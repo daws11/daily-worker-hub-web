@@ -1,0 +1,539 @@
+{
+  "feature": "Supabase Infrastructure Setup",
+  "description": "Complete Supabase Local setup with Docker, including PostgreSQL database, GoTrue authentication, Storage service for file uploads, Realtime for live updates, and Edge Functions for server-side logic. Includes Studio UI for database management.",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a feature workflow because we're adding new infrastructure (Supabase Local) to the project. The setup involves multiple services (database, auth, storage, realtime, edge functions) that need to be configured in dependency order.",
+  "phases": [
+    {
+      "id": "phase-1-cli-setup",
+      "name": "Supabase CLI Setup",
+      "type": "setup",
+      "description": "Install and configure Supabase CLI for local development",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Verify Supabase CLI installation and initialize project",
+          "service": "supabase",
+          "files_to_create": [
+            "supabase/config.toml"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "supabase --version",
+            "expected": "supabase version"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Create Supabase configuration file",
+          "service": "supabase",
+          "files_to_create": [
+            "supabase/config.toml"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "test -f supabase/config.toml && cat supabase/config.toml",
+            "expected": "project_id"
+          },
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-database-schema",
+      "name": "Database Schema and Migrations",
+      "type": "implementation",
+      "description": "Create database migrations for all required tables matching the types defined in lib/supabase/types.ts",
+      "depends_on": [
+        "phase-1-cli-setup"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create initial schema migration with core tables (users, workers, businesses, skills, categories)",
+          "service": "supabase",
+          "files_to_create": [
+            "supabase/migrations/001_initial_schema.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/supabase/types.ts",
+            "docs/Architecture.md"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase db reset --debug",
+            "expected": "Resetting database"
+          },
+          "status": "completed",
+          "notes": "Created initial schema migration with 14 core tables: users, businesses, workers, skills, categories, jobs, jobs_skills, bookings, transactions, messages, reviews, notifications, reports, webhooks. Added PostgreSQL enums, indexes, RLS policies, and triggers for updated_at timestamps."
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create RLS policies migration for security",
+          "service": "supabase",
+          "files_to_create": [
+            "supabase/migrations/002_rls_policies.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "docs/Architecture.md",
+            "docs/SECURITY.md"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase db reset --debug",
+            "expected": "Applying migration"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Create seed data migration for development",
+          "service": "supabase",
+          "files_to_create": [
+            "supabase/migrations/003_seed_data.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "docs/Architecture.md"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase db reset --debug",
+            "expected": "Seeding data"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-environment-config",
+      "name": "Environment Configuration",
+      "type": "implementation",
+      "description": "Create environment configuration files for local development",
+      "depends_on": [
+        "phase-1-cli-setup"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create .env.local.example with all required Supabase environment variables",
+          "service": "web",
+          "files_to_create": [
+            ".env.local.example"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/supabase/client.ts",
+            "lib/supabase/server.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify .env.local.example contains NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create local .env.local file with Supabase Local credentials",
+          "service": "web",
+          "files_to_create": [
+            ".env.local"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            ".env.local.example"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "test -f .env.local && grep -q 'NEXT_PUBLIC_SUPABASE_URL' .env.local && echo 'Found'",
+            "expected": "Found"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-storage-setup",
+      "name": "Storage Service Setup",
+      "type": "implementation",
+      "description": "Configure Supabase Storage buckets for file uploads",
+      "depends_on": [
+        "phase-2-database-schema"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create storage buckets migration (avatars, documents, images)",
+          "service": "supabase",
+          "files_to_create": [
+            "supabase/migrations/004_storage_buckets.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "docs/Architecture.md"
+          ],
+          "verification": {
+            "type": "api",
+            "method": "GET",
+            "url": "http://localhost:54321/storage/v1/bucket",
+            "expected_status": 200
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-edge-functions",
+      "name": "Edge Functions Setup",
+      "type": "implementation",
+      "description": "Create Supabase Edge Functions directory and example functions",
+      "depends_on": [
+        "phase-2-database-schema"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Create Edge Functions directory structure and .gitkeep",
+          "service": "supabase",
+          "files_to_create": [
+            "supabase/functions/.gitkeep"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "test -d supabase/functions && echo 'Directory exists'",
+            "expected": "Directory exists"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Create reliability-score edge function example",
+          "service": "supabase",
+          "files_to_create": [
+            "supabase/functions/reliability-score/index.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "docs/Architecture.md"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase functions serve reliability-score --no-verify-jwt",
+            "expected": "Started"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-6-scripts-and-docs",
+      "name": "Scripts and Documentation",
+      "type": "implementation",
+      "description": "Create helper scripts and documentation for Supabase Local",
+      "depends_on": [
+        "phase-1-cli-setup"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Create start-supabase.sh helper script",
+          "service": "supabase",
+          "files_to_create": [
+            "scripts/start-supabase.sh"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "docs/Architecture.md"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "chmod +x scripts/start-supabase.sh && ./scripts/start-supabase.sh",
+            "expected": "Started"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Create SUPABASE-LOCAL-GUIDE.md documentation",
+          "service": "supabase",
+          "files_to_create": [
+            "docs/SUPABASE-LOCAL-GUIDE.md"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "docs/SUPABASE-SETUP.md",
+            "docs/Architecture.md"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Review docs/SUPABASE-LOCAL-GUIDE.md for completeness"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-7-integration",
+      "name": "Integration and Verification",
+      "type": "integration",
+      "description": "Start Supabase Local, apply migrations, and verify all services are working",
+      "depends_on": [
+        "phase-2-database-schema",
+        "phase-3-environment-config",
+        "phase-4-storage-setup",
+        "phase-5-edge-functions",
+        "phase-6-scripts-and-docs"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-7-1",
+          "description": "Start Supabase Local and verify all containers are running",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Run 'supabase start' command",
+              "Verify Studio UI is accessible at http://localhost:54323",
+              "Verify API URL is http://localhost:54321",
+              "Verify PostgreSQL is running on port 54322",
+              "Check all containers with 'docker ps' command"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-7-2",
+          "description": "Verify database migrations are applied correctly",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Connect to Studio UI",
+              "Navigate to Table Editor",
+              "Verify all tables exist (users, workers, businesses, jobs, etc.)",
+              "Verify RLS policies are enabled",
+              "Check seed data is loaded"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-7-3",
+          "description": "Verify auth service is working with test registration",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Start Next.js dev server",
+              "Navigate to registration page",
+              "Create a test user account",
+              "Verify user is created in auth.users",
+              "Verify user profile is created in public.users table",
+              "Test login flow"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-7-4",
+          "description": "Verify storage service accepts file uploads",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Access Storage in Studio UI",
+              "Verify 'avatars' bucket exists",
+              "Upload a test file via Studio",
+              "Verify file is accessible via API"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-7-5",
+          "description": "Verify Edge Functions can be deployed and invoked",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Deploy reliability-score function",
+              "Invoke function via curl or API client",
+              "Verify function responds correctly",
+              "Check function logs"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "integration"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "Supabase Local starts successfully via Docker",
+      "All database migrations are applied without errors",
+      "Studio UI is accessible at http://localhost:54323",
+      "Auth service handles user registration and login",
+      "Storage service accepts file uploads",
+      "Edge Functions can be deployed and invoked",
+      "RLS policies are in place for security"
+    ],
+    "verification_steps": [
+      {
+        "name": "Supabase Local Health Check",
+        "command": "supabase status",
+        "expected_outcome": "All services running",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Database Migration Verification",
+        "command": "supabase db reset --debug",
+        "expected_outcome": "All migrations applied successfully",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Studio UI Access",
+        "command": "curl -s -o /dev/null -w '%{http_code}' http://localhost:54323",
+        "expected_outcome": "200",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Medium risk infrastructure setup. Integration tests are required to verify all Supabase services work together. No unit tests needed as this is primarily configuration. No security scan required for local development setup."
+  },
+  "qa_acceptance": {
+    "integration_tests": {
+      "required": true,
+      "commands": [
+        "supabase status",
+        "supabase db reset"
+      ],
+      "services_to_test": [
+        "supabase",
+        "web"
+      ]
+    },
+    "e2e_tests": {
+      "required": true,
+      "flows": [
+        "supabase-start-and-verify",
+        "database-migrations",
+        "auth-registration-login",
+        "storage-file-upload",
+        "edge-functions-deploy"
+      ]
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:54323",
+          "checks": [
+            "Studio UI loads",
+            "Can access Table Editor",
+            "Can access SQL Editor"
+          ]
+        },
+        {
+          "url": "http://localhost:3000",
+          "checks": [
+            "Next.js app runs",
+            "Can access auth pages",
+            "No console errors"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "migrations-exist",
+        "migrations-applied",
+        "tables-created",
+        "rls-enabled",
+        "seed-data-loaded"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "summary": {
+    "total_phases": 7,
+    "total_subtasks": 17,
+    "services_involved": [
+      "supabase",
+      "web"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 3,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-3-environment-config",
+            "phase-5-edge-functions",
+            "phase-6-scripts-and-docs"
+          ],
+          "reason": "All depend only on phase-1-cli-setup and work on different files"
+        },
+        {
+          "phases": [
+            "phase-4-storage-setup",
+            "phase-5-edge-functions"
+          ],
+          "reason": "Both depend on phase-2-database-schema but work on different services"
+        }
+      ],
+      "recommended_workers": 2,
+      "speedup_estimate": "1.5x faster than sequential"
+    },
+    "startup_command": "npx supabase@latest start"
+  },
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "xstateState": "backlog",
+  "executionPhase": "coding",
+  "updated_at": "2026-02-21T23:10:01.691Z"
+}
