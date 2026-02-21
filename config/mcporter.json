@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "transport": "http",
+      "url": "https://mcp.supabase.com/mcp",
+      "headers": {
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpcmh1Zm1id3F4bW9qbmtrbmFuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTcxMTg4OSwiZXhwIjoyMDgxMjg3ODg5fQ.9O2swifcIIxqBMPFl3U0amByKy2bHbRipbnzr75HgOk",
+        "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpcmh1Zm1id3F4bW9qbmtrbmFuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTcxMTg4OSwiZXhwIjoyMDgxMjg3ODg5fQ.9O2swifcIIxqBMPFl3U0amByKy2bHbRipbnzr75HgOk"
+      }
+    }
+  }
+}
