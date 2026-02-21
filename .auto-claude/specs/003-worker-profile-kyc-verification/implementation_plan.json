@@ -4,7 +4,7 @@
   "workflow_type": "feature",
   "workflow_rationale": "This is a multi-service feature involving database schema changes, file storage, API endpoints, and frontend UI components. The feature follows a dependency order: database first, then backend APIs, then frontend UI.",
   "created_at": "2026-02-21T20:18:40.647Z",
-  "updated_at": "2026-02-21T20:22:53.189Z",
+  "updated_at": "2026-02-21T20:24:27.387Z",
   "status": "in_progress",
   "phases": [
     {
@@ -46,8 +46,8 @@
             "command": "psql $DATABASE_URL -c \"\\dt worker_skills\"",
             "expected": "worker_skills table exists"
           },
-          "status": "pending",
-          "notes": "Create many-to-many junction table with fields: worker_id, skill_id, and composite primary key"
+          "status": "completed",
+          "notes": "Created junction table with worker_id and skill_id foreign keys (CASCADE delete), composite primary key, indexes on both columns, RLS policies for workers and admins, and documentation comments. Migration committed successfully."
         },
         {
           "id": "subtask-1-3",
