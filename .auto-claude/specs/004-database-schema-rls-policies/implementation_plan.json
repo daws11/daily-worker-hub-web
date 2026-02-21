@@ -129,7 +129,8 @@
             "command": "grep -q 'CREATE TABLE skills\\|CREATE TABLE categories' supabase/migrations/20250222000001_initial_schema.sql && echo 'Lookup tables defined'",
             "expected": "Lookup tables defined"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Skills and categories tables already properly defined with id, name, slug, created_at columns matching the types.ts pattern, UNIQUE constraints on name and slug, and indexes on slug columns"
         },
         {
           "id": "subtask-2-5",
@@ -561,5 +562,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-21T22:08:21.009Z"
+  "updated_at": "2026-02-21T22:09:52.721Z"
 }

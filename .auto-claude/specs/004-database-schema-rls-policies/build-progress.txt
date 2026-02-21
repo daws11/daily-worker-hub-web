@@ -175,3 +175,14 @@ Changes:
 Verification: grep -q 'CREATE TABLE workers\|CREATE TABLE businesses' supabase/migrations/20250222000001_initial_schema.sql
 Commit: 95f267f - auto-claude: subtask-2-3 - Create workers and businesses tables with user rel
 
+[2026-02-22] Subtask 2-4: Create skills and categories tables
+Status: COMPLETED
+Changes:
+  - Skills and categories tables already properly defined in migration
+  - Skills table: id (UUID), name (TEXT UNIQUE), slug (TEXT UNIQUE), created_at (TIMESTAMPTZ)
+  - Categories table: id (UUID), name (TEXT UNIQUE), slug (TEXT UNIQUE), created_at (TIMESTAMPTZ)
+  - Indexes on slug columns for optimized lookups
+  - All fields match TypeScript types in lib/supabase/types.ts
+Verification: grep -q 'CREATE TABLE skills\|CREATE TABLE categories' supabase/migrations/20250222000001_initial_schema.sql
+Commit: (tables already present from initial schema migration)
+
