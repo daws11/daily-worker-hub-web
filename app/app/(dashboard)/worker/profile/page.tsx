@@ -39,23 +39,23 @@ export default function WorkerProfilePage() {
 
       setIsLoadingProfile(true)
 
-      const { data, error } = await supabase
-        .from('workers')
-        .select('*')
-        .eq('user_id', user.id)
-        .single()
+      try {
+        const { data, error } = await supabase
+          .from('workers')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
 
-      setIsLoadingProfile(false)
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // Profile doesn't exist yet, that's okay for new users
-          setKycStatus('unverified')
-        } else {
-          console.error('Error loading profile:', error)
+        if (error) {
+          if (error.code === 'PGRST116') {
+            // Profile doesn't exist yet, that's okay for new users
+            setKycStatus('unverified')
+          } else {
+            console.error('Error loading profile:', error)
+            toast.error("Gagal memuat profil")
+          }
+          return
         }
-        return
-      }
 
       if (data) {
         setFullName(data.full_name || "")
@@ -84,20 +84,27 @@ export default function WorkerProfilePage() {
         }
       }
 
-      // Load skills
-      const { data: skillsData, error: skillsError } = await supabase
-        .from('worker_skills')
-        .select('skill_id, skills(name)')
-        .eq('worker_id', user.id)
+        // Load skills
+        const { data: skillsData, error: skillsError } = await supabase
+          .from('worker_skills')
+          .select('skill_id, skills(name)')
+          .eq('worker_id', user.id)
 
-      if (skillsError) {
-        console.error('Error loading skills:', skillsError)
-        return
-      }
+        if (skillsError) {
+          console.error('Error loading skills:', skillsError)
+          toast.error("Gagal memuat keahlian")
+          return
+        }
 
-      if (skillsData) {
-        const skillNames = skillsData.map((s: any) => s.skills?.name).filter(Boolean)
-        setSelectedSkills(skillNames)
+        if (skillsData) {
+          const skillNames = skillsData.map((s: any) => s.skills?.name).filter(Boolean)
+          setSelectedSkills(skillNames)
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error)
+        toast.error("Gagal memuat data. Silakan refresh halaman.")
+      } finally {
+        setIsLoadingProfile(false)
       }
     }
 

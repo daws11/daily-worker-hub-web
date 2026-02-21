@@ -31,36 +31,47 @@ export default function WorkerKycPage() {
 
       setIsLoadingData(true)
 
-      // Get worker profile
-      const { data: workerData } = await supabase
-        .from('workers')
-        .select('id, kyc_status')
-        .eq('user_id', user.id)
-        .single()
+      try {
+        // Get worker profile
+        const { data: workerData, error: workerError } = await supabase
+          .from('workers')
+          .select('id, kyc_status')
+          .eq('user_id', user.id)
+          .single()
 
-      if (workerData) {
-        setCurrentStatus(workerData.kyc_status || 'unverified')
+        if (workerError && workerError.code !== 'PGRST116') {
+          console.error('Error loading worker data:', workerError)
+          toast.error("Gagal memuat data worker")
+          return
+        }
 
-        // If pending or rejected, get the latest KYC verification details
-        if (workerData.kyc_status === 'pending' || workerData.kyc_status === 'rejected') {
-          const { data: kycData } = await supabase
-            .from('kyc_verifications')
-            .select('*')
-            .eq('worker_id', workerData.id)
-            .order('submitted_at', { ascending: false })
-            .limit(1)
-            .maybeSingle()
+        if (workerData) {
+          setCurrentStatus(workerData.kyc_status || 'unverified')
 
-          if (kycData) {
-            setKtpNumber(kycData.ktp_number || "")
-            if (kycData.rejection_reason) {
-              setRejectionReason(kycData.rejection_reason)
+          // If pending or rejected, get the latest KYC verification details
+          if (workerData.kyc_status === 'pending' || workerData.kyc_status === 'rejected') {
+            const { data: kycData } = await supabase
+              .from('kyc_verifications')
+              .select('*')
+              .eq('worker_id', workerData.id)
+              .order('submitted_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+
+            if (kycData) {
+              setKtpNumber(kycData.ktp_number || "")
+              if (kycData.rejection_reason) {
+                setRejectionReason(kycData.rejection_reason)
+              }
             }
           }
         }
+      } catch (error) {
+        console.error('Error loading KYC status:', error)
+        toast.error("Gagal memuat data KYC. Silakan refresh halaman.")
+      } finally {
+        setIsLoadingData(false)
       }
-
-      setIsLoadingData(false)
     }
 
     loadKycStatus()
