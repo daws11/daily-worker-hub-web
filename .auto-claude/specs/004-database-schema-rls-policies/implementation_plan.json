@@ -385,7 +385,9 @@
             "command": "grep -c 'CREATE INDEX' supabase/migrations/20250222000001_initial_schema.sql",
             "expected": "10+ indexes created"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "All foreign key columns already have indexes created. Total 42 indexes including: businesses.user_id, workers.user_id, jobs.business_id, jobs.category_id, jobs_skills.job_id, jobs_skills.skill_id, bookings.job_id, bookings.worker_id, bookings.business_id, transactions.booking_id, messages.sender_id, messages.receiver_id, messages.booking_id, reviews.booking_id, reviews.worker_id, notifications.user_id, reports.reporter_id. Also includes composite indexes for location queries (lat, lng) and unique constraint indexes.",
+          "updated_at": "2026-02-22T00:00:00.000000+00:00"
         },
         {
           "id": "subtask-4-2",
@@ -582,6 +584,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T00:00:00.000000Z",
+  "updated_at": "2026-02-21T22:28:08.262Z",
   "last_updated": "2026-02-22T00:00:00.000000+00:00"
 }
