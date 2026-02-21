@@ -31,3 +31,6 @@ logs/
 # Memory & Supabase
 memory/
 supabase/
+
+# Auto Claude data directory
+.auto-claude/

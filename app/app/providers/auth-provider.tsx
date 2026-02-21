@@ -3,9 +3,9 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { supabase } from "../../lib/supabase/client"
+import { supabase } from "../../../lib/supabase/client"
 import type { User, Session } from "@supabase/supabase-js"
-import type { Database } from "../../lib/supabase/types"
+import type { Database } from "../../../lib/supabase/types"
 
 type UsersRow = Database["public"]["Tables"]["users"]["Row"]
 
