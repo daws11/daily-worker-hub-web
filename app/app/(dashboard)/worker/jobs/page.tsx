@@ -1,6 +1,19 @@
 "use client"
 
+import { useState } from "react"
+
 export default function WorkerJobsPage() {
+  const [profileHovered, setProfileHovered] = useState(false)
+  const [kycHovered, setKycHovered] = useState(false)
+
+  const handleProfileClick = () => {
+    window.location.href = "/worker/profile"
+  }
+
+  const handleKycClick = () => {
+    window.location.href = "/worker/kyc"
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -8,9 +21,49 @@ export default function WorkerJobsPage() {
       padding: '1rem'
     }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-          Dashboard Worker - Jobs
-        </h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+            Dashboard Worker - Jobs
+          </h1>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={handleProfileClick}
+              onMouseEnter={() => setProfileHovered(true)}
+              onMouseLeave={() => setProfileHovered(false)}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: profileHovered ? '#1d4ed8' : '#2563eb',
+                color: 'white',
+                borderRadius: '0.375rem',
+                fontWeight: 500,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                fontSize: '0.875rem'
+              }}
+            >
+              Profile
+            </button>
+            <button
+              onClick={handleKycClick}
+              onMouseEnter={() => setKycHovered(true)}
+              onMouseLeave={() => setKycHovered(false)}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: kycHovered ? '#f59e0b' : '#fbbf24',
+                color: 'white',
+                borderRadius: '0.375rem',
+                fontWeight: 500,
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+                fontSize: '0.875rem'
+              }}
+            >
+              KYC Verification
+            </button>
+          </div>
+        </div>
         
         <div style={{
           backgroundColor: 'white',
