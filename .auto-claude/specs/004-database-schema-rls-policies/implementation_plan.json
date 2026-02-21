@@ -253,7 +253,9 @@
             "type": "manual",
             "instructions": "Verify users table has RLS enabled with policies: users can read/update their own data, admins can read all"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added 'admin' role to user_role enum. Created is_admin() helper function with SECURITY DEFINER to bypass RLS when checking admin status. Added 4 RLS policies: Users can read own data, Admins can read all users, Users can update own data, Admins can update any user.",
+          "updated_at": "2026-02-21T22:18:49.137102+00:00"
         },
         {
           "id": "subtask-3-2",
@@ -568,6 +570,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-21T22:16:18.060Z",
-  "last_updated": "2026-02-21T22:16:43.824218+00:00"
+  "updated_at": "2026-02-21T22:17:06.796Z",
+  "last_updated": "2026-02-21T22:18:49.137108+00:00"
 }
