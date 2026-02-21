@@ -99,8 +99,9 @@
             "command": "grep -q 'useForm\\|businessProfileSchema\\|onSubmit' components/business/profile-form.tsx && echo 'OK' || echo 'Not found'",
             "expected": "OK"
           },
-          "status": "pending",
-          "notes": "Client component using react-hook-form with zodResolver. Form fields: company name (Input), business type (Select), address (Textarea), area (Select - Badung/Denpasar/Gianyar/Tabanan/Buleleng/Klungkung/Karangasem/Bangli/Jembrana), phone (Input), email (Input), website (Input), description (Textarea). Handle both create and edit modes."
+          "status": "completed",
+          "notes": "Created components/business/profile-form.tsx with:\n- react-hook-form with zodResolver for form management\n- Form fields: company name (Input), business type (Select), address (textarea), area (Select), phone (Input), email (Input), website (Input), description (textarea)\n- Indonesian labels and placeholders for all fields\n- Supports both create and edit modes via mode prop\n- Integrated shadcn/ui Form components (Form, FormField, FormItem, FormLabel, FormControl, FormMessage)\n- Validation using businessProfileSchema from lib/schemas/business\n- Error handling with toast notifications using sonner\n- Reset and Submit buttons with loading states\n- Business type options: hotel, villa, restaurant, event_company, other\n- Area options: All Bali regencies (Badung, Denpasar, Gianyar, Tabanan, Buleleng, Klungkung, Karangasem, Bangli, Jembrana)",
+          "updated_at": "2026-02-22T04:50:00.000Z"
         },
         {
           "id": "subtask-2-2",
@@ -387,6 +388,6 @@
   "planStatus": "in_progress",
   "xstateState": "planning",
   "executionPhase": "coding",
-  "updated_at": "2026-02-21T20:24:42.620Z",
+  "updated_at": "2026-02-21T22:46:18.517Z",
   "last_updated": "2026-02-21T20:24:27.727187+00:00"
 }
