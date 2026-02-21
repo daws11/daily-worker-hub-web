@@ -4,7 +4,7 @@
   "workflow_type": "feature",
   "workflow_rationale": "This is a multi-service feature involving database schema changes, file storage, API endpoints, and frontend UI components. The feature follows a dependency order: database first, then backend APIs, then frontend UI.",
   "created_at": "2026-02-21T20:18:40.647Z",
-  "updated_at": "2026-02-21T20:24:27.387Z",
+  "updated_at": "2026-02-21T22:49:31.991Z",
   "status": "in_progress",
   "phases": [
     {
@@ -63,8 +63,8 @@
             "command": "psql $DATABASE_URL -c \"\\d workers\" | grep -E 'gender|experience_years|kyc_status'",
             "expected": "Fields exist in workers table"
           },
-          "status": "pending",
-          "notes": "Add columns: gender (text), experience_years (integer), kyc_status (text default 'unverified'), reliability_score (decimal default 0)"
+          "status": "completed",
+          "notes": "Added columns: gender (TEXT), experience_years (INTEGER), kyc_status (TEXT with CHECK constraint for 'unverified'|'pending'|'verified'|'rejected'), reliability_score (DECIMAL(3,2) with CHECK constraint 0-5). Created indexes on kyc_status, reliability_score, and experience_years for query performance. Migration committed successfully."
         },
         {
           "id": "subtask-1-4",
@@ -82,8 +82,8 @@
             "command": "npx tsc --noEmit",
             "expected": "No TypeScript errors"
           },
-          "status": "pending",
-          "notes": "Add KycVerifications table type and update Workers table type with new fields"
+          "status": "completed",
+          "notes": "Added kyc_verifications table type, worker_skills junction table type, and updated workers table with new fields: gender, experience_years, kyc_status, reliability_score. Changes committed successfully."
         },
         {
           "id": "subtask-1-5",
@@ -99,8 +99,8 @@
             "command": "psql $DATABASE_URL -c \"SELECT * FROM storage.buckets WHERE name = 'kyc-documents'\"",
             "expected": "Bucket 'kyc-documents' exists"
           },
-          "status": "pending",
-          "notes": "Create storage bucket with RLS policies for authenticated users to upload their own KYC documents"
+          "status": "completed",
+          "notes": "Created 'kyc-documents' storage bucket with 5MB file size limit, allowed MIME types (image/jpeg, image/png, image/jpg), set as private. Implemented RLS policies: workers can upload/view/delete own documents (only when KYC is pending/unverified), admins can view/delete all documents. Migration committed successfully."
         }
       ]
     },
