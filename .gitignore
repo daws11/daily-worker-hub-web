@@ -27,3 +27,7 @@ logs/
 .gitignore
 .auto-claude/*
 .mcp.json
+
+# Memory & Supabase
+memory/
+supabase/
