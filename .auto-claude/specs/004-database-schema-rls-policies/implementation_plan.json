@@ -1,0 +1,564 @@
+{
+  "feature": "Database Schema & RLS Policies",
+  "description": "Complete PostgreSQL database schema with tables for users, workers, businesses, jobs, bookings, wallets, transactions, reviews, and compliance records. Includes Row Level Security policies to ensure data isolation and proper access control.",
+  "workflow_type": "migration",
+  "workflow_rationale": "Database schema setup follows a migration pattern: (1) Prepare migration files and directory structure, (2) Execute schema creation with tables, RLS policies, and indexes, (3) Cleanup with verification and seed data.",
+  "phases": [
+    {
+      "id": "phase-1-prepare",
+      "name": "Prepare Migration Structure",
+      "type": "setup",
+      "description": "Create Supabase migration directory structure and prepare for schema creation",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create Supabase migration directory structure",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "ls -la supabase/migrations/",
+            "expected": "supabase/migrations/ directory exists"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Create initial schema migration file with core tables",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "test -f supabase/migrations/20250222000001_initial_schema.sql && echo 'File exists'",
+            "expected": "File exists"
+          },
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-execute",
+      "name": "Create Database Schema",
+      "type": "implementation",
+      "description": "Create all tables, enums, and relationships in the database",
+      "depends_on": [
+        "phase-1-prepare"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create enum types for job_status and booking_status",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify enums are created: job_status (open, in_progress, completed, cancelled), booking_status (pending, accepted, rejected, in_progress, completed, cancelled)"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create users table with auth integration",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'CREATE TABLE users' supabase/migrations/20250222000001_initial_schema.sql && echo 'Users table defined'",
+            "expected": "Users table defined"
+          },
+          "status": "completed",
+          "notes": "Added foreign key reference to auth.users(id), handle_new_user() function with trigger for auto-sync on signup, and CASCADE delete"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Create workers and businesses tables with user relationships",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'CREATE TABLE workers\\|CREATE TABLE businesses' supabase/migrations/20250222000001_initial_schema.sql && echo 'Profile tables defined'",
+            "expected": "Profile tables defined"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-4",
+          "description": "Create skills and categories tables",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'CREATE TABLE skills\\|CREATE TABLE categories' supabase/migrations/20250222000001_initial_schema.sql && echo 'Lookup tables defined'",
+            "expected": "Lookup tables defined"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-5",
+          "description": "Create jobs and jobs_skills junction table",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'CREATE TABLE jobs\\|CREATE TABLE jobs_skills' supabase/migrations/20250222000001_initial_schema.sql && echo 'Jobs tables defined'",
+            "expected": "Jobs tables defined"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-6",
+          "description": "Create bookings table with business/worker/job relationships",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'CREATE TABLE bookings' supabase/migrations/20250222000001_initial_schema.sql && echo 'Bookings table defined'",
+            "expected": "Bookings table defined"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-7",
+          "description": "Create transactions table for payments",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'CREATE TABLE transactions' supabase/migrations/20250222000001_initial_schema.sql && echo 'Transactions table defined'",
+            "expected": "Transactions table defined"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-8",
+          "description": "Create messages, reviews, and notifications tables",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'CREATE TABLE messages\\|CREATE TABLE reviews\\|CREATE TABLE notifications' supabase/migrations/20250222000001_initial_schema.sql && echo 'Communication tables defined'",
+            "expected": "Communication tables defined"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-9",
+          "description": "Create reports and webhooks tables",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'CREATE TABLE reports\\|CREATE TABLE webhooks' supabase/migrations/20250222000001_initial_schema.sql && echo 'Admin tables defined'",
+            "expected": "Admin tables defined"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-security",
+      "name": "Implement RLS Policies",
+      "type": "implementation",
+      "description": "Create Row Level Security policies for all tables to ensure data isolation",
+      "depends_on": [
+        "phase-2-execute"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Enable RLS and create policies for users table",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify users table has RLS enabled with policies: users can read/update their own data, admins can read all"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create RLS policies for workers table",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify workers table has RLS policies: workers can read own profile, public can read verified workers, admins full access"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Create RLS policies for businesses table",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify businesses table has RLS policies: businesses can read own data, public can read verified businesses, admins full access"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-4",
+          "description": "Create RLS policies for jobs table",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify jobs table has RLS policies: businesses can read own jobs, workers can read open jobs, admins full access"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-5",
+          "description": "Create RLS policies for bookings table",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify bookings table has RLS policies: users can see own bookings, businesses see own business bookings, admins full access"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-6",
+          "description": "Create RLS policies for transactions table",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify transactions table has RLS policies: users can read own transactions, admins full access"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-7",
+          "description": "Create RLS policies for reviews, messages, notifications tables",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify communication tables have RLS policies: users read own data, admins full access"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-performance",
+      "name": "Create Indexes",
+      "type": "implementation",
+      "description": "Create indexes for performance optimization on foreign keys and commonly queried columns",
+      "depends_on": [
+        "phase-3-security"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create indexes for foreign key columns",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "grep -c 'CREATE INDEX' supabase/migrations/20250222000001_initial_schema.sql",
+            "expected": "10+ indexes created"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Create indexes for status and timestamp columns",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "grep -c 'CREATE INDEX.*status\\|CREATE INDEX.*created_at' supabase/migrations/20250222000001_initial_schema.sql",
+            "expected": "Status and timestamp indexes created"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-cleanup",
+      "name": "Create Seed Data and Verify",
+      "type": "cleanup",
+      "description": "Create seed data for development testing and verify the complete schema",
+      "depends_on": [
+        "phase-4-performance"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Create seed data file with test data",
+          "service": "database",
+          "files_to_create": [
+            "supabase/seed.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "test -f supabase/seed.sql && wc -l supabase/seed.sql",
+            "expected": "Seed file exists with data"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Create Supabase config file if needed",
+          "service": "database",
+          "files_to_create": [
+            "supabase/config.toml"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "test -f supabase/config.toml && echo 'Config exists'",
+            "expected": "Config exists"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-3",
+          "description": "Verify schema matches TypeScript types",
+          "service": "database",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Compare all tables in SQL schema with TypeScript types to ensure 1:1 match"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-4",
+          "description": "Test migration with Supabase CLI",
+          "service": "database",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "supabase db reset 2>&1 | head -20",
+            "expected": "Migration successful"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 5,
+    "total_subtasks": 24,
+    "services_involved": [
+      "database"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 1,
+      "parallel_groups": [],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution - each phase depends on previous"
+    },
+    "startup_command": "supabase start"
+  },
+  "verification_strategy": {
+    "risk_level": "high",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "manual"
+    ],
+    "security_scanning_required": true,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All required tables are created with proper relationships",
+      "RLS policies prevent cross-user data access",
+      "Indexes are created for performance optimization",
+      "Enums are defined for job_status and booking_status",
+      "Foreign key constraints maintain data integrity",
+      "Test data can be seeded for development"
+    ],
+    "verification_steps": [
+      {
+        "name": "Schema Validation",
+        "command": "supabase db reset",
+        "expected_outcome": "All migrations apply successfully without errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "RLS Policy Verification",
+        "command": "psql $DATABASE_URL -c \"SELECT schemaname, tablename, policyname FROM pg_policies WHERE schemaname = 'public';\"",
+        "expected_outcome": "All tables have RLS policies defined",
+        "type": "security",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Index Verification",
+        "command": "psql $DATABASE_URL -c \"SELECT indexname, tablename FROM pg_indexes WHERE schemaname = 'public' ORDER BY tablename;\"",
+        "expected_outcome": "All critical indexes are created",
+        "type": "test",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "TypeScript Type Alignment",
+        "command": "diff <(psql $DATABASE_URL -c \"\\dt\") <(grep 'Tables:' lib/supabase/types.ts -A 200 | grep 'Row:' | sed 's/.*\\(\\w*\\): {.*/\\1/')",
+        "expected_outcome": "All tables in SQL match TypeScript types",
+        "type": "manual",
+        "required": true,
+        "blocking": false
+      }
+    ],
+    "reasoning": "High risk because this is foundational database schema. Any issues here will affect all features built on top. RLS policies are security-critical and must be thoroughly verified."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": false,
+      "pages": []
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "all-tables-created",
+        "rls-enabled",
+        "indexes-created",
+        "foreign-keys-defined",
+        "seed-data-works"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "xstateState": "backlog",
+  "executionPhase": "coding",
+  "updated_at": "2026-02-21T22:06:30.980Z"
+}
