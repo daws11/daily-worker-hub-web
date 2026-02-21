@@ -224,7 +224,9 @@
             "command": "grep -q 'CREATE TABLE reports\\|CREATE TABLE webhooks' supabase/migrations/20250222000001_initial_schema.sql && echo 'Admin tables defined'",
             "expected": "Admin tables defined"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Reports and webhooks tables already properly defined matching types.ts: Reports table has id, reporter_id (FK to users), reported_type (report_type enum: user/job/business/booking), reported_id, reason, status (report_status enum: pending/reviewing/resolved/dismissed), created_at with proper indexes on reporter_id, status, composite (reported_type, reported_id), and created_at DESC. Webhooks table has id, url (unique), secret, events (TEXT[] array), is_active, created_at with proper indexes on is_active and GIN index for events array. Both tables have RLS enabled.",
+          "updated_at": "2026-02-21T22:16:43.824208+00:00"
         }
       ]
     },
@@ -566,5 +568,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-21T22:15:11.376Z"
+  "updated_at": "2026-02-21T22:16:18.060Z",
+  "last_updated": "2026-02-21T22:16:43.824218+00:00"
 }

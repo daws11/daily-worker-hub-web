@@ -6,7 +6,7 @@ CREATE TYPE job_status AS ENUM ('open', 'in_progress', 'completed', 'cancelled')
 CREATE TYPE booking_status AS ENUM ('pending', 'accepted', 'rejected', 'in_progress', 'completed', 'cancelled');
 CREATE TYPE transaction_type AS ENUM ('payment', 'refund');
 CREATE TYPE transaction_status AS ENUM ('pending', 'success', 'failed');
-CREATE TYPE user_role AS ENUM ('worker', 'business');
+CREATE TYPE user_role AS ENUM ('worker', 'business', 'admin');
 CREATE TYPE report_type AS ENUM ('user', 'job', 'business', 'booking');
 CREATE TYPE report_status AS ENUM ('pending', 'reviewing', 'resolved', 'dismissed');
 
@@ -368,5 +368,39 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE webhooks ENABLE ROW LEVEL SECURITY;
 
--- Note: RLS policies will be defined in subsequent migrations
--- This migration creates the schema structure only
+-- ============================================================================
+-- RLS POLICIES FOR USERS TABLE
+-- ============================================================================
+
+-- Helper function to check if current user is an admin
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM users
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Users can read their own data
+CREATE POLICY "Users can read own data"
+  ON users FOR SELECT
+  USING (auth.uid() = id);
+
+-- Admins can read all users
+CREATE POLICY "Admins can read all users"
+  ON users FOR SELECT
+  USING (is_admin());
+
+-- Users can update their own data
+CREATE POLICY "Users can update own data"
+  ON users FOR UPDATE
+  USING (auth.uid() = id)
+  WITH CHECK (auth.uid() = id);
+
+-- Admins can update any user data
+CREATE POLICY "Admins can update any user"
+  ON users FOR UPDATE
+  USING (is_admin())
+  WITH CHECK (is_admin());
