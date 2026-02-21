@@ -68,6 +68,11 @@ export const businessProfileSchema = z.object({
     .url("URL avatar tidak valid")
     .optional()
     .or(z.literal("")),
+
+  business_license_url: z.string()
+    .url("URL lisensi bisnis tidak valid")
+    .optional()
+    .or(z.literal("")),
 })
 
 // Business profile schema for partial updates

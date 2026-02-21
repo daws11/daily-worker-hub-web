@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Camera, User } from "lucide-react"
+import { Camera, FileText, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -43,7 +43,7 @@ import {
   type BusinessType,
   type Area,
 } from "@/lib/schemas/business"
-import { uploadAvatar } from "@/lib/supabase/storage"
+import { uploadAvatar, uploadBusinessLicense } from "@/lib/supabase/storage"
 
 // Business type options in Indonesian
 const businessTypeOptions: { value: BusinessType; label: string }[] = [
@@ -78,6 +78,7 @@ interface BusinessProfile {
   website?: string
   description?: string
   avatar_url?: string
+  business_license_url?: string
 }
 
 interface ProfileFormProps {
@@ -97,6 +98,9 @@ export function ProfileForm({
     initialData?.avatar_url
   )
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [licenseFile, setLicenseFile] = useState<File | null>(null)
+  const [licenseFileName, setLicenseFileName] = useState<string | undefined>()
+  const [isUploadingLicense, setIsUploadingLicense] = useState(false)
 
   const form = useForm<BusinessProfileInput>({
     resolver: zodResolver(businessProfileSchema),
@@ -110,6 +114,7 @@ export function ProfileForm({
       website: "",
       description: "",
       avatar_url: "",
+      business_license_url: "",
     },
   })
 
@@ -137,11 +142,34 @@ export function ProfileForm({
     setAvatarPreview(previewUrl)
   }
 
+  const handleLicenseChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"]
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("File harus berupa PDF atau gambar (JPEG, PNG)")
+      return
+    }
+
+    // Validate file size (max 10MB)
+    const MAX_SIZE = 10 * 1024 * 1024
+    if (file.size > MAX_SIZE) {
+      toast.error("Ukuran file maksimal 10MB")
+      return
+    }
+
+    setLicenseFile(file)
+    setLicenseFileName(file.name)
+  }
+
   const handleSubmit = async (data: BusinessProfileInput) => {
     setIsSubmitting(true)
 
     try {
       let avatarUrl = data.avatar_url || initialData?.avatar_url
+      let licenseUrl = data.business_license_url || initialData?.business_license_url
 
       // Upload avatar if a new file was selected
       if (avatarFile) {
@@ -163,10 +191,31 @@ export function ProfileForm({
         setIsUploadingAvatar(false)
       }
 
-      // Prepare form data with avatar URL
+      // Upload business license if a new file was selected
+      if (licenseFile) {
+        setIsUploadingLicense(true)
+        const uploadResult = await uploadBusinessLicense(
+          initialData?.id || "temp",
+          licenseFile,
+          initialData?.business_license_url
+        )
+
+        if (uploadResult.error) {
+          toast.error(uploadResult.error)
+          setIsUploadingLicense(false)
+          setIsSubmitting(false)
+          return
+        }
+
+        licenseUrl = uploadResult.url
+        setIsUploadingLicense(false)
+      }
+
+      // Prepare form data with avatar and license URLs
       const formData = {
         ...data,
         avatar_url: avatarUrl,
+        business_license_url: licenseUrl,
       }
 
       if (onSubmit) {
@@ -420,6 +469,52 @@ export function ProfileForm({
                 </FormItem>
               )}
             />
+
+            {/* Business License Upload */}
+            <div className="space-y-2">
+              <Label>Lisensi Bisnis</Label>
+              <div className="flex items-center gap-2">
+                <Label
+                  htmlFor="license-upload"
+                  className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-md text-sm font-medium transition-colors"
+                >
+                  <FileText className="h-4 w-4" />
+                  {licenseFileName || initialData?.business_license_url
+                    ? "Ganti File"
+                    : "Upload Lisensi"}
+                </Label>
+                <Input
+                  id="license-upload"
+                  type="file"
+                  accept=".pdf,image/jpeg,image/png,image/jpg"
+                  onChange={handleLicenseChange}
+                  className="hidden"
+                  disabled={isSubmitting}
+                />
+                {(licenseFileName || initialData?.business_license_url) && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setLicenseFile(null)
+                      setLicenseFileName(undefined)
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    Hapus
+                  </Button>
+                )}
+              </div>
+              {(licenseFileName || initialData?.business_license_url) && (
+                <p className="text-sm text-muted-foreground">
+                  {licenseFileName || "Lisensi bisnis telah diupload"}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Format: PDF, JPG, PNG. Maksimal 10MB
+              </p>
+            </div>
 
             {/* Submit Button */}
             <div className="flex justify-end gap-3">

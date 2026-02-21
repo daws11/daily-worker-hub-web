@@ -1,0 +1,25 @@
+{
+  "active": true,
+  "spec": "002-business-profile-management",
+  "state": "building",
+  "subtasks": {
+    "completed": 6,
+    "total": 11,
+    "in_progress": 1,
+    "failed": 0
+  },
+  "phase": {
+    "current": "File Upload Features",
+    "id": null,
+    "total": 2
+  },
+  "workers": {
+    "active": 0,
+    "max": 1
+  },
+  "session": {
+    "number": 49,
+    "started_at": "2026-02-22T04:18:56.152629"
+  },
+  "last_update": "2026-02-22T06:54:13.160775"
+}
