@@ -338,7 +338,9 @@
             "type": "manual",
             "instructions": "Verify transactions table has RLS policies: users can read own transactions, admins full access"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added 6 RLS policies for transactions table: Workers can read transactions for their bookings (via bookings.worker_id linking to workers.user_id), Businesses can read transactions for their bookings (via bookings.business_id linking to businesses.user_id), Admins can read all transactions (is_admin()), Admins can insert/update/delete any transaction (is_admin()).",
+          "updated_at": "2026-02-22T00:00:00.000000+00:00"
         },
         {
           "id": "subtask-3-7",
