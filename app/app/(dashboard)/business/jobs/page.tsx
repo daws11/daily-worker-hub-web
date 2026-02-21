@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+
 export default function BusinessJobsPage() {
   return (
     <div style={{
@@ -8,9 +10,33 @@ export default function BusinessJobsPage() {
       padding: '1rem'
     }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-          Dashboard Business - Jobs
-        </h1>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1rem'
+        }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+            Dashboard Business - Jobs
+          </h1>
+          <Link
+            href="/business/profile"
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.375rem',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              textDecoration: 'none',
+              transition: 'background-color 0.2s'
+            }}
+          >
+            Profil Bisnis
+          </Link>
+        </div>
         
         <div style={{
           backgroundColor: 'white',
