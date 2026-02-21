@@ -668,3 +668,50 @@ CREATE POLICY "Businesses can delete own bookings"
 CREATE POLICY "Admins can delete any booking"
   ON bookings FOR DELETE
   USING (is_admin());
+
+-- ============================================================================
+-- RLS POLICIES FOR TRANSACTIONS TABLE
+-- ============================================================================
+
+-- Workers can read transactions for their bookings
+CREATE POLICY "Workers can read own transactions"
+  ON transactions FOR SELECT
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM workers WHERE id IN (
+        SELECT worker_id FROM bookings WHERE id = transactions.booking_id
+      )
+    )
+  );
+
+-- Businesses can read transactions for their bookings
+CREATE POLICY "Businesses can read own transactions"
+  ON transactions FOR SELECT
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM businesses WHERE id IN (
+        SELECT business_id FROM bookings WHERE id = transactions.booking_id
+      )
+    )
+  );
+
+-- Admins can read all transactions
+CREATE POLICY "Admins can read all transactions"
+  ON transactions FOR SELECT
+  USING (is_admin());
+
+-- Admins can insert any transaction
+CREATE POLICY "Admins can insert any transaction"
+  ON transactions FOR INSERT
+  WITH CHECK (is_admin());
+
+-- Admins can update any transaction
+CREATE POLICY "Admins can update any transaction"
+  ON transactions FOR UPDATE
+  USING (is_admin())
+  WITH CHECK (is_admin());
+
+-- Admins can delete any transaction
+CREATE POLICY "Admins can delete any transaction"
+  ON transactions FOR DELETE
+  USING (is_admin());
