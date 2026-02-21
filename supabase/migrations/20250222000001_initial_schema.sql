@@ -501,3 +501,72 @@ CREATE POLICY "Authenticated users can insert businesses"
 CREATE POLICY "Admins can delete any business"
   ON businesses FOR DELETE
   USING (is_admin());
+
+-- ============================================================================
+-- RLS POLICIES FOR JOBS TABLE
+-- ============================================================================
+
+-- Businesses can read their own jobs
+CREATE POLICY "Businesses can read own jobs"
+  ON jobs FOR SELECT
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM businesses WHERE id = jobs.business_id
+    )
+  );
+
+-- Workers can read open jobs
+CREATE POLICY "Workers can read open jobs"
+  ON jobs FOR SELECT
+  USING (
+    auth.uid() IS NOT NULL
+    AND status = 'open'
+  );
+
+-- Admins can read all jobs
+CREATE POLICY "Admins can read all jobs"
+  ON jobs FOR SELECT
+  USING (is_admin());
+
+-- Businesses can create jobs for their own business
+CREATE POLICY "Businesses can create jobs"
+  ON jobs FOR INSERT
+  WITH CHECK (
+    auth.uid() IN (
+      SELECT user_id FROM businesses WHERE id = business_id
+    )
+  );
+
+-- Businesses can update their own jobs
+CREATE POLICY "Businesses can update own jobs"
+  ON jobs FOR UPDATE
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM businesses WHERE id = jobs.business_id
+    )
+  )
+  WITH CHECK (
+    auth.uid() IN (
+      SELECT user_id FROM businesses WHERE id = business_id
+    )
+  );
+
+-- Admins can update any job
+CREATE POLICY "Admins can update any job"
+  ON jobs FOR UPDATE
+  USING (is_admin())
+  WITH CHECK (is_admin());
+
+-- Businesses can delete their own jobs
+CREATE POLICY "Businesses can delete own jobs"
+  ON jobs FOR DELETE
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM businesses WHERE id = jobs.business_id
+    )
+  );
+
+-- Admins can delete any job
+CREATE POLICY "Admins can delete any job"
+  ON jobs FOR DELETE
+  USING (is_admin());
