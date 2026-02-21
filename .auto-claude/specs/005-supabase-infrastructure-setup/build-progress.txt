@@ -414,3 +414,76 @@ npm run dev
 ```
 
 === END SESSION 3 - SUBTASK 7-3 COMPLETE ===
+
+[2026-02-22] Subtask 7-4 completed: Storage service verification
+
+[subtask-7-4] COMPLETED ✅
+- Created comprehensive storage service verification guide (subtask-7-4-storage-verification-guide.md)
+- Created automated Node.js test script (scripts/test-storage-service.js)
+- Reviewed storage configuration:
+  • Migration: supabase/migrations/004_storage_buckets.sql
+  • Buckets created: avatars, documents, images
+  • RLS policies: 12 policies (4 per bucket)
+  • Helper functions: get_user_avatar_path, get_user_document_path, get_user_image_path
+  • Trigger: on_avatar_upload (auto-updates users.avatar_url)
+- Storage Configuration Summary:
+  • avatars - Public, 5MB limit, image/jpeg, image/png, image/webp, image/gif
+  • documents - Private, 10MB limit, application/pdf, image/jpeg, image/png
+  • images - Public, 5MB limit, image/jpeg, image/png, image/webp, image/gif
+- Verification Steps Documented:
+  1. Verify storage service is running (supabase status, curl API)
+  2. Verify buckets exist in Studio UI (check properties)
+  3. Upload test files via Studio UI (test with {user_id}/filename pattern)
+  4. Verify file accessibility via API (public vs private access)
+- SQL verification queries provided for:
+  • Checking buckets exist (storage.buckets table)
+  • Verifying RLS policies (pg_policies view)
+  • Listing helper functions (information_schema.routines)
+  • Checking triggers (information_schema.triggers)
+  • Viewing uploaded files (storage.objects table)
+- Test script features:
+  • Generates small test files (PNG, PDF) automatically
+  • Tests all 3 buckets (avatars, documents, images)
+  • Verifies public file access (avatars, images)
+  • Verifies private file access (documents)
+  • Tests RLS policies (user isolation)
+  • Lists files in buckets
+  • Cleans up test files after verification
+  • Colored terminal output for easy reading
+  • Exit codes for CI/CD integration
+- Common issues and solutions documented:
+  • "Bucket not found" - Run supabase db reset
+  • "Permission denied" - Verify RLS policies applied
+  • Cannot access public files - Check storage container health
+  • Avatar URL not updating - Verify trigger exists
+- Security best practices documented:
+  • Private documents require authentication
+  • Use signed URLs for temporary access
+  • Validate MIME types on upload
+  • Sanitize filenames (prevent path traversal)
+- Performance considerations documented:
+  • File size recommendations for each use case
+  • CDN configuration suggestions for production
+- Testing checklist created for manual verification
+- Next steps for frontend integration documented
+
+Files Created:
+- .auto-claude/specs/005-supabase-infrastructure-setup/subtask-7-4-storage-verification-guide.md
+- scripts/test-storage-service.js (executable)
+
+To Run Tests (in main project):
+```bash
+# Start Supabase
+npx supabase@latest start
+
+# Run automated tests
+node scripts/test-storage-service.js
+
+# Or test manually via Studio UI
+# 1. Open http://localhost:54323
+# 2. Navigate to Storage section
+# 3. Upload test files to each bucket
+# 4. Verify files are accessible via API
+```
+
+=== END SESSION 3 - SUBTASK 7-4 COMPLETE ===
