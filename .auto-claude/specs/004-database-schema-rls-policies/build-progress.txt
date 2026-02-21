@@ -201,3 +201,27 @@ Verification: grep -c 'CREATE INDEX' supabase/migrations/20250222000001_initial_
   Result: 42 indexes created (exceeds 10+ requirement)
 Commit: 06307da - auto-claude: subtask-4-1 - Create indexes for foreign key columns
 
+[2026-02-22] Subtask 5-1: Create seed data file with test data
+Status: COMPLETED
+Changes:
+  - Created supabase/seed.sql with 480 lines of comprehensive test data
+  - Test data includes:
+    * 9 users (1 admin, 5 business users, 8 worker users) with auth.users entries
+    * 8 categories: Construction, Cleaning, Landscaping, Moving & Delivery, General Labor, Events & Staffing, Maintenance & Repairs, Warehousing
+    * 18 skills across various categories
+    * 5 businesses with verified/unverified statuses
+    * 8 workers with profiles, skills, and location data
+    * 7 jobs in various statuses (open, in_progress, completed, cancelled)
+    * 6 bookings in different statuses (pending, accepted, rejected, in_progress, completed)
+    * 3 transactions (payment records)
+    * 7 messages between users
+    * 2 reviews with ratings
+    * 5 notifications
+    * 2 reports
+    * 3 webhook configurations
+  - Seed file handles RLS by temporarily disabling during data insertion and re-enabling after
+  - Includes proper foreign key relationships and UUID handling
+  - Displays summary counts after insertion
+Verification: test -f supabase/seed.sql && wc -l supabase/seed.sql
+  Result: 480 supabase/seed.sql
+Commit: 5452ed7 - auto-claude: subtask-5-1 - Create seed data file with test data
