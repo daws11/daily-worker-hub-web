@@ -170,8 +170,8 @@
             "command": "grep -q 'businessLicense\\|license\\|uploadBusinessLicense' components/business/profile-form.tsx && echo 'OK' || echo 'Not found'",
             "expected": "OK"
           },
-          "status": "pending",
-          "notes": "Add license upload section with file input (accept PDF, images). Show file name after selection. Display upload progress. Call uploadBusinessLicense from storage.ts on submit."
+          "status": "completed",
+          "notes": "Added business license upload functionality to ProfileForm:\n- Added business_license_url field to businessProfileSchema in lib/schemas/business.ts\n- Added FileText icon import from lucide-react\n- Added state management for license file, file name, and upload status\n- Created handleLicenseChange function with validation:\n  - Accepts PDF and image files (JPEG, PNG)\n  - Max file size: 10MB\n  - Indonesian error messages for validation failures\n- Added license upload UI section:\n  - Upload button styled with secondary background and FileText icon\n  - Shows current filename or existing license status\n  - Remove button to clear selected license\n  - File type/size hint text (PDF, JPG, PNG, max 10MB)\n- Updated handleSubmit to upload license via uploadBusinessLicense() before form submission\n- Import uploadBusinessLicense from storage.ts\n- BusinessProfile interface updated with business_license_url field\n- License URL included in form data submission"
         }
       ]
     },
@@ -389,6 +389,6 @@
   "planStatus": "in_progress",
   "xstateState": "planning",
   "executionPhase": "coding",
-  "updated_at": "2026-02-21T22:54:13.110Z",
+  "updated_at": "2026-02-21T22:55:43.996Z",
   "last_updated": "2026-02-21T20:24:27.727187+00:00"
 }
