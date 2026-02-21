@@ -374,8 +374,8 @@
               "Profile displays in read-only mode after KYC verification"
             ]
           },
-          "status": "pending",
-          "notes": "Fetch existing worker profile on mount and populate form. After KYC verification, display profile in read-only mode."
+          "status": "completed",
+          "notes": "Added KYC status state to track verification status. Fetch kyc_status field from workers table. Display profile in read-only mode when KYC verified. Added loading state while fetching profile data. Added visual banner for verified profiles. Disable all form inputs when verified. Hide submit button when verified. Added proper error handling for profile not found (PGRST116)."
         }
       ]
     },
