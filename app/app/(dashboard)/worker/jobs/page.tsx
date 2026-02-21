@@ -1,10 +1,27 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAuth } from "../../../providers/auth-provider"
+import { supabase } from "../../../../lib/supabase/client"
+
+type KycStatus = 'unverified' | 'pending' | 'verified' | 'rejected'
+
+interface WorkerProfile {
+  full_name: string | null
+  gender: string | null
+  dob: string | null
+  phone: string | null
+  address: string | null
+  experience_years: number | null
+  kyc_status: KycStatus
+}
 
 export default function WorkerJobsPage() {
+  const { user } = useAuth()
   const [profileHovered, setProfileHovered] = useState(false)
   const [kycHovered, setKycHovered] = useState(false)
+  const [workerProfile, setWorkerProfile] = useState<WorkerProfile | null>(null)
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true)
 
   const handleProfileClick = () => {
     window.location.href = "/worker/profile"
@@ -13,6 +30,50 @@ export default function WorkerJobsPage() {
   const handleKycClick = () => {
     window.location.href = "/worker/kyc"
   }
+
+  // Load worker profile on mount
+  useEffect(() => {
+    async function loadWorkerProfile() {
+      if (!user) {
+        setIsLoadingProfile(false)
+        return
+      }
+
+      setIsLoadingProfile(true)
+
+      const { data, error } = await supabase
+        .from('workers')
+        .select('full_name, gender, dob, phone, address, experience_years, kyc_status')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      setIsLoadingProfile(false)
+
+      if (error) {
+        console.error('Error loading worker profile:', error)
+        return
+      }
+
+      if (data) {
+        setWorkerProfile(data as WorkerProfile)
+      }
+    }
+
+    loadWorkerProfile()
+  }, [user])
+
+  // Check if profile is complete
+  const isProfileComplete = workerProfile && (
+    workerProfile.full_name &&
+    workerProfile.gender &&
+    workerProfile.dob &&
+    workerProfile.phone &&
+    workerProfile.address &&
+    workerProfile.experience_years !== null
+  )
+
+  // Check if KYC is verified
+  const isKycVerified = workerProfile?.kyc_status === 'verified'
 
   return (
     <div style={{
@@ -64,7 +125,99 @@ export default function WorkerJobsPage() {
             </button>
           </div>
         </div>
-        
+
+        {/* Profile Completion Prompt */}
+        {!isLoadingProfile && !isProfileComplete && (
+          <div style={{
+            backgroundColor: '#eff6ff',
+            border: '1px solid #3b82f6',
+            borderRadius: '0.5rem',
+            padding: '1rem',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="10" cy="10" r="10" fill="#3b82f6"/>
+              <path d="M10 5V10M10 15H10.01" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#1e40af' }}>
+                Profil Anda Belum Lengkap
+              </p>
+              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#1e3a8a' }}>
+                Lengkapi profil Anda agar dapat menerima pekerjaan.
+              </p>
+              <a
+                href="/worker/profile"
+                style={{
+                  display: 'inline-block',
+                  marginTop: '0.5rem',
+                  padding: '0.375rem 0.75rem',
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  textDecoration: 'none',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 500
+                }}
+              >
+                Lengkapi Profil
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* KYC Verification Prompt */}
+        {!isLoadingProfile && !isKycVerified && workerProfile && (
+          <div style={{
+            backgroundColor: '#fef3c7',
+            border: '1px solid #f59e0b',
+            borderRadius: '0.5rem',
+            padding: '1rem',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="10" cy="10" r="10" fill="#f59e0b"/>
+              <path d="M10 6V10L13 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#92400e' }}>
+                Verifikasi KYC Belum Selesai
+              </p>
+              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#b45309' }}>
+                {workerProfile.kyc_status === 'unverified'
+                  ? 'Lengkapi verifikasi KYC agar profil Anda terverifikasi.'
+                  : workerProfile.kyc_status === 'pending'
+                  ? 'KYC Anda sedang dalam proses verifikasi.'
+                  : 'KYC Anda ditolak. Silakan submit ulang.'}
+              </p>
+              {workerProfile.kyc_status !== 'pending' && (
+                <a
+                  href="/worker/kyc"
+                  style={{
+                    display: 'inline-block',
+                    marginTop: '0.5rem',
+                    padding: '0.375rem 0.75rem',
+                    backgroundColor: '#f59e0b',
+                    color: 'white',
+                    textDecoration: 'none',
+                    borderRadius: '0.375rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 500
+                  }}
+                >
+                  {workerProfile.kyc_status === 'unverified' ? 'Verifikasi Sekarang' : 'Submit Ulang'}
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
         <div style={{
           backgroundColor: 'white',
           borderRadius: '0.5rem',
@@ -74,7 +227,7 @@ export default function WorkerJobsPage() {
           <p style={{ color: '#666', marginBottom: '1rem' }}>
             Selamat datang di dashboard Worker!
           </p>
-          
+
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
@@ -93,7 +246,7 @@ export default function WorkerJobsPage() {
                 0
               </p>
             </div>
-            
+
             <div style={{
               padding: '1rem',
               border: '1px solid #e5e7eb',
@@ -106,7 +259,7 @@ export default function WorkerJobsPage() {
                 0
               </p>
             </div>
-            
+
             <div style={{
               padding: '1rem',
               border: '1px solid #e5e7eb',
@@ -119,7 +272,7 @@ export default function WorkerJobsPage() {
                 0
               </p>
             </div>
-            
+
             <div style={{
               padding: '1rem',
               border: '1px solid #e5e7eb',
@@ -133,7 +286,7 @@ export default function WorkerJobsPage() {
               </p>
             </div>
           </div>
-          
+
           <div style={{ marginTop: '2rem', textAlign: 'center' }}>
             <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
               Job discovery feature coming soon...
