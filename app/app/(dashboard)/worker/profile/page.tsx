@@ -1,6 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { toast } from "sonner"
+import { supabase } from "../../../lib/supabase/client"
+import { useAuth } from "../../providers/auth-provider"
 
 const AVAILABLE_SKILLS = [
   "Kebersihan Rumah",
@@ -15,6 +18,7 @@ const AVAILABLE_SKILLS = [
 ]
 
 export default function WorkerProfilePage() {
+  const { user } = useAuth()
   const [fullName, setFullName] = useState("")
   const [gender, setGender] = useState<"male" | "female">("male")
   const [dob, setDob] = useState("")
@@ -23,7 +27,51 @@ export default function WorkerProfilePage() {
   const [experienceYears, setExperienceYears] = useState("")
   const [selectedSkills, setSelectedSkills] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [showToast, setShowToast] = useState(false)
+
+  // Load existing profile data on mount
+  useEffect(() => {
+    async function loadProfile() {
+      if (!user) return
+
+      const { data, error } = await supabase
+        .from('workers')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (error) {
+        console.error('Error loading profile:', error)
+        return
+      }
+
+      if (data) {
+        setFullName(data.full_name || "")
+        setGender(data.gender === "male" ? "male" : "female")
+        setDob(data.dob || "")
+        setPhone(data.phone || "")
+        setAddress(data.address || "")
+        setExperienceYears(data.experience_years?.toString() || "")
+      }
+
+      // Load skills
+      const { data: skillsData, error: skillsError } = await supabase
+        .from('worker_skills')
+        .select('skill_id, skills(name)')
+        .eq('worker_id', user.id)
+
+      if (skillsError) {
+        console.error('Error loading skills:', skillsError)
+        return
+      }
+
+      if (skillsData) {
+        const skillNames = skillsData.map((s: any) => s.skills?.name).filter(Boolean)
+        setSelectedSkills(skillNames)
+      }
+    }
+
+    loadProfile()
+  }, [user])
 
   const handleSkillToggle = (skill: string) => {
     setSelectedSkills(prev =>
@@ -35,16 +83,114 @@ export default function WorkerProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!user) {
+      toast.error("Anda harus login untuk menyimpan profil")
+      return
+    }
+
     setIsLoading(true)
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    try {
+      // 1. Get or find skill IDs for selected skills
+      const { data: existingSkills, error: skillsError } = await supabase
+        .from('skills')
+        .select('id, name')
+        .in('name', selectedSkills)
 
-    setIsLoading(false)
-    setShowToast(true)
+      if (skillsError) {
+        toast.error("Gagal memvalidasi keahlian")
+        console.error('Error fetching skills:', skillsError)
+        return
+      }
 
-    // Hide toast after 3 seconds
-    setTimeout(() => setShowToast(false), 3000)
+      // Create skills that don't exist
+      const existingSkillNames = existingSkills?.map(s => s.name) || []
+      const newSkillNames = selectedSkills.filter(name => !existingSkillNames.includes(name))
+
+      let createdSkills: any[] = existingSkills || []
+
+      if (newSkillNames.length > 0) {
+        const { data: newSkills, error: createSkillsError } = await supabase
+          .from('skills')
+          .insert(newSkillNames.map(name => ({
+            name,
+            slug: name.toLowerCase().replace(/\s+/g, '-')
+          })))
+          .select()
+
+        if (createSkillsError) {
+          toast.error("Gagal membuat keahlian baru")
+          console.error('Error creating skills:', createSkillsError)
+          return
+        }
+
+        createdSkills = [...createdSkills, ...(newSkills || [])]
+      }
+
+      // 2. Upsert worker profile
+      const { error: profileError } = await supabase
+        .from('workers')
+        .upsert({
+          user_id: user.id,
+          full_name: fullName,
+          gender: gender,
+          dob: dob,
+          phone: phone,
+          address: address,
+          experience_years: parseInt(experienceYears) || 0,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id'
+        })
+
+      if (profileError) {
+        toast.error("Gagal menyimpan profil")
+        console.error('Error saving profile:', profileError)
+        return
+      }
+
+      // 3. Get the worker record
+      const { data: workerData, error: workerError } = await supabase
+        .from('workers')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (workerError || !workerData) {
+        toast.error("Gagal mendapatkan data worker")
+        console.error('Error fetching worker:', workerError)
+        return
+      }
+
+      // 4. Delete existing worker_skills and insert new ones
+      await supabase
+        .from('worker_skills')
+        .delete()
+        .eq('worker_id', workerData.id)
+
+      if (createdSkills.length > 0) {
+        const { error: linkError } = await supabase
+          .from('worker_skills')
+          .insert(createdSkills.map((skill: any) => ({
+            worker_id: workerData.id,
+            skill_id: skill.id
+          })))
+
+        if (linkError) {
+          toast.error("Profil tersimpan, tapi keahlian gagal disimpan")
+          console.error('Error linking skills:', linkError)
+          return
+        }
+      }
+
+      toast.success("Profil berhasil disimpan!")
+    } catch (error) {
+      console.error('Submit error:', error)
+      toast.error("Terjadi kesalahan saat menyimpan profil")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -267,24 +413,6 @@ export default function WorkerProfilePage() {
           </form>
         </div>
       </div>
-
-      {/* Toast Notification */}
-      {showToast && (
-        <div style={{
-          position: 'fixed',
-          bottom: '2rem',
-          right: '2rem',
-          backgroundColor: '#10b981',
-          color: 'white',
-          padding: '1rem 1.5rem',
-          borderRadius: '0.5rem',
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-          fontSize: '0.875rem',
-          zIndex: 1000
-        }}>
-          ✓ Profil berhasil disimpan!
-        </div>
-      )}
     </div>
   )
 }
