@@ -424,9 +424,9 @@ CREATE POLICY "Public can read workers of verified users"
   USING (
     auth.uid() IS NOT NULL
     AND EXISTS (
-      SELECT 1 FROM users
-      WHERE users.id = workers.user_id
-      AND users.email_confirmed_at IS NOT NULL
+      SELECT 1 FROM auth.users
+      WHERE auth.users.id = workers.user_id
+      AND auth.users.email_confirmed_at IS NOT NULL
     )
   );
 
@@ -472,9 +472,9 @@ CREATE POLICY "Public can read verified businesses"
   USING (
     auth.uid() IS NOT NULL
     AND EXISTS (
-      SELECT 1 FROM users
-      WHERE users.id = businesses.user_id
-      AND users.email_confirmed_at IS NOT NULL
+      SELECT 1 FROM auth.users
+      WHERE auth.users.id = businesses.user_id
+      AND auth.users.email_confirmed_at IS NOT NULL
     )
     AND businesses.is_verified = TRUE
   );
