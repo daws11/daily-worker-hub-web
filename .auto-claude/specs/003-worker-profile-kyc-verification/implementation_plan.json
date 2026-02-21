@@ -1,0 +1,763 @@
+{
+  "feature": "Worker Profile & KYC Verification",
+  "description": "Worker profile system with personal information, skills tags, experience level, and area selection. Includes KYC verification with KTP number validation, KTP OCR image upload, and selfie with liveness check. Displays verification status and reliability score.",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a multi-service feature involving database schema changes, file storage, API endpoints, and frontend UI components. The feature follows a dependency order: database first, then backend APIs, then frontend UI.",
+  "created_at": "2026-02-21T20:18:40.647Z",
+  "updated_at": "2026-02-21T20:22:53.189Z",
+  "status": "in_progress",
+  "phases": [
+    {
+      "id": "phase-1-database",
+      "name": "Database Schema",
+      "type": "implementation",
+      "description": "Create and update database tables for worker profiles and KYC verification",
+      "depends_on": [],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create kyc_verifications table migration",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/20250222000001_create_kyc_verifications.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"\\dt kyc_verifications\"",
+            "expected": "kyc_verifications table exists"
+          },
+          "status": "completed",
+          "notes": "Created table with fields: id, worker_id, ktp_number, ktp_image_url, selfie_image_url, ktp_extracted_data (jsonb), status (pending/verified/rejected), rejection_reason, submitted_at, verified_at, verified_by. Included RLS policies, indexes, and updated_at trigger."
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Create worker_skills junction table migration",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/20250222000002_create_worker_skills.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"\\dt worker_skills\"",
+            "expected": "worker_skills table exists"
+          },
+          "status": "pending",
+          "notes": "Create many-to-many junction table with fields: worker_id, skill_id, and composite primary key"
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Alter workers table to add KYC and profile fields",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/20250222000003_alter_workers_table.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"\\d workers\" | grep -E 'gender|experience_years|kyc_status'",
+            "expected": "Fields exist in workers table"
+          },
+          "status": "pending",
+          "notes": "Add columns: gender (text), experience_years (integer), kyc_status (text default 'unverified'), reliability_score (decimal default 0)"
+        },
+        {
+          "id": "subtask-1-4",
+          "description": "Update TypeScript types for new database schema",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/supabase/types.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "pending",
+          "notes": "Add KycVerifications table type and update Workers table type with new fields"
+        },
+        {
+          "id": "subtask-1-5",
+          "description": "Create Supabase Storage bucket for KYC documents",
+          "service": "storage",
+          "files_to_create": [
+            "supabase/migrations/20250222000004_create_kyc_storage.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"SELECT * FROM storage.buckets WHERE name = 'kyc-documents'\"",
+            "expected": "Bucket 'kyc-documents' exists"
+          },
+          "status": "pending",
+          "notes": "Create storage bucket with RLS policies for authenticated users to upload their own KYC documents"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-backend",
+      "name": "Backend API & Utilities",
+      "type": "implementation",
+      "description": "Create backend utilities and API helpers for KTP validation and file uploads",
+      "depends_on": [
+        "phase-1-database"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create KTP number validation utility",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/utils/ktp-validator.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/utils.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "node -e \"const v = require('./lib/utils/ktp-validator.ts'); console.log(v.validateKTP('3201010101010001') ? 'PASS' : 'FAIL')\"",
+            "expected": "PASS (or validation logic works)"
+          },
+          "status": "pending",
+          "notes": "Implement Indonesian KTP checksum validation algorithm and format validation (16 digits)"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create file upload utility for Supabase Storage",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/utils/file-upload.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/supabase/client.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'uploadKycDocument' lib/utils/file-upload.ts && echo 'Found upload function'",
+            "expected": "Found upload function"
+          },
+          "status": "pending",
+          "notes": "Create utility to upload KTP and selfie images to Supabase Storage with validation for file type and size (max 5MB)"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Create Zod validation schemas for worker profile",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/validators/worker-profile.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "pending",
+          "notes": "Create Zod schemas for: profile data (name, gender, dob, phone, address, experience), KTP data (ktp_number, ktp_image, selfie_image)"
+        },
+        {
+          "id": "subtask-2-4",
+          "description": "Create database operations helper for worker profile",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/db/worker-profile.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/supabase/client.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'createWorkerProfile\\|updateWorkerProfile\\|submitKyc' lib/db/worker-profile.ts && echo 'Functions found'",
+            "expected": "Functions found"
+          },
+          "status": "pending",
+          "notes": "Create functions: createWorkerProfile(), updateWorkerProfile(), submitKycVerification(), getWorkerProfile(), linkWorkerSkills()"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-components",
+      "name": "UI Components",
+      "type": "implementation",
+      "description": "Create reusable UI components for worker profile forms",
+      "depends_on": [
+        "phase-2-backend"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create multi-select skills component",
+          "service": "frontend",
+          "files_to_create": [
+            "components/worker/skills-select.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/select.tsx",
+            "components/ui/form.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/profile",
+            "checks": [
+              "Skills select renders",
+              "Multiple skills can be selected",
+              "Selected skills display as badges"
+            ]
+          },
+          "status": "pending",
+          "notes": "Create a multi-select component that allows workers to select skills from the skills table. Display selected skills as removable badges."
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create file upload component for KTP and selfie",
+          "service": "frontend",
+          "files_to_create": [
+            "components/worker/file-upload.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/input.tsx",
+            "components/ui/form.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/kyc",
+            "checks": [
+              "File input renders",
+              "Image preview displays after selection",
+              "File size validation works",
+              "File type validation works"
+            ]
+          },
+          "status": "pending",
+          "notes": "Create component with drag-and-drop support, image preview, file size validation (max 5MB), and file type validation (jpg, png, jpeg)"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Create KYC status badge component",
+          "service": "frontend",
+          "files_to_create": [
+            "components/worker/kyc-status-badge.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/badge.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/profile",
+            "checks": [
+              "Badge displays for each status",
+              "Colors match status (pending=yellow, verified=green, rejected=red)"
+            ]
+          },
+          "status": "pending",
+          "notes": "Create badge component that displays KYC status with appropriate color coding"
+        },
+        {
+          "id": "subtask-3-4",
+          "description": "Create reliability score display component",
+          "service": "frontend",
+          "files_to_create": [
+            "components/worker/reliability-score.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/badge.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/profile",
+            "checks": [
+              "Score displays as stars",
+              "Score value displays",
+              "Score breakdown displays (optional)"
+            ]
+          },
+          "status": "pending",
+          "notes": "Create component to display reliability score (1-5 stars) with visual representation"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-frontend-profile",
+      "name": "Worker Profile Page",
+      "type": "implementation",
+      "description": "Create worker profile creation and management page",
+      "depends_on": [
+        "phase-3-components"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create worker profile form page",
+          "service": "frontend",
+          "files_to_create": [
+            "app/app/(dashboard)/worker/profile/page.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "app/app/(auth)/register/page.tsx",
+            "app/app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/profile",
+            "checks": [
+              "Page renders without errors",
+              "Form fields display (name, gender, dob, phone, address, experience)",
+              "Skills select component works",
+              "Save button submits form",
+              "Success toast displays"
+            ]
+          },
+          "status": "pending",
+          "notes": "Create profile form using React Hook Form with Zod validation. Include fields: full_name, gender (select), dob (date picker), phone, address, location_name, experience_years (number), skills (multi-select). Use existing page structure patterns."
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Implement profile form submission handler",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/app/(dashboard)/worker/profile/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/app/providers/auth-provider.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Fill out profile form and submit. Check that data is saved to database. Verify success/error toasts display appropriately."
+          },
+          "status": "pending",
+          "notes": "Handle form submission by calling database operations. Show success/error toasts using Sonner. Redirect to dashboard on success."
+        },
+        {
+          "id": "subtask-4-3",
+          "description": "Add profile data fetching and display",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/app/(dashboard)/worker/profile/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/app/providers/auth-provider.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/profile",
+            "checks": [
+              "Existing profile data loads on page load",
+              "Form pre-fills with existing data",
+              "Profile displays in read-only mode after KYC verification"
+            ]
+          },
+          "status": "pending",
+          "notes": "Fetch existing worker profile on mount and populate form. After KYC verification, display profile in read-only mode."
+        }
+      ]
+    },
+    {
+      "id": "phase-5-frontend-kyc",
+      "name": "KYC Verification Page",
+      "type": "implementation",
+      "description": "Create KYC verification submission page",
+      "depends_on": [
+        "phase-3-components"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Create KYC verification form page",
+          "service": "frontend",
+          "files_to_create": [
+            "app/app/(dashboard)/worker/kyc/page.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "app/app/(auth)/register/page.tsx",
+            "app/app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/kyc",
+            "checks": [
+              "Page renders without errors",
+              "KTP number input displays",
+              "KTP image upload displays",
+              "Selfie upload displays",
+              "Submit button works",
+              "KTP validation shows errors for invalid numbers"
+            ]
+          },
+          "status": "pending",
+          "notes": "Create KYC form with: KTP number input (with real-time validation), KTP image upload, selfie image upload. Use file upload component. Show instructions for each field."
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Implement KTP number real-time validation",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/app/(dashboard)/worker/kyc/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/utils/ktp-validator.ts"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/kyc",
+            "checks": [
+              "Invalid KTP shows error message",
+              "Valid KTP shows success indicator",
+              "16-digit requirement is enforced",
+              "Checksum validation works"
+            ]
+          },
+          "status": "pending",
+          "notes": "Add real-time validation to KTP input field. Display error for invalid format or checksum. Use Zod schema for validation."
+        },
+        {
+          "id": "subtask-5-3",
+          "description": "Implement KYC submission handler",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/app/(dashboard)/worker/kyc/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/app/providers/auth-provider.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Fill out KYC form with valid KTP and upload images. Submit and verify data is saved to kyc_verifications table. Check images are uploaded to storage bucket."
+          },
+          "status": "pending",
+          "notes": "Handle form submission by: uploading images to storage, saving KTP data to database, updating worker kyc_status to 'pending'. Show success/error toasts."
+        },
+        {
+          "id": "subtask-5-4",
+          "description": "Add KYC status display and restrictions",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/app/(dashboard)/worker/kyc/page.tsx",
+            "app/app/(dashboard)/worker/profile/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/worker/kyc-status-badge.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/profile",
+            "checks": [
+              "KYC status badge displays on profile",
+              "Pending status shows form to complete KYC",
+              "Verified status shows full profile",
+              "Rejected status shows reason and resubmit option"
+            ]
+          },
+          "status": "pending",
+          "notes": "Display KYC status badge on profile page. If pending, prompt user to complete KYC. If rejected, show rejection reason and allow resubmission. If verified, display full profile with badge."
+        }
+      ]
+    },
+    {
+      "id": "phase-6-integration",
+      "name": "Integration & Polish",
+      "type": "integration",
+      "description": "Integrate profile and KYC features with existing app, add navigation, and polish UX",
+      "depends_on": [
+        "phase-4-frontend-profile",
+        "phase-5-frontend-kyc"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Add navigation links to profile and KYC pages",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/app/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/jobs",
+            "checks": [
+              "Profile link exists in navigation",
+              "KYC link exists (if not verified)",
+              "Links navigate to correct pages"
+            ]
+          },
+          "status": "pending",
+          "notes": "Add navigation to worker dashboard with links to profile and KYC pages. Show badge indicating KYC status."
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Add profile completion prompt to worker dashboard",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/jobs",
+            "checks": [
+              "Profile completion prompt displays if profile incomplete",
+              "KYC prompt displays if not verified",
+              "Prompts link to respective pages"
+            ]
+          },
+          "status": "pending",
+          "notes": "Show prominent prompts on worker dashboard if profile is incomplete or KYC is not verified. This encourages workers to complete onboarding."
+        },
+        {
+          "id": "subtask-6-3",
+          "description": "Implement RLS policies for KYC data",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/20250222000005_add_rls_policies.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"SELECT policyname, tablename FROM pg_policies WHERE tablename IN ('kyc_verifications', 'worker_skills')\"",
+            "expected": "RLS policies exist for KYC tables"
+          },
+          "status": "pending",
+          "notes": "Create RLS policies: workers can only see their own KYC data, admins can see all KYC data, workers can insert their own KYC data, only admins can update KYC status."
+        },
+        {
+          "id": "subtask-6-4",
+          "description": "Add loading states and error handling",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/app/(dashboard)/worker/profile/page.tsx",
+            "app/app/(dashboard)/worker/kyc/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/app/providers/auth-provider.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/profile",
+            "checks": [
+              "Loading spinner displays during form submission",
+              "Disabled button state during submission",
+              "Error messages display for API failures",
+              "Network errors are handled gracefully"
+            ]
+          },
+          "status": "pending",
+          "notes": "Add isLoading states to forms during submission. Disable submit buttons while loading. Handle and display error messages for all failure cases (network, validation, database)."
+        },
+        {
+          "id": "subtask-6-5",
+          "description": "End-to-end verification of worker profile and KYC flow",
+          "service": "all",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Register new worker account",
+              "Navigate to worker profile page",
+              "Fill out profile form (name, gender, DOB, phone, address, experience, skills)",
+              "Submit profile and verify data saves",
+              "Navigate to KYC page",
+              "Enter valid KTP number (validation works)",
+              "Upload KTP image (preview displays, file validates)",
+              "Upload selfie image (preview displays, file validates)",
+              "Submit KYC and verify data saves to database",
+              "Check images are uploaded to storage bucket",
+              "Verify worker kyc_status updates to 'pending'",
+              "Verify KYC status badge displays on profile"
+            ]
+          },
+          "status": "pending",
+          "notes": "Complete full user flow from registration to KYC submission. Verify all data persists correctly, all validations work, and all UI components render properly."
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 6,
+    "total_subtasks": 24,
+    "services_involved": [
+      "database",
+      "storage",
+      "frontend"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 2,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-4-frontend-profile",
+            "phase-5-frontend-kyc"
+          ],
+          "reason": "Both depend only on phase-3 (components) and can work on different pages"
+        }
+      ],
+      "recommended_workers": 1,
+      "speedup_estimate": "1.2x faster with parallel work on phase 4 and 5"
+    },
+    "startup_command": "npm run dev",
+    "dev_command": "npm run dev",
+    "database_command": "supabase start"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "unit",
+      "integration"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All existing tests pass",
+      "New code has test coverage for KTP validation",
+      "Profile form validates all required fields",
+      "KYC file upload validates file type and size",
+      "Database migrations run successfully",
+      "RLS policies protect KYC data"
+    ],
+    "verification_steps": [
+      {
+        "name": "TypeScript Type Check",
+        "command": "npx tsc --noEmit",
+        "expected_outcome": "No TypeScript errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Database Schema Verification",
+        "command": "psql $DATABASE_URL -c \"\\dt\" | grep -E 'kyc_verifications|worker_skills'",
+        "expected_outcome": "New tables exist",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Profile Form Smoke Test",
+        "command": "curl -s http://localhost:3000/worker/profile | grep -q 'form' && echo 'Page loads'",
+        "expected_outcome": "Profile page loads",
+        "type": "test",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "KYC Form Smoke Test",
+        "command": "curl -s http://localhost:3000/worker/kyc | grep -q 'ktp' && echo 'Page loads'",
+        "expected_outcome": "KYC page loads",
+        "type": "test",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "KTP Validation Unit Test",
+        "command": "node -e \"const v = require('./lib/utils/ktp-validator.ts'); console.log('KTP validation: ' + (typeof v.validateKTP === 'function' ? 'PASS' : 'FAIL'))\"",
+        "expected_outcome": "Validation function exists and works",
+        "type": "test",
+        "required": true,
+        "blocking": false
+      }
+    ],
+    "reasoning": "Medium risk change involves database schema changes, file upload handling, and personal data (KYC). Requires unit tests for validation logic and integration tests for the full flow. Security scanning not required as no external APIs or authentication changes."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": true,
+      "commands": [
+        "npx tsc --noEmit"
+      ],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": true,
+      "commands": [],
+      "services_to_test": [
+        "database",
+        "storage"
+      ]
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": [
+        "worker-registration",
+        "profile-creation",
+        "kyc-submission"
+      ]
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/worker/profile",
+          "checks": [
+            "page-loads",
+            "form-displays",
+            "validation-works",
+            "submission-succeeds"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/worker/kyc",
+          "checks": [
+            "page-loads",
+            "ktp-validation-works",
+            "file-upload-works",
+            "submission-succeeds"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "migrations-exist",
+        "tables-created",
+        "rls-policies-exist",
+        "storage-bucket-exists"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "planStatus": "in_progress",
+  "xstateState": "planning",
+  "executionPhase": "coding"
+}
