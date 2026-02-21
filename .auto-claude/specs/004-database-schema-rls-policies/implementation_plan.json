@@ -270,7 +270,9 @@
             "type": "manual",
             "instructions": "Verify workers table has RLS policies: workers can read own profile, public can read verified workers, admins full access"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added 7 RLS policies for workers table: Workers can read own profile (auth.uid() = user_id), Authenticated users can read workers of verified users (email_confirmed_at check via users table), Admins can read all workers (is_admin()), Workers can update own profile, Admins can update/delete any worker, Insert policy for authenticated users (application layer control).",
+          "updated_at": "2026-02-22T00:00:00.000000+00:00"
         },
         {
           "id": "subtask-3-3",
@@ -570,6 +572,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-21T22:19:24.004Z",
-  "last_updated": "2026-02-21T22:18:49.137108+00:00"
+  "updated_at": "2026-02-22T00:00:00.000Z",
+  "last_updated": "2026-02-22T00:00:00.000000+00:00"
 }
