@@ -404,3 +404,51 @@ CREATE POLICY "Admins can update any user"
   ON users FOR UPDATE
   USING (is_admin())
   WITH CHECK (is_admin());
+
+-- ============================================================================
+-- RLS POLICIES FOR WORKERS TABLE
+-- ============================================================================
+
+-- Workers can read their own profile
+CREATE POLICY "Workers can read own profile"
+  ON workers FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Authenticated users can read workers linked to verified user accounts
+CREATE POLICY "Public can read workers of verified users"
+  ON workers FOR SELECT
+  USING (
+    auth.uid() IS NOT NULL
+    AND EXISTS (
+      SELECT 1 FROM users
+      WHERE users.id = workers.user_id
+      AND users.email_confirmed_at IS NOT NULL
+    )
+  );
+
+-- Admins can read all workers
+CREATE POLICY "Admins can read all workers"
+  ON workers FOR SELECT
+  USING (is_admin());
+
+-- Workers can update their own profile
+CREATE POLICY "Workers can update own profile"
+  ON workers FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- Admins can update any worker
+CREATE POLICY "Admins can update any worker"
+  ON workers FOR UPDATE
+  USING (is_admin())
+  WITH CHECK (is_admin());
+
+-- Only authenticated users can insert worker profiles (via application layer)
+CREATE POLICY "Authenticated users can insert workers"
+  ON workers FOR INSERT
+  WITH CHECK (auth.uid() IS NOT NULL);
+
+-- Admins can delete any worker
+CREATE POLICY "Admins can delete any worker"
+  ON workers FOR DELETE
+  USING (is_admin());
