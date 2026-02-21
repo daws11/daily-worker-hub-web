@@ -130,8 +130,8 @@
             "command": "node -e \"const v = require('./lib/utils/ktp-validator.ts'); console.log(v.validateKTP('3201010101010001') ? 'PASS' : 'FAIL')\"",
             "expected": "PASS (or validation logic works)"
           },
-          "status": "pending",
-          "notes": "Implement Indonesian KTP checksum validation algorithm and format validation (16 digits)"
+          "status": "completed",
+          "notes": "Created validateKTP() function with: 16-digit format validation, numeric check, date validation (DDMMYY with female day+40 handling), leap year support, and rejects all-same-digits patterns. Added extractKTPInfo() helper for parsing KTP data (province codes, birth date, gender, sequential number). All tests pass including valid KTP, invalid length, non-numeric, invalid month/day, and female KTP handling."
         },
         {
           "id": "subtask-2-2",
