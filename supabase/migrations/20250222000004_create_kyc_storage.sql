@@ -9,7 +9,7 @@ VALUES (
   'kyc-documents',
   false, -- Private bucket (documents are sensitive)
   5242880, -- 5MB file size limit (in bytes)
-  ARRAY['image/jpeg', 'image/png', 'image/jpg']
+  ARRAY['image/jpeg', 'image/png', 'image/jpg', 'image/webp']
 )
 ON CONFLICT (id) DO UPDATE SET
   name = EXCLUDED.name,

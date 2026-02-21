@@ -44,12 +44,16 @@ export async function uploadKycDocument(
     throw new Error(`Failed to upload ${documentType} document: ${error.message}`)
   }
 
-  // Get public URL
-  const { data: urlData } = supabase.storage
+  // Create signed URL for private bucket (valid for 10 years)
+  const { data: urlData, error: urlError } = await supabase.storage
     .from('kyc-documents')
-    .getPublicUrl(data.path)
+    .createSignedUrl(data.path, 315360000) // 10 years in seconds
 
-  return urlData.publicUrl
+  if (urlError) {
+    throw new Error(`Failed to create signed URL for ${documentType}: ${urlError.message}`)
+  }
+
+  return urlData.signedUrl
 }
 
 /**
