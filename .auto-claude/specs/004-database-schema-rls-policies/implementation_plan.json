@@ -355,7 +355,9 @@
             "type": "manual",
             "instructions": "Verify communication tables have RLS policies: users read own data, admins full access"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added 21 RLS policies for communication tables: Messages (8 policies) - Users can read sent/received messages (auth.uid() = sender_id/receiver_id), send messages (sender_id check), update received messages (mark read), delete sent messages, Admins full access. Reviews (6 policies) - Workers can read reviews about themselves (via workers.user_id), Businesses can read reviews for their bookings (via bookings.business_id), Businesses can create reviews, Admins full access. Notifications (7 policies) - Users can read/update/delete own notifications (auth.uid() = user_id), Admins full access.",
+          "updated_at": "2026-02-22T00:00:00.000000+00:00"
         }
       ]
     },
@@ -580,6 +582,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-21T22:26:38.257Z",
+  "updated_at": "2026-02-22T00:00:00.000000Z",
   "last_updated": "2026-02-22T00:00:00.000000+00:00"
 }
