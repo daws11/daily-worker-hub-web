@@ -321,7 +321,9 @@
             "type": "manual",
             "instructions": "Verify bookings table has RLS policies: users can see own bookings, businesses see own business bookings, admins full access"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added 11 RLS policies for bookings table: Workers can read/create/update/delete own bookings (via workers.user_id = auth.uid()), Businesses can read/update/delete their business bookings (via businesses.user_id = auth.uid()), Admins can read/insert/update/delete any booking (is_admin()).",
+          "updated_at": "2026-02-22T00:00:00.000000+00:00"
         },
         {
           "id": "subtask-3-6",
@@ -576,6 +578,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-21T22:22:45.189Z",
-  "last_updated": "2026-02-21T22:23:14.724855+00:00"
+  "updated_at": "2026-02-22T00:00:00.000Z",
+  "last_updated": "2026-02-22T00:00:00.000000+00:00"
 }
