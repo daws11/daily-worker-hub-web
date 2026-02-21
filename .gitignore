@@ -22,3 +22,8 @@ logs/
 *.swo
 *~
 .DS_Store
+.auto-claude-security.json
+.claude_settings.json
+.gitignore
+.auto-claude/*
+.mcp.json
