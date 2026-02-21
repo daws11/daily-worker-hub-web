@@ -17,6 +17,7 @@ export default function WorkerKycPage() {
   const [ktpImage, setKtpImage] = useState<FileUploadValue | null>(null)
   const [selfieImage, setSelfieImage] = useState<FileUploadValue | null>(null)
   const [ktpError, setKtpError] = useState("")
+  const [ktpValid, setKtpValid] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [currentStatus, setCurrentStatus] = useState<'unverified' | 'pending' | 'verified' | 'rejected'>('unverified')
   const [rejectionReason, setRejectionReason] = useState<string | null>(null)
@@ -70,18 +71,29 @@ export default function WorkerKycPage() {
     const digitsOnly = value.replace(/\D/g, '')
     setKtpNumber(digitsOnly)
 
-    // Clear error when user starts typing
-    if (ktpError) {
+    // Clear validation states when input is empty
+    if (digitsOnly.length === 0) {
       setKtpError("")
+      setKtpValid(false)
+      return
     }
 
-    // Validate if we have 16 digits
+    // Clear error and valid states while typing (less than 16 digits)
+    if (digitsOnly.length < 16) {
+      setKtpError("")
+      setKtpValid(false)
+      return
+    }
+
+    // Validate when exactly 16 digits
     if (digitsOnly.length === 16) {
-      if (!validateKTP(digitsOnly)) {
-        setKtpError("Nomor KTP tidak valid")
+      if (validateKTP(digitsOnly)) {
+        setKtpError("")
+        setKtpValid(true)
+      } else {
+        setKtpError("Nomor KTP tidak valid. Periksa kembali nomor Anda.")
+        setKtpValid(false)
       }
-    } else if (digitsOnly.length > 0 && digitsOnly.length < 16) {
-      setKtpError("Nomor KTP harus 16 digit")
     }
   }
 
@@ -94,15 +106,14 @@ export default function WorkerKycPage() {
     }
 
     // Validate KTP number
-    if (ktpNumber.length !== 16) {
-      setKtpError("Nomor KTP harus 16 digit")
-      toast.error("Nomor KTP harus 16 digit")
-      return
-    }
-
-    if (!validateKTP(ktpNumber)) {
-      setKtpError("Nomor KTP tidak valid")
-      toast.error("Nomor KTP tidak valid")
+    if (!ktpValid) {
+      if (ktpNumber.length !== 16) {
+        setKtpError("Nomor KTP harus 16 digit")
+        toast.error("Nomor KTP harus 16 digit")
+      } else {
+        setKtpError("Nomor KTP tidak valid. Periksa kembali nomor Anda.")
+        toast.error("Nomor KTP tidak valid")
+      }
       return
     }
 
@@ -300,7 +311,7 @@ export default function WorkerKycPage() {
                   style={{
                     width: '100%',
                     padding: '0.5rem 0.75rem',
-                    border: ktpError ? '1px solid #ef4444' : '1px solid #d1d5db',
+                    border: ktpError ? '1px solid #ef4444' : ktpValid ? '1px solid #10b981' : '1px solid #d1d5db',
                     borderRadius: '0.375rem',
                     outline: 'none',
                     fontSize: '0.875rem'
@@ -312,9 +323,15 @@ export default function WorkerKycPage() {
                     {ktpError}
                   </p>
                 )}
-                {ktpNumber.length === 16 && !ktpError && (
-                  <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#10b981' }}>
-                    ✓ Nomor KTP valid
+                {ktpValid && (
+                  <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <span>✓</span>
+                    <span>Nomor KTP valid</span>
+                  </p>
+                )}
+                {ktpNumber.length > 0 && ktpNumber.length < 16 && !ktpError && (
+                  <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#6b7280' }}>
+                    {ktpNumber.length}/16 digit
                   </p>
                 )}
               </div>
@@ -362,16 +379,16 @@ export default function WorkerKycPage() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoading || !ktpNumber || !ktpImage?.file || !selfieImage?.file || !!ktpError}
+                disabled={isLoading || !ktpValid || !ktpImage?.file || !selfieImage?.file}
                 style={{
                   width: '100%',
                   padding: '0.75rem 1rem',
-                  backgroundColor: isLoading || !ktpNumber || !ktpImage?.file || !selfieImage?.file || !!ktpError ? '#9ca3af' : '#2563eb',
+                  backgroundColor: isLoading || !ktpValid || !ktpImage?.file || !selfieImage?.file ? '#9ca3af' : '#2563eb',
                   color: 'white',
                   borderRadius: '0.375rem',
                   fontWeight: 500,
                   border: 'none',
-                  cursor: isLoading || !ktpNumber || !ktpImage?.file || !selfieImage?.file || !!ktpError ? 'not-allowed' : 'pointer',
+                  cursor: isLoading || !ktpValid || !ktpImage?.file || !selfieImage?.file ? 'not-allowed' : 'pointer',
                   fontSize: '0.875rem',
                   marginTop: '0.5rem'
                 }}
