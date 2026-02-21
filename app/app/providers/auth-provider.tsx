@@ -15,6 +15,7 @@ type AuthContextType = {
   userRole: 'worker' | 'business' | null
   isLoading: boolean
   signIn: (email: string, password: string, role: 'worker' | 'business') => Promise<void>
+  signInWithGoogle: (role: 'worker' | 'business') => Promise<void>
   signOut: () => Promise<void>
   signUp: (email: string, password: string, fullName: string, role: 'worker' | 'business') => Promise<void>
   resetPassword: (email: string) => Promise<void>
@@ -219,8 +220,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const signInWithGoogle = async (role: 'worker' | 'business') => {
+    setIsLoading(true)
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?role=${role}`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      })
+
+      if (error) {
+        toast.error("Login Google gagal: " + error.message)
+        return
+      }
+
+      // OAuth redirect will happen automatically
+    } catch (error) {
+      console.error('Google sign in error:', error)
+      toast.error("Login Google gagal")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, session, userRole, isLoading, signIn, signOut, signUp, resetPassword, updatePassword }}>
+    <AuthContext.Provider value={{ user, session, userRole, isLoading, signIn, signInWithGoogle, signOut, signUp, resetPassword, updatePassword }}>
       {children}
     </AuthContext.Provider>
   )
