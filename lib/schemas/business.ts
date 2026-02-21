@@ -63,6 +63,11 @@ export const businessProfileSchema = z.object({
   description: z.string()
     .max(2000, "Deskripsi maksimal 2000 karakter")
     .optional(),
+
+  avatar_url: z.string()
+    .url("URL avatar tidak valid")
+    .optional()
+    .or(z.literal("")),
 })
 
 // Business profile schema for partial updates

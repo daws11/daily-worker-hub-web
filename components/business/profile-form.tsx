@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
+import { Camera, User } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -15,6 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -29,6 +31,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+} from "@/components/ui/avatar"
 
 import {
   businessProfileSchema,
@@ -36,6 +43,7 @@ import {
   type BusinessType,
   type Area,
 } from "@/lib/schemas/business"
+import { uploadAvatar } from "@/lib/supabase/storage"
 
 // Business type options in Indonesian
 const businessTypeOptions: { value: BusinessType; label: string }[] = [
@@ -69,6 +77,7 @@ interface BusinessProfile {
   email?: string
   website?: string
   description?: string
+  avatar_url?: string
 }
 
 interface ProfileFormProps {
@@ -83,6 +92,11 @@ export function ProfileForm({
   onSubmit,
 }: ProfileFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreview, setAvatarPreview] = useState<string | undefined>(
+    initialData?.avatar_url
+  )
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
 
   const form = useForm<BusinessProfileInput>({
     resolver: zodResolver(businessProfileSchema),
@@ -95,15 +109,68 @@ export function ProfileForm({
       email: "",
       website: "",
       description: "",
+      avatar_url: "",
     },
   })
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("File harus berupa gambar")
+      return
+    }
+
+    // Validate file size (max 5MB)
+    const MAX_SIZE = 5 * 1024 * 1024
+    if (file.size > MAX_SIZE) {
+      toast.error("Ukuran file maksimal 5MB")
+      return
+    }
+
+    setAvatarFile(file)
+
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file)
+    setAvatarPreview(previewUrl)
+  }
 
   const handleSubmit = async (data: BusinessProfileInput) => {
     setIsSubmitting(true)
 
     try {
+      let avatarUrl = data.avatar_url || initialData?.avatar_url
+
+      // Upload avatar if a new file was selected
+      if (avatarFile) {
+        setIsUploadingAvatar(true)
+        const uploadResult = await uploadAvatar(
+          initialData?.id || "temp",
+          avatarFile,
+          initialData?.avatar_url
+        )
+
+        if (uploadResult.error) {
+          toast.error(uploadResult.error)
+          setIsUploadingAvatar(false)
+          setIsSubmitting(false)
+          return
+        }
+
+        avatarUrl = uploadResult.url
+        setIsUploadingAvatar(false)
+      }
+
+      // Prepare form data with avatar URL
+      const formData = {
+        ...data,
+        avatar_url: avatarUrl,
+      }
+
       if (onSubmit) {
-        const result = await onSubmit(data)
+        const result = await onSubmit(formData)
         if (result.error) {
           toast.error(result.error)
           return
@@ -142,6 +209,49 @@ export function ProfileForm({
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-6"
           >
+            {/* Avatar Upload */}
+            <div className="flex flex-col items-center space-y-3">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={avatarPreview} />
+                <AvatarFallback>
+                  <User className="h-12 w-12" />
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex items-center gap-2">
+                <Label
+                  htmlFor="avatar-upload"
+                  className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-md text-sm font-medium transition-colors"
+                >
+                  <Camera className="h-4 w-4" />
+                  {avatarPreview ? "Ganti Foto" : "Upload Foto"}
+                </Label>
+                <Input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                />
+                {avatarPreview && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setAvatarFile(null)
+                      setAvatarPreview(undefined)
+                    }}
+                    disabled={isSubmitting}
+                  >
+                    Hapus
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Format: JPG, PNG. Maksimal 5MB
+              </p>
+            </div>
+
             {/* Company Name */}
             <FormField
               control={form.control}
