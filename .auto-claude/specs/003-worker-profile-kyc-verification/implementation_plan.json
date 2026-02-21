@@ -4,7 +4,7 @@
   "workflow_type": "feature",
   "workflow_rationale": "This is a multi-service feature involving database schema changes, file storage, API endpoints, and frontend UI components. The feature follows a dependency order: database first, then backend APIs, then frontend UI.",
   "created_at": "2026-02-21T20:18:40.647Z",
-  "updated_at": "2026-02-21T23:16:43.590Z",
+  "updated_at": "2026-02-21T23:19:54.239Z",
   "status": "in_progress",
   "phases": [
     {
@@ -437,8 +437,9 @@
               "Checksum validation works"
             ]
           },
-          "status": "pending",
-          "notes": "Add real-time validation to KTP input field. Display error for invalid format or checksum. Use Zod schema for validation."
+          "status": "completed",
+          "notes": "Implemented real-time KTP validation with: ktpValid state for tracking validation status, visual feedback (green border for valid, red for invalid), digit counter showing progress (e.g., \"5/16 digit\"), success indicator with checkmark icon, improved UX that only shows errors after complete 16-digit entry. Uses validateKTP from ktp-validator.ts for comprehensive validation including date format, leap year handling, and checksum detection.",
+          "updated_at": "2026-02-22T07:10:00.000Z"
         },
         {
           "id": "subtask-5-3",
@@ -455,8 +456,9 @@
             "type": "manual",
             "instructions": "Fill out KYC form with valid KTP and upload images. Submit and verify data is saved to kyc_verifications table. Check images are uploaded to storage bucket."
           },
-          "status": "pending",
-          "notes": "Handle form submission by: uploading images to storage, saving KTP data to database, updating worker kyc_status to 'pending'. Show success/error toasts."
+          "status": "completed",
+          "notes": "Implemented KYC submission handler with: image upload to private storage bucket using signed URLs (10 year expiry), KTP data saved to kyc_verifications table via submitKycVerification(), worker kyc_status updated to 'pending', comprehensive error handling with toast notifications, support for JPEG, PNG, and WebP formats (up to 5MB). Also fixed storage migration to include webp MIME type.",
+          "updated_at": "2026-02-22T07:20:00.000Z"
         },
         {
           "id": "subtask-5-4",

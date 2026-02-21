@@ -3,9 +3,9 @@
   "spec": "003-worker-profile-kyc-verification",
   "state": "building",
   "subtasks": {
-    "completed": 17,
+    "completed": 19,
     "total": 25,
-    "in_progress": 1,
+    "in_progress": 0,
     "failed": 0
   },
   "phase": {
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 58,
-    "started_at": "2026-02-22T04:18:59.745588"
+    "number": 60,
+    "started_at": "2026-02-22T07:20:00.000000"
   },
-  "last_update": "2026-02-22T07:16:43.634656"
+  "last_update": "2026-02-22T07:21:00.000000"
 }
