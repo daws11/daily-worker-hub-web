@@ -4,7 +4,7 @@
   "workflow_type": "feature",
   "workflow_rationale": "This is a multi-service feature involving database schema changes, file storage, API endpoints, and frontend UI components. The feature follows a dependency order: database first, then backend APIs, then frontend UI.",
   "created_at": "2026-02-21T20:18:40.647Z",
-  "updated_at": "2026-02-21T23:26:17.453Z",
+  "updated_at": "2026-02-21T23:31:46.753Z",
   "status": "in_progress",
   "phases": [
     {
@@ -541,8 +541,9 @@
               "Prompts link to respective pages"
             ]
           },
-          "status": "pending",
-          "notes": "Show prominent prompts on worker dashboard if profile is incomplete or KYC is not verified. This encourages workers to complete onboarding."
+          "status": "completed",
+          "notes": "Added profile completion and KYC verification prompts to worker dashboard. Features: fetches worker profile data on mount using useEffect, checks if profile is complete (all required fields filled), checks if KYC is verified, displays blue banner prompt for incomplete profile with link to /worker/profile, displays yellow banner for unverified/rejected KYC with link to /worker/kyc (no CTA for pending status), uses same banner style patterns from profile page with SVG icons.",
+          "updated_at": "2026-02-21T23:31:21.734907+00:00"
         },
         {
           "id": "subtask-6-3",
@@ -555,11 +556,12 @@
           "patterns_from": [],
           "verification": {
             "type": "command",
-            "command": "psql $DATABASE_URL -c \"SELECT policyname, tablename FROM pg_policies WHERE tablename IN ('kyc_verifications', 'worker_skills')\"",
+            "command": "psql $DATABASE_URL -c \"SELECT policyname, tablename FROM pg_policies WHERE tablename IN ('kyc_verifications', 'worker_skills', 'workers')\"",
             "expected": "RLS policies exist for KYC tables"
           },
-          "status": "pending",
-          "notes": "Create RLS policies: workers can only see their own KYC data, admins can see all KYC data, workers can insert their own KYC data, only admins can update KYC status."
+          "status": "completed",
+          "notes": "Created RLS policies for workers table (which contains KYC-related data like kyc_status and reliability_score). Policies include: workers can view/insert/update own profile (with restrictions on kyc_status and reliability_score when verified), admins can view/update/insert all worker profiles, businesses can view only verified worker profiles. The kyc_verifications and worker_skills tables already had RLS policies from their initial migrations.",
+          "updated_at": "2026-02-22T07:25:00.000Z"
         },
         {
           "id": "subtask-6-4",
@@ -766,5 +768,5 @@
   "planStatus": "in_progress",
   "xstateState": "planning",
   "executionPhase": "coding",
-  "last_updated": "2026-02-21T22:58:50.872619+00:00"
+  "last_updated": "2026-02-21T23:31:21.734914+00:00"
 }
