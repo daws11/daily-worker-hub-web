@@ -715,3 +715,146 @@ CREATE POLICY "Admins can update any transaction"
 CREATE POLICY "Admins can delete any transaction"
   ON transactions FOR DELETE
   USING (is_admin());
+
+-- ============================================================================
+-- RLS POLICIES FOR MESSAGES TABLE
+-- ============================================================================
+
+-- Users can read messages they sent
+CREATE POLICY "Users can read sent messages"
+  ON messages FOR SELECT
+  USING (auth.uid() = sender_id);
+
+-- Users can read messages they received
+CREATE POLICY "Users can read received messages"
+  ON messages FOR SELECT
+  USING (auth.uid() = receiver_id);
+
+-- Admins can read all messages
+CREATE POLICY "Admins can read all messages"
+  ON messages FOR SELECT
+  USING (is_admin());
+
+-- Authenticated users can send messages
+CREATE POLICY "Authenticated users can send messages"
+  ON messages FOR INSERT
+  WITH CHECK (auth.uid() = sender_id);
+
+-- Users can update their own sent messages (e.g., mark as read)
+CREATE POLICY "Users can update received messages"
+  ON messages FOR UPDATE
+  USING (auth.uid() = receiver_id)
+  WITH CHECK (auth.uid() = receiver_id);
+
+-- Admins can update any message
+CREATE POLICY "Admins can update any message"
+  ON messages FOR UPDATE
+  USING (is_admin())
+  WITH CHECK (is_admin());
+
+-- Users can delete their own sent messages
+CREATE POLICY "Users can delete sent messages"
+  ON messages FOR DELETE
+  USING (auth.uid() = sender_id);
+
+-- Admins can delete any message
+CREATE POLICY "Admins can delete any message"
+  ON messages FOR DELETE
+  USING (is_admin());
+
+-- ============================================================================
+-- RLS POLICIES FOR REVIEWS TABLE
+-- ============================================================================
+
+-- Workers can read reviews about themselves
+CREATE POLICY "Workers can read own reviews"
+  ON reviews FOR SELECT
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM workers WHERE id = reviews.worker_id
+    )
+  );
+
+-- Businesses can read reviews for their bookings
+CREATE POLICY "Businesses can read booking reviews"
+  ON reviews FOR SELECT
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM businesses WHERE id IN (
+        SELECT business_id FROM bookings WHERE id = reviews.booking_id
+      )
+    )
+  );
+
+-- Admins can read all reviews
+CREATE POLICY "Admins can read all reviews"
+  ON reviews FOR SELECT
+  USING (is_admin());
+
+-- Businesses can create reviews for their bookings
+CREATE POLICY "Businesses can create reviews"
+  ON reviews FOR INSERT
+  WITH CHECK (
+    auth.uid() IN (
+      SELECT user_id FROM businesses WHERE id IN (
+        SELECT business_id FROM bookings WHERE id = booking_id
+      )
+    )
+  );
+
+-- Admins can insert any review
+CREATE POLICY "Admins can insert any review"
+  ON reviews FOR INSERT
+  WITH CHECK (is_admin());
+
+-- Admins can update any review
+CREATE POLICY "Admins can update any review"
+  ON reviews FOR UPDATE
+  USING (is_admin())
+  WITH CHECK (is_admin());
+
+-- Admins can delete any review
+CREATE POLICY "Admins can delete any review"
+  ON reviews FOR DELETE
+  USING (is_admin());
+
+-- ============================================================================
+-- RLS POLICIES FOR NOTIFICATIONS TABLE
+-- ============================================================================
+
+-- Users can read their own notifications
+CREATE POLICY "Users can read own notifications"
+  ON notifications FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Admins can read all notifications
+CREATE POLICY "Admins can read all notifications"
+  ON notifications FOR SELECT
+  USING (is_admin());
+
+-- Admins can insert notifications (via application functions)
+CREATE POLICY "Admins can insert notifications"
+  ON notifications FOR INSERT
+  WITH CHECK (is_admin());
+
+-- Users can update their own notifications (e.g., mark as read)
+CREATE POLICY "Users can update own notifications"
+  ON notifications FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- Admins can update any notification
+CREATE POLICY "Admins can update any notification"
+  ON notifications FOR UPDATE
+  USING (is_admin())
+  WITH CHECK (is_admin());
+
+-- Users can delete their own notifications
+CREATE POLICY "Users can delete own notifications"
+  ON notifications FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- Admins can delete any notification
+CREATE POLICY "Admins can delete any notification"
+  ON notifications FOR DELETE
+  USING (is_admin());
