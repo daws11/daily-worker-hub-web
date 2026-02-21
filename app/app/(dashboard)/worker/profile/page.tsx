@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { supabase } from "../../../lib/supabase/client"
 import { useAuth } from "../../providers/auth-provider"
+import { KycStatusBadge } from "../../../../components/worker/kyc-status-badge"
 
 const AVAILABLE_SKILLS = [
   "Kebersihan Rumah",
@@ -28,6 +29,7 @@ export default function WorkerProfilePage() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [kycStatus, setKycStatus] = useState<'unverified' | 'pending' | 'verified' | 'rejected'>('unverified')
+  const [rejectionReason, setRejectionReason] = useState<string | null>(null)
   const [isLoadingProfile, setIsLoadingProfile] = useState(true)
 
   // Load existing profile data on mount
@@ -63,6 +65,23 @@ export default function WorkerProfilePage() {
         setAddress(data.address || "")
         setExperienceYears(data.experience_years?.toString() || "")
         setKycStatus(data.kyc_status || 'unverified')
+
+        // If rejected, load the rejection reason
+        if (data.kyc_status === 'rejected') {
+          const { data: kycData } = await supabase
+            .from('kyc_verifications')
+            .select('rejection_reason')
+            .eq('worker_id', data.id)
+            .order('submitted_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+
+          if (kycData?.rejection_reason) {
+            setRejectionReason(kycData.rejection_reason)
+          }
+        } else {
+          setRejectionReason(null)
+        }
       }
 
       // Load skills
@@ -212,11 +231,132 @@ export default function WorkerProfilePage() {
       padding: '1rem'
     }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-          Profil Worker
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+            Profil Worker
+          </h1>
+          <KycStatusBadge status={kycStatus} />
+        </div>
 
-        {/* KYC Status Banner */}
+        {/* Unverified Banner */}
+        {kycStatus === 'unverified' && (
+          <div style={{
+            backgroundColor: '#eff6ff',
+            border: '1px solid #3b82f6',
+            borderRadius: '0.5rem',
+            padding: '1rem',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="10" cy="10" r="10" fill="#3b82f6"/>
+              <path d="M10 5V10M10 15H10.01" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#1e40af' }}>
+                Verifikasi KYC Belum Dilakukan
+              </p>
+              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#1e3a8a' }}>
+                Lengkapi verifikasi KYC agar profil Anda terverifikasi dan dapat menerima pekerjaan.
+              </p>
+              <a
+                href="/worker/kyc"
+                style={{
+                  display: 'inline-block',
+                  marginTop: '0.5rem',
+                  padding: '0.375rem 0.75rem',
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  textDecoration: 'none',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 500
+                }}
+              >
+                Verifikasi Sekarang
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Pending Banner */}
+        {kycStatus === 'pending' && (
+          <div style={{
+            backgroundColor: '#fef3c7',
+            border: '1px solid #f59e0b',
+            borderRadius: '0.5rem',
+            padding: '1rem',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="10" cy="10" r="10" fill="#f59e0b"/>
+              <path d="M10 6V10L13 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#92400e' }}>
+                KYC Sedang Diproses
+              </p>
+              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#b45309' }}>
+                Verifikasi KYC Anda sedang dalam proses. Kami akan menghubungi Anda setelah selesai.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Rejected Banner */}
+        {kycStatus === 'rejected' && (
+          <div style={{
+            backgroundColor: '#fee2e2',
+            border: '1px solid #ef4444',
+            borderRadius: '0.5rem',
+            padding: '1rem',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="10" cy="10" r="10" fill="#ef4444"/>
+              <path d="M6 8L10 12M10 8L6 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#991b1b' }}>
+                KYC Ditolak
+              </p>
+              {rejectionReason && (
+                <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#dc2626' }}>
+                  Alasan: {rejectionReason}
+                </p>
+              )}
+              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#dc2626' }}>
+                Silakan perbaiki dan submit ulang verifikasi KYC Anda.
+              </p>
+              <a
+                href="/worker/kyc"
+                style={{
+                  display: 'inline-block',
+                  marginTop: '0.5rem',
+                  padding: '0.375rem 0.75rem',
+                  backgroundColor: '#ef4444',
+                  color: 'white',
+                  textDecoration: 'none',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 500
+                }}
+              >
+                Submit Ulang
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Verified Banner */}
         {kycStatus === 'verified' && (
           <div style={{
             backgroundColor: '#ecfdf5',
@@ -234,10 +374,10 @@ export default function WorkerProfilePage() {
             </svg>
             <div>
               <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#065f46' }}>
-                Profil Anda Terverifikasi
+                Profil Terverifikasi
               </p>
               <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#047857' }}>
-                Profil Anda ditampilkan dalam mode baca saja setelah verifikasi KYC. Hubungi admin untuk mengubah data.
+                Profil Anda ditampilkan dalam mode baca saja. Hubungi admin untuk mengubah data.
               </p>
             </div>
           </div>

@@ -9,6 +9,7 @@ import { validateKTP } from "../../../../lib/utils/ktp-validator"
 import { uploadKycDocument } from "../../../../lib/utils/file-upload"
 import { submitKycVerification } from "../../../../lib/db/worker-profile"
 import { FileUpload, type FileUploadValue } from "../../../../components/worker/file-upload"
+import { KycStatusBadge } from "../../../../components/worker/kyc-status-badge"
 
 export default function WorkerKycPage() {
   const router = useRouter()
@@ -208,9 +209,12 @@ export default function WorkerKycPage() {
       padding: '1rem'
     }}>
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-          Verifikasi KYC
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+            Verifikasi KYC
+          </h1>
+          <KycStatusBadge status={currentStatus} />
+        </div>
 
         {/* Status Banners */}
         {currentStatus === 'verified' && (
