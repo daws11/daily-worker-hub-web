@@ -27,11 +27,15 @@ export default function WorkerProfilePage() {
   const [experienceYears, setExperienceYears] = useState("")
   const [selectedSkills, setSelectedSkills] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [kycStatus, setKycStatus] = useState<'unverified' | 'pending' | 'verified' | 'rejected'>('unverified')
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true)
 
   // Load existing profile data on mount
   useEffect(() => {
     async function loadProfile() {
       if (!user) return
+
+      setIsLoadingProfile(true)
 
       const { data, error } = await supabase
         .from('workers')
@@ -39,8 +43,15 @@ export default function WorkerProfilePage() {
         .eq('user_id', user.id)
         .single()
 
+      setIsLoadingProfile(false)
+
       if (error) {
-        console.error('Error loading profile:', error)
+        if (error.code === 'PGRST116') {
+          // Profile doesn't exist yet, that's okay for new users
+          setKycStatus('unverified')
+        } else {
+          console.error('Error loading profile:', error)
+        }
         return
       }
 
@@ -51,6 +62,7 @@ export default function WorkerProfilePage() {
         setPhone(data.phone || "")
         setAddress(data.address || "")
         setExperienceYears(data.experience_years?.toString() || "")
+        setKycStatus(data.kyc_status || 'unverified')
       }
 
       // Load skills
@@ -204,13 +216,52 @@ export default function WorkerProfilePage() {
           Profil Worker
         </h1>
 
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '0.5rem',
-          padding: '2rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-        }}>
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        {/* KYC Status Banner */}
+        {kycStatus === 'verified' && (
+          <div style={{
+            backgroundColor: '#ecfdf5',
+            border: '1px solid #10b981',
+            borderRadius: '0.5rem',
+            padding: '1rem',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="10" cy="10" r="10" fill="#10b981"/>
+              <path d="M6 10L9 13L14 7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <div>
+              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#065f46' }}>
+                Profil Anda Terverifikasi
+              </p>
+              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#047857' }}>
+                Profil Anda ditampilkan dalam mode baca saja setelah verifikasi KYC. Hubungi admin untuk mengubah data.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoadingProfile ? (
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '0.5rem',
+            padding: '3rem',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            textAlign: 'center'
+          }}>
+            <p style={{ margin: 0, color: '#6b7280' }}>Memuat profil...</p>
+          </div>
+        ) : (
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '0.5rem',
+            padding: '2rem',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+          }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
             {/* Full Name */}
             <div>
               <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
@@ -220,13 +271,17 @@ export default function WorkerProfilePage() {
                 type="text"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
+                readOnly={kycStatus === 'verified'}
+                disabled={kycStatus === 'verified'}
                 style={{
                   width: '100%',
                   padding: '0.5rem 0.75rem',
                   border: '1px solid #d1d5db',
                   borderRadius: '0.375rem',
                   outline: 'none',
-                  fontSize: '0.875rem'
+                  fontSize: '0.875rem',
+                  backgroundColor: kycStatus === 'verified' ? '#f3f4f6' : 'white',
+                  cursor: kycStatus === 'verified' ? 'not-allowed' : 'auto'
                 }}
                 placeholder="Budi Santoso"
                 required
@@ -239,26 +294,28 @@ export default function WorkerProfilePage() {
                 Jenis Kelamin
               </label>
               <div style={{ display: 'flex', gap: '1.5rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: kycStatus === 'verified' ? 'not-allowed' : 'pointer' }}>
                   <input
                     type="radio"
                     name="gender"
                     value="male"
                     checked={gender === "male"}
                     onChange={(e) => setGender(e.target.value as "male" | "female")}
-                    style={{ cursor: 'pointer' }}
+                    disabled={kycStatus === 'verified'}
+                    style={{ cursor: kycStatus === 'verified' ? 'not-allowed' : 'pointer' }}
                   />
                   <span style={{ fontSize: '0.875rem' }}>Laki-laki</span>
                 </label>
 
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: kycStatus === 'verified' ? 'not-allowed' : 'pointer' }}>
                   <input
                     type="radio"
                     name="gender"
                     value="female"
                     checked={gender === "female"}
                     onChange={(e) => setGender(e.target.value as "male" | "female")}
-                    style={{ cursor: 'pointer' }}
+                    disabled={kycStatus === 'verified'}
+                    style={{ cursor: kycStatus === 'verified' ? 'not-allowed' : 'pointer' }}
                   />
                   <span style={{ fontSize: '0.875rem' }}>Perempuan</span>
                 </label>
@@ -274,13 +331,17 @@ export default function WorkerProfilePage() {
                 type="date"
                 value={dob}
                 onChange={(e) => setDob(e.target.value)}
+                readOnly={kycStatus === 'verified'}
+                disabled={kycStatus === 'verified'}
                 style={{
                   width: '100%',
                   padding: '0.5rem 0.75rem',
                   border: '1px solid #d1d5db',
                   borderRadius: '0.375rem',
                   outline: 'none',
-                  fontSize: '0.875rem'
+                  fontSize: '0.875rem',
+                  backgroundColor: kycStatus === 'verified' ? '#f3f4f6' : 'white',
+                  cursor: kycStatus === 'verified' ? 'not-allowed' : 'auto'
                 }}
                 required
               />
@@ -295,13 +356,17 @@ export default function WorkerProfilePage() {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
+                readOnly={kycStatus === 'verified'}
+                disabled={kycStatus === 'verified'}
                 style={{
                   width: '100%',
                   padding: '0.5rem 0.75rem',
                   border: '1px solid #d1d5db',
                   borderRadius: '0.375rem',
                   outline: 'none',
-                  fontSize: '0.875rem'
+                  fontSize: '0.875rem',
+                  backgroundColor: kycStatus === 'verified' ? '#f3f4f6' : 'white',
+                  cursor: kycStatus === 'verified' ? 'not-allowed' : 'auto'
                 }}
                 placeholder="081234567890"
                 required
@@ -316,6 +381,8 @@ export default function WorkerProfilePage() {
               <textarea
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
+                readOnly={kycStatus === 'verified'}
+                disabled={kycStatus === 'verified'}
                 style={{
                   width: '100%',
                   padding: '0.5rem 0.75rem',
@@ -324,7 +391,9 @@ export default function WorkerProfilePage() {
                   outline: 'none',
                   fontSize: '0.875rem',
                   minHeight: '80px',
-                  resize: 'vertical'
+                  resize: 'vertical',
+                  backgroundColor: kycStatus === 'verified' ? '#f3f4f6' : 'white',
+                  cursor: kycStatus === 'verified' ? 'not-allowed' : 'auto'
                 }}
                 placeholder="Jl. Contoh No. 123, Jakarta"
                 required
@@ -340,13 +409,17 @@ export default function WorkerProfilePage() {
                 type="number"
                 value={experienceYears}
                 onChange={(e) => setExperienceYears(e.target.value)}
+                readOnly={kycStatus === 'verified'}
+                disabled={kycStatus === 'verified'}
                 style={{
                   width: '100%',
                   padding: '0.5rem 0.75rem',
                   border: '1px solid #d1d5db',
                   borderRadius: '0.375rem',
                   outline: 'none',
-                  fontSize: '0.875rem'
+                  fontSize: '0.875rem',
+                  backgroundColor: kycStatus === 'verified' ? '#f3f4f6' : 'white',
+                  cursor: kycStatus === 'verified' ? 'not-allowed' : 'auto'
                 }}
                 placeholder="0"
                 min="0"
@@ -374,16 +447,18 @@ export default function WorkerProfilePage() {
                       padding: '0.5rem',
                       border: `1px solid ${selectedSkills.includes(skill) ? '#2563eb' : '#d1d5db'}`,
                       borderRadius: '0.375rem',
-                      cursor: 'pointer',
+                      cursor: kycStatus === 'verified' ? 'not-allowed' : 'pointer',
                       backgroundColor: selectedSkills.includes(skill) ? '#eff6ff' : 'white',
-                      fontSize: '0.875rem'
+                      fontSize: '0.875rem',
+                      opacity: kycStatus === 'verified' ? '0.7' : '1'
                     }}
                   >
                     <input
                       type="checkbox"
                       checked={selectedSkills.includes(skill)}
                       onChange={() => handleSkillToggle(skill)}
-                      style={{ cursor: 'pointer' }}
+                      disabled={kycStatus === 'verified'}
+                      style={{ cursor: kycStatus === 'verified' ? 'not-allowed' : 'pointer' }}
                     />
                     <span>{skill}</span>
                   </label>
@@ -391,27 +466,30 @@ export default function WorkerProfilePage() {
               </div>
             </div>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              style={{
-                width: '100%',
-                padding: '0.75rem 1rem',
-                backgroundColor: isLoading ? '#9ca3af' : '#2563eb',
-                color: 'white',
-                borderRadius: '0.375rem',
-                fontWeight: 500,
-                border: 'none',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                fontSize: '0.875rem',
-                marginTop: '0.5rem'
-              }}
-            >
-              {isLoading ? 'Menyimpan...' : 'Simpan Profil'}
-            </button>
+            {/* Submit Button - Hide when verified */}
+            {kycStatus !== 'verified' && (
+              <button
+                type="submit"
+                disabled={isLoading}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  backgroundColor: isLoading ? '#9ca3af' : '#2563eb',
+                  color: 'white',
+                  borderRadius: '0.375rem',
+                  fontWeight: 500,
+                  border: 'none',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  fontSize: '0.875rem',
+                  marginTop: '0.5rem'
+                }}
+              >
+                {isLoading ? 'Menyimpan...' : 'Simpan Profil'}
+              </button>
+            )}
           </form>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   )
