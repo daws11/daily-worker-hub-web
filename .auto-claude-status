@@ -3,23 +3,23 @@
   "spec": "004-database-schema-rls-policies",
   "state": "building",
   "subtasks": {
-    "completed": 19,
+    "completed": 20,
     "total": 24,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Create Indexes",
+    "current": "Create Seed Data and Verify",
     "id": null,
-    "total": 2
+    "total": 4
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 21,
+    "number": 22,
     "started_at": "2026-02-22T05:58:42.545665"
   },
-  "last_update": "2026-02-22T06:29:54.704167"
+  "last_update": "2026-02-22T06:31:18.702221"
 }

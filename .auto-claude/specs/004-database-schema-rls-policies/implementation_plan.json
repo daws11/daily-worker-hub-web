@@ -403,7 +403,9 @@
             "command": "grep -c 'CREATE INDEX.*status\\|CREATE INDEX.*created_at' supabase/migrations/20250222000001_initial_schema.sql",
             "expected": "Status and timestamp indexes created"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added 4 new created_at indexes for users, businesses, workers, and webhooks tables. Now have 15 total status/timestamp indexes: jobs (status, created_at), bookings (status, created_at), transactions (status, created_at), messages (created_at), reviews (created_at), notifications (created_at), reports (status, created_at), and newly added users (created_at), businesses (created_at), workers (created_at), webhooks (created_at). All indexes follow DESC ordering for timestamp columns to optimize recent-record queries.",
+          "updated_at": "2026-02-22T00:00:00.000000+00:00"
         }
       ]
     },
@@ -584,6 +586,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-21T22:29:54.655Z",
+  "updated_at": "2026-02-21T22:31:18.656Z",
   "last_updated": "2026-02-22T00:00:00.000000+00:00"
 }
