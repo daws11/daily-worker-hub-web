@@ -570,3 +570,101 @@ CREATE POLICY "Businesses can delete own jobs"
 CREATE POLICY "Admins can delete any job"
   ON jobs FOR DELETE
   USING (is_admin());
+
+-- ============================================================================
+-- RLS POLICIES FOR BOOKINGS TABLE
+-- ============================================================================
+
+-- Workers can read their own bookings
+CREATE POLICY "Workers can read own bookings"
+  ON bookings FOR SELECT
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM workers WHERE id = bookings.worker_id
+    )
+  );
+
+-- Businesses can read their own business bookings
+CREATE POLICY "Businesses can read own bookings"
+  ON bookings FOR SELECT
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM businesses WHERE id = bookings.business_id
+    )
+  );
+
+-- Admins can read all bookings
+CREATE POLICY "Admins can read all bookings"
+  ON bookings FOR SELECT
+  USING (is_admin());
+
+-- Workers can create bookings
+CREATE POLICY "Workers can create bookings"
+  ON bookings FOR INSERT
+  WITH CHECK (
+    auth.uid() IN (
+      SELECT user_id FROM workers WHERE id = worker_id
+    )
+  );
+
+-- Admins can insert any booking
+CREATE POLICY "Admins can insert any booking"
+  ON bookings FOR INSERT
+  WITH CHECK (is_admin());
+
+-- Workers can update their own bookings
+CREATE POLICY "Workers can update own bookings"
+  ON bookings FOR UPDATE
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM workers WHERE id = bookings.worker_id
+    )
+  )
+  WITH CHECK (
+    auth.uid() IN (
+      SELECT user_id FROM workers WHERE id = worker_id
+    )
+  );
+
+-- Businesses can update their own business bookings
+CREATE POLICY "Businesses can update own bookings"
+  ON bookings FOR UPDATE
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM businesses WHERE id = bookings.business_id
+    )
+  )
+  WITH CHECK (
+    auth.uid() IN (
+      SELECT user_id FROM businesses WHERE id = business_id
+    )
+  );
+
+-- Admins can update any booking
+CREATE POLICY "Admins can update any booking"
+  ON bookings FOR UPDATE
+  USING (is_admin())
+  WITH CHECK (is_admin());
+
+-- Workers can delete their own bookings
+CREATE POLICY "Workers can delete own bookings"
+  ON bookings FOR DELETE
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM workers WHERE id = bookings.worker_id
+    )
+  );
+
+-- Businesses can delete their own business bookings
+CREATE POLICY "Businesses can delete own bookings"
+  ON bookings FOR DELETE
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM businesses WHERE id = bookings.business_id
+    )
+  );
+
+-- Admins can delete any booking
+CREATE POLICY "Admins can delete any booking"
+  ON bookings FOR DELETE
+  USING (is_admin());
