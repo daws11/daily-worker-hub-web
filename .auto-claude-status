@@ -1,10 +1,10 @@
 {
   "active": true,
   "spec": "004-database-schema-rls-policies",
-  "state": "planning",
+  "state": "building",
   "subtasks": {
-    "completed": 0,
-    "total": 0,
+    "completed": 1,
+    "total": 24,
     "in_progress": 1,
     "failed": 0
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 2,
+    "number": 3,
     "started_at": "2026-02-22T05:58:42.545665"
   },
-  "last_update": "2026-02-22T06:02:23.795068"
+  "last_update": "2026-02-22T06:03:50.528013"
 }
