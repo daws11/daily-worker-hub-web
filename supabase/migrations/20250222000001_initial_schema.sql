@@ -452,3 +452,52 @@ CREATE POLICY "Authenticated users can insert workers"
 CREATE POLICY "Admins can delete any worker"
   ON workers FOR DELETE
   USING (is_admin());
+
+-- ============================================================================
+-- RLS POLICIES FOR BUSINESSES TABLE
+-- ============================================================================
+
+-- Businesses can read their own profile
+CREATE POLICY "Businesses can read own profile"
+  ON businesses FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Authenticated users can read verified businesses
+CREATE POLICY "Public can read verified businesses"
+  ON businesses FOR SELECT
+  USING (
+    auth.uid() IS NOT NULL
+    AND EXISTS (
+      SELECT 1 FROM users
+      WHERE users.id = businesses.user_id
+      AND users.email_confirmed_at IS NOT NULL
+    )
+    AND businesses.is_verified = TRUE
+  );
+
+-- Admins can read all businesses
+CREATE POLICY "Admins can read all businesses"
+  ON businesses FOR SELECT
+  USING (is_admin());
+
+-- Businesses can update their own profile
+CREATE POLICY "Businesses can update own profile"
+  ON businesses FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- Admins can update any business
+CREATE POLICY "Admins can update any business"
+  ON businesses FOR UPDATE
+  USING (is_admin())
+  WITH CHECK (is_admin());
+
+-- Only authenticated users can insert business profiles (via application layer)
+CREATE POLICY "Authenticated users can insert businesses"
+  ON businesses FOR INSERT
+  WITH CHECK (auth.uid() IS NOT NULL);
+
+-- Admins can delete any business
+CREATE POLICY "Admins can delete any business"
+  ON businesses FOR DELETE
+  USING (is_admin());

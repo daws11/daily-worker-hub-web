@@ -287,7 +287,9 @@
             "type": "manual",
             "instructions": "Verify businesses table has RLS policies: businesses can read own data, public can read verified businesses, admins full access"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added 7 RLS policies for businesses table: Businesses can read own profile (auth.uid() = user_id), Public can read verified businesses (is_verified = true + email_confirmed_at check), Admins can read all businesses (is_admin()), Businesses can update own profile, Admins can update/delete any business, Insert policy for authenticated users (application layer control).",
+          "updated_at": "2026-02-21T22:21:51.307621+00:00"
         },
         {
           "id": "subtask-3-4",
@@ -572,6 +574,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T00:00:00.000Z",
-  "last_updated": "2026-02-22T00:00:00.000000+00:00"
+  "updated_at": "2026-02-21T22:21:13.281Z",
+  "last_updated": "2026-02-21T22:21:51.307627+00:00"
 }
