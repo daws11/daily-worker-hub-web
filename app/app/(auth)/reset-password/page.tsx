@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "../../providers/auth-provider"
+import { toast } from "sonner"
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -14,12 +15,12 @@ export default function ResetPasswordPage() {
     e.preventDefault()
 
     if (password !== confirmPassword) {
-      alert("Password tidak cocok!")
+      toast.error("Password tidak cocok!")
       return
     }
 
     if (password.length < 6) {
-      alert("Password harus minimal 6 karakter!")
+      toast.error("Password harus minimal 6 karakter!")
       return
     }
 
