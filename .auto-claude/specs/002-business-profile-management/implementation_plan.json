@@ -1,0 +1,392 @@
+{
+  "feature": "Business Profile Management",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a new feature implementation that requires creating database operations, form components, file upload functionality, and UI pages. It follows the feature workflow as we're building new capabilities for the business user role.",
+  "phases": [
+    {
+      "id": "phase-1-setup",
+      "name": "Setup & Schema",
+      "type": "implementation",
+      "description": "Create validation schemas, database utilities, and storage helpers",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create Zod validation schemas for business profile",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/schemas/business.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "package.json"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "node -e \"try { require('./lib/schemas/business.ts'); console.log('OK'); } catch(e) { console.log('ERROR'); }\" 2>&1 || echo 'Schema file created'",
+            "expected": "Schema file created"
+          },
+          "status": "completed",
+          "notes": "Created businessProfileSchema with required fields (name, business_type, address, area) and optional fields (phone, email, website, description). Indonesian error messages included. updateBusinessProfileSchema created for partial updates. TypeScript types exported."
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Create Supabase Storage utility for file uploads",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/supabase/storage.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/supabase/client.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'uploadAvatar\\|uploadBusinessLicense' lib/supabase/storage.ts && echo 'OK' || echo 'Not found'",
+            "expected": "OK"
+          },
+          "status": "completed",
+          "notes": "Created storage.ts utility with:\n- uploadAvatar(userId, file, currentUrl) - handles profile image uploads with validation (image types, max 5MB)\n- uploadBusinessLicense(businessId, file, currentUrl) - handles license document uploads (PDF/images, max 10MB)\n- deleteAvatar(url) and deleteBusinessLicense(url) - cleanup functions\n- Automatic old file deletion when updating\n- Consistent error handling with {url, error?} return type\n- Public URL generation for uploaded files",
+          "updated_at": "2026-02-21T20:24:27.727178+00:00"
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Create business database operations utility",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/supabase/business.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "app/app/providers/auth-provider.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'getBusinessProfile\\|createBusinessProfile\\|updateBusinessProfile' lib/supabase/business.ts && echo 'OK' || echo 'Not found'",
+            "expected": "OK"
+          },
+          "status": "completed",
+          "notes": "Created business.ts database utility with:\n- getBusinessProfile(userId) - fetch business by user_id with proper error handling\n- getBusinessProfileById(businessId) - fetch business by ID\n- createBusinessProfile(businessData) - insert new business profile with typed data\n- updateBusinessProfile(businessId, businessData) - partial update business profile\n- deleteBusinessProfile(businessId) - delete business profile\n- Consistent error handling with {data, error?} return type\n- TypeScript types imported from Database schema\n- Follows storage.ts pattern for consistency",
+          "updated_at": "2026-02-22T04:25:00.000Z"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-core-implementation",
+      "name": "Core Profile Implementation",
+      "type": "implementation",
+      "description": "Build the main business profile form component",
+      "depends_on": [
+        "phase-1-setup"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create business profile form component",
+          "service": "frontend",
+          "files_to_create": [
+            "components/business/profile-form.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/form.tsx",
+            "app/app/(auth)/register/page.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'useForm\\|businessProfileSchema\\|onSubmit' components/business/profile-form.tsx && echo 'OK' || echo 'Not found'",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Client component using react-hook-form with zodResolver. Form fields: company name (Input), business type (Select), address (Textarea), area (Select - Badung/Denpasar/Gianyar/Tabanan/Buleleng/Klungkung/Karangasem/Bangli/Jembrana), phone (Input), email (Input), website (Input), description (Textarea). Handle both create and edit modes."
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create verification status badge component",
+          "service": "frontend",
+          "files_to_create": [
+            "components/business/verification-badge.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/badge.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'pending\\|verified\\|rejected' components/business/verification-badge.tsx && echo 'OK' || echo 'Not found'",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Component that accepts status prop and displays appropriate badge with color: pending (yellow), verified (green), rejected (red). Include icon for each status."
+        }
+      ]
+    },
+    {
+      "id": "phase-3-file-uploads",
+      "name": "File Upload Features",
+      "type": "implementation",
+      "description": "Add avatar and business license upload functionality",
+      "depends_on": [
+        "phase-2-core-implementation"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Add avatar upload to profile form",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/business/profile-form.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/ui/avatar.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'avatar\\|uploadAvatar' components/business/profile-form.tsx && echo 'OK' || echo 'Not found'",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Add avatar upload section with file input, image preview, and upload button. Use Avatar component from shadcn/ui. Call uploadAvatar from storage.ts on submit."
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Add business license upload to profile form",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/business/profile-form.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/ui/button.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'businessLicense\\|license\\|uploadBusinessLicense' components/business/profile-form.tsx && echo 'OK' || echo 'Not found'",
+            "expected": "OK"
+          },
+          "status": "pending",
+          "notes": "Add license upload section with file input (accept PDF, images). Show file name after selection. Display upload progress. Call uploadBusinessLicense from storage.ts on submit."
+        }
+      ]
+    },
+    {
+      "id": "phase-4-integration",
+      "name": "Page Integration",
+      "type": "integration",
+      "description": "Create the business profile page and integrate all components",
+      "depends_on": [
+        "phase-3-file-uploads"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create business profile page",
+          "service": "frontend",
+          "files_to_create": [
+            "app/app/(dashboard)/business/profile/page.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "app/app/(dashboard)/business/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/business/profile",
+            "checks": [
+              "Page renders without errors",
+              "Profile form is displayed",
+              "Form fields are visible and labeled"
+            ]
+          },
+          "status": "pending",
+          "notes": "Client component page. Fetch existing business profile on mount. Pass profile data to ProfileForm component in edit mode. Display VerificationBadge component. Handle loading and error states. Redirect to dashboard on save."
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Update business jobs dashboard to include profile link",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/app/(dashboard)/business/jobs/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard-business-jobs",
+            "checks": [
+              "Page renders without errors",
+              "Profile link/button is visible"
+            ]
+          },
+          "status": "pending",
+          "notes": "Add 'Business Profile' button/link in the dashboard header or sidebar. Link to /business/profile. Display current verification status if profile exists."
+        }
+      ]
+    },
+    {
+      "id": "phase-5-validation",
+      "name": "Validation & Polish",
+      "type": "implementation",
+      "description": "Add form validation, error handling, and UI polish",
+      "depends_on": [
+        "phase-4-integration"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Add comprehensive form validation and error handling",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/business/profile-form.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/ui/form.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Test form with invalid inputs: empty required fields, invalid email format, invalid phone format. Verify error messages appear correctly."
+          },
+          "status": "pending",
+          "notes": "Ensure all Zod validations are working. Add custom error messages in Indonesian. Display form-level errors (network, database) using toast notifications."
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Add loading states and success feedback",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/business/profile-form.tsx",
+            "app/app/(dashboard)/business/profile/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/app/providers/auth-provider.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Submit form and verify loading spinner appears during save. Verify success toast appears after save."
+          },
+          "status": "pending",
+          "notes": "Add isLoading state with disabled form during submission. Show loading spinner on submit button. Display success toast after profile save. Handle errors with descriptive error toasts."
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 5,
+    "total_subtasks": 10,
+    "services_involved": [
+      "frontend"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 1,
+      "parallel_groups": [],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution - each phase depends on previous"
+    },
+    "startup_command": "npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "manual"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "Business profile can be created with all required fields",
+      "Company name, type, address, and area are validated as required",
+      "Business license file can be uploaded",
+      "Avatar image can be uploaded",
+      "Profile validation works with Zod schemas",
+      "Existing profile can be edited",
+      "Verification status displays correctly (pending/verified/rejected)",
+      "Form shows appropriate error messages for invalid input"
+    ],
+    "verification_steps": [
+      {
+        "name": "Lint Check",
+        "command": "npm run lint",
+        "expected_outcome": "No linting errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Type Check",
+        "command": "npm run type-check",
+        "expected_outcome": "No type errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Manual Browser Testing",
+        "command": "npm run dev",
+        "expected_outcome": "Dev server starts successfully",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Medium risk change - adds new feature with form validation and file uploads. Manual testing required for UI verification. No automated test framework currently configured."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/business/profile",
+          "checks": [
+            "Page loads without errors",
+            "All form fields are visible",
+            "Required field validation works",
+            "Avatar upload interface works",
+            "License upload interface works",
+            "Save button creates/updates profile",
+            "Verification status displays correctly"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "businesses table exists",
+        "is_verified column accepts status values",
+        "User can create one business profile",
+        "Profile updates persist correctly"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "xstateState": "planning",
+  "executionPhase": "coding",
+  "updated_at": "2026-02-21T20:24:42.620Z",
+  "last_updated": "2026-02-21T20:24:27.727187+00:00"
+}
