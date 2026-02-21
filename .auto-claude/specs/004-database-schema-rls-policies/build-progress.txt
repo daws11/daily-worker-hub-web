@@ -186,3 +186,18 @@ Changes:
 Verification: grep -q 'CREATE TABLE skills\|CREATE TABLE categories' supabase/migrations/20250222000001_initial_schema.sql
 Commit: (tables already present from initial schema migration)
 
+[2026-02-22] Subtask 4-1: Create indexes for foreign key columns
+Status: COMPLETED
+Changes:
+  - All foreign key columns already have indexes (42 total indexes in migration)
+  - Foreign key indexes: businesses.user_id, workers.user_id, jobs.business_id, jobs.category_id,
+    jobs_skills.job_id, jobs_skills.skill_id, bookings.job_id, bookings.worker_id, bookings.business_id,
+    transactions.booking_id, messages.sender_id, messages.receiver_id, messages.booking_id,
+    reviews.worker_id, notifications.user_id, reports.reporter_id
+  - Additional indexes: location (lat, lng), status columns, created_at (DESC), is_read, is_verified, etc.
+  - Unique constraint index: idx_bookings_job_worker for active bookings
+  - GIN index: idx_webhooks_events for array searching
+Verification: grep -c 'CREATE INDEX' supabase/migrations/20250222000001_initial_schema.sql
+  Result: 42 indexes created (exceeds 10+ requirement)
+Commit: 06307da - auto-claude: subtask-4-1 - Create indexes for foreign key columns
+

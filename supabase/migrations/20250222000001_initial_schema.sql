@@ -27,6 +27,7 @@ CREATE TABLE users (
 -- Indexes for users
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX idx_users_created_at ON users(created_at DESC);
 
 -- ============================================================================
 -- AUTH INTEGRATION - Auto-create user profile on signup
@@ -112,6 +113,7 @@ CREATE TABLE businesses (
 CREATE INDEX idx_businesses_user_id ON businesses(user_id);
 CREATE INDEX idx_businesses_location ON businesses(lat, lng);
 CREATE INDEX idx_businesses_is_verified ON businesses(is_verified);
+CREATE INDEX idx_businesses_created_at ON businesses(created_at DESC);
 
 -- ============================================================================
 -- WORKERS TABLE
@@ -136,6 +138,7 @@ CREATE TABLE workers (
 -- Indexes for workers
 CREATE INDEX idx_workers_user_id ON workers(user_id);
 CREATE INDEX idx_workers_location ON workers(lat, lng);
+CREATE INDEX idx_workers_created_at ON workers(created_at DESC);
 
 -- ============================================================================
 -- JOBS TABLE
@@ -313,6 +316,7 @@ CREATE TABLE webhooks (
 -- Indexes for webhooks
 CREATE INDEX idx_webhooks_is_active ON webhooks(is_active);
 CREATE INDEX idx_webhooks_events ON webhooks USING GIN(events);
+CREATE INDEX idx_webhooks_created_at ON webhooks(created_at DESC);
 
 -- ============================================================================
 -- FUNCTIONS AND TRIGGERS FOR UPDATED_AT
