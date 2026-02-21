@@ -1,240 +1,180 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { toast } from "sonner"
+import { Loader2 } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import { ProfileForm } from "@/components/business/profile-form"
+import type { BusinessType, Area } from "@/lib/schemas/business"
+
+interface BusinessProfile {
+  id?: string
+  name: string
+  business_type: BusinessType
+  address: string
+  area: Area
+  phone?: string
+  email?: string
+  website?: string
+  description?: string
+  avatar_url?: string
+  business_license_url?: string
+}
+
 export default function BusinessProfilePage() {
-  return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f5f5f5',
-      padding: '1rem'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-          Dashboard Business - Profile
-        </h1>
+  const [profile, setProfile] = useState<BusinessProfile | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const supabase = createClient()
 
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '0.5rem',
-          padding: '1.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-        }}>
-          <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-            Kelola profil bisnis Anda untuk menarik lebih banyak pekerja.
-          </p>
+  useEffect(() => {
+    async function fetchProfile() {
+      setIsLoading(true)
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
 
-          <form style={{ maxWidth: '600px' }}>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="businessName" style={{
-                display: 'block',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                marginBottom: '0.5rem',
-                color: '#374151'
-              }}>
-                Nama Bisnis
-              </label>
-              <input
-                type="text"
-                id="businessName"
-                name="businessName"
-                placeholder="Masukkan nama bisnis Anda"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.375rem',
-                  fontSize: '1rem',
-                  outline: 'none',
-                  transition: 'border-color 0.2s'
-                }}
-              />
-            </div>
+        if (!user) {
+          toast.error("Anda harus login untuk mengakses halaman ini")
+          return
+        }
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="industry" style={{
-                display: 'block',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                marginBottom: '0.5rem',
-                color: '#374151'
-              }}>
-                Industri
-              </label>
-              <select
-                id="industry"
-                name="industry"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.375rem',
-                  fontSize: '1rem',
-                  outline: 'none',
-                  backgroundColor: 'white',
-                  transition: 'border-color 0.2s'
-                }}
-              >
-                <option value="">Pilih industri</option>
-                <option value="technology">Teknologi</option>
-                <option value="retail">Retail</option>
-                <option value="food">Makanan & Minuman</option>
-                <option value="services">Jasa</option>
-                <option value="manufacturing">Manufaktur</option>
-                <option value="other">Lainnya</option>
-              </select>
-            </div>
+        const { data, error } = await supabase
+          .from("business_profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .single()
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="description" style={{
-                display: 'block',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                marginBottom: '0.5rem',
-                color: '#374151'
-              }}>
-                Deskripsi Bisnis
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                rows="4"
-                placeholder="Jelaskan tentang bisnis Anda..."
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.375rem',
-                  fontSize: '1rem',
-                  outline: 'none',
-                  resize: 'vertical',
-                  transition: 'border-color 0.2s'
-                }}
-              />
-            </div>
+        if (error) {
+          // Check if it's a "not found" error
+          if (error.code === "PGRST116") {
+            // No profile exists yet, this is fine for new users
+            setProfile(null)
+          } else {
+            console.error("Error fetching profile:", error)
+            toast.error("Gagal memuat profil bisnis")
+          }
+        } else {
+          setProfile(data)
+        }
+      } catch (error) {
+        console.error("Error fetching profile:", error)
+        toast.error("Terjadi kesalahan saat memuat profil")
+      } finally {
+        setIsLoading(false)
+      }
+    }
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="website" style={{
-                display: 'block',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                marginBottom: '0.5rem',
-                color: '#374151'
-              }}>
-                Website
-              </label>
-              <input
-                type="url"
-                id="website"
-                name="website"
-                placeholder="https://example.com"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.375rem',
-                  fontSize: '1rem',
-                  outline: 'none',
-                  transition: 'border-color 0.2s'
-                }}
-              />
-            </div>
+    fetchProfile()
+  }, [supabase])
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="phone" style={{
-                display: 'block',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                marginBottom: '0.5rem',
-                color: '#374151'
-              }}>
-                Nomor Telepon
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                placeholder="+62 812 3456 7890"
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.375rem',
-                  fontSize: '1rem',
-                  outline: 'none',
-                  transition: 'border-color 0.2s'
-                }}
-              />
-            </div>
+  const handleSubmit = async (data: Omit<BusinessProfile, "id">) => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="address" style={{
-                display: 'block',
-                fontSize: '0.875rem',
-                fontWeight: 600,
-                marginBottom: '0.5rem',
-                color: '#374151'
-              }}>
-                Alamat
-              </label>
-              <textarea
-                id="address"
-                name="address"
-                rows="2"
-                placeholder="Masukkan alamat lengkap bisnis Anda..."
-                style={{
-                  width: '100%',
-                  padding: '0.75rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.375rem',
-                  fontSize: '1rem',
-                  outline: 'none',
-                  resize: 'vertical',
-                  transition: 'border-color 0.2s'
-                }}
-              />
-            </div>
+      if (!user) {
+        toast.error("Anda harus login untuk menyimpan profil")
+        return { error: "User not authenticated" }
+      }
 
-            <div style={{
-              display: 'flex',
-              gap: '1rem',
-              marginTop: '2rem'
-            }}>
-              <button
-                type="submit"
-                style={{
-                  padding: '0.75rem 2rem',
-                  backgroundColor: '#2563eb',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '0.375rem',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s'
-                }}
-              >
-                Simpan Profil
-              </button>
-              <button
-                type="button"
-                style={{
-                  padding: '0.75rem 2rem',
-                  backgroundColor: 'white',
-                  color: '#374151',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.375rem',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s'
-                }}
-              >
-                Batal
-              </button>
-            </div>
-          </form>
+      if (profile?.id) {
+        // Update existing profile
+        const { error } = await supabase
+          .from("business_profiles")
+          .update({
+            name: data.name,
+            business_type: data.business_type,
+            address: data.address,
+            area: data.area,
+            phone: data.phone || null,
+            email: data.email || null,
+            website: data.website || null,
+            description: data.description || null,
+            avatar_url: data.avatar_url || null,
+            business_license_url: data.business_license_url || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", profile.id)
+
+        if (error) {
+          console.error("Error updating profile:", error)
+          return { error: "Gagal memperbarui profil bisnis" }
+        }
+
+        // Refetch profile
+        const { data: updatedProfile } = await supabase
+          .from("business_profiles")
+          .select("*")
+          .eq("id", profile.id)
+          .single()
+
+        if (updatedProfile) {
+          setProfile(updatedProfile)
+        }
+      } else {
+        // Create new profile
+        const { data: newProfile, error } = await supabase
+          .from("business_profiles")
+          .insert({
+            user_id: user.id,
+            name: data.name,
+            business_type: data.business_type,
+            address: data.address,
+            area: data.area,
+            phone: data.phone || null,
+            email: data.email || null,
+            website: data.website || null,
+            description: data.description || null,
+            avatar_url: data.avatar_url || null,
+            business_license_url: data.business_license_url || null,
+          })
+          .select()
+          .single()
+
+        if (error) {
+          console.error("Error creating profile:", error)
+          return { error: "Gagal membuat profil bisnis" }
+        }
+
+        setProfile(newProfile)
+      }
+
+      return {}
+    } catch (error) {
+      console.error("Error submitting profile:", error)
+      return { error: "Terjadi kesalahan tak terduga" }
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Memuat profil bisnis...</p>
         </div>
       </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto py-8 max-w-4xl">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-foreground">
+          Profil Bisnis
+        </h1>
+        <p className="text-muted-foreground mt-2">
+          Kelola profil bisnis Anda untuk menarik lebih banyak pekerja
+        </p>
+      </div>
+
+      <ProfileForm
+        mode={profile ? "edit" : "create"}
+        initialData={profile || undefined}
+        onSubmit={handleSubmit}
+      />
     </div>
   )
 }
