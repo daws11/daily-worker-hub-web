@@ -30,4 +30,11 @@ logs/
 
 # Memory & Supabase
 memory/
+# Ignore Supabase generated files, but keep migrations
 supabase/
+!supabase/migrations/
+!supabase/migrations/*.sql
+!supabase/seed.sql
+
+# Auto Claude data directory
+.auto-claude/
