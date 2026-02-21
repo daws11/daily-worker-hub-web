@@ -433,7 +433,8 @@
             "command": "test -f supabase/seed.sql && wc -l supabase/seed.sql",
             "expected": "Seed file exists with data"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created comprehensive seed.sql file with 480 lines of test data including: 9 users (1 admin, 5 businesses, 8 workers), 5 businesses, 8 workers, 8 categories, 18 skills, 7 jobs (various statuses), 6 bookings, 3 transactions, 7 messages, 2 reviews, 5 notifications, 2 reports, and 3 webhooks. Seed data properly handles auth.users insertion for foreign key relationships, temporarily disables RLS during seeding, and re-enables it after insertion."
         },
         {
           "id": "subtask-5-2",
