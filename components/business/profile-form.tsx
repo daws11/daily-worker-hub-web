@@ -1,15 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Camera, FileText, User } from "lucide-react"
+import { Camera, FileText, User, AlertCircle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -36,6 +37,7 @@ import {
   AvatarImage,
   AvatarFallback,
 } from "@/components/ui/avatar"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 import {
   businessProfileSchema,
@@ -93,17 +95,22 @@ export function ProfileForm({
   onSubmit,
 }: ProfileFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [hasSubmitted, setHasSubmitted] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(
     initialData?.avatar_url
   )
+  const [avatarError, setAvatarError] = useState<string | null>(null)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [licenseFile, setLicenseFile] = useState<File | null>(null)
   const [licenseFileName, setLicenseFileName] = useState<string | undefined>()
+  const [licenseError, setLicenseError] = useState<string | null>(null)
   const [isUploadingLicense, setIsUploadingLicense] = useState(false)
 
   const form = useForm<BusinessProfileInput>({
     resolver: zodResolver(businessProfileSchema),
+    mode: "onBlur", // Validate on blur for better UX
     defaultValues: initialData || {
       name: "",
       business_type: "hotel",
@@ -118,20 +125,42 @@ export function ProfileForm({
     },
   })
 
+  const {
+    formState: { errors, isValid, isDirty },
+  } = form
+
+  // Focus on first error field when form is submitted with errors
+  useEffect(() => {
+    if (hasSubmitted && Object.keys(errors).length > 0) {
+      const firstErrorField = Object.keys(errors)[0] as keyof BusinessProfileInput
+      const fieldElement = document.querySelector(
+        `[name="${firstErrorField}"]`
+      ) as HTMLElement
+      fieldElement?.focus()
+    }
+  }, [hasSubmitted, errors])
+
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Clear previous error
+    setAvatarError(null)
+
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      toast.error("File harus berupa gambar")
+      const errorMsg = "File harus berupa gambar"
+      setAvatarError(errorMsg)
+      toast.error(errorMsg)
       return
     }
 
     // Validate file size (max 5MB)
     const MAX_SIZE = 5 * 1024 * 1024
     if (file.size > MAX_SIZE) {
-      toast.error("Ukuran file maksimal 5MB")
+      const errorMsg = "Ukuran file maksimal 5MB"
+      setAvatarError(errorMsg)
+      toast.error(errorMsg)
       return
     }
 
@@ -140,88 +169,141 @@ export function ProfileForm({
     // Create preview URL
     const previewUrl = URL.createObjectURL(file)
     setAvatarPreview(previewUrl)
+    toast.success("Foto berhasil dipilih")
   }
 
   const handleLicenseChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
+    // Clear previous error
+    setLicenseError(null)
+
     // Validate file type
     const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"]
     if (!allowedTypes.includes(file.type)) {
-      toast.error("File harus berupa PDF atau gambar (JPEG, PNG)")
+      const errorMsg = "File harus berupa PDF atau gambar (JPEG, PNG)"
+      setLicenseError(errorMsg)
+      toast.error(errorMsg)
       return
     }
 
     // Validate file size (max 10MB)
     const MAX_SIZE = 10 * 1024 * 1024
     if (file.size > MAX_SIZE) {
-      toast.error("Ukuran file maksimal 10MB")
+      const errorMsg = "Ukuran file maksimal 10MB"
+      setLicenseError(errorMsg)
+      toast.error(errorMsg)
       return
     }
 
     setLicenseFile(file)
     setLicenseFileName(file.name)
+    toast.success("Lisensi berhasil dipilih")
   }
 
   const handleSubmit = async (data: BusinessProfileInput) => {
+    setHasSubmitted(true)
+    setSubmitError(null)
+
+    // Validate optional fields properly - convert empty strings to undefined
+    const sanitizedData: BusinessProfileInput = {
+      ...data,
+      phone: data.phone?.trim() || undefined,
+      email: data.email?.trim() || undefined,
+      website: data.website?.trim() || undefined,
+      description: data.description?.trim() || undefined,
+      avatar_url: data.avatar_url?.trim() || undefined,
+      business_license_url: data.business_license_url?.trim() || undefined,
+    }
+
     setIsSubmitting(true)
 
     try {
-      let avatarUrl = data.avatar_url || initialData?.avatar_url
-      let licenseUrl = data.business_license_url || initialData?.business_license_url
+      let avatarUrl = sanitizedData.avatar_url || initialData?.avatar_url
+      let licenseUrl = sanitizedData.business_license_url || initialData?.business_license_url
 
       // Upload avatar if a new file was selected
       if (avatarFile) {
         setIsUploadingAvatar(true)
-        const uploadResult = await uploadAvatar(
-          initialData?.id || "temp",
-          avatarFile,
-          initialData?.avatar_url
-        )
+        try {
+          const uploadResult = await uploadAvatar(
+            initialData?.id || "temp",
+            avatarFile,
+            initialData?.avatar_url
+          )
 
-        if (uploadResult.error) {
-          toast.error(uploadResult.error)
+          if (uploadResult.error) {
+            setAvatarError(uploadResult.error)
+            toast.error(`Gagal upload foto: ${uploadResult.error}`)
+            setIsUploadingAvatar(false)
+            setIsSubmitting(false)
+            return
+          }
+
+          avatarUrl = uploadResult.url
+          setIsUploadingAvatar(false)
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : "Gagal upload foto"
+          setAvatarError(errorMsg)
+          toast.error(errorMsg)
           setIsUploadingAvatar(false)
           setIsSubmitting(false)
           return
         }
-
-        avatarUrl = uploadResult.url
-        setIsUploadingAvatar(false)
       }
 
       // Upload business license if a new file was selected
       if (licenseFile) {
         setIsUploadingLicense(true)
-        const uploadResult = await uploadBusinessLicense(
-          initialData?.id || "temp",
-          licenseFile,
-          initialData?.business_license_url
-        )
+        try {
+          const uploadResult = await uploadBusinessLicense(
+            initialData?.id || "temp",
+            licenseFile,
+            initialData?.business_license_url
+          )
 
-        if (uploadResult.error) {
-          toast.error(uploadResult.error)
+          if (uploadResult.error) {
+            setLicenseError(uploadResult.error)
+            toast.error(`Gagal upload lisensi: ${uploadResult.error}`)
+            setIsUploadingLicense(false)
+            setIsSubmitting(false)
+            return
+          }
+
+          licenseUrl = uploadResult.url
+          setIsUploadingLicense(false)
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : "Gagal upload lisensi"
+          setLicenseError(errorMsg)
+          toast.error(errorMsg)
           setIsUploadingLicense(false)
           setIsSubmitting(false)
           return
         }
-
-        licenseUrl = uploadResult.url
-        setIsUploadingLicense(false)
       }
 
       // Prepare form data with avatar and license URLs
       const formData = {
-        ...data,
+        ...sanitizedData,
         avatar_url: avatarUrl,
         business_license_url: licenseUrl,
       }
 
       if (onSubmit) {
-        const result = await onSubmit(formData)
-        if (result.error) {
-          toast.error(result.error)
+        try {
+          const result = await onSubmit(formData)
+          if (result.error) {
+            setSubmitError(result.error)
+            toast.error(result.error)
+            setIsSubmitting(false)
+            return
+          }
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : "Gagal menyimpan profil"
+          setSubmitError(errorMsg)
+          toast.error(errorMsg)
+          setIsSubmitting(false)
           return
         }
       }
@@ -232,9 +314,9 @@ export function ProfileForm({
           : "Profil bisnis berhasil diperbarui"
       )
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Terjadi kesalahan"
-      )
+      const errorMsg = error instanceof Error ? error.message : "Terjadi kesalahan tak terduga"
+      setSubmitError(errorMsg)
+      toast.error(errorMsg)
     } finally {
       setIsSubmitting(false)
     }
@@ -253,10 +335,29 @@ export function ProfileForm({
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {/* Submit Error Alert */}
+        {hasSubmitted && submitError && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{submitError}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Form-level validation error summary */}
+        {hasSubmitted && Object.keys(errors).length > 0 && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Mohon perbaiki {Object.keys(errors).length} error pada formulir.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
             className="space-y-6"
+            noValidate
           >
             {/* Avatar Upload */}
             <div className="flex flex-col items-center space-y-3">
@@ -280,6 +381,7 @@ export function ProfileForm({
                   accept="image/*"
                   onChange={handleAvatarChange}
                   className="hidden"
+                  disabled={isSubmitting || isUploadingAvatar}
                 />
                 {avatarPreview && (
                   <Button
@@ -289,15 +391,24 @@ export function ProfileForm({
                     onClick={() => {
                       setAvatarFile(null)
                       setAvatarPreview(undefined)
+                      setAvatarError(null)
                     }}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isUploadingAvatar}
                   >
                     Hapus
                   </Button>
                 )}
               </div>
+              {isUploadingAvatar && (
+                <p className="text-xs text-muted-foreground animate-pulse">
+                  Mengupload foto...
+                </p>
+              )}
+              {avatarError && (
+                <p className="text-xs text-destructive">{avatarError}</p>
+              )}
               <p className="text-xs text-muted-foreground">
-                Format: JPG, PNG. Maksimal 5MB
+                Format: JPG, PNG. Maksimal 5MB. Opsional.
               </p>
             </div>
 
@@ -312,8 +423,13 @@ export function ProfileForm({
                     <Input
                       placeholder="Contoh: Hotel Bali Indah"
                       {...field}
+                      disabled={isSubmitting}
+                      aria-invalid={hasSubmitted && !!errors.name}
                     />
                   </FormControl>
+                  <FormDescription>
+                    Nama resmi perusahaan atau bisnis Anda (1-200 karakter)
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -329,9 +445,12 @@ export function ProfileForm({
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    disabled={isSubmitting}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger
+                        aria-invalid={hasSubmitted && !!errors.business_type}
+                      >
                         <SelectValue placeholder="Pilih tipe bisnis" />
                       </SelectTrigger>
                     </FormControl>
@@ -343,6 +462,9 @@ export function ProfileForm({
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormDescription>
+                    Pilih kategori yang paling sesuai dengan bisnis Anda
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -359,8 +481,13 @@ export function ProfileForm({
                     <Input
                       placeholder="Contoh: Jl. Raya Kuta No. 123"
                       {...field}
+                      disabled={isSubmitting}
+                      aria-invalid={hasSubmitted && !!errors.address}
                     />
                   </FormControl>
+                  <FormDescription>
+                    Alamat lengkap lokasi bisnis Anda (1-500 karakter)
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -376,9 +503,12 @@ export function ProfileForm({
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
+                    disabled={isSubmitting}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger
+                        aria-invalid={hasSubmitted && !!errors.area}
+                      >
                         <SelectValue placeholder="Pilih area" />
                       </SelectTrigger>
                     </FormControl>
@@ -390,6 +520,9 @@ export function ProfileForm({
                       ))}
                     </SelectContent>
                   </Select>
+                  <FormDescription>
+                    Pilih kabupaten/kota lokasi bisnis Anda di Bali
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -406,8 +539,13 @@ export function ProfileForm({
                     <Input
                       placeholder="Contoh: 0361 123456"
                       {...field}
+                      disabled={isSubmitting}
+                      aria-invalid={hasSubmitted && !!errors.phone}
                     />
                   </FormControl>
+                  <FormDescription>
+                    Nomor telepon yang bisa dihubungi (opsional, max 20 karakter)
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -425,8 +563,13 @@ export function ProfileForm({
                       type="email"
                       placeholder="Contoh: info@hotelbali.com"
                       {...field}
+                      disabled={isSubmitting}
+                      aria-invalid={hasSubmitted && !!errors.email}
                     />
                   </FormControl>
+                  <FormDescription>
+                    Email resmi bisnis untuk komunikasi (opsional)
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -444,8 +587,13 @@ export function ProfileForm({
                       type="url"
                       placeholder="Contoh: https://hotelbali.com"
                       {...field}
+                      disabled={isSubmitting}
+                      aria-invalid={hasSubmitted && !!errors.website}
                     />
                   </FormControl>
+                  <FormDescription>
+                    Website resmi bisnis jika ada (opsional, harus diawali https://)
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -463,8 +611,13 @@ export function ProfileForm({
                       className="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-y"
                       placeholder="Ceritakan tentang bisnis Anda..."
                       {...field}
+                      disabled={isSubmitting}
+                      aria-invalid={hasSubmitted && !!errors.description}
                     />
                   </FormControl>
+                  <FormDescription>
+                    Jelaskan tentang bisnis, layanan, atau fasilitas yang Anda tawarkan (opsional, max 2000 karakter)
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -489,7 +642,7 @@ export function ProfileForm({
                   accept=".pdf,image/jpeg,image/png,image/jpg"
                   onChange={handleLicenseChange}
                   className="hidden"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isUploadingLicense}
                 />
                 {(licenseFileName || initialData?.business_license_url) && (
                   <Button
@@ -499,20 +652,29 @@ export function ProfileForm({
                     onClick={() => {
                       setLicenseFile(null)
                       setLicenseFileName(undefined)
+                      setLicenseError(null)
                     }}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || isUploadingLicense}
                   >
                     Hapus
                   </Button>
                 )}
               </div>
+              {isUploadingLicense && (
+                <p className="text-xs text-muted-foreground animate-pulse">
+                  Mengupload lisensi...
+                </p>
+              )}
+              {licenseError && (
+                <p className="text-xs text-destructive">{licenseError}</p>
+              )}
               {(licenseFileName || initialData?.business_license_url) && (
                 <p className="text-sm text-muted-foreground">
                   {licenseFileName || "Lisensi bisnis telah diupload"}
                 </p>
               )}
               <p className="text-xs text-muted-foreground">
-                Format: PDF, JPG, PNG. Maksimal 10MB
+                Format: PDF, JPG, PNG. Maksimal 10MB. Opsional.
               </p>
             </div>
 
@@ -521,13 +683,22 @@ export function ProfileForm({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => form.reset()}
+                onClick={() => {
+                  form.reset()
+                  setHasSubmitted(false)
+                  setSubmitError(null)
+                  setAvatarError(null)
+                  setLicenseError(null)
+                }}
                 disabled={isSubmitting}
               >
                 Reset
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting
+              <Button
+                type="submit"
+                disabled={isSubmitting || isUploadingAvatar || isUploadingLicense}
+              >
+                {isSubmitting || isUploadingAvatar || isUploadingLicense
                   ? "Menyimpan..."
                   : mode === "create"
                     ? "Buat Profil"
