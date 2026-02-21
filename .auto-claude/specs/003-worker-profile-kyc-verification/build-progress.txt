@@ -328,3 +328,21 @@ Profile Completion:
 - Workers table now has proper RLS protection for KYC-related data (kyc_status, reliability_score)
 - Migration file: supabase/migrations/20250222000005_add_rls_policies.sql
 - Committed: d732ba2
+
+[2026-02-22] subtask-6-4: Add loading states and error handling
+- Improved error handling in worker profile and KYC pages:
+  - Added try-catch blocks around data loading in useEffect hooks
+  - Added toast notifications for API failures and network errors
+  - Ensured loading states are always reset with finally blocks
+  - Improved user feedback for loading and error states
+- Profile page (app/app/(dashboard)/worker/profile/page.tsx):
+  - loadProfile function now wrapped in try-catch
+  - Toast errors for failed profile/skills loading
+  - finally block ensures setIsLoadingProfile(false) always executes
+- KYC page (app/app/(dashboard)/worker/kyc/page.tsx):
+  - loadKycStatus function now wrapped in try-catch
+  - Toast errors for failed worker data loading
+  - Graceful handling of PGRST116 (profile not found) error
+  - finally block ensures setIsLoadingData(false) always executes
+- Follows error handling patterns from auth-provider.tsx
+- Committed: 7124ca0
