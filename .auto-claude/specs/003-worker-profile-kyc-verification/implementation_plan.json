@@ -4,7 +4,7 @@
   "workflow_type": "feature",
   "workflow_rationale": "This is a multi-service feature involving database schema changes, file storage, API endpoints, and frontend UI components. The feature follows a dependency order: database first, then backend APIs, then frontend UI.",
   "created_at": "2026-02-21T20:18:40.647Z",
-  "updated_at": "2026-02-21T23:19:54.239Z",
+  "updated_at": "2026-02-21T23:23:36.963Z",
   "status": "in_progress",
   "phases": [
     {
@@ -482,8 +482,8 @@
               "Rejected status shows reason and resubmit option"
             ]
           },
-          "status": "pending",
-          "notes": "Display KYC status badge on profile page. If pending, prompt user to complete KYC. If rejected, show rejection reason and allow resubmission. If verified, display full profile with badge."
+          "status": "completed",
+          "notes": "Added KycStatusBadge component to both profile and KYC pages header. Added rejectionReason state to profile page and loads from kyc_verifications table when rejected. Created status-specific banners: unverified (blue, with 'Verifikasi Sekarang' link), pending (yellow, info message), rejected (red, shows rejection reason with 'Submit Ulang' link), verified (green, read-only info). Profile page displays banner based on KYC status with appropriate call-to-actions."
         }
       ]
     },
