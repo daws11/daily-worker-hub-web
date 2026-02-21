@@ -110,7 +110,8 @@
             "command": "grep -q 'CREATE TABLE workers\\|CREATE TABLE businesses' supabase/migrations/20250222000001_initial_schema.sql && echo 'Profile tables defined'",
             "expected": "Profile tables defined"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Workers and businesses tables already properly defined with user_id foreign key references, CASCADE delete, UNIQUE constraint for one-to-one relationship, location indexes, and updated_at triggers"
         },
         {
           "id": "subtask-2-4",

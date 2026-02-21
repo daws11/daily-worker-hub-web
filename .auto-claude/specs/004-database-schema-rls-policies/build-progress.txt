@@ -163,3 +163,15 @@ Changes:
   - Added proper SECURITY DEFINER and grants for auth integration
 Commit: 4e79c2f - auto-claude: subtask-2-2 - Create users table with auth integration
 
+[2026-02-22] Subtask 2-3: Create workers and businesses tables with user relationships
+Status: COMPLETED
+Changes:
+  - Workers and businesses tables already properly defined in migration
+  - Both tables have user_id foreign key references with CASCADE delete
+  - UNIQUE(user_id) constraint ensures one-to-one relationship
+  - Location indexes (lat, lng) for geo-queries
+  - update_businesses_updated_at and update_workers_updated_at triggers
+  - All fields match TypeScript types in lib/supabase/types.ts
+Verification: grep -q 'CREATE TABLE workers\|CREATE TABLE businesses' supabase/migrations/20250222000001_initial_schema.sql
+Commit: 95f267f - auto-claude: subtask-2-3 - Create workers and businesses tables with user rel
+
