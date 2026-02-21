@@ -195,3 +195,38 @@ Next phase options:
 - Phase 4: Storage Service Setup (1 subtask) - Depends on Phase 2
 - Phase 5: Edge Functions Setup (2 subtasks) - Can run in parallel
 - Phase 6: Scripts and Documentation (2 subtasks) - Can run in parallel
+[2026-02-22] Subtask 5-1 completed: Created Edge Functions directory structure with .gitkeep
+
+[subtask-5-2] COMPLETED ✅
+- Created reliability-score edge function (supabase/functions/reliability-score/index.ts)
+- Features:
+  • Calculates worker reliability score based on booking completion rate (50%) and average rating (50%)
+  • Returns normalized score (1-5 scale) with detailed metrics
+  • Looks at bookings and reviews from last 90 days
+- Implementation:
+  • Uses Deno runtime with standard Supabase Edge Function imports
+  • CORS headers for browser requests
+  • Input validation (requires worker_id)
+  • Proper error handling with descriptive messages
+  • Works with existing workers/bookings/reviews schema
+- API:
+  • POST /functions/v1/reliability-score
+  • Body: { "worker_id": "uuid" }
+  • Returns: { success, worker_id, reliability_score, metrics }
+- Note: Docker not available in isolated worktree for full verification, but TypeScript code is valid Deno runtime code
+- Committed: 0f440dd
+[subtask-6-1] COMPLETED ✅
+- Created scripts/start-supabase.sh helper script
+- Features:
+  • Docker availability check with helpful error messages
+  • Supabase CLI verification (supports global CLI and npx fallback)
+  • Supabase config validation (checks supabase/config.toml exists)
+  • Colored terminal output (RED, GREEN, YELLOW, BLUE, NC)
+  • Service URL display (Studio UI, API URL, DB connection string)
+  • Useful command references (stop, status, db reset, logs)
+- Error handling: set -e for strict error checking
+- Modular functions: check_docker(), check_supabase_cli(), check_config(), start_supabase(), print_service_info()
+- Syntax validated with bash -n
+- Note: In isolated worktree without Docker, script correctly detects and reports Docker not running
+- Committed: 7f5640b
+
