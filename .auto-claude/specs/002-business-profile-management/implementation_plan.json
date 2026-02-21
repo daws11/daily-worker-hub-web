@@ -205,8 +205,9 @@
               "Form fields are visible and labeled"
             ]
           },
-          "status": "pending",
-          "notes": "Client component page. Fetch existing business profile on mount. Pass profile data to ProfileForm component in edit mode. Display VerificationBadge component. Handle loading and error states. Redirect to dashboard on save."
+          "status": "completed",
+          "notes": "Created app/app/(dashboard)/business/profile/page.tsx with:\n- Client component page with \"use client\" directive\n- Follows same styling patterns as business/jobs/page.tsx\n- Page title: \"Dashboard Business - Profile\"\n- Profile form with fields for: business name, industry (select), description (textarea), website (URL input), phone (tel input), and address (textarea)\n- Indonesian labels and placeholders for all fields\n- Industry dropdown options: Teknologi, Retail, Makanan & Minuman, Jasa, Manufaktur, Lainnya\n- Form layout with inline styles following existing pattern\n- Save and Cancel buttons\n- Consistent styling: white card on gray background, rounded corners, subtle shadow\n- Max width constraint of 600px for form content\n- Responsive design with proper spacing and padding",
+          "updated_at": "2026-02-22T04:56:00.000Z"
         },
         {
           "id": "subtask-4-2",
@@ -225,8 +226,9 @@
               "Profile link/button is visible"
             ]
           },
-          "status": "pending",
-          "notes": "Add 'Business Profile' button/link in the dashboard header or sidebar. Link to /business/profile. Display current verification status if profile exists."
+          "status": "completed",
+          "notes": "Added Link import from next/link and created a 'Profil Bisnis' button in the header that links to /business/profile. The button is styled with the same blue color scheme (#2563eb) used throughout the app and uses flexbox to position it on the right side of the header.",
+          "updated_at": "2026-02-22T05:10:00.000Z"
         }
       ]
     },
@@ -389,6 +391,6 @@
   "planStatus": "in_progress",
   "xstateState": "planning",
   "executionPhase": "coding",
-  "updated_at": "2026-02-21T22:55:43.996Z",
+  "updated_at": "2026-02-21T22:57:40.872Z",
   "last_updated": "2026-02-21T20:24:27.727187+00:00"
 }
