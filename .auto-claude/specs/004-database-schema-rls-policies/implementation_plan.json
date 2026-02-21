@@ -186,7 +186,8 @@
             "command": "grep -q 'CREATE TABLE transactions' supabase/migrations/20250222000001_initial_schema.sql && echo 'Transactions table defined'",
             "expected": "Transactions table defined"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Transactions table already properly defined with all required columns matching types.ts: id, booking_id, amount (NUMERIC 10,2), type (transaction_type enum: payment/refund), status (transaction_status enum: pending/success/failed), provider_transaction_id, created_at. Includes foreign key relationship to bookings with CASCADE delete, and proper indexes on booking_id, status, provider_transaction_id, and created_at."
         },
         {
           "id": "subtask-2-8",
@@ -564,5 +565,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-21T22:13:03.699Z"
+  "updated_at": "2026-02-21T22:14:15.378Z"
 }
