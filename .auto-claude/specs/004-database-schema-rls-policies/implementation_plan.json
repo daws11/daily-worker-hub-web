@@ -167,7 +167,8 @@
             "command": "grep -q 'CREATE TABLE bookings' supabase/migrations/20250222000001_initial_schema.sql && echo 'Bookings table defined'",
             "expected": "Bookings table defined"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Bookings table already properly defined with all required columns matching types.ts: id, job_id, worker_id, business_id, status (booking_status enum), start_date, end_date, final_price, created_at, updated_at. Includes foreign key relationships to jobs, workers, and businesses with CASCADE deletes, proper indexes on job_id, worker_id, business_id, status, and created_at, unique constraint to ensure one booking per job-worker combination for active statuses, and updated_at trigger."
         },
         {
           "id": "subtask-2-7",
@@ -563,5 +564,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-21T22:11:49.566Z"
+  "updated_at": "2026-02-21T22:13:03.699Z"
 }

@@ -3,7 +3,7 @@
   "spec": "004-database-schema-rls-policies",
   "state": "building",
   "subtasks": {
-    "completed": 6,
+    "completed": 7,
     "total": 24,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 8,
+    "number": 9,
     "started_at": "2026-02-22T05:58:42.545665"
   },
-  "last_update": "2026-02-22T06:11:49.620797"
+  "last_update": "2026-02-22T06:13:03.743821"
 }
