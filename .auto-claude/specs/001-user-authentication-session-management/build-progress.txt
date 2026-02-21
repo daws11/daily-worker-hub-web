@@ -138,3 +138,27 @@ Subtask-2-3: Create reset-password page - COMPLETED
 - Uses updatePassword method from AuthProvider
 - Clean implementation with no console.log statements
 
+Subtask-3-1: Add Google OAuth method to AuthProvider - COMPLETED
+- Added signInWithGoogle(role) method to AuthProvider
+- Uses Supabase Auth signInWithOAuth with Google provider
+- Includes role parameter in redirect URL (/auth/callback?role=${role}) for proper post-login routing
+- Follows existing patterns with setIsLoading, try/catch error handling
+- Indonesian toast messages for success/error feedback
+- Updated AuthContextType to include new method
+- Added method to Provider value for consumer access
+- Note: Pre-existing TypeScript errors in fetchUserRole and signUp functions (not related to this change)
+
+Subtask-3-2: Add Google button to login page - COMPLETED
+- Added Google sign-in button to app/app/(auth)/login/page.tsx
+- Button features:
+  - Official Google logo SVG (4-color G logo)
+  - White background with gray border
+  - Hover effect (light gray background on hover)
+  - Loading state support (disabled when isLoading, shows "Memproses...")
+  - Indonesian text "Lanjutkan dengan Google"
+- Visual separator ("ATAU") between email/password form and Google button
+- Uses selected role (worker/business) for OAuth redirect
+- Properly integrated with existing useAuth hook
+- Follows existing code patterns and inline styling conventions
+
+
