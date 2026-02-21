@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+import { supabase } from "@/lib/supabase/client"
+import { getBusinessProfile, createBusinessProfile, updateBusinessProfile } from "@/lib/supabase/business"
 import { ProfileForm } from "@/components/business/profile-form"
+import { VerificationBadge } from "@/components/business/verification-badge"
 import type { BusinessType, Area } from "@/lib/schemas/business"
 
 interface BusinessProfile {
@@ -19,12 +21,12 @@ interface BusinessProfile {
   description?: string
   avatar_url?: string
   business_license_url?: string
+  verification_status?: 'pending' | 'verified' | 'rejected'
 }
 
 export default function BusinessProfilePage() {
   const [profile, setProfile] = useState<BusinessProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
     async function fetchProfile() {
@@ -39,15 +41,12 @@ export default function BusinessProfilePage() {
           return
         }
 
-        const { data, error } = await supabase
-          .from("business_profiles")
-          .select("*")
-          .eq("user_id", user.id)
-          .single()
+        // Use business utility function
+        const { data, error } = await getBusinessProfile(user.id)
 
         if (error) {
           // Check if it's a "not found" error
-          if (error.code === "PGRST116") {
+          if (error.includes('PGRST116') || error.includes('rows')) {
             // No profile exists yet, this is fine for new users
             setProfile(null)
           } else {
@@ -68,7 +67,7 @@ export default function BusinessProfilePage() {
     fetchProfile()
   }, [supabase])
 
-  const handleSubmit = async (data: Omit<BusinessProfile, "id">) => {
+  const handleSubmit = async (data: Omit<BusinessProfile, "id" | "verification_status">) => {
     try {
       const {
         data: { user },
@@ -80,65 +79,56 @@ export default function BusinessProfilePage() {
       }
 
       if (profile?.id) {
-        // Update existing profile
-        const { error } = await supabase
-          .from("business_profiles")
-          .update({
-            name: data.name,
-            business_type: data.business_type,
-            address: data.address,
-            area: data.area,
-            phone: data.phone || null,
-            email: data.email || null,
-            website: data.website || null,
-            description: data.description || null,
-            avatar_url: data.avatar_url || null,
-            business_license_url: data.business_license_url || null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", profile.id)
+        // Update existing profile using business utility
+        const { data: updatedProfile, error } = await updateBusinessProfile(profile.id, {
+          name: data.name,
+          business_type: data.business_type,
+          address: data.address,
+          area: data.area,
+          phone: data.phone || null,
+          email: data.email || null,
+          website: data.website || null,
+          description: data.description || null,
+          avatar_url: data.avatar_url || null,
+          business_license_url: data.business_license_url || null,
+          updated_at: new Date().toISOString(),
+        })
 
         if (error) {
           console.error("Error updating profile:", error)
           return { error: "Gagal memperbarui profil bisnis" }
         }
 
-        // Refetch profile
-        const { data: updatedProfile } = await supabase
-          .from("business_profiles")
-          .select("*")
-          .eq("id", profile.id)
-          .single()
-
         if (updatedProfile) {
           setProfile(updatedProfile)
+          toast.success("Profil bisnis berhasil diperbarui")
         }
       } else {
-        // Create new profile
-        const { data: newProfile, error } = await supabase
-          .from("business_profiles")
-          .insert({
-            user_id: user.id,
-            name: data.name,
-            business_type: data.business_type,
-            address: data.address,
-            area: data.area,
-            phone: data.phone || null,
-            email: data.email || null,
-            website: data.website || null,
-            description: data.description || null,
-            avatar_url: data.avatar_url || null,
-            business_license_url: data.business_license_url || null,
-          })
-          .select()
-          .single()
+        // Create new profile using business utility
+        const { data: newProfile, error } = await createBusinessProfile({
+          user_id: user.id,
+          name: data.name,
+          business_type: data.business_type,
+          address: data.address,
+          area: data.area,
+          phone: data.phone || null,
+          email: data.email || null,
+          website: data.website || null,
+          description: data.description || null,
+          avatar_url: data.avatar_url || null,
+          business_license_url: data.business_license_url || null,
+          verification_status: 'pending',
+        })
 
         if (error) {
           console.error("Error creating profile:", error)
           return { error: "Gagal membuat profil bisnis" }
         }
 
-        setProfile(newProfile)
+        if (newProfile) {
+          setProfile(newProfile)
+          toast.success("Profil bisnis berhasil dibuat")
+        }
       }
 
       return {}
@@ -162,12 +152,19 @@ export default function BusinessProfilePage() {
   return (
     <div className="container mx-auto py-8 max-w-4xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">
-          Profil Bisnis
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          Kelola profil bisnis Anda untuk menarik lebih banyak pekerja
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">
+              Profil Bisnis
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Kelola profil bisnis Anda untuk menarik lebih banyak pekerja
+            </p>
+          </div>
+          {profile && (
+            <VerificationBadge status={profile.verification_status || "pending"} />
+          )}
+        </div>
       </div>
 
       <ProfileForm
