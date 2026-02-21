@@ -59,7 +59,7 @@ type AuthContextType = {
   session: Session | null
   userRole: 'worker' | 'business' | null
   isLoading: boolean
-  signIn: (email: string, password: string, role: 'worker' | 'business') => Promise<void>
+  signIn: (email: string, password: string, role: 'worker' | 'business', redirect?: string) => Promise<void>
   signInWithGoogle: (role: 'worker' | 'business') => Promise<void>
   signOut: () => Promise<void>
   signUp: (email: string, password: string, fullName: string, role: 'worker' | 'business') => Promise<void>
@@ -188,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signIn = async (email: string, password: string, role: 'worker' | 'business') => {
+  const signIn = async (email: string, password: string, role: 'worker' | 'business', redirect?: string) => {
     setIsLoading(true)
     try {
       // Validate inputs
@@ -215,11 +215,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       toast.success("Login berhasil!")
 
-      // Redirect based on role
-      if (role === 'worker') {
-        router.push("/dashboard-worker-jobs")
+      // Use redirect parameter if provided, otherwise use role-based default
+      if (redirect) {
+        router.push(redirect)
       } else {
-        router.push("/dashboard-business-jobs")
+        // Redirect based on role
+        if (role === 'worker') {
+          router.push("/dashboard-worker-jobs")
+        } else {
+          router.push("/dashboard-business-jobs")
+        }
       }
     } catch (error: any) {
       const errorMessage = getAuthErrorMessage(error)

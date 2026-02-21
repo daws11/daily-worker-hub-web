@@ -1,19 +1,23 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth, LoadingSpinner } from "../../providers/auth-provider"
 
 export default function LoginPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { signIn, signInWithGoogle, isLoading } = useAuth()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [role, setRole] = useState<"worker" | "business">("worker")
 
+  // Get redirect parameter from URL (set by middleware)
+  const redirect = searchParams.get("redirect")
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await signIn(email, password, role)
+    await signIn(email, password, role, redirect || undefined)
   }
 
   const handleGoogleSignIn = async () => {
