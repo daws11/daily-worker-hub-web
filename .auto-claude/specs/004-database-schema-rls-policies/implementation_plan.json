@@ -205,7 +205,8 @@
             "command": "grep -q 'CREATE TABLE messages\\|CREATE TABLE reviews\\|CREATE TABLE notifications' supabase/migrations/20250222000001_initial_schema.sql && echo 'Communication tables defined'",
             "expected": "Communication tables defined"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Messages, reviews, and notifications tables already properly defined matching types.ts: Messages table has id, sender_id, receiver_id (FK to users), booking_id (FK, nullable), content, is_read, created_at with proper indexes. Reviews table has id, booking_id (FK), worker_id (FK), rating (1-5 check constraint), comment, created_at with proper indexes and unique constraint on (booking_id, worker_id). Notifications table has id, user_id (FK to users), title, body, link, is_read, created_at with proper indexes."
         },
         {
           "id": "subtask-2-9",
@@ -565,5 +566,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-21T22:14:15.378Z"
+  "updated_at": "2026-02-21T22:15:11.376Z"
 }
