@@ -17,6 +17,8 @@ type AuthContextType = {
   signIn: (email: string, password: string, role: 'worker' | 'business') => Promise<void>
   signOut: () => Promise<void>
   signUp: (email: string, password: string, fullName: string, role: 'worker' | 'business') => Promise<void>
+  resetPassword: (email: string) => Promise<void>
+  updatePassword: (newPassword: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -174,8 +176,51 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const resetPassword = async (email: string) => {
+    setIsLoading(true)
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+
+      if (error) {
+        toast.error("Gagal mengirim email reset: " + error.message)
+        return
+      }
+
+      toast.success("Email reset password telah dikirim. Silakan cek inbox Anda.")
+    } catch (error) {
+      console.error('Reset password error:', error)
+      toast.error("Gagal mengirim email reset password")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const updatePassword = async (newPassword: string) => {
+    setIsLoading(true)
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      })
+
+      if (error) {
+        toast.error("Gagal mengupdate password: " + error.message)
+        return
+      }
+
+      toast.success("Password berhasil diupdate!")
+      router.push("/login")
+    } catch (error) {
+      console.error('Update password error:', error)
+      toast.error("Gagal mengupdate password")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, session, userRole, isLoading, signIn, signOut, signUp }}>
+    <AuthContext.Provider value={{ user, session, userRole, isLoading, signIn, signOut, signUp, resetPassword, updatePassword }}>
       {children}
     </AuthContext.Provider>
   )
