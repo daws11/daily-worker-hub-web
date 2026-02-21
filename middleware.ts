@@ -1,4 +1,4 @@
-import { createServerClient, type CookieHandlingMethods } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 /**
@@ -26,7 +26,7 @@ function createMiddlewareClient(request: NextRequest) {
           request.cookies.set({ name, value: '', ...options })
           response.cookies.set({ name, value: '', ...options })
         },
-      } as CookieHandlingMethods,
+      },
     }
   )
 
@@ -60,11 +60,10 @@ const protectedRoutes = [
  * Checks for Supabase session and redirects unauthenticated users
  */
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.url
+  const pathname = request.nextUrl.pathname
 
   // Get the origin for proper URL construction
-  const url = new URL(request.url)
-  const origin = url.origin
+  const origin = request.nextUrl.origin
 
   // Create Supabase client and get response
   const { supabase, response } = createMiddlewareClient(request)
