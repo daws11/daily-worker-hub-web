@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils"
 import type { ApplicantWithDetails } from "@/lib/data/jobs"
 import type { ComplianceStatusResult } from "@/lib/supabase/queries/compliance"
 import { ComplianceStatusBadge } from "@/components/booking/compliance-status-badge"
+import { ComplianceWarningBanner } from "@/components/booking/compliance-warning-banner"
 
 export interface ApplicantListProps extends React.HTMLAttributes<HTMLDivElement> {
   applicants: ApplicantWithDetails[]
@@ -111,6 +112,30 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
       return (applicant.status === "pending" || applicant.status === "accepted") && onReject
     }
 
+    // Find the most severe compliance issue among applicants
+    const getMostSevereComplianceIssue = (): ComplianceStatusResult | null => {
+      if (!complianceStatusByApplicant) return null
+
+      let mostSevere: ComplianceStatusResult | null = null
+
+      for (const applicant of applicants) {
+        const compliance = complianceStatusByApplicant[applicant.id]
+        if (!compliance) continue
+
+        // Prioritize blocked status over warning
+        if (compliance.status === "blocked") {
+          return compliance
+        }
+        if (compliance.status === "warning" && !mostSevere) {
+          mostSevere = compliance
+        }
+      }
+
+      return mostSevere
+    }
+
+    const complianceIssue = getMostSevereComplianceIssue()
+
     if (isLoading) {
       return (
         <Card ref={ref} className={cn("w-full", className)} {...props}>
@@ -157,6 +182,11 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {complianceIssue && (
+            <div className="mb-4">
+              <ComplianceWarningBanner compliance={complianceIssue} />
+            </div>
+          )}
           <div className="rounded-md border">
             <Table>
               <TableHeader>
