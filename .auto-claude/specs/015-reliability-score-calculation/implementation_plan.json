@@ -217,7 +217,8 @@
             "instructions": "Component displays history as list or simple chart, showing date and score changes"
           },
           "status": "completed",
-          "notes": "Component created with history list display showing date, score changes, and trend indicators. Uses Card component pattern, displays color-coded scores (green/yellow/orange/red), includes trend badges showing improvement/decline with icons, shows completed jobs count, handles empty state with helpful message, limits entries with optional prop, and formats dates relative to today (Today, Yesterday, X days ago)."
+          "notes": "Component created with history list display showing date, score changes, and trend indicators. Uses Card component pattern, displays color-coded scores (green/yellow/orange/red), includes trend badges showing improvement/decline with icons, shows completed jobs count, handles empty state with helpful message, limits entries with optional prop, and formats dates relative to today (Today, Yesterday, X days ago).",
+          "updated_at": "2026-02-22T17:22:55.388376+00:00"
         }
       ]
     },
@@ -251,8 +252,8 @@
               "ScoreHistory shows trend (if history exists)"
             ]
           },
-          "status": "pending",
-          "notes": "Fetch score data using server action, display all three components"
+          "status": "completed",
+          "notes": "Added imports for ReliabilityBadge, ScoreBreakdown, and ScoreHistory components. Created state for reliabilityScore, scoreBreakdown, and scoreHistory. Implemented useEffect to fetch worker's reliability score and history from database. Added UI section after KYC banners showing: score header with ReliabilityBadge, explanation text, and grid layout for ScoreBreakdown and ScoreHistory cards. ScoreBreakdown only shows when data exists. ScoreHistory displays up to 5 entries with current score context. Follows existing inline style patterns from the page."
         },
         {
           "id": "subtask-4-2",
@@ -274,8 +275,8 @@
               "New workers show 'Insufficient data' indicator"
             ]
           },
-          "status": "pending",
-          "notes": "Helps businesses make hiring decisions based on worker reliability"
+          "status": "completed",
+          "notes": "Added reliability_score to ApplicantWithDetails type, updated getApplicants function to select reliability_score from workers, added ReliabilityBadge component to applicant list table with new \"Skor Keandalan\" column. Workers with scores 1.0-5.0 show color-coded badges, and 0 score shows N/A indicator."
         }
       ]
     },
@@ -485,7 +486,8 @@
   "executionPhase": "coding",
   "status": "in_progress",
   "planStatus": "in_progress",
-  "updated_at": "2026-02-22T17:17:21.735Z",
+  "updated_at": "2026-02-22T17:38:01.037Z",
   "xstateState": "backlog",
-  "recoveryNote": "Task recovered from stuck state at 2026-02-22T15:41:06.709Z"
+  "recoveryNote": "Task recovered from stuck state at 2026-02-22T15:41:06.709Z",
+  "last_updated": "2026-02-22T17:22:55.388392+00:00"
 }

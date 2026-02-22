@@ -263,6 +263,50 @@ Date: 2026-02-23
   • Commit: 3507536
   • Plan updated: subtask-3-3 status = completed
 
-[NEXT] Phase 4: Integration Pages (2 subtasks)
-  • Subtask 4-1: Add reliability score display to worker profile page
-  • Subtask 4-2: Add reliability score display to business applicant view
+[COMPLETED] Subtask 4-1: Add reliability score display to worker profile page
+  • Updated: app/app/(dashboard)/worker/profile/page.tsx
+  • Added imports:
+    - ReliabilityBadge from components/worker/reliability-badge
+    - ScoreBreakdown from components/worker/score-breakdown
+    - ScoreHistory from components/worker/score-history
+    - ScoreHistoryEntry type
+  • Added state:
+    - reliabilityScore (number | null)
+    - scoreBreakdown (attendance_rate, punctuality_rate, avg_rating, completed_jobs_count)
+    - scoreHistory (ScoreHistoryEntry[])
+    - isLoadingScore (boolean)
+  • Added useEffect to fetch:
+    - Worker's reliability_score from workers table
+    - Latest score breakdown from reliability_score_history
+    - Score history (up to 10 entries) from reliability_score_history
+  • Added UI section after KYC banners:
+    - Score header card with title and ReliabilityBadge
+    - Explanation text about score calculation
+    - Grid layout for ScoreBreakdown and ScoreHistory cards
+    - ScoreBreakdown only renders when data exists
+    - ScoreHistory shows up to 5 entries with current score context
+  • Pattern from: app/app/(dashboard)/worker/jobs/page.tsx
+  • Commit: 00c6624
+  • Plan updated: subtask-4-1 status = completed
+
+[COMPLETED] Subtask 4-2: Add reliability score display to business job applicant view
+  • Updated: components/applicant-list.tsx
+  • Updated: lib/data/jobs.ts
+  • Changes to lib/data/jobs.ts:
+    - Added reliability_score to ApplicantWithDetails type
+    - Updated getApplicants() function to select reliability_score from workers
+  • Changes to components/applicant-list.tsx:
+    - Added import for ReliabilityBadge component
+    - Added "Skor Keandalan" column header to table
+    - Added reliability score badge display in each applicant row
+    - ReliabilityBadge shows score with showStars={false} for compact display
+    - Workers with scores 1.0-5.0 show color-coded badges (excellent/verygood/good/fair/poor)
+    - Workers with 0 or null score show "N/A" indicator (insufficient data)
+  • Pattern from: components/worker/reliability-badge.tsx
+  • Commit: 8cc65b7
+  • Plan updated: subtask-4-2 status = completed
+
+[NEXT] Phase 5: Automation Triggers (3 subtasks)
+  • Subtask 5-1: Create database trigger to auto-calculate score when booking completes
+  • Subtask 5-2: Add score calculation to job completion flow
+  • Subtask 5-3: End-to-end verification of automatic score calculation
