@@ -154,3 +154,39 @@ Session 7 (2026-02-23):
   - Committed: e39990d
 
 === END SESSION 7 ===
+
+Session 8 (2026-02-23):
+- Subtask 4-1 COMPLETED: Created checkout dialog component
+  - File: components/booking/checkout-dialog.tsx (new file)
+  - Features:
+    * Job details display (title, description, payment estimate, work period, location)
+    * 24-hour review period notice
+    * Controlled/uncontrolled state support (like WorkerNotesDialog)
+    * Integration with checkoutBooking server action
+    * Indonesian language UI with toast notifications
+    * Proper loading and error states
+    * Status validation (only allows checkout for 'in_progress' bookings)
+    * Warning message when booking is not in in_progress status
+  - Props interface:
+    * bookingId: string
+    * workerId: string
+    * status: BookingStatus
+    * job: JobDetails (id, title, description, budget_max, address)
+    * finalPrice?: number
+    * startDate?: string
+    * endDate?: string
+    * onCheckoutComplete?: callback
+    * trigger?: React.ReactNode (for DialogTrigger)
+    * triggerClassName?: string
+    * open?: boolean (controlled state)
+    * onOpenChange?: callback (controlled state)
+  - Pattern compliance:
+    * Follows WorkerNotesDialog pattern for controlled/uncontrolled state
+    * Uses same UI components (Dialog, Button, etc.)
+    * Uses cn() utility for styling
+    * Toast notifications from sonner
+    * Indonesian language throughout
+  - Icons: Banknote, Clock, MapPin, LogOut (all from lucide-react)
+  - Committed: 83831dc
+
+=== END SESSION 8 ===

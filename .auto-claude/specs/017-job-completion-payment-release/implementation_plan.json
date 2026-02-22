@@ -2,7 +2,7 @@
   "feature": "Job Completion & Payment Release",
   "description": "# Job Completion & Payment Release\n\nAutomated job completion workflow that triggers when workers check out. Moves funds from business pending balance to worker pending balance, then to worker available balance after review period or auto-release timer.\n\n## Rationale\nAutomated payment release ensures workers are paid fairly and quickly while giving businesses a window to raise issues. This builds trust and reduces payment disputes.\n\n## User Stories\n- As a worker, I want to be paid automatically after completing a job so that I receive my earnings promptly\n- As a business, I want a review period so that I can flag issues if needed\n- As both parties, I want payment confirmation so that I know the transaction completed\n\n## Acceptance Criteria\n- [ ] Job completion is triggered when worker checks out\n- [ ] Payment moves from business pending to worker pending\n- [ ] Businesses can flag issues within 24 hours\n- [ ] Worker funds are released after 24-hour review period\n- [ ] Payment confirmation notifications are sent to both parties\n- [ ] Transaction records show payment flow\n- [ ] Disputed payments are held until resolution\n",
   "created_at": "2026-02-21T21:14:31.161Z",
-  "updated_at": "2026-02-22T17:30:13.770Z",
+  "updated_at": "2026-02-22T17:33:29.138Z",
   "status": "in_progress",
   "planStatus": "in_progress",
   "xstateState": "backlog",
@@ -232,7 +232,7 @@
           },
           "status": "completed",
           "notes": "Updated lib/lib/supabase/queries/bookings.ts to include payment status and wallet information in all booking queries. Modified JobBookingWithDetails type to include optional wallet_transaction field. Updated getJobBookings, getWorkerBookings, getBusinessBookings, and getBookingById functions to fetch wallet transaction details (id, amount, type, status, description, created_at). All booking queries already return checkout_time, payment_status, and review_deadline fields via select('*'). Now queries provide complete payment information including transaction details.",
-          "updated_at": "2026-02-23T01:31:00.000000+00:00"
+          "updated_at": "2026-02-22T17:33:09.002585+00:00"
         }
       ]
     },
@@ -262,7 +262,9 @@
             "type": "manual",
             "instructions": "Verify dialog appears on accepted/in_progress bookings, shows job details, and confirms checkout"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created checkout-dialog.tsx with: Job details display (title, description, payment estimate, work period, location), 24-hour review period notice, Controlled/uncontrolled state support, Integration with checkoutBooking server action, Indonesian language UI, Toast notifications, Proper loading and error states. Component follows patterns from WorkerNotesDialog and BookingActions. Only allows checkout for 'in_progress' status bookings.",
+          "updated_at": "2026-02-23T01:37:00.000000+00:00"
         },
         {
           "id": "subtask-4-2",
@@ -626,5 +628,5 @@
     }
   },
   "qa_signoff": null,
-  "last_updated": "2026-02-23T12:00:00.000000+00:00"
+  "last_updated": "2026-02-22T17:33:09.002604+00:00"
 }
