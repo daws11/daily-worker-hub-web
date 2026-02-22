@@ -462,7 +462,9 @@
             "command": "npm run type-check 2>&1 | grep -i 'error' | wc -l",
             "expected": "0"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created WalletBalance component at components/payment/wallet-balance.tsx with comprehensive features: 1) React.forwardRef pattern with proper displayName, 2) Loading state with spinner, 3) Empty state handling (no wallet), 4) Normal state displaying balance with formatIDR utility, 5) Configurable wallet type (business/worker), 6) Optional icon display with Lucide Wallet icon, 7) Customizable title, description, and balance label, 8) Uses Card component for structure, 9) TypeScript typing with WalletBalanceProps, 10) Responsive display with large balance text (text-3xl). All patterns followed from card.tsx and transaction-history.tsx. Type-check passed with 0 errors.",
+          "updated_at": "2026-02-22T09:59:23.619405+00:00"
         }
       ]
     },
@@ -497,7 +499,9 @@
               "Transaction history visible"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created business wallet page at app/app/(dashboard)/business/wallet/page.tsx. Features: 1) Wallet balance display with Card component and proper formatting (formatCurrency utility), 2) QRIS top-up form with Input, Label components and fee breakdown preview, 3) Real-time fee calculation using calculateTopUpFee server action, 4) Payment initialization via initializeQrisPayment with QRIS URL redirect, 5) Transaction history table with status badges (pending, success, failed, expired), 6) Loading states with Loader2 spinner for business, wallet, and transactions, 7) Error handling with toast notifications, 8) Follows patterns from business/jobs/page.tsx (useAuth, useEffect hooks, state management) and business/profile/page.tsx (loading state, Card layout), 9) Uses existing UI components (Card, Badge, Table, Button, Input, Label), 10) Responsive design with proper TypeScript typing. Page includes getBusinessWalletBalance, getBusinessPaymentHistory, initializeQrisPayment, and calculateTopUpFee server actions integration.",
+          "updated_at": "2026-02-22T10:03:34.659208+00:00"
         },
         {
           "id": "subtask-7-2",
@@ -520,7 +524,9 @@
               "Transaction history visible"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created worker wallet page at app/app/(dashboard)/worker/wallet/page.tsx. Features: 1) Wallet balance display with Card component and proper formatting (formatCurrency utility), 2) Withdrawal form with bank account selection (dropdown for multiple accounts, auto-select primary), 3) Real-time fee calculation (1% or Rp 5.000, whichever is higher), 4) Payout request processing via requestPayout server action, 5) Bank account display with info card for single account or dropdown for multiple accounts, 6) Payout history table with status badges (pending, processing, completed, failed, cancelled), 7) Loading states with Loader2 spinner for worker, wallet, bank accounts, and payouts, 8) Error handling with toast notifications, 9) Empty state for no bank accounts with message to contact admin, 10) Empty state for no payout history, 11) Form validation (minimum Rp 100.000 withdrawal, balance check), 12) Bank account info display (bank code, account number, account holder name), 13) Net amount calculation showing total received after fees. Follows patterns from business/wallet/page.tsx (useAuth, useEffect hooks, state management, Card layout, Table display), worker/jobs/page.tsx (worker profile fetching, loading states), and worker/profile/page.tsx (form patterns). Uses existing UI components (Card, Badge, Table, Button, Input, Label) and server actions (getWorkerWalletBalance, requestPayout). Indonesian localization for dates and currency (IDR). Proper TypeScript typing with Database types (WorkersRow, PayoutRequest, BankAccount).",
+          "updated_at": "2026-02-22T10:08:00.000000+00:00"
         }
       ]
     },
@@ -776,6 +782,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T09:48:36.666Z",
-  "last_updated": "2026-02-22T09:09:21.210614+00:00"
+  "updated_at": "2026-02-22T10:14:18.876Z",
+  "last_updated": "2026-02-22T10:08:00.000000+00:00"
 }
