@@ -61,6 +61,18 @@ export interface Database {
           updated_at: string
         }
       }
+      wallets: {
+        Row: {
+          id: string
+          business_id: string | null
+          worker_id: string | null
+          balance: number
+          currency: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+      }
       kyc_verifications: {
         Row: {
           id: string
