@@ -107,7 +107,7 @@ export default function BusinessJobsPage() {
           status: job.status as JobStatus,
           createdAt: job.created_at,
           applicants: 0, // TODO: Fetch from bookings table
-          positionType: undefined, // TODO: Map from category_id
+          positionType: (job as any).position_type, // Load position_type from database
           date: job.deadline,
           address: job.address,
           wageMin: job.budget_min,
@@ -186,7 +186,8 @@ export default function BusinessJobsPage() {
         // Create new job
         const newJob = await createJob({
           business_id: user.id,
-          category_id: "", // TODO: Add category selection to form
+          category_id: null,
+          position_type: values.positionType,
           title: values.title,
           description: values.description,
           requirements: values.requirements.join(','),
@@ -195,8 +196,8 @@ export default function BusinessJobsPage() {
           status: "draft",
           deadline: values.date,
           address: values.address,
-          lat: 0, // TODO: Add geocoding
-          lng: 0, // TODO: Add geocoding
+          lat: -8.4, // Bali center latitude (default until geocoding is implemented)
+          lng: 115.1, // Bali center longitude (default until geocoding is implemented)
         })
 
         setJobs((prev) => [{

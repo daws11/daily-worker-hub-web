@@ -75,7 +75,8 @@ export interface Database {
         Row: {
           id: string
           business_id: string
-          category_id: string
+          category_id?: string | null
+          position_type?: string
           title: string
           description: string
           requirements: string
