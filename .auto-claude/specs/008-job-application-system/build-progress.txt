@@ -1,0 +1,67 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Job Application System
+Workspace: managed by orchestrator (worktree mode)
+Started: 2026-02-22
+
+Workflow Type: feature
+Rationale: Building a new multi-service feature (frontend + database) with clear dependencies.
+           Database layer must be implemented first, then server actions, followed by UI
+           components, and finally integration.
+
+Session 1 (Planner):
+- Created implementation_plan.json
+- Phases: 6
+- Total subtasks: 16
+- Created init.sh
+- Created context files (project_index.json, context.json)
+
+Phase Summary:
+- Phase 1 - Database Schema & Migrations: 2 subtasks, depends on []
+- Phase 2 - Server Actions & API Layer: 3 subtasks, depends on [phase-1-database]
+- Phase 3 - UI Components: 3 subtasks, depends on [phase-2-server-actions]
+- Phase 4 - Worker Dashboard: 3 subtasks, depends on [phase-3-ui-components]
+- Phase 5 - Business Dashboard: 2 subtasks, depends on [phase-3-ui-components]
+- Phase 6 - Integration & Notifications: 2 subtasks, depends on [phase-4-worker-dashboard, phase-5-business-dashboard]
+
+Services Involved:
+- frontend: Next.js 14 + TypeScript + Supabase
+
+Key Findings from Investigation:
+- Existing bookings table has status field (pending/accepted/rejected) for applications
+- Existing notifications table for user notifications
+- Auth pattern: Context provider with Supabase client-side auth
+- UI: shadcn/ui components available, inline styling used
+- Toast: Sonner for notifications
+- Current dashboard pages are placeholders
+
+Parallelism Analysis:
+- Max parallel phases: 2 (Phase 4 and Phase 5 can run in parallel)
+- Recommended workers: 1 (Sequential execution recommended - shared state management)
+- Parallel groups:
+  * Phase 4 (Worker Dashboard) + Phase 5 (Business Dashboard) can run in parallel
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  npm run dev
+
+Or use the init script:
+
+  bash .auto-claude/specs/008-job-application-system/init.sh
+
+=== END SESSION 1 ===
+
+Session 2 (2026-02-22):
+- subtask-1-1: COMPLETED - Added unique constraint to prevent duplicate job applications
+- subtask-1-2: COMPLETED - Created RLS policies for bookings table
+  * File: supabase/migrations/20260222_add_bookings_rls_policies.sql
+  * Worker policies: view, create, and update own bookings
+  * Business policies: view and update bookings for their jobs
+  * Admin policies: full access for auditing
+  * Workers can only cancel pending bookings
+
+=== CURRENT STATUS ===
+Phase 1 (Database Schema & Migrations): 2/2 subtasks completed
+Next: Phase 2 - Server Actions & API Layer (subtask-2-1)
