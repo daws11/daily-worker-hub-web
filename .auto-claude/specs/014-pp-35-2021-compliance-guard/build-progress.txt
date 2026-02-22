@@ -258,6 +258,50 @@
 - TypeScript Verification: No compliance-related TypeScript errors
 - Git Commit: d341674 "auto-claude: subtask-4-2 - Create ComplianceStatusBadge component to display worker compliance status in applicant cards"
 
+## Subtask 4-3: Create AlternativeWorkersSuggestion component ✅ COMPLETED
+- File: components/booking/alternative-workers-suggestion.tsx (NEW FILE)
+- Status: COMPLETE - Alternative workers suggestion component implemented following project patterns
+- Component Features:
+  - AlternativeWorkersSuggestion({ workers, isLoading?, onSelectWorker?, className? })
+    - Displays loading state with Alert while fetching workers
+    - Shows empty state Alert when no workers available (all at limit)
+    - Shows informative Alert with worker count when workers available
+    - Grid layout: 1 column on mobile, 2 on md, 3 on lg screens
+    - Workers sorted by availability (fewest days worked first)
+  - AlternativeWorkerCard subcomponent:
+    - Card-based layout matching WorkerApplicationCard pattern
+    - Avatar with fallback initials
+    - Worker full name and bio
+    - Phone number with clickable tel: link
+    - DaysWorkedBadge showing "X days this month" with color coding:
+      - Green (15-17 days): secondary badge
+      - Yellow (18-20 days): outline badge
+      - Amber (0-14 days): default badge
+    - Compliance status section showing "Available for booking this month"
+  - Helper Components:
+    - ReliabilityScore: Reusable star rating component (from WorkerApplicationCard)
+    - DaysWorkedBadge: Badge showing days worked with color coding
+  - Props Interface:
+    - workers: AlternativeWorker[] (imported from lib/supabase/queries/compliance)
+    - isLoading: boolean (default: false)
+    - onSelectWorker: optional callback function
+    - className for custom styling
+- Type Exports Added:
+  - AlternativeWorkersSuggestionProps: interface for component props
+- Pattern Compliance:
+  - Follows WorkerApplicationCard patterns exactly (components/booking/worker-application-card.tsx)
+  - Uses Card, CardContent, CardHeader, CardTitle from components/ui/card
+  - Uses Badge from components/ui/badge
+  - Uses Avatar, AvatarFallback, AvatarImage from components/ui/avatar
+  - Uses Alert, AlertDescription, AlertTitle from components/ui/alert
+  - Uses Icons from lucide-react (Users, AlertCircle, Calendar, Phone, Star)
+  - Uses cn() utility from lib/utils
+  - "use client" directive for client component
+  - Proper TypeScript types and exported interfaces
+  - Follows accessibility patterns (aria-labels, semantic HTML)
+- TypeScript Verification: No compliance-related TypeScript errors (pre-existing errors unrelated to this component)
+- Git Commit: 14618ba "auto-claude: subtask-4-3 - Create AlternativeWorkersSuggestion component"
+
 ## Quality Checklist ✅
 - [x] Follows patterns from reference files (initial_schema.sql, kyc_verifications.sql, bookings.ts)
 - [x] No console.log/print debugging statements

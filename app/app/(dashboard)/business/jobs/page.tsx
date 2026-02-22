@@ -12,8 +12,10 @@ import { ApplicantList } from "@/components/applicant-list"
 import { supabase } from "@/lib/supabase/client"
 import type { Database } from "@/lib/supabase/types"
 import { acceptApplication, rejectApplication } from "@/lib/actions/job-applications"
+import { checkComplianceBeforeAccept } from "@/lib/actions/compliance"
 import { Briefcase, Calendar, MapPin, Wallet, Building2, Users, Loader2, ChevronDown, ChevronUp } from "lucide-react"
 import type { ApplicantWithDetails } from "@/lib/data/jobs"
+import type { ComplianceStatusResult } from "@/lib/supabase/queries/compliance"
 
 type BusinessesRow = Database["public"]["Tables"]["businesses"]["Row"]
 type Job = Database["public"]["Tables"]["jobs"]["Row"]
@@ -33,6 +35,7 @@ export default function BusinessJobsPage() {
   const [applicantsByJob, setApplicantsByJob] = useState<Record<string, ApplicantWithDetails[]>>({})
   const [isLoadingJobs, setIsLoadingJobs] = useState(true)
   const [isLoadingApplicants, setIsLoadingApplicants] = useState<Record<string, boolean>>({})
+  const [complianceStatusByApplicant, setComplianceStatusByApplicant] = useState<Record<string, ComplianceStatusResult>>({})
   const [expandedJobs, setExpandedJobs] = useState<Record<string, boolean>>({})
   const [isProcessing, setIsProcessing] = useState<Record<string, boolean>>({})
 
@@ -124,10 +127,31 @@ export default function BusinessJobsPage() {
         return
       }
 
+      const applicants = data as ApplicantWithDetails[]
+
       setApplicantsByJob((prev) => ({
         ...prev,
-        [jobId]: data as ApplicantWithDetails[],
+        [jobId]: applicants,
       }))
+
+      // Fetch compliance status for each applicant
+      for (const applicant of applicants) {
+        try {
+          const result = await checkComplianceBeforeAccept(
+            applicant.workers.id,
+            business.id
+          )
+
+          if (result.success && result.data) {
+            setComplianceStatusByApplicant((prev) => ({
+              ...prev,
+              [applicant.id]: result.data,
+            }))
+          }
+        } catch {
+          // Silently fail for compliance check errors
+        }
+      }
     } finally {
       setIsLoadingApplicants((prev) => ({ ...prev, [jobId]: false }))
     }
@@ -435,6 +459,7 @@ export default function BusinessJobsPage() {
                           onAccept={handleAcceptApplicant}
                           onReject={handleRejectApplicant}
                           isLoading={isLoadingApplicants[job.id] || false}
+                          complianceStatusByApplicant={complianceStatusByApplicant}
                         />
                       </div>
                     )}

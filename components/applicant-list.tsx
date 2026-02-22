@@ -25,16 +25,19 @@ import {
 } from "./ui/avatar"
 import { cn } from "@/lib/utils"
 import type { ApplicantWithDetails } from "@/lib/data/jobs"
+import type { ComplianceStatusResult } from "@/lib/supabase/queries/compliance"
+import { ComplianceStatusBadge } from "@/components/booking/compliance-status-badge"
 
 export interface ApplicantListProps extends React.HTMLAttributes<HTMLDivElement> {
   applicants: ApplicantWithDetails[]
   onAccept?: (applicantId: string) => void
   onReject?: (applicantId: string) => void
   isLoading?: boolean
+  complianceStatusByApplicant?: Record<string, ComplianceStatusResult>
 }
 
 const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
-  ({ applicants, onAccept, onReject, isLoading = false, className, ...props }, ref) => {
+  ({ applicants, onAccept, onReject, isLoading = false, complianceStatusByApplicant, className, ...props }, ref) => {
     // Format date to Indonesian locale
     const formatDate = (dateString: string) => {
       return new Date(dateString).toLocaleDateString("id-ID", {
@@ -162,6 +165,7 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
                   <TableHead>No. Telepon</TableHead>
                   <TableHead>Tanggal Lamar</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Kepatuhan</TableHead>
                   <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
@@ -207,6 +211,18 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
                       <Badge variant={getStatusVariant(applicant.status)}>
                         {getStatusLabel(applicant.status)}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {complianceStatusByApplicant?.[applicant.id] ? (
+                        <ComplianceStatusBadge
+                          compliance={complianceStatusByApplicant[applicant.id]}
+                          showDays
+                          showIcon
+                          size="sm"
+                        />
+                      ) : (
+                        <span className="text-sm text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
