@@ -40,50 +40,82 @@ COMMENT ON COLUMN public.compliance_tracking.days_worked IS 'Number of days work
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.compliance_tracking ENABLE ROW LEVEL SECURITY;
 
--- Create RLS policies
--- Policy: Businesses can view compliance tracking for their own business
-CREATE POLICY "Businesses can view own compliance tracking"
-  ON public.compliance_tracking
-  FOR SELECT
-  USING (
-    business_id IN (
-      SELECT id FROM public.businesses WHERE user_id = auth.uid()
-    )
-  );
+-- ============================================================================
+-- WORKER POLICIES
+-- Workers can only view their own compliance tracking records
+-- ============================================================================
 
--- Policy: Workers can view compliance tracking for themselves
-CREATE POLICY "Workers can view own compliance tracking"
-  ON public.compliance_tracking
-  FOR SELECT
-  USING (
-    worker_id IN (
-      SELECT id FROM public.workers WHERE user_id = auth.uid()
-    )
-  );
+-- Policy: Workers can view their own compliance tracking
+CREATE POLICY "Workers can view their own compliance tracking"
+ON compliance_tracking FOR SELECT
+USING (
+  worker_id IN (
+    SELECT id FROM workers WHERE user_id = auth.uid()
+  )
+);
 
--- Policy: Admins can view all compliance tracking data
-CREATE POLICY "Admins can view all compliance tracking data"
-  ON public.compliance_tracking
-  FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.users
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+-- ============================================================================
+-- BUSINESS POLICIES
+-- Businesses can only view compliance tracking for their workers
+-- ============================================================================
 
--- Policy: System can insert compliance tracking data (via triggers/functions)
-CREATE POLICY "Authenticated users can insert compliance tracking data"
-  ON public.compliance_tracking
-  FOR INSERT
-  WITH CHECK (auth.uid() IS NOT NULL);
+-- Policy: Businesses can view compliance tracking for their business
+CREATE POLICY "Businesses can view their compliance tracking"
+ON compliance_tracking FOR SELECT
+USING (
+  business_id IN (
+    SELECT id FROM businesses WHERE user_id = auth.uid()
+  )
+);
 
--- Policy: System can update compliance tracking data (via triggers/functions)
-CREATE POLICY "Authenticated users can update compliance tracking data"
-  ON public.compliance_tracking
-  FOR UPDATE
-  USING (auth.uid() IS NOT NULL)
-  WITH CHECK (auth.uid() IS NOT NULL);
+-- ============================================================================
+-- ADMIN POLICIES
+-- Admins have full access to all compliance tracking for auditing and management
+-- ============================================================================
+
+-- Policy: Admins can view all compliance tracking
+CREATE POLICY "Admins can view all compliance tracking"
+ON compliance_tracking FOR SELECT
+USING (
+  EXISTS (
+    SELECT 1 FROM users
+    WHERE id = auth.uid()
+    AND role = 'admin'
+  )
+);
+
+-- Policy: Admins can update any compliance tracking record
+CREATE POLICY "Admins can update any compliance tracking"
+ON compliance_tracking FOR UPDATE
+USING (
+  EXISTS (
+    SELECT 1 FROM users
+    WHERE id = auth.uid()
+    AND role = 'admin'
+  )
+);
+
+-- Policy: Admins can delete any compliance tracking record (for moderation)
+CREATE POLICY "Admins can delete any compliance tracking"
+ON compliance_tracking FOR DELETE
+USING (
+  EXISTS (
+    SELECT 1 FROM users
+    WHERE id = auth.uid()
+    AND role = 'admin'
+  )
+);
+
+-- ============================================================================
+-- SECURITY NOTES
+-- ============================================================================
+-- 1. Workers can only view their own compliance tracking records
+-- 2. Businesses can only view compliance tracking for their business
+-- 3. Regular users cannot INSERT or UPDATE - only system triggers can modify data
+-- 4. Admins have full access for auditing and dispute resolution
+-- 5. The table is effectively read-only for workers and businesses
+-- 6. All data modifications happen via database triggers/functions (SECURITY DEFINER)
+-- ============================================================================
 
 -- Create trigger to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_compliance_tracking_updated_at()
