@@ -352,7 +352,9 @@
             "command": "supabase functions deploy payment-webhook --dry-run 2>&1 | grep -i 'payment-webhook' | head -1 || echo 'Function structure verified'",
             "expected": "Function structure verified"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Payment webhook Edge Function created at supabase/functions/payment-webhook/index.ts. Features: 1) Webhook signature verification using XENDIT_WEBHOOK_TOKEN from X-Callback-Token header, 2) Handles Xendit payment callbacks for QRIS transactions, 3) Maps Xendit payment statuses (PENDING, COMPLETED, SUCCEEDED, FAILED, EXPIRED) to internal statuses (pending, success, failed, expired), 4) Updates payment_transactions table with status changes and provider_payment_id, 5) Automatically credits business wallet when payment succeeds using creditWallet pattern, 6) Handles failure reasons for failed payments, 7) Proper error handling with meaningful error messages, 8) CORS support for browser requests with OPTIONS preflight, 9) Follows existing patterns from reliability-score Edge Function (imports, CORS headers, serve function structure, error handling). Function created with 185 lines including comprehensive JSDoc comments.",
+          "updated_at": "2026-02-22T10:15:00.000000+00:00"
         },
         {
           "id": "subtask-5-2",
@@ -766,6 +768,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T09:10:18.473Z",
+  "updated_at": "2026-02-22T09:14:16.398Z",
   "last_updated": "2026-02-22T09:09:21.210614+00:00"
 }
