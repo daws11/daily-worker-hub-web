@@ -21,6 +21,12 @@ Follow the menu prompts to:
 9. Run full verification (option 9)
 10. Cleanup test data (option 10)
 
+### Dispute Testing (New!)
+11. Create dispute on booking (option 11)
+12. Verify dispute state (option 12)
+13. Test auto-release blocked by dispute (option 13)
+14. Run dispute flow verification (option 14)
+
 ### Method 2: Manual Execution via UI
 
 Follow the full test plan in `e2e-test-plan-checkout-payment-flow.md`
@@ -80,6 +86,56 @@ Connect to database and run queries from the test plan document.
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+## Dispute Flow Summary
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    DISPUTE FLOW E2E TEST                            │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  PRECONDITION: Worker has checked out (payment_status = pending)    │
+│                                                                     │
+│  1. BUSINESS OPENS BOOKING (within review period)                   │
+│     │                                                               │
+│     ├─→ Can see 24-hour countdown                                   │
+│     ├─→ Sees "Report Issue" button                                  │
+│     └─→ Payment status shows "Dalam Review"                         │
+│     │                                                               │
+│     ▼                                                               │
+│  2. BUSINESS CLICKS "REPORT ISSUE"                                  │
+│     │                                                               │
+│     ├─→ Dispute dialog opens                                        │
+│     ├─→ Shows job details and payment amount                        │
+│     └─→ Requires reason for dispute                                 │
+│     │                                                               │
+│     ▼                                                               │
+│  3. BUSINESS SUBMITS DISPUTE                                        │
+│     │                                                               │
+│     ├─→ Dispute record created (status='pending')                   │
+│     ├─→ Booking: payment_status = 'disputed'                       │
+│     ├─→ Transaction: status = 'disputed'                            │
+│     ├─→ Worker pending_balance UNCHANGED (funds held)               │
+│     └─→ Notifications sent (if implemented)                         │
+│     │                                                               │
+│     ▼                                                               │
+│  4. REVIEW DEADLINE EXPIRES                                         │
+│     │                                                               │
+│     ├─→ Payment NOT released (still disputed)                       │
+│     ├─→ Funds remain held in pending_balance                        │
+│     └─→ No new release transaction created                          │
+│     │                                                               │
+│     ▼                                                               │
+│  5. ADMIN RESOLVES DISPUTE (outside this test scope)                │
+│     │                                                               │
+│     ├─→ Worker wins: payment_status = 'available'                   │
+│     │                  pending_balance → available_balance           │
+│     ├─→ Business wins: payment_status = 'cancelled'                 │
+│     │                  pending_balance reduced                      │
+│     └─→ Rejected: payment_status = 'pending_review'                 │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
 ## Key Database Queries
 
 ### Check Booking State
@@ -112,6 +168,23 @@ WHERE user_id = '<user_id>'
 ORDER BY created_at DESC LIMIT 5;
 ```
 
+### Check Disputes
+```sql
+SELECT id, booking_id, raised_by, reason, status, created_at
+FROM disputes WHERE booking_id = '<booking_id>';
+```
+
+### Check if Dispute Blocks Payment Release
+```sql
+SELECT id, payment_status, review_deadline, NOW() as current_time,
+       CASE
+         WHEN payment_status = 'disputed' THEN 'Blocked - disputed'
+         WHEN payment_status = 'pending_review' AND review_deadline < NOW() THEN 'Ready for release'
+         ELSE 'Waiting'
+       END as release_status
+FROM bookings WHERE id = '<booking_id>';
+```
+
 ## Expected Results at Each Stage
 
 | Stage | Booking Status | Payment Status | Wallet Pending | Wallet Available |
@@ -120,6 +193,17 @@ ORDER BY created_at DESC LIMIT 5;
 | Started | in_progress | NULL | 0 | 0 |
 | Checked Out | completed | pending_review | +amount | 0 |
 | Released | completed | available | 0 | +amount |
+
+### Dispute Flow Results
+
+| Stage | Booking Status | Payment Status | Wallet Pending | Wallet Available |
+|-------|---------------|----------------|----------------|------------------|
+| After Checkout | completed | pending_review | +amount | 0 |
+| Dispute Created | completed | **disputed** | +amount | 0 |
+| Review Expires | completed | **disputed** | +amount | 0 |
+| Resolved (Worker) | completed | available | 0 | +amount |
+| Resolved (Business) | completed | cancelled | 0 | 0 |
+| Dispute Rejected | completed | pending_review | +amount | 0 |
 
 ## Test Checklist
 
@@ -142,6 +226,24 @@ Use this quick checklist when running tests:
 - [ ] Wallet pending decreased, available increased
 - [ ] Release transaction created
 - [ ] Worker receives payment notification
+
+### Dispute Flow Checklist
+
+- [ ] Database schema verified
+- [ ] Test booking created and worker checked out
+- [ ] Booking payment_status = 'pending_review'
+- [ ] Review deadline in future (within 24h)
+- [ ] Business opens booking during review period
+- [ ] Business sees "Report Issue" button
+- [ ] Business submits dispute with reason
+- [ ] Dispute record created (status='pending')
+- [ ] Booking payment_status = 'disputed'
+- [ ] Wallet transaction status = 'disputed'
+- [ ] Worker pending_balance unchanged (funds held)
+- [ ] Review deadline set to past
+- [ ] Payment NOT released (still 'disputed')
+- [ ] No release transaction created
+- [ ] Worker receives dispute notification (if implemented)
 
 ## Troubleshooting
 
@@ -172,9 +274,29 @@ UPDATE bookings SET review_deadline = NOW() - INTERVAL '1 hour'
 WHERE id = '<booking_id>';
 ```
 
+### Dispute not blocking payment release
+```sql
+-- Check if dispute exists and is active
+SELECT * FROM disputes WHERE booking_id = '<booking_id>'
+  AND status IN ('pending', 'investigating');
+-- Check payment status
+SELECT id, payment_status FROM bookings WHERE id = '<booking_id>';
+-- Should be 'disputed' if active dispute exists
+```
+
+### Cannot create dispute
+```sql
+-- Verify booking is in correct state
+SELECT id, payment_status, review_deadline
+FROM bookings WHERE id = '<booking_id>';
+-- Must be payment_status='pending_review'
+-- Must have review_deadline > NOW()
+```
+
 ## Files Reference
 
-- **Full Test Plan**: `e2e-test-plan-checkout-payment-flow.md`
+- **Checkout & Release Test Plan**: `e2e-test-plan-checkout-payment-flow.md`
+- **Dispute Flow Test Plan**: `e2e-test-plan-dispute-flow.md` (NEW!)
 - **Helper Script**: `run-e2e-test.sh`
 - **Quick Reference**: This file
 - **Implementation Plan**: `implementation_plan.json`

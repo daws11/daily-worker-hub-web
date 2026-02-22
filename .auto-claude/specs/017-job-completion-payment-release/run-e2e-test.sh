@@ -70,6 +70,11 @@ echo "7. Check wallet balances and transactions"
 echo "8. Check notifications"
 echo "9. Run full verification suite"
 echo "10. Cleanup test data"
+echo "--- Dispute Testing ---"
+echo "11. Create dispute on booking"
+echo "12. Verify dispute state"
+echo "13. Test auto-release blocked by dispute"
+echo "14. Run dispute flow verification"
 echo "0. Exit"
 
 read -p "Enter choice: " choice
@@ -435,6 +440,11 @@ case $choice in
             prompt_input "Enter Booking IDs to cleanup (comma-separated)" booking_ids
 
             run_query "
+                DELETE FROM disputes
+                WHERE booking_id IN ($booking_ids);
+            " "Deleting disputes"
+
+            run_query "
                 DELETE FROM wallet_transactions
                 WHERE booking_id IN ($booking_ids);
             " "Deleting wallet transactions"
@@ -463,6 +473,269 @@ case $choice in
         else
             echo -e "${YELLOW}Cancelled${NC}"
         fi
+        ;;
+
+    11)
+        echo -e "\n${BLUE}=== Create Dispute on Booking ===${NC}\n"
+        prompt_input "Enter Booking ID" booking_id
+        prompt_input "Enter Business ID (raising the dispute)" business_id
+        prompt_input "Enter dispute reason" reason
+
+        run_query "
+            INSERT INTO disputes (
+                booking_id,
+                raised_by,
+                reason,
+                status,
+                created_at
+            ) VALUES (
+                '$booking_id',
+                '$business_id',
+                '$reason',
+                'pending',
+                NOW()
+            ) RETURNING id, status, reason;
+        " "Creating dispute"
+
+        run_query "
+            UPDATE bookings
+            SET payment_status = 'disputed', updated_at = NOW()
+            WHERE id = '$booking_id'
+            RETURNING id, payment_status;
+        " "Updating booking payment status"
+
+        run_query "
+            UPDATE wallet_transactions
+            SET status = 'disputed', updated_at = NOW()
+            WHERE booking_id = '$booking_id'
+              AND type = 'hold'
+              AND status = 'pending_review'
+            RETURNING id, status;
+        " "Updating wallet transaction status"
+
+        echo -e "\n${GREEN}✓ Dispute created! Verify with option 12${NC}"
+        ;;
+
+    12)
+        echo -e "\n${BLUE}=== Verify Dispute State ===${NC}\n"
+        prompt_input "Enter Booking ID" booking_id
+        prompt_input "Enter Worker User ID" worker_user_id
+        prompt_input "Enter Business ID" business_id
+
+        echo -e "\n${GREEN}--- 1. Dispute Record ---${NC}"
+        run_query "
+            SELECT
+                id,
+                booking_id,
+                raised_by,
+                reason,
+                status,
+                created_at
+            FROM disputes
+            WHERE booking_id = '$booking_id';
+        " "Checking dispute record"
+
+        echo -e "\n${GREEN}--- 2. Booking Payment Status ---${NC}"
+        run_query "
+            SELECT
+                id,
+                status,
+                payment_status,
+                checkout_time,
+                review_deadline,
+                final_price,
+                NOW() as current_time,
+                EXTRACT(EPOCH FROM (review_deadline - NOW())) / 3600 as hours_until_deadline
+            FROM bookings
+            WHERE id = '$booking_id';
+        " "Checking booking"
+
+        echo -e "\n${GREEN}--- 3. Wallet Transaction Status ---${NC}"
+        run_query "
+            SELECT
+                wt.id,
+                wt.amount,
+                wt.type,
+                wt.status,
+                wt.description,
+                w.pending_balance,
+                w.available_balance
+            FROM wallet_transactions wt
+            JOIN wallets w ON wt.wallet_id = w.id
+            WHERE wt.booking_id = '$booking_id'
+              AND w.user_id = '$worker_user_id';
+        " "Checking wallet transaction"
+
+        echo -e "\n${GREEN}--- 4. Worker Wallet Balance ---${NC}"
+        run_query "
+            SELECT
+                pending_balance,
+                available_balance,
+                (pending_balance + available_balance) as total_balance
+            FROM wallets
+            WHERE user_id = '$worker_user_id';
+        " "Checking worker wallet"
+
+        echo -e "\n${GREEN}--- 5. Business View of Booking ---${NC}"
+        run_query "
+            SELECT
+                b.id,
+                j.title,
+                b.status,
+                b.payment_status,
+                b.final_price,
+                d.status as dispute_status,
+                d.reason
+            FROM bookings b
+            JOIN jobs j ON b.job_id = j.id
+            LEFT JOIN disputes d ON b.id = d.booking_id
+            WHERE b.business_id = '$business_id'
+              AND b.id = '$booking_id';
+        " "Checking business view"
+        ;;
+
+    13)
+        echo -e "\n${BLUE}=== Test Auto-Release Blocked by Dispute ===${NC}\n"
+        prompt_input "Enter Booking ID" booking_id
+
+        echo -e "${YELLOW}This will set review deadline to past and verify payment is NOT released${NC}"
+        read -p "Continue? (y/n): " confirm
+
+        if [ "$confirm" = "y" ]; then
+            run_query "
+                UPDATE bookings
+                SET review_deadline = NOW() - INTERVAL '1 hour'
+                WHERE id = '$booking_id'
+                RETURNING id, review_deadline, NOW() as current_time;
+            " "Setting review deadline to past"
+
+            echo -e "\n${GREEN}--- Checking if payment would be released ---${NC}"
+            run_query "
+                SELECT
+                    id,
+                    payment_status,
+                    review_deadline,
+                    NOW() as current_time,
+                    CASE
+                        WHEN payment_status = 'disputed' THEN 'Correctly held (disputed)'
+                        WHEN payment_status = 'pending_review' AND review_deadline < NOW() THEN 'Would be released (NOT disputed)'
+                        ELSE 'Other status'
+                    END as expected_behavior
+                FROM bookings
+                WHERE id = '$booking_id';
+            " "Verifying payment is held"
+
+            echo -e "\n${GREEN}--- Verifying no release occurred ---${NC}"
+            run_query "
+                SELECT
+                    COUNT(*) as release_transactions,
+                    COALESCE(SUM(CASE WHEN type = 'release' THEN 1 ELSE 0 END), 0) as release_count
+                FROM wallet_transactions
+                WHERE booking_id = '$booking_id';
+            " "Checking for release transactions"
+
+            echo -e "\n${GREEN}✓ If payment_status='disputed', auto-release is correctly blocked${NC}"
+        else
+            echo -e "${YELLOW}Cancelled${NC}"
+        fi
+        ;;
+
+    14)
+        echo -e "\n${BLUE}=== Dispute Flow Verification ===${NC}\n"
+        prompt_input "Enter Booking ID" booking_id
+        prompt_input "Enter Worker User ID" worker_user_id
+        prompt_input "Enter Business User ID" business_user_id
+
+        echo -e "\n${GREEN}--- 1. Pre-Dispute State Check ---${NC}"
+        run_query "
+            SELECT
+                id,
+                status,
+                payment_status,
+                checkout_time,
+                review_deadline,
+                CASE
+                    WHEN payment_status = 'pending_review' AND review_deadline > NOW() THEN 'Eligible for dispute'
+                    ELSE 'Not eligible for dispute'
+                END as dispute_eligible
+            FROM bookings
+            WHERE id = '$booking_id';
+        " "Checking if booking is eligible for dispute"
+
+        echo -e "\n${GREEN}--- 2. Dispute Records ---${NC}"
+        run_query "
+            SELECT
+                id,
+                raised_by,
+                reason,
+                status,
+                created_at,
+                resolved_at
+            FROM disputes
+            WHERE booking_id = '$booking_id'
+            ORDER BY created_at DESC;
+        " "Checking all disputes for this booking"
+
+        echo -e "\n${GREEN}--- 3. Payment Flow ---${NC}"
+        run_query "
+            SELECT
+                wt.type,
+                wt.status,
+                wt.amount,
+                wt.description,
+                wt.created_at,
+                CASE
+                    WHEN wt.status = 'disputed' THEN 'Payment held due to dispute'
+                    WHEN wt.status = 'pending_review' THEN 'Payment in review period'
+                    WHEN wt.status = 'available' THEN 'Payment available to worker'
+                    WHEN wt.status = 'released' THEN 'Payment released to worker'
+                    WHEN wt.status = 'cancelled' THEN 'Payment cancelled'
+                END as status_description
+            FROM wallet_transactions wt
+            JOIN wallets w ON wt.wallet_id = w.id
+            WHERE wt.booking_id = '$booking_id'
+              AND w.user_id = '$worker_user_id'
+            ORDER BY wt.created_at;
+        " "Checking payment transaction flow"
+
+        echo -e "\n${GREEN}--- 4. Worker Notifications ---${NC}"
+        run_query "
+            SELECT
+                title,
+                body,
+                link,
+                created_at,
+                read_at
+            FROM notifications
+            WHERE user_id = '$worker_user_id'
+              AND created_at > NOW() - INTERVAL '2 days'
+            ORDER BY created_at DESC
+            LIMIT 5;
+        " "Checking worker notifications"
+
+        echo -e "\n${GREEN}--- 5. Business Notifications ---${NC}"
+        run_query "
+            SELECT
+                title,
+                body,
+                link,
+                created_at,
+                read_at
+            FROM notifications
+            WHERE user_id = '$business_user_id'
+              AND created_at > NOW() - INTERVAL '2 days'
+            ORDER BY created_at DESC
+            LIMIT 5;
+        " "Checking business notifications"
+
+        echo -e "\n${GREEN}--- 6. Expected Results Summary ---${NC}"
+        echo -e "${BLUE}If dispute was created:${NC}"
+        echo -e "  - Booking payment_status should be 'disputed'"
+        echo -e "  - Wallet transaction status should be 'disputed'"
+        echo -e "  - Worker pending_balance should have the funds (still held)"
+        echo -e "  - No auto-release should occur even if review_deadline passes"
+        echo -e "  - Both parties should receive notifications"
+        echo ""
         ;;
 
     0)
