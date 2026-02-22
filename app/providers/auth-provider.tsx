@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
-      setUserRole(data?.role ?? null)
+      setUserRole((data as any)?.role ?? null)
     }
 
     fetchUserRole()
@@ -96,16 +96,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // 2. Create user profile in public.users table
-      const { error: profileError } = await supabase.from('users').insert([
-        {
+      const { error: profileError } = await (supabase
+        .from('users') as any)
+        .insert({
           id: user.id,
           email: user.email!,
           full_name: fullName,
           role: role,
           phone: '',
           avatar_url: '',
-        },
-      ])
+        })
 
       if (profileError) {
         console.error('Error creating user profile:', profileError)

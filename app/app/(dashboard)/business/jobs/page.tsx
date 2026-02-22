@@ -1,6 +1,14 @@
 "use client"
 
+import { useAuth } from "../../../providers/auth-provider"
+
 export default function BusinessJobsPage() {
+  const { signOut, user, isLoading } = useAuth()
+
+  const handleLogout = async () => {
+    await signOut()
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -8,9 +16,34 @@ export default function BusinessJobsPage() {
       padding: '1rem'
     }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-          Dashboard Business - Jobs
-        </h1>
+        {/* Header with logout button */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1.5rem'
+        }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>
+            Dashboard Business - Jobs
+          </h1>
+          <button
+            onClick={handleLogout}
+            disabled={isLoading}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: isLoading ? '#9ca3af' : '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.375rem',
+              fontWeight: 500,
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              opacity: isLoading ? 0.6 : 1,
+              transition: 'background-color 0.2s'
+            }}
+          >
+            Keluar
+          </button>
+        </div>
         
         <div style={{
           backgroundColor: 'white',
