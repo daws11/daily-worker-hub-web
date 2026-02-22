@@ -112,6 +112,17 @@ Session 2 (Implementation):
   * Admin-only policies for INSERT and UPDATE operations
   * Similar RLS policies for wallet_transactions table
 
-=== END SESSION 1 ===
+Session 3 (Implementation):
+- [COMPLETED] subtask-2-1: Create wallet queries (getWallet, createWallet, updateBalance)
+  * Created lib/lib/supabase/queries/wallets.ts
+  * Implemented getWallet function to retrieve wallet by user ID
+  * Implemented getWalletById function to retrieve wallet by ID
+  * Implemented createWallet function to create new wallet for user
+  * Implemented updateBalance function to update wallet balance
+  * All 4 exported functions verified (grep count: 4)
+  * Follows patterns from bookings.ts query structure
+  * Committed: 528c29c
+
+=== END SESSION 3 ===
 
 Planning complete. Ready for implementation.

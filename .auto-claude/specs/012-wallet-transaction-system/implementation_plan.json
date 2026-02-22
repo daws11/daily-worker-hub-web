@@ -94,7 +94,9 @@
             "command": "grep -c 'export.*function' lib/lib/supabase/queries/wallets.ts",
             "expected": "4"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created wallet query functions: getWallet, getWalletById, createWallet, updateBalance. All 4 functions verified using grep command.",
+          "updated_at": "2026-02-22T08:49:00.000Z"
         },
         {
           "id": "subtask-2-2",
@@ -422,6 +424,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T07:38:06.739Z",
+  "updated_at": "2026-02-22T07:46:35.070Z",
   "last_updated": "2026-02-22T07:44:40.836003+00:00"
 }
