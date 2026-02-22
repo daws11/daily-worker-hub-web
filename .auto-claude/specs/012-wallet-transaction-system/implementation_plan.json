@@ -133,7 +133,9 @@
             "type": "manual",
             "instructions": "Verify calculatePendingBalance and getTotalEarnings functions exist"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created wallet statistics helper functions: calculatePendingBalance (sums pending transactions) and getTotalEarnings (sums credit transactions). Both functions verified to exist using grep command. Total of 6 exported functions in wallets.ts.",
+          "updated_at": "2026-02-22T09:10:00.000Z"
         }
       ]
     },
@@ -426,6 +428,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T07:52:31.822Z",
+  "updated_at": "2026-02-22T08:02:36.602Z",
   "last_updated": "2026-02-22T07:44:40.836003+00:00"
 }
