@@ -422,6 +422,104 @@ export default function WorkerProfilePage() {
           </div>
         )}
 
+        {/* Score History Trend (Mock - Placeholder for Future Implementation) */}
+        {reliabilityScore !== null && (
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '0.5rem',
+            padding: '1.5rem',
+            marginBottom: '1rem',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: '#1f2937' }}>
+                Riwayat Skor
+              </h3>
+              <span style={{ fontSize: '0.75rem', color: '#9ca3af', fontStyle: 'italic' }}>
+                Placeholder - Akan diimplementasikan
+              </span>
+            </div>
+            <p style={{ margin: '0 0 1rem 0', fontSize: '0.875rem', color: '#6b7280' }}>
+              Tren skor reliabilitas Anda selama 6 bulan terakhir
+            </p>
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-end',
+              justifyContent: 'space-between',
+              gap: '0.5rem',
+              height: '120px',
+              padding: '0.5rem 0'
+            }}>
+              {[
+                { month: 'Sep', score: 72 },
+                { month: 'Okt', score: 75 },
+                { month: 'Nov', score: 73 },
+                { month: 'Des', score: 78 },
+                { month: 'Jan', score: 82 },
+                { month: 'Feb', score: reliabilityScore || 80 }
+              ].map((data, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    flex: 1,
+                    height: '100%'
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '100%',
+                      height: `${data.score}%`,
+                      backgroundColor: data.score >= 80 ? '#10b981' : data.score >= 70 ? '#f59e0b' : '#ef4444',
+                      borderRadius: '0.25rem 0.25rem 0 0',
+                      transition: 'height 0.3s ease',
+                      minHeight: '20px'
+                    }}
+                  />
+                  <div style={{
+                    marginTop: '0.5rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    color: '#6b7280'
+                  }}>
+                    {data.month}
+                  </div>
+                  <div style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: data.score >= 80 ? '#10b981' : data.score >= 70 ? '#f59e0b' : '#ef4444'
+                  }}>
+                    {data.score}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{
+              marginTop: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              fontSize: '0.75rem',
+              color: '#6b7280'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div style={{ width: '12px', height: '12px', backgroundColor: '#10b981', borderRadius: '2px' }} />
+                <span>Sangat Baik (≥80)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div style={{ width: '12px', height: '12px', backgroundColor: '#f59e0b', borderRadius: '2px' }} />
+                <span>Baik (70-79)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                <div style={{ width: '12px', height: '12px', backgroundColor: '#ef4444', borderRadius: '2px' }} />
+                <span>Perlu Ditingkatkan (&lt;70)</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Loading State */}
         {isLoadingProfile ? (
           <div style={{

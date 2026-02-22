@@ -3,7 +3,7 @@
   "spec": "016-reliability-score-display",
   "state": "building",
   "subtasks": {
-    "completed": 9,
+    "completed": 11,
     "total": 13,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 12,
+    "number": 13,
     "started_at": "2026-02-22T20:14:30.338567"
   },
-  "last_update": "2026-02-22T21:05:06.747174"
+  "last_update": "2026-02-22T21:15:30.911252"
 }
