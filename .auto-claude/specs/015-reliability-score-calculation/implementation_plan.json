@@ -65,8 +65,8 @@
             "command": "psql $DATABASE_URL -c \"SELECT * FROM pg_policies WHERE tablename = 'reliability_score_history'\"",
             "expected": "reliability_score_history policies"
           },
-          "status": "pending",
-          "notes": "Workers can read their own history, admins can read all"
+          "status": "completed",
+          "notes": "RLS policies created: Workers can view their own score history (read-only), Admins can view all score history, Service role can insert score history records. Score history is immutable - no update/delete policies ensure data integrity and auditability."
         },
         {
           "id": "subtask-1-4",
