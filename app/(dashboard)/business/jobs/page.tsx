@@ -1,411 +1,474 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
-import { Loader2, FileText, CheckCircle, XCircle, Clock } from "lucide-react"
+import { useState, useCallback, useEffect } from 'react'
+import { useAuth } from '@/providers/auth-provider'
+import { getBusinessJobs, getJobBookings } from '@/lib/supabase/queries/jobs'
+import type { JobsRow } from '@/lib/supabase/queries/jobs'
+import type { JobBookingWithDetails } from '@/lib/supabase/queries/bookings'
+import { QRCodeGenerator } from '@/components/attendance/qr-code-generator'
+import { Calendar, MapPin, Users, Loader2, AlertCircle, CheckCircle, XCircle, Clock, Building2, QrCode } from 'lucide-react'
+import { toast } from 'sonner'
 
-import { useAuth } from "../../../providers/auth-provider"
-import { useBookings } from "../../../../lib/hooks/use-bookings"
-import { calculateReliabilityScore } from "../../../../lib/supabase/queries/bookings"
-import { WorkerApplicationCard } from "../../../../components/booking/worker-application-card"
-import { BookingActions } from "../../../../components/booking/booking-actions"
-import { BulkActions } from "../../../../components/booking/bulk-actions"
-import { WorkerNotesDialog } from "../../../../components/booking/worker-notes-dialog"
-import { supabase } from "../../../../lib/supabase/client"
-import type { Database } from "../../../../lib/supabase/types"
+interface JobWithAttendance extends JobsRow {
+  bookings?: JobBookingWithDetails[]
+  stats?: {
+    total: number
+    checkedIn: number
+    checkedOut: number
+  }
+}
 
-type BookingRow = Database["public"]["Tables"]["bookings"]["Row"]
+interface JobsData {
+  total: number
+  active: number
+  completed: number
+  jobsList: JobWithAttendance[]
+}
 
 export default function BusinessJobsPage() {
   const { user } = useAuth()
-  const [businessId, setBusinessId] = useState<string | null>(null)
-  const [allWorkerBookings, setAllWorkerBookings] = useState<Array<{ worker_id: string; bookings: any[] }>>([])
-  const [selectedBookingIds, setSelectedBookingIds] = useState<Set<string>>(new Set())
-  const [notesDialogOpen, setNotesDialogOpen] = useState(false)
-  const [activeBookingForNotes, setActiveBookingForNotes] = useState<{ id: string; workerName: string; notes?: string } | null>(null)
+  const [jobs, setJobs] = useState<JobsData>({ total: 0, active: 0, completed: 0, jobsList: [] })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Fetch business ID for current user
-  useEffect(() => {
-    async function fetchBusinessId() {
-      if (!user) {
-        setBusinessId(null)
-        return
-      }
+  // Fetch business jobs with attendance data
+  const fetchJobsWithAttendance = useCallback(async () => {
+    if (!user?.id) return
 
-      try {
-        const { data, error } = await supabase
-          .from('businesses')
-          .select('id')
-          .eq('user_id', user.id)
-          .single()
+    setLoading(true)
+    setError(null)
 
-        if (error) {
-          console.error('Error fetching business:', error)
-          return
-        }
+    try {
+      // Fetch all jobs for the business
+      const businessJobs = await getBusinessJobs(user.id)
 
-        setBusinessId(data?.id ?? null)
-      } catch (err) {
-        console.error('Unexpected error fetching business:', err)
-      }
-    }
+      // Calculate stats
+      const totalJobs = businessJobs.length
+      const activeJobs = businessJobs.filter(job =>
+        job.status === 'open' || job.status === 'in_progress'
+      ).length
+      const completedJobs = businessJobs.filter(job => job.status === 'completed').length
 
-    fetchBusinessId()
-  }, [user])
+      // Fetch bookings for active jobs
+      const activeJobsList = businessJobs.filter(job =>
+        job.status === 'open' || job.status === 'in_progress'
+      )
 
-  // Fetch all worker bookings to calculate reliability scores
-  useEffect(() => {
-    async function fetchWorkerBookings() {
-      if (!businessId) return
+      const jobsWithAttendance: JobWithAttendance[] = await Promise.all(
+        activeJobsList.map(async (job) => {
+          const { data: bookings } = await getJobBookings(job.id)
 
-      try {
-        const { data, error } = await supabase
-          .from('bookings')
-          .select('worker_id, status, rating, checked_in_at, shift_start_time')
-          .eq('business_id', businessId)
-
-        if (error) {
-          console.error('Error fetching worker bookings:', error)
-          return
-        }
-
-        // Group bookings by worker_id
-        const bookingsByWorker = (data ?? []).reduce((acc: Record<string, any[]>, booking: any) => {
-          if (!acc[booking.worker_id]) {
-            acc[booking.worker_id] = []
+          const stats = {
+            total: bookings?.length ?? 0,
+            checkedIn: bookings?.filter(b => b.check_in_at).length ?? 0,
+            checkedOut: bookings?.filter(b => b.check_out_at).length ?? 0,
           }
-          acc[booking.worker_id].push(booking)
-          return acc
-        }, {})
 
-        setAllWorkerBookings(
-          Object.entries(bookingsByWorker).map(([worker_id, bookings]) => ({
-            worker_id,
-            bookings,
-          }))
-        )
-      } catch (err) {
-        console.error('Unexpected error fetching worker bookings:', err)
-      }
+          return {
+            ...job,
+            bookings: bookings ?? undefined,
+            stats,
+          }
+        })
+      )
+
+      setJobs({
+        total: totalJobs,
+        active: activeJobs,
+        completed: completedJobs,
+        jobsList: jobsWithAttendance
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Gagal memuat data'
+      setError(message)
+      toast.error(message)
+    } finally {
+      setLoading(false)
     }
+  }, [user?.id])
 
-    fetchWorkerBookings()
-  }, [businessId])
+  // Handle QR code refresh
+  const handleQRRefresh = useCallback(() => {
+    fetchJobsWithAttendance()
+  }, [fetchJobsWithAttendance])
 
-  // Calculate reliability scores for all workers
-  const reliabilityScores = useMemo(() => {
-    const scores: Record<string, number> = {}
-    allWorkerBookings.forEach(({ worker_id, bookings }) => {
-      scores[worker_id] = calculateReliabilityScore(bookings)
-    })
-    return scores
-  }, [allWorkerBookings])
-
-  // Fetch bookings using the hook
-  const {
-    bookings,
-    isLoading,
-    error,
-    updateStatus,
-    bulkUpdateStatus,
-    addNotes,
-    refreshBookings,
-  } = useBookings({ businessId: businessId ?? undefined, autoFetch: !!businessId })
-
-  // Handle selection toggle
-  const handleToggleSelection = (bookingId: string) => {
-    setSelectedBookingIds((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(bookingId)) {
-        newSet.delete(bookingId)
-      } else {
-        newSet.add(bookingId)
-      }
-      return newSet
+  // Format date to Indonesian locale
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
     })
   }
 
-  // Handle clear selection
-  const handleClearSelection = () => {
-    setSelectedBookingIds(new Set())
-  }
-
-  // Handle accept action
-  const handleAccept = async (bookingId: string) => {
-    await updateStatus(bookingId, 'accepted')
-    setSelectedBookingIds((prev) => {
-      const newSet = new Set(prev)
-      newSet.delete(bookingId)
-      return newSet
+  // Format time to Indonesian locale
+  const formatTime = (dateString: string | null) => {
+    if (!dateString) return '-'
+    return new Date(dateString).toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
     })
   }
 
-  // Handle reject action
-  const handleReject = async (bookingId: string) => {
-    await updateStatus(bookingId, 'rejected')
-    setSelectedBookingIds((prev) => {
-      const newSet = new Set(prev)
-      newSet.delete(bookingId)
-      return newSet
-    })
-  }
-
-  // Handle bulk accept
-  const handleBulkAccept = async (bookingIds: string[]) => {
-    await bulkUpdateStatus(bookingIds, 'accepted')
-    handleClearSelection()
-  }
-
-  // Handle bulk reject
-  const handleBulkReject = async (bookingIds: string[]) => {
-    await bulkUpdateStatus(bookingIds, 'rejected')
-    handleClearSelection()
-  }
-
-  // Handle notes dialog
-  const handleOpenNotes = (booking: any) => {
-    setActiveBookingForNotes({
-      id: booking.id,
-      workerName: booking.worker?.full_name ?? 'Worker',
-      notes: booking.booking_notes,
-    })
-    setNotesDialogOpen(true)
-  }
-
-  const handleSaveNotes = async (bookingId: string, notes: string) => {
-    await addNotes(bookingId, notes)
-    setNotesDialogOpen(false)
-    setActiveBookingForNotes(null)
-  }
-
-  // Calculate statistics
-  const stats = useMemo(() => {
-    if (!bookings) return { total: 0, pending: 0, accepted: 0, rejected: 0 }
-    return {
-      total: bookings.length,
-      pending: bookings.filter((b) => b.status === 'pending').length,
-      accepted: bookings.filter((b) => b.status === 'accepted').length,
-      rejected: bookings.filter((b) => b.status === 'rejected').length,
-    }
-  }, [bookings])
-
-  // Filter bookings by status
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all')
-  const filteredBookings = bookings?.filter((booking) => {
-    if (statusFilter === 'all') return true
-    return booking.status === statusFilter
-  }) ?? []
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white rounded-lg p-6 shadow-sm text-center">
-            <p className="text-gray-600">Please log in to view your bookings.</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!businessId && !isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-white rounded-lg p-6 shadow-sm text-center">
-            <p className="text-gray-600">Business profile not found. Please complete your business registration.</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // Fetch jobs on mount
+  useEffect(() => {
+    fetchJobsWithAttendance()
+  }, [fetchJobsWithAttendance])
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Booking Applications</h1>
-          <p className="text-gray-600 mt-1">Manage worker applications for your jobs</p>
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#f5f5f5',
+      padding: '1rem'
+    }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Page Header */}
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+            Pekerjaan Saya
+          </h1>
+          <p style={{ color: '#666', fontSize: '0.875rem' }}>
+            Kelola pekerjaan dan pantau kehadiran pekerja
+          </p>
         </div>
-
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <FileText className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total Applications</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.total}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-50 rounded-lg">
-                <Clock className="h-5 w-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-50 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Accepted</p>
-                <p className="text-2xl font-bold text-green-600">{stats.accepted}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-50 rounded-lg">
-                <XCircle className="h-5 w-5 text-red-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Rejected</p>
-                <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Filters and Bulk Actions */}
-        <div className="bg-white rounded-lg p-4 shadow-sm mb-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setStatusFilter('all')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  statusFilter === 'all'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                All ({stats.total})
-              </button>
-              <button
-                onClick={() => setStatusFilter('pending')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  statusFilter === 'pending'
-                    ? 'bg-yellow-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Pending ({stats.pending})
-              </button>
-              <button
-                onClick={() => setStatusFilter('accepted')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  statusFilter === 'accepted'
-                    ? 'bg-green-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Accepted ({stats.accepted})
-              </button>
-              <button
-                onClick={() => setStatusFilter('rejected')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  statusFilter === 'rejected'
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Rejected ({stats.rejected})
-              </button>
-            </div>
-
-            {selectedBookingIds.size > 0 && (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-600">
-                  {selectedBookingIds.size} selected
-                </span>
-                <button
-                  onClick={handleClearSelection}
-                  className="text-sm text-blue-600 hover:text-blue-700"
-                >
-                  Clear
-                </button>
-                <BulkActions
-                  selectedBookingIds={Array.from(selectedBookingIds)}
-                  onBulkAccept={handleBulkAccept}
-                  onBulkReject={handleBulkReject}
-                  isLoading={isLoading}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="bg-white rounded-lg p-12 shadow-sm text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
-            <p className="mt-4 text-gray-600">Loading bookings...</p>
-          </div>
-        )}
 
         {/* Error State */}
         {error && (
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-red-200">
-            <p className="text-red-600">Error: {error}</p>
+          <div style={{
+            backgroundColor: '#fef2f2',
+            border: '1px solid #fecaca',
+            borderRadius: '0.5rem',
+            padding: '1rem',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem'
+          }}>
+            <AlertCircle style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
+            <div style={{ flex: 1 }}>
+              <p style={{ color: '#991b1b', fontWeight: 500, marginBottom: '0.25rem' }}>
+                Gagal memuat data
+              </p>
+              <p style={{ color: '#b91c1c', fontSize: '0.875rem' }}>{error}</p>
+            </div>
+            <button
+              onClick={fetchJobsWithAttendance}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#dc2626',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <Loader2 style={{ width: '1rem', height: '1rem' }} />
+              Coba Lagi
+            </button>
           </div>
         )}
 
-        {/* Bookings List */}
-        {!isLoading && !error && filteredBookings.length === 0 && (
-          <div className="bg-white rounded-lg p-12 shadow-sm text-center">
-            <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No applications yet</h3>
-            <p className="text-gray-600">
-              {statusFilter === 'all'
-                ? "Workers haven't applied to your jobs yet."
-                : `No ${statusFilter} applications found.`}
+        {/* Loading State */}
+        {loading && !error && (
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '0.5rem',
+            padding: '3rem',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            textAlign: 'center'
+          }}>
+            <Loader2 style={{ width: '2rem', height: '2rem', color: '#2563eb', margin: '0 auto 1rem', animation: 'spin 1s linear infinite' }} />
+            <p style={{ color: '#666' }}>Memuat data pekerjaan...</p>
+          </div>
+        )}
+
+        {/* Stats Cards */}
+        {!loading && !error && (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+            gap: '1rem',
+            marginBottom: '1.5rem'
+          }}>
+            <div style={{
+              padding: '1rem',
+              border: '1px solid #e5e7eb',
+              borderRadius: '0.375rem',
+              backgroundColor: 'white'
+            }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+                Total Pekerjaan
+              </h3>
+              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#2563eb' }}>
+                {jobs.total ?? 0}
+              </p>
+            </div>
+
+            <div style={{
+              padding: '1rem',
+              border: '1px solid #e5e7eb',
+              borderRadius: '0.375rem',
+              backgroundColor: 'white'
+            }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+                Pekerjaan Aktif
+              </h3>
+              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#10b981' }}>
+                {jobs.active ?? 0}
+              </p>
+            </div>
+
+            <div style={{
+              padding: '1rem',
+              border: '1px solid #e5e7eb',
+              borderRadius: '0.375rem',
+              backgroundColor: 'white'
+            }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+                Selesai
+              </h3>
+              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#6b7280' }}>
+                {jobs.completed ?? 0}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && !error && jobs.jobsList?.length === 0 && (
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '0.5rem',
+            padding: '3rem',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            textAlign: 'center',
+            border: '1px dashed #d1d5db'
+          }}>
+            <Building2 style={{ width: '3rem', height: '3rem', color: '#9ca3af', margin: '0 auto 1rem' }} />
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+              Tidak Ada Pekerjaan Aktif
+            </h3>
+            <p style={{ color: '#666' }}>
+              Buat pekerjaan baru untuk mulai melacak kehadiran pekerja
             </p>
           </div>
         )}
 
-        {!isLoading && !error && filteredBookings.length > 0 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {filteredBookings.map((booking) => (
-              <div key={booking.id} className="relative">
-                <WorkerApplicationCard
-                  booking={booking as any}
-                  reliabilityScore={reliabilityScores[booking.worker_id]}
-                  onSelect={handleToggleSelection}
-                  isSelected={selectedBookingIds.has(booking.id)}
-                />
-
-                {/* Action Buttons */}
-                <div className="absolute top-4 right-4 flex items-center gap-2 bg-white rounded-lg shadow-sm p-1.5">
-                  <BookingActions
-                    bookingId={booking.id}
-                    status={booking.status}
-                    onAccept={handleAccept}
-                    onReject={handleReject}
-                    isLoading={isLoading}
-                    size="sm"
-                    showLabels={false}
-                  />
+        {/* Active Jobs List */}
+        {!loading && !error && jobs.jobsList && jobs.jobsList.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {jobs.jobsList.map((job) => (
+              <div
+                key={job.id}
+                style={{
+                  backgroundColor: 'white',
+                  borderRadius: '0.5rem',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                  overflow: 'hidden'
+                }}
+              >
+                {/* Job Header */}
+                <div style={{
+                  padding: '1rem 1.5rem',
+                  borderBottom: '1px solid #e5e7eb',
+                  backgroundColor: '#f9fafb'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+                        {job.title}
+                      </h3>
+                      {job.address && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666', fontSize: '0.875rem' }}>
+                          <MapPin style={{ width: '1rem', height: '1rem' }} />
+                          <span>{job.address}</span>
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => {
+                        // Open QR code dialog
+                        const dialog = document.getElementById(`qr-dialog-${job.id}`) as HTMLDialogElement
+                        dialog?.showModal()
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#2563eb',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '0.375rem',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        transition: 'background-color 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                    >
+                      <QrCode style={{ width: '1rem', height: '1rem' }} />
+                      QR Code
+                    </button>
+                  </div>
+                  {job.stats && job.stats.total > 0 && (
+                    <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+                        <Users style={{ width: '1rem', height: '1rem' }} />
+                        <span>{job.stats.total} Pekerja</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#10b981' }}>
+                        <CheckCircle style={{ width: '1rem', height: '1rem' }} />
+                        <span>{job.stats.checkedIn} Check In</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
+                        <XCircle style={{ width: '1rem', height: '1rem' }} />
+                        <span>{job.stats.checkedOut} Check Out</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Notes Button */}
-                {booking.status !== 'rejected' && (
-                  <button
-                    onClick={() => handleOpenNotes(booking)}
-                    className="absolute bottom-4 right-4 px-3 py-1.5 bg-white rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors border border-gray-200"
-                  >
-                    {booking.booking_notes ? 'Edit Notes' : 'Add Notes'}
-                  </button>
+                {/* Workers List */}
+                {job.bookings && job.bookings.length > 0 && (
+                  <div style={{ padding: '1.5rem' }}>
+                    <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Users style={{ width: '1.25rem', height: '1.25rem', color: '#666' }} />
+                      Daftar Pekerja
+                    </h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                      {job.bookings.map((booking) => (
+                        <div
+                          key={booking.id}
+                          style={{
+                            padding: '1rem',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '0.375rem',
+                            backgroundColor: '#fafafa'
+                          }}
+                        >
+                          {/* Worker Info */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                            <div style={{
+                              width: '2.5rem',
+                              height: '2.5rem',
+                              borderRadius: '50%',
+                              backgroundColor: '#e5e7eb',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              overflow: 'hidden',
+                              flexShrink: 0
+                            }}>
+                              {booking.worker?.avatar_url ? (
+                                <img
+                                  src={booking.worker.avatar_url}
+                                  alt={booking.worker.full_name}
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                              ) : (
+                                <span style={{ fontSize: '1rem', fontWeight: 600, color: '#666' }}>
+                                  {booking.worker?.full_name?.charAt(0) || '?'}
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ fontWeight: 500, fontSize: '0.875rem', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {booking.worker?.full_name || 'Pekerja'}
+                              </p>
+                              <p style={{ fontSize: '0.75rem', color: '#666', margin: 0 }}>
+                                {booking.worker?.phone || ''}
+                              </p>
+                            </div>
+                            {booking.check_out_at ? (
+                              <div style={{
+                                padding: '0.25rem 0.5rem',
+                                backgroundColor: '#dcfce7',
+                                color: '#166534',
+                                borderRadius: '0.25rem',
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
+                                flexShrink: 0
+                              }}>
+                                <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />
+                                Selesai
+                              </div>
+                            ) : booking.check_in_at ? (
+                              <div style={{
+                                padding: '0.25rem 0.5rem',
+                                backgroundColor: '#dbeafe',
+                                color: '#1e40af',
+                                borderRadius: '0.25rem',
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
+                                flexShrink: 0
+                              }}>
+                                <Clock style={{ width: '0.875rem', height: '0.875rem' }} />
+                                Bekerja
+                              </div>
+                            ) : (
+                              <div style={{
+                                padding: '0.25rem 0.5rem',
+                                backgroundColor: '#f3f4f6',
+                                color: '#6b7280',
+                                borderRadius: '0.25rem',
+                                fontSize: '0.75rem',
+                                fontWeight: 500,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.25rem',
+                                flexShrink: 0
+                              }}>
+                                <XCircle style={{ width: '0.875rem', height: '0.875rem' }} />
+                                Belum
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Attendance Times */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.75rem', paddingTop: '0.5rem', borderTop: '1px solid #e5e7eb' }}>
+                            <div>
+                              <span style={{ color: '#666' }}>Check In: </span>
+                              <span style={{ fontWeight: 500 }}>{formatTime(booking.check_in_at)}</span>
+                            </div>
+                            <div>
+                              <span style={{ color: '#666' }}>Check Out: </span>
+                              <span style={{ fontWeight: 500 }}>{formatTime(booking.check_out_at)}</span>
+                            </div>
+                          </div>
+
+                          {/* Location Verification */}
+                          {booking.check_in_lat && booking.check_in_lng && (
+                            <div style={{
+                              marginTop: '0.5rem',
+                              paddingTop: '0.5rem',
+                              borderTop: '1px solid #e5e7eb',
+                              fontSize: '0.75rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              color: '#10b981'
+                            }}>
+                              <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />
+                              <span>Lokasi terverifikasi</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
               </div>
             ))}
@@ -413,17 +476,63 @@ export default function BusinessJobsPage() {
         )}
       </div>
 
-      {/* Notes Dialog */}
-      {activeBookingForNotes && (
-        <WorkerNotesDialog
-          open={notesDialogOpen}
-          onOpenChange={setNotesDialogOpen}
-          bookingId={activeBookingForNotes.id}
-          workerName={activeBookingForNotes.workerName}
-          existingNotes={activeBookingForNotes.notes}
-          onSave={handleSaveNotes}
-        />
-      )}
+      {/* QR Code Dialogs */}
+      {jobs.jobsList?.map((job) => (
+        <dialog
+          key={`qr-dialog-${job.id}`}
+          id={`qr-dialog-${job.id}`}
+          style={{
+            border: 'none',
+            borderRadius: '0.5rem',
+            padding: 0,
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
+          }}
+        >
+          <div style={{ padding: '0' }}>
+            <QRCodeGenerator
+              jobId={job.id}
+              jobTitle={job.title}
+              businessName={user?.full_name || 'Business'}
+              address={job.address || undefined}
+              startDate={job.start_date || undefined}
+              existingQRCode={job.qr_code || undefined}
+              onRefresh={handleQRRefresh}
+            />
+            <div style={{ padding: '1rem', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  const dialog = document.getElementById(`qr-dialog-${job.id}`) as HTMLDialogElement
+                  dialog?.close()
+                }}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#f3f4f6',
+                  color: '#374151',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  cursor: 'pointer'
+                }}
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </dialog>
+      ))}
+
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        dialog::backdrop {
+          background: rgba(0, 0, 0, 0.5);
+        }
+      `}</style>
     </div>
   )
 }

@@ -207,3 +207,102 @@ export async function searchJobs(
 
   return data || []
 }
+
+/**
+ * Generate a unique QR code for a job
+ * The QR code contains the job ID for attendance tracking
+ */
+export async function generateJobQRCode(
+  jobId: string
+): Promise<{ qr_code: string; generated_at: string }> {
+  // Check if job exists
+  const job = await getJobById(jobId)
+  if (!job) {
+    throw new Error('Job not found')
+  }
+
+  // Generate unique QR code data
+  const qrData = JSON.stringify({
+    jobId,
+    type: 'attendance',
+    generatedAt: new Date().toISOString(),
+  })
+
+  // Encode to base64 for compact storage
+  const qrCode = Buffer.from(qrData).toString('base64')
+  const generatedAt = new Date().toISOString()
+
+  // Update job with QR code
+  const { error } = await supabase
+    .from('jobs')
+    .update({
+      qr_code: qrCode,
+      qr_generated_at: generatedAt,
+      updated_at: generatedAt,
+    })
+    .eq('id', jobId)
+
+  if (error) {
+    throw new Error(`Failed to generate QR code: ${error.message}`)
+  }
+
+  return { qr_code: qrCode, generated_at: generatedAt }
+}
+
+/**
+ * Get job QR code data
+ */
+export async function getJobQRCode(
+  jobId: string
+): Promise<{ qr_code: string | null; generated_at: string | null } | null> {
+  const { data, error } = await supabase
+    .from('jobs')
+    .select('qr_code, qr_generated_at')
+    .eq('id', jobId)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null
+    }
+    throw new Error(`Failed to fetch job QR code: ${error.message}`)
+  }
+
+  return {
+    qr_code: data.qr_code,
+    generated_at: data.qr_generated_at,
+  }
+}
+
+/**
+ * Validate and decode a job QR code
+ */
+export async function validateJobQRCode(
+  qrCode: string
+): Promise<{ isValid: boolean; jobId?: string; error?: string }> {
+  try {
+    // Decode base64
+    const decoded = Buffer.from(qrCode, 'base64').toString('utf-8')
+    const data = JSON.parse(decoded)
+
+    // Validate structure
+    if (!data.jobId || data.type !== 'attendance') {
+      return { isValid: false, error: 'Invalid QR code format' }
+    }
+
+    // Verify job exists
+    const job = await getJobById(data.jobId)
+    if (!job) {
+      return { isValid: false, error: 'Job not found' }
+    }
+
+    // Verify QR code matches the job's stored QR code
+    if (job.qr_code !== qrCode) {
+      return { isValid: false, error: 'QR code mismatch' }
+    }
+
+    return { isValid: true, jobId: data.jobId }
+  } catch {
+    return { isValid: false, error: 'Failed to decode QR code' }
+  }
+}

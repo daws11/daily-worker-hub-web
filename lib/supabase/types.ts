@@ -117,6 +117,8 @@ export interface Database {
           address: string
           lat: number
           lng: number
+          qr_code: string | null
+          qr_generated_at: string | null
           created_at: string
           updated_at: string
         }
@@ -138,6 +140,12 @@ export interface Database {
           end_date: string
           final_price: number
           booking_notes: string
+          check_in_at: string | null
+          check_out_at: string | null
+          check_in_lat: number | null
+          check_in_lng: number | null
+          check_out_lat: number | null
+          check_out_lng: number | null
           created_at: string
           updated_at: string
         }
