@@ -236,6 +236,30 @@ export interface Database {
           updated_at: string
         }
       }
+      payout_requests: {
+        Row: {
+          id: string
+          worker_id: string
+          amount: number
+          fee_amount: number
+          net_amount: number
+          status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+          bank_code: 'BCA' | 'BRI' | 'Mandiri' | 'BNI'
+          bank_account_number: string
+          bank_account_name: string
+          payment_provider: string
+          provider_payout_id: string | null
+          provider_response: Json
+          requested_at: string
+          processed_at: string | null
+          completed_at: string | null
+          failed_at: string | null
+          failure_reason: string | null
+          metadata: Json
+          created_at: string
+          updated_at: string
+        }
+      }
     }
   }
 }
