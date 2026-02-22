@@ -12,6 +12,14 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
   BriefcaseIcon,
   CheckCircle2Icon,
   ClockIcon,
@@ -19,6 +27,7 @@ import {
   PencilIcon,
   Trash2Icon,
 } from "lucide-react"
+import { JobPostingForm, type JobPostingFormValues } from "@/app/components/job-posting-form"
 
 type JobStatus = "draft" | "open" | "in_progress" | "completed"
 
@@ -58,6 +67,9 @@ function getStatusLabel(status: JobStatus): string {
 }
 
 export default function BusinessJobsPage() {
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
+  const [isSubmitting, setIsSubmitting] = React.useState(false)
+
   // TODO: Replace with actual data fetching from API
   const jobs: Job[] = [
     {
@@ -100,24 +112,36 @@ export default function BusinessJobsPage() {
     completed: jobs.filter((j) => j.status === "completed").length,
   }
 
+  const handleCreateJob = async (values: JobPostingFormValues) => {
+    setIsSubmitting(true)
+    try {
+      // TODO: Replace with actual API call to create job
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      setIsDialogOpen(false)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-muted/40 p-4 md:p-6">
-      <div className="mx-auto max-w-6xl space-y-6">
-        {/* Header */}
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">My Jobs</h1>
-            <p className="text-muted-foreground">
-              Manage your job postings and track applications
-            </p>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <div className="min-h-screen bg-muted/40 p-4 md:p-6">
+        <div className="mx-auto max-w-6xl space-y-6">
+          {/* Header */}
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">My Jobs</h1>
+              <p className="text-muted-foreground">
+                Manage your job postings and track applications
+              </p>
+            </div>
+            <DialogTrigger asChild>
+              <Button>
+                <BriefcaseIcon className="mr-2 h-4 w-4" />
+                Create Job
+              </Button>
+            </DialogTrigger>
           </div>
-          <Button asChild>
-            <Link href="/dashboard-business-jobs/create">
-              <BriefcaseIcon className="mr-2 h-4 w-4" />
-              Create Job
-            </Link>
-          </Button>
-        </div>
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-3">
@@ -179,12 +203,12 @@ export default function BusinessJobsPage() {
                 <p className="mb-4 max-w-sm text-sm text-muted-foreground">
                   Get started by creating your first job posting to find workers for your needs.
                 </p>
-                <Button asChild>
-                  <Link href="/dashboard-business-jobs/create">
+                <DialogTrigger asChild>
+                  <Button>
                     <BriefcaseIcon className="mr-2 h-4 w-4" />
                     Create Your First Job
-                  </Link>
-                </Button>
+                  </Button>
+                </DialogTrigger>
               </div>
             ) : (
               <div className="space-y-4">
@@ -241,5 +265,21 @@ export default function BusinessJobsPage() {
         </Card>
       </div>
     </div>
+
+    {/* Create Job Dialog */}
+    <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle>Create New Job Posting</DialogTitle>
+        <DialogDescription>
+          Fill in the details below to post a new job and find workers for your needs.
+        </DialogDescription>
+      </DialogHeader>
+      <JobPostingForm
+        onSubmit={handleCreateJob}
+        isLoading={isSubmitting}
+        submitButtonText="Create Job"
+      />
+    </DialogContent>
+  </Dialog>
   )
 }
