@@ -108,10 +108,9 @@ export function ReliabilityScore({
 export interface ReliabilityScoreBreakdownProps {
   score: number
   breakdown?: {
-    completedJobs?: number
-    onTimeDelivery?: number
-    qualityRating?: number
-    communication?: number
+    attendanceRate?: number
+    punctualityRate?: number
+    averageRating?: number
   }
   size?: "sm" | "md" | "lg"
   className?: string
@@ -129,28 +128,22 @@ export function ReliabilityScoreBreakdown({
 
       {breakdown && (
         <div className="space-y-2">
-          {breakdown.completedJobs !== undefined && (
+          {breakdown.attendanceRate !== undefined && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Completed Jobs</span>
-              <span className="font-medium">{breakdown.completedJobs}</span>
+              <span className="text-muted-foreground">Attendance Rate</span>
+              <span className="font-medium">{breakdown.attendanceRate}%</span>
             </div>
           )}
-          {breakdown.onTimeDelivery !== undefined && (
+          {breakdown.punctualityRate !== undefined && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">On-time Delivery</span>
-              <span className="font-medium">{breakdown.onTimeDelivery}%</span>
+              <span className="text-muted-foreground">Punctuality Rate</span>
+              <span className="font-medium">{breakdown.punctualityRate}%</span>
             </div>
           )}
-          {breakdown.qualityRating !== undefined && (
+          {breakdown.averageRating !== undefined && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Quality Rating</span>
-              <span className="font-medium">{breakdown.qualityRating}/5</span>
-            </div>
-          )}
-          {breakdown.communication !== undefined && (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Communication</span>
-              <span className="font-medium">{breakdown.communication}/5</span>
+              <span className="text-muted-foreground">Average Rating</span>
+              <span className="font-medium">{breakdown.averageRating.toFixed(1)}/5</span>
             </div>
           )}
         </div>
