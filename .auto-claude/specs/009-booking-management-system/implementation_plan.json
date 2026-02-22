@@ -221,11 +221,11 @@
           "description": "Update business jobs page to show booking applications",
           "service": "frontend",
           "files_to_modify": [
-            "app/app/(dashboard)/business/jobs/page.tsx"
+            "app/(dashboard)/business/jobs/page.tsx"
           ],
           "files_to_create": [],
           "patterns_from": [
-            "app/app/(dashboard)/business/jobs/page.tsx"
+            "app/(dashboard)/business/jobs/page.tsx"
           ],
           "verification": {
             "type": "browser",
@@ -235,7 +235,8 @@
               "Booking applications are displayed"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Updated app/(dashboard)/business/jobs/page.tsx with: statistics dashboard showing total/pending/accepted/rejected bookings, status filtering (all/pending/accepted/rejected), WorkerApplicationCard integration with reliability scores, BookingActions for individual accept/reject, BulkActions for bulk operations, WorkerNotesDialog for adding worker notes, business ID fetching from authenticated user, loading/error states, empty states, and responsive grid layout"
         }
       ]
     },
