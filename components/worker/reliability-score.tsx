@@ -43,16 +43,16 @@ export function ReliabilityScore({
   const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0)
 
   const getScoreColor = (score: number) => {
-    if (score >= 4.5) return "text-green-600 dark:text-green-400"
-    if (score >= 3.5) return "text-yellow-600 dark:text-yellow-400"
-    if (score >= 2.5) return "text-orange-600 dark:text-orange-400"
+    if (score === 5.0) return "text-yellow-600 dark:text-yellow-400"
+    if (score >= 4.0) return "text-green-600 dark:text-green-400"
+    if (score >= 3.0) return "text-yellow-600 dark:text-yellow-400"
     return "text-red-600 dark:text-red-400"
   }
 
   const getStarColor = (score: number) => {
-    if (score >= 4.5) return "fill-green-500 text-green-500 dark:fill-green-400 dark:text-green-400"
-    if (score >= 3.5) return "fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400"
-    if (score >= 2.5) return "fill-orange-500 text-orange-500 dark:fill-orange-400 dark:text-orange-400"
+    if (score === 5.0) return "fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400"
+    if (score >= 4.0) return "fill-green-500 text-green-500 dark:fill-green-400 dark:text-green-400"
+    if (score >= 3.0) return "fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400"
     return "fill-red-500 text-red-500 dark:fill-red-400 dark:text-red-400"
   }
 
