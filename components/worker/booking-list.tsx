@@ -76,10 +76,12 @@ async function fetchBookings(workerId: string): Promise<Booking[]> {
 }
 
 async function cancelBooking(bookingId: string): Promise<void> {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("bookings")
+    // @ts-ignore - Supabase type inference issue with React 19
     .update({ status: "cancelled" })
     .eq("id", bookingId)
+    .select()
 
   if (error) {
     throw error
