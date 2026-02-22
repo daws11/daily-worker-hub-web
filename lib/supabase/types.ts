@@ -138,8 +138,49 @@ export interface Database {
           end_date: string
           final_price: number
           booking_notes: string
+          checkout_time: string | null
+          payment_status: 'pending_review' | 'available' | 'released' | 'disputed' | 'cancelled'
+          review_deadline: string | null
           created_at: string
           updated_at: string
+        }
+      }
+      wallets: {
+        Row: {
+          id: string
+          user_id: string
+          pending_balance: number
+          available_balance: number
+          created_at: string
+          updated_at: string
+        }
+      }
+      wallet_transactions: {
+        Row: {
+          id: string
+          wallet_id: string
+          booking_id: string | null
+          amount: number
+          type: 'earn' | 'payout' | 'refund' | 'hold' | 'release'
+          status: 'pending_review' | 'available' | 'released' | 'disputed' | 'cancelled'
+          description: string | null
+          metadata: Json
+          created_at: string
+        }
+      }
+      disputes: {
+        Row: {
+          id: string
+          booking_id: string
+          raised_by: string
+          reason: string
+          status: 'pending' | 'investigating' | 'resolved' | 'rejected'
+          resolution: string | null
+          admin_notes: string | null
+          evidence_urls: string[] | null
+          created_at: string
+          updated_at: string
+          resolved_at: string | null
         }
       }
       transactions: {
