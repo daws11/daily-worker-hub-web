@@ -146,4 +146,20 @@ Phase 1 (Database Schema & Migrations): 2/2 subtasks completed
 Phase 2 (Server Actions & API Layer): 3/3 subtasks completed
 Phase 3 (UI Components): 3/3 subtasks completed
 Phase 4 (Worker Dashboard): 3/3 subtasks completed
-Next: Phase 5 - Business Dashboard (subtask-5-1 - Business jobs page with applicant listings)
+Phase 5 (Business Dashboard): 1/2 subtasks completed
+Next: Phase 5 - subtask-5-2 (Accept/reject applicant functionality)
+
+Session 5 (2026-02-22):
+- subtask-5-1: COMPLETED - Implemented business jobs page
+  * File: app/app/(dashboard)/business/jobs/page.tsx
+  * Job listing showing applicant count for each job
+  * Collapsible applicant list for each job using ApplicantList component
+  * Stats cards showing total jobs, open jobs, in-progress jobs, and total applicants
+  * Loading and empty states with appropriate UI
+  * Accept/reject applicant functionality (buttons provided to ApplicantList)
+  * Fetches business profile from database based on authenticated user
+  * Loads jobs with applicant count, fetches applicants on demand when expanding job
+  * Uses ChevronDown/ChevronUp icons for expand/collapse toggle
+  * Indonesian language for all UI labels
+  * Follows patterns from auth-provider.tsx for state management and error handling
+  * Consistent with worker jobs page implementation

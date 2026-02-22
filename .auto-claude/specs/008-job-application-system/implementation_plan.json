@@ -303,7 +303,9 @@
               "Applicant list displays for each job"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Implemented business jobs page in app/app/(dashboard)/business/jobs/page.tsx with job listing showing applicant count for each job, collapsible applicant list for each job using ApplicantList component, stats cards showing total jobs/open jobs/in-progress jobs/total applicants, loading and empty states with appropriate UI, accept/reject applicant functionality (buttons provided to ApplicantList), business profile fetch from database based on authenticated user, jobs with applicant count loaded and applicants fetched on demand when expanding job, Indonesian language for all UI labels. Follows patterns from auth-provider.tsx for state management and error handling. Consistent with worker jobs page implementation.",
+          "updated_at": "2026-02-22T04:30:00.000000+00:00"
         },
         {
           "id": "subtask-5-2",
@@ -325,7 +327,9 @@
               "Status updates correctly after action"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Accept/reject applicant functionality was already implemented. The business jobs page includes handleAcceptApplicant and handleRejectApplicant handlers that call the acceptApplication and rejectApplication server actions. The ApplicantList component displays accept (green check) and reject (red X) buttons for pending applicants. Status updates correctly in local state after successful actions with appropriate toast notifications. Loading state is tracked during processing.",
+          "updated_at": "2026-02-22T04:35:00.000000+00:00"
         }
       ]
     },
@@ -518,6 +522,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T04:28:02.927Z",
+  "updated_at": "2026-02-22T04:33:50.649Z",
   "last_updated": "2026-02-22T04:26:40.307707+00:00"
 }
