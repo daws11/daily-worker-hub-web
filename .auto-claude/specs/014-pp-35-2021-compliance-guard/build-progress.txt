@@ -258,6 +258,28 @@
 - TypeScript Verification: No compliance-related TypeScript errors
 - Git Commit: d341674 "auto-claude: subtask-4-2 - Create ComplianceStatusBadge component to display worker compliance status in applicant cards"
 
+## Subtask 5-1: Add compliance status fetching to business jobs page ✅ COMPLETED
+- File: app/app/(dashboard)/business/jobs/page.tsx
+- Status: COMPLETE - Compliance status fetching was already implemented
+- Implementation Verified:
+  - Line 15: Import of checkComplianceBeforeAccept action from "@/lib/actions/compliance"
+  - Line 18: Import of ComplianceStatusResult type from "@/lib/supabase/queries/compliance"
+  - Line 38: State variable complianceStatusByApplicant for storing compliance data
+  - Lines 137-154: Fetching logic in fetchApplicants function
+    - Iterates through all applicants
+    - Calls checkComplianceBeforeAccept for each applicant
+    - Stores result in complianceStatusByApplicant state
+    - Silently handles errors (try-catch with empty catch)
+  - Line 462: Passing complianceStatusByApplicant prop to ApplicantList component
+- Pattern Compliance:
+  - Follows existing patterns in the file
+  - Uses the same error handling pattern as other async operations
+  - State management pattern consistent with applicantsByJob and isLoadingApplicants
+- TypeScript Verification:
+  - No compliance-related TypeScript errors in this file
+  - Note: Pre-existing TypeScript errors exist in other parts of codebase (unrelated to compliance)
+- Note: This subtask was already complete from previous implementation. No changes required.
+
 ## Subtask 4-3: Create AlternativeWorkersSuggestion component ✅ COMPLETED
 - File: components/booking/alternative-workers-suggestion.tsx (NEW FILE)
 - Status: COMPLETE - Alternative workers suggestion component implemented following project patterns
