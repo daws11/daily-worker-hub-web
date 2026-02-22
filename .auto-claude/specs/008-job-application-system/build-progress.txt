@@ -66,8 +66,36 @@ Session 2 (2026-02-22):
   * Functions: applyForJob, cancelApplication, checkDuplicateApplication
   * Additional: getWorkerApplications, getJobApplicants, acceptApplication, rejectApplication
   * All actions include proper error handling and type safety
+- subtask-2-2: COMPLETED - Created notification server actions
+  * File: lib/actions/notifications.ts
+- subtask-2-3: COMPLETED - Created data fetching utilities
+  * File: lib/data/jobs.ts
+  * Functions: getJobs, getJobById, getApplications, getApplicants, getJobsByBusiness
+
+Session 3 (2026-02-22):
+- subtask-3-1: COMPLETED - Created JobCard component
+  * File: components/job-card.tsx
+  * Displays job title, description, budget range, deadline, location
+  * Shows business name with verification badge
+  * Shows category and skills (up to 3 displayed)
+  * Status badge (open/in_progress/completed/cancelled) with Indonesian labels
+  * Optional apply button with disabled states for applied/closed jobs
+  * Uses lucide-react icons (Calendar, MapPin, Building2, Briefcase, Wallet)
+  * Follows patterns from card.tsx, button.tsx, and badge.tsx
+- subtask-3-2: COMPLETED - Created ApplicationList component
+  * File: components/application-list.tsx
+  * Table-based display of worker application history
+  * Shows job title, budget range, location, business name, application date
+  * Status badge (pending/accepted/rejected/in_progress/completed/cancelled) with color coding
+  * Loading state with spinner animation
+  * Empty state with briefcase icon and message
+  * Optional cancel button for pending applications
+  * Uses lucide-react icons (Calendar, Building2, MapPin, Wallet, X, MoreVertical)
+  * Follows patterns from table.tsx, badge.tsx, card.tsx, and button.tsx
+  * Indonesian language for all UI labels
 
 === CURRENT STATUS ===
 Phase 1 (Database Schema & Migrations): 2/2 subtasks completed
-Phase 2 (Server Actions & API Layer): 1/3 subtasks completed
-Next: Phase 2 - Server Actions & API Layer (subtask-2-2)
+Phase 2 (Server Actions & API Layer): 3/3 subtasks completed
+Phase 3 (UI Components): 2/3 subtasks completed
+Next: Phase 3 - UI Components (subtask-3-3 - ApplicantList component)
