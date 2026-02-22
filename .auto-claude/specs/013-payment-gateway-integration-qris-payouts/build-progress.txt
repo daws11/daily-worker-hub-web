@@ -246,3 +246,29 @@ Implementation plan is ready for coder agent to begin.
   - try-catch error handling with descriptive messages
   - Supabase queries with select() and single()
   - Proper status updates and data transformations
+
+2026-02-22 - Subtask 4-3: Add wallet balance check action to lib/actions/payments.ts
+- Status: COMPLETED
+- Files:
+  - lib/actions/payments.ts (verified existing implementation)
+- Implementation verified:
+  - getBusinessWalletBalance function (lines 177-216):
+    - Gets wallet balance for a business by business_id
+    - Auto-creates wallet with zero balance if not exists
+    - Returns WalletBalanceResult with balance and currency (IDR)
+  - getWorkerWalletBalance function (lines 221-260):
+    - Gets wallet balance for a worker by worker_id
+    - Auto-creates wallet with zero balance if not exists
+    - Returns WalletBalanceResult with balance and currency (IDR)
+- Error handling:
+  - Proper try-catch blocks with Indonesian error messages
+  - Handles database errors gracefully
+  - Returns consistent { success, error?, data } result type
+- Verification: Type-check passed with 0 errors
+- Patterns followed from lib/actions/notifications.ts:
+  - "use server" directive
+  - Export type definitions for result types
+  - JSDoc comments for all functions
+  - Consistent result type structure (success, error, data)
+  - Indonesian error messages ("Gagal mengambil saldo wallet", etc.)
+  - Proper Supabase query patterns (maybeSingle() for optional records)
