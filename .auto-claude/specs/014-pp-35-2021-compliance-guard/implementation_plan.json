@@ -102,28 +102,28 @@
           "service": "app",
           "files_to_modify": [],
           "files_to_create": [
-            "lib/lib/supabase/queries/compliance.ts"
+            "lib/supabase/queries/compliance.ts"
           ],
           "patterns_from": [
-            "lib/lib/supabase/queries/bookings.ts"
+            "lib/supabase/queries/bookings.ts"
           ],
           "verification": {
             "type": "command",
             "command": "npx tsc --noEmit",
             "expected": "No TypeScript errors"
           },
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "subtask-2-2",
           "description": "Create getComplianceStatus query function to check if worker can be booked (returns status, days count, warning level)",
           "service": "app",
           "files_to_modify": [
-            "lib/lib/supabase/queries/compliance.ts"
+            "lib/supabase/queries/compliance.ts"
           ],
           "files_to_create": [],
           "patterns_from": [
-            "lib/lib/supabase/queries/bookings.ts"
+            "lib/supabase/queries/bookings.ts"
           ],
           "verification": {
             "type": "command",
@@ -137,11 +137,11 @@
           "description": "Create getComplianceRecords query function to get all compliance records for a business (for audit)",
           "service": "app",
           "files_to_modify": [
-            "lib/lib/supabase/queries/compliance.ts"
+            "lib/supabase/queries/compliance.ts"
           ],
           "files_to_create": [],
           "patterns_from": [
-            "lib/lib/supabase/queries/bookings.ts"
+            "lib/supabase/queries/bookings.ts"
           ],
           "verification": {
             "type": "command",
@@ -155,11 +155,11 @@
           "description": "Create getAlternativeWorkers query function to suggest workers who haven't reached limit",
           "service": "app",
           "files_to_modify": [
-            "lib/lib/supabase/queries/compliance.ts"
+            "lib/supabase/queries/compliance.ts"
           ],
           "files_to_create": [],
           "patterns_from": [
-            "lib/lib/supabase/queries/bookings.ts"
+            "lib/supabase/queries/bookings.ts"
           ],
           "verification": {
             "type": "command",
@@ -598,5 +598,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T12:28:00.930Z"
+  "updated_at": "2026-02-22T12:32:01.182Z"
 }

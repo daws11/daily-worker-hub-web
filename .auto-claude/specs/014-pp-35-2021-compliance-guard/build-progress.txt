@@ -71,8 +71,26 @@
   - Admins have full access for auditing and dispute resolution
 - Pattern Compliance: Follows the same structure as 20260222_add_bookings_rls_policies.sql
 
+## Subtask 2-1: Create getWorkerDaysForMonth query function ✅ COMPLETED
+- File: lib/supabase/queries/compliance.ts (NEW FILE)
+- Status: COMPLETE - Query function implemented following project patterns
+- Functions Created:
+  - getWorkerDaysForMonth(workerId, businessId, month)
+    - Calls database function calculate_days_worked via RPC
+    - Returns days worked count (default 0 if no record)
+    - Error handling with try-catch and console.error
+  - getBusinessComplianceRecords(businessId, limit)
+    - Returns all compliance records for a business with worker details
+    - Useful for auditing and compliance history
+  - getWorkerComplianceRecords(workerId, limit)
+    - Returns all compliance records for a worker with business details
+    - Useful for workers to track their work history
+- Pattern Compliance: Follows the same structure as lib/supabase/queries/bookings.ts
+- TypeScript Verification: No new TypeScript errors introduced
+- Note: Uses type assertion for database function call until types are regenerated
+
 ## Quality Checklist ✅
-- [x] Follows patterns from reference files (initial_schema.sql, kyc_verifications.sql)
+- [x] Follows patterns from reference files (initial_schema.sql, kyc_verifications.sql, bookings.ts)
 - [x] No console.log/print debugging statements
 - [x] Proper foreign key relationships (businesses, workers tables exist)
 - [x] Error handling in place (RLS policies, constraints, exception handling)
