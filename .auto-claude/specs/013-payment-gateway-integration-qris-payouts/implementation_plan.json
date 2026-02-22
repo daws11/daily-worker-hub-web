@@ -443,7 +443,9 @@
             "command": "npm run type-check 2>&1 | grep -i 'error' | wc -l",
             "expected": "0"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created TransactionHistory component at components/payment/transaction-history.tsx. Features: 1) Table display with columns for transaction type, description, date, status, and amount, 2) Loading state with spinner, 3) Empty state with wallet icon and message, 4) Indonesian localization for dates and currency (IDR), 5) Status badge variants (pending, processing, success/completed, failed/expired/cancelled), 6) Transaction type labels (Isi Saldo, Pembayaran, Pengembalian, Penarikan, Penarikan Gagal), 7) Transaction icons with color coding (green for top-ups/refunds, blue for payments/payouts, red for failures), 8) Amount formatting with +/- indicators and color coding, 9) Follows patterns from application-list.tsx (forwardRef, Card layout, Table components, helper functions, status badges), 10) Uses TransactionHistory type from lib/types/payment.ts. Component includes WalletIcon helper for empty state display. Type-check passed with 0 errors.",
+          "updated_at": "2026-02-22T09:53:05.000Z"
         },
         {
           "id": "subtask-6-4",
