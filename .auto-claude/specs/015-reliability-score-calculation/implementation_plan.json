@@ -82,8 +82,8 @@
             "command": "grep -c \"reliability_score_history\" lib/supabase/types.ts",
             "expected": "1"
           },
-          "status": "pending",
-          "notes": "Run: npx supabase gen types typescript --local > lib/supabase/types.ts"
+          "status": "completed",
+          "notes": "Added actual_start_time and actual_end_time columns to bookings table type. Added reliability_score_history table type with id, worker_id, score, attendance_rate, punctuality_rate, avg_rating, completed_jobs_count, calculated_at, and created_at fields."
         }
       ]
     },
@@ -113,8 +113,8 @@
             "body": "{\"worker_id\": \"test-worker-id\"}",
             "expected_status": 200
           },
-          "status": "pending",
-          "notes": "Formula: 40% attendance + 30% punctuality + 30% ratings. Enable the commented update code."
+          "status": "completed",
+          "notes": "Implemented 40% attendance + 30% punctuality + 30% ratings formula. Added punctuality calculation using actual_start_time and actual_end_time. Created migration to add reliability_score column to workers table. Enabled update code and added score history recording."
         },
         {
           "id": "subtask-2-2",
@@ -485,5 +485,5 @@
   "executionPhase": "coding",
   "status": "in_progress",
   "planStatus": "in_progress",
-  "updated_at": "2026-02-22T12:25:48.406Z"
+  "updated_at": "2026-02-22T12:38:39.648Z"
 }
