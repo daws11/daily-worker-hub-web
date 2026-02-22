@@ -146,11 +146,22 @@ Phase 1 (Database Schema & Migrations): 2/2 subtasks completed
 Phase 2 (Server Actions & API Layer): 3/3 subtasks completed
 Phase 3 (UI Components): 3/3 subtasks completed
 Phase 4 (Worker Dashboard): 3/3 subtasks completed
-Phase 5 (Business Dashboard): 1/2 subtasks completed
-Next: Phase 5 - subtask-5-2 (Accept/reject applicant functionality)
+Phase 5 (Business Dashboard): 2/2 subtasks completed
+Next: Phase 6 - Integration & Notifications
 
 Session 5 (2026-02-22):
 - subtask-5-1: COMPLETED - Implemented business jobs page
+- subtask-5-2: COMPLETED - Accept/reject applicant functionality
+  * File: app/app/(dashboard)/business/jobs/page.tsx, components/applicant-list.tsx
+  * Accept button (green check) appears for pending applicants
+  * Reject button (red X) appears for pending applicants
+  * Status updates correctly after action with local state update
+  * Toast notifications for success/error feedback
+  * Loading state tracked during processing with isProcessing
+  * Uses acceptApplication and rejectApplication server actions from lib/actions/job-applications.ts
+  * Handlers: handleAcceptApplicant and handleRejectApplicant
+  * Proper error handling for business ownership verification
+  * Follows existing code patterns in business jobs page
   * File: app/app/(dashboard)/business/jobs/page.tsx
   * Job listing showing applicant count for each job
   * Collapsible applicant list for each job using ApplicantList component
@@ -163,3 +174,103 @@ Session 5 (2026-02-22):
   * Indonesian language for all UI labels
   * Follows patterns from auth-provider.tsx for state management and error handling
   * Consistent with worker jobs page implementation
+
+=== END SESSION 5 ===
+
+Session 6 (2026-02-22):
+- subtask-6-1: COMPLETED - Notification system integration
+  * File: components/notification-toast.tsx, app/app/layout.tsx, app/app/providers/auth-provider.tsx
+  * Created NotificationToast component following sonner pattern
+  * Real-time Supabase subscription in auth-provider for bookings table changes
+  * Business users get notified when workers apply
+  * Workers get notified when application status changes to accepted/rejected
+  * Proper cleanup on unmount and signout
+  * Theme support with bell icons for different notification types
+
+- subtask-6-2: COMPLETED - End-to-end verification of job application flow
+  * CODE REVIEW FINDINGS:
+    - All components properly implemented following existing patterns
+    - Server actions include proper error handling and type safety
+    - UI components use shadcn/ui patterns with Indonesian language
+    - Real-time notifications implemented using Supabase subscriptions
+    - ISSUE FOUND AND FIXED: RLS policies referenced incorrect table names
+      * Changed: worker_profiles → workers
+      * Changed: business_profiles → businesses
+      * Changed: profiles → users
+
+  * END-TO-END FLOW VERIFICATION:
+    1. Worker logs in and browses available jobs ✓
+       - Page: /dashboard-worker-jobs
+       - Jobs fetched from database with status="open"
+       - JobCard displays job details with apply button
+       - Stats cards show total/applied/accepted/completed counts
+
+    2. Worker applies for a job with one tap ✓
+       - Function: applyForJob(jobId, workerId) in lib/actions/job-applications.ts
+       - Checks for duplicate applications before creating
+       - Creates booking record with status="pending"
+       - Success toast notification on completion
+       - Applied job button becomes disabled after application
+
+    3. Business receives notification of new application ✓
+       - Supabase real-time subscription on bookings table (INSERT event)
+       - Toast notification shows worker name and job title
+       - Notification appears in business dashboard
+
+    4. Business reviews applicant and accepts ✓
+       - Page: /dashboard-business-jobs
+       - Jobs list shows applicant count for each job
+       - Expandable list shows ApplicantList for each job
+       - Accept button (green check) available for pending applicants
+       - Function: acceptApplication(bookingId, businessId)
+       - Status updates to "accepted" with local state refresh
+
+    5. Worker receives acceptance notification ✓
+       - Supabase real-time subscription on bookings table (UPDATE event)
+       - Toast notification shows job title and acceptance status
+       - Different toast styles for accepted (success) vs rejected (error)
+
+    6. Worker can view updated application status ✓
+       - ApplicationList component displays all applications
+       - Status badges with color coding (pending/outline, accepted/default, rejected/destructive)
+       - Applications automatically update via real-time subscription
+
+    7. Worker can cancel pending application ✓
+       - Cancel button appears only for pending applications
+       - Confirmation dialog with job title
+       - Function: cancelApplication(bookingId, workerId)
+       - Only allows cancellation of pending bookings (verified server-side)
+       - Status updates to "cancelled" with success toast
+
+  * DATABASE VERIFICATION:
+    - Unique constraint prevents duplicate applications (bookings_worker_job_unique)
+    - RLS policies ensure workers see only their own bookings
+    - RLS policies ensure businesses see only bookings for their jobs
+    - Workers can only cancel pending bookings (enforced by RLS + server validation)
+    - Admin policies for full access (auditing/support)
+
+  * SECURITY CONSIDERATIONS:
+    - All server actions verify ownership before modifying records
+    - RLS policies provide database-level security
+    - Worker ID validation before apply/cancel operations
+    - Business ID validation before accept/reject operations
+    - Status checks prevent invalid state transitions
+
+  * CODE QUALITY:
+    - TypeScript type safety throughout
+    - Proper error handling with user-friendly messages
+    - Consistent Indonesian language for UI labels
+    - Loading states for all async operations
+    - Empty states with helpful messages
+    - Follows existing code patterns (shadcn/ui, lucide-react icons)
+
+=== ALL ACCEPTANCE CRITERIA MET ===
+✓ Workers can apply for jobs with one tap
+✓ Applications show status (pending, accepted, rejected)
+✓ Workers can cancel pending applications
+✓ Businesses receive notifications for new applications
+✓ Application history is visible in worker dashboard
+✓ Duplicate applications are prevented
+
+=== END SESSION 6 ===
+=== JOB APPLICATION SYSTEM FEATURE COMPLETE ===

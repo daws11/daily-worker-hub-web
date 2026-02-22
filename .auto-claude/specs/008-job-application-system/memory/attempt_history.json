@@ -131,11 +131,47 @@
         }
       ],
       "status": "completed"
+    },
+    "subtask-5-1": {
+      "attempts": [
+        {
+          "session": 13,
+          "timestamp": "2026-02-22T04:33:30.952516+00:00",
+          "approach": "Implemented: Implement business jobs page with applicant listings",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-5-2": {
+      "attempts": [
+        {
+          "session": 14,
+          "timestamp": "2026-02-22T04:35:42.573530+00:00",
+          "approach": "Implemented: Implement accept/reject applicant functionality",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-6-1": {
+      "attempts": [
+        {
+          "session": 15,
+          "timestamp": "2026-02-22T04:40:21.952782+00:00",
+          "approach": "Implemented: Implement notification system integration",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
     }
   },
   "stuck_subtasks": [],
   "metadata": {
     "created_at": "2026-02-22T03:50:26.171481+00:00",
-    "last_updated": "2026-02-22T04:27:43.368896+00:00"
+    "last_updated": "2026-02-22T04:40:21.952793+00:00"
   }
 }

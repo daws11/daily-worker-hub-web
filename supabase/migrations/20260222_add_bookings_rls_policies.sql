@@ -16,7 +16,7 @@ CREATE POLICY "Workers can view their own bookings"
 ON bookings FOR SELECT
 USING (
   worker_id IN (
-    SELECT id FROM worker_profiles WHERE user_id = auth.uid()
+    SELECT id FROM workers WHERE user_id = auth.uid()
   )
 );
 
@@ -25,7 +25,7 @@ CREATE POLICY "Workers can create their own bookings"
 ON bookings FOR INSERT
 WITH CHECK (
   worker_id IN (
-    SELECT id FROM worker_profiles WHERE user_id = auth.uid()
+    SELECT id FROM workers WHERE user_id = auth.uid()
   )
 );
 
@@ -34,12 +34,12 @@ CREATE POLICY "Workers can update their own bookings"
 ON bookings FOR UPDATE
 USING (
   worker_id IN (
-    SELECT id FROM worker_profiles WHERE user_id = auth.uid()
+    SELECT id FROM workers WHERE user_id = auth.uid()
   )
 )
 WITH CHECK (
   worker_id IN (
-    SELECT id FROM worker_profiles WHERE user_id = auth.uid()
+    SELECT id FROM workers WHERE user_id = auth.uid()
   )
   AND status = 'pending' -- Can only cancel pending bookings
 );
@@ -54,7 +54,7 @@ CREATE POLICY "Businesses can view their job bookings"
 ON bookings FOR SELECT
 USING (
   business_id IN (
-    SELECT id FROM business_profiles WHERE user_id = auth.uid()
+    SELECT id FROM businesses WHERE user_id = auth.uid()
   )
 );
 
@@ -63,12 +63,12 @@ CREATE POLICY "Businesses can update booking status"
 ON bookings FOR UPDATE
 USING (
   business_id IN (
-    SELECT id FROM business_profiles WHERE user_id = auth.uid()
+    SELECT id FROM businesses WHERE user_id = auth.uid()
   )
 )
 WITH CHECK (
   business_id IN (
-    SELECT id FROM business_profiles WHERE user_id = auth.uid()
+    SELECT id FROM businesses WHERE user_id = auth.uid()
   )
   AND status IN ('pending', 'accepted', 'rejected', 'cancelled', 'completed', 'no_show')
 );
@@ -83,7 +83,7 @@ CREATE POLICY "Admins can view all bookings"
 ON bookings FOR SELECT
 USING (
   EXISTS (
-    SELECT 1 FROM profiles
+    SELECT 1 FROM users
     WHERE id = auth.uid()
     AND role = 'admin'
   )
@@ -94,7 +94,7 @@ CREATE POLICY "Admins can update any booking"
 ON bookings FOR UPDATE
 USING (
   EXISTS (
-    SELECT 1 FROM profiles
+    SELECT 1 FROM users
     WHERE id = auth.uid()
     AND role = 'admin'
   )
@@ -105,7 +105,7 @@ CREATE POLICY "Admins can delete any booking"
 ON bookings FOR DELETE
 USING (
   EXISTS (
-    SELECT 1 FROM profiles
+    SELECT 1 FROM users
     WHERE id = auth.uid()
     AND role = 'admin'
   )
