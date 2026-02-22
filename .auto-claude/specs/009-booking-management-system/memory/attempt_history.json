@@ -171,6 +171,18 @@
         }
       ],
       "status": "stuck"
+    },
+    "subtask-6-1": {
+      "attempts": [
+        {
+          "session": 18,
+          "timestamp": "2026-02-22T05:23:38.884676+00:00",
+          "approach": "Implemented: Create notification creation function for booking status changes",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
     }
   },
   "stuck_subtasks": [
@@ -183,6 +195,6 @@
   ],
   "metadata": {
     "created_at": "2026-02-22T04:47:19.915259+00:00",
-    "last_updated": "2026-02-22T05:21:55.225615+00:00"
+    "last_updated": "2026-02-22T05:23:38.884691+00:00"
   }
 }

@@ -30,4 +30,4 @@ logs/
 
 # Memory & Supabase
 memory/
-supabase/
+/supabase/
