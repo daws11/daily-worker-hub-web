@@ -127,6 +127,41 @@ export async function getWorkerComplianceRecords(workerId: string, limit = 100) 
   }
 }
 
+/**
+ * Get all compliance records for a business.
+ * Used for audit purposes to track worker compliance history.
+ *
+ * @param businessId - The business ID
+ * @param limit - Maximum number of records to return (default: 100)
+ */
+export async function getComplianceRecords(businessId: string, limit = 100) {
+  try {
+    const { data, error } = await supabase
+      .from('compliance_tracking')
+      .select(`
+        *,
+        worker:workers!inner(
+          id,
+          full_name,
+          avatar_url
+        )
+      `)
+      .eq('business_id', businessId)
+      .order('month', { ascending: false })
+      .limit(limit)
+
+    if (error) {
+      console.error('Error fetching compliance records:', error)
+      return { data: null, error }
+    }
+
+    return { data, error: null }
+  } catch (error) {
+    console.error('Unexpected error fetching compliance records:', error)
+    return { data: null, error }
+  }
+}
+
 // Type for compliance status result
 export type ComplianceStatus = 'ok' | 'warning' | 'blocked'
 export type WarningLevel = 'none' | 'approaching' | 'limit'

@@ -89,6 +89,29 @@
 - TypeScript Verification: No new TypeScript errors introduced
 - Note: Uses type assertion for database function call until types are regenerated
 
+## Subtask 2-2: Create getComplianceStatus query function ✅ COMPLETED
+- File: lib/supabase/queries/compliance.ts
+- Status: COMPLETE - Query function implemented following project patterns
+- Functions Created:
+  - getComplianceStatus(workerId, businessId, month?)
+    - Checks if worker can be booked based on PP 35/2021 compliance rules
+    - Returns ComplianceStatusResult with:
+      - status: 'ok' | 'warning' | 'blocked'
+      - daysWorked: number
+      - warningLevel: 'none' | 'approaching' | 'limit'
+      - message: string (descriptive message)
+    - Logic:
+      - Days 0-14: OK (can book)
+      - Days 15-20: Warning (approaching limit, can still book)
+      - Day 21+: Blocked (cannot book - PP 35/2021 limit)
+    - Defaults to current month if not provided
+- Type Exports Added:
+  - ComplianceStatus: 'ok' | 'warning' | 'blocked'
+  - WarningLevel: 'none' | 'approaching' | 'limit'
+  - ComplianceStatusResult: interface for return value
+- Pattern Compliance: Follows the same structure as lib/supabase/queries/bookings.ts
+- TypeScript Verification: No new TypeScript errors introduced
+
 ## Quality Checklist ✅
 - [x] Follows patterns from reference files (initial_schema.sql, kyc_verifications.sql, bookings.ts)
 - [x] No console.log/print debugging statements
