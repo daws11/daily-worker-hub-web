@@ -232,3 +232,16 @@ Date: 2026-02-23
   • Pattern from: components/ui/badge.tsx and components/worker/kyc-status-badge.tsx
   • Commit: 5b185a7
   • Plan updated: subtask-3-1 status = completed
+
+[NEXT] Subtask 3-2: Create ScoreBreakdown component to show attendance/punctuality/ratings breakdown
+  • File exists: components/worker/score-breakdown.tsx (already implemented)
+  • Features:
+    - Displays three metrics (attendance, punctuality, ratings) with percentages
+    - Visual progress bars with color coding (green ≥90%, yellow ≥75%, red <75%)
+    - Shows weight breakdown (40%/30%/30%)
+    - Includes formula explanation: (Attendance × 0.4) + (Punctuality × 0.3) + (Rating × 0.3)
+    - Uses Card component patterns (Card, CardHeader, CardTitle, CardDescription, CardContent)
+    - Internal MetricItem component for consistent metric display
+    - Proper value clamping with Math.max/Math.min
+  • Pattern from: components/ui/card.tsx
+  • Plan updated: subtask-3-2 status = completed
