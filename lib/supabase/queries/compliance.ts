@@ -126,3 +126,76 @@ export async function getWorkerComplianceRecords(workerId: string, limit = 100) 
     return { data: null, error }
   }
 }
+
+// Type for compliance status result
+export type ComplianceStatus = 'ok' | 'warning' | 'blocked'
+export type WarningLevel = 'none' | 'approaching' | 'limit'
+
+export interface ComplianceStatusResult {
+  status: ComplianceStatus
+  daysWorked: number
+  warningLevel: WarningLevel
+  message: string
+}
+
+/**
+ * Get compliance status for a worker-business pair.
+ * Checks if the worker can be booked based on PP 35/2021 compliance rules:
+ * - Days 0-14: OK (can book)
+ * - Days 15-20: Warning (approaching limit, can still book)
+ * - Day 21+: Blocked (cannot book - PP 35/2021 limit)
+ *
+ * @param workerId - The worker ID
+ * @param businessId - The business ID
+ * @param month - First day of the month (e.g., '2026-02-01'). Defaults to current month
+ * @returns Compliance status with days worked, status, warning level, and message
+ */
+export async function getComplianceStatus(
+  workerId: string,
+  businessId: string,
+  month?: string
+) {
+  try {
+    // Default to current month if not provided
+    const targetMonth = month || new Date().toISOString().slice(0, 7) + '-01'
+
+    // Get days worked for the month
+    const { data: daysWorked, error } = await getWorkerDaysForMonth(
+      workerId,
+      businessId,
+      targetMonth
+    )
+
+    if (error) {
+      console.error('Error fetching compliance status:', error)
+      return { data: null, error }
+    }
+
+    const days = daysWorked ?? 0
+    let status: ComplianceStatus = 'ok'
+    let warningLevel: WarningLevel = 'none'
+    let message = 'Worker can be booked'
+
+    if (days >= 21) {
+      status = 'blocked'
+      warningLevel = 'limit'
+      message = `Worker has reached ${days} days this month. PP 35/2021 limit (21 days) reached. Cannot accept more bookings.`
+    } else if (days >= 15) {
+      status = 'warning'
+      warningLevel = 'approaching'
+      message = `Warning: Worker has worked ${days} days this month. Approaching PP 35/2021 limit of 21 days.`
+    }
+
+    const result: ComplianceStatusResult = {
+      status,
+      daysWorked: days,
+      warningLevel,
+      message
+    }
+
+    return { data: result, error: null }
+  } catch (error) {
+    console.error('Unexpected error fetching compliance status:', error)
+    return { data: null, error }
+  }
+}
