@@ -1,0 +1,76 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Job Completion & Payment Release
+Workspace: .auto-claude/worktrees/tasks/017-job-completion-payment-release
+Started: 2025-02-22
+
+Workflow Type: feature
+Rationale: Multi-service feature requiring database schema changes, backend business logic (server actions), and UI components. Involves multiple tables (bookings, wallets, transactions) and flows (checkout -> payment hold -> review -> release).
+
+Session 1 (Planner):
+- Created implementation_plan.json
+- Created project_index.json
+- Created context.json
+- Phases: 6
+- Total subtasks: 22
+- Created init.sh
+
+Phase Summary:
+- Phase 1 (Database Schema & RLS Policies): 3 subtasks, depends on []
+- Phase 2 (Wallet System Backend): 3 subtasks, depends on [phase-1-database]
+- Phase 3 (Checkout & Payment Release Backend): 4 subtasks, depends on [phase-2-backend-wallet]
+- Phase 4 (Checkout UI Components): 4 subtasks, depends on [phase-3-backend-checkout]
+- Phase 5 (Wallet UI Components): 4 subtasks, depends on [phase-2-backend-wallet]
+- Phase 6 (Integration & End-to-End Testing): 4 subtasks, depends on [phase-4-frontend-checkout, phase-5-frontend-wallet]
+
+Services Involved:
+- database: PostgreSQL with Supabase, handles wallet tables, booking extensions, RLS policies
+- app: Next.js frontend with server actions, handles all business logic and UI
+
+Parallelism Analysis:
+- Max parallel phases: 2
+- Parallel groups:
+  - phase-4-frontend-checkout + phase-5-frontend-wallet (different UI components, can be built in parallel)
+- Recommended workers: 1
+- Parallelism note: Limited parallelism due to phase dependencies - sequential execution is safer
+
+Key Discoveries from Investigation:
+- No existing wallet/balance system - must create from scratch
+- No check-in/check-out functionality exists
+- Existing transaction table only tracks payment/refund, not balance management
+- All tables use RLS with auth.uid() for security
+- Server actions pattern: "use server" + {success, error?, data?} return type
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  npm run dev
+
+Or run the init script:
+
+  bash .auto-claude/specs/017-job-completion-payment-release/init.sh
+
+=== END SESSION 1 ===
+
+Session 2 (2025-02-22):
+- Subtask 1-1 COMPLETED: Created migration for wallet tables and booking completion fields
+  - File: supabase/migrations/20260222_add_job_completion_payment_schema.sql
+  - Added: wallets table, wallet_transactions table, disputes table
+  - Added: booking completion fields (checkout_time, payment_status, review_deadline)
+  - Added: helper function ensure_wallet_exists
+  - Added: triggers for updated_at on wallets and disputes tables
+  - Committed: f0b8412
+
+=== END SESSION 2 ===
+
+Session 3 (2026-02-22):
+- Subtask 1-2 COMPLETED: Created RLS policies for wallet tables and payment operations
+  - File: supabase/migrations/20260222_add_payment_rls_policies.sql
+  - Added: RLS policies for wallets table (user access + admin access)
+  - Added: RLS policies for wallet_transactions table (view own transactions)
+  - Added: RLS policies for disputes table (worker/business access for bookings)
+  - Added: security helper function is_wallet_owner()
+  - Committed: 598075b
+
+=== END SESSION 3 ===
