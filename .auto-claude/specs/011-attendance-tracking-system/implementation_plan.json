@@ -339,8 +339,9 @@
               "Worker attendance list shows check-in times"
             ]
           },
-          "status": "pending",
-          "notes": "Page shows job QR code for display, list of workers with their check-in/check-out status, attendance summary, export options"
+          "status": "completed",
+          "notes": "Created app/(dashboard)/business/job-attendance/page.tsx with:\n- Fetches active business jobs (status: open or in_progress)\n- Displays QR code for each job using QRCodeGenerator component\n- Shows worker attendance list with check-in/check-out times\n- Attendance summary stats: total workers, checked in, checked out\n- Worker cards with avatar, name, phone, and attendance status\n- Location verification indicator for GPS-verified check-ins\n- Loading state with spinner animation\n- Error state with retry button\n- Empty state when no active jobs exist\n- Two-column layout: QR code on left, worker list on right\n- Worker status badges: 'Selesai' (completed), 'Bekerja' (working), 'Belum' (not yet)\n- Check-in/check-out timestamps in Indonesian locale format\n\nPattern compliance:\n- Follows business/jobs/page.tsx inline style pattern\n- Uses existing components: QRCodeGenerator\n- Indonesian language for UI text\n- Proper error handling with toast notifications\n- Responsive design with grid layout\n\nURL: /dashboard-business-job-attendance",
+          "updated_at": "2026-02-22T16:50:00.000Z"
         },
         {
           "id": "subtask-5-3",
