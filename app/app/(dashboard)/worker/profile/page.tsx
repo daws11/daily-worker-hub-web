@@ -2,13 +2,13 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import { supabase } from "../../../lib/supabase/client"
-import { useAuth } from "../../providers/auth-provider"
-import { KycStatusBadge } from "../../../../components/worker/kyc-status-badge"
-import { ReliabilityBadge } from "../../../../components/worker/reliability-badge"
-import { ScoreBreakdown } from "../../../../components/worker/score-breakdown"
-import { ScoreHistory } from "../../../../components/worker/score-history"
-import type { ScoreHistoryEntry } from "../../../../components/worker/score-history"
+import { supabase } from "../../../../../lib/supabase/client"
+import { useAuth } from "@/app/providers/auth-provider"
+import { KycStatusBadge } from "../../../../../components/worker/kyc-status-badge"
+import { ReliabilityBadge } from "../../../../../components/worker/reliability-badge"
+import { ScoreBreakdown } from "../../../../../components/worker/score-breakdown"
+import { ScoreHistory } from "../../../../../components/worker/score-history"
+import type { ScoreHistoryEntry } from "../../../../../components/worker/score-history"
 
 const AVAILABLE_SKILLS = [
   "Kebersihan Rumah",
