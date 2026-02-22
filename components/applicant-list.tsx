@@ -25,9 +25,10 @@ import {
 } from "./ui/avatar"
 import { cn } from "@/lib/utils"
 import type { ApplicantWithDetails } from "@/lib/data/jobs"
-import type { ComplianceStatusResult } from "@/lib/supabase/queries/compliance"
+import type { ComplianceStatusResult, AlternativeWorker } from "@/lib/supabase/queries/compliance"
 import { ComplianceStatusBadge } from "@/components/booking/compliance-status-badge"
 import { ComplianceWarningBanner } from "@/components/booking/compliance-warning-banner"
+import { AlternativeWorkersSuggestion } from "@/components/booking/alternative-workers-suggestion"
 
 export interface ApplicantListProps extends React.HTMLAttributes<HTMLDivElement> {
   applicants: ApplicantWithDetails[]
@@ -35,10 +36,13 @@ export interface ApplicantListProps extends React.HTMLAttributes<HTMLDivElement>
   onReject?: (applicantId: string) => void
   isLoading?: boolean
   complianceStatusByApplicant?: Record<string, ComplianceStatusResult>
+  alternativeWorkers?: AlternativeWorker[]
+  isLoadingAlternativeWorkers?: boolean
+  onSelectAlternativeWorker?: (workerId: string) => void
 }
 
 const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
-  ({ applicants, onAccept, onReject, isLoading = false, complianceStatusByApplicant, className, ...props }, ref) => {
+  ({ applicants, onAccept, onReject, isLoading = false, complianceStatusByApplicant, alternativeWorkers, isLoadingAlternativeWorkers = false, onSelectAlternativeWorker, className, ...props }, ref) => {
     // Format date to Indonesian locale
     const formatDate = (dateString: string) => {
       return new Date(dateString).toLocaleDateString("id-ID", {
@@ -296,6 +300,15 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
               </TableBody>
             </Table>
           </div>
+          {complianceIssue?.status === "blocked" && (
+            <div className="mt-6">
+              <AlternativeWorkersSuggestion
+                workers={alternativeWorkers ?? []}
+                isLoading={isLoadingAlternativeWorkers}
+                onSelectWorker={onSelectAlternativeWorker}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     )
