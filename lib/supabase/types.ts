@@ -218,6 +218,24 @@ export interface Database {
           created_at: string
         }
       }
+      payment_transactions: {
+        Row: {
+          id: string
+          business_id: string
+          amount: number
+          status: 'pending' | 'success' | 'failed' | 'expired'
+          payment_provider: 'xendit' | 'midtrans'
+          provider_payment_id: string | null
+          payment_url: string | null
+          qris_expires_at: string | null
+          paid_at: string | null
+          failure_reason: string | null
+          fee_amount: number
+          metadata: Json
+          created_at: string
+          updated_at: string
+        }
+      }
     }
   }
 }

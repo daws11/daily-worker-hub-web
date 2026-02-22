@@ -1,10 +1,10 @@
 {
   "active": true,
   "spec": "013-payment-gateway-integration-qris-payouts",
-  "state": "planning",
+  "state": "building",
   "subtasks": {
-    "completed": 0,
-    "total": 0,
+    "completed": 1,
+    "total": 26,
     "in_progress": 1,
     "failed": 0
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 3,
+    "number": 5,
     "started_at": "2026-02-22T15:25:22.780616"
   },
-  "last_update": "2026-02-22T15:34:21.138395"
+  "last_update": "2026-02-22T15:44:54.117355"
 }
