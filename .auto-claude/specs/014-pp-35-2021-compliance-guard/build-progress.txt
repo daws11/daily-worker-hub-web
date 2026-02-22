@@ -1,0 +1,59 @@
+# Build Progress - PP 35/2021 Compliance Guard
+
+## Subtask 1-1: Create compliance_tracking table ✅ COMPLETED
+- File: supabase/migrations/20260222_add_compliance_tracking.sql
+- Status: COMPLETE - Migration file already exists with proper implementation
+- Schema Verified:
+  - id (UUID primary key with gen_random_uuid())
+  - business_id (FK → businesses.id ON DELETE CASCADE)
+  - worker_id (FK → workers.id ON DELETE CASCADE)
+  - month (DATE - first day of month)
+  - days_worked (INTEGER >= 0, DEFAULT 0)
+  - created_at (TIMESTAMPTZ)
+  - updated_at (TIMESTAMPTZ)
+- Indexes Created:
+  - idx_compliance_tracking_business_id
+  - idx_compliance_tracking_worker_id
+  - idx_compliance_tracking_month
+  - idx_compliance_tracking_business_worker_month (composite)
+- Constraints:
+  - UNIQUE(business_id, worker_id, month)
+  - CHECK (days_worked >= 0)
+- RLS Policies:
+  - "Businesses can view own compliance tracking" (SELECT)
+  - "Workers can view own compliance tracking" (SELECT)
+  - "Admins can view all compliance tracking data" (SELECT)
+  - "Authenticated users can insert compliance tracking data" (INSERT)
+  - "Authenticated users can update compliance tracking data" (UPDATE)
+- Trigger: set_compliance_tracking_updated_at (auto-updates updated_at)
+
+## Subtask 1-2: Create calculate_days_worked function ✅ COMPLETED
+- File: supabase/migrations/20260222_add_compliance_tracking.sql
+- Status: COMPLETE - Function implemented following project patterns
+- Function: calculate_days_worked(p_business_id, p_worker_id, p_month)
+  - Returns: INTEGER (count of accepted/completed bookings in specified month)
+  - Logic: Counts bookings where status IN ('accepted', 'completed') and start_date within month
+  - Error Handling: Returns 0 on failure with RAISE WARNING
+  - Uses: SECURITY DEFINER for proper permissions
+  - Documentation: COMMENT added describing purpose and usage
+
+## Subtask 1-3: Create trigger for automatic compliance_tracking updates ✅ COMPLETED
+- File: supabase/migrations/20260222_add_compliance_tracking.sql
+- Status: COMPLETE - Trigger implemented following project patterns
+- Function: update_compliance_tracking_for_booking()
+  - Trigger: AFTER INSERT OR UPDATE ON bookings
+  - Logic:
+    - Fires when booking status changes to 'accepted' or 'completed'
+    - Calculates month from start_date (fallback to created_at)
+    - Calls calculate_days_worked() to get current count
+    - Upserts into compliance_tracking using ON CONFLICT
+  - Error Handling: Returns NEW/OLD to prevent booking failures
+  - Documentation: COMMENT added for function and trigger
+- Trigger Name: on_booking_status_change_for_compliance
+
+## Quality Checklist ✅
+- [x] Follows patterns from reference files (initial_schema.sql, kyc_verifications.sql)
+- [x] No console.log/print debugging statements
+- [x] Proper foreign key relationships (businesses, workers tables exist)
+- [x] Error handling in place (RLS policies, constraints, exception handling)
+- [x] Clean commits with descriptive messages
