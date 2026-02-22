@@ -325,8 +325,8 @@ export async function deleteBooking(bookingId: string) {
 export function calculateReliabilityScore(bookings: Array<{
   status: string
   rating?: number | null
-  checked_in_at?: string | null
-  shift_start_time?: string | null
+  check_in_at?: string | null
+  check_out_at?: string | null
 }>): number {
   if (!bookings || bookings.length === 0) {
     return 3.0 // Default score for new workers
@@ -343,19 +343,10 @@ export function calculateReliabilityScore(bookings: Array<{
   const attendanceRate = completedBookings.length / totalBookings
   const attendanceScore = attendanceRate * 5.0
 
-  // 2. Punctuality Score (30% weight): % of on-time check-ins
-  const onTimeBookings = completedBookings.filter(booking => {
-    if (!booking.checked_in_at || !booking.shift_start_time) {
-      return false
-    }
-    const checkInTime = new Date(booking.checked_in_at)
-    const startTime = new Date(booking.shift_start_time)
-    // Consider on-time if checked in within 15 minutes of start
-    const diffMinutes = (checkInTime.getTime() - startTime.getTime()) / (1000 * 60)
-    return diffMinutes >= -15 && diffMinutes <= 15
-  })
+  // 2. Punctuality Score (30% weight): % of bookings with check-ins
+  const bookingsWithCheckIn = completedBookings.filter(booking => booking.check_in_at !== null && booking.check_in_at !== undefined)
   const punctualityRate = completedBookings.length > 0
-    ? onTimeBookings.length / completedBookings.length
+    ? bookingsWithCheckIn.length / completedBookings.length
     : 0
   const punctualityScore = punctualityRate * 5.0
 
@@ -385,7 +376,7 @@ export async function getWorkerReliabilityMetrics(workerId: string) {
   try {
     const { data, error } = await supabase
       .from('bookings')
-      .select('status, rating, checked_in_at, shift_start_time')
+      .select('status, rating, check_in_at, check_out_at')
       .eq('worker_id', workerId)
       .order('created_at', { ascending: false })
 
@@ -404,17 +395,9 @@ export async function getWorkerReliabilityMetrics(workerId: string) {
       : 0
 
     // Calculate punctuality
-    const onTimeBookings = completedBookings.filter(booking => {
-      if (!booking.checked_in_at || !booking.shift_start_time) {
-        return false
-      }
-      const checkInTime = new Date(booking.checked_in_at)
-      const startTime = new Date(booking.shift_start_time)
-      const diffMinutes = (checkInTime.getTime() - startTime.getTime()) / (1000 * 60)
-      return diffMinutes >= -15 && diffMinutes <= 15
-    })
+    const bookingsWithCheckIn = completedBookings.filter(booking => booking.check_in_at !== null && booking.check_in_at !== undefined)
     const punctualityRate = completedBookings.length > 0
-      ? (onTimeBookings.length / completedBookings.length) * 100
+      ? (bookingsWithCheckIn.length / completedBookings.length) * 100
       : 0
 
     // Calculate average rating
