@@ -272,3 +272,39 @@ Implementation plan is ready for coder agent to begin.
   - Consistent result type structure (success, error, data)
   - Indonesian error messages ("Gagal mengambil saldo wallet", etc.)
   - Proper Supabase query patterns (maybeSingle() for optional records)
+
+2026-02-22 - Subtask 8-3: End-to-end verification: Worker withdrawal flow
+- Status: COMPLETED
+- Files:
+  - scripts/test-e2e-worker-withdrawal.ts (created)
+  - scripts/test-e2e-worker-withdrawal.sh (created)
+  - package.json (updated with npm script)
+  - scripts/E2E_VERIFICATION_SUMMARY.md (updated)
+- Implementation:
+  - Created TypeScript E2E test script for worker withdrawal flow
+  - Created bash script version for direct execution
+  - Added npm script: test:e2e:worker-withdrawal
+  - Updated E2E verification summary with both test documentation
+- Test Coverage (9 verification steps):
+  1. Worker exists verification
+  2. Worker wallet creation/management with balance seeding
+  3. Bank account verification and ownership check
+  4. Withdrawal amount validation (>= Rp 100.000)
+  5. Fee calculation (1% or Rp 5.000, whichever is higher)
+  6. Payout request creation with pending status
+  7. Wallet balance deduction
+  8. Successful payout webhook simulation
+  9. Payout status update to completed verification
+  10. Wallet balance verification after withdrawal
+- Features:
+  - Colored console output for clear test progress visualization
+  - Indonesian Rupiah currency formatting
+  - Comprehensive error handling with descriptive messages
+  - Balance seeding for testing (seed_balance parameter)
+  - Validates UUID format for worker_id and bank_account_id
+  - Follows same pattern as business top-up E2E test
+- Usage:
+  - ./scripts/test-e2e-worker-withdrawal.sh <worker_id> <bank_account_id> [amount] [seed_balance]
+  - npm run test:e2e:worker-withdrawal <worker_id> <bank_account_id> [amount] [seed_balance]
+- Notes: All 9 verification steps pass. The test simulates the complete flow from payout request creation to wallet debiting and webhook completion without requiring actual Xendit API calls. For production, the Edge Function needs to be deployed and Xendit webhook configured.
+
