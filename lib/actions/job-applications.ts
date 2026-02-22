@@ -2,6 +2,7 @@
 
 import { createClient } from "../supabase/server"
 import type { Database } from "../supabase/types"
+import { calculateWorkerScore } from "./reliability-score"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"]
 type Job = Database["public"]["Tables"]["jobs"]["Row"]
@@ -307,5 +308,56 @@ export async function rejectApplication(bookingId: string, businessId: string): 
     return { success: true, data }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat menolak lamaran" }
+  }
+}
+
+/**
+ * Business completes a job booking
+ * Triggers reliability score calculation for the worker
+ * This is a backup to the database trigger, ensuring score is always calculated
+ */
+export async function completeBooking(bookingId: string, businessId: string): Promise<ApplicationResult> {
+  try {
+    const supabase = await createClient()
+
+    // Verify the booking belongs to the business
+    const { data: booking, error: fetchError } = await supabase
+      .from("bookings")
+      .select("*")
+      .eq("id", bookingId)
+      .eq("business_id", businessId)
+      .single()
+
+    if (fetchError || !booking) {
+      return { success: false, error: "Booking tidak ditemukan" }
+    }
+
+    // Only accepted or in_progress bookings can be completed
+    if (booking.status !== "accepted" && booking.status !== "in_progress") {
+      return { success: false, error: "Hanya booking dengan status accepted atau in_progress yang bisa diselesaikan" }
+    }
+
+    // Update the booking status to completed
+    const { data, error } = await supabase
+      .from("bookings")
+      .update({ status: "completed" })
+      .eq("id", bookingId)
+      .eq("business_id", businessId)
+      .select()
+      .single()
+
+    if (error) {
+      return { success: false, error: `Gagal menyelesaikan booking: ${error.message}` }
+    }
+
+    // Trigger reliability score calculation for the worker
+    // This is a backup to the database trigger - ensures score is always calculated
+    if (booking.worker_id) {
+      await calculateWorkerScore(booking.worker_id)
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    return { success: false, error: "Terjadi kesalahan saat menyelesaikan booking" }
   }
 }
