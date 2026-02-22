@@ -73,4 +73,18 @@ Session 3 (2026-02-22):
   - Added: security helper function is_wallet_owner()
   - Committed: 598075b
 
-=== END SESSION 3 ===
+Session 4 (2026-02-22):
+- Subtask 2-1 COMPLETED: Wallet query functions verified and documented
+  - File: lib/supabase/queries/wallets.ts (already existed)
+  - Verified: All required functions present and follow patterns
+  - Functions: getWalletBalance, createWallet, getWalletTransactions,
+               getWalletByUserId, getOrCreateWallet, updateWalletBalance,
+               addPendingFunds, releaseFunds, deductAvailableFunds,
+               getUserWalletTransactions, createWalletTransaction,
+               getTransactionsByBookingId, updateTransactionStatus
+  - Pattern compliance: Follows bookings.ts pattern with proper error handling,
+                        type definitions, JSDoc comments, and return types
+  - No code changes needed - implementation was already complete
+  - Committed: (verification only commit)
+
+=== END SESSION 4 ===
