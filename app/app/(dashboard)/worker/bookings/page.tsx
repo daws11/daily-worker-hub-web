@@ -55,9 +55,13 @@ export default function WorkerBookingsPage() {
         }}>
           {user ? (
             <BookingList workerId={user.id} />
-          ) : (
+          ) : isLoading ? (
             <p style={{ color: '#666', textAlign: 'center', padding: '2rem' }}>
               Memuat informasi pengguna...
+            </p>
+          ) : (
+            <p style={{ color: '#ef4444', textAlign: 'center', padding: '2rem' }}>
+              Error: Tidak dapat memuat informasi pengguna. Silakan refresh halaman.
             </p>
           )}
         </div>
