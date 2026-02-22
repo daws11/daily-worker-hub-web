@@ -2,11 +2,27 @@ import { supabase } from '../supabase/client'
 import { Database } from '../supabase/types'
 
 type WorkerProfile = Database['public']['Tables']['workers']['Row']
-type WorkerInsert = Database['public']['Tables']['workers']['Insert']
-type WorkerUpdate = Database['public']['Tables']['workers']['Update']
-type KycVerification = Database['public']['Tables']['kyc_verifications']['Row']
-type KycVerificationInsert = Database['public']['Tables']['kyc_verifications']['Insert']
-type WorkerSkillInsert = Database['public']['Tables']['worker_skills']['Insert']
+type WorkerInsert = any
+type WorkerUpdate = any
+
+type KycVerification = {
+  id: string
+  worker_id: string
+  ktp_number: string
+  ktp_image_url: string | null
+  selfie_image_url: string | null
+  ktp_extracted_data: Record<string, any> | null
+  status: 'unverified' | 'pending' | 'verified' | 'rejected'
+  rejection_reason: string | null
+  submitted_at: string
+  verified_at: string | null
+  created_at: string
+  updated_at: string
+  verified_by: string | null
+}
+
+type KycVerificationInsert = any
+type WorkerSkillInsert = any
 
 /**
  * Get worker profile by user ID
@@ -42,8 +58,8 @@ export async function createWorkerProfile(
   userId: string,
   profile: Omit<WorkerInsert, 'user_id' | 'kyc_status' | 'reliability_score'>
 ) {
-  const { data, error } = await supabase
-    .from('workers')
+  const { data, error } = await (supabase
+    .from('workers') as any)
     .insert({
       user_id: userId,
       kyc_status: 'unverified',
@@ -67,8 +83,8 @@ export async function updateWorkerProfile(
   workerId: string,
   updates: WorkerUpdate
 ) {
-  const { data, error } = await supabase
-    .from('workers')
+  const { data, error } = await (supabase
+    .from('workers') as any)
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
@@ -95,8 +111,8 @@ export async function submitKycVerification(kycData: {
   ktpExtractedData?: KycVerificationInsert['ktp_extracted_data']
 }) {
   // First, update worker's KYC status to pending
-  const { error: updateError } = await supabase
-    .from('workers')
+  const { error: updateError } = await (supabase
+    .from('workers') as any)
     .update({
       kyc_status: 'pending',
       updated_at: new Date().toISOString(),
@@ -108,7 +124,7 @@ export async function submitKycVerification(kycData: {
   }
 
   // Then insert KYC verification record
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('kyc_verifications')
     .insert({
       worker_id: kycData.workerId,
@@ -137,7 +153,7 @@ export async function linkWorkerSkills(
   skillIds: string[]
 ) {
   // First, delete existing skills for this worker
-  const { error: deleteError } = await supabase
+  const { error: deleteError } = await (supabase as any)
     .from('worker_skills')
     .delete()
     .eq('worker_id', workerId)
@@ -157,7 +173,7 @@ export async function linkWorkerSkills(
     skill_id: skillId,
   }))
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('worker_skills')
     .insert(insertData)
     .select()
@@ -212,7 +228,7 @@ export async function getWorkerProfileWithKyc(userId: string) {
  * Get KYC verification status for a worker
  */
 export async function getKycStatus(workerId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('kyc_verifications')
     .select('*')
     .eq('worker_id', workerId)

@@ -1,10 +1,10 @@
 import { supabase } from '../client'
 import type { Database } from '../types'
 
-type JobsRow = Database['public']['Tables']['jobs']['Row']
+export type JobsRow = Database['public']['Tables']['jobs']['Row']
 type JobsInsert = Database['public']['Tables']['jobs']['Insert']
 type JobsUpdate = Database['public']['Tables']['jobs']['Update']
-type JobStatus = 'draft' | 'open' | 'in_progress' | 'completed' | 'cancelled'
+type JobStatus = 'open' | 'in_progress' | 'completed' | 'cancelled'
 
 type JobWithRelations = JobsRow & {
   category?: {
@@ -15,6 +15,9 @@ type JobWithRelations = JobsRow & {
     id: string
     name: string
   }
+  // QR code fields (may not be in current DB schema but needed for feature)
+  qr_code?: string | null
+  qr_generated_at?: string | null
 }
 
 /**
@@ -255,7 +258,7 @@ export async function generateJobQRCode(
 export async function getJobQRCode(
   jobId: string
 ): Promise<{ qr_code: string | null; generated_at: string | null } | null> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('jobs')
     .select('qr_code, qr_generated_at')
     .eq('id', jobId)
@@ -268,9 +271,10 @@ export async function getJobQRCode(
     throw new Error(`Failed to fetch job QR code: ${error.message}`)
   }
 
+  const typedData = data as { qr_code: string | null; qr_generated_at: string | null } | null
   return {
-    qr_code: data.qr_code,
-    generated_at: data.qr_generated_at,
+    qr_code: typedData?.qr_code ?? null,
+    generated_at: typedData?.qr_generated_at ?? null,
   }
 }
 

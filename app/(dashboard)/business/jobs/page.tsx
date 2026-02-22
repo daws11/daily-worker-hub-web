@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useAuth } from '@/providers/auth-provider'
-import { getBusinessJobs, getJobBookings } from '@/lib/supabase/queries/jobs'
+import { getBusinessJobs } from '@/lib/supabase/queries/jobs'
+import { getJobBookings } from '@/lib/supabase/queries/bookings'
 import type { JobsRow } from '@/lib/supabase/queries/jobs'
 import type { JobBookingWithDetails } from '@/lib/supabase/queries/bookings'
 import { QRCodeGenerator } from '@/components/attendance/qr-code-generator'
@@ -16,6 +17,7 @@ interface JobWithAttendance extends JobsRow {
     checkedIn: number
     checkedOut: number
   }
+  qr_code?: string | null
 }
 
 interface JobsData {
@@ -494,9 +496,9 @@ export default function BusinessJobsPage() {
             <QRCodeGenerator
               jobId={job.id}
               jobTitle={job.title}
-              businessName={user?.full_name || 'Business'}
+              businessName={user?.user_metadata?.full_name || 'Business'}
               address={job.address || undefined}
-              startDate={job.start_date || undefined}
+              startDate={job.deadline || undefined}
               existingQRCode={job.qr_code || undefined}
               onRefresh={handleQRRefresh}
             />

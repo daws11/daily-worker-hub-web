@@ -7,7 +7,7 @@ import { PAYMENT_CONSTANTS } from "../types/payment"
 
 // Bank code enum (supported Indonesian banks)
 export const bankCodeSchema = z.enum(["BCA", "BRI", "Mandiri", "BNI"], {
-  errorMap: () => ({ message: "Bank harus dipilih (BCA, BRI, Mandiri, atau BNI)" }),
+  message: "Bank harus dipilih (BCA, BRI, Mandiri, atau BNI)",
 })
 
 // Bank account number validation with bank-specific length requirements
@@ -99,9 +99,9 @@ export const createPaymentTransactionSchema = z.object({
   business_id: z.string().uuid({ message: "Business ID tidak valid" }),
   amount: topUpAmountSchema,
   payment_provider: z.enum(["xendit", "midtrans"], {
-    errorMap: () => ({ message: "Payment provider harus dipilih" }),
+    message: "Payment provider harus dipilih",
   }),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 })
 
 export type CreatePaymentTransactionInput = z.infer<typeof createPaymentTransactionSchema>

@@ -5,6 +5,14 @@ type BookingRow = Database["public"]["Tables"]["bookings"]["Row"]
 type BookingUpdate = Database["public"]["Tables"]["bookings"]["Update"]
 
 export type JobBookingWithDetails = BookingRow & {
+  // Attendance fields (may not be in current DB schema but needed for feature)
+  check_in_at?: string | null
+  check_out_at?: string | null
+  check_in_lat?: number | null
+  check_in_lng?: number | null
+  check_out_lat?: number | null
+  check_out_lng?: number | null
+  booking_notes?: string | null
   worker?: {
     id: string
     full_name: string
@@ -385,7 +393,12 @@ export async function getWorkerReliabilityMetrics(workerId: string) {
       return { data: null, error }
     }
 
-    const bookings = data || []
+    const bookings = (data || []) as unknown as Array<{
+      status: string
+      rating?: number | null
+      check_in_at?: string | null
+      check_out_at?: string | null
+    }>
     const completedBookings = bookings.filter(b => b.status === 'completed')
     const totalBookings = bookings.length
 

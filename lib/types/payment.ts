@@ -1,11 +1,5 @@
 import { Database } from '../supabase/types'
 
-type PaymentTransactionRow = Database['public']['Tables']['payment_transactions']['Row']
-type PayoutRequestRow = Database['public']['Tables']['payout_requests']['Row']
-type BankAccountRow = Database['public']['Tables']['bank_accounts']['Row']
-type WalletRow = Database['public']['Tables']['wallets']['Row']
-type UserRow = Database['public']['Tables']['users']['Row']
-
 // Payment Provider Types
 export type PaymentProvider = 'xendit' | 'midtrans'
 

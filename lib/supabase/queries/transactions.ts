@@ -5,7 +5,15 @@ import type { Database } from '../types'
 // WALLET TRANSACTIONS (Internal wallet transactions)
 // ============================================
 
-type WalletTransactionRow = Database['public']['Tables']['wallet_transactions']['Row']
+type WalletTransactionRow = {
+  id: string
+  wallet_id: string
+  amount: number
+  type: 'credit' | 'debit' | 'pending' | 'released'
+  booking_id: string | null
+  description: string | null
+  created_at: string
+}
 
 export type WalletTransactionWithDetails = WalletTransactionRow & {
   wallet: {
@@ -23,7 +31,7 @@ export type WalletTransactionWithDetails = WalletTransactionRow & {
  */
 export async function getWalletTransactions(walletId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('wallet_transactions')
       .select(`
         *,
@@ -56,7 +64,7 @@ export async function getWalletTransactions(walletId: string) {
  */
 export async function getUserWalletTransactions(userId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('wallet_transactions')
       .select(`
         *,
@@ -89,7 +97,7 @@ export async function getUserWalletTransactions(userId: string) {
  */
 export async function getWalletTransactionById(transactionId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('wallet_transactions')
       .select(`
         *,
@@ -125,7 +133,7 @@ export async function filterWalletTransactions(
   type?: 'credit' | 'debit' | 'pending' | 'released'
 ) {
   try {
-    let query = supabase
+    let query = (supabase as any)
       .from('wallet_transactions')
       .select(`
         *,
@@ -162,9 +170,31 @@ export async function filterWalletTransactions(
 // PAYMENT TRANSACTIONS (QRIS/Xendit payments)
 // ============================================
 
-type PaymentTransactionsRow = Database['public']['Tables']['payment_transactions']['Row']
-type PaymentTransactionsInsert = Database['public']['Tables']['payment_transactions']['Insert']
-type PaymentTransactionsUpdate = Database['public']['Tables']['payment_transactions']['Update']
+type PaymentTransactionsRow = {
+  id: string
+  business_id: string
+  amount: number
+  fee_amount: number
+  type: 'credit' | 'debit' | 'pending' | 'released'
+  status: 'pending' | 'success' | 'failed' | 'expired'
+  payment_provider: string
+  provider_payment_id: string | null
+  payment_url: string | null
+  qris_expires_at: string | null
+  paid_at?: string | null
+  failure_reason?: string | null
+  metadata: Record<string, any> | null
+  created_at: string
+}
+
+type PaymentTransactionsInsert = Partial<PaymentTransactionsRow> & {
+  business_id: string
+  amount: number
+  status: 'pending' | 'success' | 'failed' | 'expired'
+  payment_provider: string
+}
+
+type PaymentTransactionsUpdate = Partial<PaymentTransactionsRow>
 type PaymentStatus = 'pending' | 'success' | 'failed' | 'expired'
 type PaymentProvider = 'xendit' | 'midtrans'
 
@@ -181,7 +211,7 @@ type PaymentTransactionWithRelations = PaymentTransactionsRow & {
 export async function createPaymentTransaction(
   transactionData: Omit<PaymentTransactionsInsert, 'id' | 'created_at' | 'updated_at'>
 ): Promise<PaymentTransactionsRow> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('payment_transactions')
     .insert(transactionData)
     .select()
@@ -201,7 +231,7 @@ export async function updatePaymentTransaction(
   transactionId: string,
   updates: PaymentTransactionsUpdate
 ): Promise<PaymentTransactionsRow> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('payment_transactions')
     .update({
       ...updates,
@@ -224,7 +254,7 @@ export async function updatePaymentTransaction(
 export async function getPaymentTransactionById(
   transactionId: string
 ): Promise<PaymentTransactionWithRelations | null> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('payment_transactions')
     .select(`
       *,
@@ -250,7 +280,7 @@ export async function getBusinessPaymentTransactions(
   businessId: string,
   status?: PaymentStatus
 ): Promise<PaymentTransactionsRow[]> {
-  let query = supabase
+  let query = (supabase as any)
     .from('payment_transactions')
     .select('*')
     .eq('business_id', businessId)
@@ -273,7 +303,7 @@ export async function getBusinessPaymentTransactions(
  * Get pending payment transactions (for webhook processing or expiry checks)
  */
 export async function getPendingPaymentTransactions(): Promise<PaymentTransactionsRow[]> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('payment_transactions')
     .select('*')
     .eq('status', 'pending')
@@ -290,7 +320,7 @@ export async function getPendingPaymentTransactions(): Promise<PaymentTransactio
  * Get expired pending transactions (QRIS expired)
  */
 export async function getExpiredPaymentTransactions(): Promise<PaymentTransactionsRow[]> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('payment_transactions')
     .select('*')
     .eq('status', 'pending')
@@ -362,7 +392,7 @@ export async function updatePaymentDetails(
 export async function getTransactionByProviderPaymentId(
   providerPaymentId: string
 ): Promise<PaymentTransactionWithRelations | null> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('payment_transactions')
     .select(`
       *,
@@ -390,7 +420,7 @@ export async function getBusinessPaymentStats(businessId: string): Promise<{
   successful_amount: number
   pending_amount: number
 }> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('payment_transactions')
     .select('status, amount')
     .eq('business_id', businessId)

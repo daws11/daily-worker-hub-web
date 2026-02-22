@@ -37,14 +37,19 @@ import { requestPayout, getWorkerWalletBalance } from "@/lib/actions/payments"
 import { PAYMENT_CONSTANTS } from "@/lib/types/payment"
 import type { Database } from "@/lib/supabase/types"
 
-type BankAccount = Database["public"]["Tables"]["bank_accounts"]["Row"]
+type BankAccount = {
+  id: string
+  worker_id: string
+  bank_code: string
+  bank_account_number: string
+  bank_account_name: string
+  is_default: boolean
+  created_at: string
+}
 
 // Zod schema for withdrawal form validation
 export const withdrawalFormSchema = z.object({
-  amount: z.number({
-    required_error: "Silakan masukkan jumlah penarikan",
-    invalid_type_error: "Jumlah harus berupa angka",
-  }).min(PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT, {
+  amount: z.number().min(PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT, {
     message: `Minimal penarikan Rp ${PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT.toLocaleString("id-ID")}`,
   }),
   bank_account_id: z.string().optional(),
@@ -97,7 +102,7 @@ export function WithdrawalForm({
   const [error, setError] = React.useState<string | null>(null)
 
   // Determine primary bank account
-  const primaryAccount = bankAccounts.find((acc) => acc.is_primary) || bankAccounts[0]
+  const primaryAccount = bankAccounts.find((acc) => acc.is_default) || bankAccounts[0]
   const selectedBankAccount = primaryAccount
 
   const form = useForm<WithdrawalFormValues>({

@@ -6,10 +6,54 @@ import { createQrisPayment, calculatePaymentFee, createPayout, calculatePayoutFe
 import { validateTopUpAmount, calculatePaymentFeeDetails, validatePaymentAmount } from "../utils/payment-validator"
 import { PAYMENT_CONSTANTS } from "../types/payment"
 
-type PaymentTransaction = Database["public"]["Tables"]["payment_transactions"]["Row"]
-type Wallet = Database["public"]["Tables"]["wallets"]["Row"]
-type PayoutRequest = Database["public"]["Tables"]["payout_requests"]["Row"]
-type BankAccount = Database["public"]["Tables"]["bank_accounts"]["Row"]
+type PaymentTransaction = {
+  id: string
+  business_id: string
+  amount: number
+  fee_amount: number
+  type: 'credit' | 'debit' | 'pending' | 'released'
+  status: 'success' | 'pending' | 'failed' | 'expired'
+  payment_provider: string
+  provider_payment_id: string | null
+  payment_url: string | null
+  qris_expires_at: string | null
+  metadata: Record<string, any> | null
+  created_at: string
+}
+
+type Wallet = {
+  id: string
+  business_id: string | null
+  worker_id: string | null
+  balance: number
+  pending_balance: number
+  created_at: string
+  updated_at: string
+}
+
+type PayoutRequest = {
+  id: string
+  worker_id: string
+  amount: number
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+  bank_account_id: string | null
+  fee_amount: number
+  total_amount: number
+  net_amount?: number
+  rejection_reason: string | null
+  created_at: string
+  updated_at: string
+}
+
+type BankAccount = {
+  id: string
+  worker_id: string
+  bank_code: string
+  bank_account_number: string
+  bank_account_name: string
+  is_default: boolean
+  created_at: string
+}
 
 // Type for creating a new payment transaction
 type PaymentTransactionInsert = Pick<
@@ -111,7 +155,7 @@ export async function initializeQrisPayment(
       metadata: metadata || {},
     }
 
-    const { data: transaction, error: transactionError } = await supabase
+    const { data: transaction, error: transactionError } = await (supabase as any)
       .from("payment_transactions")
       .insert(newTransaction)
       .select()
@@ -131,7 +175,7 @@ export async function initializeQrisPayment(
       })
 
       // Update transaction with payment details
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from("payment_transactions")
         .update({
           payment_url: qrisPayment.payment_url,
@@ -153,7 +197,7 @@ export async function initializeQrisPayment(
       }
     } catch (xenditError) {
       // If Xendit fails, mark transaction as failed
-      await supabase
+      await (supabase as any)
         .from("payment_transactions")
         .update({
           status: "failed",
@@ -178,7 +222,7 @@ export async function getBusinessWalletBalance(businessId: string): Promise<Wall
   try {
     const supabase = await createClient()
 
-    const { data: wallet, error } = await supabase
+    const { data: wallet, error } = await (supabase as any)
       .from("wallets")
       .select("balance, currency")
       .eq("business_id", businessId)
@@ -190,7 +234,7 @@ export async function getBusinessWalletBalance(businessId: string): Promise<Wall
 
     // If wallet doesn't exist, create one with zero balance
     if (!wallet) {
-      const { data: newWallet, error: createError } = await supabase
+      const { data: newWallet, error: createError } = await (supabase as any)
         .from("wallets")
         .insert({
           business_id: businessId,
@@ -222,7 +266,7 @@ export async function getWorkerWalletBalance(workerId: string): Promise<WalletBa
   try {
     const supabase = await createClient()
 
-    const { data: wallet, error } = await supabase
+    const { data: wallet, error } = await (supabase as any)
       .from("wallets")
       .select("balance, currency")
       .eq("worker_id", workerId)
@@ -234,7 +278,7 @@ export async function getWorkerWalletBalance(workerId: string): Promise<WalletBa
 
     // If wallet doesn't exist, create one with zero balance
     if (!wallet) {
-      const { data: newWallet, error: createError } = await supabase
+      const { data: newWallet, error: createError } = await (supabase as any)
         .from("wallets")
         .insert({
           business_id: null,
@@ -269,7 +313,7 @@ export async function getBusinessPaymentHistory(
   try {
     const supabase = await createClient()
 
-    let query = supabase
+    let query = (supabase as any)
       .from("payment_transactions")
       .select("*")
       .eq("business_id", businessId)
@@ -305,7 +349,7 @@ export async function getPaymentTransactionDetails(
   try {
     const supabase = await createClient()
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("payment_transactions")
       .select("*")
       .eq("id", transactionId)
@@ -387,7 +431,7 @@ export async function requestPayout(
     }
 
     // Get worker's wallet to check balance
-    const { data: wallet, error: walletError } = await supabase
+    const { data: wallet, error: walletError } = await (supabase as any)
       .from("wallets")
       .select("id, balance")
       .eq("worker_id", workerId)
@@ -408,7 +452,7 @@ export async function requestPayout(
 
     if (bankAccountId) {
       // Get the specified bank account
-      const { data: specifiedAccount, error: accountError } = await supabase
+      const { data: specifiedAccount, error: accountError } = await (supabase as any)
         .from("bank_accounts")
         .select("*")
         .eq("id", bankAccountId)
@@ -421,7 +465,7 @@ export async function requestPayout(
       bankAccount = specifiedAccount
     } else {
       // Get primary bank account
-      const { data: primaryAccount, error: primaryError } = await supabase
+      const { data: primaryAccount, error: primaryError } = await (supabase as any)
         .from("bank_accounts")
         .select("*")
         .eq("worker_id", workerId)
@@ -446,7 +490,7 @@ export async function requestPayout(
     const netAmount = amount - feeAmount
 
     // Create payout request with pending status
-    const { data: payoutRequest, error: payoutError } = await supabase
+    const { data: payoutRequest, error: payoutError } = await (supabase as any)
       .from("payout_requests")
       .insert({
         worker_id: workerId,
@@ -486,7 +530,7 @@ export async function requestPayout(
       })
 
       // Update payout request with Xendit details
-      const { data: updatedPayout, error: updateError } = await supabase
+      const { data: updatedPayout, error: updateError } = await (supabase as any)
         .from("payout_requests")
         .update({
           provider_payout_id: xenditPayout.id,
@@ -503,7 +547,7 @@ export async function requestPayout(
       }
 
       // Debit wallet (balance will be locked for this payout)
-      const { error: debitError } = await supabase
+      const { error: debitError } = await (supabase as any)
         .from("wallets")
         .update({ balance: wallet.balance - amount })
         .eq("id", wallet.id)
@@ -521,7 +565,7 @@ export async function requestPayout(
       }
     } catch (xenditError) {
       // If Xendit fails, mark payout request as failed
-      await supabase
+      await (supabase as any)
         .from("payout_requests")
         .update({
           status: "failed",

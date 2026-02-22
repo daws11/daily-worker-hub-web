@@ -6,7 +6,7 @@ import { z } from "zod"
 
 // Gender enum
 export const genderSchema = z.enum(["male", "female"], {
-  errorMap: () => ({ message: "Gender harus dipilih" }),
+  message: "Gender harus dipilih",
 })
 
 // Date of birth validation - must be at least 17 years old (legal working age in Indonesia)
@@ -117,10 +117,10 @@ const imageUrlSchema = z
 export const kycVerificationSchema = z.object({
   ktp_number: ktpNumberSchema,
   ktp_image: z.union([imageFileSchema, imageUrlSchema], {
-    errorMap: () => ({ message: "Upload gambar KTP (JPG/PNG, maks 5MB)" }),
+    message: "Upload gambar KTP (JPG/PNG, maks 5MB)",
   }),
   selfie_image: z.union([imageFileSchema, imageUrlSchema], {
-    errorMap: () => ({ message: "Upload selfie (JPG/PNG, maks 5MB)" }),
+    message: "Upload selfie (JPG/PNG, maks 5MB)",
   }),
 })
 

@@ -1,7 +1,17 @@
 import { supabase } from '../client'
 import type { Database } from '../types'
 
-type WalletsRow = Database['public']['Tables']['wallets']['Row']
+type WalletsRow = {
+  id: string
+  business_id: string | null
+  worker_id: string | null
+  user_id: string | null
+  balance: number
+  currency: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
 
 /**
  * Create a new wallet
@@ -9,7 +19,7 @@ type WalletsRow = Database['public']['Tables']['wallets']['Row']
 export async function createWallet(
   walletData: Omit<WalletsRow, 'id' | 'created_at' | 'updated_at'>
 ): Promise<WalletsRow> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('wallets')
     .insert(walletData)
     .select()
@@ -28,7 +38,7 @@ export async function createWallet(
  */
 export async function createWalletForUser(userId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('wallets')
       .insert({ user_id: userId })
       .select()
@@ -53,7 +63,7 @@ export async function updateWallet(
   walletId: string,
   updates: Partial<Pick<WalletsRow, 'balance' | 'currency' | 'is_active'>>
 ): Promise<WalletsRow> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('wallets')
     .update({
       ...updates,
@@ -74,7 +84,7 @@ export async function updateWallet(
  * Get a single wallet by ID
  */
 export async function getWalletById(walletId: string): Promise<WalletsRow | null> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('wallets')
     .select('*')
     .eq('id', walletId)
@@ -96,7 +106,7 @@ export async function getWalletById(walletId: string): Promise<WalletsRow | null
  */
 export async function getWallet(userId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('wallets')
       .select('*')
       .eq('user_id', userId)
@@ -118,7 +128,7 @@ export async function getWallet(userId: string) {
  * Get wallet by business ID
  */
 export async function getBusinessWallet(businessId: string): Promise<WalletsRow | null> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('wallets')
     .select('*')
     .eq('business_id', businessId)
@@ -135,7 +145,7 @@ export async function getBusinessWallet(businessId: string): Promise<WalletsRow 
  * Get wallet by worker ID
  */
 export async function getWorkerWallet(workerId: string): Promise<WalletsRow | null> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('wallets')
     .select('*')
     .eq('worker_id', workerId)
@@ -205,7 +215,7 @@ export async function updateBalance(
   newBalance: number
 ) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('wallets')
       .update({ balance: newBalance, updated_at: new Date().toISOString() })
       .eq('id', walletId)
@@ -270,7 +280,7 @@ export async function debitWallet(
  */
 export async function calculatePendingBalance(walletId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('wallet_transactions')
       .select('amount')
       .eq('wallet_id', walletId)
@@ -296,7 +306,7 @@ export async function calculatePendingBalance(walletId: string) {
  */
 export async function getTotalEarnings(walletId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('wallet_transactions')
       .select('amount')
       .eq('wallet_id', walletId)
@@ -334,7 +344,7 @@ export async function activateWallet(walletId: string): Promise<WalletsRow> {
  * Delete a wallet
  */
 export async function deleteWallet(walletId: string): Promise<void> {
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('wallets')
     .delete()
     .eq('id', walletId)

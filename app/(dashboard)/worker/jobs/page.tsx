@@ -44,7 +44,7 @@ export default function WorkerJobsPage() {
   })
 
   // Fetch worker bookings for attendance
-  const { bookings, loading: bookingsLoading, refreshBookings } = useBookings({
+  const { bookings, isLoading: bookingsLoading, refreshBookings } = useBookings({
     workerId: user?.id,
     autoFetch: true,
   })
@@ -95,7 +95,10 @@ export default function WorkerJobsPage() {
   }, [handleDialogClose])
 
   // Handle check-in button click
-  const handleCheckInClick = useCallback(async (booking: JobBookingWithDetails) => {
+  const handleCheckInClick = useCallback(async (bookingId: string) => {
+    const booking = bookings?.find(b => b.id === bookingId)
+    if (!booking) return
+
     setSelectedBooking(booking)
     setScannerMode('check-in')
 
@@ -103,16 +106,19 @@ export default function WorkerJobsPage() {
     const position = await getCurrentPosition()
     if (position) {
       // We have location, proceed with check-in
-      await workerCheckIn(booking.id, position.lat, position.lng)
+      await workerCheckIn(bookingId, position.lat, position.lng)
       await refreshBookings()
     } else {
       // No location available, open QR scanner
       setScannerOpen(true)
     }
-  }, [getCurrentPosition, workerCheckIn, refreshBookings])
+  }, [bookings, getCurrentPosition, workerCheckIn, refreshBookings])
 
   // Handle check-out button click
-  const handleCheckOutClick = useCallback(async (booking: JobBookingWithDetails) => {
+  const handleCheckOutClick = useCallback(async (bookingId: string) => {
+    const booking = bookings?.find(b => b.id === bookingId)
+    if (!booking) return
+
     setSelectedBooking(booking)
     setScannerMode('check-out')
 
@@ -120,13 +126,13 @@ export default function WorkerJobsPage() {
     const position = await getCurrentPosition()
     if (position) {
       // We have location, proceed with check-out
-      await workerCheckOut(booking.id, position.lat, position.lng)
+      await workerCheckOut(bookingId, position.lat, position.lng)
       await refreshBookings()
     } else {
       // No location available, open QR scanner
       setScannerOpen(true)
     }
-  }, [getCurrentPosition, workerCheckOut, refreshBookings])
+  }, [bookings, getCurrentPosition, workerCheckOut, refreshBookings])
 
   // Handle QR scanner success
   const handleScannerSuccess = useCallback(async (jobId: string, lat?: number, lng?: number) => {
@@ -318,8 +324,8 @@ export default function WorkerJobsPage() {
                       status={booking.status}
                       checkInAt={booking.check_in_at}
                       checkOutAt={booking.check_out_at}
-                      onCheckIn={() => handleCheckInClick(booking)}
-                      onCheckOut={() => handleCheckOutClick(booking)}
+                      onCheckIn={handleCheckInClick}
+                      onCheckOut={handleCheckOutClick}
                       isLoading={locationLoading || attendanceLoading}
                       className="w-full"
                       showLabel={true}

@@ -13,9 +13,30 @@ import type {
 } from '../../types/attendance'
 
 type BookingRow = Database['public']['Tables']['bookings']['Row']
-type BookingUpdate = Database['public']['Tables']['bookings']['Update']
 type JobRow = Database['public']['Tables']['jobs']['Row']
 type BusinessRow = Database['public']['Tables']['businesses']['Row']
+
+// Extended booking type with attendance fields
+type BookingWithAttendance = BookingRow & {
+  check_in_at?: string | null
+  check_out_at?: string | null
+  check_in_lat?: number | null
+  check_in_lng?: number | null
+  check_out_lat?: number | null
+  check_out_lng?: number | null
+  job?: {
+    id: string
+    title: string
+    address?: string | null
+    lat?: number | null
+    lng?: number | null
+  }
+  worker?: {
+    id: string
+    full_name: string
+    avatar_url?: string | null
+  }
+}
 
 /**
  * Check in a worker for a booking
@@ -35,7 +56,7 @@ export async function checkIn(
         check_in_lng: lng ?? null,
         status: 'in_progress',
         updated_at: new Date().toISOString(),
-      } as BookingUpdate)
+      })
       .eq('id', bookingId)
       .select()
       .single()
@@ -72,7 +93,7 @@ export async function checkOut(
         check_out_lng: lng ?? null,
         status: 'completed',
         updated_at: new Date().toISOString(),
-      } as BookingUpdate)
+      })
       .eq('id', bookingId)
       .select()
       .single()
@@ -142,7 +163,7 @@ export async function getJobAttendanceHistory(
     }
 
     const jobTitle = bookings[0]?.job?.title || ''
-    const records = bookings.map((booking) => {
+    const records = (bookings as BookingWithAttendance[]).map((booking) => {
       const jobLat = booking.job?.lat ?? 0
       const jobLng = booking.job?.lng ?? 0
       const checkInLat = booking.check_in_lat ?? 0
@@ -159,7 +180,7 @@ export async function getJobAttendanceHistory(
       } as AttendanceWithRelations
     })
 
-    const stats = calculateAttendanceStats(bookings)
+    const stats = calculateAttendanceStats(bookings as unknown as Array<{ check_in_at: string | null; check_out_at: string | null; start_date: string }>)
 
     return {
       data: {
@@ -225,7 +246,7 @@ export async function getWorkerAttendanceHistory(
       }
     }
 
-    const records = bookings.map((booking) => {
+    const records = (bookings as BookingWithAttendance[]).map((booking) => {
       const jobLat = booking.job?.lat ?? 0
       const jobLng = booking.job?.lng ?? 0
       const checkInLat = booking.check_in_lat ?? 0
@@ -242,7 +263,7 @@ export async function getWorkerAttendanceHistory(
       } as AttendanceWithRelations
     })
 
-    const stats = calculateAttendanceStats(bookings)
+    const stats = calculateAttendanceStats(bookings as unknown as Array<{ check_in_at: string | null; check_out_at: string | null; start_date: string }>)
 
     return {
       data: {
@@ -324,8 +345,9 @@ export async function calculateAttendanceRate(
       return { data: 0, error: null }
     }
 
-    const totalBookings = bookings.length
-    const checkedInBookings = bookings.filter((b) => b.check_in_at !== null).length
+    const typedBookings = bookings as unknown as Array<{ id: string; check_in_at: string | null }>
+    const totalBookings = typedBookings.length
+    const checkedInBookings = typedBookings.filter((b) => b.check_in_at !== null).length
     const attendanceRate = (checkedInBookings / totalBookings) * 100
 
     return { data: attendanceRate, error: null }
@@ -400,7 +422,7 @@ export async function getAttendanceList(
     const total = count || 0
     const totalPages = Math.ceil(total / limit)
 
-    const records = (bookings || []).map((booking) => {
+    const records = ((bookings || []) as BookingWithAttendance[]).map((booking) => {
       const jobLat = booking.job?.lat ?? 0
       const jobLng = booking.job?.lng ?? 0
       const checkInLat = booking.check_in_lat ?? 0
@@ -450,7 +472,7 @@ export async function getWorkerAttendanceStats(
       return { data: null, error }
     }
 
-    const stats = calculateAttendanceStats(bookings || [])
+    const stats = calculateAttendanceStats((bookings || []) as unknown as Array<{ check_in_at: string | null; check_out_at: string | null; start_date: string }>)
 
     return { data: stats, error: null }
   } catch (error) {
