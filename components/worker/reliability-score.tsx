@@ -1,7 +1,50 @@
 import * as React from "react"
 import { Star, StarHalf } from "lucide-react"
+import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+
+// NewWorkerBadge variants
+const newWorkerVariants = cva(
+  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      isNew: {
+        true: "border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+        false: "hidden",
+      },
+    },
+    defaultVariants: {
+      isNew: true,
+    },
+  }
+)
+
+export interface NewWorkerBadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof newWorkerVariants> {
+  completedJobs: number
+  threshold?: number
+}
+
+export function NewWorkerBadge({
+  completedJobs,
+  threshold = 5,
+  className,
+  isNew,
+  ...props
+}: NewWorkerBadgeProps) {
+  const isNewWorker = completedJobs < threshold
+
+  return (
+    <div
+      className={cn(newWorkerVariants({ isNew: isNewWorker }), className)}
+      {...props}
+    >
+      New
+    </div>
+  )
+}
 
 export interface ReliabilityScoreProps {
   score: number
