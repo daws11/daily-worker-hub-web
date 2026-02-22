@@ -169,7 +169,9 @@
               "Transaction list visible"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created worker wallet page with balance cards (available balance, pending balance) and transaction list. Page follows patterns from worker/jobs/page.tsx including useAuth, useEffect for data fetching, and Indonesian UI text. TypeScript compilation successful.",
+          "updated_at": "2026-02-22T09:15:00.000Z"
         },
         {
           "id": "subtask-3-2",
@@ -428,6 +430,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T08:02:36.602Z",
+  "updated_at": "2026-02-22T08:04:52.813Z",
   "last_updated": "2026-02-22T07:44:40.836003+00:00"
 }
