@@ -177,3 +177,40 @@ Implementation plan is ready for coder agent to begin.
   - Proper TypeScript type exports
   - Comprehensive validation with refine()
   - Helper functions for business logic
+
+2026-02-22 - Subtask 3-1: Create lib/supabase/queries/wallets.ts with wallet CRUD operations
+- Status: COMPLETED
+- Files:
+  - lib/supabase/queries/wallets.ts (created)
+- Implementation:
+  - Created comprehensive wallet CRUD query functions
+  - Core operations:
+    - createWallet - Create a new wallet
+    - updateWallet - Update existing wallet fields (balance, currency, is_active)
+    - getWalletById - Get wallet by ID (returns null if not found)
+    - getBusinessWallet - Get wallet by business ID
+    - getWorkerWallet - Get wallet by worker ID
+  - Convenience functions:
+    - getOrCreateBusinessWallet - Get existing or create new business wallet
+    - getOrCreateWorkerWallet - Get existing or create new worker wallet
+  - Transaction functions:
+    - creditWallet - Add funds to wallet balance
+    - debitWallet - Deduct funds with balance check (throws if insufficient)
+  - Status management:
+    - activateWallet - Set wallet to active
+    - deactivateWallet - Set wallet to inactive
+    - deleteWallet - Delete wallet permanently
+- Error handling:
+  - All functions throw descriptive errors on failure
+  - PGRST116 handling for "not found" cases
+  - Balance validation in debitWallet
+- Verification: Type-check passed with 0 errors
+- Patterns followed from lib/supabase/queries/jobs.ts:
+  - Import structure (supabase client and Database types)
+  - TypeScript type definitions using Database tables
+  - Function naming conventions (get/create/update + Entity)
+  - Error handling with descriptive messages
+  - Proper select() usage with single()
+  - MaybeSingle() for optional queries
+  - JSDoc comments for all functions
+
