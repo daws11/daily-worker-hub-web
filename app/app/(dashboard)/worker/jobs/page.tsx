@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { JobSearch } from '@/components/job-marketplace/JobSearch'
 import { JobFilters } from '@/components/job-marketplace/JobFilters'
 import { JobSort } from '@/components/job-marketplace/JobSort'
@@ -9,7 +9,16 @@ import { JobDetailDialog } from '@/components/job-marketplace/JobDetailDialog'
 import { useJobs } from '@/lib/hooks/useJobs'
 import { JobWithRelations, JobFilters as JobFiltersType, JobSortOption } from '@/lib/types/job'
 import { toast } from 'sonner'
-import { Briefcase, Loader2 } from 'lucide-react'
+import { Briefcase, Loader2, SlidersHorizontal } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 export default function WorkerJobsPage() {
   // State for filters and search
@@ -22,12 +31,22 @@ export default function WorkerJobsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isApplying, setIsApplying] = useState(false)
 
+  // State for mobile filters dialog
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
+
   // Fetch jobs with filters and sorting
   const { jobs, loading, error, refetch } = useJobs({
     filters: { ...filters, search },
     sort,
     enabled: true,
   })
+
+  // Calculate active filters count for badge
+  const activeFiltersCount = useMemo(() => {
+    return Object.keys(filters).filter(
+      (key) => filters[key as keyof JobFiltersType] !== undefined && filters[key as keyof JobFiltersType] !== ''
+    ).length
+  }, [filters])
 
   // Handle job click - open detail dialog
   const handleJobClick = useCallback((job: JobWithRelations) => {
@@ -78,38 +97,80 @@ export default function WorkerJobsPage() {
   }, [refetch])
 
   return (
-    <div className="min-h-screen bg-muted/30 p-4 md:p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <div className="min-h-screen bg-muted/30 p-3 sm:p-4 md:p-6">
+      <div className="mx-auto max-w-7xl space-y-4 sm:space-y-6">
         {/* Page Header */}
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Briefcase className="h-6 w-6 text-muted-foreground" />
-            <h1 className="text-2xl font-bold">Job Marketplace</h1>
+            <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
+            <h1 className="text-xl font-bold sm:text-2xl">Job Marketplace</h1>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Discover and apply for jobs across Bali
           </p>
         </div>
 
         {/* Error State */}
         {error && (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-            <p className="text-destructive font-medium mb-2">Failed to load jobs</p>
-            <p className="text-sm text-muted-foreground mb-4">{error.message}</p>
-            <button
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 sm:p-6 text-center">
+            <p className="text-destructive font-medium mb-2 text-sm sm:text-base">Failed to load jobs</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-4">{error.message}</p>
+            <Button
               onClick={handleRetry}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+              variant="default"
+              size="sm"
             >
               <Loader2 className="h-4 w-4 animate-spin" />
               Try Again
-            </button>
+            </Button>
           </div>
         )}
 
-        {/* Main Content */}
-        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-          {/* Sidebar - Filters */}
-          <aside className="lg:col-span-1">
+        {/* Search and Filter Bar - Mobile First */}
+        <div className="space-y-3">
+          {/* Search Bar - Full width on mobile */}
+          <div className="w-full">
+            <JobSearch
+              value={search}
+              onSearchChange={handleSearchChange}
+              placeholder="Search jobs by keyword or position..."
+              className="w-full"
+            />
+          </div>
+
+          {/* Filter and Sort Actions Bar */}
+          <div className="flex items-center justify-between gap-2">
+            {/* Mobile Filters Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsMobileFiltersOpen(true)}
+              className="lg:hidden flex items-center gap-2"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              Filters
+              {activeFiltersCount > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1">
+                  {activeFiltersCount}
+                </Badge>
+              )}
+            </Button>
+
+            {/* Sort - Full width on mobile, compact on larger screens */}
+            <div className="flex-1 lg:flex-none">
+              <JobSort
+                value={sort}
+                onSortChange={handleSortChange}
+                className="w-full lg:w-auto"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-[280px_1fr]">
+          {/* Sidebar - Filters - Hidden on mobile, visible on lg+ */}
+          <aside className="hidden lg:block lg:col-span-1">
             <JobFilters
               filters={filters}
               onFiltersChange={handleFiltersChange}
@@ -117,45 +178,52 @@ export default function WorkerJobsPage() {
             />
           </aside>
 
-          {/* Main Column - Search, Sort, and Job List */}
-          <div className="lg:col-span-1 space-y-4">
-            {/* Search and Sort Bar */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex-1">
-                <JobSearch
-                  value={search}
-                  onSearchChange={handleSearchChange}
-                  placeholder="Search jobs by keyword or position..."
-                  className="w-full sm:max-w-md"
-                />
-              </div>
-              <div className="flex-shrink-0">
-                <JobSort
-                  value={sort}
-                  onSortChange={handleSortChange}
-                />
-              </div>
-            </div>
-
-            {/* Job List */}
+          {/* Main Column - Job List */}
+          <div className="lg:col-span-1">
             <JobListWithHeader
               jobs={jobs}
               loading={loading}
               onJobClick={handleJobClick}
               title="Available Jobs"
-              subtitle={search || Object.keys(filters).length > 0
+              subtitle={search || activeFiltersCount > 0
                 ? 'Filtered results'
                 : 'Browse all open positions'}
-              emptyTitle={search || Object.keys(filters).length > 0
+              emptyTitle={search || activeFiltersCount > 0
                 ? 'No jobs match your criteria'
                 : 'No jobs available'}
-              emptyDescription={search || Object.keys(filters).length > 0
+              emptyDescription={search || activeFiltersCount > 0
                 ? 'Try adjusting your filters or search terms'
                 : 'Check back later for new opportunities'}
             />
           </div>
         </div>
       </div>
+
+      {/* Mobile Filters Dialog */}
+      <Dialog open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-lg max-h-[90vh] p-0">
+          <DialogHeader className="p-4 sm:p-6 pb-4 border-b">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex items-center gap-2">
+                <SlidersHorizontal className="h-5 w-5" />
+                Filters
+              </DialogTitle>
+              {activeFiltersCount > 0 && (
+                <Badge variant="secondary">
+                  {activeFiltersCount} {activeFiltersCount === 1 ? 'filter' : 'filters'} applied
+                </Badge>
+              )}
+            </div>
+          </DialogHeader>
+          <ScrollArea className="max-h-[calc(90vh-8rem)] px-4 sm:px-6 py-4">
+            <JobFilters
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+              className="border-0 shadow-none"
+            />
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       {/* Job Detail Dialog */}
       <JobDetailDialog
