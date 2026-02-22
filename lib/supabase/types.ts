@@ -150,6 +150,8 @@ export interface Database {
           updated_at: string
         }
       }
+      // Wallet system: wallets table stores user wallet balances
+      // wallet_transactions table stores transaction history for each wallet
       transactions: {
         Row: {
           id: string
@@ -158,6 +160,27 @@ export interface Database {
           type: 'payment' | 'refund'
           status: 'pending' | 'success' | 'failed'
           provider_transaction_id: string
+          created_at: string
+        }
+      }
+      wallets: {
+        Row: {
+          id: string
+          user_id: string
+          balance: number
+          pending_balance: number
+          created_at: string
+          updated_at: string
+        }
+      }
+      wallet_transactions: {
+        Row: {
+          id: string
+          wallet_id: string
+          amount: number
+          type: 'credit' | 'debit' | 'pending' | 'released'
+          booking_id: string | null
+          description: string | null
           created_at: string
         }
       }
