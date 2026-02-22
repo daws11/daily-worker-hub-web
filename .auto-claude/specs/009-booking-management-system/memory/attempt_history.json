@@ -71,11 +71,35 @@
         }
       ],
       "status": "completed"
+    },
+    "subtask-3-2": {
+      "attempts": [
+        {
+          "session": 8,
+          "timestamp": "2026-02-22T05:08:09.970808+00:00",
+          "approach": "Implemented: Create BookingActions component (accept/reject buttons)",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-3-3": {
+      "attempts": [
+        {
+          "session": 9,
+          "timestamp": "2026-02-22T05:09:44.461932+00:00",
+          "approach": "Implemented: Create BulkActions component for batch operations",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
     }
   },
   "stuck_subtasks": [],
   "metadata": {
     "created_at": "2026-02-22T04:47:19.915259+00:00",
-    "last_updated": "2026-02-22T05:05:58.596781+00:00"
+    "last_updated": "2026-02-22T05:09:44.461944+00:00"
   }
 }
