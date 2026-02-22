@@ -40,10 +40,10 @@ export async function getJobs(params?: JobListParams): Promise<{
           created_at
         )
       `)
+      .eq('status', 'open') // Always filter to show only open jobs
 
     // Apply filters
     if (filters) {
-      // Filter by status (only show open jobs by default)
       if (filters.search) {
         query = query.ilike('title', `%${filters.search}%`)
       }

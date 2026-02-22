@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { JobFilters as JobFiltersType, PositionType } from '@/lib/types/job'
+import { JobFilters as JobFiltersType } from '@/lib/types/job'
 import { X, Filter } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -22,11 +22,14 @@ interface JobFiltersProps {
   className?: string
 }
 
-const positionTypes: { value: PositionType; label: string }[] = [
-  { value: 'full_time', label: 'Full Time' },
-  { value: 'part_time', label: 'Part Time' },
-  { value: 'contract', label: 'Contract' },
-  { value: 'temporary', label: 'Temporary' },
+// Categories that match our database
+const categories = [
+  { value: 'cat-1', label: 'Housekeeping' },
+  { value: 'cat-2', label: 'Driving' },
+  { value: 'cat-3', label: 'Cooking' },
+  { value: 'cat-4', label: 'Gardening' },
+  { value: 'cat-5', label: 'Construction' },
+  { value: 'cat-6', label: 'Security' },
 ]
 
 export function JobFilters({ filters, onFiltersChange, className }: JobFiltersProps) {
@@ -36,8 +39,17 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
   const [deadlineAfter, setDeadlineAfter] = useState<string>(filters?.deadlineAfter || '')
   const [deadlineBefore, setDeadlineBefore] = useState<string>(filters?.deadlineBefore || '')
 
+  // Sync local state when filters prop changes
+  useEffect(() => {
+    setLocalFilters(filters || {})
+    setWageMin(filters?.wageMin?.toString() || '')
+    setWageMax(filters?.wageMax?.toString() || '')
+    setDeadlineAfter(filters?.deadlineAfter || '')
+    setDeadlineBefore(filters?.deadlineBefore || '')
+  }, [filters])
+
   const hasActiveFilters = Boolean(
-    localFilters.positionType ||
+    localFilters.categoryId ||
     localFilters.area ||
     localFilters.wageMin ||
     localFilters.wageMax ||
@@ -45,10 +57,10 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
     localFilters.deadlineBefore
   )
 
-  const handlePositionChange = (value: string) => {
+  const handleCategoryChange = (value: string) => {
     const newFilters = {
       ...localFilters,
-      positionType: value === 'all' ? undefined : (value as PositionType),
+      categoryId: value === 'all' ? undefined : value,
     }
     setLocalFilters(newFilters)
     onFiltersChange(newFilters)
@@ -137,23 +149,23 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Position Type Filter */}
+        {/* Category Filter */}
         <div className="space-y-2">
-          <Label htmlFor="position-type" className="text-sm">
-            Position Type
+          <Label htmlFor="category" className="text-sm">
+            Category
           </Label>
           <Select
-            value={localFilters.positionType || 'all'}
-            onValueChange={handlePositionChange}
+            value={localFilters.categoryId || 'all'}
+            onValueChange={handleCategoryChange}
           >
-            <SelectTrigger id="position-type">
-              <SelectValue placeholder="All positions" />
+            <SelectTrigger id="category">
+              <SelectValue placeholder="All categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All positions</SelectItem>
-              {positionTypes.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.label}
+              <SelectItem value="all">All categories</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category.value} value={category.value}>
+                  {category.label}
                 </SelectItem>
               ))}
             </SelectContent>
