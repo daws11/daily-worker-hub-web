@@ -1,25 +1,25 @@
 {
   "active": true,
   "spec": "008-job-application-system",
-  "state": "planning",
+  "state": "building",
   "subtasks": {
-    "completed": 0,
-    "total": 0,
+    "completed": 2,
+    "total": 15,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Database Schema & Migrations",
+    "current": "Server Actions & API Layer",
     "id": null,
-    "total": 2
+    "total": 3
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 2,
+    "number": 4,
     "started_at": "2026-02-22T11:50:26.171885"
   },
-  "last_update": "2026-02-22T11:52:58.048558"
+  "last_update": "2026-02-22T11:57:26.918067"
 }
