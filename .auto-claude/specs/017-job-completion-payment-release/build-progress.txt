@@ -127,3 +127,30 @@ Session 6 (2026-02-23):
   - Committed: e3d254f
 
 === END SESSION 6 ===
+
+Session 7 (2026-02-23):
+- Subtask 3-1 COMPLETED: Created checkout server action
+  - File: lib/actions/bookings.ts (new file)
+  - Functions created:
+    * checkoutBooking: Main function that handles worker checkout
+      - Verifies booking belongs to worker and is in_progress
+      - Marks booking as completed
+      - Sets checkout_time to current timestamp
+      - Sets review_deadline to 24 hours from now
+      - Sets payment_status to pending_review
+      - Calls addPendingFundsAction to initiate payment hold
+    * getWorkerBooking: Get booking details for a worker
+    * getBusinessBooking: Get booking details for a business
+    * getWorkerBookings: Get all bookings for a worker (with optional status filter)
+    * getBusinessBookings: Get all bookings for a business (with optional status filter)
+  - Pattern compliance: Follows job-applications.ts patterns exactly
+    * "use server" directive
+    * TypeScript type definitions (CheckoutResult, etc.)
+    * {success, error?, data?} return pattern
+    * Indonesian error messages
+    * Proper error handling with try/catch
+    * JSDoc comments
+  - Payment integration: Dynamically imports addPendingFundsAction from wallets.ts
+  - Committed: e39990d
+
+=== END SESSION 7 ===
