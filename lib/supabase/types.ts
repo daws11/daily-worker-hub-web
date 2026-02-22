@@ -53,8 +53,36 @@ export interface Database {
           location_name: string
           lat: number
           lng: number
+          gender: string | null
+          experience_years: number | null
+          kyc_status: 'unverified' | 'pending' | 'verified' | 'rejected'
+          reliability_score: number
           created_at: string
           updated_at: string
+        }
+      }
+      kyc_verifications: {
+        Row: {
+          id: string
+          worker_id: string
+          ktp_number: string
+          ktp_image_url: string | null
+          selfie_image_url: string | null
+          ktp_extracted_data: Json
+          status: 'pending' | 'verified' | 'rejected'
+          rejection_reason: string | null
+          submitted_at: string
+          verified_at: string | null
+          created_at: string
+          updated_at: string
+          verified_by: string | null
+        }
+      }
+      worker_skills: {
+        Row: {
+          worker_id: string
+          skill_id: string
+          created_at: string
         }
       }
       skills: {

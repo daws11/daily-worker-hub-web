@@ -1,0 +1,348 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Worker Profile & KYC Verification
+Workspace: managed by orchestrator
+Started: 2026-02-22
+
+Workflow Type: feature
+Rationale: This is a multi-service feature involving database schema changes, file storage, API endpoints, and frontend UI components. The feature follows a dependency order: database first, then backend APIs, then frontend UI.
+
+Session 1 (Planner):
+- Created implementation_plan.json
+- Created project_index.json
+- Created context.json
+- Created init.sh
+- Created build-progress.txt
+
+Phase Summary:
+- Phase 1: Database Schema (5 subtasks, depends on: none)
+  - Create kyc_verifications table
+  - Create worker_skills junction table
+  - Alter workers table with new fields
+  - Update TypeScript types
+  - Create Supabase Storage bucket
+
+- Phase 2: Backend API & Utilities (4 subtasks, depends on: phase-1-database)
+  - Create KTP validation utility
+  - Create file upload utility
+  - Create Zod validation schemas
+  - Create database operations helper
+
+- Phase 3: UI Components (4 subtasks, depends on: phase-2-backend)
+  - Multi-select skills component
+  - File upload component
+  - KYC status badge
+  - Reliability score display
+
+- Phase 4: Worker Profile Page (3 subtasks, depends on: phase-3-components)
+  - Create profile form page
+  - Implement form submission
+  - Add data fetching and display
+
+- Phase 5: KYC Verification Page (4 subtasks, depends on: phase-3-components)
+  - Create KYC form page
+  - KTP real-time validation
+  - KYC submission handler
+  - KYC status display and restrictions
+
+- Phase 6: Integration & Polish (5 subtasks, depends on: phase-4, phase-5)
+  - Add navigation links
+  - Add profile completion prompts
+  - Implement RLS policies
+  - Add loading states and error handling
+  - End-to-end verification
+
+Services Involved:
+- database: PostgreSQL with Supabase (migrations, RLS, storage)
+- storage: Supabase Storage for KYC documents
+- frontend: Next.js 14 App Router with TypeScript
+
+Parallelism Analysis:
+- Max parallel phases: 2
+- Recommended workers: 1 (sequential is simpler for this feature)
+- Parallel groups: Phase 4 (Profile) and Phase 5 (KYC) can run in parallel after Phase 3
+- Speedup estimate: ~1.2x with parallel work
+
+=== CODEBASE INVESTIGATION FINDINGS ===
+
+Project Type: Single Next.js application with Supabase backend
+
+Tech Stack:
+- Next.js 14 (App Router)
+- TypeScript
+- Tailwind CSS
+- Supabase (Auth, Database, Storage, Edge Functions)
+- React Hook Form + Zod
+- Radix UI (shadcn/ui components)
+- Sonner (toast notifications)
+
+Existing Patterns:
+- Form handling: Mix of controlled inputs (useState) in existing pages
+- Database: Direct supabase client with .from() queries
+- Auth: Supabase Auth with custom AuthProvider context
+- Styling: Mix of inline styles and Tailwind classes
+- Toast: Sonner with toast.success() / toast.error()
+
+Existing Database Tables:
+- users (id, email, full_name, avatar_url, role, phone, created_at, updated_at)
+- workers (id, user_id, full_name, bio, avatar_url, phone, dob, address, location_name, lat, lng)
+- skills (id, name, slug)
+- categories, jobs, bookings, transactions, messages, reviews, notifications, reports, webhooks
+
+Tables to Create:
+- kyc_verifications (id, worker_id, ktp_number, ktp_image_url, selfie_image_url, ktp_extracted_data, status, rejection_reason, submitted_at, verified_at, verified_by)
+- worker_skills (worker_id, skill_id) - junction table
+
+Tables to Modify:
+- workers: Add gender, experience_years, kyc_status, reliability_score
+
+Key Components to Reference:
+- app/app/providers/auth-provider.tsx - Auth context with signUp/signIn
+- lib/supabase/client.ts - Supabase client configuration
+- lib/supabase/types.ts - Database type definitions (needs updates)
+- components/ui/form.tsx - React Hook Form integration
+- app/app/(auth)/register/page.tsx - Form pattern example
+- app/app/(dashboard)/worker/jobs/page.tsx - Dashboard page pattern
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  cd /Users/yanuar/Documents/daws/daily-worker-hub-web/.auto-claude/worktrees/tasks/003-worker-profile-kyc-verification
+  npm run dev
+
+Or use the init script:
+  bash ./.auto-claude/specs/003-worker-profile-kyc-verification/init.sh
+
+=== IMPLEMENTATION NOTES ===
+
+KTP Validation:
+- Indonesian KTP is 16 digits
+- Uses checksum algorithm for validation
+- Must be unique per worker
+- Format: 6-digit province code + birth date + serial
+
+File Upload Requirements:
+- KTP image: jpg/png/jpeg, max 5MB
+- Selfie image: jpg/png/jpeg, max 5MB
+- Storage bucket: 'kyc-documents'
+- RLS: Workers can only upload/view their own documents
+
+KYC Status Flow:
+1. unverified (default) - Prompt to complete KYC
+2. pending - Submitted, awaiting review
+3. verified - KYC approved, full profile access
+4. rejected - KYC failed, show reason, allow resubmit
+
+Profile Completion:
+- Workers should complete basic profile first
+- Then submit KYC for verification
+- Verified workers get full platform access
+- Reliability score starts at 0, builds over time
+
+=== SUBTASK COMPLETIONS ===
+
+[2026-02-22] subtask-1-4: Update TypeScript types for new database schema
+- Added kyc_verifications table type with fields:
+  - id, worker_id, ktp_number, ktp_image_url, selfie_image_url
+  - ktp_extracted_data (JSONB), status, rejection_reason
+  - submitted_at, verified_at, created_at, updated_at, verified_by
+- Added worker_skills junction table type with fields:
+  - worker_id, skill_id, created_at
+- Updated workers table type with new fields:
+  - gender (string | null)
+  - experience_years (number | null)
+  - kyc_status ('unverified' | 'pending' | 'verified' | 'rejected')
+  - reliability_score (number)
+- All types follow existing patterns in lib/supabase/types.ts
+- Committed: dccdaf9
+
+[2026-02-22] subtask-1-5: Create Supabase Storage bucket for KYC documents
+- Created 'kyc-documents' storage bucket:
+  - Private bucket (sensitive documents)
+  - 5MB file size limit (5242880 bytes)
+  - Allowed MIME types: image/jpeg, image/png, image/jpg
+- Implemented RLS policies:
+  - Workers can upload own KYC documents to their folder (kyc-documents/{worker_id}/)
+  - Workers can view own KYC documents
+  - Workers can delete/update documents only when KYC is pending/unverified
+  - Admins can view all KYC documents for verification
+  - Admins can delete any KYC documents
+- Migration file: supabase/migrations/20250222000004_create_kyc_storage.sql
+- Committed: 168dc85
+
+[2026-02-22] subtask-2-3: Create Zod validation schemas for worker profile
+- Created lib/validators/worker-profile.ts with comprehensive schemas:
+  - genderSchema: Enum for male/female with Indonesian error messages
+  - dateOfBirthSchema: Validates age >= 17 years (legal working age)
+  - phoneNumberSchema: Indonesian phone format (+62/62/0 prefix)
+  - experienceYearsSchema: Integer 0-50 years
+  - skillsSchema: Array of 1-10 skill IDs
+  - workerProfileSchema: Complete profile validation combining all above
+  - ktpVerificationSchema: KTP number + image uploads
+    - KTP number uses validateKTP() from ktp-validator.ts
+    - Image files validated for type (JPEG/PNG/WebP) and size (max 5MB)
+    - Supports both File objects (for upload) and URL strings (for edit)
+  - workerFullProfileSchema: Combined profile + KYC validation
+  - updateWorkerProfileSchema: Partial update schema
+- All error messages in Indonesian for better UX
+- Committed: f7a7605
+
+[2026-02-22] subtask-3-3: Create KYC status badge component
+- Created components/worker/kyc-status-badge.tsx with:
+  - KycStatusBadge component using CVA for variant styling
+  - Four status variants with appropriate colors:
+    - unverified: gray/neutral
+    - pending: yellow
+    - verified: green
+    - rejected: red
+  - Dark mode support for all variants
+  - TypeScript types extending React.HTMLAttributes and VariantProps
+  - statusLabels object for consistent text display
+- Follows existing badge.tsx pattern with cva() styling
+- Committed: 47f6331
+
+=== END SESSION 1 ===
+
+[2026-02-22] subtask-4-1: Create worker profile form page
+- Created app/app/(dashboard)/worker/profile/page.tsx with:
+  - Full name input field
+  - Gender selection (radio buttons for male/female)
+  - Date of birth picker
+  - Phone number input
+  - Address textarea
+  - Experience years input (number)
+  - Multi-select skills component with 9 available skills:
+    - Kebersihan Rumah, Laundry & Setrika, Memasak
+    - Merapikan Rumah, Cuci Piring, Jaga Anak
+    - Jaga Lansia, Belanja Pasar, Pekerjaan Luar Rumah
+- Form uses inline styles following existing patterns
+- Submit button with loading state
+- Success toast notification on form submission
+- Simulated API call with 1 second delay
+- Follows patterns from register/page.tsx and jobs/page.tsx
+- File: app/app/(dashboard)/worker/profile/page.tsx
+- Committed: bfb9ca7
+
+[2026-02-22] subtask-4-2: Implement profile form submission handler
+- Replaced mock API call with real Supabase database operations
+- Added useEffect to load existing profile data on mount
+- Implemented handleSubmit function with:
+  - User authentication check
+  - Skill lookup/creation for selected skills
+  - Worker profile upsert with all form fields
+  - Worker skills linking (delete existing + insert new)
+  - Error handling with toast notifications
+- Added toast notifications using sonner (success/error messages)
+- Added Toaster component to app/layout.tsx for toast display
+- Follows patterns from auth-provider.tsx (supabase queries, toast usage, error handling)
+- File: app/app/(dashboard)/worker/profile/page.tsx
+- Committed: 6972786
+
+[2026-02-22] subtask-5-1: Create KYC verification form page
+- Created app/app/(dashboard)/worker/kyc/page.tsx with:
+  - KTP number input with real-time validation
+    - 16-digit format enforcement
+    - Checksum validation using validateKTP() utility
+    - Visual feedback (error message for invalid, checkmark for valid)
+  - KTP image upload using FileUpload component
+  - Selfie image upload using FileUpload component
+  - File type/size validation (JPG/PNG/WebP, max 5MB)
+  - KYC status display with banners:
+    - unverified: Shows form (default)
+    - pending: Yellow banner with "sedang dalam proses" message
+    - verified: Green banner, hides form
+    - rejected: Red banner with rejection reason
+  - Loading states for data fetching and form submission
+  - Error handling with toast notifications
+  - Instructions banner with user guidance
+  - Data fetching on mount to load existing KYC status
+  - Follows inline styling pattern from profile page
+  - Uses existing utilities and helpers:
+    - validateKTP from lib/utils/ktp-validator.ts
+    - uploadKycDocument from lib/utils/file-upload.ts
+    - submitKycVerification from lib/db/worker-profile.ts
+    - FileUpload component from components/worker/file-upload.tsx
+- File: app/app/(dashboard)/worker/kyc/page.tsx (405 lines)
+- Committed: 08519ea
+
+[2026-02-22] subtask-5-2: Implement KTP real-time validation
+- Enhanced KYC page KTP input with comprehensive real-time validation:
+  - ktpValid state tracks validation status
+  - handleKtpNumberChange() function handles input changes
+  - Only allows numeric input (filters non-digits)
+  - Validation states:
+    - Empty: Clear all states
+    - 1-15 digits: No error, show digit counter (e.g., "5/16 digit")
+    - 16 digits: Run full validation
+  - Visual feedback:
+    - Valid: Green border, "✓ Nomor KTP valid" message
+    - Invalid: Red border, specific error message
+  - Uses validateKTP() from ktp-validator.ts:
+    - Date format validation
+    - Leap year handling
+    - Checksum algorithm
+    - All-same-digit detection
+  - Improved UX: Only shows errors after complete 16-digit entry
+- Files: app/app/(dashboard)/worker/kyc/page.tsx
+- Committed: (included in subtask-5-1)
+
+[2026-02-22] subtask-5-3: Implement KYC submission handler
+- Implemented handleSubmit function in KYC page with:
+  - User authentication check
+  - KTP number validation (must be valid, 16 digits)
+  - Image upload validation (KTP and selfie required)
+  - Worker profile lookup via supabase
+  - Image upload to private storage bucket:
+    - Uses uploadKycDocument() utility
+    - Creates signed URLs (10 year expiry) for private bucket
+    - Error handling for each upload
+  - KYC data submission to database:
+    - Uses submitKycVerification() from worker-profile.ts
+    - Updates workers.kyc_status to 'pending'
+    - Inserts record into kyc_verifications table
+  - Toast notifications for success/error feedback
+  - Loading state management
+  - Error handling with early returns
+- Fixed storage migration to include webp MIME type
+- Fixed file upload to use signed URLs for private bucket
+- Files:
+  - lib/utils/file-upload.ts
+  - supabase/migrations/20250222000004_create_kyc_storage.sql
+  - app/app/(dashboard)/worker/kyc/page.tsx (handler already implemented)
+- Committed: f044031
+
+=== END SESSION 2 ===
+
+[2026-02-22] subtask-6-3: Implement RLS policies for KYC data
+- Created migration 20250222000005_add_rls_policies.sql with RLS policies for workers table:
+  - Workers can view own profile (user_id = auth.uid())
+  - Workers can insert own profile (on registration)
+  - Workers can update own profile with restrictions:
+    - Can update any fields when kyc_status is unverified/pending/rejected
+    - When verified, cannot change kyc_status or reliability_score (admin only)
+  - Admins can view/update/insert all worker profiles
+  - Businesses can view only verified worker profiles
+- kyc_verifications table already has RLS policies from migration 00001
+- worker_skills table already has RLS policies from migration 00002
+- Workers table now has proper RLS protection for KYC-related data (kyc_status, reliability_score)
+- Migration file: supabase/migrations/20250222000005_add_rls_policies.sql
+- Committed: d732ba2
+
+[2026-02-22] subtask-6-4: Add loading states and error handling
+- Improved error handling in worker profile and KYC pages:
+  - Added try-catch blocks around data loading in useEffect hooks
+  - Added toast notifications for API failures and network errors
+  - Ensured loading states are always reset with finally blocks
+  - Improved user feedback for loading and error states
+- Profile page (app/app/(dashboard)/worker/profile/page.tsx):
+  - loadProfile function now wrapped in try-catch
+  - Toast errors for failed profile/skills loading
+  - finally block ensures setIsLoadingProfile(false) always executes
+- KYC page (app/app/(dashboard)/worker/kyc/page.tsx):
+  - loadKycStatus function now wrapped in try-catch
+  - Toast errors for failed worker data loading
+  - Graceful handling of PGRST116 (profile not found) error
+  - finally block ensures setIsLoadingData(false) always executes
+- Follows error handling patterns from auth-provider.tsx
+- Committed: 7124ca0

@@ -30,7 +30,9 @@ logs/
 
 # Memory & Supabase
 memory/
-supabase/
+.supabase/
+# But allow migrations
+!supabase/migrations/
 
 # Auto Claude data directory
 .auto-claude/
