@@ -30,6 +30,8 @@ import {
   Trash2Icon,
 } from "lucide-react"
 import { JobPostingForm, type JobPostingFormValues } from "@/app/components/job-posting-form"
+import { createJob, updateJob, publishJob, deleteJob, getBusinessJobs } from "@/lib/supabase/queries/jobs"
+import { useAuth } from "@/app/providers/auth-provider"
 
 type JobStatus = "draft" | "open" | "in_progress" | "completed"
 
@@ -79,85 +81,48 @@ function getStatusLabel(status: JobStatus): string {
 }
 
 export default function BusinessJobsPage() {
+  const { user } = useAuth()
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [editingJob, setEditingJob] = React.useState<Job | null>(null)
   const [jobToDelete, setJobToDelete] = React.useState<Job | null>(null)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false)
-  const [jobs, setJobs] = React.useState<Job[]>([
-    {
-      id: "1",
-      title: "Warehouse Worker",
-      description: "Looking for reliable warehouse workers for sorting and packaging.",
-      status: "draft",
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-      applicants: 0,
-      positionType: "other",
-      date: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString().split('T')[0],
-      startTime: "09:00",
-      endTime: "17:00",
-      area: "badung",
-      address: "Jl. Raya Kuta No. 123, Kuta, Bali",
-      wageMin: 50000,
-      wageMax: 75000,
-      workersNeeded: 3,
-      requirements: ["physically_fit", "reliable"],
-    },
-    {
-      id: "2",
-      title: "Delivery Driver",
-      description: "Need experienced delivery drivers for local routes.",
-      status: "open",
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-      applicants: 5,
-      positionType: "driver",
-      date: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString().split('T')[0],
-      startTime: "08:00",
-      endTime: "16:00",
-      area: "denpasar",
-      address: "Jl. Sudirman No. 45, Denpasar",
-      wageMin: 60000,
-      wageMax: 80000,
-      workersNeeded: 2,
-      requirements: ["drivers_license", "knows_area"],
-    },
-    {
-      id: "3",
-      title: "Event Setup Crew",
-      description: "Weekend event setup crew needed for upcoming conference.",
-      status: "in_progress",
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
-      applicants: 12,
-      positionType: "event_staff",
-      date: new Date(Date.now() + 1000 * 60 * 60 * 48).toISOString().split('T')[0],
-      startTime: "07:00",
-      endTime: "19:00",
-      area: "badung",
-      address: "Nusa Dua Convention Center",
-      wageMin: 75000,
-      wageMax: 100000,
-      workersNeeded: 10,
-      requirements: ["physically_fit", "team_player", "flexible_hours"],
-    },
-    {
-      id: "4",
-      title: "Office Cleaning",
-      description: "Evening office cleaning staff required.",
-      status: "completed",
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 168).toISOString(),
-      applicants: 8,
-      positionType: "housekeeping",
-      date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString().split('T')[0],
-      startTime: "18:00",
-      endTime: "21:00",
-      area: "denpasar",
-      address: "Jl. Hasanuddin No. 78, Denpasar",
-      wageMin: 45000,
-      wageMax: 60000,
-      workersNeeded: 2,
-      requirements: ["reliable", "attention_to_detail"],
-    },
-  ])
+  const [isLoadingJobs, setIsLoadingJobs] = React.useState(true)
+  const [jobs, setJobs] = React.useState<Job[]>([])
+
+  // Load jobs from database on mount
+  React.useEffect(() => {
+    const loadJobs = async () => {
+      if (!user?.id) {
+        setIsLoadingJobs(false)
+        return
+      }
+      try {
+        const jobsData = await getBusinessJobs(user.id)
+        // Transform database rows to Job interface format
+        const transformedJobs: Job[] = jobsData.map((job) => ({
+          id: job.id,
+          title: job.title,
+          description: job.description,
+          status: job.status as JobStatus,
+          createdAt: job.created_at,
+          applicants: 0, // TODO: Fetch from bookings table
+          positionType: undefined, // TODO: Map from category_id
+          date: job.deadline,
+          address: job.address,
+          wageMin: job.budget_min,
+          wageMax: job.budget_max,
+        }))
+        setJobs(transformedJobs)
+      } catch (error) {
+        console.error('Failed to load jobs:', error)
+        toast.error('Gagal memuat lowongan')
+      } finally {
+        setIsLoadingJobs(false)
+      }
+    }
+    loadJobs()
+  }, [user?.id])
 
   const stats = {
     total: jobs.length,
@@ -176,12 +141,23 @@ export default function BusinessJobsPage() {
   }
 
   const handleJobSubmit = async (values: JobPostingFormValues) => {
+    if (!user?.id) {
+      toast.error("User tidak terautentikasi")
+      return
+    }
+
     setIsSubmitting(true)
     try {
       if (editingJob) {
         // Update existing job
-        // TODO: Replace with actual API call to update job
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        await updateJob(editingJob.id, {
+          title: values.title,
+          description: values.description,
+          deadline: values.date,
+          address: values.address,
+          budget_min: values.wageMin,
+          budget_max: values.wageMax,
+        })
 
         setJobs((prev) =>
           prev.map((job) =>
@@ -208,34 +184,46 @@ export default function BusinessJobsPage() {
         toast.success("Lowongan berhasil diperbarui")
       } else {
         // Create new job
-        // TODO: Replace with actual API call to create job
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-
-        const newJob: Job = {
-          id: Date.now().toString(),
+        const newJob = await createJob({
+          business_id: user.id,
+          category_id: "", // TODO: Add category selection to form
           title: values.title,
           description: values.description,
+          requirements: values.requirements.join(','),
+          budget_min: values.wageMin,
+          budget_max: values.wageMax,
           status: "draft",
-          createdAt: new Date().toISOString(),
+          deadline: values.date,
+          address: values.address,
+          lat: 0, // TODO: Add geocoding
+          lng: 0, // TODO: Add geocoding
+        })
+
+        setJobs((prev) => [{
+          id: newJob.id,
+          title: newJob.title,
+          description: newJob.description,
+          status: newJob.status as JobStatus,
+          createdAt: newJob.created_at,
           applicants: 0,
           positionType: values.positionType,
           date: values.date,
           startTime: values.startTime,
           endTime: values.endTime,
           area: values.area,
-          address: values.address,
-          wageMin: values.wageMin,
-          wageMax: values.wageMax,
+          address: newJob.address,
+          wageMin: newJob.budget_min,
+          wageMax: newJob.budget_max,
           workersNeeded: values.workersNeeded,
           requirements: values.requirements,
-        }
-        setJobs((prev) => [newJob, ...prev])
+        }, ...prev])
 
         toast.success("Lowongan berhasil dibuat")
       }
       setIsDialogOpen(false)
       setEditingJob(null)
     } catch (error) {
+      console.error('Job submit error:', error)
       toast.error(editingJob ? "Gagal memperbarui lowongan" : "Gagal membuat lowongan")
     } finally {
       setIsSubmitting(false)
@@ -269,8 +257,7 @@ export default function BusinessJobsPage() {
 
   const handlePublishJob = async (job: Job) => {
     try {
-      // TODO: Replace with actual API call to publish job
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      await publishJob(job.id)
 
       setJobs((prev) =>
         prev.map((j) =>
@@ -280,6 +267,7 @@ export default function BusinessJobsPage() {
 
       toast.success("Lowongan berhasil dipublikasikan")
     } catch (error) {
+      console.error('Publish job error:', error)
       toast.error("Gagal mempublikasikan lowongan")
     }
   }
@@ -293,8 +281,7 @@ export default function BusinessJobsPage() {
     if (!jobToDelete) return
 
     try {
-      // TODO: Replace with actual API call to delete job
-      await new Promise((resolve) => setTimeout(resolve, 500))
+      await deleteJob(jobToDelete.id)
 
       setJobs((prev) => prev.filter((j) => j.id !== jobToDelete.id))
       setIsDeleteDialogOpen(false)
@@ -302,6 +289,7 @@ export default function BusinessJobsPage() {
 
       toast.success("Lowongan berhasil dihapus")
     } catch (error) {
+      console.error('Delete job error:', error)
       toast.error("Gagal menghapus lowongan")
     }
   }
@@ -376,13 +364,19 @@ export default function BusinessJobsPage() {
           <CardHeader>
             <CardTitle>Job Listings</CardTitle>
             <CardDescription>
-              {jobs.length === 0
+              {isLoadingJobs
+                ? "Loading jobs..."
+                : jobs.length === 0
                 ? "You haven't posted any jobs yet"
                 : `Showing ${jobs.length} job${jobs.length !== 1 ? "s" : ""}`}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {jobs.length === 0 ? (
+            {isLoadingJobs ? (
+              <div className="flex min-h-[300px] items-center justify-center">
+                <p className="text-muted-foreground">Loading...</p>
+              </div>
+            ) : jobs.length === 0 ? (
               <div className="flex min-h-[300px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
                 <BriefcaseIcon className="mb-4 h-12 w-12 text-muted-foreground/50" />
                 <h3 className="mb-2 text-lg font-semibold">No jobs posted yet</h3>

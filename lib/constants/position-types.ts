@@ -10,10 +10,12 @@ export const POSITION_TYPES: PositionType[] = [
   { value: 'bartender', label: 'Bartender', category: 'Front of House' },
   { value: 'receptionist', label: 'Receptionist', category: 'Front of House' },
   { value: 'host_hostess', label: 'Host/Hostess', category: 'Front of House' },
+  { value: 'concierge', label: 'Concierge', category: 'Front of House' },
 
   // Housekeeping
   { value: 'housekeeping', label: 'Housekeeping', category: 'Housekeeping' },
   { value: 'laundry_staff', label: 'Laundry Staff', category: 'Housekeeping' },
+  { value: 'laundry_attendant', label: 'Laundry Attendant', category: 'Housekeeping' },
   { value: 'public_area_attendant', label: 'Public Area Attendant', category: 'Housekeeping' },
 
   // Kitchen
@@ -27,11 +29,11 @@ export const POSITION_TYPES: PositionType[] = [
   // Service & Support
   { value: 'driver', label: 'Driver', category: 'Service & Support' },
   { value: 'bellman', label: 'Bellman', category: 'Service & Support' },
-  { value: 'concierge', label: 'Concierge', category: 'Service & Support' },
   { value: 'porter', label: 'Porter', category: 'Service & Support' },
 
   // Wellness & Recreation
   { value: 'spa_therapist', label: 'Spa Therapist', category: 'Wellness & Recreation' },
+  { value: 'spa_staff', label: 'Spa Staff', category: 'Wellness & Recreation' },
   { value: 'pool_attendant', label: 'Pool Attendant', category: 'Wellness & Recreation' },
   { value: 'fitness_instructor', label: 'Fitness Instructor', category: 'Wellness & Recreation' },
   { value: 'tour_guide', label: 'Tour Guide', category: 'Wellness & Recreation' },
@@ -46,6 +48,9 @@ export const POSITION_TYPES: PositionType[] = [
   { value: 'setup_crew', label: 'Setup Crew', category: 'Events' },
   { value: 'security', label: 'Security', category: 'Events' },
 
+  // Other
+  { value: 'other', label: 'Other', category: 'Other' },
+
   // Management & Supervision
   { value: 'supervisor', label: 'Supervisor', category: 'Management' },
   { value: 'manager', label: 'Manager', category: 'Management' },
@@ -59,6 +64,7 @@ export const POSITION_TYPE_CATEGORIES = [
   'Wellness & Recreation',
   'Facilities & Maintenance',
   'Events',
+  'Other',
   'Management',
 ]
 

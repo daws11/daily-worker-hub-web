@@ -11,41 +11,9 @@ import {
 } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import { POSITION_TYPES } from "@/lib/constants/position-types"
 
-export type PositionType =
-  | "housekeeping"
-  | "kitchen_staff"
-  | "driver"
-  | "server"
-  | "bartender"
-  | "receptionist"
-  | "concierge"
-  | "security"
-  | "maintenance"
-  | "laundry_attendant"
-  | "pool_attendant"
-  | "spa_staff"
-  | "event_staff"
-  | "gardener"
-  | "other"
-
-const POSITION_LABELS: Record<PositionType, string> = {
-  housekeeping: "Housekeeping",
-  kitchen_staff: "Kitchen Staff",
-  driver: "Driver",
-  server: "Server",
-  bartender: "Bartender",
-  receptionist: "Receptionist",
-  concierge: "Concierge",
-  security: "Security",
-  maintenance: "Maintenance",
-  laundry_attendant: "Laundry Attendant",
-  pool_attendant: "Pool Attendant",
-  spa_staff: "Spa Staff",
-  event_staff: "Event Staff",
-  gardener: "Gardener",
-  other: "Other",
-}
+export type PositionType = typeof POSITION_TYPES[number]['value']
 
 export interface PositionTypeSelectProps {
   value?: PositionType
@@ -105,9 +73,9 @@ export const PositionTypeSelect = React.forwardRef<
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(POSITION_LABELS).map(([key, label]) => (
-              <SelectItem key={key} value={key}>
-                {label}
+            {POSITION_TYPES.map((position) => (
+              <SelectItem key={position.value} value={position.value}>
+                {position.label}
               </SelectItem>
             ))}
           </SelectContent>
