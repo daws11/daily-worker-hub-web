@@ -9,6 +9,7 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   const redirect = requestUrl.searchParams.get('redirect')
+  const role = requestUrl.searchParams.get('role') || 'worker'
 
   // If there's no code, redirect to home
   if (!code) {
@@ -51,6 +52,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(redirect, requestUrl.origin))
   }
 
-  // Default redirect to dashboard
-  return NextResponse.redirect(new URL('/dashboard-worker-jobs', requestUrl.origin))
+  // Redirect to the appropriate dashboard based on role
+  const dashboardUrl = role === 'worker' ? '/dashboard-worker-jobs' : '/dashboard-business-jobs'
+  return NextResponse.redirect(new URL(dashboardUrl, requestUrl.origin))
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from "../../../providers/auth-provider"
+import { useAuth } from '../../../providers/auth-provider'
 
 export default function WorkerJobsPage() {
   const { signOut, user, isLoading } = useAuth()
@@ -37,14 +37,15 @@ export default function WorkerJobsPage() {
               borderRadius: '0.375rem',
               fontWeight: 500,
               cursor: isLoading ? 'not-allowed' : 'pointer',
+              fontSize: '0.875rem',
               opacity: isLoading ? 0.6 : 1,
               transition: 'background-color 0.2s'
             }}
           >
-            Keluar
+            {isLoading ? 'Memproses...' : 'Keluar'}
           </button>
         </div>
-        
+
         <div style={{
           backgroundColor: 'white',
           borderRadius: '0.5rem',
@@ -54,7 +55,7 @@ export default function WorkerJobsPage() {
           <p style={{ color: '#666', marginBottom: '1rem' }}>
             Selamat datang di dashboard Worker!
           </p>
-          
+
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
@@ -73,7 +74,7 @@ export default function WorkerJobsPage() {
                 0
               </p>
             </div>
-            
+
             <div style={{
               padding: '1rem',
               border: '1px solid #e5e7eb',
@@ -86,7 +87,7 @@ export default function WorkerJobsPage() {
                 0
               </p>
             </div>
-            
+
             <div style={{
               padding: '1rem',
               border: '1px solid #e5e7eb',
@@ -99,7 +100,7 @@ export default function WorkerJobsPage() {
                 0
               </p>
             </div>
-            
+
             <div style={{
               padding: '1rem',
               border: '1px solid #e5e7eb',
@@ -113,7 +114,7 @@ export default function WorkerJobsPage() {
               </p>
             </div>
           </div>
-          
+
           <div style={{ marginTop: '2rem', textAlign: 'center' }}>
             <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
               Job discovery feature coming soon...

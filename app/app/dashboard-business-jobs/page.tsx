@@ -1,6 +1,14 @@
 "use client"
 
+import { useAuth } from '../../providers/auth-provider'
+
 export default function BusinessJobsPage() {
+  const { signOut, isLoading } = useAuth()
+
+  const handleLogout = async () => {
+    await signOut()
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -8,9 +16,27 @@ export default function BusinessJobsPage() {
       padding: '1rem'
     }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-          Dashboard Business - Jobs
-        </h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>
+            Dashboard Business - Jobs
+          </h1>
+          <button
+            onClick={handleLogout}
+            disabled={isLoading}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: isLoading ? '#9ca3af' : '#ef4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.375rem',
+              cursor: isLoading ? 'not-allowed' : 'pointer',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+            }}
+          >
+            {isLoading ? 'Memproses...' : 'Keluar'}
+          </button>
+        </div>
         
         <div style={{
           backgroundColor: 'white',
