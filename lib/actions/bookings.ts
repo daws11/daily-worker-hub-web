@@ -91,6 +91,29 @@ export async function checkoutBooking(bookingId: string, workerId: string): Prom
       console.error("Gagal menambahkan dana ke dompet worker:", walletResult.error)
     }
 
+    // Send notifications
+    // Import dynamically to avoid circular dependency
+    const { createNotification } = await import("./notifications")
+
+    // Notify worker about successful checkout
+    const jobTitle = booking.jobs?.title || "pekerjaan"
+    await createNotification(
+      workerId,
+      "Checkout Berhasil",
+      `Anda telah menyelesaikan ${jobTitle}. Pembayaran sedang dalam proses review selama 24 jam.`,
+      `/dashboard/worker/jobs`
+    )
+
+    // Notify business about worker checkout
+    if (booking.business_id) {
+      await createNotification(
+        booking.business_id,
+        "Pekerjaan Selesai",
+        `Pekerja telah menyelesaikan ${jobTitle}. Silakan review pekerjaan dalam 24 jam.`,
+        `/dashboard/business/jobs`
+      )
+    }
+
     return { success: true, data: updatedBooking }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat checkout pekerjaan" }

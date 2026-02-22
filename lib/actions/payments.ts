@@ -98,6 +98,17 @@ export async function releasePaymentAction(
       return { success: false, error: `Gagal memperbarui status pembayaran: ${updateError.message}` }
     }
 
+    // Send notification to worker
+    // Import dynamically to avoid circular dependency
+    const { createNotification } = await import("./notifications")
+    const jobTitle = booking.jobs?.title || "pekerjaan"
+    await createNotification(
+      workerId,
+      "Pembayaran Tersedia",
+      `Pembayaran sebesar Rp ${paymentAmount.toLocaleString("id-ID")} untuk ${jobTitle} kini tersedia di dompet Anda.`,
+      `/dashboard/worker/wallet`
+    )
+
     return { success: true, data: updatedBooking }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat melepaskan pembayaran" }
@@ -145,6 +156,9 @@ export async function releaseDuePaymentsAction(): Promise<BatchPaymentReleaseRes
     let releasedCount = 0
     let failedCount = 0
 
+    // Import notification function once for batch processing
+    const { createNotification } = await import("./notifications")
+
     // Process each booking
     for (const booking of bookings) {
       try {
@@ -174,6 +188,15 @@ export async function releaseDuePaymentsAction(): Promise<BatchPaymentReleaseRes
           failedCount++
         } else {
           releasedCount++
+
+          // Send notification to worker
+          const jobTitle = booking.jobs?.title || "pekerjaan"
+          await createNotification(
+            booking.worker_id,
+            "Pembayaran Tersedia",
+            `Pembayaran sebesar Rp ${paymentAmount.toLocaleString("id-ID")} untuk ${jobTitle} kini tersedia di dompet Anda.`,
+            `/dashboard/worker/wallet`
+          )
         }
       } catch {
         failedCount++
