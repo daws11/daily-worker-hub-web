@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "003-worker-profile-kyc-verification",
+  "spec": "004-database-schema-rls-policies",
   "state": "building",
   "subtasks": {
-    "completed": 21,
-    "total": 25,
-    "in_progress": 0,
+    "completed": 23,
+    "total": 24,
+    "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Integration & Polish",
+    "current": "Create Seed Data and Verify",
     "id": null,
-    "total": 5
+    "total": 4
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 61,
-    "started_at": "2026-02-22T04:18:59.745588"
+    "number": 25,
+    "started_at": "2026-02-22T05:58:42.545665"
   },
-  "last_update": "2026-02-22T07:30:00.000000"
+  "last_update": "2026-02-22T06:40:41.931262"
 }

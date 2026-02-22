@@ -15,7 +15,7 @@ export interface Database {
           email: string
           full_name: string
           avatar_url: string
-          role: 'worker' | 'business'
+          role: 'worker' | 'business' | 'admin'
           phone: string
           created_at: string
           updated_at: string
