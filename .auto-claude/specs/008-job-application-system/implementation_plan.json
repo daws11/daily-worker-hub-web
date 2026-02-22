@@ -90,7 +90,9 @@
             "command": "npm run type-check",
             "expected": "No TypeScript errors"
           },
-          "status": "completed"
+          "status": "completed",
+          "notes": "Created notification server actions in lib/actions/notifications.ts with functions for create, mark read, get unread count, get user notifications, and delete notifications. Follows the same patterns as job-applications.ts.",
+          "updated_at": "2026-02-22T04:02:13.635543+00:00"
         },
         {
           "id": "subtask-2-3",
@@ -108,7 +110,9 @@
             "command": "npm run type-check",
             "expected": "No TypeScript errors"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created data fetching utilities in lib/data/jobs.ts with functions for getJobs, getJobById, getApplications, getApplicants, and getJobsByBusiness. Follows the same patterns as job-applications.ts.",
+          "updated_at": "2026-02-22T04:03:40.000000+00:00"
         }
       ]
     },
@@ -502,5 +506,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T04:00:50.669Z"
+  "updated_at": "2026-02-22T04:02:43.791Z",
+  "last_updated": "2026-02-22T04:02:13.635552+00:00"
 }
