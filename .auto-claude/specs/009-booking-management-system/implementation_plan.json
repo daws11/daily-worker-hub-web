@@ -162,7 +162,8 @@
             "command": "grep -q \"export.*BookingActions\" components/booking/booking-actions.tsx && echo 'Component created'",
             "expected": "Component created"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created BookingActions component in components/booking/booking-actions.tsx with: accept and reject buttons using Check and X icons from lucide-react, configurable variants (default, outline, ghost), size options (default, sm, lg), optional label display, disabled state for non-pending bookings, individual loading states for each action, accessibility ARIA labels, and follows shadcn/ui Button component patterns"
         },
         {
           "id": "subtask-3-3",
