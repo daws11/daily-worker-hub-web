@@ -64,7 +64,7 @@
             "command": "psql $DATABASE_URL -c \"SELECT trigger_name FROM information_schema.triggers WHERE event_object_table = 'bookings'\"",
             "expected": "Trigger exists for updating compliance tracking"
           },
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "subtask-1-4",
@@ -598,5 +598,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T12:08:05.217Z"
+  "updated_at": "2026-02-22T12:14:19.684Z"
 }
