@@ -329,7 +329,8 @@
             "command": "npx tsc --noEmit",
             "expected": "No TypeScript errors"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added ComplianceWarningBanner integration: imported component, added getMostSevereComplianceIssue() helper function that prioritizes blocked status over warning, and displays banner after header when any applicant has compliance issues."
         },
         {
           "id": "subtask-5-3",
@@ -347,7 +348,8 @@
             "command": "npx tsc --noEmit",
             "expected": "No TypeScript errors"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added ComplianceStatusBadge integration: imported component and ComplianceStatusResult type, added optional compliance prop to WorkerApplicationCardProps, and displayed badge next to status badge in card header when compliance data is provided."
         },
         {
           "id": "subtask-5-4",
@@ -599,5 +601,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T13:57:30.183Z"
+  "updated_at": "2026-02-22T14:04:45.260Z"
 }

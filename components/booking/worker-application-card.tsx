@@ -6,7 +6,9 @@ import { Calendar, Phone, Star } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ComplianceStatusBadge } from "@/components/booking/compliance-status-badge"
 import { cn } from "@/lib/utils"
+import type { ComplianceStatusResult } from "@/lib/supabase/queries/compliance"
 
 type BookingStatus = "pending" | "accepted" | "rejected" | "in_progress" | "completed" | "cancelled"
 
@@ -26,6 +28,7 @@ export interface WorkerApplicationCardProps {
     }
   }
   reliabilityScore?: number
+  compliance?: ComplianceStatusResult
   onSelect?: (bookingId: string) => void
   isSelected?: boolean
 }
@@ -86,6 +89,7 @@ function ReliabilityScore({ score }: { score?: number }) {
 export function WorkerApplicationCard({
   booking,
   reliabilityScore,
+  compliance,
   onSelect,
   isSelected,
 }: WorkerApplicationCardProps) {
@@ -138,7 +142,10 @@ export function WorkerApplicationCard({
               </div>
             </div>
           </div>
-          <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
+          <div className="flex items-center gap-2 shrink-0">
+            {compliance && <ComplianceStatusBadge compliance={compliance} />}
+            <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
