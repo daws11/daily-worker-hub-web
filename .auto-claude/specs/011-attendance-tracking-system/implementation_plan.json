@@ -381,8 +381,9 @@
               "Worker list shows attendance status"
             ]
           },
-          "status": "pending",
-          "notes": "Add QRCodeGenerator button to active job cards, show worker attendance status in booking list"
+          "status": "completed",
+          "notes": "Successfully added attendance section to business jobs page:\n- Transformed page from placeholder to functional business jobs management page\n- Added stats cards showing total jobs, active jobs, and completed jobs\n- Added active jobs list with QR code button for each job\n- Worker booking cards display:\n  - Worker avatar, name, phone\n  - Attendance status badge (Selesai/Bekerja/Belum)\n  - Check-in and check-out times in Indonesian locale\n  - Location verification indicator when GPS verified\n- Integrated QRCodeGenerator component in modal dialogs\n- Loading state with spinner animation\n- Error state with retry button\n- Empty state when no active jobs exist\n- Responsive grid layout for worker cards\n\nVerification URL: http://localhost:3000/dashboard-business-jobs\n- Active jobs show QR code button\n- Worker list shows attendance status (check-in/out times, location verification)\n\nPattern compliance:\n- Follows inline style pattern from existing business pages\n- Uses QRCodeGenerator component\n- Lucide-react icons (Users, Loader2, AlertCircle, CheckCircle, XCircle, Clock, Building2, QrCode, MapPin)\n- Indonesian language for UI text\n- Proper error handling with toast notifications\n- Committed to git",
+          "updated_at": "2026-02-22T09:00:31.170101+00:00"
         }
       ]
     },
@@ -410,8 +411,8 @@
             "command": "grep -q 'check_in_at' lib/supabase/queries/bookings.ts && echo 'Reliability function updated'",
             "expected": "Reliability function updated"
           },
-          "status": "pending",
-          "notes": "Update calculateReliabilityScore to use check_in_at instead of checked_in_at, add attendance completeness check, update getWorkerReliabilityMetrics to include attendance data"
+          "status": "completed",
+          "notes": "Updated calculateReliabilityScore and getWorkerReliabilityMetrics to use check_in_at and check_out_at:\n- Changed type definition from checked_in_at to check_in_at and added check_out_at\n- Simplified punctuality calculation to check for attendance presence rather than timing comparison (since shift_start_time doesn't exist in schema)\n- Updated getWorkerReliabilityMetrics to select check_in_at and check_out_at instead of checked_in_at and shift_start_time\n- Reliability score now properly uses attendance data from the new attendance tracking fields\n- Verified with grep command and committed to git"
         },
         {
           "id": "subtask-6-2",
@@ -663,6 +664,6 @@
   "planStatus": "in_progress",
   "xstateState": "planning",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T08:49:23.634Z",
-  "last_updated": "2026-02-22T07:51:09.652213+00:00"
+  "updated_at": "2026-02-22T09:01:21.323Z",
+  "last_updated": "2026-02-22T09:00:31.170109+00:00"
 }
