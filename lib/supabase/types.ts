@@ -260,6 +260,18 @@ export interface Database {
           updated_at: string
         }
       }
+      bank_accounts: {
+        Row: {
+          id: string
+          worker_id: string
+          bank_code: 'BCA' | 'BRI' | 'Mandiri' | 'BNI'
+          bank_account_number: string
+          bank_account_name: string
+          is_primary: boolean
+          created_at: string
+          updated_at: string
+        }
+      }
     }
   }
 }
