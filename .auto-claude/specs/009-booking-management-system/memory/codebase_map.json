@@ -1,0 +1,25 @@
+{
+  "discovered_files": {
+    "lib/supabase/types.ts": {
+      "description": "The project uses a single TypeScript types file (lib/supabase/types.ts) that defines the complete Database schema including all tables (users, businesses, workers, jobs, bookings, reviews, notifications, etc.). This is the source of truth for database types and should be updated when schema changes are made.",
+      "category": "database-schema",
+      "discovered_at": "2026-02-22T04:51:14.784541+00:00"
+    },
+    "app/providers/auth-provider.tsx": {
+      "description": "Auth pattern uses React Context with Supabase Auth. The browser client is imported from lib/supabase/client.ts which uses createBrowserClient from @supabase/ssr package. Role-based access control is implemented (worker/business roles).",
+      "category": "authentication-pattern",
+      "discovered_at": "2026-02-22T04:51:14.792040+00:00"
+    },
+    "components/ui/": {
+      "description": "The project uses shadcn/ui component library (Radix UI primitives). All UI components are client components with \"use client\" directive. Components use cn() utility function from lib/utils.ts for className merging (clsx + tailwind-merge).",
+      "category": "ui-components",
+      "discovered_at": "2026-02-22T04:51:14.795091+00:00"
+    },
+    "lib/supabase/queries/": {
+      "description": "No existing query functions file found. Need to create lib/supabase/queries/bookings.ts for booking-related database operations. Reference auth-provider.tsx for Supabase client usage patterns (supabase.from(table).select()/insert()/update()).",
+      "category": "data-layer",
+      "discovered_at": "2026-02-22T04:51:14.797771+00:00"
+    }
+  },
+  "last_updated": "2026-02-22T04:51:14.797777+00:00"
+}
