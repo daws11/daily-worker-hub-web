@@ -1,0 +1,105 @@
+{
+  "subtasks": {
+    "subtask-1-1": {
+      "attempts": [
+        {
+          "session": 2,
+          "timestamp": "2026-02-22T04:53:15.842123+00:00",
+          "approach": "Implemented: Create database migration to add booking_notes column",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-1-2": {
+      "attempts": [
+        {
+          "session": 3,
+          "timestamp": "2026-02-22T04:54:34.588663+00:00",
+          "approach": "Implemented: Update TypeScript types to include booking_notes field",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-2-1": {
+      "attempts": [
+        {
+          "session": 4,
+          "timestamp": "2026-02-22T04:56:43.850263+00:00",
+          "approach": "Implemented: Create booking query functions (fetch, update status, add notes)",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-2-2": {
+      "attempts": [
+        {
+          "session": 5,
+          "timestamp": "2026-02-22T04:59:17.013169+00:00",
+          "approach": "Implemented: Create useBookings hook for fetching and managing booking state",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-2-3": {
+      "attempts": [
+        {
+          "session": 6,
+          "timestamp": "2026-02-22T05:02:39.838110+00:00",
+          "approach": "Implemented: Create reliability score calculation function",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-3-1": {
+      "attempts": [
+        {
+          "session": 7,
+          "timestamp": "2026-02-22T05:05:58.596764+00:00",
+          "approach": "Implemented: Create WorkerApplicationCard component with reliability score display",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-3-2": {
+      "attempts": [
+        {
+          "session": 8,
+          "timestamp": "2026-02-22T05:08:09.970808+00:00",
+          "approach": "Implemented: Create BookingActions component (accept/reject buttons)",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-3-3": {
+      "attempts": [
+        {
+          "session": 9,
+          "timestamp": "2026-02-22T05:09:44.461932+00:00",
+          "approach": "Implemented: Create BulkActions component for batch operations",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    }
+  },
+  "stuck_subtasks": [],
+  "metadata": {
+    "created_at": "2026-02-22T04:47:19.915259+00:00",
+    "last_updated": "2026-02-22T05:09:44.461944+00:00"
+  }
+}

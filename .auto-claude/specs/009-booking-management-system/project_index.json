@@ -1,0 +1,40 @@
+{
+  "project_type": "single",
+  "services": {
+    "frontend": {
+      "path": ".",
+      "tech_stack": ["nextjs", "typescript", "tailwindcss", "supabase"],
+      "port": 3000,
+      "dev_command": "npm run dev",
+      "test_command": "npm test",
+      "build_command": "npm run build"
+    }
+  },
+  "infrastructure": {
+    "docker": true,
+    "database": "postgresql",
+    "realtime": "supabase-realtime"
+  },
+  "conventions": {
+    "linter": "eslint",
+    "formatter": "prettier",
+    "testing": "jest",
+    "ui_library": "shadcn-ui",
+    "styling": "tailwindcss"
+  },
+  "database_schema": {
+    "bookings": {
+      "status": ["pending", "accepted", "rejected", "in_progress", "completed", "cancelled"],
+      "relationships": ["job_id", "worker_id", "business_id"]
+    },
+    "workers": {
+      "fields": ["full_name", "bio", "avatar_url", "phone", "address", "location_name", "lat", "lng"]
+    },
+    "reviews": {
+      "fields": ["rating", "comment"]
+    },
+    "notifications": {
+      "fields": ["title", "body", "link", "is_read"]
+    }
+  }
+}

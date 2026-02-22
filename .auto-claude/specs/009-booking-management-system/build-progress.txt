@@ -1,0 +1,123 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Booking Management System
+Workspace: managed by orchestrator
+Started: 2026-02-22
+
+Workflow Type: feature
+Rationale: Multi-step feature implementation requiring database schema changes, data fetching hooks, UI components, and realtime integration. The phases follow dependency order: database -> data layer -> UI -> actions -> realtime -> integration.
+
+Session 1 (Planner):
+- Created implementation_plan.json
+- Created context.json
+- Created project_index.json
+- Created init.sh
+- Phases: 7
+- Total subtasks: 17
+
+Phase Summary:
+- Phase 1 (Database Schema Setup): 2 subtasks, depends on []
+- Phase 2 (Data Layer & Hooks): 3 subtasks, depends on [phase-1-database]
+- Phase 3 (UI Components): 4 subtasks, depends on [phase-2-data-layer]
+- Phase 4 (Page Implementation): 1 subtask, depends on [phase-3-ui-components]
+- Phase 5 (Realtime Integration): 2 subtasks, depends on [phase-4-page-implementation]
+- Phase 6 (Notifications): 2 subtasks, depends on [phase-4-page-implementation]
+- Phase 7 (Integration & Testing): 1 subtask, depends on [phase-5-realtime, phase-6-notifications]
+
+Services Involved:
+- Frontend (Next.js 14+, TypeScript, Tailwind CSS, shadcn/ui)
+- Database (PostgreSQL via Supabase)
+
+Files to Create:
+- supabase/migrations/20250222000000_add_booking_notes.sql
+- lib/supabase/queries/bookings.ts
+- lib/hooks/use-bookings.ts
+- lib/hooks/use-realtime-bookings.ts
+- components/booking/worker-application-card.tsx
+- components/booking/booking-actions.tsx
+- components/booking/bulk-actions.tsx
+- components/booking/worker-notes-dialog.tsx
+
+Files to Modify:
+- lib/supabase/types.ts (add booking_notes field)
+- app/app/(dashboard)/business/jobs/page.tsx (implement booking management UI)
+
+Parallelism Analysis:
+- Max parallel phases: 2
+- Parallel groups: [phase-5-realtime, phase-6-notifications] can run in parallel
+- Recommended workers: 1
+- Sequential execution recommended due to tight dependencies
+
+Key Features:
+1. View applications for business jobs
+2. Worker profile cards with reliability scores (calculated from reviews)
+3. Accept/reject individual bookings
+4. Bulk accept/reject multiple workers
+5. Worker notes for reference
+6. Real-time updates via Supabase Realtime
+7. Notifications to workers on status changes
+
+Database Schema Notes:
+- bookings table needs booking_notes column (text, nullable)
+- reliability_score calculated from reviews table (average rating per worker)
+- notifications table used for worker notifications
+
+Tech Stack:
+- Next.js 14+ with App Router
+- TypeScript
+- Tailwind CSS + shadcn/ui (Radix UI)
+- Supabase (Auth, Database, Realtime)
+- React Hook Form + Zod
+- Sonner for toast notifications
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  npm run dev
+
+Then open the booking management page at:
+  http://localhost:3000/dashboard-business-jobs
+
+=== SESSION PROGRESS ===
+
+Session 2 (Coder - subtask-2-1):
+[COMPLETED] subtask-2-1: Create booking query functions (fetch, update status, add notes)
+  - Created: lib/supabase/queries/bookings.ts
+  - Functions implemented:
+    * getJobBookings(jobId) - Fetch all bookings for a specific job with worker and business details
+    * getWorkerBookings(workerId) - Fetch bookings for a worker with job and business details
+    * getBusinessBookings(businessId) - Fetch bookings for a business with worker and job details
+    * getBookingById(bookingId) - Fetch single booking with all related data
+    * updateBookingStatus(bookingId, status) - Update single booking status
+    * updateMultipleBookingStatuses(bookingIds, status) - Bulk update booking statuses
+    * addBookingNotes(bookingId, notes) - Add/update booking notes
+    * createBooking(booking) - Create new booking
+    * deleteBooking(bookingId) - Delete booking
+  - All functions follow project patterns with proper error handling
+  - Verification passed
+
+=== END SESSION 2 ===
+
+Session 3 (Coder - subtask-2-2):
+[COMPLETED] subtask-2-2: Create useBookings hook for fetching and managing booking state
+  - Created: lib/hooks/use-bookings.ts
+  - Features implemented:
+    * Fetch bookings by job, worker, or business ID
+    * Fetch single booking by ID
+    * Update booking status (single)
+    * Bulk update booking statuses
+    * Add/update booking notes
+    * Create new booking
+    * Delete booking
+    * Auto-fetch capability with optional refresh
+    * Loading and error state management
+    * Toast notifications for user feedback
+    * TypeScript types exported for use
+  - Follows patterns from auth-provider.tsx
+  - Uses useCallback for memoized functions
+  - Proper error handling with user-friendly messages in Indonesian
+  - Verification passed
+
+=== END SESSION 3 ===
+2026-02-22T05:09:30Z - subtask-3-3: Completed - Created BulkActions component for batch operations with bulk accept/reject, loading states, configurable variants/sizes, and proper error handling

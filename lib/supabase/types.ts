@@ -137,6 +137,7 @@ export interface Database {
           start_date: string
           end_date: string
           final_price: number
+          booking_notes: string
           created_at: string
           updated_at: string
         }

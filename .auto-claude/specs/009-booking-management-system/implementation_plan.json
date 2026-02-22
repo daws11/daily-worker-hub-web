@@ -1,0 +1,495 @@
+{
+  "feature": "Booking Management System",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a multi-step feature implementation requiring database schema changes, data fetching hooks, UI components, and realtime integration. The phases follow dependency order: database -> data layer -> UI -> actions -> realtime -> integration.",
+  "phases": [
+    {
+      "id": "phase-1-database",
+      "name": "Database Schema Setup",
+      "type": "implementation",
+      "description": "Add booking_notes column to bookings table for storing worker notes by businesses",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create database migration to add booking_notes column",
+          "service": "database",
+          "files_to_create": [
+            "migrations/20250222000000_add_booking_notes.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"\\d bookings\" | grep booking_notes",
+            "expected": "booking_notes"
+          },
+          "status": "completed",
+          "notes": "Migration file created at migrations/20250222000000_add_booking_notes.sql with ALTER TABLE statement to add booking_notes TEXT column"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Update TypeScript types to include booking_notes field",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/supabase/types.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q \"booking_notes\" lib/supabase/types.ts && echo 'Types updated'",
+            "expected": "Types updated"
+          },
+          "status": "completed",
+          "notes": "Added booking_notes: string field to Database.public.Tables.bookings.Row type"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-data-layer",
+      "name": "Data Layer & Hooks",
+      "type": "implementation",
+      "description": "Create Supabase query functions and React hooks for fetching and managing booking data",
+      "depends_on": [
+        "phase-1-database"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create booking query functions (fetch, update status, add notes)",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/supabase/queries/bookings.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "app/providers/auth-provider.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q \"export.*getJobBookings\" lib/supabase/queries/bookings.ts && echo 'Queries created'",
+            "expected": "Queries created"
+          },
+          "status": "completed",
+          "notes": "Created booking query functions in lib/supabase/queries/bookings.ts including: getJobBookings, getWorkerBookings, getBusinessBookings, getBookingById, updateBookingStatus, updateMultipleBookingStatuses, addBookingNotes, createBooking, and deleteBooking"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create useBookings hook for fetching and managing booking state",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/hooks/use-bookings.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "app/providers/auth-provider.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q \"export.*useBookings\" lib/hooks/use-bookings.ts && echo 'Hook created'",
+            "expected": "Hook created"
+          },
+          "status": "completed",
+          "notes": "Created useBookings hook in lib/hooks/use-bookings.ts with state management for bookings, CRUD operations (create, read, update, delete), single and bulk status updates, notes functionality, loading/error states, toast notifications, auto-fetch capability, and refresh function"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Create reliability score calculation function",
+          "service": "frontend",
+          "files_to_create": [],
+          "files_to_modify": [
+            "lib/supabase/queries/bookings.ts"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "grep -q \"calculateReliabilityScore\" lib/supabase/queries/bookings.ts && echo 'Function created'",
+            "expected": "Function created"
+          },
+          "status": "completed",
+          "notes": "Created calculateReliabilityScore function with weighted scoring (attendance 40%, punctuality 30%, rating 30%), returns 1-5 score. Also added getWorkerReliabilityMetrics helper function."
+        }
+      ]
+    },
+    {
+      "id": "phase-3-ui-components",
+      "name": "UI Components",
+      "type": "implementation",
+      "description": "Create reusable UI components for booking management (worker cards, actions, dialogs)",
+      "depends_on": [
+        "phase-2-data-layer"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create WorkerApplicationCard component with reliability score display",
+          "service": "frontend",
+          "files_to_create": [
+            "components/booking/worker-application-card.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/card.tsx",
+            "components/ui/badge.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q \"export.*WorkerApplicationCard\" components/booking/worker-application-card.tsx && echo 'Component created'",
+            "expected": "Component created"
+          },
+          "status": "completed",
+          "notes": "Created WorkerApplicationCard component in components/booking/worker-application-card.tsx with: worker profile display (avatar, name, bio, phone), reliability score visualization with 5-star rating and color coding (green≥4.5, yellow≥3.5, orange≥2.5, red<2.5), booking status badge with variants, date range display, booking notes section, optional selection state for bulk operations, click-to-select functionality, accessibility ARIA labels, and responsive layout following shadcn/ui patterns"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create BookingActions component (accept/reject buttons)",
+          "service": "frontend",
+          "files_to_create": [
+            "components/booking/booking-actions.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/button.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q \"export.*BookingActions\" components/booking/booking-actions.tsx && echo 'Component created'",
+            "expected": "Component created"
+          },
+          "status": "completed",
+          "notes": "Created BookingActions component in components/booking/booking-actions.tsx with: accept and reject buttons using Check and X icons from lucide-react, configurable variants (default, outline, ghost), size options (default, sm, lg), optional label display, disabled state for non-pending bookings, individual loading states for each action, accessibility ARIA labels, and follows shadcn/ui Button component patterns",
+          "updated_at": "2026-02-22T05:07:53.237878+00:00"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Create BulkActions component for batch operations",
+          "service": "frontend",
+          "files_to_create": [
+            "components/booking/bulk-actions.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/button.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q \"export.*BulkActions\" components/booking/bulk-actions.tsx && echo 'Component created'",
+            "expected": "Component created"
+          },
+          "status": "completed",
+          "notes": "Created BulkActions component in components/booking/bulk-actions.tsx with: bulk accept and reject functionality for multiple selected bookings, individual loading states for each action using Loader2 icon from lucide-react, configurable variants (default, outline, ghost), size options (default, sm, lg), optional label and count display, disabled state handling, component returns null when no selections, proper error handling with try/finally blocks, accessibility ARIA labels, and follows shadcn/ui Button component patterns"
+        },
+        {
+          "id": "subtask-3-4",
+          "description": "Create WorkerNotesDialog component for adding/editing notes",
+          "service": "frontend",
+          "files_to_create": [
+            "components/booking/worker-notes-dialog.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/dialog.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q \"export.*WorkerNotesDialog\" components/booking/worker-notes-dialog.tsx && echo 'Component created'",
+            "expected": "Component created"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-page-implementation",
+      "name": "Page Implementation",
+      "type": "implementation",
+      "description": "Implement the main booking management page with all features integrated",
+      "depends_on": [
+        "phase-3-ui-components"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Update business jobs page to show booking applications",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/app/(dashboard)/business/jobs/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/app/(dashboard)/business/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard-business-jobs",
+            "checks": [
+              "Page loads without errors",
+              "Booking applications are displayed"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-realtime",
+      "name": "Realtime Integration",
+      "type": "implementation",
+      "description": "Add Supabase Realtime for live updates on booking status changes",
+      "depends_on": [
+        "phase-4-page-implementation"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Create useRealtimeBookings hook for subscribing to booking changes",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/hooks/use-realtime-bookings.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/hooks/use-bookings.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q \"export.*useRealtimeBookings\" lib/hooks/use-realtime-bookings.ts && echo 'Hook created'",
+            "expected": "Hook created"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Integrate realtime hook into booking management page",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/app/(dashboard)/business/jobs/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard-business-jobs",
+            "checks": [
+              "Realtime updates work when booking status changes"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-6-notifications",
+      "name": "Notifications",
+      "type": "implementation",
+      "description": "Trigger notifications to workers when booking status changes",
+      "depends_on": [
+        "phase-4-page-implementation"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Create notification creation function for booking status changes",
+          "service": "frontend",
+          "files_to_create": [],
+          "files_to_modify": [
+            "lib/supabase/queries/bookings.ts"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "grep -q \"createBookingNotification\" lib/supabase/queries/bookings.ts && echo 'Function created'",
+            "expected": "Function created"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Integrate notification creation into accept/reject actions",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/booking/booking-actions.tsx",
+            "components/booking/bulk-actions.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Test accepting/rejecting a booking and verify notification is created in notifications table"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-7-integration",
+      "name": "Integration & Testing",
+      "type": "integration",
+      "description": "End-to-end testing of the complete booking management flow",
+      "depends_on": [
+        "phase-5-realtime",
+        "phase-6-notifications"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-7-1",
+          "description": "End-to-end verification of booking management flow",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Business views job applications",
+              "Worker profile cards display with reliability scores",
+              "Business accepts a worker - status updates to 'accepted'",
+              "Business rejects a worker - status updates to 'rejected'",
+              "Business adds notes to worker",
+              "Business uses bulk actions to accept multiple workers",
+              "Real-time updates show new applications immediately",
+              "Worker receives notification on booking status change"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 7,
+    "total_subtasks": 17,
+    "services_involved": [
+      "frontend",
+      "database"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 2,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-5-realtime",
+            "phase-6-notifications"
+          ],
+          "reason": "Both depend only on phase-4, can work on realtime and notification features in parallel"
+        }
+      ],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution recommended due to tight dependencies"
+    },
+    "startup_command": "npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "unit",
+      "integration"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All existing tests pass",
+      "New code has test coverage",
+      "No console errors on booking management page",
+      "Real-time updates function correctly",
+      "Notifications are created on status changes"
+    ],
+    "verification_steps": [
+      {
+        "name": "TypeScript Type Check",
+        "command": "npm run type-check",
+        "expected_outcome": "No type errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Lint Check",
+        "command": "npm run lint",
+        "expected_outcome": "No lint errors",
+        "type": "test",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "Build Verification",
+        "command": "npm run build",
+        "expected_outcome": "Build succeeds without errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Manual Browser Testing",
+        "command": "Open http://localhost:3000/dashboard-business-jobs and verify booking management features",
+        "expected_outcome": "All acceptance criteria met",
+        "type": "manual",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Medium risk feature with UI components, database changes, and realtime integration. Type checking and build verification ensure code quality, manual testing verifies UI/UX requirements."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/dashboard-business-jobs",
+          "checks": [
+            "Page renders without errors",
+            "Worker application cards display",
+            "Reliability scores are visible",
+            "Accept/reject buttons work",
+            "Bulk actions function",
+            "Notes dialog opens and saves",
+            "Real-time updates appear"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "booking_notes column exists in bookings table",
+        "Bookings can be queried with worker data",
+        "Booking status updates work",
+        "Notifications are created on status changes"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "xstateState": "coding",
+  "executionPhase": "coding",
+  "updated_at": "2026-02-22T05:09:57.431Z",
+  "last_updated": "2026-02-22T05:07:53.237888+00:00"
+}

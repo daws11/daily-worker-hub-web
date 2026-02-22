@@ -1,0 +1,54 @@
+{
+  "files_to_modify": {
+    "frontend": [
+      "app/app/(dashboard)/business/jobs/page.tsx"
+    ]
+  },
+  "files_to_create": {
+    "frontend": [
+      "components/booking/worker-application-card.tsx",
+      "components/booking/booking-actions.tsx",
+      "components/booking/bulk-actions.tsx",
+      "components/booking/worker-notes-dialog.tsx",
+      "lib/hooks/use-bookings.ts",
+      "lib/hooks/use-realtime-bookings.ts",
+      "lib/supabase/queries/bookings.ts"
+    ],
+    "database": [
+      "migrations/add_booking_notes.sql"
+    ]
+  },
+  "files_to_reference": [
+    "app/providers/auth-provider.tsx",
+    "lib/supabase/client.ts",
+    "components/ui/card.tsx",
+    "components/ui/button.tsx",
+    "components/ui/badge.tsx",
+    "components/ui/dialog.tsx",
+    "components/ui/table.tsx"
+  ],
+  "patterns": {
+    "supabase_client": "Browser client from lib/supabase/client.ts using createBrowserClient from @supabase/ssr",
+    "auth_pattern": "React Context with Supabase Auth, role-based access control (worker/business)",
+    "ui_components": "shadcn/ui (Radix UI primitives) with 'use client' directive, cn() utility for className merging",
+    "toast_notifications": "sonner library for toast notifications",
+    "styling": "Tailwind CSS with shadcn/ui component variants"
+  },
+  "existing_implementations": {
+    "description": "Basic dashboard exists at app/app/(dashboard)/business/jobs/page.tsx with inline styles. Auth provider shows Supabase integration pattern. Database schema includes bookings, workers, reviews, notifications tables. No existing booking management UI or realtime implementation.",
+    "relevant_files": [
+      "app/app/(dashboard)/business/jobs/page.tsx",
+      "app/providers/auth-provider.tsx",
+      "lib/supabase/types.ts",
+      "lib/supabase/client.ts"
+    ]
+  },
+  "reliability_score_calculation": {
+    "description": "Reliability score should be calculated from reviews table by averaging ratings for a worker across all completed bookings. This requires aggregation query on reviews table filtered by worker_id.",
+    "implementation": "Create a database view or use Supabase RPC function to calculate average rating per worker"
+  },
+  "realtime_implementation": {
+    "pattern": "Use supabase.channel().on('postgres_changes', { event, schema, table, filter }, callback).subscribe()",
+    "reference": "Supabase Realtime documentation for PostgreSQL Change Notifications"
+  }
+}
