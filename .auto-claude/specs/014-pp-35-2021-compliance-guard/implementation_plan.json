@@ -213,7 +213,7 @@
             "type": "manual",
             "instructions": "Review acceptApplication function - it should call checkComplianceBeforeAccept and block if limit reached"
           },
-          "status": "pending"
+          "status": "completed"
         }
       ]
     },
@@ -244,7 +244,7 @@
             "command": "npx tsc --noEmit",
             "expected": "No TypeScript errors"
           },
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "subtask-4-2",
@@ -598,5 +598,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T13:07:06.176Z"
+  "updated_at": "2026-02-22T13:15:06.934Z"
 }
