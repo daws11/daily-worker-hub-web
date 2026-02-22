@@ -232,7 +232,9 @@
             "command": "npm run type-check 2>&1 | grep -i 'error' | wc -l",
             "expected": "0"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created lib/supabase/queries/wallets.ts with comprehensive wallet CRUD operations. Includes: 1) createWallet - create a new wallet, 2) updateWallet - update existing wallet fields, 3) getWalletById - get wallet by ID, 4) getBusinessWallet - get wallet by business ID, 5) getWorkerWallet - get wallet by worker ID, 6) getOrCreateBusinessWallet - get or create business wallet, 7) getOrCreateWorkerWallet - get or create worker wallet, 8) creditWallet - add funds to wallet, 9) debitWallet - deduct funds with balance check, 10) activateWallet/deactivateWallet - wallet status management, 11) deleteWallet - delete wallet. All functions follow the pattern from lib/supabase/queries/jobs.ts with proper error handling, JSDoc comments, and TypeScript types. Type-check passed with 0 errors.",
+          "updated_at": "2026-02-22T09:40:00.000000+00:00"
         },
         {
           "id": "subtask-3-2",
@@ -756,6 +758,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T08:28:03.462Z",
+  "updated_at": "2026-02-22T08:36:46.654Z",
   "last_updated": "2026-02-22T08:27:06.569143+00:00"
 }
