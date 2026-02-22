@@ -88,3 +88,22 @@ Session 4 (2026-02-22):
   - Committed: (verification only commit)
 
 === END SESSION 4 ===
+
+Session 5 (2026-02-22):
+- Subtask 2-2 COMPLETED: Created wallet server actions
+  - File: lib/actions/wallets.ts (new file)
+  - Functions created:
+    * createWalletAction: Creates a new wallet for a user
+    * getWalletBalanceAction: Gets pending and available balance
+    * getOrCreateWalletAction: Gets existing wallet or creates new one
+    * addPendingFundsAction: Adds funds to pending balance (on job completion)
+    * releaseFundsAction: Releases funds from pending to available (after review)
+    * deductAvailableFundsAction: Deducts funds for withdrawals
+    * getWalletTransactionsAction: Gets transaction history
+    * getWalletDetailsAction: Gets full wallet details
+  - All functions follow {success, error?, data?} return pattern
+  - Uses Indonesian error messages consistent with codebase patterns
+  - TypeScript type check: No errors for this file
+  - Committed: 4d52824
+
+=== END SESSION 5 ===
