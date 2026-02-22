@@ -126,10 +126,24 @@ Session 4 (2026-02-22):
   * Loading state with spinner animation
   * Empty state with briefcase icon and message
   * Indonesian language for all UI labels
+- subtask-4-3: COMPLETED - Implemented cancel application functionality
+  * File: app/app/(dashboard)/worker/jobs/page.tsx
+  * Added cancel button for pending applications with confirmation dialog
+  * Cancel button only appears for pending applications (conditional rendering)
+  * Button uses ghost variant with destructive styling (red color) and X icon
+  * Confirmation dialog follows Dialog component pattern
+  * Dialog shows job title and warns action cannot be undone
+  * Two action buttons: "Batal" (cancel) and "Ya, Batalkan Lamaran" (confirm)
+  * Loading state shown during cancellation with Loader2 spinner
+  * On successful cancel, updates local application status to "cancelled"
+  * Success toast notification on successful cancellation
+  * Error handling with appropriate toast messages
+  * Uses Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter components
+  * Indonesian language for all UI labels
 
 === CURRENT STATUS ===
 Phase 1 (Database Schema & Migrations): 2/2 subtasks completed
 Phase 2 (Server Actions & API Layer): 3/3 subtasks completed
 Phase 3 (UI Components): 3/3 subtasks completed
-Phase 4 (Worker Dashboard): 2/3 subtasks completed
-Next: Phase 4 - Worker Dashboard (subtask-4-3 - Cancel application functionality)
+Phase 4 (Worker Dashboard): 3/3 subtasks completed
+Next: Phase 5 - Business Dashboard (subtask-5-1 - Business jobs page with applicant listings)
