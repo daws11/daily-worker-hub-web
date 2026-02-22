@@ -308,11 +308,7 @@ export function ProfileForm({
         }
       }
 
-      toast.success(
-        mode === "create"
-          ? "Profil bisnis berhasil dibuat"
-          : "Profil bisnis berhasil diperbarui"
-      )
+      // Success toast is handled by parent component (page.tsx)
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Terjadi kesalahan tak terduga"
       setSubmitError(errorMsg)
