@@ -423,7 +423,9 @@
             "command": "npm run type-check 2>&1 | grep -i 'error' | wc -l",
             "expected": "0"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created withdrawal form component at components/payment/withdrawal-form.tsx. Features: 1) Zod schema validation with minimum Rp 100.000 withdrawal limit, 2) Current wallet balance display with remaining balance preview, 3) Bank account info display showing destination account (bank code, account number, holder name), 4) Fee calculation (free for first weekly withdrawal, 1% for additional), 5) Quick amount presets (100k, 200k, 500k, 1jt, 2jt) for easy selection, 6) Form validation for insufficient balance and minimum amount with warning messages, 7) Integration with requestPayout server action for processing withdrawals, 8) Error handling and loading states with Loader2 icon, 9) Follows patterns from qris-payment-form.tsx (useForm, zodResolver, FormField components) and file-upload.tsx (validation patterns), 10) Uses existing UI components (Form, Card, Button, Input, Select), 11) Responsive design with grid layout for presets, 12) Proper TypeScript typing with exported schema (withdrawalFormSchema) and type (WithdrawalFormValues). Component includes fee calculation logic and balance projection display.",
+          "updated_at": "2026-02-22T09:43:00.000000+00:00"
         },
         {
           "id": "subtask-6-3",
@@ -772,6 +774,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T09:24:03.825Z",
+  "updated_at": "2026-02-22T09:48:36.666Z",
   "last_updated": "2026-02-22T09:09:21.210614+00:00"
 }
