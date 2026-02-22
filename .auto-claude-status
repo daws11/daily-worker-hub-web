@@ -3,23 +3,23 @@
   "spec": "006-job-posting-system",
   "state": "building",
   "subtasks": {
-    "completed": 8,
+    "completed": 13,
     "total": 24,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Form Components",
+    "current": "Database Query Layer",
     "id": null,
-    "total": 5
+    "total": 4
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 10,
+    "number": 15,
     "started_at": "2026-02-22T07:42:10.379983"
   },
-  "last_update": "2026-02-22T08:01:19.648570"
+  "last_update": "2026-02-22T08:14:08.710710"
 }
