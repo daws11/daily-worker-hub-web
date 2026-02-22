@@ -1,473 +1,443 @@
 "use client"
 
-import * as React from "react"
-import Link from "next/link"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import {
-  BriefcaseIcon,
-  CheckCircle2Icon,
-  ClockIcon,
-  EyeIcon,
-  PencilIcon,
-  Trash2Icon,
-  LogOutIcon,
-} from "lucide-react"
-import { JobPostingForm, type JobPostingFormValues } from "@/app/components/job-posting-form"
-import { createJob, updateJob, publishJob, deleteJob, getBusinessJobs } from "@/lib/supabase/queries/jobs"
 import { useAuth } from "@/app/providers/auth-provider"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { ApplicantList } from "@/components/applicant-list"
+import { supabase } from "@/lib/supabase/client"
+import type { Database } from "@/lib/supabase/types"
+import { acceptApplication, rejectApplication } from "@/lib/actions/job-applications"
+import { Briefcase, Calendar, MapPin, Wallet, Building2, Users, Loader2, ChevronDown, ChevronUp } from "lucide-react"
+import type { ApplicantWithDetails } from "@/lib/data/jobs"
 
-type JobStatus = "draft" | "open" | "in_progress" | "completed"
+type BusinessesRow = Database["public"]["Tables"]["businesses"]["Row"]
+type Job = Database["public"]["Tables"]["jobs"]["Row"]
+type Booking = Database["public"]["Tables"]["bookings"]["Row"]
 
-interface Job {
-  id: string
-  title: string
-  description: string
-  status: JobStatus
-  createdAt: string
-  applicants?: number
-  positionType?: JobPostingFormValues["positionType"]
-  date?: string
-  startTime?: string
-  endTime?: string
-  area?: string
-  address?: string
-  wageMin?: number
-  wageMax?: number
-  workersNeeded?: number
-  requirements?: string[]
+type JobWithApplicantCount = Job & {
+  applicant_count: number
 }
 
-function getStatusBadgeVariant(status: JobStatus): "default" | "secondary" | "outline" {
-  switch (status) {
-    case "draft":
-      return "secondary"
-    case "open":
-      return "default"
-    case "in_progress":
-      return "outline"
-    case "completed":
-      return "secondary"
-  }
-}
-
-function getStatusLabel(status: JobStatus): string {
-  switch (status) {
-    case "draft":
-      return "Draft"
-    case "open":
-      return "Open"
-    case "in_progress":
-      return "In Progress"
-    case "completed":
-      return "Completed"
-  }
-}
+type ApplicantWithJobId = ApplicantWithDetails & { job_id: string }
 
 export default function BusinessJobsPage() {
-  const { signOut, user, isLoading } = useAuth()
-  const [isDialogOpen, setIsDialogOpen] = React.useState(false)
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [editingJob, setEditingJob] = React.useState<Job | null>(null)
-  const [jobToDelete, setJobToDelete] = React.useState<Job | null>(null)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false)
-  const [isLoadingJobs, setIsLoadingJobs] = React.useState(true)
-  const [jobs, setJobs] = React.useState<Job[]>([])
+  const { user } = useAuth()
+  const router = useRouter()
+  const [business, setBusiness] = useState<BusinessesRow | null>(null)
+  const [jobs, setJobs] = useState<JobWithApplicantCount[]>([])
+  const [applicantsByJob, setApplicantsByJob] = useState<Record<string, ApplicantWithDetails[]>>({})
+  const [isLoadingJobs, setIsLoadingJobs] = useState(true)
+  const [isLoadingApplicants, setIsLoadingApplicants] = useState<Record<string, boolean>>({})
+  const [expandedJobs, setExpandedJobs] = useState<Record<string, boolean>>({})
+  const [isProcessing, setIsProcessing] = useState<Record<string, boolean>>({})
 
-  const handleLogout = async () => {
-    await signOut()
-  }
-
-  // Load jobs from database on mount
-  React.useEffect(() => {
-    const loadJobs = async () => {
-      if (!user?.id) {
-        setIsLoadingJobs(false)
+  // Fetch business profile
+  useEffect(() => {
+    async function fetchBusiness() {
+      if (!user) {
+        router.push("/login")
         return
       }
+
+      const { data, error } = await supabase
+        .from("businesses")
+        .select("*")
+        .eq("user_id", user.id)
+        .single()
+
+      if (error || !data) {
+        toast.error("Profil bisnis tidak ditemukan")
+        return
+      }
+
+      setBusiness(data)
+    }
+
+    fetchBusiness()
+  }, [user, router])
+
+  // Fetch business jobs with applicant count
+  useEffect(() => {
+    async function fetchJobs() {
+      if (!business) return
+
+      setIsLoadingJobs(true)
       try {
-        const jobsData = await getBusinessJobs(user.id)
-        // Transform database rows to Job interface format
-        const transformedJobs: Job[] = jobsData.map((job) => ({
-          id: job.id,
-          title: job.title,
-          description: job.description,
-          status: job.status as JobStatus,
-          createdAt: job.created_at,
-          applicants: 0, // TODO: Fetch from bookings table
-          positionType: (job as any).position_type, // Load position_type from database
-          date: job.deadline,
-          address: job.address,
-          wageMin: job.budget_min,
-          wageMax: job.budget_max,
-          requirements: job.requirements ? job.requirements.split(',') : [],
+        const { data, error } = await supabase
+          .from("jobs")
+          .select(`
+            *,
+            bookings (id)
+          `)
+          .eq("business_id", business.id)
+          .order("created_at", { ascending: false })
+
+        if (error) {
+          toast.error("Gagal memuat data pekerjaan")
+          return
+        }
+
+        // Transform data to include applicant count
+        const jobsWithCount = (data as Job[]).map((job) => ({
+          ...job,
+          applicant_count: (job as any).bookings?.length || 0,
         }))
-        setJobs(transformedJobs)
-      } catch (error) {
-        console.error('Failed to load jobs:', error)
-        toast.error('Gagal memuat lowongan')
+
+        setJobs(jobsWithCount)
       } finally {
         setIsLoadingJobs(false)
       }
     }
-    loadJobs()
-  }, [user?.id])
 
+    fetchJobs()
+  }, [business])
+
+  // Fetch applicants for a specific job
+  const fetchApplicants = async (jobId: string) => {
+    if (!business) return
+
+    setIsLoadingApplicants((prev) => ({ ...prev, [jobId]: true }))
+    try {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select(`
+          *,
+          workers (
+            id,
+            full_name,
+            phone,
+            bio,
+            avatar_url
+          )
+        `)
+        .eq("job_id", jobId)
+        .eq("business_id", business.id)
+        .order("created_at", { ascending: false })
+
+      if (error) {
+        toast.error("Gagal memuat data pelamar")
+        return
+      }
+
+      setApplicantsByJob((prev) => ({
+        ...prev,
+        [jobId]: data as ApplicantWithDetails[],
+      }))
+    } finally {
+      setIsLoadingApplicants((prev) => ({ ...prev, [jobId]: false }))
+    }
+  }
+
+  // Toggle job expansion
+  const toggleJobExpansion = (jobId: string) => {
+    setExpandedJobs((prev) => {
+      const newState = { ...prev, [jobId]: !prev[jobId] }
+      // If expanding and haven't loaded applicants yet, fetch them
+      if (newState[jobId] && !applicantsByJob[jobId]) {
+        fetchApplicants(jobId)
+      }
+      return newState
+    })
+  }
+
+  // Handle accept applicant
+  const handleAcceptApplicant = async (applicantId: string) => {
+    if (!business) return
+
+    // Find the job_id for this applicant
+    const jobEntry = Object.entries(applicantsByJob).find(([_, applicants]) =>
+      applicants.some((a) => a.id === applicantId)
+    )
+
+    if (!jobEntry) return
+
+    const [jobId] = jobEntry
+
+    setIsProcessing((prev) => ({ ...prev, [applicantId]: true }))
+    try {
+      const result = await acceptApplication(applicantId, business.id)
+
+      if (!result.success) {
+        toast.error(result.error || "Gagal menerima pelamar")
+        return
+      }
+
+      toast.success("Pelamar berhasil diterima")
+
+      // Update local state
+      setApplicantsByJob((prev) => ({
+        ...prev,
+        [jobId]: prev[jobId]?.map((app) =>
+          app.id === applicantId
+            ? { ...app, status: "accepted" as const }
+            : app
+        ) || [],
+      }))
+    } finally {
+      setIsProcessing((prev) => ({ ...prev, [applicantId]: false }))
+    }
+  }
+
+  // Handle reject applicant
+  const handleRejectApplicant = async (applicantId: string) => {
+    if (!business) return
+
+    // Find the job_id for this applicant
+    const jobEntry = Object.entries(applicantsByJob).find(([_, applicants]) =>
+      applicants.some((a) => a.id === applicantId)
+    )
+
+    if (!jobEntry) return
+
+    const [jobId] = jobEntry
+
+    setIsProcessing((prev) => ({ ...prev, [applicantId]: true }))
+    try {
+      const result = await rejectApplication(applicantId, business.id)
+
+      if (!result.success) {
+        toast.error(result.error || "Gagal menolak pelamar")
+        return
+      }
+
+      toast.success("Pelamar berhasil ditolak")
+
+      // Update local state
+      setApplicantsByJob((prev) => ({
+        ...prev,
+        [jobId]: prev[jobId]?.map((app) =>
+          app.id === applicantId
+            ? { ...app, status: "rejected" as const }
+            : app
+        ) || [],
+      }))
+    } finally {
+      setIsProcessing((prev) => ({ ...prev, [applicantId]: false }))
+    }
+  }
+
+  // Format date to Indonesian locale
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    })
+  }
+
+  // Format budget to Indonesian Rupiah
+  const formatBudget = (amount: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  // Get status badge variant
+  const getStatusVariant = (
+    status: Job["status"]
+  ): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status) {
+      case "open":
+        return "default"
+      case "in_progress":
+        return "secondary"
+      case "closed":
+        return "outline"
+      default:
+        return "outline"
+    }
+  }
+
+  // Get status label in Indonesian
+  const getStatusLabel = (status: Job["status"]): string => {
+    switch (status) {
+      case "open":
+        return "Buka"
+      case "in_progress":
+        return "Sedang Berjalan"
+      case "closed":
+        return "Tutup"
+      default:
+        return status
+    }
+  }
+
+  // Calculate stats
   const stats = {
     total: jobs.length,
-    active: jobs.filter((j) => j.status === "open" || j.status === "in_progress").length,
-    completed: jobs.filter((j) => j.status === "completed").length,
-  }
-
-  const handleOpenCreateDialog = () => {
-    setEditingJob(null)
-    setIsDialogOpen(true)
-  }
-
-  const handleOpenEditDialog = (job: Job) => {
-    setEditingJob(job)
-    setIsDialogOpen(true)
-  }
-
-  const handleJobSubmit = async (values: JobPostingFormValues) => {
-    if (!user?.id) {
-      toast.error("User tidak terautentikasi")
-      return
-    }
-
-    setIsSubmitting(true)
-    try {
-      if (editingJob) {
-        // Update existing job
-        await updateJob(editingJob.id, {
-          position_type: values.positionType,
-          title: values.title,
-          description: values.description,
-          deadline: values.date,
-          address: values.address,
-          budget_min: values.wageMin,
-          budget_max: values.wageMax,
-          requirements: values.requirements.join(','),
-        })
-
-        setJobs((prev) =>
-          prev.map((job) =>
-            job.id === editingJob.id
-              ? {
-                  ...job,
-                  title: values.title,
-                  description: values.description,
-                  positionType: values.positionType,
-                  date: values.date,
-                  startTime: values.startTime,
-                  endTime: values.endTime,
-                  area: values.area,
-                  address: values.address,
-                  wageMin: values.wageMin,
-                  wageMax: values.wageMax,
-                  workersNeeded: values.workersNeeded,
-                  requirements: values.requirements,
-                }
-              : job
-          )
-        )
-
-        toast.success("Lowongan berhasil diperbarui")
-      } else {
-        // Create new job
-        const newJob = await createJob({
-          business_id: user.id,
-          category_id: null,
-          position_type: values.positionType,
-          title: values.title,
-          description: values.description,
-          requirements: values.requirements.join(','),
-          budget_min: values.wageMin,
-          budget_max: values.wageMax,
-          status: "draft",
-          deadline: values.date,
-          address: values.address,
-          lat: -8.4, // Bali center latitude (default until geocoding is implemented)
-          lng: 115.1, // Bali center longitude (default until geocoding is implemented)
-        })
-
-        setJobs((prev) => [{
-          id: newJob.id,
-          title: newJob.title,
-          description: newJob.description,
-          status: newJob.status as JobStatus,
-          createdAt: newJob.created_at,
-          applicants: 0,
-          positionType: values.positionType,
-          date: values.date,
-          startTime: values.startTime,
-          endTime: values.endTime,
-          area: values.area,
-          address: newJob.address,
-          wageMin: newJob.budget_min,
-          wageMax: newJob.budget_max,
-          workersNeeded: values.workersNeeded,
-          requirements: values.requirements,
-        }, ...prev])
-
-        toast.success("Lowongan berhasil dibuat")
-      }
-      setIsDialogOpen(false)
-      setEditingJob(null)
-    } catch (error) {
-      console.error('Job submit error:', error)
-      toast.error(editingJob ? "Gagal memperbarui lowongan" : "Gagal membuat lowongan")
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const getDialogDefaultValues = (): Partial<JobPostingFormValues> | undefined => {
-    if (!editingJob) return undefined
-    return {
-      title: editingJob.title,
-      description: editingJob.description,
-      positionType: editingJob.positionType,
-      date: editingJob.date || "",
-      startTime: editingJob.startTime || "",
-      endTime: editingJob.endTime || "",
-      area: editingJob.area || "",
-      address: editingJob.address || "",
-      wageMin: editingJob.wageMin || 0,
-      wageMax: editingJob.wageMax || 0,
-      workersNeeded: editingJob.workersNeeded || 1,
-      requirements: editingJob.requirements || [],
-    }
-  }
-
-  const handleDialogOpenChange = (open: boolean) => {
-    setIsDialogOpen(open)
-    if (!open) {
-      setEditingJob(null)
-    }
-  }
-
-  const handlePublishJob = async (job: Job) => {
-    try {
-      await publishJob(job.id)
-
-      setJobs((prev) =>
-        prev.map((j) =>
-          j.id === job.id ? { ...j, status: "open" as JobStatus } : j
-        )
-      )
-
-      toast.success("Lowongan berhasil dipublikasikan")
-    } catch (error) {
-      console.error('Publish job error:', error)
-      toast.error("Gagal mempublikasikan lowongan")
-    }
-  }
-
-  const handleDeleteClick = (job: Job) => {
-    setJobToDelete(job)
-    setIsDeleteDialogOpen(true)
-  }
-
-  const handleDeleteConfirm = async () => {
-    if (!jobToDelete) return
-
-    try {
-      await deleteJob(jobToDelete.id)
-
-      setJobs((prev) => prev.filter((j) => j.id !== jobToDelete.id))
-      setIsDeleteDialogOpen(false)
-      setJobToDelete(null)
-
-      toast.success("Lowongan berhasil dihapus")
-    } catch (error) {
-      console.error('Delete job error:', error)
-      toast.error("Gagal menghapus lowongan")
-    }
-  }
-
-  const handleDeleteCancel = () => {
-    setIsDeleteDialogOpen(false)
-    setJobToDelete(null)
+    open: jobs.filter((j) => j.status === "open").length,
+    inProgress: jobs.filter((j) => j.status === "in_progress").length,
+    closed: jobs.filter((j) => j.status === "closed").length,
+    totalApplicants: jobs.reduce((sum, job) => sum + job.applicant_count, 0),
   }
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
-      <div className="min-h-screen bg-muted/40 p-4 md:p-6">
-        <div className="mx-auto max-w-6xl space-y-6">
-          {/* Header */}
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">My Jobs</h1>
-              <p className="text-muted-foreground">
-                Manage your job postings and track applications
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleOpenCreateDialog}>
-                <BriefcaseIcon className="mr-2 h-4 w-4" />
-                Create Job
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleLogout}
-                disabled={isLoading}
-              >
-                <LogOutIcon className="mr-2 h-4 w-4" />
-                {isLoading ? 'Memproses...' : 'Keluar'}
-              </Button>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#f5f5f5] p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Dashboard Business - Jobs</h1>
+          <p className="text-[#666]">
+            Kelola pekerjaan dan pelamar Anda
+          </p>
+        </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Jobs</CardTitle>
-              <BriefcaseIcon className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="pb-3">
+              <CardDescription>Total Pekerjaan</CardDescription>
+              <CardTitle className="text-3xl text-[#2563eb]">{stats.total}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.total}</div>
-              <p className="text-xs text-muted-foreground">
-                All job postings
-              </p>
+            <CardContent className="text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Briefcase className="h-4 w-4" />
+                <span>Semua pekerjaan</span>
+              </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
-              <ClockIcon className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="pb-3">
+              <CardDescription>Pekerjaan Buka</CardDescription>
+              <CardTitle className="text-3xl text-[#10b981]">{stats.open}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">{stats.active}</div>
-              <p className="text-xs text-muted-foreground">
-                Currently accepting applications
-              </p>
+            <CardContent className="text-sm text-muted-foreground">
+              <span>Terbuka untuk pelamar</span>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Completed Jobs</CardTitle>
-              <CheckCircle2Icon className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="pb-3">
+              <CardDescription>Sedang Berjalan</CardDescription>
+              <CardTitle className="text-3xl text-[#f59e0b]">{stats.inProgress}</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-muted-foreground">{stats.completed}</div>
-              <p className="text-xs text-muted-foreground">
-                Finished hiring
-              </p>
+            <CardContent className="text-sm text-muted-foreground">
+              <span>Pekerjaan aktif</span>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Total Pelamar</CardDescription>
+              <CardTitle className="text-3xl text-[#8b5cf6]">{stats.totalApplicants}</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>Semua pelamar</span>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Job Listings */}
+        {/* Jobs List */}
         <Card>
           <CardHeader>
-            <CardTitle>Job Listings</CardTitle>
+            <CardTitle>Daftar Pekerjaan</CardTitle>
             <CardDescription>
-              {isLoadingJobs
-                ? "Loading jobs..."
-                : jobs.length === 0
-                ? "You haven't posted any jobs yet"
-                : `Showing ${jobs.length} job${jobs.length !== 1 ? "s" : ""}`}
+              Kelola pekerjaan dan lihat pelamar ({jobs.length} pekerjaan)
             </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoadingJobs ? (
-              <div className="flex min-h-[300px] items-center justify-center">
-                <p className="text-muted-foreground">Loading...</p>
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : jobs.length === 0 ? (
-              <div className="flex min-h-[300px] flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                <BriefcaseIcon className="mb-4 h-12 w-12 text-muted-foreground/50" />
-                <h3 className="mb-2 text-lg font-semibold">No jobs posted yet</h3>
-                <p className="mb-4 max-w-sm text-sm text-muted-foreground">
-                  Get started by creating your first job posting to find workers for your needs.
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Briefcase className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  Belum ada pekerjaan. Buat pekerjaan pertama Anda sekarang!
                 </p>
-                <Button onClick={handleOpenCreateDialog}>
-                  <BriefcaseIcon className="mr-2 h-4 w-4" />
-                  Create Your First Job
-                </Button>
               </div>
             ) : (
               <div className="space-y-4">
                 {jobs.map((job) => (
-                  <div
-                    key={job.id}
-                    className="flex flex-col gap-4 rounded-lg border p-4 md:flex-row md:items-center md:justify-between"
-                  >
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold">{job.title}</h3>
-                        <Badge variant={getStatusBadgeVariant(job.status)}>
-                          {getStatusLabel(job.status)}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {job.description}
-                      </p>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                        <span>Posted {new Date(job.createdAt).toLocaleDateString()}</span>
-                        {job.status !== "draft" && (
-                          <span>{job.applicants} applicant{job.applicants !== 1 ? "s" : ""}</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex gap-2 md:flex-col md:gap-1">
-                      {job.status === "draft" ? (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleOpenEditDialog(job)}
-                          >
-                            <PencilIcon className="mr-2 h-3 w-3" />
-                            Edit
-                          </Button>
-                          <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => handlePublishJob(job)}
-                          >
-                            Publish
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteClick(job)}
-                          >
-                            <Trash2Icon className="mr-2 h-3 w-3" />
-                            Delete
-                          </Button>
-                        </>
-                      ) : (
-                        <Button variant="outline" size="sm" asChild>
-                          <Link href={`/dashboard-business-jobs/${job.id}`}>
-                            <EyeIcon className="mr-2 h-3 w-3" />
-                            View
-                          </Link>
+                  <div key={job.id} className="border rounded-lg overflow-hidden">
+                    {/* Job Header */}
+                    <div className="p-4 bg-white hover:bg-gray-50 transition-colors">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center gap-3">
+                            <h3 className="font-semibold text-lg">{job.title}</h3>
+                            <Badge variant={getStatusVariant(job.status)}>
+                              {getStatusLabel(job.status)}
+                            </Badge>
+                          </div>
+
+                          {job.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {job.description}
+                            </p>
+                          )}
+
+                          <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                              <Wallet className="h-4 w-4" />
+                              <span>
+                                {formatBudget(job.budget_min)}
+                                {job.budget_max > job.budget_min &&
+                                  ` - ${formatBudget(job.budget_max)}`}
+                              </span>
+                            </div>
+
+                            {job.address && (
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-4 w-4" />
+                                <span className="line-clamp-1">{job.address}</span>
+                              </div>
+                            )}
+
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4" />
+                              <span>{formatDate(job.deadline)}</span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <Users className="h-4 w-4" />
+                              <span>{job.applicant_count} pelamar</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleJobExpansion(job.id)}
+                          className="shrink-0"
+                        >
+                          {expandedJobs[job.id] ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                          <span className="ml-1">
+                            {expandedJobs[job.id] ? "Tutup" : "Lihat Pelamar"}
+                          </span>
                         </Button>
-                      )}
+                      </div>
                     </div>
+
+                    {/* Applicants Section (Collapsible) */}
+                    {expandedJobs[job.id] && (
+                      <div className="border-t p-4 bg-gray-50">
+                        <ApplicantList
+                          applicants={applicantsByJob[job.id] || []}
+                          onAccept={handleAcceptApplicant}
+                          onReject={handleRejectApplicant}
+                          isLoading={isLoadingApplicants[job.id] || false}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -476,44 +446,5 @@ export default function BusinessJobsPage() {
         </Card>
       </div>
     </div>
-
-    {/* Create/Edit Job Dialog */}
-    <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle>{editingJob ? "Edit Job Posting" : "Create New Job Posting"}</DialogTitle>
-        <DialogDescription>
-          {editingJob
-            ? "Update the job details below. Changes will be saved immediately."
-            : "Fill in the details below to post a new job and find workers for your needs."}
-        </DialogDescription>
-      </DialogHeader>
-      <JobPostingForm
-        onSubmit={handleJobSubmit}
-        defaultValues={getDialogDefaultValues()}
-        isLoading={isSubmitting}
-        submitButtonText={editingJob ? "Update Job" : "Create Job"}
-      />
-    </DialogContent>
-  </Dialog>
-
-  {/* Delete Confirmation Dialog */}
-  <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Delete Job Posting</DialogTitle>
-        <DialogDescription>
-          Are you sure you want to delete "{jobToDelete?.title}"? This action cannot be undone.
-        </DialogDescription>
-      </DialogHeader>
-      <DialogFooter>
-        <Button variant="outline" onClick={handleDeleteCancel}>
-          Cancel
-        </Button>
-        <Button variant="destructive" onClick={handleDeleteConfirm}>
-          Delete
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
   )
 }

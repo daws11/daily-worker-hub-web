@@ -1,0 +1,38 @@
+{
+  "files_to_modify": {
+    "frontend": [
+      "app/app/(dashboard)/worker/jobs/page.tsx",
+      "app/app/(dashboard)/business/jobs/page.tsx"
+    ]
+  },
+  "files_to_create": {
+    "frontend": [
+      "lib/actions/job-applications.ts",
+      "lib/actions/notifications.ts",
+      "components/job-card.tsx",
+      "components/application-list.tsx"
+    ],
+    "database": [
+      "supabase/migrations/20260222_job_applications.sql"
+    ]
+  },
+  "files_to_reference": [
+    "app/app/providers/auth-provider.tsx",
+    "lib/supabase/client.ts",
+    "lib/supabase/types.ts"
+  ],
+  "patterns": {
+    "auth_pattern": "Use AuthContext from providers/auth-provider.tsx for user state",
+    "supabase_client_pattern": "Use supabase from lib/supabase/client.ts for client-side queries",
+    "server_action_pattern": "Create server actions in lib/actions/ for database mutations",
+    "toast_pattern": "Use toast from 'sonner' for user notifications",
+    "styling_pattern": "Inline style objects (no Tailwind classes yet)"
+  },
+  "existing_implementations": {
+    "description": "The codebase has a bookings table with status field (pending/accepted/rejected) that can be used for job applications. The notifications table exists for user notifications.",
+    "relevant_files": [
+      "lib/supabase/types.ts",
+      "app/app/providers/auth-provider.tsx"
+    ]
+  }
+}

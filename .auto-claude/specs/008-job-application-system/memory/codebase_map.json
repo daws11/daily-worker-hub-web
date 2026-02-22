@@ -1,0 +1,25 @@
+{
+  "discovered_files": {
+    "lib/supabase/types.ts": {
+      "description": "The database schema includes a bookings table with status field (pending/accepted/rejected/in_progress/completed/cancelled) that can be used for job applications. There's also a notifications table for user notifications.",
+      "category": "database-schema",
+      "discovered_at": "2026-02-22T03:52:42.674560+00:00"
+    },
+    "app/app/providers/auth-provider.tsx": {
+      "description": "The app uses a React Context provider pattern for authentication with Supabase. The AuthProvider provides user, session, userRole state and signIn/signOut/signUp functions.",
+      "category": "auth-pattern",
+      "discovered_at": "2026-02-22T03:52:42.689328+00:00"
+    },
+    "lib/supabase/client.ts": {
+      "description": "Supabase client is exported as 'supabase' from lib/supabase/client.ts for browser-side queries. Server client is available in lib/supabase/server.ts using createServerClient.",
+      "category": "data-access-pattern",
+      "discovered_at": "2026-02-22T03:52:42.700445+00:00"
+    },
+    "app/app/(dashboard)/worker/jobs/page.tsx": {
+      "description": "Current dashboard pages are placeholders with static HTML. They display stats cards but have no actual data fetching or interactivity yet.",
+      "category": "existing-implementation",
+      "discovered_at": "2026-02-22T03:52:42.705039+00:00"
+    }
+  },
+  "last_updated": "2026-02-22T03:52:42.705056+00:00"
+}

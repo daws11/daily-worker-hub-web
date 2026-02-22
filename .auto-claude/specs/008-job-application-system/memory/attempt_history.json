@@ -1,0 +1,177 @@
+{
+  "subtasks": {
+    "subtask-1-1": {
+      "attempts": [
+        {
+          "session": 2,
+          "timestamp": "2026-02-22T03:54:28.562960+00:00",
+          "approach": "Implemented: Create database migration for job applications unique constraint",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-1-2": {
+      "attempts": [
+        {
+          "session": 3,
+          "timestamp": "2026-02-22T03:57:04.627562+00:00",
+          "approach": "Implemented: Create Row Level Security (RLS) policies for bookings table",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-2-1": {
+      "attempts": [
+        {
+          "session": 4,
+          "timestamp": "2026-02-22T04:00:32.514736+00:00",
+          "approach": "Implemented: Create job application server actions (apply, cancel, check duplicate)",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-2-2": {
+      "attempts": [
+        {
+          "session": 5,
+          "timestamp": "2026-02-22T04:02:20.019544+00:00",
+          "approach": "Implemented: Create notification server actions (create, mark read, get unread)",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-2-3": {
+      "attempts": [
+        {
+          "session": 6,
+          "timestamp": "2026-02-22T04:04:33.200726+00:00",
+          "approach": "Implemented: Create data fetching utilities (get jobs, get applications, get applicants)",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-3-1": {
+      "attempts": [
+        {
+          "session": 7,
+          "timestamp": "2026-02-22T04:09:13.257487+00:00",
+          "approach": "Implemented: Create JobCard component for displaying available jobs",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-3-2": {
+      "attempts": [
+        {
+          "session": 8,
+          "timestamp": "2026-02-22T04:13:48.691856+00:00",
+          "approach": "Implemented: Create ApplicationList component for worker application history",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-3-3": {
+      "attempts": [
+        {
+          "session": 9,
+          "timestamp": "2026-02-22T04:17:16.789464+00:00",
+          "approach": "Implemented: Create ApplicantList component for business view of applicants",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-4-1": {
+      "attempts": [
+        {
+          "session": 10,
+          "timestamp": "2026-02-22T04:21:10.936703+00:00",
+          "approach": "Implemented: Implement worker jobs page with job listing and one-tap apply",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-4-2": {
+      "attempts": [
+        {
+          "session": 11,
+          "timestamp": "2026-02-22T04:24:17.568457+00:00",
+          "approach": "Implemented: Implement application history view with status badges",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-4-3": {
+      "attempts": [
+        {
+          "session": 12,
+          "timestamp": "2026-02-22T04:27:43.368885+00:00",
+          "approach": "Implemented: Implement cancel application functionality for pending applications",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-5-1": {
+      "attempts": [
+        {
+          "session": 13,
+          "timestamp": "2026-02-22T04:33:30.952516+00:00",
+          "approach": "Implemented: Implement business jobs page with applicant listings",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-5-2": {
+      "attempts": [
+        {
+          "session": 14,
+          "timestamp": "2026-02-22T04:35:42.573530+00:00",
+          "approach": "Implemented: Implement accept/reject applicant functionality",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-6-1": {
+      "attempts": [
+        {
+          "session": 15,
+          "timestamp": "2026-02-22T04:40:21.952782+00:00",
+          "approach": "Implemented: Implement notification system integration",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    }
+  },
+  "stuck_subtasks": [],
+  "metadata": {
+    "created_at": "2026-02-22T03:50:26.171481+00:00",
+    "last_updated": "2026-02-22T04:40:21.952793+00:00"
+  }
+}

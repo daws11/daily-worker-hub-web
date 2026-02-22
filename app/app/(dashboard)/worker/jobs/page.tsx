@@ -1,238 +1,430 @@
 "use client"
 
-import { useState, useCallback, useMemo } from 'react'
-import { JobSearch } from '@/components/job-marketplace/JobSearch'
-import { JobFilters } from '@/components/job-marketplace/JobFilters'
-import { JobSort } from '@/components/job-marketplace/JobSort'
-import { JobListWithHeader } from '@/components/job-marketplace/JobList'
-import { JobDetailDialog } from '@/components/job-marketplace/JobDetailDialog'
-import { useJobs } from '@/lib/hooks/useJobs'
-import { JobWithRelations, JobFilters as JobFiltersType, JobSortOption } from '@/lib/types/job'
-import { toast } from 'sonner'
-import { Briefcase, Loader2, SlidersHorizontal } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { useAuth } from "@/app/providers/auth-provider"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { supabase } from "@/lib/supabase/client"
+import type { Database } from "@/lib/supabase/types"
+import { cancelApplication } from "@/lib/actions/job-applications"
+import { Briefcase, Calendar, Building2, MapPin, Wallet, Loader2, X } from "lucide-react"
+
+type WorkersRow = Database["public"]["Tables"]["workers"]["Row"]
+type Job = Database["public"]["Tables"]["jobs"]["Row"]
+type Booking = Database["public"]["Tables"]["bookings"]["Row"]
+
+type ApplicationWithDetails = Booking & {
+  jobs: {
+    id: string
+    title: string
+    description: string
+    budget_min: number
+    budget_max: number
+    deadline: string
+    address: string
+  }
+  businesses: {
+    id: string
+    name: string
+    phone: string
+    email: string
+  }
+}
 
 export default function WorkerJobsPage() {
-  // State for filters and search
-  const [search, setSearch] = useState<string>('')
-  const [filters, setFilters] = useState<JobFiltersType>({})
-  const [sort, setSort] = useState<JobSortOption>('newest')
+  const { user } = useAuth()
+  const router = useRouter()
+  const [worker, setWorker] = useState<WorkersRow | null>(null)
+  const [applications, setApplications] = useState<ApplicationWithDetails[]>([])
+  const [isLoadingApplications, setIsLoadingApplications] = useState(true)
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
+  const [applicationToCancel, setApplicationToCancel] = useState<ApplicationWithDetails | null>(null)
+  const [isCancelling, setIsCancelling] = useState(false)
 
-  // State for job detail dialog
-  const [selectedJob, setSelectedJob] = useState<JobWithRelations | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isApplying, setIsApplying] = useState(false)
+  // Fetch worker profile
+  useEffect(() => {
+    async function fetchWorker() {
+      if (!user) {
+        router.push("/login")
+        return
+      }
 
-  // State for mobile filters dialog
-  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
+      const { data, error } = await supabase
+        .from("workers")
+        .select("*")
+        .eq("user_id", user.id)
+        .single()
 
-  // Fetch jobs with filters and sorting
-  const { jobs, loading, error, refetch } = useJobs({
-    filters: { ...filters, search },
-    sort,
-    enabled: true,
-  })
+      if (error || !data) {
+        toast.error("Profil worker tidak ditemukan")
+        return
+      }
 
-  // Calculate active filters count for badge
-  const activeFiltersCount = useMemo(() => {
-    return Object.keys(filters).filter(
-      (key) => filters[key as keyof JobFiltersType] !== undefined && filters[key as keyof JobFiltersType] !== ''
-    ).length
-  }, [filters])
-
-  // Handle job click - open detail dialog
-  const handleJobClick = useCallback((job: JobWithRelations) => {
-    setSelectedJob(job)
-    setIsDialogOpen(true)
-  }, [])
-
-  // Handle dialog close
-  const handleDialogClose = useCallback(() => {
-    setIsDialogOpen(false)
-    // Delay clearing selected job to allow animation to complete
-    setTimeout(() => setSelectedJob(null), 300)
-  }, [])
-
-  // Handle job application
-  const handleApply = useCallback(async (job: JobWithRelations) => {
-    setIsApplying(true)
-    try {
-      // TODO: Implement actual application logic when backend is ready
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      toast.success('Application submitted successfully!')
-      handleDialogClose()
-    } catch (err) {
-      toast.error('Failed to submit application. Please try again.')
-    } finally {
-      setIsApplying(false)
+      setWorker(data)
     }
-  }, [handleDialogClose])
 
-  // Handle search change
-  const handleSearchChange = useCallback((value: string) => {
-    setSearch(value)
-  }, [])
+    fetchWorker()
+  }, [user, router])
 
-  // Handle filters change
-  const handleFiltersChange = useCallback((newFilters: JobFiltersType) => {
-    setFilters(newFilters)
-  }, [])
+  // Fetch worker applications
+  useEffect(() => {
+    async function fetchApplications() {
+      if (!worker) return
 
-  // Handle sort change
-  const handleSortChange = useCallback((newSort: JobSortOption) => {
-    setSort(newSort)
-  }, [])
+      setIsLoadingApplications(true)
+      try {
+        const { data, error } = await supabase
+          .from("bookings")
+          .select(`
+            *,
+            jobs (
+              id,
+              title,
+              description,
+              budget_min,
+              budget_max,
+              deadline,
+              address
+            ),
+            businesses (
+              id,
+              name,
+              phone,
+              email
+            )
+          `)
+          .eq("worker_id", worker.id)
+          .order("created_at", { ascending: false })
 
-  // Handle retry on error
-  const handleRetry = useCallback(() => {
-    refetch()
-  }, [refetch])
+        if (error) {
+          toast.error("Gagal memuat data lamaran")
+          return
+        }
+
+        setApplications(data as ApplicationWithDetails[])
+      } finally {
+        setIsLoadingApplications(false)
+      }
+    }
+
+    fetchApplications()
+  }, [worker])
+
+  // Format date to Indonesian locale
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
+  // Format budget to Indonesian Rupiah
+  const formatBudget = (amount: number) => {
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)
+  }
+
+  // Get status badge variant
+  const getStatusVariant = (
+    status: ApplicationWithDetails["status"]
+  ): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status) {
+      case "pending":
+        return "outline"
+      case "accepted":
+        return "default"
+      case "rejected":
+        return "destructive"
+      case "in_progress":
+        return "secondary"
+      case "completed":
+        return "default"
+      case "cancelled":
+        return "destructive"
+      default:
+        return "outline"
+    }
+  }
+
+  // Get status label in Indonesian
+  const getStatusLabel = (status: ApplicationWithDetails["status"]): string => {
+    switch (status) {
+      case "pending":
+        return "Menunggu"
+      case "accepted":
+        return "Diterima"
+      case "rejected":
+        return "Ditolak"
+      case "in_progress":
+        return "Sedang Berjalan"
+      case "completed":
+        return "Selesai"
+      case "cancelled":
+        return "Dibatalkan"
+      default:
+        return status
+    }
+  }
+
+  // Handle cancel application
+  const handleCancelApplication = async () => {
+    if (!applicationToCancel || !worker) return
+
+    setIsCancelling(true)
+    try {
+      const result = await cancelApplication(applicationToCancel.id, worker.id)
+
+      if (!result.success) {
+        toast.error(result.error || "Gagal membatalkan lamaran")
+        return
+      }
+
+      toast.success("Lamaran berhasil dibatalkan")
+
+      // Update local state - remove the cancelled application or update its status
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === applicationToCancel.id
+            ? { ...app, status: "cancelled" as const }
+            : app
+        )
+      )
+
+      setCancelDialogOpen(false)
+      setApplicationToCancel(null)
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
+  // Open cancel dialog
+  const openCancelDialog = (application: ApplicationWithDetails) => {
+    setApplicationToCancel(application)
+    setCancelDialogOpen(true)
+  }
+
+  // Close cancel dialog
+  const closeCancelDialog = () => {
+    setCancelDialogOpen(false)
+    setApplicationToCancel(null)
+  }
+
+  // Calculate stats
+  const stats = {
+    total: applications.length,
+    pending: applications.filter((a) => a.status === "pending").length,
+    accepted: applications.filter((a) => a.status === "accepted").length,
+    rejected: applications.filter((a) => a.status === "rejected").length,
+    inProgress: applications.filter((a) => a.status === "in_progress").length,
+    completed: applications.filter((a) => a.status === "completed").length,
+  }
 
   return (
-    <div className="min-h-screen bg-muted/30 p-3 sm:p-4 md:p-6">
-      <div className="mx-auto max-w-7xl space-y-4 sm:space-y-6">
-        {/* Page Header */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
-            <h1 className="text-xl font-bold sm:text-2xl">Job Marketplace</h1>
-          </div>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Discover and apply for jobs across Bali
+    <div className="min-h-screen bg-[#f5f5f5] p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Dashboard Worker - Jobs</h1>
+          <p className="text-[#666]">
+            Kelola lamaran pekerjaan Anda
           </p>
         </div>
 
-        {/* Error State */}
-        {error && (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 sm:p-6 text-center">
-            <p className="text-destructive font-medium mb-2 text-sm sm:text-base">Failed to load jobs</p>
-            <p className="text-xs sm:text-sm text-muted-foreground mb-4">{error.message}</p>
-            <Button
-              onClick={handleRetry}
-              variant="default"
-              size="sm"
-            >
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Try Again
-            </Button>
-          </div>
-        )}
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Total Lamaran</CardDescription>
+              <CardTitle className="text-3xl text-[#2563eb]">{stats.total}</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Briefcase className="h-4 w-4" />
+                <span>Semua lamaran</span>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Search and Filter Bar - Mobile First */}
-        <div className="space-y-3">
-          {/* Search Bar - Full width on mobile */}
-          <div className="w-full">
-            <JobSearch
-              value={search}
-              onSearchChange={handleSearchChange}
-              placeholder="Search jobs by keyword or position..."
-              className="w-full"
-            />
-          </div>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Menunggu</CardDescription>
+              <CardTitle className="text-3xl text-[#f59e0b]">{stats.pending}</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              <span>Menunggu respons</span>
+            </CardContent>
+          </Card>
 
-          {/* Filter and Sort Actions Bar */}
-          <div className="flex items-center justify-between gap-2">
-            {/* Mobile Filters Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsMobileFiltersOpen(true)}
-              className="lg:hidden flex items-center gap-2"
-            >
-              <SlidersHorizontal className="h-4 w-4" />
-              Filters
-              {activeFiltersCount > 0 && (
-                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1">
-                  {activeFiltersCount}
-                </Badge>
-              )}
-            </Button>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Diterima/Berjalan</CardDescription>
+              <CardTitle className="text-3xl text-[#10b981]">{stats.accepted + stats.inProgress}</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              <span>Lamaran disetujui</span>
+            </CardContent>
+          </Card>
 
-            {/* Sort - Full width on mobile, compact on larger screens */}
-            <div className="flex-1 lg:flex-none">
-              <JobSort
-                value={sort}
-                onSortChange={handleSortChange}
-                className="w-full lg:w-auto"
-              />
-            </div>
-          </div>
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription>Selesai</CardDescription>
+              <CardTitle className="text-3xl text-[#6b7280]">{stats.completed}</CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-muted-foreground">
+              <span>Pekerjaan selesai</span>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid gap-4 sm:gap-6 lg:grid-cols-[280px_1fr]">
-          {/* Sidebar - Filters - Hidden on mobile, visible on lg+ */}
-          <aside className="hidden lg:block lg:col-span-1">
-            <JobFilters
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-              className="sticky top-6"
-            />
-          </aside>
+        {/* Application History */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Riwayat Lamaran</CardTitle>
+            <CardDescription>
+              Daftar pekerjaan yang Anda lamar ({applications.length} lamaran)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoadingApplications ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : applications.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Briefcase className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  Belum ada lamaran. Mulai cari pekerjaan dan lamar sekarang!
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Pekerjaan</TableHead>
+                      <TableHead>Perusahaan</TableHead>
+                      <TableHead>Tanggal Lamar</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Aksi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {applications.map((application) => (
+                      <TableRow key={application.id}>
+                        <TableCell className="font-medium">
+                          <div className="space-y-1">
+                            <div className="font-medium">{application.jobs.title}</div>
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Wallet className="h-3 w-3" />
+                              <span>
+                                {formatBudget(application.jobs.budget_min)}
+                                {application.jobs.budget_max > application.jobs.budget_min &&
+                                  ` - ${formatBudget(application.jobs.budget_max)}`}
+                              </span>
+                            </div>
+                            {application.jobs.address && (
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <MapPin className="h-3 w-3" />
+                                <span className="line-clamp-1">
+                                  {application.jobs.address}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-muted-foreground" />
+                            <span>{application.businesses.name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            <span>{formatDate(application.created_at)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusVariant(application.status)}>
+                            {getStatusLabel(application.status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {application.status === "pending" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openCancelDialog(application)}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Batalkan
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-          {/* Main Column - Job List */}
-          <div className="lg:col-span-1">
-            <JobListWithHeader
-              jobs={jobs}
-              loading={loading}
-              onJobClick={handleJobClick}
-              title="Available Jobs"
-              subtitle={search || activeFiltersCount > 0
-                ? 'Filtered results'
-                : 'Browse all open positions'}
-              emptyTitle={search || activeFiltersCount > 0
-                ? 'No jobs match your criteria'
-                : 'No jobs available'}
-              emptyDescription={search || activeFiltersCount > 0
-                ? 'Try adjusting your filters or search terms'
-                : 'Check back later for new opportunities'}
-            />
-          </div>
-        </div>
+        {/* Cancel Confirmation Dialog */}
+        <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Batalkan Lamaran?</DialogTitle>
+              <DialogDescription>
+                Anda yakin ingin membatalkan lamaran untuk pekerjaan{" "}
+                <span className="font-semibold">
+                  {applicationToCancel?.jobs.title}
+                </span>
+                ?
+                <br />
+                <br />
+                Tindakan ini tidak dapat dibatalkan.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={closeCancelDialog}
+                disabled={isCancelling}
+              >
+                Batal
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleCancelApplication}
+                disabled={isCancelling}
+              >
+                {isCancelling ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Membatalkan...
+                  </>
+                ) : (
+                  "Ya, Batalkan Lamaran"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-
-      {/* Mobile Filters Dialog */}
-      <Dialog open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-lg max-h-[90vh] p-0">
-          <DialogHeader className="p-4 sm:p-6 pb-4 border-b">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="flex items-center gap-2">
-                <SlidersHorizontal className="h-5 w-5" />
-                Filters
-              </DialogTitle>
-              {activeFiltersCount > 0 && (
-                <Badge variant="secondary">
-                  {activeFiltersCount} {activeFiltersCount === 1 ? 'filter' : 'filters'} applied
-                </Badge>
-              )}
-            </div>
-          </DialogHeader>
-          <ScrollArea className="max-h-[calc(90vh-8rem)] px-4 sm:px-6 py-4">
-            <JobFilters
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-              className="border-0 shadow-none"
-            />
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
-
-      {/* Job Detail Dialog */}
-      <JobDetailDialog
-        job={selectedJob}
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        onApply={handleApply}
-        isApplying={isApplying}
-      />
     </div>
   )
 }

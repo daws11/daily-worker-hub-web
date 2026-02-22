@@ -1,0 +1,21 @@
+{
+  "project_type": "single",
+  "services": {
+    "frontend": {
+      "path": ".",
+      "tech_stack": ["nextjs", "typescript", "supabase"],
+      "port": 3000,
+      "dev_command": "npm run dev",
+      "test_command": "npm test"
+    }
+  },
+  "infrastructure": {
+    "docker": true,
+    "database": "postgresql (supabase)"
+  },
+  "conventions": {
+    "linter": "eslint",
+    "formatter": "prettier",
+    "testing": "jest"
+  }
+}

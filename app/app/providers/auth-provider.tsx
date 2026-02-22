@@ -1,70 +1,26 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { supabase } from "../../../lib/supabase/client"
-import type { User, Session, AuthError } from "@supabase/supabase-js"
-import type { Database } from "../../../lib/supabase/types"
+import { supabase } from "../../lib/supabase/client"
+import type { User, Session } from "@supabase/supabase-js"
+import type { Database } from "../../lib/supabase/types"
+import type { RealtimeChannel } from "@supabase/supabase-js"
 
 type UsersRow = Database["public"]["Tables"]["users"]["Row"]
-
-// Error helper function to map Supabase errors to user-friendly messages
-function getAuthErrorMessage(error: AuthError | { message?: string; name?: string; status?: number; code?: string }): string {
-  // Network errors
-  if (!navigator.onLine || error.name === 'TypeError' || error.message?.includes('fetch') || error.message?.includes('network')) {
-    return "Koneksi internet bermasalah. Silakan cek koneksi Anda dan coba lagi."
-  }
-
-  // Supabase specific error codes
-  const message = error.message?.toLowerCase() || ''
-  const code = (error as any).code || ''
-
-  // Invalid credentials
-  if (message.includes('invalid') || message.includes('wrong') || message.includes('credentials') || code === 'invalid_credentials') {
-    return "Email atau password salah. Silakan coba lagi."
-  }
-
-  // User already exists
-  if (message.includes('already') || message.includes('registered') || message.includes('exists') || message.includes('duplicate') || code === 'user_already_exists' || code === '23505') {
-    return "Email sudah terdaftar. Silakan login atau gunakan email lain."
-  }
-
-  // Weak password
-  if (message.includes('weak') || (message.includes('password') && message.includes('character')) || message.includes('too short')) {
-    return "Password terlalu lemah. Gunakan minimal 8 karakter dengan kombinasi huruf dan angka."
-  }
-
-  // Email not confirmed
-  if (message.includes('email not confirmed') || message.includes('not verified') || message.includes('confirmation')) {
-    return "Email belum dikonfirmasi. Silakan cek inbox Anda untuk link konfirmasi."
-  }
-
-  // Rate limiting
-  if (message.includes('rate limit') || message.includes('too many requests') || message.includes('request limit')) {
-    return "Terlalu banyak percobaan. Silakan tunggu beberapa saat dan coba lagi."
-  }
-
-  // Email not found (for password reset)
-  if (message.includes('not found') && message.includes('email')) {
-    return "Email tidak terdaftar. Silakan cek kembali atau daftar akun baru."
-  }
-
-  // Default error message
-  return error.message || "Terjadi kesalahan yang tidak terduga. Silakan coba lagi."
-}
+type WorkersRow = Database["public"]["Tables"]["workers"]["Row"]
+type BusinessesRow = Database["public"]["Tables"]["businesses"]["Row"]
+type BookingsRow = Database["public"]["Tables"]["bookings"]["Row"]
 
 type AuthContextType = {
   user: User | null
   session: Session | null
   userRole: 'worker' | 'business' | null
   isLoading: boolean
-  signIn: (email: string, password: string, role: 'worker' | 'business', redirect?: string) => Promise<void>
-  signInWithGoogle: (role: 'worker' | 'business') => Promise<void>
+  signIn: (email: string, password: string, role: 'worker' | 'business') => Promise<void>
   signOut: () => Promise<void>
   signUp: (email: string, password: string, fullName: string, role: 'worker' | 'business') => Promise<void>
-  resetPassword: (email: string) => Promise<void>
-  updatePassword: (newPassword: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -75,6 +31,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<'worker' | 'business' | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const channelRef = useRef<RealtimeChannel | null>(null)
+  const [workerProfile, setWorkerProfile] = useState<WorkersRow | null>(null)
+  const [businessProfile, setBusinessProfile] = useState<BusinessesRow | null>(null)
 
   useEffect(() => {
     // Get initial session
@@ -99,6 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function fetchUserRole() {
       if (!user) {
         setUserRole(null)
+        setWorkerProfile(null)
+        setBusinessProfile(null)
         return
       }
 
@@ -109,31 +70,128 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       if (error) {
-        // Silently fail - role will be null
-        setUserRole(null)
+        console.error('Error fetching user role:', error)
         return
       }
 
-      setUserRole((data as any)?.role ?? null)
+      setUserRole(data?.role ?? null)
+
+      // Fetch worker or business profile
+      if (data?.role === 'worker') {
+        const { data: worker } = await supabase
+          .from('workers')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+        setWorkerProfile(worker)
+        setBusinessProfile(null)
+      } else if (data?.role === 'business') {
+        const { data: business } = await supabase
+          .from('businesses')
+          .select('*')
+          .eq('user_id', user.id)
+          .single()
+        setBusinessProfile(business)
+        setWorkerProfile(null)
+      }
     }
 
     fetchUserRole()
   }, [user])
 
+  // Listen for real-time booking events for notifications
+  useEffect(() => {
+    // Clean up existing subscription
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current)
+      channelRef.current = null
+    }
+
+    if (!user || !userRole) return
+
+    // Subscribe to bookings table changes
+    const channel = supabase
+      .channel('bookings-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bookings',
+        },
+        async (payload) => {
+          const { eventType, new: newRecord, old: oldRecord } = payload
+
+          // Handle new application (worker applies for job)
+          if (eventType === 'INSERT') {
+            const booking = newRecord as BookingsRow
+
+            // Notify business if they own this job
+            if (userRole === 'business' && businessProfile && booking.business_id === businessProfile.id) {
+              // Fetch worker and job details
+              const [workerResult, jobResult] = await Promise.all([
+                supabase.from('workers').select('full_name').eq('id', booking.worker_id).single(),
+                supabase.from('jobs').select('title').eq('id', booking.job_id).single(),
+              ])
+
+              const workerName = workerResult.data?.full_name || 'Seorang pekerja'
+              const jobTitle = jobResult.data?.title || 'pekerjaan ini'
+
+              toast.success(`Lamaran Baru`, {
+                description: `${workerName} melamar untuk ${jobTitle}`,
+              })
+            }
+          }
+
+          // Handle application status update
+          if (eventType === 'UPDATE') {
+            const newBooking = newRecord as BookingsRow
+            const oldBooking = oldRecord as BookingsRow
+
+            // Notify worker if their application status changed
+            if (
+              userRole === 'worker' &&
+              workerProfile &&
+              newBooking.worker_id === workerProfile.id &&
+              oldBooking.status !== newBooking.status
+            ) {
+              // Fetch job details
+              const { data: job } = await supabase
+                .from('jobs')
+                .select('title')
+                .eq('id', newBooking.job_id)
+                .single()
+
+              const jobTitle = job?.title || 'pekerjaan ini'
+
+              if (newBooking.status === 'accepted') {
+                toast.success(`Selamat! Lamaran Diterima`, {
+                  description: `Lamaran Anda untuk ${jobTitle} telah diterima`,
+                })
+              } else if (newBooking.status === 'rejected') {
+                toast.error(`Lamaran Ditolak`, {
+                  description: `Lamaran Anda untuk ${jobTitle} telah ditolak`,
+                })
+              }
+            }
+          }
+        }
+      )
+      .subscribe()
+
+    channelRef.current = channel
+
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+        channelRef.current = null
+      }
+    }
+  }, [user, userRole, workerProfile, businessProfile])
+
   const signUp = async (email: string, password: string, fullName: string, role: 'worker' | 'business') => {
     setIsLoading(true)
     try {
-      // Validate inputs
-      if (!email || !password || !fullName) {
-        toast.error("Semua kolom wajib diisi")
-        return
-      }
-
-      if (password.length < 6) {
-        toast.error("Password harus minimal 6 karakter")
-        return
-      }
-
       // 1. Sign up with Supabase Auth
       const { data: { user }, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -146,89 +204,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (signUpError) {
-        const errorMessage = getAuthErrorMessage(signUpError)
-        toast.error(errorMessage)
+        toast.error("Registrasi gagal: " + signUpError.message)
         return
       }
 
       if (!user) {
-        toast.error("Registrasi gagal: User tidak dapat dibuat")
+        toast.error("Registrasi gagal: User not created")
         return
       }
 
       // 2. Create user profile in public.users table
-      const { error: profileError } = await (supabase
-        .from('users') as any)
-        .insert({
+      const { error: profileError } = await supabase.from('users').insert([
+        {
           id: user.id,
           email: user.email!,
           full_name: fullName,
           role: role,
           phone: '',
           avatar_url: '',
-        })
+        },
+      ])
 
       if (profileError) {
-        // Handle duplicate user profile error
-        if (profileError.code === '23505') {
-          toast.warning("Profil pengguna sudah ada")
-        } else {
-          toast.error("Registrasi berhasil, tapi profil gagal dibuat. Silakan hubungi support.")
-        }
+        console.error('Error creating user profile:', profileError)
+        toast.error("Registrasi berhasil, tapi profile gagal dibuat")
       } else {
         toast.success("Registrasi berhasil! Silakan login.")
       }
 
       router.push("/login")
-    } catch (error: any) {
-      const errorMessage = getAuthErrorMessage(error)
-      toast.error(errorMessage)
+    } catch (error) {
+      console.error('Sign up error:', error)
+      toast.error("Registrasi gagal")
     } finally {
       setIsLoading(false)
     }
   }
 
-  const signIn = async (email: string, password: string, role: 'worker' | 'business', redirect?: string) => {
+  const signIn = async (email: string, password: string, role: 'worker' | 'business') => {
     setIsLoading(true)
     try {
-      // Validate inputs
-      if (!email || !password) {
-        toast.error("Email dan password wajib diisi")
-        return
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (error) {
-        const errorMessage = getAuthErrorMessage(error)
-        toast.error(errorMessage)
+        toast.error("Login gagal: " + error.message)
         return
       }
 
       if (!data.session) {
-        toast.error("Login gagal: Sesi tidak dapat dibuat")
+        toast.error("Login gagal: Session not created")
         return
       }
 
       toast.success("Login berhasil!")
 
-      // Use redirect parameter if provided, otherwise use role-based default
-      if (redirect) {
-        router.push(redirect)
+      // Redirect based on role
+      if (role === 'worker') {
+        router.push("/dashboard-worker-jobs")
       } else {
-        // Redirect based on role
-        if (role === 'worker') {
-          router.push("/dashboard-worker-jobs")
-        } else {
-          router.push("/dashboard-business-jobs")
-        }
+        router.push("/dashboard-business-jobs")
       }
-    } catch (error: any) {
-      const errorMessage = getAuthErrorMessage(error)
-      toast.error(errorMessage)
+    } catch (error) {
+      console.error('Sign in error:', error)
+      toast.error("Login gagal")
     } finally {
       setIsLoading(false)
     }
@@ -237,119 +278,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     setIsLoading(true)
     try {
-      const { error } = await supabase.auth.signOut()
-
-      if (error) {
-        toast.error("Logout gagal: " + error.message)
-        return
+      // Clean up real-time subscription
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current)
+        channelRef.current = null
       }
-
+      await supabase.auth.signOut()
       setUser(null)
       setSession(null)
       setUserRole(null)
+      setWorkerProfile(null)
+      setBusinessProfile(null)
       router.push("/")
       toast.success("Logout berhasil")
-    } catch (error: any) {
-      const errorMessage = getAuthErrorMessage(error)
-      toast.error(errorMessage)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const resetPassword = async (email: string) => {
-    setIsLoading(true)
-    try {
-      // Validate input
-      if (!email) {
-        toast.error("Email wajib diisi")
-        return
-      }
-
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      })
-
-      if (error) {
-        const errorMessage = getAuthErrorMessage(error)
-        toast.error(errorMessage)
-        return
-      }
-
-      toast.success("Email reset password telah dikirim. Silakan cek inbox Anda.")
-    } catch (error: any) {
-      const errorMessage = getAuthErrorMessage(error)
-      toast.error(errorMessage)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const updatePassword = async (newPassword: string) => {
-    setIsLoading(true)
-    try {
-      // Validate input
-      if (!newPassword) {
-        toast.error("Password wajib diisi")
-        return
-      }
-
-      if (newPassword.length < 6) {
-        toast.error("Password harus minimal 6 karakter")
-        return
-      }
-
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      })
-
-      if (error) {
-        const errorMessage = getAuthErrorMessage(error)
-        toast.error(errorMessage)
-        return
-      }
-
-      toast.success("Password berhasil diupdate!")
-      router.push("/login")
-    } catch (error: any) {
-      const errorMessage = getAuthErrorMessage(error)
-      toast.error(errorMessage)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const signInWithGoogle = async (role: 'worker' | 'business') => {
-    setIsLoading(true)
-    try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback?role=${role}`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
-      })
-
-      if (error) {
-        const errorMessage = getAuthErrorMessage(error)
-        toast.error(errorMessage)
-        return
-      }
-
-      // OAuth redirect will happen automatically
-    } catch (error: any) {
-      const errorMessage = getAuthErrorMessage(error)
-      toast.error(errorMessage)
+    } catch (error) {
+      console.error('Sign out error:', error)
+      toast.error("Logout gagal")
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, userRole, isLoading, signIn, signInWithGoogle, signOut, signUp, resetPassword, updatePassword }}>
+    <AuthContext.Provider value={{ user, session, userRole, isLoading, signIn, signOut, signUp }}>
       {children}
     </AuthContext.Provider>
   )
@@ -361,42 +312,4 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider')
   }
   return context
-}
-
-// Loading spinner component for buttons
-export function LoadingSpinner() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{
-        animation: 'spin 1s linear infinite',
-      }}
-    >
-      <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
-      <circle
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-        fill="none"
-        strokeOpacity="0.25"
-      />
-      <path
-        d="M12 2 A10 10 0 0 1 22 12"
-        stroke="currentColor"
-        strokeWidth="4"
-        fill="none"
-        strokeLinecap="round"
-      />
-    </svg>
-  )
 }

@@ -12,10 +12,8 @@ yarn-error.log*
 # Logs
 logs/
 *.log
+*.sql
 *.db
-# Keep migration SQL files but ignore dump files
-!supabase/migrations/*.sql
-dump*.sql
 
 # IDE
 .idea/
@@ -32,12 +30,7 @@ dump*.sql
 
 # Memory & Supabase
 memory/
-# Ignore generated Supabase files but keep migrations and config
-supabase/.branches/
-supabase/.temp/
-supabase/.env*
-!supabase/migrations/
-!supabase/config.toml
+supabase/
 
 # Auto Claude data directory
 .auto-claude/

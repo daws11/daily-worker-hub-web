@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "006-job-posting-system",
+  "spec": "008-job-application-system",
   "state": "building",
   "subtasks": {
-    "completed": 18,
-    "total": 24,
+    "completed": 14,
+    "total": 15,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Dashboard Integration",
+    "current": "Integration & Notifications",
     "id": null,
-    "total": 7
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 20,
-    "started_at": "2026-02-22T07:42:10.379983"
+    "number": 16,
+    "started_at": "2026-02-22T11:50:26.171885"
   },
-  "last_update": "2026-02-22T08:22:43.853865"
+  "last_update": "2026-02-22T12:40:39.052699"
 }
