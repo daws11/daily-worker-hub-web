@@ -302,7 +302,9 @@
             "command": "npm run type-check 2>&1 | grep -i 'error' | wc -l",
             "expected": "0"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added requestPayout function to lib/actions/payments.ts. Function includes: 1) Amount validation against min/max limits (Rp 100.000 - Rp 100.000.000), 2) Worker wallet balance sufficiency check, 3) Bank account retrieval (primary or specified), 4) Payout fee calculation using Xendit fee structure, 5) Payout request creation in database, 6) Xendit API integration for disbursement, 7) Worker wallet balance debit, 8) Error handling with proper rollback on failure. Follows patterns from job-applications.ts with proper TypeScript types, result types, Indonesian error messages, and comprehensive error handling. Type-check passed with 0 errors.",
+          "updated_at": "2026-02-22T09:09:21.210607+00:00"
         },
         {
           "id": "subtask-4-3",
@@ -319,7 +321,9 @@
             "command": "npm run type-check 2>&1 | grep -i 'error' | wc -l",
             "expected": "0"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Wallet balance check actions verified in lib/actions/payments.ts. Both getBusinessWalletBalance and getWorkerWalletBalance functions exist and follow the patterns from lib/actions/notifications.ts with proper TypeScript types (WalletBalanceResult), error handling with Indonesian messages, and auto-create functionality for wallets that don't exist. Type-check passed with 0 errors.",
+          "updated_at": "2026-02-22T10:05:00.000000+00:00"
         }
       ]
     },
@@ -762,6 +766,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T09:05:41.232Z",
-  "last_updated": "2026-02-22T10:00:00.000000+00:00"
+  "updated_at": "2026-02-22T09:10:18.473Z",
+  "last_updated": "2026-02-22T09:09:21.210614+00:00"
 }

@@ -214,3 +214,35 @@ Implementation plan is ready for coder agent to begin.
   - MaybeSingle() for optional queries
   - JSDoc comments for all functions
 
+2026-02-22 - Subtask 4-2: Add payout request action to lib/actions/payments.ts
+- Status: COMPLETED
+- Files:
+  - lib/actions/payments.ts (modified)
+- Implementation:
+  - Added PayoutRequest and BankAccount types from Database
+  - Added PayoutRequestResult type for consistent response handling
+  - Implemented requestPayout function:
+    - Validates payout amount against min/max limits (Rp 100.000 - Rp 100.000.000)
+    - Gets worker wallet and checks balance sufficiency using validatePaymentAmount
+    - Gets worker bank account (primary or specified by bank_account_id)
+    - Calculates payout fee using calculatePayoutFee from xendit.ts (varies by bank)
+    - Creates payout_request record with status 'pending'
+    - Calls Xendit createPayout API for disbursement
+    - Updates payout_request with provider details and status 'processing'
+    - Debits worker wallet balance
+    - Returns payout_request with estimated arrival date
+  - Error handling:
+    - Validates minimum/maximum payout amounts
+    - Checks sufficient wallet balance
+    - Validates bank account ownership
+    - Rolls back payout_request on Xendit failure (marks as failed)
+    - Proper Indonesian error messages throughout
+- Verification: Type-check passed with 0 errors
+- Patterns followed from lib/actions/job-applications.ts:
+  - "use server" directive at top
+  - Import structure (supabase client, Database types)
+  - TypeScript type definitions using Pick for insert types
+  - Result type with success, error, data properties
+  - try-catch error handling with descriptive messages
+  - Supabase queries with select() and single()
+  - Proper status updates and data transformations
