@@ -23,11 +23,47 @@
         }
       ],
       "status": "completed"
+    },
+    "subtask-2-1": {
+      "attempts": [
+        {
+          "session": 4,
+          "timestamp": "2026-02-22T04:56:43.850263+00:00",
+          "approach": "Implemented: Create booking query functions (fetch, update status, add notes)",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-2-2": {
+      "attempts": [
+        {
+          "session": 5,
+          "timestamp": "2026-02-22T04:59:17.013169+00:00",
+          "approach": "Implemented: Create useBookings hook for fetching and managing booking state",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-2-3": {
+      "attempts": [
+        {
+          "session": 6,
+          "timestamp": "2026-02-22T05:02:39.838110+00:00",
+          "approach": "Implemented: Create reliability score calculation function",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
     }
   },
   "stuck_subtasks": [],
   "metadata": {
     "created_at": "2026-02-22T04:47:19.915259+00:00",
-    "last_updated": "2026-02-22T04:54:34.588678+00:00"
+    "last_updated": "2026-02-22T05:02:39.838128+00:00"
   }
 }
