@@ -15,6 +15,7 @@ import type {
 type BookingRow = Database['public']['Tables']['bookings']['Row']
 type BookingUpdate = Database['public']['Tables']['bookings']['Update']
 type JobRow = Database['public']['Tables']['jobs']['Row']
+type BusinessRow = Database['public']['Tables']['businesses']['Row']
 
 /**
  * Check in a worker for a booking
@@ -40,13 +41,15 @@ export async function checkIn(
       .single()
 
     if (error) {
-      console.error('Error checking in:', error)
       return { data: null, error }
+    }
+
+    if (data) {
+      await createCheckInNotification(data.id)
     }
 
     return { data, error: null }
   } catch (error) {
-    console.error('Unexpected error checking in:', error)
     return { data: null, error }
   }
 }
@@ -75,13 +78,15 @@ export async function checkOut(
       .single()
 
     if (error) {
-      console.error('Error checking out:', error)
       return { data: null, error }
+    }
+
+    if (data) {
+      await createCheckOutNotification(data.id)
     }
 
     return { data, error: null }
   } catch (error) {
-    console.error('Unexpected error checking out:', error)
     return { data: null, error }
   }
 }
@@ -565,5 +570,85 @@ function calculateAttendanceStats(bookings: Array<{
     checked_out_bookings: checkedOutBookings.length,
     attendance_rate: Math.round(attendanceRate),
     on_time_arrivals: onTimeArrivals,
+  }
+}
+
+/**
+ * Create notification for worker check-in
+ */
+async function createCheckInNotification(bookingId: string) {
+  try {
+    const { data: booking } = await supabase
+      .from('bookings')
+      .select(`
+        *,
+        job:jobs!inner(id, title),
+        worker:workers!inner(id, full_name)
+      `)
+      .eq('id', bookingId)
+      .single()
+
+    if (!booking) {
+      return
+    }
+
+    const { data: business } = await supabase
+      .from('businesses')
+      .select('user_id')
+      .eq('id', booking.business_id)
+      .single()
+
+    if (!business) {
+      return
+    }
+
+    await supabase.from('notifications').insert({
+      user_id: business.user_id,
+      title: 'Pekerja telah check-in',
+      body: `${booking.worker.full_name} telah check-in untuk pekerjaan ${booking.job.title}`,
+      link: `/bookings/${bookingId}`,
+      is_read: false,
+    })
+  } catch {
+  }
+}
+
+/**
+ * Create notification for worker check-out
+ */
+async function createCheckOutNotification(bookingId: string) {
+  try {
+    const { data: booking } = await supabase
+      .from('bookings')
+      .select(`
+        *,
+        job:jobs!inner(id, title),
+        worker:workers!inner(id, full_name)
+      `)
+      .eq('id', bookingId)
+      .single()
+
+    if (!booking) {
+      return
+    }
+
+    const { data: business } = await supabase
+      .from('businesses')
+      .select('user_id')
+      .eq('id', booking.business_id)
+      .single()
+
+    if (!business) {
+      return
+    }
+
+    await supabase.from('notifications').insert({
+      user_id: business.user_id,
+      title: 'Pekerja telah check-out',
+      body: `${booking.worker.full_name} telah menyelesaikan pekerjaan ${booking.job.title}`,
+      link: `/bookings/${bookingId}`,
+      is_read: false,
+    })
+  } catch {
   }
 }
