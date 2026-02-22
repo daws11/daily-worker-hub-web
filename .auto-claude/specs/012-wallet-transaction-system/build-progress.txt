@@ -102,6 +102,15 @@ Session 2 (Implementation):
   * Created RLS policies for wallets and wallet_transactions
   * Added trigger to auto-create wallets on user signup
   * Committed: 3de7d4b
+- [COMPLETED] subtask-1-2: Update TypeScript types to include wallets table
+  * Added wallets and wallet_transactions types to Database schema
+  * Committed: 3de7d4b
+- [COMPLETED] subtask-1-3: Create RLS policies for wallets table
+  * Verified RLS policies exist for wallets table
+  * Users can read their own wallets (auth.uid() = user_id)
+  * Admins can read all wallets (is_admin())
+  * Admin-only policies for INSERT and UPDATE operations
+  * Similar RLS policies for wallet_transactions table
 
 === END SESSION 1 ===
 

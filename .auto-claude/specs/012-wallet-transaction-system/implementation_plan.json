@@ -45,7 +45,7 @@
             "command": "grep -c 'wallets' lib/supabase/types.ts",
             "expected": "2"
           },
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "subtask-1-3",
@@ -62,7 +62,9 @@
             "type": "manual",
             "instructions": "Verify RLS policies exist for wallets table allowing users to read own wallets"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "RLS policies for wallets table verified and working. Users can read their own wallets using auth.uid() = user_id policy. Admin policies also in place for full access.",
+          "updated_at": "2026-02-22T07:44:40.835991+00:00"
         }
       ]
     },
@@ -420,5 +422,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T07:12:26.832Z"
+  "updated_at": "2026-02-22T07:38:06.739Z",
+  "last_updated": "2026-02-22T07:44:40.836003+00:00"
 }
