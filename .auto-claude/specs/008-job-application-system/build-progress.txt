@@ -61,7 +61,13 @@ Session 2 (2026-02-22):
   * Business policies: view and update bookings for their jobs
   * Admin policies: full access for auditing
   * Workers can only cancel pending bookings
+- subtask-2-1: COMPLETED - Created job application server actions
+  * File: lib/actions/job-applications.ts
+  * Functions: applyForJob, cancelApplication, checkDuplicateApplication
+  * Additional: getWorkerApplications, getJobApplicants, acceptApplication, rejectApplication
+  * All actions include proper error handling and type safety
 
 === CURRENT STATUS ===
 Phase 1 (Database Schema & Migrations): 2/2 subtasks completed
-Next: Phase 2 - Server Actions & API Layer (subtask-2-1)
+Phase 2 (Server Actions & API Layer): 1/3 subtasks completed
+Next: Phase 2 - Server Actions & API Layer (subtask-2-2)

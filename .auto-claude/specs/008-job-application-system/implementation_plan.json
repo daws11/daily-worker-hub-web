@@ -72,7 +72,7 @@
             "command": "npm run type-check",
             "expected": "No TypeScript errors"
           },
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "subtask-2-2",
