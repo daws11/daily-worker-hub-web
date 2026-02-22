@@ -11,7 +11,8 @@
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
     "test:e2e:business-topup": "node --loader ts-node/esm scripts/test-e2e-business-topup.ts",
-    "test:e2e:worker-withdrawal": "node --loader ts-node/esm scripts/test-e2e-worker-withdrawal.ts"
+    "test:e2e:worker-withdrawal": "node --loader ts-node/esm scripts/test-e2e-worker-withdrawal.ts",
+    "test:e2e:error-handling": "node --loader ts-node/esm scripts/test-e2e-error-handling.ts"
   },
   "keywords": [],
   "author": "",

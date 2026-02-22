@@ -1,12 +1,15 @@
 # E2E Verification Summary: Payment Gateway Integration
 
 **Date:** 2026-02-22
-**Subtasks:** subtask-8-2, subtask-8-3
+**Subtasks:** subtask-8-2, subtask-8-3, subtask-8-4
 **Phase:** Integration and Testing
 
 ## Overview
 
-This document summarizes the end-to-end verification tests for the payment gateway integration, covering both business top-up flow via QRIS and worker withdrawal flow via bank transfer.
+This document summarizes the end-to-end verification tests for the payment gateway integration, covering:
+- Business top-up flow via QRIS
+- Worker withdrawal flow via bank transfer
+- Error handling verification for failed payments and payouts
 
 ---
 
@@ -196,6 +199,198 @@ The E2E test verifies the following flow:
 
 ---
 
+## Part 3: Error Handling Verification (subtask-8-4)
+
+### E2E Test Scripts Created
+
+**Files:**
+- `scripts/test-e2e-error-handling.ts` - TypeScript version with detailed output
+- `scripts/test-e2e-error-handling.sh` - Bash script version for direct execution
+
+**Test Coverage:**
+1. ✅ QRIS payment with amount below minimum (Rp 500.000) - validation error
+2. ✅ Withdrawal with amount below minimum (Rp 100.000) - validation error
+3. ✅ Withdrawal with insufficient wallet balance - error message
+4. ✅ Failed payment webhook from Xendit - transaction status updated to failed
+5. ✅ Failed payout webhook from Xendit - payout status updated to failed, wallet refunded
+
+**Usage:**
+```bash
+# Using the shell script (recommended)
+./scripts/test-e2e-error-handling.sh <business_id> <worker_id> <bank_account_id>
+
+# Using the TypeScript script
+npm run test:e2e:error-handling <business_id> <worker_id> <bank_account_id>
+```
+
+### Verification Steps for Error Handling
+
+The E2E test verifies the following error scenarios:
+
+**Test 1: Payment Below Minimum Amount**
+- Verifies validation rejects top-up amounts below Rp 500.000
+- Confirms validation schema in `lib/utils/payment-validator.ts` correctly enforces minimum
+- Validates error message format (Indonesian)
+
+**Test 2: Withdrawal Below Minimum Amount**
+- Verifies validation rejects withdrawal amounts below Rp 100.000
+- Confirms validation schema in `lib/utils/payment-validator.ts` correctly enforces minimum
+- Validates error message: "Minimal penarikan adalah Rp 100.000"
+
+**Test 3: Insufficient Wallet Balance**
+- Gets worker's current wallet balance
+- Attempts withdrawal amount exceeding available balance
+- Confirms validation detects insufficient balance
+- Validates error message: "Saldo tidak mencukupi"
+
+**Test 4: Failed Payment Webhook**
+- Creates pending payment transaction
+- Gets initial business wallet balance
+- Simulates failed payment webhook from Xendit
+- Verifies transaction status updates to 'failed'
+- Verifies failure_reason is recorded
+- **Critical:** Confirms wallet balance is NOT affected
+
+**Test 5: Failed Payout Webhook with Wallet Refund**
+- Gets or creates worker wallet with sufficient balance
+- Creates pending payout request
+- Debits worker wallet (simulating processing)
+- Simulates failed payout webhook from Xendit
+- Updates payout status to 'failed'
+- **Critical:** Refunds full amount to worker wallet
+- Verifies wallet balance is fully restored
+- Confirms failure_reason and failed_at timestamp are recorded
+
+### Expected Test Output (Error Handling)
+
+```
+======================================================================
+🧪 E2E TEST: Error Handling Verification
+   Failed Payments and Payouts
+======================================================================
+
+----------------------------------------------------------------------
+🧪 TEST 1: QRIS Payment with Amount Below Minimum
+----------------------------------------------------------------------
+
+📋 Test Details:
+   Amount: Rp 499.000
+   Minimum required: Rp 500.000
+
+🔍 Step 2: Verifying validation schema...
+   ✅ Validation correctly rejects amount below minimum
+   ✅ Test 1 PASSED: Payment amount validation works correctly
+
+----------------------------------------------------------------------
+🧪 TEST 2: Withdrawal with Amount Below Minimum
+----------------------------------------------------------------------
+
+📋 Test Details:
+   Amount: Rp 99.000
+   Minimum required: Rp 100.000
+
+🔍 Step 1: Verifying validation schema...
+   ✅ Validation correctly rejects amount below minimum
+
+🔍 Step 2: Verifying error message format...
+   Expected error message: "Minimal penarikan adalah Rp 100.000"
+   ✅ Error message format is correct
+   ✅ Test 2 PASSED: Withdrawal amount validation works correctly
+
+----------------------------------------------------------------------
+🧪 TEST 3: Withdrawal with Insufficient Wallet Balance
+----------------------------------------------------------------------
+
+📋 Test Details:
+   Current balance: Rp 0
+   Withdrawal amount: Rp 100.000
+
+🔍 Step 1: Verifying insufficient balance validation...
+   ✅ Validation correctly detects insufficient balance
+
+🔍 Step 2: Verifying error message...
+   Expected error message: "Saldo tidak mencukupi"
+   ✅ Error message format is correct
+   ✅ Test 3 PASSED: Insufficient balance validation works correctly
+
+----------------------------------------------------------------------
+🧪 TEST 4: Failed Payment Webhook from Xendit
+----------------------------------------------------------------------
+
+💰 Step 1: Getting business wallet...
+   Initial balance: Rp 0
+
+📝 Step 2: Creating pending payment transaction...
+   ✅ Transaction created with ID: <uuid>
+
+🔔 Step 3: Simulating failed payment webhook...
+   Webhook payload:
+   - external_id: <uuid>
+   - status: FAILED
+   - failure_reason: Insufficient funds in payment source
+   ✅ Transaction status updated to 'failed'
+
+💰 Step 4: Verifying wallet balance was not affected...
+   ✅ Wallet balance unchanged: Rp 0
+
+🔍 Step 5: Verifying transaction record...
+   ✅ Transaction status: failed
+   ✅ Failure reason: Insufficient funds in payment source
+   ✅ Test 4 PASSED: Failed payment webhook handling works correctly
+
+----------------------------------------------------------------------
+🧪 TEST 5: Failed Payout Webhook from Xendit with Wallet Refund
+----------------------------------------------------------------------
+
+💰 Step 1: Getting worker wallet...
+   Initial balance: Rp 200.000
+
+📝 Step 2: Creating pending payout request...
+   ✅ Payout request created with ID: <uuid>
+
+💰 Step 3: Debiting worker wallet...
+   ✅ Wallet debited: Rp 100.000
+   Balance after debit: Rp 100.000
+
+🔔 Step 4: Simulating failed payout webhook...
+   Webhook payload:
+   - external_id: <uuid>
+   - status: FAILED
+   - failure_reason: Bank account validation failed
+   ✅ Payout status updated to 'failed'
+
+💰 Step 5: Refunding worker wallet...
+   ✅ Wallet refunded: Rp 100.000
+   Balance after refund: Rp 200.000
+
+🔍 Step 6: Verifying wallet balance is restored...
+   ✅ Wallet balance fully restored: Rp 200.000
+
+🔍 Step 7: Verifying payout record...
+   ✅ Payout status: failed
+   ✅ Failure reason: Bank account validation failed
+   ✅ Failed at: <timestamp>
+   ✅ Test 5 PASSED: Failed payout webhook with refund works correctly
+
+======================================================================
+✅ ALL ERROR HANDLING TESTS PASSED
+======================================================================
+
+📊 Test Summary:
+   Business ID: <business_id>
+   Worker ID: <worker_id>
+   Bank Account ID: <bank_account_id>
+
+   Tests Passed: 5/5
+   - Test 1: Payment below minimum validation ✅
+   - Test 2: Withdrawal below minimum validation ✅
+   - Test 3: Insufficient balance validation ✅
+   - Test 4: Failed payment webhook handling ✅
+   - Test 5: Failed payout webhook with refund ✅
+```
+
+---
+
 ## Environment Variables Required
 
 To run the E2E tests, ensure these environment variables are set:
@@ -215,13 +410,14 @@ XENDIT_WEBHOOK_TOKEN=your-webhook-token
 
 ## NPM Scripts
 
-Both tests are available as npm scripts:
+All three tests are available as npm scripts:
 
 ```json
 {
   "scripts": {
     "test:e2e:business-topup": "node --loader ts-node/esm scripts/test-e2e-business-topup.ts",
-    "test:e2e:worker-withdrawal": "node --loader ts-node/esm scripts/test-e2e-worker-withdrawal.ts"
+    "test:e2e:worker-withdrawal": "node --loader ts-node/esm scripts/test-e2e-worker-withdrawal.ts",
+    "test:e2e:error-handling": "node --loader ts-node/esm scripts/test-e2e-error-handling.ts"
   }
 }
 ```
@@ -244,4 +440,7 @@ Both tests are available as npm scripts:
 - ✅ Verification steps documented
 - ✅ Changes committed with descriptive message
 - ✅ Type-safe TypeScript implementations
-- ✅ Comprehensive test coverage for both flows
+- ✅ Comprehensive test coverage for all three flows:
+  - Business top-up (success path)
+  - Worker withdrawal (success path)
+  - Error handling (failure paths)
