@@ -322,8 +322,7 @@
           "description": "Integrate notification creation into accept/reject actions",
           "service": "frontend",
           "files_to_modify": [
-            "components/booking/booking-actions.tsx",
-            "components/booking/bulk-actions.tsx"
+            "lib/supabase/queries/bookings.ts"
           ],
           "files_to_create": [],
           "patterns_from": [],
@@ -331,7 +330,9 @@
             "type": "manual",
             "instructions": "Test accepting/rejecting a booking and verify notification is created in notifications table"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Integrated notification creation into updateBookingStatus and updateMultipleBookingStatuses functions. Notifications are now created automatically when booking status changes to accepted, rejected, in_progress, completed, or cancelled. Component files (booking-actions.tsx, bulk-actions.tsx) did not need modification as they are presentational components - notification creation is handled at the query layer.",
+          "updated_at": "2026-02-22T05:30:00.000000+00:00"
         }
       ]
     },
