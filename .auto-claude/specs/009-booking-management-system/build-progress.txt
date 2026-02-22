@@ -121,3 +121,42 @@ Session 3 (Coder - subtask-2-2):
 
 === END SESSION 3 ===
 2026-02-22T05:09:30Z - subtask-3-3: Completed - Created BulkActions component for batch operations with bulk accept/reject, loading states, configurable variants/sizes, and proper error handling
+
+Session 4 (Coder - subtask-6-1):
+[COMPLETED] subtask-6-1: Create notification creation function for booking status changes
+  - Modified: lib/supabase/queries/bookings.ts
+  - Function created: createBookingNotification(workerId, businessName, jobTitle, status, bookingId)
+  - Features implemented:
+    * Fetches worker's user_id from workers table
+    * Generates personalized Indonesian notification messages based on status
+    * Status-specific messages for: accepted (congratulatory), rejected (polite decline), in_progress (encouragement), completed (thanks), cancelled (neutral notice)
+    * Creates notification entry in notifications table with title, body, link, and is_read flag
+    * Link points to worker's booking detail page (/dashboard-worker-bookings/{id})
+    * Follows existing error handling patterns with try/catch and console.error
+  - Verification passed: grep for createBookingNotification in bookings.ts
+  - Committed with auto-claude message
+
+=== END SESSION 4 ===
+
+Session 5 (Coder - subtask-6-2):
+[COMPLETED] subtask-6-2: Integrate notification creation into accept/reject actions
+  - Modified: lib/supabase/queries/bookings.ts
+  - Updated functions:
+    * updateBookingStatus(bookingId, status) - Now creates notification after status update
+    * updateMultipleBookingStatuses(bookingIds, status) - Now creates notifications for each booking
+  - Implementation details:
+    * Fetches booking with related data (worker, business, job) before updating status
+    * Updates booking status as before
+    * Calls createBookingNotification with fetched data
+    * Notification creation failure doesn't fail status update (logs error only)
+    * For bulk updates, iterates through each booking to create individual notifications
+  - Architectural approach: Notification creation integrated at query layer (not UI components)
+    * This ensures notifications are created for every status update, regardless of source
+    * UI components remain purely presentational
+    * Single responsibility principle maintained
+  - Note: Component files (booking-actions.tsx, bulk-actions.tsx) don't need modification
+    * They are presentational components that delegate to parent callbacks
+    * The callback chain (Component -> Page -> Hook -> Query) triggers notification creation
+  - Manual verification required: Test accepting/rejecting booking and verify notification in table
+
+=== END SESSION 5 ===

@@ -95,11 +95,106 @@
         }
       ],
       "status": "completed"
+    },
+    "subtask-3-4": {
+      "attempts": [
+        {
+          "session": 10,
+          "timestamp": "2026-02-22T05:11:46.487377+00:00",
+          "approach": "Implemented: Create WorkerNotesDialog component for adding/editing notes",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-4-1": {
+      "attempts": [
+        {
+          "session": 11,
+          "timestamp": "2026-02-22T05:18:48.595457+00:00",
+          "approach": "Implemented: Update business jobs page to show booking applications",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-5-1": {
+      "attempts": [
+        {
+          "session": 12,
+          "timestamp": "2026-02-22T05:21:19.230970+00:00",
+          "approach": "Implemented: Create useRealtimeBookings hook for subscribing to booking changes",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-5-2": {
+      "attempts": [
+        {
+          "session": 13,
+          "timestamp": "2026-02-22T05:21:42.944261+00:00",
+          "approach": "File validation failed before execution",
+          "success": false,
+          "error": "Planned files do not exist: app/app/(dashboard)/business/jobs/page.tsx"
+        },
+        {
+          "session": 14,
+          "timestamp": "2026-02-22T05:21:46.016968+00:00",
+          "approach": "File validation failed before execution",
+          "success": false,
+          "error": "Planned files do not exist: app/app/(dashboard)/business/jobs/page.tsx"
+        },
+        {
+          "session": 15,
+          "timestamp": "2026-02-22T05:21:49.078183+00:00",
+          "approach": "File validation failed before execution",
+          "success": false,
+          "error": "Planned files do not exist: app/app/(dashboard)/business/jobs/page.tsx"
+        },
+        {
+          "session": 16,
+          "timestamp": "2026-02-22T05:21:52.138007+00:00",
+          "approach": "File validation failed before execution",
+          "success": false,
+          "error": "Planned files do not exist: app/app/(dashboard)/business/jobs/page.tsx"
+        },
+        {
+          "session": 17,
+          "timestamp": "2026-02-22T05:21:55.206880+00:00",
+          "approach": "File validation failed before execution",
+          "success": false,
+          "error": "Planned files do not exist: app/app/(dashboard)/business/jobs/page.tsx"
+        }
+      ],
+      "status": "stuck"
+    },
+    "subtask-6-1": {
+      "attempts": [
+        {
+          "session": 18,
+          "timestamp": "2026-02-22T05:23:38.884676+00:00",
+          "approach": "Implemented: Create notification creation function for booking status changes",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
     }
   },
-  "stuck_subtasks": [],
+  "stuck_subtasks": [
+    {
+      "subtask_id": "subtask-5-2",
+      "reason": "File validation failed after 5 attempts: Planned files do not exist: app/app/(dashboard)/business/jobs/page.tsx",
+      "escalated_at": "2026-02-22T05:21:55.225542+00:00",
+      "attempt_count": 5
+    }
+  ],
   "metadata": {
     "created_at": "2026-02-22T04:47:19.915259+00:00",
-    "last_updated": "2026-02-22T05:09:44.461944+00:00"
+    "last_updated": "2026-02-22T05:23:38.884691+00:00"
   }
 }
