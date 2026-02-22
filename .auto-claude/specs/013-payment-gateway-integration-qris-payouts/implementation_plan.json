@@ -184,7 +184,7 @@
           },
           "status": "completed",
           "notes": "Created lib/utils/xendit.ts with comprehensive Xendit API client functions. Includes: 1) createQrisPayment for QRIS payment creation, 2) createPayout for disbursements/withdrawals, 3) getPayoutStatus for checking payout status, 4) verifyWebhookSignature for webhook authentication, 5) calculatePaymentFee (0.7% + Rp 500), 6) calculatePayoutFee (varies by bank and amount), 7) validateCredentials for API key validation, 8) mapPaymentStatus and mapPayoutStatus for status conversion. All functions follow project patterns with JSDoc comments, proper error handling, and TypeScript types. Verification passed with module load check.",
-          "updated_at": "2026-02-22T09:30:00.000000+00:00"
+          "updated_at": "2026-02-22T08:27:06.569127+00:00"
         },
         {
           "id": "subtask-2-4",
@@ -201,7 +201,9 @@
             "command": "npm run type-check 2>&1 | grep -i 'error' | wc -l",
             "expected": "0"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created lib/utils/payment-validator.ts with comprehensive payment validation schemas using Zod. Includes: 1) Bank code enum (BCA, BRI, Mandiri, BNI), 2) Bank account number validation with length constraints and format checks, 3) Bank account holder name validation with regex, 4) Top-up amount validation (Rp 500.000 - Rp 100.000.000), 5) Payout amount validation (Rp 100.000 - Rp 100.000.000), 6) Fee amount validation, 7) Zod schemas for bank account CRUD operations, 8) Payment transaction and payout request creation schemas, 9) Helper functions: validateBankAccountFormat, validatePaymentAmount, validateTopUpAmount, calculatePayoutFeeDetails, calculatePaymentFeeDetails. All error messages in Indonesian following project conventions. Type-check passed with 0 errors.",
+          "updated_at": "2026-02-22T09:25:00.000000+00:00"
         }
       ]
     },
@@ -754,6 +756,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T08:22:54.070Z",
-  "last_updated": "2026-02-22T08:11:36.636090+00:00"
+  "updated_at": "2026-02-22T08:28:03.462Z",
+  "last_updated": "2026-02-22T08:27:06.569143+00:00"
 }

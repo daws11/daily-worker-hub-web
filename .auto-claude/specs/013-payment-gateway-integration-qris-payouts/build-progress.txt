@@ -137,3 +137,43 @@ Implementation plan is ready for coder agent to begin.
   - RLS policies for data security
   - Trigger for updated_at timestamps
   - TypeScript types match database schema exactly
+
+2026-02-22 - Subtask 2-4: Create lib/utils/payment-validator.ts with validation for amounts and bank accounts
+- Status: COMPLETED
+- Files:
+  - lib/utils/payment-validator.ts (created)
+- Implementation:
+  - Created comprehensive Zod validation schemas for payments
+  - Bank code enum: BCA, BRI, Mandiri, BNI
+  - Bank account number validation:
+    - Min 10 digits, max 16 digits
+    - Digits only
+    - Rejects repeated same digits (e.g., 1111111111)
+  - Bank account holder name validation:
+    - Min 3 characters, max 100 characters
+    - Letters, spaces, and standard punctuation only
+  - Top-up amount validation: Rp 500.000 - Rp 100.000.000
+  - Payout amount validation: Rp 100.000 - Rp 100.000.000
+  - Fee amount validation: 0 - Rp 100.000
+  - Zod schemas:
+    - createBankAccountSchema
+    - updateBankAccountSchema
+    - createPaymentTransactionSchema
+    - createPayoutRequestSchema
+    - payoutFeeCalculationSchema
+    - paymentFeeCalculationSchema
+  - Helper functions:
+    - validateBankAccountFormat(accountNumber, bankCode)
+    - validatePaymentAmount(amount, availableBalance)
+    - validateTopUpAmount(amount)
+    - calculatePayoutFeeDetails(amount, bankCode, feePercentage)
+    - calculatePaymentFeeDetails(amount, feePercentage, fixedFee)
+  - All error messages in Indonesian
+  - Exported TypeScript types for all schemas
+- Verification: Type-check passed with 0 errors
+- Patterns followed from lib/validators/worker-profile.ts:
+  - Zod schema structure
+  - Indonesian error messages
+  - Proper TypeScript type exports
+  - Comprehensive validation with refine()
+  - Helper functions for business logic
