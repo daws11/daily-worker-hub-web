@@ -152,5 +152,26 @@ Date: 2026-02-22
   • Commit: 1c22935
   • Plan updated: subtask-1-1 status = completed
 
-[IN PROGRESS] Subtask 1-2: Create reliability_score_history table
-  • Next: Create migration file for reliability_score_history table
+[COMPLETED] Subtask 1-2: Create reliability_score_history table for tracking score changes over time
+  • Created: supabase/migrations/20260222_create_reliability_score_history.sql
+  • Table structure:
+    - id UUID (primary key)
+    - worker_id UUID (foreign key to workers)
+    - score NUMERIC(3,2) CHECK (1.0-5.0)
+    - attendance_rate NUMERIC(5,2) CHECK (0-100)
+    - punctuality_rate NUMERIC(5,2) CHECK (0-100)
+    - avg_rating NUMERIC(3,2) CHECK (1.0-5.0)
+    - completed_jobs_count INTEGER (for 5+ job threshold)
+    - calculated_at TIMESTAMPTZ
+    - created_at TIMESTAMPTZ
+  • Added indexes: worker_id, calculated_at DESC, composite (worker_id, calculated_at)
+  • RLS policies enabled:
+    - Workers can view own history
+    - Admins can view all history
+  • Comprehensive documentation via COMMENT statements
+  • Commit: c790733
+  • Plan updated: subtask-1-2 status = completed
+
+[NEXT] Subtask 1-3: Add RLS policies for reliability_score_history table
+  • Note: RLS policies already included in subtask 1-2 migration
+  • May need to verify or skip this subtask
