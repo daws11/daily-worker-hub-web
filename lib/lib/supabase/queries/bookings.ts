@@ -16,6 +16,14 @@ export type JobBookingWithDetails = BookingRow & {
     id: string
     name: string
   }
+  wallet_transaction?: {
+    id: string
+    amount: number
+    type: 'earn' | 'payout' | 'refund' | 'hold' | 'release'
+    status: 'pending_review' | 'available' | 'released' | 'disputed' | 'cancelled'
+    description: string | null
+    created_at: string
+  } | null
 }
 
 /**
@@ -37,6 +45,14 @@ export async function getJobBookings(jobId: string) {
         business:businesses!inner(
           id,
           name
+        ),
+        wallet_transaction:wallet_transactions(
+          id,
+          amount,
+          type,
+          status,
+          description,
+          created_at
         )
       `)
       .eq('job_id', jobId)
@@ -76,6 +92,14 @@ export async function getWorkerBookings(workerId: string) {
           name,
           phone,
           email
+        ),
+        wallet_transaction:wallet_transactions(
+          id,
+          amount,
+          type,
+          status,
+          description,
+          created_at
         )
       `)
       .eq('worker_id', workerId)
@@ -115,6 +139,14 @@ export async function getBusinessBookings(businessId: string) {
           description,
           budget_min,
           budget_max
+        ),
+        wallet_transaction:wallet_transactions(
+          id,
+          amount,
+          type,
+          status,
+          description,
+          created_at
         )
       `)
       .eq('business_id', businessId)
@@ -160,6 +192,14 @@ export async function getBookingById(bookingId: string) {
           description,
           budget_min,
           budget_max
+        ),
+        wallet_transaction:wallet_transactions(
+          id,
+          amount,
+          type,
+          status,
+          description,
+          created_at
         )
       `)
       .eq('id', bookingId)
