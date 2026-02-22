@@ -5,6 +5,10 @@ import { toast } from "sonner"
 import { supabase } from "../../../lib/supabase/client"
 import { useAuth } from "../../providers/auth-provider"
 import { KycStatusBadge } from "../../../../components/worker/kyc-status-badge"
+import { ReliabilityBadge } from "../../../../components/worker/reliability-badge"
+import { ScoreBreakdown } from "../../../../components/worker/score-breakdown"
+import { ScoreHistory } from "../../../../components/worker/score-history"
+import type { ScoreHistoryEntry } from "../../../../components/worker/score-history"
 
 const AVAILABLE_SKILLS = [
   "Kebersihan Rumah",
@@ -31,6 +35,15 @@ export default function WorkerProfilePage() {
   const [kycStatus, setKycStatus] = useState<'unverified' | 'pending' | 'verified' | 'rejected'>('unverified')
   const [rejectionReason, setRejectionReason] = useState<string | null>(null)
   const [isLoadingProfile, setIsLoadingProfile] = useState(true)
+  const [reliabilityScore, setReliabilityScore] = useState<number | null>(null)
+  const [scoreBreakdown, setScoreBreakdown] = useState<{
+    attendance_rate: number
+    punctuality_rate: number
+    avg_rating: number
+    completed_jobs_count: number
+  } | null>(null)
+  const [scoreHistory, setScoreHistory] = useState<ScoreHistoryEntry[]>([])
+  const [isLoadingScore, setIsLoadingScore] = useState(false)
 
   // Load existing profile data on mount
   useEffect(() => {
@@ -109,6 +122,66 @@ export default function WorkerProfilePage() {
     }
 
     loadProfile()
+  }, [user])
+
+  // Fetch reliability score data when worker profile is loaded
+  useEffect(() => {
+    async function fetchReliabilityScore() {
+      if (!user) return
+
+      setIsLoadingScore(true)
+      try {
+        // Get worker ID
+        const { data: workerData } = await supabase
+          .from('workers')
+          .select('id, reliability_score')
+          .eq('user_id', user.id)
+          .single()
+
+        if (!workerData) {
+          return
+        }
+
+        // Set current reliability score
+        setReliabilityScore(workerData.reliability_score)
+
+        // Fetch score breakdown from latest history entry
+        const { data: latestHistory } = await supabase
+          .from('reliability_score_history')
+          .select('*')
+          .eq('worker_id', workerData.id)
+          .order('calculated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (latestHistory) {
+          setScoreBreakdown({
+            attendance_rate: latestHistory.attendance_rate,
+            punctuality_rate: latestHistory.punctuality_rate,
+            avg_rating: latestHistory.avg_rating,
+            completed_jobs_count: latestHistory.completed_jobs_count,
+          })
+        }
+
+        // Fetch score history
+        const { data: historyData } = await supabase
+          .from('reliability_score_history')
+          .select('*')
+          .eq('worker_id', workerData.id)
+          .order('calculated_at', { ascending: false })
+          .limit(10)
+
+        if (historyData) {
+          setScoreHistory(historyData as ScoreHistoryEntry[])
+        }
+      } catch (error) {
+        console.error('Error fetching reliability score:', error)
+      } finally {
+        setIsLoadingScore(false)
+      }
+    }
+
+    fetchReliabilityScore()
   }, [user])
 
   const handleSkillToggle = (skill: string) => {
@@ -389,6 +462,43 @@ export default function WorkerProfilePage() {
             </div>
           </div>
         )}
+
+        {/* Reliability Score Section */}
+        <div style={{ marginBottom: '1rem' }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '0.5rem',
+            padding: '1rem',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            marginBottom: '1rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 600, color: '#1f2937' }}>
+                Skor Reliabilitas
+              </h3>
+              {!isLoadingScore && <ReliabilityBadge score={reliabilityScore} />}
+            </div>
+            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: '#6b7280' }}>
+              Skor reliabilitas Anda didasarkan pada kehadiran, ketepatan waktu, dan rating dari bisnis.
+            </p>
+          </div>
+
+          {/* Score Breakdown and History Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
+            {scoreBreakdown && (
+              <ScoreBreakdown
+                attendanceRate={scoreBreakdown.attendance_rate}
+                punctualityRate={scoreBreakdown.punctuality_rate}
+                avgRating={scoreBreakdown.avg_rating}
+              />
+            )}
+            <ScoreHistory
+              history={scoreHistory}
+              currentScore={reliabilityScore ?? undefined}
+              limit={5}
+            />
+          </div>
+        </div>
 
         {/* Loading State */}
         {isLoadingProfile ? (

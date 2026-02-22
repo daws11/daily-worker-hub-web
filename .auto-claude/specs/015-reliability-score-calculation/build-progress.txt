@@ -245,3 +245,24 @@ Date: 2026-02-23
     - Proper value clamping with Math.max/Math.min
   • Pattern from: components/ui/card.tsx
   • Plan updated: subtask-3-2 status = completed
+
+[COMPLETED] Subtask 3-3: Create ScoreHistory component to show score trend over time
+  • Created: components/worker/score-history.tsx
+  • Features:
+    - Displays history as a list with date, score, and trend indicators
+    - Shows dates relative to today (Today, Yesterday, X days ago, or formatted date)
+    - Displays completed jobs count for each entry
+    - Color-coded scores: green (4.5+), yellow (3.5+), orange (2.5+), red (<2.5)
+    - Trend badges showing improvement/decline with icons (TrendingUp/TrendingDown/Minus)
+    - Handles empty state with helpful message
+    - Optional limit prop to control number of entries shown (default 10)
+    - Shows "Showing X of Y entries" when limited
+  • Uses Card component patterns (Card, CardHeader, CardTitle, CardDescription, CardContent)
+  • Internal components: TrendBadge, getScoreColor, formatDate
+  • Pattern from: components/ui/card.tsx
+  • Commit: 3507536
+  • Plan updated: subtask-3-3 status = completed
+
+[NEXT] Phase 4: Integration Pages (2 subtasks)
+  • Subtask 4-1: Add reliability score display to worker profile page
+  • Subtask 4-2: Add reliability score display to business applicant view
