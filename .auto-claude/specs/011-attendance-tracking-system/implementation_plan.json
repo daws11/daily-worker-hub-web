@@ -1,0 +1,660 @@
+{
+  "feature": "Attendance Tracking System",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a multi-service feature requiring database schema changes (new columns for attendance), QR code generation/scanning, GPS location verification, UI components for check-in/out flow, and integration with existing reliability scoring. The phases follow dependency order: database -> data layer -> attendance logic -> UI components -> pages -> integration.",
+  "phases": [
+    {
+      "id": "phase-1-database",
+      "name": "Database Schema",
+      "type": "implementation",
+      "description": "Add attendance tracking columns to bookings table and QR code support to jobs table",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create database migration for attendance tracking fields",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/20260222_add_attendance_tracking.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/migrations/20260222_add_bookings_rls_policies.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'check_in_at' supabase/migrations/20260222_add_attendance_tracking.sql && echo 'Migration created'",
+            "expected": "Migration created"
+          },
+          "status": "completed",
+          "notes": "Created database migration file at supabase/migrations/20260222_add_attendance_tracking.sql with:\n- Added check_in_at, check_out_at columns to bookings table\n- Added GPS location columns (check_in_lat, check_in_lng, check_out_lat, check_out_lng) to bookings table\n- Added qr_code, qr_generated_at columns to jobs table with unique constraint\n- Updated RLS policies to allow workers to update their own attendance fields\n- Added indexes for efficient attendance queries\n- Verified with grep command and committed to git",
+          "updated_at": "2026-02-22T07:08:11.607675+00:00"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Update TypeScript types for attendance fields",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/supabase/types.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'check_in_at' lib/supabase/types.ts && echo 'Types updated'",
+            "expected": "Types updated"
+          },
+          "status": "completed",
+          "notes": "Successfully added attendance fields to TypeScript types:\n- Added check_in_at, check_out_at, check_in_lat, check_in_lng, check_out_lat, check_out_lng to bookings Row type\n- Added qr_code, qr_generated_at to jobs Row type\n- All fields are nullable (string | null for timestamps and QR code, number | null for coordinates)\n- Verified with grep command and committed to git",
+          "updated_at": "2026-02-22T07:15:00.000Z"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-dependencies",
+      "name": "Install Dependencies",
+      "type": "implementation",
+      "description": "Install QR code generation and scanning libraries",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Install QR code libraries",
+          "service": "frontend",
+          "files_to_modify": [
+            "package.json"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'qrcode.react' package.json && grep -q 'html5-qrcode' package.json && echo 'Dependencies installed'",
+            "expected": "Dependencies installed"
+          },
+          "status": "completed",
+          "notes": "Added qrcode.react@^4.2.0 for QR code generation and html5-qrcode@^2.3.8 for QR code scanning to package.json dependencies. Both libraries are properly listed and verification passed. Note: npm install encountered registry access issues in the isolated environment, but the dependencies are correctly defined and will install in the user's environment. Committed to git."
+        }
+      ]
+    },
+    {
+      "id": "phase-3-data-layer",
+      "name": "Data Layer & Types",
+      "type": "implementation",
+      "description": "Create attendance query functions, hooks, and TypeScript types",
+      "depends_on": [
+        "phase-1-database",
+        "phase-2-dependencies"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create attendance TypeScript types",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/types/attendance.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/types/job.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'export.*AttendanceRecord' lib/types/attendance.ts && echo 'Types created'",
+            "expected": "Types created"
+          },
+          "status": "completed",
+          "notes": "Created lib/types/attendance.ts with comprehensive TypeScript types for attendance tracking:\n- AttendanceStatus, LocationVerificationStatus union types\n- LocationCoordinates interface for GPS data\n- AttendanceRecord interface matching bookings table schema\n- AttendanceWithRelations interface with job/worker relations and location verification\n- CheckInData, CheckOutData interfaces for check-in/out operations\n- QRCodeData interface for QR code data\n- AttendanceStats interface for attendance statistics\n- WorkerAttendanceHistory and JobAttendanceHistory interfaces\n- AttendanceListParams and AttendanceListResponse for paginated queries\n- LocationVerificationResult for GPS verification results\n- QRCodeValidationResult for QR code validation\nAll types follow the same pattern as lib/types/job.ts, verified with grep command and committed to git.",
+          "updated_at": "2026-02-22T07:24:05.115471+00:00"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create attendance query functions",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/supabase/queries/attendance.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/supabase/queries/bookings.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'export.*checkIn' lib/supabase/queries/attendance.ts && grep -q 'export.*checkOut' lib/supabase/queries/attendance.ts && echo 'Queries created'",
+            "expected": "Queries created"
+          },
+          "status": "completed",
+          "notes": "Created lib/supabase/queries/attendance.ts with comprehensive attendance query functions:\n- checkIn(bookingId, lat, lng) - Check in worker with GPS coordinates, updates status to 'in_progress'\n- checkOut(bookingId, lat, lng) - Check out worker with GPS coordinates, updates status to 'completed'\n- getJobAttendanceHistory(jobId) - Get attendance records for a job with worker relations\n- getWorkerAttendanceHistory(workerId) - Get attendance records for a worker with job relations\n- verifyWorkerLocation(jobId, workerLat, workerLng) - Verify GPS location using Haversine formula\n- calculateAttendanceRate(workerId) - Calculate attendance rate percentage\n- getAttendanceList(params) - Get paginated attendance records with filtering\n- getWorkerAttendanceStats(workerId) - Get attendance statistics for a worker\n\nHelper functions:\n- haversineDistance() - Calculate distance between coordinates\n- calculateLocationVerification() - Determine if location is within acceptable range (100m)\n- calculateAttendanceStats() - Calculate attendance statistics from bookings\n\nAll functions follow the same error handling pattern as bookings.ts with try-catch blocks and console.error logging. Verified with grep command and committed to git.",
+          "updated_at": "2026-02-22T15:30:00.000Z"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Update job queries to add QR code generation",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/supabase/queries/jobs.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/queries/jobs.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'generateJobQRCode' lib/supabase/queries/jobs.ts && echo 'Job queries updated'",
+            "expected": "Job queries updated"
+          },
+          "status": "pending",
+          "notes": "Add generateJobQRCode(jobId) function to create unique QR code for job and store in jobs table"
+        },
+        {
+          "id": "subtask-3-4",
+          "description": "Create useGeolocation hook for GPS capture",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/hooks/use-geolocation.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/hooks/use-bookings.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'export.*useGeolocation' lib/hooks/use-geolocation.ts && echo 'Hook created'",
+            "expected": "Hook created"
+          },
+          "status": "pending",
+          "notes": "Create hook that uses navigator.geolocation API to get current position with error handling, permission states, and accuracy info"
+        },
+        {
+          "id": "subtask-3-5",
+          "description": "Create useAttendance hook for attendance state management",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/hooks/use-attendance.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/hooks/use-bookings.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'export.*useAttendance' lib/hooks/use-attendance.ts && echo 'Hook created'",
+            "expected": "Hook created"
+          },
+          "status": "pending",
+          "notes": "Create hook with checkIn, checkOut, getAttendanceHistory, calculateAttendanceRate functions, loading/error states, toast notifications"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-ui-components",
+      "name": "UI Components",
+      "type": "implementation",
+      "description": "Create QR code generation, scanning, and attendance display components",
+      "depends_on": [
+        "phase-3-data-layer"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create QRCodeGenerator component for businesses",
+          "service": "frontend",
+          "files_to_create": [
+            "components/attendance/qr-code-generator.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/card.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'export.*QRCodeGenerator' components/attendance/qr-code-generator.tsx && echo 'Component created'",
+            "expected": "Component created"
+          },
+          "status": "pending",
+          "notes": "Component uses qrcode.react to display QR code, includes download/print options, shows job details, refresh button to regenerate QR code"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Create QRCodeScanner component for workers",
+          "service": "frontend",
+          "files_to_create": [
+            "components/attendance/qr-code-scanner.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/dialog.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'export.*QRCodeScanner' components/attendance/qr-code-scanner.tsx && echo 'Component created'",
+            "expected": "Component created"
+          },
+          "status": "pending",
+          "notes": "Component uses html5-qrcode for camera access, handles scan success/error, validates QR code format, shows camera permission prompt, handles check-in vs check-out mode"
+        },
+        {
+          "id": "subtask-4-3",
+          "description": "Create CheckInOutButton component",
+          "service": "frontend",
+          "files_to_create": [
+            "components/attendance/check-in-out-button.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/button.tsx",
+            "components/booking/booking-actions.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'export.*CheckInOutButton' components/attendance/check-in-out-button.tsx && echo 'Component created'",
+            "expected": "Component created"
+          },
+          "status": "pending",
+          "notes": "Smart button that shows 'Check In' or 'Check Out' based on current state, handles loading state, disabled when not at job location or outside working hours, opens QR scanner on click"
+        },
+        {
+          "id": "subtask-4-4",
+          "description": "Create AttendanceHistory component",
+          "service": "frontend",
+          "files_to_create": [
+            "components/attendance/attendance-history.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/table.tsx",
+            "components/ui/badge.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'export.*AttendanceHistory' components/attendance/attendance-history.tsx && echo 'Component created'",
+            "expected": "Component created"
+          },
+          "status": "pending",
+          "notes": "Table component showing date, job title, check-in time, check-out time, duration, location verification status, attendance rate summary card at top"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-pages",
+      "name": "Page Implementation",
+      "type": "implementation",
+      "description": "Create worker and business pages for attendance tracking",
+      "depends_on": [
+        "phase-4-ui-components"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Create worker attendance page",
+          "service": "frontend",
+          "files_to_create": [
+            "app/(dashboard)/worker/attendance/page.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard-worker-attendance",
+            "checks": [
+              "Page loads without errors",
+              "Attendance history displays",
+              "Check in/out buttons work for active bookings"
+            ]
+          },
+          "status": "pending",
+          "notes": "Page shows today's schedule with check-in/out buttons, attendance history table, attendance rate card, GPS permission prompt if needed"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Create business job attendance page",
+          "service": "frontend",
+          "files_to_create": [
+            "app/(dashboard)/business/job-attendance/page.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "app/(dashboard)/business/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard-business-job-attendance",
+            "checks": [
+              "Page loads without errors",
+              "QR code displays for active jobs",
+              "Worker attendance list shows check-in times"
+            ]
+          },
+          "status": "pending",
+          "notes": "Page shows job QR code for display, list of workers with their check-in/check-out status, attendance summary, export options"
+        },
+        {
+          "id": "subtask-5-3",
+          "description": "Add attendance section to worker jobs page",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard-worker-jobs",
+            "checks": [
+              "Accepted bookings show check-in button",
+              "Checked-in bookings show check-out button"
+            ]
+          },
+          "status": "pending",
+          "notes": "Add CheckInOutButton to accepted booking cards, show check-in status badge on each booking"
+        },
+        {
+          "id": "subtask-5-4",
+          "description": "Add attendance section to business jobs page",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(dashboard)/business/jobs/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard-business-jobs",
+            "checks": [
+              "Active jobs show QR code button",
+              "Worker list shows attendance status"
+            ]
+          },
+          "status": "pending",
+          "notes": "Add QRCodeGenerator button to active job cards, show worker attendance status in booking list"
+        }
+      ]
+    },
+    {
+      "id": "phase-6-integration",
+      "name": "Integration & Reliability",
+      "type": "implementation",
+      "description": "Integrate attendance data with reliability scoring and add notifications",
+      "depends_on": [
+        "phase-5-pages"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Update reliability score calculation to use attendance data",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/supabase/queries/bookings.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'check_in_at' lib/supabase/queries/bookings.ts && echo 'Reliability function updated'",
+            "expected": "Reliability function updated"
+          },
+          "status": "pending",
+          "notes": "Update calculateReliabilityScore to use check_in_at instead of checked_in_at, add attendance completeness check, update getWorkerReliabilityMetrics to include attendance data"
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Add notifications for check-in/check-out events",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/supabase/queries/attendance.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/actions/notifications.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Test that business receives notification when worker checks in"
+          },
+          "status": "pending",
+          "notes": "Create notification when worker checks in (alert business), create notification when worker checks out (mark job complete ready), include location verification status in notification"
+        },
+        {
+          "id": "subtask-6-3",
+          "description": "Update booking status when worker checks in",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/supabase/queries/attendance.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify booking status changes to 'in_progress' when worker checks in"
+          },
+          "status": "pending",
+          "notes": "Automatically change booking status from 'accepted' to 'in_progress' when worker checks in, change to 'completed' when worker checks out"
+        }
+      ]
+    },
+    {
+      "id": "phase-7-testing",
+      "name": "End-to-End Testing",
+      "type": "integration",
+      "description": "Complete testing of the attendance tracking flow",
+      "depends_on": [
+        "phase-6-integration"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-7-1",
+          "description": "End-to-end verification of attendance tracking flow",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Business creates job and accepts worker booking",
+              "QR code is generated for the job",
+              "Business displays QR code to worker",
+              "Worker navigates to attendance page and taps Check In",
+              "Worker scans QR code",
+              "GPS location is captured and verified",
+              "Check-in timestamp is recorded",
+              "Booking status changes to 'in_progress'",
+              "Business receives notification of worker check-in",
+              "After work, worker taps Check Out and scans QR code",
+              "Check-out timestamp is recorded",
+              "Booking status changes to 'completed'",
+              "Worker views attendance history with check-in/out times",
+              "Business views worker attendance for the job",
+              "Reliability score is updated based on attendance"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 7,
+    "total_subtasks": 22,
+    "services_involved": [
+      "database",
+      "frontend"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 2,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-1-database",
+            "phase-2-dependencies"
+          ],
+          "reason": "Database migrations and package installation can happen independently"
+        },
+        {
+          "phases": [
+            "phase-6-integration"
+          ],
+          "reason": "Integration tasks can be done in parallel once pages are complete"
+        }
+      ],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution recommended due to tight dependencies between phases"
+    },
+    "startup_command": "npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "unit",
+      "integration"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All existing tests pass",
+      "New code has type safety (no TypeScript errors)",
+      "QR codes generate correctly for jobs",
+      "QR scanner accesses camera and reads codes",
+      "GPS location is captured and verified",
+      "Check-in/out timestamps are recorded accurately",
+      "Attendance history displays correctly",
+      "Reliability score incorporates attendance data",
+      "Notifications are sent on check-in/check-out"
+    ],
+    "verification_steps": [
+      {
+        "name": "TypeScript Type Check",
+        "command": "npm run type-check",
+        "expected_outcome": "No type errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Lint Check",
+        "command": "npm run lint",
+        "expected_outcome": "No lint errors",
+        "type": "test",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "Build Verification",
+        "command": "npm run build",
+        "expected_outcome": "Build succeeds without errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Manual Browser Testing - Worker Flow",
+        "command": "Test worker check-in flow: navigate to attendance page, tap check in, scan QR code, verify GPS capture, confirm timestamp recorded",
+        "expected_outcome": "Worker can successfully check in and check out",
+        "type": "manual",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Manual Browser Testing - Business Flow",
+        "command": "Test business attendance view: view job QR code, display to worker, see worker check-in notification, view attendance history",
+        "expected_outcome": "Business can generate QR codes and view worker attendance",
+        "type": "manual",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Medium risk feature with database changes, third-party library integration (QR code), camera/geolocation APIs, and integration with existing reliability scoring system. Type checking ensures type safety with new libraries. Manual testing required for camera and GPS functionality which cannot be tested automatically."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/dashboard-worker-attendance",
+          "checks": [
+            "Page loads without errors",
+            "Today's schedule displays with check-in buttons",
+            "Attendance history table shows past records",
+            "Attendance rate is calculated and displayed",
+            "Check-in button opens QR scanner",
+            "GPS permission prompt works correctly",
+            "Check-in timestamp is recorded after scanning"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/dashboard-business-job-attendance",
+          "checks": [
+            "Page loads without errors",
+            "Job QR code is displayed",
+            "Worker attendance list shows check-in/check-out times",
+            "Location verification status is shown",
+            "Refresh button regenerates QR code"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/dashboard-worker-jobs",
+          "checks": [
+            "Accepted bookings show check-in/check-out buttons",
+            "Booking status badges update correctly",
+            "Attendance status is visible on booking cards"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/dashboard-business-jobs",
+          "checks": [
+            "Active jobs show QR code button",
+            "Worker booking cards show attendance status",
+            "Notifications appear when workers check in"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "check_in_at column exists in bookings table",
+        "check_out_at column exists in bookings table",
+        "check_in_lat, check_in_lng columns exist in bookings table",
+        "check_out_lat, check_out_lng columns exist in bookings table",
+        "qr_code column exists in jobs table",
+        "Check-in updates booking status to 'in_progress'",
+        "Check-out updates booking status to 'completed'",
+        "Attendance data feeds into reliability score calculation"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "xstateState": "planning",
+  "executionPhase": "coding",
+  "updated_at": "2026-02-22T07:24:29.043Z",
+  "last_updated": "2026-02-22T07:24:05.115479+00:00"
+}
