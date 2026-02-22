@@ -144,7 +144,9 @@
             "command": "npm run type-check 2>&1 | grep -i 'error' | wc -l",
             "expected": "0"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Payment-related TypeScript types verified in lib/supabase/types.ts. All three payment tables (payment_transactions, payout_requests, bank_accounts) are properly defined with correct field types matching the database schema. Type check passes with 0 errors.",
+          "updated_at": "2026-02-22T09:10:00.000000+00:00"
         },
         {
           "id": "subtask-2-2",
@@ -748,6 +750,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T08:08:25.445Z",
+  "updated_at": "2026-02-22T08:12:58.581Z",
   "last_updated": "2026-02-22T08:11:36.636090+00:00"
 }

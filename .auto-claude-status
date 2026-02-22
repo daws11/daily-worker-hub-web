@@ -3,23 +3,23 @@
   "spec": "013-payment-gateway-integration-qris-payouts",
   "state": "building",
   "subtasks": {
-    "completed": 1,
+    "completed": 5,
     "total": 26,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Database Schema Setup",
+    "current": "Core Types and Utilities",
     "id": null,
-    "total": 5
+    "total": 4
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 5,
+    "number": 11,
     "started_at": "2026-02-22T15:25:22.780616"
   },
-  "last_update": "2026-02-22T15:44:54.117355"
+  "last_update": "2026-02-22T16:12:58.608134"
 }
