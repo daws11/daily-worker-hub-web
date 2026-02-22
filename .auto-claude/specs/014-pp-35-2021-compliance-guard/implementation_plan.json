@@ -46,7 +46,7 @@
             "command": "psql $DATABASE_URL -c \"SELECT calculate_days_worked('business-id', 'worker-id', '2026-02-01'::date)\"",
             "expected": "Function returns count of accepted/completed bookings"
           },
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "subtask-1-3",
@@ -598,5 +598,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T12:04:13.458Z"
+  "updated_at": "2026-02-22T12:08:05.217Z"
 }
