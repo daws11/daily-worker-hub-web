@@ -45,7 +45,10 @@ export async function getJobs(params?: JobListParams): Promise<{
     // Apply filters
     if (filters) {
       if (filters.search) {
-        query = query.ilike('title', `%${filters.search}%`)
+        // Search across title, description, and requirements
+        query = query.or(
+          `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%,requirements.ilike.%${filters.search}%`
+        )
       }
 
       if (filters.categoryId) {
