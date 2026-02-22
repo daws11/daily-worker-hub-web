@@ -112,6 +112,7 @@ export default function BusinessJobsPage() {
           address: job.address,
           wageMin: job.budget_min,
           wageMax: job.budget_max,
+          requirements: job.requirements ? job.requirements.split(',') : [],
         }))
         setJobs(transformedJobs)
       } catch (error) {
@@ -151,12 +152,14 @@ export default function BusinessJobsPage() {
       if (editingJob) {
         // Update existing job
         await updateJob(editingJob.id, {
+          position_type: values.positionType,
           title: values.title,
           description: values.description,
           deadline: values.date,
           address: values.address,
           budget_min: values.wageMin,
           budget_max: values.wageMax,
+          requirements: values.requirements.join(','),
         })
 
         setJobs((prev) =>
