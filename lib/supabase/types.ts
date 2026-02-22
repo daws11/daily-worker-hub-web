@@ -138,6 +138,8 @@ export interface Database {
           end_date: string
           final_price: number
           booking_notes: string
+          actual_start_time: string | null
+          actual_end_time: string | null
           created_at: string
           updated_at: string
         }
@@ -171,6 +173,19 @@ export interface Database {
           worker_id: string
           rating: number
           comment: string
+          created_at: string
+        }
+      }
+      reliability_score_history: {
+        Row: {
+          id: string
+          worker_id: string
+          score: number
+          attendance_rate: number
+          punctuality_rate: number
+          avg_rating: number
+          completed_jobs_count: number
+          calculated_at: string
           created_at: string
         }
       }
