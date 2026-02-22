@@ -1,0 +1,70 @@
+{
+  "files_to_modify": {
+    "frontend": [
+      "app/app/(dashboard)/worker/bookings/page.tsx",
+      "middleware.ts"
+    ]
+  },
+  "files_to_create": {
+    "frontend": [
+      "app/app/(dashboard)/worker/bookings/page.tsx",
+      "components/worker/booking-list.tsx",
+      "components/worker/booking-card.tsx",
+      "components/worker/booking-status-badge.tsx",
+      "components/worker/cancel-booking-dialog.tsx"
+    ]
+  },
+  "files_to_reference": [
+    "app/app/(dashboard)/worker/jobs/page.tsx",
+    "app/app/(dashboard)/business/jobs/page.tsx",
+    "app/app/providers/auth-provider.tsx",
+    "lib/supabase/client.ts",
+    "lib/supabase/types.ts",
+    "components/ui/card.tsx",
+    "components/ui/badge.tsx",
+    "components/ui/button.tsx",
+    "components/ui/table.tsx",
+    "components/ui/dialog.tsx"
+  ],
+  "patterns": {
+    "page_structure": "All pages use 'use client' directive with useAuth hook for authentication",
+    "auth_provider": "AuthContext provides user, session, userRole, isLoading states via useAuth() hook",
+    "data_fetching": "Use supabase client from lib/supabase/client.ts for database queries",
+    "styling": "Existing dashboard pages use inline styles OR Tailwind classes via shadcn/ui components",
+    "ui_components": "Shadcn/ui components (Card, Button, Badge, Table, Dialog) with cn() utility for class merging",
+    "middleware": "Protected routes are defined in middleware.ts protectedRoutes array",
+    "routing": "Dashboard pages use (dashboard) route group with role-specific folders (worker/business)"
+  },
+  "existing_implementations": {
+    "description": "Existing worker jobs page at app/app/(dashboard)/worker/jobs/page.tsx shows dashboard structure with stats cards and uses inline styling for layout",
+    "relevant_files": [
+      "app/app/(dashboard)/worker/jobs/page.tsx",
+      "app/app/providers/auth-provider.tsx",
+      "lib/supabase/types.ts"
+    ],
+    "database_schema": {
+      "bookings_table": {
+        "status_values": ["pending", "accepted", "rejected", "in_progress", "completed", "cancelled"],
+        "related_tables": ["jobs", "businesses", "workers"]
+      },
+      "jobs_table": {
+        "fields": ["id", "business_id", "category_id", "title", "description", "budget_min", "budget_max", "deadline", "address"]
+      },
+      "businesses_table": {
+        "fields": ["id", "user_id", "name", "is_verified", "phone", "email"]
+      }
+    }
+  },
+  "ui_components_available": {
+    "Card": ["Card", "CardHeader", "CardTitle", "CardDescription", "CardContent", "CardFooter"],
+    "Button": "Variants: default, destructive, outline, secondary, ghost, link",
+    "Badge": "Variants: default, secondary, destructive, outline",
+    "Table": ["Table", "TableHeader", "TableBody", "TableRow", "TableHead", "TableCell"],
+    "Dialog": ["Dialog", "DialogContent", "DialogHeader", "DialogTitle", "DialogDescription", "DialogFooter", "DialogTrigger"]
+  },
+  "considerations": {
+    "language": "Indonesian language used in existing UI (e.g., 'Keluar', 'Memproses...', 'Selamat datang')",
+    "authentication": "Middleware requires authentication - add new route to protectedRoutes array",
+    "rsvp": "Real-time updates via Supabase realtime could be added but not required for MVP"
+  }
+}
