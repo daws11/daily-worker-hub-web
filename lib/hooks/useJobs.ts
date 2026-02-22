@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { getJobs } from '../api/jobs'
+import { calculateDistance } from '../utils/distance'
 import type { JobWithRelations, JobListParams } from '../types/job'
 
 export interface UseJobsParams {
@@ -27,6 +28,28 @@ export function useJobs({
   const [jobs, setJobs] = useState<JobWithRelations[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<Error | null>(null)
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
+
+  // Get user's location for distance sorting
+  useEffect(() => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      return
+    }
+
+    // Get initial location
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        })
+      },
+      // Silently fail - user may have denied permission
+      () => {
+        // Location not available, nearest sort will fall back to created_at
+      }
+    )
+  }, [])
 
   const fetchJobs = useCallback(async () => {
     if (!enabled) {
@@ -38,7 +61,9 @@ export function useJobs({
     setError(null)
 
     try {
-      const { data, error: apiError } = await getJobs({ filters, sort, page, limit })
+      // For 'nearest' sort, we don't pass it to API since it requires client-side calculation
+      const sortParam = sort === 'nearest' ? 'newest' : sort
+      const { data, error: apiError } = await getJobs({ filters, sort: sortParam, page, limit })
 
       if (apiError) {
         setError(apiError)
@@ -58,8 +83,28 @@ export function useJobs({
     fetchJobs()
   }, [fetchJobs])
 
+  // Apply client-side sorting for 'nearest' option
+  const sortedJobs = useMemo(() => {
+    if (sort !== 'nearest' || !userLocation) {
+      return jobs
+    }
+
+    // Calculate distances and sort
+    return jobs
+      .map((job) => ({
+        ...job,
+        distance: calculateDistance(
+          userLocation.lat,
+          userLocation.lng,
+          job.lat,
+          job.lng
+        ),
+      }))
+      .sort((a, b) => (a.distance || 0) - (b.distance || 0))
+  }, [jobs, sort, userLocation])
+
   return {
-    jobs,
+    jobs: sortedJobs,
     loading,
     error,
     refetch: fetchJobs,
