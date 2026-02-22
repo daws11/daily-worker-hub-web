@@ -50,7 +50,6 @@ export default function WorkerJobsPage() {
       setIsLoadingProfile(false)
 
       if (error) {
-        console.error('Error loading worker profile:', error)
         return
       }
 

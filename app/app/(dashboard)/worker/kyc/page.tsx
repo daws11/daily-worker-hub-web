@@ -40,7 +40,6 @@ export default function WorkerKycPage() {
           .single()
 
         if (workerError && workerError.code !== 'PGRST116') {
-          console.error('Error loading worker data:', workerError)
           toast.error("Gagal memuat data worker")
           return
         }
@@ -67,7 +66,6 @@ export default function WorkerKycPage() {
           }
         }
       } catch (error) {
-        console.error('Error loading KYC status:', error)
         toast.error("Gagal memuat data KYC. Silakan refresh halaman.")
       } finally {
         setIsLoadingData(false)
@@ -191,7 +189,6 @@ export default function WorkerKycPage() {
       setCurrentStatus('pending')
       setRejectionReason(null)
     } catch (error) {
-      console.error('Submit error:', error)
       toast.error("Terjadi kesalahan saat submit KYC")
     } finally {
       setIsLoading(false)

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import { supabase } from "../../../lib/supabase/client"
+import { supabase } from "../../../../lib/supabase/client"
 import { useAuth } from "../../providers/auth-provider"
-import { KycStatusBadge } from "../../../../components/worker/kyc-status-badge"
+import { KycStatusBadge } from "../../../../../components/worker/kyc-status-badge"
 
 const AVAILABLE_SKILLS = [
   "Kebersihan Rumah",
@@ -51,7 +51,6 @@ export default function WorkerProfilePage() {
             // Profile doesn't exist yet, that's okay for new users
             setKycStatus('unverified')
           } else {
-            console.error('Error loading profile:', error)
             toast.error("Gagal memuat profil")
           }
           return
@@ -91,7 +90,6 @@ export default function WorkerProfilePage() {
           .eq('worker_id', user.id)
 
         if (skillsError) {
-          console.error('Error loading skills:', skillsError)
           toast.error("Gagal memuat keahlian")
           return
         }
@@ -101,7 +99,6 @@ export default function WorkerProfilePage() {
           setSelectedSkills(skillNames)
         }
       } catch (error) {
-        console.error('Error loading profile:', error)
         toast.error("Gagal memuat data. Silakan refresh halaman.")
       } finally {
         setIsLoadingProfile(false)
@@ -138,7 +135,6 @@ export default function WorkerProfilePage() {
 
       if (skillsError) {
         toast.error("Gagal memvalidasi keahlian")
-        console.error('Error fetching skills:', skillsError)
         return
       }
 
@@ -159,7 +155,6 @@ export default function WorkerProfilePage() {
 
         if (createSkillsError) {
           toast.error("Gagal membuat keahlian baru")
-          console.error('Error creating skills:', createSkillsError)
           return
         }
 
@@ -184,7 +179,6 @@ export default function WorkerProfilePage() {
 
       if (profileError) {
         toast.error("Gagal menyimpan profil")
-        console.error('Error saving profile:', profileError)
         return
       }
 
@@ -197,7 +191,6 @@ export default function WorkerProfilePage() {
 
       if (workerError || !workerData) {
         toast.error("Gagal mendapatkan data worker")
-        console.error('Error fetching worker:', workerError)
         return
       }
 
@@ -217,14 +210,12 @@ export default function WorkerProfilePage() {
 
         if (linkError) {
           toast.error("Profil tersimpan, tapi keahlian gagal disimpan")
-          console.error('Error linking skills:', linkError)
           return
         }
       }
 
       toast.success("Profil berhasil disimpan!")
     } catch (error) {
-      console.error('Submit error:', error)
       toast.error("Terjadi kesalahan saat menyimpan profil")
     } finally {
       setIsLoading(false)
