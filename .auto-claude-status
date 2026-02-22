@@ -1,10 +1,10 @@
 {
   "active": true,
   "spec": "010-worker-booking-dashboard",
-  "state": "planning",
+  "state": "building",
   "subtasks": {
-    "completed": 0,
-    "total": 0,
+    "completed": 1,
+    "total": 7,
     "in_progress": 1,
     "failed": 0
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 2,
+    "number": 3,
     "started_at": "2026-02-22T13:29:28.473174"
   },
-  "last_update": "2026-02-22T13:32:37.828385"
+  "last_update": "2026-02-22T13:33:36.150863"
 }
