@@ -158,3 +158,80 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Add comment for documentation
 COMMENT ON FUNCTION calculate_days_worked IS 'Calculates days worked by a worker for a business in a month. Counts accepted/completed bookings with start_date in the specified month. Used for PP 35/2021 compliance tracking (21-day limit).';
+
+-- ============================================================================
+-- FUNCTION: update_compliance_tracking_for_booking
+-- ============================================================================
+-- Trigger function that updates compliance_tracking when a booking's status
+-- changes to 'accepted' or 'completed'. This ensures the days_worked counter
+-- stays up-to-date for PP 35/2021 compliance monitoring.
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION update_compliance_tracking_for_booking()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_month_start DATE;
+  v_current_days INTEGER;
+BEGIN
+  -- Only proceed if status has changed to 'accepted' or 'completed'
+  -- Check both INSERT (NEW only) and UPDATE (OLD vs NEW) scenarios
+  IF (TG_OP = 'INSERT' AND NEW.status IN ('accepted', 'completed'))
+     OR (TG_OP = 'UPDATE' AND OLD.status IS DISTINCT FROM NEW.status AND NEW.status IN ('accepted', 'completed')) THEN
+
+    -- Calculate the month for this booking (first day of the month)
+    v_month_start := date_trunc('month', COALESCE(NEW.start_date, NEW.created_at));
+
+    -- Calculate current days worked using the helper function
+    v_current_days := public.calculate_days_worked(NEW.business_id, NEW.worker_id, v_month_start);
+
+    -- Insert or update compliance_tracking record
+    INSERT INTO public.compliance_tracking (business_id, worker_id, month, days_worked)
+    VALUES (NEW.business_id, NEW.worker_id, v_month_start, v_current_days)
+    ON CONFLICT (business_id, worker_id, month)
+    DO UPDATE SET
+      days_worked = EXCLUDED.days_worked,
+      updated_at = NOW();
+
+  END IF;
+
+  -- Return the row as-is for INSERT/UPDATE operations
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  ELSE
+    RETURN NEW;
+  END IF;
+
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Log error but don't fail the booking operation
+    RAISE WARNING 'Error updating compliance tracking for booking %: %',
+      COALESCE(NEW.id, OLD.id), SQLERRM;
+
+    -- Still return the row to allow the booking operation to succeed
+    IF TG_OP = 'DELETE' THEN
+      RETURN OLD;
+    ELSE
+      RETURN NEW;
+    END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Add comment for documentation
+COMMENT ON FUNCTION update_compliance_tracking_for_booking IS 'Trigger function that updates compliance_tracking when booking status changes to accepted/completed. Automatically maintains days_worked counter for PP 35/2021 compliance.';
+
+-- ============================================================================
+-- TRIGGER: on_booking_status_change_for_compliance
+-- ============================================================================
+-- Creates a trigger on the bookings table that automatically updates
+-- compliance_tracking when a booking status changes to 'accepted' or 'completed'.
+-- ============================================================================
+
+DROP TRIGGER IF EXISTS on_booking_status_change_for_compliance ON public.bookings;
+
+CREATE TRIGGER on_booking_status_change_for_compliance
+  AFTER INSERT OR UPDATE ON public.bookings
+  FOR EACH ROW
+  EXECUTE FUNCTION public.update_compliance_tracking_for_booking();
+
+-- Add comment for documentation
+COMMENT ON TRIGGER on_booking_status_change_for_compliance ON public.bookings IS 'Automatically updates compliance_tracking when booking status becomes accepted or completed';
