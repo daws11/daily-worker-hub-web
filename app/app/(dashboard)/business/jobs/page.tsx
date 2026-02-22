@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardContent,
@@ -10,15 +11,93 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { BriefcaseIcon, CheckCircle2Icon, ClockIcon } from "lucide-react"
+import {
+  BriefcaseIcon,
+  CheckCircle2Icon,
+  ClockIcon,
+  EyeIcon,
+  PencilIcon,
+  Trash2Icon,
+} from "lucide-react"
+
+type JobStatus = "draft" | "open" | "in_progress" | "completed"
+
+interface Job {
+  id: string
+  title: string
+  description: string
+  status: JobStatus
+  createdAt: string
+  applicants?: number
+}
+
+function getStatusBadgeVariant(status: JobStatus): "default" | "secondary" | "outline" {
+  switch (status) {
+    case "draft":
+      return "secondary"
+    case "open":
+      return "default"
+    case "in_progress":
+      return "outline"
+    case "completed":
+      return "secondary"
+  }
+}
+
+function getStatusLabel(status: JobStatus): string {
+  switch (status) {
+    case "draft":
+      return "Draft"
+    case "open":
+      return "Open"
+    case "in_progress":
+      return "In Progress"
+    case "completed":
+      return "Completed"
+  }
+}
 
 export default function BusinessJobsPage() {
   // TODO: Replace with actual data fetching from API
-  const jobs = []
+  const jobs: Job[] = [
+    {
+      id: "1",
+      title: "Warehouse Worker",
+      description: "Looking for reliable warehouse workers for sorting and packaging.",
+      status: "draft",
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
+      applicants: 0,
+    },
+    {
+      id: "2",
+      title: "Delivery Driver",
+      description: "Need experienced delivery drivers for local routes.",
+      status: "open",
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+      applicants: 5,
+    },
+    {
+      id: "3",
+      title: "Event Setup Crew",
+      description: "Weekend event setup crew needed for upcoming conference.",
+      status: "in_progress",
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
+      applicants: 12,
+    },
+    {
+      id: "4",
+      title: "Office Cleaning",
+      description: "Evening office cleaning staff required.",
+      status: "completed",
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 168).toISOString(),
+      applicants: 8,
+    },
+  ]
+
   const stats = {
-    total: 0,
-    active: 0,
-    completed: 0,
+    total: jobs.length,
+    active: jobs.filter((j) => j.status === "open" || j.status === "in_progress").length,
+    completed: jobs.filter((j) => j.status === "completed").length,
   }
 
   return (
@@ -109,10 +188,51 @@ export default function BusinessJobsPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {/* Job items will be rendered here when data is available */}
                 {jobs.map((job) => (
-                  <div key={job.id}>
-                    {/* Job item implementation */}
+                  <div
+                    key={job.id}
+                    className="flex flex-col gap-4 rounded-lg border p-4 md:flex-row md:items-center md:justify-between"
+                  >
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold">{job.title}</h3>
+                        <Badge variant={getStatusBadgeVariant(job.status)}>
+                          {getStatusLabel(job.status)}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {job.description}
+                      </p>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <span>Posted {new Date(job.createdAt).toLocaleDateString()}</span>
+                        {job.status !== "draft" && (
+                          <span>{job.applicants} applicant{job.applicants !== 1 ? "s" : ""}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex gap-2 md:flex-col md:gap-1">
+                      {job.status === "draft" ? (
+                        <>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/dashboard-business-jobs/${job.id}/edit`}>
+                              <PencilIcon className="mr-2 h-3 w-3" />
+                              Edit
+                            </Link>
+                          </Button>
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                            <Trash2Icon className="mr-2 h-3 w-3" />
+                            Delete
+                          </Button>
+                        </>
+                      ) : (
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/dashboard-business-jobs/${job.id}`}>
+                            <EyeIcon className="mr-2 h-3 w-3" />
+                            View
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
