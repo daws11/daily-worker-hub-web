@@ -39,6 +39,16 @@ interface Job {
   status: JobStatus
   createdAt: string
   applicants?: number
+  positionType?: JobPostingFormValues["positionType"]
+  date?: string
+  startTime?: string
+  endTime?: string
+  area?: string
+  address?: string
+  wageMin?: number
+  wageMax?: number
+  workersNeeded?: number
+  requirements?: string[]
 }
 
 function getStatusBadgeVariant(status: JobStatus): "default" | "secondary" | "outline" {
@@ -70,6 +80,7 @@ function getStatusLabel(status: JobStatus): string {
 export default function BusinessJobsPage() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [editingJob, setEditingJob] = React.useState<Job | null>(null)
   const [jobs, setJobs] = React.useState<Job[]>([
     {
       id: "1",
@@ -78,6 +89,16 @@ export default function BusinessJobsPage() {
       status: "draft",
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
       applicants: 0,
+      positionType: "other",
+      date: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString().split('T')[0],
+      startTime: "09:00",
+      endTime: "17:00",
+      area: "badung",
+      address: "Jl. Raya Kuta No. 123, Kuta, Bali",
+      wageMin: 50000,
+      wageMax: 75000,
+      workersNeeded: 3,
+      requirements: ["physically_fit", "reliable"],
     },
     {
       id: "2",
@@ -86,6 +107,16 @@ export default function BusinessJobsPage() {
       status: "open",
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
       applicants: 5,
+      positionType: "driver",
+      date: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString().split('T')[0],
+      startTime: "08:00",
+      endTime: "16:00",
+      area: "denpasar",
+      address: "Jl. Sudirman No. 45, Denpasar",
+      wageMin: 60000,
+      wageMax: 80000,
+      workersNeeded: 2,
+      requirements: ["drivers_license", "knows_area"],
     },
     {
       id: "3",
@@ -94,6 +125,16 @@ export default function BusinessJobsPage() {
       status: "in_progress",
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
       applicants: 12,
+      positionType: "event_staff",
+      date: new Date(Date.now() + 1000 * 60 * 60 * 48).toISOString().split('T')[0],
+      startTime: "07:00",
+      endTime: "19:00",
+      area: "badung",
+      address: "Nusa Dua Convention Center",
+      wageMin: 75000,
+      wageMax: 100000,
+      workersNeeded: 10,
+      requirements: ["physically_fit", "team_player", "flexible_hours"],
     },
     {
       id: "4",
@@ -102,6 +143,16 @@ export default function BusinessJobsPage() {
       status: "completed",
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 168).toISOString(),
       applicants: 8,
+      positionType: "housekeeping",
+      date: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString().split('T')[0],
+      startTime: "18:00",
+      endTime: "21:00",
+      area: "denpasar",
+      address: "Jl. Hasanuddin No. 78, Denpasar",
+      wageMin: 45000,
+      wageMax: 60000,
+      workersNeeded: 2,
+      requirements: ["reliable", "attention_to_detail"],
     },
   ])
 
@@ -111,35 +162,110 @@ export default function BusinessJobsPage() {
     completed: jobs.filter((j) => j.status === "completed").length,
   }
 
-  const handleCreateJob = async (values: JobPostingFormValues) => {
+  const handleOpenCreateDialog = () => {
+    setEditingJob(null)
+    setIsDialogOpen(true)
+  }
+
+  const handleOpenEditDialog = (job: Job) => {
+    setEditingJob(job)
+    setIsDialogOpen(true)
+  }
+
+  const handleJobSubmit = async (values: JobPostingFormValues) => {
     setIsSubmitting(true)
     try {
-      // TODO: Replace with actual API call to create job
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      if (editingJob) {
+        // Update existing job
+        // TODO: Replace with actual API call to update job
+        await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      // Add new job to the list
-      const newJob: Job = {
-        id: Date.now().toString(),
-        title: values.title,
-        description: values.description,
-        status: "draft",
-        createdAt: new Date().toISOString(),
-        applicants: 0,
+        setJobs((prev) =>
+          prev.map((job) =>
+            job.id === editingJob.id
+              ? {
+                  ...job,
+                  title: values.title,
+                  description: values.description,
+                  positionType: values.positionType,
+                  date: values.date,
+                  startTime: values.startTime,
+                  endTime: values.endTime,
+                  area: values.area,
+                  address: values.address,
+                  wageMin: values.wageMin,
+                  wageMax: values.wageMax,
+                  workersNeeded: values.workersNeeded,
+                  requirements: values.requirements,
+                }
+              : job
+          )
+        )
+
+        toast.success("Lowongan berhasil diperbarui")
+      } else {
+        // Create new job
+        // TODO: Replace with actual API call to create job
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+
+        const newJob: Job = {
+          id: Date.now().toString(),
+          title: values.title,
+          description: values.description,
+          status: "draft",
+          createdAt: new Date().toISOString(),
+          applicants: 0,
+          positionType: values.positionType,
+          date: values.date,
+          startTime: values.startTime,
+          endTime: values.endTime,
+          area: values.area,
+          address: values.address,
+          wageMin: values.wageMin,
+          wageMax: values.wageMax,
+          workersNeeded: values.workersNeeded,
+          requirements: values.requirements,
+        }
+        setJobs((prev) => [newJob, ...prev])
+
+        toast.success("Lowongan berhasil dibuat")
       }
-      setJobs((prev) => [newJob, ...prev])
-
-      toast.success("Lowongan berhasil dibuat")
       setIsDialogOpen(false)
+      setEditingJob(null)
     } catch (error) {
-      console.error("Error creating job:", error)
-      toast.error("Gagal membuat lowongan")
+      toast.error(editingJob ? "Gagal memperbarui lowongan" : "Gagal membuat lowongan")
     } finally {
       setIsSubmitting(false)
     }
   }
 
+  const getDialogDefaultValues = (): Partial<JobPostingFormValues> | undefined => {
+    if (!editingJob) return undefined
+    return {
+      title: editingJob.title,
+      description: editingJob.description,
+      positionType: editingJob.positionType,
+      date: editingJob.date || "",
+      startTime: editingJob.startTime || "",
+      endTime: editingJob.endTime || "",
+      area: editingJob.area || "",
+      address: editingJob.address || "",
+      wageMin: editingJob.wageMin || 0,
+      wageMax: editingJob.wageMax || 0,
+      workersNeeded: editingJob.workersNeeded || 1,
+      requirements: editingJob.requirements || [],
+    }
+  }
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setIsDialogOpen(open)
+    if (!open) {
+      setEditingJob(null)
+    }
+  }
+
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
       <div className="min-h-screen bg-muted/40 p-4 md:p-6">
         <div className="mx-auto max-w-6xl space-y-6">
           {/* Header */}
@@ -150,12 +276,10 @@ export default function BusinessJobsPage() {
                 Manage your job postings and track applications
               </p>
             </div>
-            <DialogTrigger asChild>
-              <Button>
-                <BriefcaseIcon className="mr-2 h-4 w-4" />
-                Create Job
-              </Button>
-            </DialogTrigger>
+            <Button onClick={handleOpenCreateDialog}>
+              <BriefcaseIcon className="mr-2 h-4 w-4" />
+              Create Job
+            </Button>
           </div>
 
         {/* Stats Cards */}
@@ -218,12 +342,10 @@ export default function BusinessJobsPage() {
                 <p className="mb-4 max-w-sm text-sm text-muted-foreground">
                   Get started by creating your first job posting to find workers for your needs.
                 </p>
-                <DialogTrigger asChild>
-                  <Button>
-                    <BriefcaseIcon className="mr-2 h-4 w-4" />
-                    Create Your First Job
-                  </Button>
-                </DialogTrigger>
+                <Button onClick={handleOpenCreateDialog}>
+                  <BriefcaseIcon className="mr-2 h-4 w-4" />
+                  Create Your First Job
+                </Button>
               </div>
             ) : (
               <div className="space-y-4">
@@ -252,11 +374,13 @@ export default function BusinessJobsPage() {
                     <div className="flex gap-2 md:flex-col md:gap-1">
                       {job.status === "draft" ? (
                         <>
-                          <Button variant="outline" size="sm" asChild>
-                            <Link href={`/dashboard-business-jobs/${job.id}/edit`}>
-                              <PencilIcon className="mr-2 h-3 w-3" />
-                              Edit
-                            </Link>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenEditDialog(job)}
+                          >
+                            <PencilIcon className="mr-2 h-3 w-3" />
+                            Edit
                           </Button>
                           <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
                             <Trash2Icon className="mr-2 h-3 w-3" />
@@ -281,18 +405,21 @@ export default function BusinessJobsPage() {
       </div>
     </div>
 
-    {/* Create Job Dialog */}
+    {/* Create/Edit Job Dialog */}
     <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
       <DialogHeader>
-        <DialogTitle>Create New Job Posting</DialogTitle>
+        <DialogTitle>{editingJob ? "Edit Job Posting" : "Create New Job Posting"}</DialogTitle>
         <DialogDescription>
-          Fill in the details below to post a new job and find workers for your needs.
+          {editingJob
+            ? "Update the job details below. Changes will be saved immediately."
+            : "Fill in the details below to post a new job and find workers for your needs."}
         </DialogDescription>
       </DialogHeader>
       <JobPostingForm
-        onSubmit={handleCreateJob}
+        onSubmit={handleJobSubmit}
+        defaultValues={getDialogDefaultValues()}
         isLoading={isSubmitting}
-        submitButtonText="Create Job"
+        submitButtonText={editingJob ? "Update Job" : "Create Job"}
       />
     </DialogContent>
   </Dialog>
