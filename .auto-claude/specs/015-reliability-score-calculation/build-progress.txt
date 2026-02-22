@@ -306,7 +306,33 @@ Date: 2026-02-23
   • Commit: 8cc65b7
   • Plan updated: subtask-4-2 status = completed
 
-[NEXT] Phase 5: Automation Triggers (3 subtasks)
-  • Subtask 5-1: Create database trigger to auto-calculate score when booking completes
+[COMPLETED] Subtask 5-1: Create database trigger to auto-calculate score when booking completes
+  • Created: supabase/migrations/20260222_add_score_trigger.sql
+  • Functions created:
+    - calculate_reliability_score(p_worker_id UUID) RETURNS NUMERIC(3, 2)
+      * Calculates attendance rate (completed / total bookings)
+      * Calculates punctuality rate (bookings with actual_start_time / completed)
+      * Gets average rating from reviews table
+      * Applies weighted formula: 40% attendance + 30% punctuality + 30% ratings
+      * Returns score 1.0-5.0 rounded to 2 decimal places
+    - update_reliability_score_for_booking() RETURNS TRIGGER
+      * Trigger function that fires when booking status changes to 'completed'
+      * Calls calculate_reliability_score for the worker
+      * Updates workers.reliability_score column
+      * Creates reliability_score_history record with score breakdown
+      * Includes error handling to prevent booking failures
+  • Trigger created: trigger_recalculate_reliability_score
+    * AFTER UPDATE ON public.bookings
+    * FOR EACH ROW
+    * Executes update_reliability_score_for_booking()
+  • Pattern from: supabase/migrations/20250222000001_initial_schema.sql
+  • SECURITY DEFINER used for both functions
+  • Proper error handling with EXCEPTION block and RAISE WARNING
+  • Documentation comments added for functions and trigger
+  • Grant permissions for postgres user to execute functions
+  • Commit: e19b4b7
+  • Plan updated: subtask-5-1 status = completed
+
+[NEXT] Phase 5: Automation Triggers (remaining 2 subtasks)
   • Subtask 5-2: Add score calculation to job completion flow
   • Subtask 5-3: End-to-end verification of automatic score calculation
