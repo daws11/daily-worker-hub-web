@@ -23,6 +23,7 @@ import { AreaSelect, type AreaValue } from "@/app/components/area-select"
 import { WageRateInput } from "@/app/components/wage-rate-input"
 import { WorkersNeededCounter } from "@/app/components/workers-needed-counter"
 import { JobRequirementsSelect, type JobRequirement } from "@/app/components/job-requirements-select"
+import { JobDraftBanner } from "@/app/components/job-draft-banner"
 
 // Zod schema for job posting form validation
 export const jobPostingFormSchema = z.object({
@@ -132,8 +133,7 @@ export function JobPostingForm({
   submitButtonText = "Post Job",
   className,
 }: JobPostingFormProps) {
-  const [draftRestored, setDraftRestored] = React.useState(false)
-  const [hasDraft, setHasDraft] = React.useState(false)
+  const [draftTimestamp, setDraftTimestamp] = React.useState<number | undefined>(undefined)
 
   const form = useForm<JobPostingFormValues>({
     resolver: zodResolver(jobPostingFormSchema),
@@ -157,15 +157,13 @@ export function JobPostingForm({
   const positionType = form.watch("positionType")
   const area = form.watch("area")
 
-  // Load draft from localStorage on mount
+  // Check for draft on mount (without auto-restoring)
   React.useEffect(() => {
     const draft = loadDraft()
     if (draft) {
-      form.reset(draft.data)
-      setDraftRestored(true)
-      setHasDraft(true)
+      setDraftTimestamp(draft.timestamp)
     }
-  }, [form])
+  }, [])
 
   // Auto-save form data to localStorage on changes
   React.useEffect(() => {
@@ -177,37 +175,48 @@ export function JobPostingForm({
       )
       if (hasData) {
         saveDraft(formValues as JobPostingFormValues)
-        setHasDraft(true)
+        setDraftTimestamp(Date.now())
       }
     })
     return () => subscription.unsubscribe()
   }, [form])
 
+  const handleRestoreDraft = () => {
+    const draft = loadDraft()
+    if (draft) {
+      form.reset(draft.data)
+    }
+  }
+
+  const handleDiscardDraft = () => {
+    clearDraft()
+    setDraftTimestamp(undefined)
+  }
+
   const handleSubmit = async (values: JobPostingFormValues) => {
     if (onSubmit) {
       await onSubmit(values)
       clearDraft()
-      setHasDraft(false)
+      setDraftTimestamp(undefined)
     }
   }
 
   const handleReset = () => {
     form.reset()
     clearDraft()
-    setHasDraft(false)
-    setDraftRestored(false)
+    setDraftTimestamp(undefined)
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className={cn("space-y-6", className)}>
         {/* Draft Banner */}
-        {draftRestored && hasDraft && (
-          <div className="rounded-md border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
-            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-              Draft restored from your previous session. Your progress has been saved.
-            </p>
-          </div>
+        {draftTimestamp !== undefined && (
+          <JobDraftBanner
+            timestamp={draftTimestamp}
+            onRestore={handleRestoreDraft}
+            onDiscard={handleDiscardDraft}
+          />
         )}
 
         {/* Title */}
