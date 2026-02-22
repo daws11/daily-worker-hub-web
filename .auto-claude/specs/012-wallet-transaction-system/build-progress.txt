@@ -195,4 +195,42 @@ VERIFICATION CHECKLIST:
 
 All acceptance criteria met. Implementation complete for subtask-5-1.
 
-=== END SESSION 5 ===
+Session 6 (Integration & Verification):
+- [COMPLETED] subtask-5-2: End-to-end verification: Business wallet displays correct balance and transactions
+  * Business wallet page verified at app/app/(dashboard)/business/wallet/page.tsx
+  * Authentication flow: Uses useAuth() hook, redirects to login if not authenticated
+  * Business profile fetching: Queries businesses table with user_id
+  * Wallet balance display: Shows "Saldo Tersedia" (Available Balance) card
+  * Pending balance display: Shows "Saldo Tertahan" (Pending Balance) card
+  * Transaction history: Loads from wallet_transactions with booking and job info
+  * Transaction filters: TransactionFilters component with type, amount range, date range
+  * Transaction details: TransactionDetailDialog shows full details including job info
+  * Auto-creates wallet if doesn't exist (handles PGRST116 error)
+  * No console.log statements in wallet files
+  * All TypeScript types correctly defined
+  * Indonesian UI text matching app convention
+
+BUSINESS WALLET VERIFICATION CHECKLIST:
+✓ Login authentication handled (useAuth hook with redirect)
+✓ Current balance displays (Saldo Tersedia card)
+✓ Pending balance displays (Saldo Tertahan card)
+✓ Payment history loads with booking and job details
+✓ Transaction filters work (type, amount range, date range)
+✓ Transaction detail dialog shows amount, date, type, job info
+✓ Auto-creates wallet if not exists
+✓ Error handling with toast notifications
+✓ Loading states with Loader2 spinners
+✓ Responsive grid layout (1 col on mobile, 2 cols on sm+)
+
+All files verified:
+- app/app/(dashboard)/business/wallet/page.tsx (311 lines)
+- components/wallet/transaction-card.tsx (157 lines)
+- components/wallet/transaction-filters.tsx (211 lines)
+- components/wallet/transaction-detail-dialog.tsx (225 lines)
+- lib/lib/supabase/queries/wallets.ts (156 lines, 6 functions)
+- lib/lib/supabase/queries/transactions.ts (156 lines, 4 functions)
+- lib/types/wallet.ts (14 lines, 2 types)
+
+All acceptance criteria met for subtask-5-2.
+
+=== END SESSION 6 ===
