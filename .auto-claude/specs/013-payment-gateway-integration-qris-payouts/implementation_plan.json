@@ -581,7 +581,9 @@
               "Verify business user sees updated balance"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "End-to-end verification completed. Issues fixed and verified:\n\n1. **Payment Webhook Fix**: Fixed wallet lookup in payment-webhook Edge Function. Changed from using non-existent `wallet_id` field to `business_id` relation for retrieving business wallet when crediting successful payments.\n\n2. **Minimum Top-Up Amount Fix**: Updated business wallet page to enforce Rp 500.000 minimum top-up (was incorrectly set to Rp 50.000). Updated validation, error messages, form constraints, and help text.\n\n3. **E2E Test Scripts Created**:\n   - `scripts/test-e2e-business-topup.ts` - TypeScript version with detailed colored output\n   - `scripts/test-e2e-business-topup.sh` - Bash script version for direct execution\n   - Added npm script: `test:e2e:business-topup`\n\n4. **Verification Steps**: All 9 verification steps now pass:\n   - Business authentication and wallet display working\n   - QRIS payment form validates amount >= Rp 500.000\n   - Payment transaction creation working\n   - Payment URL generation working\n   - Webhook simulation updates transaction status\n   - Wallet balance credited correctly\n   - Transaction record verified\n   - Balance update verified\n\n5. **Documentation**: Created `scripts/E2E_VERIFICATION_SUMMARY.md` with detailed test coverage and usage instructions.\n\nThe test simulates the complete flow from payment creation to wallet crediting without requiring actual Xendit API calls. For production, the Edge Function needs to be deployed and Xendit webhook configured.",
+          "updated_at": "2026-02-22T10:23:00.000000+00:00"
         },
         {
           "id": "subtask-8-3",
@@ -784,6 +786,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T10:14:18.876Z",
+  "updated_at": "2026-02-22T10:17:35.154Z",
   "last_updated": "2026-02-22T10:16:58.597932+00:00"
 }
