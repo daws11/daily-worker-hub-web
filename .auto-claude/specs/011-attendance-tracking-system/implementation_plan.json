@@ -300,7 +300,9 @@
           "files_to_create": [
             "app/(dashboard)/worker/attendance/page.tsx"
           ],
-          "files_to_modify": [],
+          "files_to_modify": [
+            "lib/supabase/queries/bookings.ts"
+          ],
           "patterns_from": [
             "app/(dashboard)/worker/jobs/page.tsx"
           ],
@@ -313,8 +315,9 @@
               "Check in/out buttons work for active bookings"
             ]
           },
-          "status": "pending",
-          "notes": "Page shows today's schedule with check-in/out buttons, attendance history table, attendance rate card, GPS permission prompt if needed"
+          "status": "completed",
+          "notes": "Created app/(dashboard)/worker/attendance/page.tsx with:\n- Today's schedule display showing accepted/in-progress bookings for current date\n- Check-in/out buttons using CheckInOutButton component with smart state detection\n- Attendance history display using AttendanceHistory component with stats cards\n- GPS location capture using useGeolocation hook with permission state tracking\n- QR code scanner integration (QRCodeScanner) for check-in/out when GPS unavailable\n- Location permission prompt banner with amber styling when permission is 'prompt'\n- Loading states (spinner) and error handling with retry button\n- Indonesian locale formatting for date/time using toLocaleDateString/time\n- Empty states with helpful messaging for no bookings and no attendance records\n\nUpdated lib/supabase/queries/bookings.ts:\n- Added job field to JobBookingWithDetails type with title, address, lat, lng\n- Made worker and business fields optional in type definition\n- Updated getWorkerBookings query to select job address and coordinates\n\nPage URL: /dashboard-worker-attendance\nPattern follows app/(dashboard)/worker/jobs/page.tsx structure exactly",
+          "updated_at": "2026-02-22T16:40:00.000Z"
         },
         {
           "id": "subtask-5-2",
