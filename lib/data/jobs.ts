@@ -70,6 +70,7 @@ export type ApplicantWithDetails = Booking & {
     phone: string
     bio: string
     avatar_url: string
+    reliability_score: number | null
   }
 }
 
@@ -247,7 +248,8 @@ export async function getApplicants(jobId: string, businessId: string): Promise<
           full_name,
           phone,
           bio,
-          avatar_url
+          avatar_url,
+          reliability_score
         )
       `)
       .eq("job_id", jobId)
