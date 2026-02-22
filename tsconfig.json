@@ -22,7 +22,12 @@
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@/components/*": ["./components/*"],
+      "@/lib/*": ["./lib/*"]
+    }
   },
   "include": [
     "next-env.d.ts",
@@ -33,10 +38,5 @@
   ],
   "exclude": [
     "node_modules"
-  ],
-  "paths": {
-    "@/*": ["./*"],
-    "@/components/*": ["./components/*"],
-    "@/lib/*": ["./lib/*"]
-  }
+  ]
 }
