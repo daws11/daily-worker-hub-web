@@ -133,7 +133,7 @@
             "expected": "5"
           },
           "status": "completed",
-          "notes": "Created 5 query functions: calculateScore (40/30/30 formula), getScoreHistory, getWorkerScore, updateScore, recordScoreHistory. Follows patterns from jobs.ts with proper error handling and TypeScript types."
+          "notes": "Created 5 query functions: calculateScore (40/30/30 formula), getScoreHistory (fetch history), getWorkerScore (fetch current score), updateScore (update worker score), recordScoreHistory (record to history table). All follow patterns from jobs.ts with proper error handling, types, and JSDoc comments."
         },
         {
           "id": "subtask-2-3",
@@ -150,8 +150,8 @@
             "type": "manual",
             "instructions": "Review file exports: calculateWorkerScore, getWorkerScoreWithHistory, triggerScoreUpdate"
           },
-          "status": "pending",
-          "notes": "Server actions using 'use server' directive with {success, error?, data?} return type"
+          "status": "completed",
+          "notes": "Created server actions: calculateWorkerScore (calculates and updates score after job completion), getWorkerScoreWithHistory (fetches current score with history), triggerScoreUpdate (manual recalculation). Follows patterns from job-applications.ts with 'use server' directive, {success, error?, data?} return types, Indonesian error messages, and proper error handling."
         }
       ]
     },
@@ -482,9 +482,10 @@
     }
   },
   "qa_signoff": null,
-  "executionPhase": "planning",
+  "executionPhase": "coding",
   "status": "in_progress",
   "planStatus": "in_progress",
-  "updated_at": "2026-02-22T13:20:02.839Z",
-  "xstateState": "backlog"
+  "updated_at": "2026-02-22T16:05:16.657Z",
+  "xstateState": "backlog",
+  "recoveryNote": "Task recovered from stuck state at 2026-02-22T15:41:06.709Z"
 }
