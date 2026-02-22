@@ -80,14 +80,15 @@ WITH CHECK (
     -- Can only cancel pending bookings
     (status = 'pending' AND check_in_at IS NULL)
     OR
-    -- Can update attendance fields (check_in_at, check_out_at, and location)
+    -- Allow setting attendance fields if currently NULL (initial check-in/check-out)
+    -- Prevent modifying already-set attendance fields (prevent tampering)
     (status IN ('accepted', 'in_progress') AND
-     check_in_at IS NOT DISTINCT FROM OLD.check_in_at AND
-     check_out_at IS NOT DISTINCT FROM OLD.check_out_at AND
-     check_in_lat IS NOT DISTINCT FROM OLD.check_in_lat AND
-     check_in_lng IS NOT DISTINCT FROM OLD.check_in_lng AND
-     check_out_lat IS NOT DISTINCT FROM OLD.check_out_lat AND
-     check_out_lng IS NOT DISTINCT FROM OLD.check_out_lng)
+     (check_in_at IS NULL OR check_in_at = OLD.check_in_at) AND
+     (check_out_at IS NULL OR check_out_at = OLD.check_out_at) AND
+     (check_in_lat IS NULL OR check_in_lat = OLD.check_in_lat) AND
+     (check_in_lng IS NULL OR check_in_lng = OLD.check_in_lng) AND
+     (check_out_lat IS NULL OR check_out_lat = OLD.check_out_lat) AND
+     (check_out_lng IS NULL OR check_out_lng = OLD.check_out_lng))
   )
 );
 
