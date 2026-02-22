@@ -266,7 +266,8 @@
             "command": "grep -q \"export.*useRealtimeBookings\" lib/hooks/use-realtime-bookings.ts && echo 'Hook created'",
             "expected": "Hook created"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created useRealtimeBookings hook in lib/hooks/use-realtime-bookings.ts with Supabase Realtime subscription support for booking changes (INSERT/UPDATE/DELETE events), filtering by jobId/workerId/businessId, connection status tracking, error handling, and callbacks for onBookingChange/onConnect/onDisconnect. Follows patterns from use-bookings.ts with proper cleanup on unmount."
         },
         {
           "id": "subtask-5-2",
@@ -312,7 +313,9 @@
             "command": "grep -q \"createBookingNotification\" lib/supabase/queries/bookings.ts && echo 'Function created'",
             "expected": "Function created"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created createBookingNotification function in lib/supabase/queries/bookings.ts. Function generates notifications for workers when booking status changes, with personalized Indonesian messages based on status (accepted, rejected, in_progress, completed, cancelled). Fetches worker's user_id from workers table and creates notification entry with title, body, link to booking, and is_read flag. Follows existing error handling patterns.",
+          "updated_at": "2026-02-22T05:23:17.563915+00:00"
         },
         {
           "id": "subtask-6-2",
@@ -492,6 +495,6 @@
   "planStatus": "in_progress",
   "xstateState": "coding",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T05:12:03.844Z",
-  "last_updated": "2026-02-22T05:07:53.237888+00:00"
+  "updated_at": "2026-02-22T05:21:58.231Z",
+  "last_updated": "2026-02-22T05:23:17.563928+00:00"
 }

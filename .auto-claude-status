@@ -1,25 +1,25 @@
 {
   "active": true,
   "spec": "009-booking-management-system",
-  "state": "building",
+  "state": "error",
   "subtasks": {
-    "completed": 9,
+    "completed": 11,
     "total": 15,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Page Implementation",
+    "current": "Realtime Integration",
     "id": null,
-    "total": 1
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 11,
+    "number": 18,
     "started_at": "2026-02-22T12:47:19.915768"
   },
-  "last_update": "2026-02-22T13:12:03.867831"
+  "last_update": "2026-02-22T13:21:58.284630"
 }
