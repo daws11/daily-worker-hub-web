@@ -105,13 +105,14 @@ export interface Database {
         Row: {
           id: string
           business_id: string
-          category_id: string
+          category_id?: string | null
+          position_type?: string
           title: string
           description: string
           requirements: string
           budget_min: number
           budget_max: number
-          status: 'open' | 'in_progress' | 'completed' | 'cancelled'
+          status: 'draft' | 'open' | 'in_progress' | 'completed' | 'cancelled'
           deadline: string
           address: string
           lat: number
