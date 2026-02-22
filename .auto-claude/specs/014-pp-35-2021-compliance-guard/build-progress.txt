@@ -145,6 +145,119 @@
 - Pattern Compliance: Follows the same structure as lib/supabase/queries/bookings.ts
 - TypeScript Verification: No compliance-related TypeScript errors
 
+## Subtask 3-1: Create checkComplianceBeforeAccept server action ✅ COMPLETED
+- File: lib/actions/compliance.ts (NEW FILE)
+- Status: COMPLETE - Server action implemented following project patterns
+- Actions Created:
+  - checkComplianceBeforeAccept(workerId, businessId, month?)
+    - Verifies worker can be accepted before booking
+    - Returns ComplianceCheckResult with:
+      - success: boolean
+      - canAccept: boolean (false if worker is blocked)
+      - error?: string
+      - data?: ComplianceStatusResult
+    - Logic:
+      - Verifies business exists
+      - Verifies worker exists
+      - Calls getComplianceStatus query function
+      - Determines canAccept based on compliance status (blocked = cannot accept)
+    - Uses Indonesian error messages (following job-applications.ts pattern)
+  - getBusinessComplianceRecordsForAudit(businessId, limit)
+    - Retrieves compliance records for a business for audit purposes
+    - Returns records with worker details (full_name, avatar_url)
+- Type Exports Added:
+  - ComplianceCheckResult: interface for return value
+- Pattern Compliance:
+  - Uses "use server" directive
+  - Imports createClient from "../supabase/server"
+  - Returns { success, error?, data? } format
+  - Uses Indonesian error messages
+- TypeScript Verification: No compliance-related TypeScript errors
+- Git Commit: d301c15 "auto-claude: subtask-3-1 - Create checkComplianceBeforeAccept server action"
+
+## Subtask 3-2: Update acceptApplication action to check compliance ✅ COMPLETED
+- File: lib/actions/job-applications.ts
+- Status: COMPLETE - acceptApplication now checks compliance before accepting
+- Changes Made:
+  - Added import: checkComplianceBeforeAccept from "./compliance"
+  - Updated acceptApplication function:
+    - Fetches booking first to get worker_id
+    - Calls checkComplianceBeforeAccept(booking.worker_id, businessId)
+    - Blocks acceptance if canAccept is false
+    - Returns Indonesian error message with days worked count
+    - Error message: "Pekerja telah mencapai batas 21 hari kerja dalam sebulan sesuai PP 35/2021 (${daysWorked} hari). Tidak dapat menerima lamaran."
+  - Updated JSDoc comment to mention compliance check
+- Pattern Compliance:
+  - Follows existing error handling pattern
+  - Uses Indonesian error messages
+  - Preserves existing function logic flow
+  - Returns { success, error?, data? } format
+- Manual Verification:
+  - Function calls checkComplianceBeforeAccept before accepting
+  - Blocks acceptance when limit is reached
+  - Informative error message includes days worked
+- Git Commit: e10fe04 "auto-claude: subtask-3-2 - Update acceptApplication action to check compliance"
+
+## Subtask 4-1: Create ComplianceWarningBanner component ✅ COMPLETED
+- File: components/booking/compliance-warning-banner.tsx (NEW FILE)
+- Status: COMPLETE - Banner component implemented following project patterns
+- Component Features:
+  - ComplianceWarningBanner({ className?, compliance, onViewAlternatives? })
+    - Returns null when status is 'ok' (no banner needed)
+    - Displays amber/yellow warning for 15-20 days (approaching limit)
+    - Displays red/blocked state for 21+ days (PP 35/2021 limit reached)
+    - Shows current days worked and remaining days
+    - Optional "View Alternatives" button for blocked state
+  - Style System:
+    - Blocked: Red colors (border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950)
+    - Warning: Amber colors matching JobDraftBanner (border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950)
+    - Responsive: flex-col on mobile, flex-row on sm+
+  - Props Interface:
+    - ComplianceStatusResult imported from lib/supabase/queries/compliance
+    - className for custom styling
+    - onViewAlternatives optional callback
+- Pattern Compliance:
+  - Follows JobDraftBanner structure (app/components/job-draft-banner.tsx)
+  - Uses cn() utility from lib/utils
+  - Uses Button from components/ui/button
+  - "use client" directive for client component
+  - Proper TypeScript types and interfaces
+- TypeScript Verification: No compliance-related TypeScript errors
+- Git Commit: 0d3e38a "auto-claude: subtask-4-1 - Create ComplianceWarningBanner component to show warnings when approaching limits"
+
+## Subtask 4-2: Create ComplianceStatusBadge component ✅ COMPLETED
+- File: components/booking/compliance-status-badge.tsx (NEW FILE)
+- Status: COMPLETE - Badge component implemented following project patterns
+- Component Features:
+  - ComplianceStatusBadge({ compliance, showDays?, showIcon?, size?, className? })
+    - Displays compliance status as a badge with icon and optional days count
+    - Status variants:
+      - 'ok' → Outline badge with CheckCircle2 icon (green styling implied)
+      - 'warning' → Custom amber/yellow badge with AlertCircle icon
+      - 'blocked' → Destructive (red) badge with XCircle icon
+    - Shows days worked as "({daysWorked}/21)" when showDays=true
+    - Configurable icon visibility with showIcon prop
+    - Size variants: "sm" (px-2 py-0.5) or "md" (px-2.5 py-1)
+  - Props Interface:
+    - compliance: ComplianceStatusResult (imported from lib/supabase/queries/compliance)
+    - showDays: boolean (default: true)
+    - showIcon: boolean (default: true)
+    - size: "sm" | "md" (default: "sm")
+    - className for custom styling
+  - Icons from lucide-react:
+    - CheckCircle2 for 'ok' status
+    - AlertCircle for 'warning' status
+    - XCircle for 'blocked' status
+- Pattern Compliance:
+  - Follows WorkerApplicationCard.tsx patterns for status badges
+  - Uses statusVariants record pattern for status configuration
+  - Uses Badge from components/ui/badge with variant prop
+  - Uses cn() utility from lib/utils for conditional classes
+  - "use client" directive for client component
+  - Proper TypeScript types and exported interfaces
+- TypeScript Verification: No compliance-related TypeScript errors
+- Git Commit: d341674 "auto-claude: subtask-4-2 - Create ComplianceStatusBadge component to display worker compliance status in applicant cards"
+
 ## Quality Checklist ✅
 - [x] Follows patterns from reference files (initial_schema.sql, kyc_verifications.sql, bookings.ts)
 - [x] No console.log/print debugging statements
