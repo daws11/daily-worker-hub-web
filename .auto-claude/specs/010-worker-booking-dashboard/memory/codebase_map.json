@@ -1,0 +1,25 @@
+{
+  "discovered_files": {
+    "app/app/(dashboard)/worker/jobs/page.tsx": {
+      "description": "Existing worker dashboard page showing structure pattern: uses 'use client', useAuth() hook, inline styles for layout, stats cards grid. This is the pattern to follow for the new bookings page.",
+      "category": "pattern",
+      "discovered_at": "2026-02-22T05:32:23.727489+00:00"
+    },
+    "lib/supabase/types.ts": {
+      "description": "Database types defined for Supabase tables. Key tables for bookings: bookings (status: pending/accepted/rejected/in_progress/completed/cancelled), jobs (title, budget, address), businesses (name, is_verified). Types should be imported for booking data.",
+      "category": "database-schema",
+      "discovered_at": "2026-02-22T05:32:23.738314+00:00"
+    },
+    "components/ui/": {
+      "description": "Shadcn/ui components available: Card, Button, Badge, Table, Dialog. All use cn() utility for class merging and support variant prop for styling. These should be used instead of inline styles where possible.",
+      "category": "ui-components",
+      "discovered_at": "2026-02-22T05:32:23.742143+00:00"
+    },
+    "middleware.ts": {
+      "description": "Protected routes are defined in protectedRoutes array. New route '/dashboard/worker/bookings' must be added to this array for authentication protection.",
+      "category": "routing",
+      "discovered_at": "2026-02-22T05:32:23.745335+00:00"
+    }
+  },
+  "last_updated": "2026-02-22T05:32:23.745342+00:00"
+}

@@ -1,0 +1,81 @@
+{
+  "subtasks": {
+    "subtask-1-1": {
+      "attempts": [
+        {
+          "session": 2,
+          "timestamp": "2026-02-22T05:33:24.972735+00:00",
+          "approach": "Implemented: Create BookingStatusBadge component with color-coded status display",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-1-2": {
+      "attempts": [
+        {
+          "session": 3,
+          "timestamp": "2026-02-22T05:34:34.056677+00:00",
+          "approach": "Implemented: Create CancelBookingDialog component with confirmation UI",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-2-1": {
+      "attempts": [
+        {
+          "session": 4,
+          "timestamp": "2026-02-22T05:37:10.423345+00:00",
+          "approach": "Implemented: Create BookingCard component showing booking details, job info, business info, and cancel button",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-3-1": {
+      "attempts": [
+        {
+          "session": 5,
+          "timestamp": "2026-02-22T05:40:00.359418+00:00",
+          "approach": "Implemented: Create BookingList component with Supabase data fetching and status-based grouping",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-4-1": {
+      "attempts": [
+        {
+          "session": 6,
+          "timestamp": "2026-02-22T05:42:01.914880+00:00",
+          "approach": "Implemented: Create worker bookings page at app/app/(dashboard)/worker/bookings/page.tsx",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    },
+    "subtask-5-1": {
+      "attempts": [
+        {
+          "session": 7,
+          "timestamp": "2026-02-22T05:43:08.021242+00:00",
+          "approach": "Implemented: Add bookings route to middleware protected routes array",
+          "success": true,
+          "error": null
+        }
+      ],
+      "status": "completed"
+    }
+  },
+  "stuck_subtasks": [],
+  "metadata": {
+    "created_at": "2026-02-22T05:29:28.472472+00:00",
+    "last_updated": "2026-02-22T05:43:08.021257+00:00"
+  }
+}

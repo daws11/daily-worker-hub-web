@@ -53,6 +53,7 @@ const protectedRoutes = [
   '/dashboard-worker-jobs',
   '/dashboard/business',
   '/dashboard/worker',
+  '/dashboard/worker/bookings',
 ]
 
 /**

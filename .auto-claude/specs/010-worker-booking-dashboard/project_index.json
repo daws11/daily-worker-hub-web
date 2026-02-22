@@ -1,0 +1,40 @@
+{
+  "project_type": "single",
+  "services": {
+    "frontend": {
+      "path": ".",
+      "tech_stack": ["next.js", "typescript", "tailwindcss", "supabase"],
+      "port": 3000,
+      "dev_command": "npm run dev",
+      "test_command": "npm test",
+      "build_command": "npm run build"
+    }
+  },
+  "infrastructure": {
+    "docker": false,
+    "database": "postgresql",
+    "auth": "supabase",
+    "hosting": "vercel"
+  },
+  "conventions": {
+    "linter": "eslint",
+    "formatter": "prettier",
+    "testing": "jest",
+    "ui_components": "shadcn/ui",
+    "routing": "next.js app router",
+    "styling": "tailwindcss with inline style fallbacks"
+  },
+  "directories": {
+    "app": "app/app/",
+    "components": "components/",
+    "lib": "lib/",
+    "ui_components": "components/ui/",
+    "types": "lib/supabase/"
+  },
+  "existing_pages": {
+    "worker_dashboard": "app/app/(dashboard)/worker/jobs/page.tsx",
+    "business_dashboard": "app/app/(dashboard)/business/jobs/page.tsx",
+    "login": "app/app/(auth)/login/page.tsx",
+    "register": "app/app/(auth)/register/page.tsx"
+  }
+}

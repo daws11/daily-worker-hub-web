@@ -278,6 +278,62 @@ const validated = jobPostingSchema.parse(input)
 - Escape special characters
 - Validate URLs (prevent XSS via href)
 
+### Row Level Security (RLS) Policies
+
+**Implementation:**
+- Supabase RLS enabled on all tables
+- Workers can only view their own bookings
+- Businesses can only view their own bookings
+- Admins can view all bookings
+
+**Required RLS Policies for Bookings Table:**
+
+```sql
+-- Enable RLS on bookings table
+ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
+
+-- Policy 1: Workers can only view their own bookings
+CREATE POLICY "Workers can view own bookings"
+ON bookings FOR SELECT
+USING (auth.uid() = worker_id);
+
+-- Policy 2: Businesses can only view their own bookings
+CREATE POLICY "Businesses can view own bookings"
+ON bookings FOR SELECT
+USING (auth.uid() = business_id);
+
+-- Policy 3: Workers can only cancel their own pending bookings
+CREATE POLICY "Workers can cancel own pending bookings"
+ON bookings FOR UPDATE
+USING (auth.uid() = worker_id AND status = 'pending')
+WITH CHECK (auth.uid() = worker_id AND status = 'cancelled');
+
+-- Policy 4: Businesses can update their own bookings (accept/reject/complete)
+CREATE POLICY "Businesses can update own bookings"
+ON bookings FOR UPDATE
+USING (auth.uid() = business_id);
+
+-- Policy 5: Service role can bypass RLS (for backend operations)
+CREATE POLICY "Service role bypass for bookings"
+ON bookings FOR ALL
+USING (auth.role() = 'service_role');
+```
+
+**Verification SQL:**
+```sql
+-- Check if RLS is enabled on bookings table
+SELECT tablename, rowsecurity
+FROM pg_tables
+WHERE schemaname = 'public' AND tablename = 'bookings';
+
+-- List all RLS policies on bookings table
+SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual
+FROM pg_policies
+WHERE tablename = 'bookings';
+```
+
+**Security Note:** The frontend code filters by `worker_id` on the client side (see `components/worker/booking-list.tsx:68`), but this is only for UX optimization. The real security enforcement happens at the database level via RLS policies.
+
 ### SQL Injection Prevention (Parameterized Queries)
 
 **Implementation:**
