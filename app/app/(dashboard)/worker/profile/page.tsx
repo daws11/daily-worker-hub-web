@@ -5,6 +5,7 @@ import { toast } from "sonner"
 import { supabase } from "../../../lib/supabase/client"
 import { useAuth } from "../../providers/auth-provider"
 import { KycStatusBadge } from "../../../../components/worker/kyc-status-badge"
+import { ReliabilityScoreBreakdown } from "../../../../components/worker/reliability-score"
 
 const AVAILABLE_SKILLS = [
   "Kebersihan Rumah",
@@ -31,6 +32,12 @@ export default function WorkerProfilePage() {
   const [kycStatus, setKycStatus] = useState<'unverified' | 'pending' | 'verified' | 'rejected'>('unverified')
   const [rejectionReason, setRejectionReason] = useState<string | null>(null)
   const [isLoadingProfile, setIsLoadingProfile] = useState(true)
+  const [reliabilityScore, setReliabilityScore] = useState<number | null>(null)
+  const [reliabilityBreakdown, setReliabilityBreakdown] = useState<{
+    attendanceRate?: number
+    punctualityRate?: number
+    averageRating?: number
+  } | null>(null)
 
   // Load existing profile data on mount
   useEffect(() => {
@@ -65,6 +72,11 @@ export default function WorkerProfilePage() {
         setAddress(data.address || "")
         setExperienceYears(data.experience_years?.toString() || "")
         setKycStatus(data.kyc_status || 'unverified')
+
+        // Set reliability score if available
+        if (data.reliability_score !== null && data.reliability_score !== undefined) {
+          setReliabilityScore(data.reliability_score)
+        }
 
         // If rejected, load the rejection reason
         if (data.kyc_status === 'rejected') {
@@ -387,6 +399,26 @@ export default function WorkerProfilePage() {
                 Profil Anda ditampilkan dalam mode baca saja. Hubungi admin untuk mengubah data.
               </p>
             </div>
+          </div>
+        )}
+
+        {/* Reliability Score Breakdown */}
+        {reliabilityScore !== null && (
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '0.5rem',
+            padding: '1.5rem',
+            marginBottom: '1rem',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+          }}>
+            <h3 style={{ margin: '0 0 1rem 0', fontSize: '1rem', fontWeight: 600, color: '#1f2937' }}>
+              Skor Reliabilitas
+            </h3>
+            <ReliabilityScoreBreakdown
+              score={reliabilityScore}
+              breakdown={reliabilityBreakdown || undefined}
+              size="md"
+            />
           </div>
         )}
 
