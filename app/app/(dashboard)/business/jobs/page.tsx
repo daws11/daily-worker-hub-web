@@ -16,6 +16,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -81,6 +82,8 @@ export default function BusinessJobsPage() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [editingJob, setEditingJob] = React.useState<Job | null>(null)
+  const [jobToDelete, setJobToDelete] = React.useState<Job | null>(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false)
   const [jobs, setJobs] = React.useState<Job[]>([
     {
       id: "1",
@@ -264,6 +267,50 @@ export default function BusinessJobsPage() {
     }
   }
 
+  const handlePublishJob = async (job: Job) => {
+    try {
+      // TODO: Replace with actual API call to publish job
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      setJobs((prev) =>
+        prev.map((j) =>
+          j.id === job.id ? { ...j, status: "open" as JobStatus } : j
+        )
+      )
+
+      toast.success("Lowongan berhasil dipublikasikan")
+    } catch (error) {
+      toast.error("Gagal mempublikasikan lowongan")
+    }
+  }
+
+  const handleDeleteClick = (job: Job) => {
+    setJobToDelete(job)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!jobToDelete) return
+
+    try {
+      // TODO: Replace with actual API call to delete job
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      setJobs((prev) => prev.filter((j) => j.id !== jobToDelete.id))
+      setIsDeleteDialogOpen(false)
+      setJobToDelete(null)
+
+      toast.success("Lowongan berhasil dihapus")
+    } catch (error) {
+      toast.error("Gagal menghapus lowongan")
+    }
+  }
+
+  const handleDeleteCancel = () => {
+    setIsDeleteDialogOpen(false)
+    setJobToDelete(null)
+  }
+
   return (
     <Dialog open={isDialogOpen} onOpenChange={handleDialogOpenChange}>
       <div className="min-h-screen bg-muted/40 p-4 md:p-6">
@@ -382,7 +429,19 @@ export default function BusinessJobsPage() {
                             <PencilIcon className="mr-2 h-3 w-3" />
                             Edit
                           </Button>
-                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => handlePublishJob(job)}
+                          >
+                            Publish
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteClick(job)}
+                          >
                             <Trash2Icon className="mr-2 h-3 w-3" />
                             Delete
                           </Button>
@@ -421,6 +480,26 @@ export default function BusinessJobsPage() {
         isLoading={isSubmitting}
         submitButtonText={editingJob ? "Update Job" : "Create Job"}
       />
+    </DialogContent>
+  </Dialog>
+
+  {/* Delete Confirmation Dialog */}
+  <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Delete Job Posting</DialogTitle>
+        <DialogDescription>
+          Are you sure you want to delete "{jobToDelete?.title}"? This action cannot be undone.
+        </DialogDescription>
+      </DialogHeader>
+      <DialogFooter>
+        <Button variant="outline" onClick={handleDeleteCancel}>
+          Cancel
+        </Button>
+        <Button variant="destructive" onClick={handleDeleteConfirm}>
+          Delete
+        </Button>
+      </DialogFooter>
     </DialogContent>
   </Dialog>
   )
