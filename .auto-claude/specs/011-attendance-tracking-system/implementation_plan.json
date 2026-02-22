@@ -360,8 +360,9 @@
               "Checked-in bookings show check-out button"
             ]
           },
-          "status": "pending",
-          "notes": "Add CheckInOutButton to accepted booking cards, show check-in status badge on each booking"
+          "status": "completed",
+          "notes": "Successfully added attendance section to worker jobs page:\n- Added 'My Bookings' section above the job marketplace showing worker's active bookings\n- Filtered active bookings: status is 'accepted', 'in_progress', or has check_in_at\n- Integrated CheckInOutButton component with smart state detection (check-in/check-out)\n- Added QRCodeScanner for check-in/out when GPS is unavailable\n- Added useBookings, useAttendance, and useGeolocation hooks for state management\n- Display booking status badges with dynamic colors:\n  - Amber: 'Diterima' (accepted)\n  - Blue: 'Sedang Bekerja' (working/checked in)\n  - Green: 'Selesai' (completed/checked out)\n- Show check-in/check-out timestamps with CheckCircle icons\n- Format dates and times in Indonesian locale (id-ID)\n- Responsive grid layout (2 columns on medium screens, 1 column on small)\n- Section only displays when active bookings exist (empty state handled)\n- Booking cards show: job title, business name, date, time, address, status, attendance times, check-in/out button\n\nPattern compliance:\n- Follows worker/attendance/page.tsx pattern for attendance functionality\n- Uses existing components: CheckInOutButton, QRCodeScanner\n- Lucide-react icons (Calendar, Clock, MapPin, CheckCircle)\n- Indonesian language for UI text\n- Proper error handling with toast notifications\n- Verified with grep command and committed to git",
+          "updated_at": "2026-02-22T17:00:00.000Z"
         },
         {
           "id": "subtask-5-4",
@@ -662,6 +663,6 @@
   "planStatus": "in_progress",
   "xstateState": "planning",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T08:46:36.994Z",
+  "updated_at": "2026-02-22T08:49:23.634Z",
   "last_updated": "2026-02-22T07:51:09.652213+00:00"
 }
