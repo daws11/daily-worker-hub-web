@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -69,9 +70,7 @@ function getStatusLabel(status: JobStatus): string {
 export default function BusinessJobsPage() {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-
-  // TODO: Replace with actual data fetching from API
-  const jobs: Job[] = [
+  const [jobs, setJobs] = React.useState<Job[]>([
     {
       id: "1",
       title: "Warehouse Worker",
@@ -104,7 +103,7 @@ export default function BusinessJobsPage() {
       createdAt: new Date(Date.now() - 1000 * 60 * 60 * 168).toISOString(),
       applicants: 8,
     },
-  ]
+  ])
 
   const stats = {
     total: jobs.length,
@@ -117,7 +116,23 @@ export default function BusinessJobsPage() {
     try {
       // TODO: Replace with actual API call to create job
       await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      // Add new job to the list
+      const newJob: Job = {
+        id: Date.now().toString(),
+        title: values.title,
+        description: values.description,
+        status: "draft",
+        createdAt: new Date().toISOString(),
+        applicants: 0,
+      }
+      setJobs((prev) => [newJob, ...prev])
+
+      toast.success("Lowongan berhasil dibuat")
       setIsDialogOpen(false)
+    } catch (error) {
+      console.error("Error creating job:", error)
+      toast.error("Gagal membuat lowongan")
     } finally {
       setIsSubmitting(false)
     }
