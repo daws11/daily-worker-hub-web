@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "009-booking-management-system",
+  "spec": "017-job-completion-payment-release",
   "state": "building",
   "subtasks": {
-    "completed": 8,
-    "total": 15,
+    "completed": 0,
+    "total": 0,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "UI Components",
+    "current": "Database Schema & RLS Policies",
     "id": null,
-    "total": 4
+    "total": 3
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 10,
-    "started_at": "2026-02-22T12:47:19.915768"
+    "number": 4,
+    "started_at": "2026-02-22T21:20:15.820336"
   },
-  "last_update": "2026-02-22T13:09:57.474794"
+  "last_update": "2026-02-22T21:46:29.762338"
 }
