@@ -1,330 +1,238 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { useAuth } from "../../../providers/auth-provider"
-import { supabase } from "../../../../lib/supabase/client"
-
-type KycStatus = 'unverified' | 'pending' | 'verified' | 'rejected'
-
-interface WorkerProfile {
-  full_name: string | null
-  gender: string | null
-  dob: string | null
-  phone: string | null
-  address: string | null
-  experience_years: number | null
-  kyc_status: KycStatus
-}
+import { useState, useCallback, useMemo } from 'react'
+import { JobSearch } from '@/components/job-marketplace/JobSearch'
+import { JobFilters } from '@/components/job-marketplace/JobFilters'
+import { JobSort } from '@/components/job-marketplace/JobSort'
+import { JobListWithHeader } from '@/components/job-marketplace/JobList'
+import { JobDetailDialog } from '@/components/job-marketplace/JobDetailDialog'
+import { useJobs } from '@/lib/hooks/useJobs'
+import { JobWithRelations, JobFilters as JobFiltersType, JobSortOption } from '@/lib/types/job'
+import { toast } from 'sonner'
+import { Briefcase, Loader2, SlidersHorizontal } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 export default function WorkerJobsPage() {
-  const { signOut, user, isLoading } = useAuth()
-  const [profileHovered, setProfileHovered] = useState(false)
-  const [kycHovered, setKycHovered] = useState(false)
-  const [logoutHovered, setLogoutHovered] = useState(false)
-  const [workerProfile, setWorkerProfile] = useState<WorkerProfile | null>(null)
-  const [isLoadingProfile, setIsLoadingProfile] = useState(true)
+  // State for filters and search
+  const [search, setSearch] = useState<string>('')
+  const [filters, setFilters] = useState<JobFiltersType>({})
+  const [sort, setSort] = useState<JobSortOption>('newest')
 
-  const handleLogout = async () => {
-    await signOut()
-  }
+  // State for job detail dialog
+  const [selectedJob, setSelectedJob] = useState<JobWithRelations | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isApplying, setIsApplying] = useState(false)
 
-  const handleProfileClick = () => {
-    window.location.href = "/worker/profile"
-  }
+  // State for mobile filters dialog
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
 
-  const handleKycClick = () => {
-    window.location.href = "/worker/kyc"
-  }
+  // Fetch jobs with filters and sorting
+  const { jobs, loading, error, refetch } = useJobs({
+    filters: { ...filters, search },
+    sort,
+    enabled: true,
+  })
 
-  // Load worker profile on mount
-  useEffect(() => {
-    async function loadWorkerProfile() {
-      if (!user) {
-        setIsLoadingProfile(false)
-        return
-      }
+  // Calculate active filters count for badge
+  const activeFiltersCount = useMemo(() => {
+    return Object.keys(filters).filter(
+      (key) => filters[key as keyof JobFiltersType] !== undefined && filters[key as keyof JobFiltersType] !== ''
+    ).length
+  }, [filters])
 
-      setIsLoadingProfile(true)
+  // Handle job click - open detail dialog
+  const handleJobClick = useCallback((job: JobWithRelations) => {
+    setSelectedJob(job)
+    setIsDialogOpen(true)
+  }, [])
 
-      const { data, error } = await supabase
-        .from('workers')
-        .select('full_name, gender, dob, phone, address, experience_years, kyc_status')
-        .eq('user_id', user.id)
-        .maybeSingle()
+  // Handle dialog close
+  const handleDialogClose = useCallback(() => {
+    setIsDialogOpen(false)
+    // Delay clearing selected job to allow animation to complete
+    setTimeout(() => setSelectedJob(null), 300)
+  }, [])
 
-      setIsLoadingProfile(false)
-
-      if (error) {
-        console.error('Error loading worker profile:', error)
-        return
-      }
-
-      if (data) {
-        setWorkerProfile(data as WorkerProfile)
-      }
+  // Handle job application
+  const handleApply = useCallback(async (job: JobWithRelations) => {
+    setIsApplying(true)
+    try {
+      // TODO: Implement actual application logic when backend is ready
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      toast.success('Application submitted successfully!')
+      handleDialogClose()
+    } catch (err) {
+      toast.error('Failed to submit application. Please try again.')
+    } finally {
+      setIsApplying(false)
     }
+  }, [handleDialogClose])
 
-    loadWorkerProfile()
-  }, [user])
+  // Handle search change
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value)
+  }, [])
 
-  // Check if profile is complete
-  const isProfileComplete = workerProfile && (
-    workerProfile.full_name &&
-    workerProfile.gender &&
-    workerProfile.dob &&
-    workerProfile.phone &&
-    workerProfile.address &&
-    workerProfile.experience_years !== null
-  )
+  // Handle filters change
+  const handleFiltersChange = useCallback((newFilters: JobFiltersType) => {
+    setFilters(newFilters)
+  }, [])
 
-  // Check if KYC is verified
-  const isKycVerified = workerProfile?.kyc_status === 'verified'
+  // Handle sort change
+  const handleSortChange = useCallback((newSort: JobSortOption) => {
+    setSort(newSort)
+  }, [])
+
+  // Handle retry on error
+  const handleRetry = useCallback(() => {
+    refetch()
+  }, [refetch])
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f5f5f5',
-      padding: '1rem'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Header with action buttons */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1.5rem'
-        }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>
-            Dashboard Worker - Jobs
-          </h1>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button
-              onClick={handleProfileClick}
-              onMouseEnter={() => setProfileHovered(true)}
-              onMouseLeave={() => setProfileHovered(false)}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: profileHovered ? '#1d4ed8' : '#2563eb',
-                color: 'white',
-                borderRadius: '0.375rem',
-                fontWeight: 500,
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s',
-                fontSize: '0.875rem'
-              }}
+    <div className="min-h-screen bg-muted/30 p-3 sm:p-4 md:p-6">
+      <div className="mx-auto max-w-7xl space-y-4 sm:space-y-6">
+        {/* Page Header */}
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
+            <h1 className="text-xl font-bold sm:text-2xl">Job Marketplace</h1>
+          </div>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            Discover and apply for jobs across Bali
+          </p>
+        </div>
+
+        {/* Error State */}
+        {error && (
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 sm:p-6 text-center">
+            <p className="text-destructive font-medium mb-2 text-sm sm:text-base">Failed to load jobs</p>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-4">{error.message}</p>
+            <Button
+              onClick={handleRetry}
+              variant="default"
+              size="sm"
             >
-              Profile
-            </button>
-            <button
-              onClick={handleKycClick}
-              onMouseEnter={() => setKycHovered(true)}
-              onMouseLeave={() => setKycHovered(false)}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: kycHovered ? '#d97706' : '#f59e0b',
-                color: 'white',
-                borderRadius: '0.375rem',
-                fontWeight: 500,
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s',
-                fontSize: '0.875rem'
-              }}
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Try Again
+            </Button>
+          </div>
+        )}
+
+        {/* Search and Filter Bar - Mobile First */}
+        <div className="space-y-3">
+          {/* Search Bar - Full width on mobile */}
+          <div className="w-full">
+            <JobSearch
+              value={search}
+              onSearchChange={handleSearchChange}
+              placeholder="Search jobs by keyword or position..."
+              className="w-full"
+            />
+          </div>
+
+          {/* Filter and Sort Actions Bar */}
+          <div className="flex items-center justify-between gap-2">
+            {/* Mobile Filters Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsMobileFiltersOpen(true)}
+              className="lg:hidden flex items-center gap-2"
             >
-              KYC Verification
-            </button>
-            <button
-              onClick={handleLogout}
-              disabled={isLoading}
-              onMouseEnter={() => setLogoutHovered(true)}
-              onMouseLeave={() => setLogoutHovered(false)}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: isLoading ? '#9ca3af' : logoutHovered ? '#dc2626' : '#ef4444',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                fontWeight: 500,
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                fontSize: '0.875rem',
-                opacity: isLoading ? 0.6 : 1,
-                transition: 'background-color 0.2s'
-              }}
-            >
-              {isLoading ? 'Memproses...' : 'Keluar'}
-            </button>
+              <SlidersHorizontal className="h-4 w-4" />
+              Filters
+              {activeFiltersCount > 0 && (
+                <Badge variant="secondary" className="ml-1 h-5 min-w-5 px-1">
+                  {activeFiltersCount}
+                </Badge>
+              )}
+            </Button>
+
+            {/* Sort - Full width on mobile, compact on larger screens */}
+            <div className="flex-1 lg:flex-none">
+              <JobSort
+                value={sort}
+                onSortChange={handleSortChange}
+                className="w-full lg:w-auto"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Profile Completion Prompt */}
-        {!isLoadingProfile && !isProfileComplete && (
-          <div style={{
-            backgroundColor: '#eff6ff',
-            border: '1px solid #3b82f6',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="10" cy="10" r="10" fill="#3b82f6"/>
-              <path d="M10 5V10M10 15H10.01" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <div>
-              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#1e40af' }}>
-                Profil Anda Belum Lengkap
-              </p>
-              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#1e3a8a' }}>
-                Lengkapi profil Anda agar dapat menerima pekerjaan.
-              </p>
-              <a
-                href="/worker/profile"
-                style={{
-                  display: 'inline-block',
-                  marginTop: '0.5rem',
-                  padding: '0.375rem 0.75rem',
-                  backgroundColor: '#3b82f6',
-                  color: 'white',
-                  textDecoration: 'none',
-                  borderRadius: '0.375rem',
-                  fontSize: '0.75rem',
-                  fontWeight: 500
-                }}
-              >
-                Lengkapi Profil
-              </a>
-            </div>
-          </div>
-        )}
+        {/* Main Content Grid */}
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-[280px_1fr]">
+          {/* Sidebar - Filters - Hidden on mobile, visible on lg+ */}
+          <aside className="hidden lg:block lg:col-span-1">
+            <JobFilters
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+              className="sticky top-6"
+            />
+          </aside>
 
-        {/* KYC Verification Prompt */}
-        {!isLoadingProfile && !isKycVerified && workerProfile && (
-          <div style={{
-            backgroundColor: '#fef3c7',
-            border: '1px solid #f59e0b',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="10" cy="10" r="10" fill="#f59e0b"/>
-              <path d="M10 6V10L13 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <div>
-              <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 500, color: '#92400e' }}>
-                Verifikasi KYC Belum Selesai
-              </p>
-              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#b45309' }}>
-                {workerProfile.kyc_status === 'unverified'
-                  ? 'Lengkapi verifikasi KYC agar profil Anda terverifikasi.'
-                  : workerProfile.kyc_status === 'pending'
-                  ? 'KYC Anda sedang dalam proses verifikasi.'
-                  : 'KYC Anda ditolak. Silakan submit ulang.'}
-              </p>
-              {workerProfile.kyc_status !== 'pending' && (
-                <a
-                  href="/worker/kyc"
-                  style={{
-                    display: 'inline-block',
-                    marginTop: '0.5rem',
-                    padding: '0.375rem 0.75rem',
-                    backgroundColor: '#f59e0b',
-                    color: 'white',
-                    textDecoration: 'none',
-                    borderRadius: '0.375rem',
-                    fontSize: '0.75rem',
-                    fontWeight: 500
-                  }}
-                >
-                  {workerProfile.kyc_status === 'unverified' ? 'Verifikasi Sekarang' : 'Submit Ulang'}
-                </a>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div style={{
-          backgroundColor: 'white',
-          borderRadius: '0.5rem',
-          padding: '1.5rem',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
-        }}>
-          <p style={{ color: '#666', marginBottom: '1rem' }}>
-            Selamat datang di dashboard Worker!
-          </p>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-            gap: '1rem',
-            marginTop: '1rem'
-          }}>
-            <div style={{
-              padding: '1rem',
-              border: '1px solid #e5e7eb',
-              borderRadius: '0.375rem'
-            }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                Total Jobs
-              </h3>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#2563eb' }}>
-                0
-              </p>
-            </div>
-
-            <div style={{
-              padding: '1rem',
-              border: '1px solid #e5e7eb',
-              borderRadius: '0.375rem'
-            }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                Applied
-              </h3>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f59e0b' }}>
-                0
-              </p>
-            </div>
-
-            <div style={{
-              padding: '1rem',
-              border: '1px solid #e5e7eb',
-              borderRadius: '0.375rem'
-            }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                Booked
-              </h3>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#10b981' }}>
-                0
-              </p>
-            </div>
-
-            <div style={{
-              padding: '1rem',
-              border: '1px solid #e5e7eb',
-              borderRadius: '0.375rem'
-            }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                Completed
-              </h3>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#6b7280' }}>
-                0
-              </p>
-            </div>
-          </div>
-
-          <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-            <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
-              Job discovery feature coming soon...
-            </p>
+          {/* Main Column - Job List */}
+          <div className="lg:col-span-1">
+            <JobListWithHeader
+              jobs={jobs}
+              loading={loading}
+              onJobClick={handleJobClick}
+              title="Available Jobs"
+              subtitle={search || activeFiltersCount > 0
+                ? 'Filtered results'
+                : 'Browse all open positions'}
+              emptyTitle={search || activeFiltersCount > 0
+                ? 'No jobs match your criteria'
+                : 'No jobs available'}
+              emptyDescription={search || activeFiltersCount > 0
+                ? 'Try adjusting your filters or search terms'
+                : 'Check back later for new opportunities'}
+            />
           </div>
         </div>
       </div>
+
+      {/* Mobile Filters Dialog */}
+      <Dialog open={isMobileFiltersOpen} onOpenChange={setIsMobileFiltersOpen}>
+        <DialogContent className="w-[calc(100%-2rem)] max-w-lg max-h-[90vh] p-0">
+          <DialogHeader className="p-4 sm:p-6 pb-4 border-b">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex items-center gap-2">
+                <SlidersHorizontal className="h-5 w-5" />
+                Filters
+              </DialogTitle>
+              {activeFiltersCount > 0 && (
+                <Badge variant="secondary">
+                  {activeFiltersCount} {activeFiltersCount === 1 ? 'filter' : 'filters'} applied
+                </Badge>
+              )}
+            </div>
+          </DialogHeader>
+          <ScrollArea className="max-h-[calc(90vh-8rem)] px-4 sm:px-6 py-4">
+            <JobFilters
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+              className="border-0 shadow-none"
+            />
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Job Detail Dialog */}
+      <JobDetailDialog
+        job={selectedJob}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        onApply={handleApply}
+        isApplying={isApplying}
+      />
     </div>
   )
 }
