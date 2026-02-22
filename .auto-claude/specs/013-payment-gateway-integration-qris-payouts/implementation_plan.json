@@ -113,7 +113,9 @@
             "command": "psql $DATABASE_URL -c \"SELECT policyname FROM pg_policies WHERE tablename IN ('wallets', 'payment_transactions', 'payout_requests', 'bank_accounts');\" | head -10",
             "expected": "Multiple RLS policies found"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created comprehensive RLS policies migration at supabase/migrations/20250222000010_payment_rls_policies.sql. The migration includes:\n\n1. **Wallets Policies (6 policies)**:\n   - Business owners can read their own wallet\n   - Workers can read their own wallet\n   - Admins have full CRUD access\n\n2. **Payment Transactions Policies (5 policies)**:\n   - Business owners can read their own transactions\n   - Admins have full CRUD access (transactions created via webhooks)\n\n3. **Payout Requests Policies (6 policies)**:\n   - Workers can read and create their own requests\n   - Workers can cancel pending requests before processing\n   - Admins have full access\n\n4. **Bank Accounts Policies (8 policies)**:\n   - Workers have full CRUD on their own accounts\n   - Admins have full access for auditing\n\nAll policies follow established patterns from 002_rls_policies.sql and 20260222_add_bookings_rls_policies.sql:\n- Use EXISTS subqueries for better performance\n- Use text casting (::text) for UUID comparisons\n- Use is_admin() helper function\n- Proper security notes included",
+          "updated_at": "2026-02-22T08:11:36.636076+00:00"
         }
       ]
     },
@@ -746,6 +748,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T08:00:49.566Z",
-  "last_updated": "2026-02-22T08:00:16.061473+00:00"
+  "updated_at": "2026-02-22T08:08:25.445Z",
+  "last_updated": "2026-02-22T08:11:36.636090+00:00"
 }
