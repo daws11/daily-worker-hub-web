@@ -6,7 +6,7 @@ import { Calendar, Phone } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ReliabilityScore } from "@/components/worker/reliability-score"
+import { ReliabilityScore, NewWorkerBadge } from "@/components/worker/reliability-score"
 import { cn } from "@/lib/utils"
 
 type BookingStatus = "pending" | "accepted" | "rejected" | "in_progress" | "completed" | "cancelled"
@@ -27,6 +27,7 @@ export interface WorkerApplicationCardProps {
     }
   }
   reliabilityScore?: number
+  completedJobs?: number
   onSelect?: (bookingId: string) => void
   isSelected?: boolean
 }
@@ -43,6 +44,7 @@ const statusVariants: Record<BookingStatus, { variant: "default" | "secondary" |
 export function WorkerApplicationCard({
   booking,
   reliabilityScore,
+  completedJobs,
   onSelect,
   isSelected,
 }: WorkerApplicationCardProps) {
@@ -91,7 +93,9 @@ export function WorkerApplicationCard({
             <div className="flex-1 min-w-0">
               <CardTitle className="text-lg truncate">{worker.full_name}</CardTitle>
               <div className="flex items-center gap-2 mt-1">
-                {reliabilityScore !== undefined && reliabilityScore !== null ? (
+                {completedJobs !== undefined && completedJobs < 5 ? (
+                  <NewWorkerBadge completedJobs={completedJobs} />
+                ) : reliabilityScore !== undefined && reliabilityScore !== null ? (
                   <ReliabilityScore score={reliabilityScore} />
                 ) : (
                   <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
