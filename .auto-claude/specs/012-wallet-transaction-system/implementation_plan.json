@@ -1,0 +1,424 @@
+{
+  "feature": "Wallet & Transaction System",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a new feature requiring database schema changes, API query functions, and frontend UI components. The workflow follows service dependencies: database schema must exist before queries can be built, and queries must exist before the UI can consume them.",
+  "phases": [
+    {
+      "id": "phase-1-database",
+      "name": "Database Schema",
+      "type": "implementation",
+      "description": "Create wallet tables and update database schema with proper RLS policies",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create wallets table migration",
+          "service": "database",
+          "files_to_modify": [],
+          "files_to_create": [
+            "supabase/migrations/20260222_create_wallets.sql"
+          ],
+          "patterns_from": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "ls supabase/migrations/20260222_create_wallets.sql",
+            "expected": "supabase/migrations/20260222_create_wallets.sql"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Update TypeScript types to include wallets table",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/supabase/types.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -c 'wallets' lib/supabase/types.ts",
+            "expected": "2"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Create RLS policies for wallets table",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20260222_create_wallets.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify RLS policies exist for wallets table allowing users to read own wallets"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-queries",
+      "name": "Database Queries",
+      "type": "implementation",
+      "description": "Create wallet and transaction query functions",
+      "depends_on": [
+        "phase-1-database"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create wallet queries (getWallet, createWallet, updateBalance)",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/lib/supabase/queries/wallets.ts"
+          ],
+          "patterns_from": [
+            "lib/lib/supabase/queries/bookings.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -c 'export.*function' lib/lib/supabase/queries/wallets.ts",
+            "expected": "4"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create transaction queries (getTransactions, getTransactionById, filterTransactions)",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/lib/supabase/queries/transactions.ts"
+          ],
+          "patterns_from": [
+            "lib/lib/supabase/queries/bookings.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -c 'export.*function' lib/lib/supabase/queries/transactions.ts",
+            "expected": "4"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Create wallet statistics helper (calculatePendingBalance, getTotalEarnings)",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/lib/supabase/queries/wallets.ts"
+          ],
+          "patterns_from": [
+            "lib/lib/supabase/queries/bookings.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify calculatePendingBalance and getTotalEarnings functions exist"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-worker-ui",
+      "name": "Worker Wallet UI",
+      "type": "implementation",
+      "description": "Create wallet dashboard page and components for workers",
+      "depends_on": [
+        "phase-2-queries"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create worker wallet page with balance cards and transaction list",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "app/app/(dashboard)/worker/wallet/page.tsx"
+          ],
+          "patterns_from": [
+            "app/app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard/worker/wallet",
+            "checks": [
+              "Page renders without errors",
+              "Balance cards display",
+              "Transaction list visible"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create transaction card component for displaying individual transactions",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/wallet/transaction-card.tsx"
+          ],
+          "patterns_from": [
+            "components/booking/worker-application-card.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify transaction card component renders with amount, date, type, and status"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Create transaction filter component (by date and type)",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/wallet/transaction-filters.tsx"
+          ],
+          "patterns_from": [
+            "components/job-marketplace/JobFilters.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify filters work for date range and transaction type"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-4",
+          "description": "Create transaction detail dialog component",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/wallet/transaction-detail-dialog.tsx"
+          ],
+          "patterns_from": [
+            "components/booking/worker-notes-dialog.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify dialog shows transaction details including related job info"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-business-ui",
+      "name": "Business Wallet UI",
+      "type": "implementation",
+      "description": "Create wallet dashboard page and components for businesses",
+      "depends_on": [
+        "phase-2-queries"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create business wallet page with balance cards and transaction list",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "app/app/(dashboard)/business/wallet/page.tsx"
+          ],
+          "patterns_from": [
+            "app/app/(dashboard)/worker/wallet/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard/business/wallet",
+            "checks": [
+              "Page renders without errors",
+              "Balance cards display",
+              "Transaction list visible"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-integration",
+      "name": "Integration & Verification",
+      "type": "integration",
+      "description": "Verify end-to-end wallet functionality and integrate with booking completion flow",
+      "depends_on": [
+        "phase-3-worker-ui",
+        "phase-4-business-ui"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "End-to-end verification: Worker wallet displays correct balance and pending amounts",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Login as worker user",
+              "Navigate to wallet page",
+              "Verify current balance displays",
+              "Verify pending balance displays for in-progress bookings",
+              "Verify transaction history loads",
+              "Test transaction filters by date",
+              "Test transaction filters by type",
+              "Click on transaction to view details"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "End-to-end verification: Business wallet displays correct balance and transactions",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Login as business user",
+              "Navigate to wallet page",
+              "Verify current balance displays",
+              "Verify payment history loads",
+              "Test transaction filters",
+              "Click on transaction to view details including job info"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 5,
+    "total_subtasks": 13,
+    "services_involved": [
+      "database",
+      "frontend"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 2,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-3-worker-ui",
+            "phase-4-business-ui"
+          ],
+          "reason": "Both depend only on phase-2-queries and work on separate pages"
+        }
+      ],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution recommended due to clear dependencies"
+    },
+    "startup_command": "npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "manual"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "Businesses and workers have wallet balances",
+      "Pending balances are held until job completion",
+      "Transaction history shows all deposits and withdrawals",
+      "Transactions can be filtered by date and type",
+      "Transaction details show amount, date, and related job",
+      "Wallet balances update in real-time"
+    ],
+    "verification_steps": [
+      {
+        "name": "Type Check",
+        "command": "npm run type-check",
+        "expected_outcome": "No TypeScript errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Lint Check",
+        "command": "npm run lint",
+        "expected_outcome": "No lint errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Medium risk change involving new database tables, query functions, and UI components. Manual browser verification required for wallet functionality."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/dashboard/worker/wallet",
+          "checks": [
+            "Wallet balance displays",
+            "Pending balance shows",
+            "Transaction list loads",
+            "Filters work",
+            "Transaction details visible"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/dashboard/business/wallet",
+          "checks": [
+            "Wallet balance displays",
+            "Transaction list loads",
+            "Filters work",
+            "Transaction details visible"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "wallets table exists",
+        "RLS policies enabled on wallets",
+        "Foreign keys to users/businesses/workers valid"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "xstateState": "backlog",
+  "executionPhase": "coding",
+  "updated_at": "2026-02-22T07:12:26.832Z"
+}
