@@ -5,41 +5,36 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useAuth } from "@/app/providers/auth-provider"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { supabase } from "@/lib/supabase/client"
 import type { Database } from "@/lib/supabase/types"
-import { Wallet, Clock, Loader2 } from "lucide-react"
-import { TransactionCard } from "@/components/wallet/transaction-card"
-import { TransactionFilters } from "@/components/wallet/transaction-filters"
-import type { TransactionFilters as TransactionFiltersType } from "@/lib/types/wallet"
-import { TransactionDetailDialog } from "@/components/wallet/transaction-detail-dialog"
+import { getBusinessWalletBalance, getBusinessPaymentHistory, initializeQrisPayment, calculateTopUpFee } from "@/lib/actions/payments"
+import { Wallet, Loader2, Plus, ArrowUpRight, Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
 
 type BusinessesRow = Database["public"]["Tables"]["businesses"]["Row"]
-type WalletRow = Database["public"]["Tables"]["wallets"]["Row"]
-type WalletTransactionRow = Database["public"]["Tables"]["wallet_transactions"]["Row"]
+type PaymentTransaction = Database["public"]["Tables"]["payment_transactions"]["Row"]
 
-type WalletWithBalance = WalletRow
-
-type TransactionWithDetails = WalletTransactionRow & {
-  bookings?: {
-    id: string
-    jobs: {
-      id: string
-      title: string
-    }
-  } | null
+type WalletBalance = {
+  balance: number
+  currency: string
 }
 
 export default function BusinessWalletPage() {
   const { user } = useAuth()
   const router = useRouter()
   const [business, setBusiness] = useState<BusinessesRow | null>(null)
-  const [wallet, setWallet] = useState<WalletWithBalance | null>(null)
-  const [transactions, setTransactions] = useState<TransactionWithDetails[]>([])
-  const [filteredTransactions, setFilteredTransactions] = useState<TransactionWithDetails[]>([])
+  const [walletBalance, setWalletBalance] = useState<WalletBalance | null>(null)
+  const [transactions, setTransactions] = useState<PaymentTransaction[]>([])
+  const [isLoadingBusiness, setIsLoadingBusiness] = useState(true)
   const [isLoadingWallet, setIsLoadingWallet] = useState(true)
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(true)
-  const [selectedTransaction, setSelectedTransaction] = useState<TransactionWithDetails | null>(null)
-  const [filters, setFilters] = useState<TransactionFiltersType>({})
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
+  const [topUpAmount, setTopUpAmount] = useState<string>("")
+  const [feeBreakdown, setFeeBreakdown] = useState<{ amount: number; fee_amount: number; total_amount: number } | null>(null)
 
   // Fetch business profile
   useEffect(() => {
@@ -66,122 +61,119 @@ export default function BusinessWalletPage() {
     fetchBusiness()
   }, [user, router])
 
-  // Fetch wallet
+  // Fetch wallet balance
   useEffect(() => {
-    async function fetchWallet() {
-      if (!user) return
+    async function fetchWalletBalance() {
+      if (!business) return
 
       setIsLoadingWallet(true)
       try {
-        const { data, error } = await supabase
-          .from("wallets")
-          .select("*")
-          .eq("user_id", user.id)
-          .single()
+        const result = await getBusinessWalletBalance(business.id)
 
-        if (error) {
-          // If wallet doesn't exist, create one
-          if (error.code === "PGRST116") {
-            const { data: newWallet, error: createError } = await supabase
-              .from("wallets")
-              .insert({
-                user_id: user.id,
-                balance: 0,
-                pending_balance: 0,
-              })
-              .select()
-              .single()
-
-            if (createError) {
-              toast.error("Gagal membuat dompet")
-              return
-            }
-
-            setWallet(newWallet)
-            return
-          }
-
-          toast.error("Gagal memuat data dompet")
+        if (!result.success || !result.data) {
+          toast.error(result.error || "Gagal memuat saldo wallet")
           return
         }
 
-        setWallet(data)
+        setWalletBalance(result.data)
       } finally {
         setIsLoadingWallet(false)
       }
     }
 
-    fetchWallet()
-  }, [user])
+    fetchWalletBalance()
+  }, [business])
 
-  // Fetch transactions
+  // Fetch payment history
   useEffect(() => {
     async function fetchTransactions() {
-      if (!wallet) return
+      if (!business) return
 
       setIsLoadingTransactions(true)
       try {
-        const { data, error } = await supabase
-          .from("wallet_transactions")
-          .select(`
-            *,
-            bookings (
-              id,
-              jobs (
-                id,
-                title
-              )
-            )
-          `)
-          .eq("wallet_id", wallet.id)
-          .order("created_at", { ascending: false })
+        const result = await getBusinessPaymentHistory(business.id)
 
-        if (error) {
-          toast.error("Gagal memuat riwayat transaksi")
+        if (!result.success || !result.data) {
+          toast.error(result.error || "Gagal memuat riwayat transaksi")
           return
         }
 
-        setTransactions(data as TransactionWithDetails[])
+        setTransactions(result.data)
       } finally {
         setIsLoadingTransactions(false)
       }
     }
 
     fetchTransactions()
-  }, [wallet])
+  }, [business])
 
-  // Apply filters to transactions
+  // Calculate fee when amount changes
   useEffect(() => {
-    let filtered = [...transactions]
+    async function calculateFee() {
+      if (!topUpAmount || isNaN(Number(topUpAmount))) {
+        setFeeBreakdown(null)
+        return
+      }
 
-    // Filter by type
-    if (filters.type) {
-      filtered = filtered.filter((t) => t.type === filters.type)
+      const amount = Number(topUpAmount)
+      if (amount < 500000) return
+
+      try {
+        const result = await calculateTopUpFee(amount)
+        if (result.success && result.data) {
+          setFeeBreakdown({
+            amount: result.data.amount,
+            fee_amount: result.data.fee_amount,
+            total_amount: result.data.total_amount,
+          })
+        } else {
+          setFeeBreakdown(null)
+        }
+      } catch {
+        setFeeBreakdown(null)
+      }
     }
 
-    // Filter by amount range
-    if (filters.amountMin !== undefined) {
-      filtered = filtered.filter((t) => t.amount >= filters.amountMin!)
-    }
-    if (filters.amountMax !== undefined) {
-      filtered = filtered.filter((t) => t.amount <= filters.amountMax!)
+    calculateFee()
+  }, [topUpAmount])
+
+  // Handle top-up payment
+  const handleTopUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!business) return
+
+    const amount = Number(topUpAmount)
+    if (isNaN(amount) || amount < 500000) {
+      toast.error("Minimal top-up Rp 500.000")
+      return
     }
 
-    // Filter by date range
-    if (filters.dateAfter) {
-      filtered = filtered.filter((t) => new Date(t.created_at) >= new Date(filters.dateAfter!))
-    }
-    if (filters.dateBefore) {
-      const endDate = new Date(filters.dateBefore!)
-      endDate.setHours(23, 59, 59, 999)
-      filtered = filtered.filter((t) => new Date(t.created_at) <= endDate)
-    }
+    setIsProcessingPayment(true)
+    try {
+      const result = await initializeQrisPayment(business.id, amount)
 
-    setFilteredTransactions(filtered)
-  }, [transactions, filters])
+      if (!result.success || !result.data) {
+        toast.error(result.error || "Gagal membuat pembayaran QRIS")
+        return
+      }
 
-  // Format amount to Indonesian Rupiah
-  const formatAmount = (amount: number) => {
+      // Redirect to payment URL
+      if (result.data.payment_url) {
+        window.open(result.data.payment_url, "_blank")
+        toast.success("Pembayaran QRIS berhasil dibuat. Silakan selesaikan pembayaran.")
+        // Refresh transactions after a delay
+        setTimeout(() => {
+          window.location.reload()
+        }, 3000)
+      }
+    } finally {
+      setIsProcessingPayment(false)
+    }
+  }
+
+  // Format currency to Indonesian Rupiah
+  const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
@@ -190,120 +182,254 @@ export default function BusinessWalletPage() {
     }).format(amount)
   }
 
+  // Format date to Indonesian locale
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
+  // Get status badge variant and icon
+  const getStatusInfo = (status: PaymentTransaction["status"]) => {
+    switch (status) {
+      case "success":
+        return {
+          variant: "default" as const,
+          label: "Berhasil",
+          icon: CheckCircle2,
+          className: "bg-green-100 text-green-800 hover:bg-green-100",
+        }
+      case "pending":
+        return {
+          variant: "secondary" as const,
+          label: "Menunggu",
+          icon: Clock,
+          className: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
+        }
+      case "failed":
+        return {
+          variant: "destructive" as const,
+          label: "Gagal",
+          icon: XCircle,
+          className: "bg-red-100 text-red-800 hover:bg-red-100",
+        }
+      case "expired":
+        return {
+          variant: "outline" as const,
+          label: "Kadaluarsa",
+          icon: AlertCircle,
+          className: "bg-gray-100 text-gray-800 hover:bg-gray-100",
+        }
+      default:
+        return {
+          variant: "outline" as const,
+          label: status,
+          icon: AlertCircle,
+          className: "",
+        }
+    }
+  }
+
+  if (isLoadingBusiness) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Memuat profil bisnis...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-[#f5f5f5] p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">Dompet Bisnis</h1>
+          <h1 className="text-2xl font-bold">Wallet Bisnis</h1>
           <p className="text-[#666]">
-            Kelola saldo dan lihat riwayat transaksi bisnis Anda
+            Kelola saldo dan riwayat transaksi Anda
           </p>
         </div>
 
-        {/* Balance Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-          {/* Total Balance Card */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>Saldo Tersedia</CardDescription>
-              <CardTitle className="text-3xl text-[#2563eb]">
-                {isLoadingWallet ? (
-                  <Loader2 className="h-8 w-8 animate-spin" />
-                ) : (
-                  formatAmount(wallet?.balance || 0)
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Wallet className="h-4 w-4" />
-                <span>Saldo yang dapat digunakan</span>
+        {/* Wallet Balance Card */}
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <Wallet className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Saldo Wallet</CardTitle>
+                  <CardDescription>Saldo yang tersedia untuk digunakan</CardDescription>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Pending Balance Card */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardDescription>Saldo Tertahan</CardDescription>
-              <CardTitle className="text-3xl text-[#f59e0b]">
-                {isLoadingWallet ? (
-                  <Loader2 className="h-8 w-8 animate-spin" />
-                ) : (
-                  formatAmount(wallet?.pending_balance || 0)
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span>Menunggu penyelesaian transaksi</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {isLoadingWallet ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-bold text-blue-600">
+                    {walletBalance ? formatCurrency(walletBalance.balance) : "Rp 0"}
+                  </span>
+                  <span className="text-lg text-muted-foreground">
+                    {walletBalance?.currency || "IDR"}
+                  </span>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Saldo akan bertambah setelah pembayaran QRIS berhasil
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-        {/* Filters and Transaction List */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Filters Sidebar */}
-          <div className="lg:col-span-1">
-            <TransactionFilters
-              filters={filters}
-              onFiltersChange={setFilters}
-            />
-          </div>
+        {/* Top-up Form */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Top Up Saldo
+            </CardTitle>
+            <CardDescription>
+              Isi saldo wallet menggunakan QRIS (minimal Rp 500.000)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleTopUp} className="space-y-4">
+              <div className="grid w-full items-center gap-1.5">
+                <Label htmlFor="amount">Jumlah Top Up (Rp)</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="Masukkan jumlah top up"
+                  value={topUpAmount}
+                  onChange={(e) => setTopUpAmount(e.target.value)}
+                  min={500000}
+                  step={1000}
+                  disabled={isProcessingPayment}
+                />
+                <p className="text-sm text-muted-foreground">
+                  Minimal: Rp 500.000 | Maksimal: Rp 100.000.000
+                </p>
+              </div>
 
-          {/* Transaction List */}
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Riwayat Transaksi</CardTitle>
-                <CardDescription>
-                  {filteredTransactions.length === transactions.length
-                    ? `Semua transaksi (${transactions.length} transaksi)`
-                    : `${filteredTransactions.length} dari ${transactions.length} transaksi`}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isLoadingTransactions ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              {feeBreakdown && (
+                <div className="bg-blue-50 p-4 rounded-lg space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Jumlah Top Up:</span>
+                    <span className="font-medium">{formatCurrency(feeBreakdown.amount)}</span>
                   </div>
-                ) : filteredTransactions.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <Wallet className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">
-                      {transactions.length === 0
-                        ? "Belum ada transaksi. Mulai posting pekerjaan dan temukan pekerja terbaik!"
-                        : "Tidak ada transaksi yang cocok dengan filter."}
-                    </p>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Biaya Admin (0.7% + Rp 500):</span>
+                    <span className="font-medium">{formatCurrency(feeBreakdown.fee_amount)}</span>
                   </div>
+                  <div className="border-t pt-2 mt-2">
+                    <div className="flex justify-between">
+                      <span className="font-semibold">Total Pembayaran:</span>
+                      <span className="font-bold text-blue-600">{formatCurrency(feeBreakdown.total_amount)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={!topUpAmount || isProcessingPayment || Number(topUpAmount) < 500000}
+                className="w-full"
+              >
+                {isProcessingPayment ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Memproses...
+                  </>
                 ) : (
-                  <div className="space-y-3">
-                    {filteredTransactions.map((transaction) => (
-                      <TransactionCard
-                        key={transaction.id}
-                        transaction={transaction}
-                        onSelect={setSelectedTransaction}
-                        isSelected={selectedTransaction?.id === transaction.id}
-                      />
-                    ))}
-                  </div>
+                  <>
+                    <ArrowUpRight className="mr-2 h-4 w-4" />
+                    Bayar dengan QRIS
+                  </>
                 )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
-        {/* Transaction Detail Dialog */}
-        <TransactionDetailDialog
-          transaction={selectedTransaction}
-          open={selectedTransaction !== null}
-          onOpenChange={(open) => {
-            if (!open) setSelectedTransaction(null)
-          }}
-        />
+        {/* Transaction History */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Riwayat Transaksi</CardTitle>
+            <CardDescription>
+              Daftar semua transaksi top up wallet Anda
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoadingTransactions ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : transactions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Wallet className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  Belum ada riwayat transaksi
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Tanggal</TableHead>
+                      <TableHead>Jumlah</TableHead>
+                      <TableHead>Biaya Admin</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Payment Provider</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions.map((transaction) => {
+                      const statusInfo = getStatusInfo(transaction.status)
+                      const StatusIcon = statusInfo.icon
+
+                      return (
+                        <TableRow key={transaction.id}>
+                          <TableCell className="font-medium">
+                            {formatDate(transaction.created_at)}
+                          </TableCell>
+                          <TableCell>
+                            {formatCurrency(transaction.amount)}
+                          </TableCell>
+                          <TableCell>
+                            {formatCurrency(transaction.fee_amount)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={statusInfo.className} variant={statusInfo.variant}>
+                              <StatusIcon className="h-3 w-3 mr-1" />
+                              {statusInfo.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="capitalize">
+                            {transaction.payment_provider}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

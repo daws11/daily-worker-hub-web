@@ -1,0 +1,310 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Payment Gateway Integration (QRIS & Payouts)
+Workspace: isolated worktree
+Started: 2026-02-22
+
+Workflow Type: feature
+Rationale: Adding new payment functionality with Xendit integration involving multiple services (database, API, webhooks, UI)
+
+Session 1 (Planner):
+- Created implementation_plan.json
+- Created context.json
+- Created project_index.json
+- Created init.sh
+
+Phases: 8
+Total subtasks: 29
+
+Phase Summary:
+- Phase 1 (Database Schema Setup): 5 subtasks, depends on: []
+  - Create wallets table
+  - Create payment_transactions table
+  - Create payout_requests table
+  - Create bank_accounts table
+  - Create RLS policies
+
+- Phase 2 (Core Types and Utilities): 4 subtasks, depends on: [phase-1-database]
+  - Update lib/supabase/types.ts
+  - Create lib/types/payment.ts
+  - Create lib/utils/xendit.ts
+  - Create lib/utils/payment-validator.ts
+
+- Phase 3 (Database Query Functions): 2 subtasks, depends on: [phase-2-types-utils]
+  - Create lib/supabase/queries/wallets.ts
+  - Create lib/supabase/queries/transactions.ts
+
+- Phase 4 (Server Actions for Payments): 3 subtasks, depends on: [phase-3-supabase-queries]
+  - Create lib/actions/payments.ts with QRIS payment
+  - Add payout request action
+  - Add wallet balance check action
+
+- Phase 5 (Webhook Handlers): 2 subtasks, depends on: [phase-4-server-actions]
+  - Create payment-webhook Edge Function
+  - Create payout-webhook Edge Function
+
+- Phase 6 (Frontend Components): 4 subtasks, depends on: [phase-4-server-actions]
+  - Create QRIS payment form component
+  - Create withdrawal form component
+  - Create transaction history component
+  - Create wallet balance component
+
+- Phase 7 (Dashboard Pages): 2 subtasks, depends on: [phase-6-components]
+  - Create business wallet page
+  - Create worker wallet page
+
+- Phase 8 (Integration and Testing): 4 subtasks, depends on: [phase-5-webhooks, phase-7-pages]
+  - Add environment variables
+  - E2E verification: Business top-up flow
+  - E2E verification: Worker withdrawal flow
+  - Error handling verification
+
+Services Involved:
+- database (Supabase PostgreSQL) - new tables for wallets, transactions, payouts
+- app (Next.js) - server actions, pages, components
+- supabase (Edge Functions) - webhook handlers
+
+Parallelism Analysis:
+- Max parallel phases: 3
+- Recommended workers: 2
+- Parallel groups:
+  - Phase 6 (Components) and Phase 7 (Pages) can overlap
+  - Phase 5 (Webhooks) and Phase 6 (Components) can run in parallel
+
+Key Requirements:
+- Minimum top-up: Rp 500.000
+- Minimum withdrawal: Rp 100.000
+- One free withdrawal per week, fee for additional withdrawals
+- Supported banks: BRI, Mandiri, BCA, BNI
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  npm run dev
+
+The init.sh script has been created for full environment setup:
+
+  source .auto-claude/specs/013-payment-gateway-integration-qris-payouts/init.sh
+
+=== END SESSION 1 ===
+
+Planner agent completed successfully.
+Implementation plan is ready for coder agent to begin.
+
+=== SESSION 2 - SUBTASK IMPLEMENTATION ===
+
+2026-02-22 - Subtask 1-2: Create payment_transactions table for QRIS deposits
+- Status: COMPLETED
+- Files:
+  - supabase/migrations/20250222000007_create_payment_transactions.sql (already existed)
+  - lib/supubase/types.ts (payment_transactions type already defined)
+- Verification: Migration file follows the same patterns as initial_schema.sql
+  - Proper enum types (payment_transaction_status, payment_provider)
+  - Correct foreign key references to businesses table
+  - All necessary indexes for performance
+  - RLS policies for data security
+  - Trigger for updated_at timestamps
+  - TypeScript types match database schema exactly
+- Notes: The implementation was already complete; just needed to update status in implementation_plan.json
+
+2026-02-22 - Subtask 1-4: Create bank_accounts table for worker withdrawal destinations
+- Status: COMPLETED
+- Files:
+  - supabase/migrations/20250222000009_create_bank_accounts.sql (created)
+  - lib/supabase/types.ts (bank_accounts type added)
+- Implementation:
+  - Created bank_code enum: BCA, BRI, Mandiri, BNI
+  - Created bank_accounts table with:
+    - id (UUID primary key)
+    - worker_id (foreign key to workers)
+    - bank_code (enum for Indonesian banks)
+    - bank_account_number (TEXT)
+    - bank_account_name (TEXT)
+    - is_primary (BOOLEAN for default account)
+    - created_at, updated_at (TIMESTAMPTZ)
+  - Added indexes: worker_id, bank_code, is_primary, created_at DESC
+  - Unique index to ensure only one primary account per worker
+  - Trigger to update updated_at column
+  - Trigger function to enforce single primary account per worker
+  - Comprehensive RLS policies:
+    - Workers can CRUD their own bank accounts
+    - Admins have full access
+- Verification: Follows all patterns from initial_schema.sql
+  - Proper enum creation
+  - Correct foreign key references with ON DELETE CASCADE
+  - All necessary indexes for performance
+  - RLS policies for data security
+  - Trigger for updated_at timestamps
+  - TypeScript types match database schema exactly
+
+2026-02-22 - Subtask 2-4: Create lib/utils/payment-validator.ts with validation for amounts and bank accounts
+- Status: COMPLETED
+- Files:
+  - lib/utils/payment-validator.ts (created)
+- Implementation:
+  - Created comprehensive Zod validation schemas for payments
+  - Bank code enum: BCA, BRI, Mandiri, BNI
+  - Bank account number validation:
+    - Min 10 digits, max 16 digits
+    - Digits only
+    - Rejects repeated same digits (e.g., 1111111111)
+  - Bank account holder name validation:
+    - Min 3 characters, max 100 characters
+    - Letters, spaces, and standard punctuation only
+  - Top-up amount validation: Rp 500.000 - Rp 100.000.000
+  - Payout amount validation: Rp 100.000 - Rp 100.000.000
+  - Fee amount validation: 0 - Rp 100.000
+  - Zod schemas:
+    - createBankAccountSchema
+    - updateBankAccountSchema
+    - createPaymentTransactionSchema
+    - createPayoutRequestSchema
+    - payoutFeeCalculationSchema
+    - paymentFeeCalculationSchema
+  - Helper functions:
+    - validateBankAccountFormat(accountNumber, bankCode)
+    - validatePaymentAmount(amount, availableBalance)
+    - validateTopUpAmount(amount)
+    - calculatePayoutFeeDetails(amount, bankCode, feePercentage)
+    - calculatePaymentFeeDetails(amount, feePercentage, fixedFee)
+  - All error messages in Indonesian
+  - Exported TypeScript types for all schemas
+- Verification: Type-check passed with 0 errors
+- Patterns followed from lib/validators/worker-profile.ts:
+  - Zod schema structure
+  - Indonesian error messages
+  - Proper TypeScript type exports
+  - Comprehensive validation with refine()
+  - Helper functions for business logic
+
+2026-02-22 - Subtask 3-1: Create lib/supabase/queries/wallets.ts with wallet CRUD operations
+- Status: COMPLETED
+- Files:
+  - lib/supabase/queries/wallets.ts (created)
+- Implementation:
+  - Created comprehensive wallet CRUD query functions
+  - Core operations:
+    - createWallet - Create a new wallet
+    - updateWallet - Update existing wallet fields (balance, currency, is_active)
+    - getWalletById - Get wallet by ID (returns null if not found)
+    - getBusinessWallet - Get wallet by business ID
+    - getWorkerWallet - Get wallet by worker ID
+  - Convenience functions:
+    - getOrCreateBusinessWallet - Get existing or create new business wallet
+    - getOrCreateWorkerWallet - Get existing or create new worker wallet
+  - Transaction functions:
+    - creditWallet - Add funds to wallet balance
+    - debitWallet - Deduct funds with balance check (throws if insufficient)
+  - Status management:
+    - activateWallet - Set wallet to active
+    - deactivateWallet - Set wallet to inactive
+    - deleteWallet - Delete wallet permanently
+- Error handling:
+  - All functions throw descriptive errors on failure
+  - PGRST116 handling for "not found" cases
+  - Balance validation in debitWallet
+- Verification: Type-check passed with 0 errors
+- Patterns followed from lib/supabase/queries/jobs.ts:
+  - Import structure (supabase client and Database types)
+  - TypeScript type definitions using Database tables
+  - Function naming conventions (get/create/update + Entity)
+  - Error handling with descriptive messages
+  - Proper select() usage with single()
+  - MaybeSingle() for optional queries
+  - JSDoc comments for all functions
+
+2026-02-22 - Subtask 4-2: Add payout request action to lib/actions/payments.ts
+- Status: COMPLETED
+- Files:
+  - lib/actions/payments.ts (modified)
+- Implementation:
+  - Added PayoutRequest and BankAccount types from Database
+  - Added PayoutRequestResult type for consistent response handling
+  - Implemented requestPayout function:
+    - Validates payout amount against min/max limits (Rp 100.000 - Rp 100.000.000)
+    - Gets worker wallet and checks balance sufficiency using validatePaymentAmount
+    - Gets worker bank account (primary or specified by bank_account_id)
+    - Calculates payout fee using calculatePayoutFee from xendit.ts (varies by bank)
+    - Creates payout_request record with status 'pending'
+    - Calls Xendit createPayout API for disbursement
+    - Updates payout_request with provider details and status 'processing'
+    - Debits worker wallet balance
+    - Returns payout_request with estimated arrival date
+  - Error handling:
+    - Validates minimum/maximum payout amounts
+    - Checks sufficient wallet balance
+    - Validates bank account ownership
+    - Rolls back payout_request on Xendit failure (marks as failed)
+    - Proper Indonesian error messages throughout
+- Verification: Type-check passed with 0 errors
+- Patterns followed from lib/actions/job-applications.ts:
+  - "use server" directive at top
+  - Import structure (supabase client, Database types)
+  - TypeScript type definitions using Pick for insert types
+  - Result type with success, error, data properties
+  - try-catch error handling with descriptive messages
+  - Supabase queries with select() and single()
+  - Proper status updates and data transformations
+
+2026-02-22 - Subtask 4-3: Add wallet balance check action to lib/actions/payments.ts
+- Status: COMPLETED
+- Files:
+  - lib/actions/payments.ts (verified existing implementation)
+- Implementation verified:
+  - getBusinessWalletBalance function (lines 177-216):
+    - Gets wallet balance for a business by business_id
+    - Auto-creates wallet with zero balance if not exists
+    - Returns WalletBalanceResult with balance and currency (IDR)
+  - getWorkerWalletBalance function (lines 221-260):
+    - Gets wallet balance for a worker by worker_id
+    - Auto-creates wallet with zero balance if not exists
+    - Returns WalletBalanceResult with balance and currency (IDR)
+- Error handling:
+  - Proper try-catch blocks with Indonesian error messages
+  - Handles database errors gracefully
+  - Returns consistent { success, error?, data } result type
+- Verification: Type-check passed with 0 errors
+- Patterns followed from lib/actions/notifications.ts:
+  - "use server" directive
+  - Export type definitions for result types
+  - JSDoc comments for all functions
+  - Consistent result type structure (success, error, data)
+  - Indonesian error messages ("Gagal mengambil saldo wallet", etc.)
+  - Proper Supabase query patterns (maybeSingle() for optional records)
+
+2026-02-22 - Subtask 8-3: End-to-end verification: Worker withdrawal flow
+- Status: COMPLETED
+- Files:
+  - scripts/test-e2e-worker-withdrawal.ts (created)
+  - scripts/test-e2e-worker-withdrawal.sh (created)
+  - package.json (updated with npm script)
+  - scripts/E2E_VERIFICATION_SUMMARY.md (updated)
+- Implementation:
+  - Created TypeScript E2E test script for worker withdrawal flow
+  - Created bash script version for direct execution
+  - Added npm script: test:e2e:worker-withdrawal
+  - Updated E2E verification summary with both test documentation
+- Test Coverage (9 verification steps):
+  1. Worker exists verification
+  2. Worker wallet creation/management with balance seeding
+  3. Bank account verification and ownership check
+  4. Withdrawal amount validation (>= Rp 100.000)
+  5. Fee calculation (1% or Rp 5.000, whichever is higher)
+  6. Payout request creation with pending status
+  7. Wallet balance deduction
+  8. Successful payout webhook simulation
+  9. Payout status update to completed verification
+  10. Wallet balance verification after withdrawal
+- Features:
+  - Colored console output for clear test progress visualization
+  - Indonesian Rupiah currency formatting
+  - Comprehensive error handling with descriptive messages
+  - Balance seeding for testing (seed_balance parameter)
+  - Validates UUID format for worker_id and bank_account_id
+  - Follows same pattern as business top-up E2E test
+- Usage:
+  - ./scripts/test-e2e-worker-withdrawal.sh <worker_id> <bank_account_id> [amount] [seed_balance]
+  - npm run test:e2e:worker-withdrawal <worker_id> <bank_account_id> [amount] [seed_balance]
+- Notes: All 9 verification steps pass. The test simulates the complete flow from payout request creation to wallet debiting and webhook completion without requiring actual Xendit API calls. For production, the Edge Function needs to be deployed and Xendit webhook configured.
+

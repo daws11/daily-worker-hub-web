@@ -61,6 +61,18 @@ export interface Database {
           updated_at: string
         }
       }
+      wallets: {
+        Row: {
+          id: string
+          business_id: string | null
+          worker_id: string | null
+          balance: number
+          currency: string
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+      }
       kyc_verifications: {
         Row: {
           id: string
@@ -235,6 +247,60 @@ export interface Database {
           events: string[]
           is_active: boolean
           created_at: string
+        }
+      }
+      payment_transactions: {
+        Row: {
+          id: string
+          business_id: string
+          amount: number
+          status: 'pending' | 'success' | 'failed' | 'expired'
+          payment_provider: 'xendit' | 'midtrans'
+          provider_payment_id: string | null
+          payment_url: string | null
+          qris_expires_at: string | null
+          paid_at: string | null
+          failure_reason: string | null
+          fee_amount: number
+          metadata: Json
+          created_at: string
+          updated_at: string
+        }
+      }
+      payout_requests: {
+        Row: {
+          id: string
+          worker_id: string
+          amount: number
+          fee_amount: number
+          net_amount: number
+          status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+          bank_code: 'BCA' | 'BRI' | 'Mandiri' | 'BNI'
+          bank_account_number: string
+          bank_account_name: string
+          payment_provider: string
+          provider_payout_id: string | null
+          provider_response: Json
+          requested_at: string
+          processed_at: string | null
+          completed_at: string | null
+          failed_at: string | null
+          failure_reason: string | null
+          metadata: Json
+          created_at: string
+          updated_at: string
+        }
+      }
+      bank_accounts: {
+        Row: {
+          id: string
+          worker_id: string
+          bank_code: 'BCA' | 'BRI' | 'Mandiri' | 'BNI'
+          bank_account_number: string
+          bank_account_name: string
+          is_primary: boolean
+          created_at: string
+          updated_at: string
         }
       }
     }
