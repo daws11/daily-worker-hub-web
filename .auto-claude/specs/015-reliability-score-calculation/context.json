@@ -1,0 +1,64 @@
+{
+  "files_to_modify": {
+    "database": [
+      "supabase/migrations/20250222000001_initial_schema.sql",
+      "supabase/migrations/20260222_add_bookings_rls_policies.sql"
+    ],
+    "edge_functions": [
+      "supabase/functions/reliability-score/index.ts"
+    ],
+    "actions": [
+      "lib/actions/reliability-score.ts"
+    ],
+    "queries": [
+      "lib/supabase/queries/reliability-score.ts"
+    ],
+    "types": [
+      "lib/supabase/types.ts"
+    ],
+    "components": [
+      "components/worker/reliability-badge.tsx",
+      "components/worker/score-history.tsx",
+      "app/app/(dashboard)/worker/profile/page.tsx"
+    ]
+  },
+  "files_to_create": [
+    "supabase/migrations/20260222_add_reliability_score_columns.sql",
+    "supabase/migrations/20260222_create_reliability_score_history.sql",
+    "lib/actions/reliability-score.ts",
+    "lib/supabase/queries/reliability-score.ts",
+    "components/worker/reliability-badge.tsx",
+    "components/worker/score-breakdown.tsx"
+  ],
+  "patterns": {
+    "server_action_pattern": "All server actions use 'use server' directive, return {success, error?, data?} type, and use createClient() from lib/supabase/server",
+    "edge_function_pattern": "Edge functions use Deno.serve(), CORS headers, and service role key for admin operations",
+    "component_pattern": "Client components use 'use client', lucide-react for icons, sonner for toasts",
+    "query_pattern": "Database queries use supabase client with .from().select().eq() pattern",
+    "type_pattern": "Types are auto-generated in lib/supabase/types.ts from Database schema"
+  },
+  "existing_implementations": {
+    "description": "Found existing reliability-score edge function at supabase/functions/reliability-score/index.ts with incomplete implementation",
+    "relevant_files": [
+      "supabase/functions/reliability-score/index.ts",
+      "lib/supabase/types.ts",
+      "lib/actions/job-applications.ts",
+      "lib/actions/notifications.ts"
+    ],
+    "notes": [
+      "Workers table already has reliability_score column (number type)",
+      "Bookings table has start_date and end_date but needs actual_start_time and actual_end_time for punctuality",
+      "Reviews table exists for ratings",
+      "Existing edge function uses wrong formula (50/50 instead of 40/30/30) and update code is commented out"
+    ]
+  },
+  "tech_stack": {
+    "frontend": "Next.js 14 with App Router",
+    "language": "TypeScript",
+    "styling": "Tailwind CSS",
+    "ui_library": "shadcn/ui (Radix UI primitives)",
+    "database": "Supabase (PostgreSQL)",
+    "auth": "Supabase Auth",
+    "edge_runtime": "Deno (Supabase Edge Functions)"
+  }
+}

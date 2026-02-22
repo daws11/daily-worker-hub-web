@@ -132,8 +132,8 @@
             "command": "grep -c \"export async function\" lib/supabase/queries/reliability-score.ts",
             "expected": "5"
           },
-          "status": "pending",
-          "notes": "Functions: calculateScore, getScoreHistory, getWorkerScore, updateScore, recordScoreHistory"
+          "status": "completed",
+          "notes": "Created 5 query functions: calculateScore (40/30/30 formula), getScoreHistory, getWorkerScore, updateScore, recordScoreHistory. All functions follow the jobs.ts pattern with proper error handling and TypeScript types."
         },
         {
           "id": "subtask-2-3",

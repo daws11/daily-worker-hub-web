@@ -1,0 +1,38 @@
+{
+  "project_type": "single",
+  "services": {
+    "frontend": {
+      "path": ".",
+      "tech_stack": ["nextjs", "typescript", "tailwindcss"],
+      "port": 3000,
+      "dev_command": "npm run dev",
+      "test_command": "npm run type-check",
+      "description": "Next.js 14 app with App Router"
+    },
+    "database": {
+      "type": "postgresql",
+      "host": "supabase",
+      "migrations_path": "supabase/migrations",
+      "description": "Supabase PostgreSQL with Row Level Security"
+    },
+    "edge_functions": {
+      "path": "supabase/functions",
+      "runtime": "deno",
+      "description": "Supabase Edge Functions for server-side logic"
+    }
+  },
+  "infrastructure": {
+    "docker": false,
+    "database": "postgresql",
+    "hosting": "vercel",
+    "auth": "supabase-auth"
+  },
+  "conventions": {
+    "linter": "eslint",
+    "formatter": "prettier",
+    "testing": "none",
+    "types": "typescript",
+    "styling": "tailwindcss",
+    "ui_components": "shadcn/ui (radix-ui)"
+  }
+}
