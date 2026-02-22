@@ -1,0 +1,156 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Reliability Score Calculation System
+Workspace: /Users/yanuar/Documents/daws/daily-worker-hub-web/.auto-claude/worktrees/tasks/015-reliability-score-calculation
+Started: 2026-02-22
+
+Workflow Type: feature
+Rationale: Building a new multi-service feature with clear service dependencies.
+           Database schema changes must come first, followed by backend logic,
+           then UI components.
+
+Session 1 (Planner):
+- Created implementation_plan.json
+- Created project_index.json
+- Created context.json
+- Created init.sh
+- Created build-progress.txt
+
+=== FEATURE OVERVIEW ===
+
+Automated reliability scoring system that calculates worker scores (1-5 stars)
+based on three weighted factors:
+  • 40% Attendance Rate: completed_bookings / total_bookings
+  • 30% Punctuality Rate: on-time arrivals / total completed jobs
+  • 30% Average Ratings: from business reviews
+
+=== PHASE SUMMARY ===
+
+Phase 1: Database Schema Changes (4 subtasks)
+  - Add actual_start_time, actual_end_time to bookings (for punctuality)
+  - Create reliability_score_history table (for trend tracking)
+  - Add RLS policies for score history
+  - Regenerate TypeScript types
+
+Phase 2: Backend Logic (3 subtasks)
+  - Update reliability-score edge function with 40/30/30 formula
+  - Create database query functions
+  - Create server actions for score calculation
+
+Phase 3: UI Components (3 subtasks)
+  - Create ReliabilityBadge component (star display)
+  - Create ScoreBreakdown component (transparent metrics)
+  - Create ScoreHistory component (trend visualization)
+
+Phase 4: Integration Pages (2 subtasks)
+  - Add score display to worker profile page
+  - Add score display to business applicant view
+
+Phase 5: Automation Triggers (3 subtasks)
+  - Create database trigger for auto-calculation
+  - Add calculation to job completion flow
+  - End-to-end verification
+
+=== SERVICES INVOLVED ===
+
+  • database: PostgreSQL schema changes, migrations
+  • edge_functions: Supabase Edge Functions (Deno)
+  • queries: Database query functions (TypeScript)
+  • actions: Next.js server actions
+  • frontend: React components and pages
+
+=== PARALLELISM ANALYSIS ===
+
+Max parallel phases: 2 (UI components and integration pages can overlap)
+Recommended workers: 1 (Sequential execution recommended due to dependencies)
+
+=== DISCOVERY NOTES ===
+
+1. Existing Implementation Found:
+   - File: supabase/functions/reliability-score/index.ts
+   - Status: Uses wrong formula (50/50), update code commented out
+   - Action: Update with 40/30/30 formula and enable updates
+
+2. Database Schema:
+   - Workers table already has reliability_score column (number type)
+   - Bookings table has start_date/end_date but needs actual times for punctuality
+   - Reviews table exists for ratings
+   - No reliability_score_history table yet
+
+3. Code Patterns:
+   - Server actions: "use server", return {success, error?, data?}
+   - Edge functions: Deno.serve(), CORS headers, service role key
+   - Components: "use client", lucide-react icons, sonner toasts
+   - Types: Auto-generated in lib/supabase/types.ts
+
+4. Tech Stack:
+   - Next.js 14 (App Router)
+   - TypeScript
+   - Tailwind CSS + shadcn/ui
+   - Supabase (PostgreSQL + Auth + Edge Functions)
+
+=== ACCEPTANCE CRITERIA ===
+
+  [ ] Reliability scores calculate automatically after job completion
+  [ ] Score formula: 40% attendance + 30% punctuality + 30% ratings
+  [ ] Scores range from 1.0 to 5.0 stars
+  [ ] Score history is tracked in reliability_score_history table
+  [ ] Workers with <5 completed jobs show "Insufficient data"
+  [ ] Score breakdown is transparent in worker profile
+  [ ] Businesses can see worker reliability scores when hiring
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  cd /Users/yanuar/Documents/daws/daily-worker-hub-web/.auto-claude/worktrees/tasks/015-reliability-score-calculation
+  npm run dev
+
+Or use the init script:
+
+  source .auto-claude/specs/015-reliability-score-calculation/init.sh
+
+=== VERIFICATION STRATEGY ===
+
+Risk Level: medium
+
+Required Verification:
+  1. Type Check: npm run type-check
+  2. Build: npm run build
+  3. Manual UI: Check worker profile page
+  4. Database: Verify new columns and tables
+
+Manual Testing Required:
+  - Job completion -> score calculation flow
+  - Worker profile score display
+  - Business applicant view scores
+
+=== END SESSION 1 ===
+
+Session Type: Planning
+Files Created:
+  • implementation_plan.json (5 phases, 14 subtasks)
+  • project_index.json (service and infrastructure info)
+  • context.json (patterns and existing implementations)
+  • init.sh (development environment setup)
+  • build-progress.txt (this file)
+
+Next Session: Implementation (Coder Agent)
+  - Begin with Phase 1, Subtask 1-1: Add booking time tracking columns
+  - Follow subtask order respecting dependencies
+  - Mark each subtask complete after verification
+
+=== SESSION 2: IMPLEMENTATION STARTED ===
+
+Date: 2026-02-22
+
+[COMPLETED] Subtask 1-1: Add actual_start_time and actual_end_time columns to bookings table
+  • Created: supabase/migrations/20260222_add_booking_time_tracking.sql
+  • Added columns: actual_start_time TIMESTAMPTZ, actual_end_time TIMESTAMPTZ
+  • Added indexes for efficient querying
+  • Added documentation comments
+  • Commit: 1c22935
+  • Plan updated: subtask-1-1 status = completed
+
+[IN PROGRESS] Subtask 1-2: Create reliability_score_history table
+  • Next: Create migration file for reliability_score_history table
