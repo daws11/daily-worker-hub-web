@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useAuth } from "@/app/providers/auth-provider"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Wallet, Clock, Loader2 } from "lucide-react"
 import { supabase } from "@/lib/supabase/client"
 import type { Database } from "@/lib/supabase/types"
-import { Wallet, Clock, ArrowDownLeft, ArrowUpRight, Loader2, Briefcase } from "lucide-react"
+import { TransactionCard } from "@/components/wallet/transaction-card"
+import { TransactionFilters } from "@/components/wallet/transaction-filters"
+import type { TransactionFilters as TransactionFiltersType } from "@/lib/types/wallet"
+import { TransactionDetailDialog } from "@/components/wallet/transaction-detail-dialog"
 
 type WorkersRow = Database["public"]["Tables"]["workers"]["Row"]
 type WalletRow = Database["public"]["Tables"]["wallets"]["Row"]
@@ -33,8 +35,11 @@ export default function WorkerWalletPage() {
   const [worker, setWorker] = useState<WorkersRow | null>(null)
   const [wallet, setWallet] = useState<WalletWithBalance | null>(null)
   const [transactions, setTransactions] = useState<TransactionWithDetails[]>([])
+  const [filteredTransactions, setFilteredTransactions] = useState<TransactionWithDetails[]>([])
   const [isLoadingWallet, setIsLoadingWallet] = useState(true)
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(true)
+  const [selectedTransaction, setSelectedTransaction] = useState<TransactionWithDetails | null>(null)
+  const [filters, setFilters] = useState<TransactionFiltersType>({})
 
   // Fetch worker profile
   useEffect(() => {
@@ -145,16 +150,35 @@ export default function WorkerWalletPage() {
     fetchTransactions()
   }, [wallet])
 
-  // Format date to Indonesian locale
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
+  // Apply filters to transactions
+  useEffect(() => {
+    let filtered = [...transactions]
+
+    // Filter by type
+    if (filters.type) {
+      filtered = filtered.filter((t) => t.type === filters.type)
+    }
+
+    // Filter by amount range
+    if (filters.amountMin !== undefined) {
+      filtered = filtered.filter((t) => t.amount >= filters.amountMin!)
+    }
+    if (filters.amountMax !== undefined) {
+      filtered = filtered.filter((t) => t.amount <= filters.amountMax!)
+    }
+
+    // Filter by date range
+    if (filters.dateAfter) {
+      filtered = filtered.filter((t) => new Date(t.created_at) >= new Date(filters.dateAfter!))
+    }
+    if (filters.dateBefore) {
+      const endDate = new Date(filters.dateBefore!)
+      endDate.setHours(23, 59, 59, 999)
+      filtered = filtered.filter((t) => new Date(t.created_at) <= endDate)
+    }
+
+    setFilteredTransactions(filtered)
+  }, [transactions, filters])
 
   // Format amount to Indonesian Rupiah
   const formatAmount = (amount: number) => {
@@ -164,72 +188,6 @@ export default function WorkerWalletPage() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount)
-  }
-
-  // Get transaction type badge variant
-  const getTransactionTypeVariant = (
-    type: WalletTransactionRow["type"]
-  ): "default" | "secondary" | "destructive" | "outline" => {
-    switch (type) {
-      case "credit":
-        return "default"
-      case "debit":
-        return "destructive"
-      case "pending":
-        return "secondary"
-      case "released":
-        return "default"
-      default:
-        return "outline"
-    }
-  }
-
-  // Get transaction type label in Indonesian
-  const getTransactionTypeLabel = (type: WalletTransactionRow["type"]): string => {
-    switch (type) {
-      case "credit":
-        return "Pemasukan"
-      case "debit":
-        return "Pengeluaran"
-      case "pending":
-        return "Tertahan"
-      case "released":
-        return "Diterbitkan"
-      default:
-        return type
-    }
-  }
-
-  // Get transaction icon
-  const getTransactionIcon = (type: WalletTransactionRow["type"]) => {
-    switch (type) {
-      case "credit":
-        return <ArrowDownLeft className="h-4 w-4 text-green-600" />
-      case "debit":
-        return <ArrowUpRight className="h-4 w-4 text-red-600" />
-      case "pending":
-        return <Clock className="h-4 w-4 text-yellow-600" />
-      case "released":
-        return <ArrowDownLeft className="h-4 w-4 text-green-600" />
-      default:
-        return null
-    }
-  }
-
-  // Get amount display with sign
-  const getAmountDisplay = (type: WalletTransactionRow["type"], amount: number) => {
-    const formatted = formatAmount(amount)
-    switch (type) {
-      case "credit":
-      case "released":
-        return `+${formatted}`
-      case "debit":
-        return `-${formatted}`
-      case "pending":
-        return formatted
-      default:
-        return formatted
-    }
   }
 
   return (
@@ -286,92 +244,66 @@ export default function WorkerWalletPage() {
           </Card>
         </div>
 
-        {/* Transaction History */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Riwayat Transaksi</CardTitle>
-            <CardDescription>
-              Daftar semua transaksi dompet ({transactions.length} transaksi)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoadingTransactions ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : transactions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Wallet className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  Belum ada transaksi. Mulai kerja dan dapatkan penghasilan!
-                </p>
-              </div>
-            ) : (
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Tanggal</TableHead>
-                      <TableHead>Tipe</TableHead>
-                      <TableHead>Pekerjaan</TableHead>
-                      <TableHead>Keterangan</TableHead>
-                      <TableHead className="text-right">Jumlah</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {transactions.map((transaction) => (
-                      <TableRow key={transaction.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2 text-sm">
-                            {getTransactionIcon(transaction.type)}
-                            <span className="text-muted-foreground">
-                              {formatDate(transaction.created_at)}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getTransactionTypeVariant(transaction.type)}>
-                            {getTransactionTypeLabel(transaction.type)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {transaction.bookings?.jobs ? (
-                            <div className="flex items-center gap-2">
-                              <Briefcase className="h-4 w-4 text-muted-foreground" />
-                              <span className="line-clamp-1">
-                                {transaction.bookings.jobs.title}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm text-muted-foreground">
-                            {transaction.description || "-"}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <span
-                            className={`font-medium ${
-                              transaction.type === "credit" || transaction.type === "released"
-                                ? "text-green-600"
-                                : transaction.type === "debit"
-                                ? "text-red-600"
-                                : "text-yellow-600"
-                            }`}
-                          >
-                            {getAmountDisplay(transaction.type, transaction.amount)}
-                          </span>
-                        </TableCell>
-                      </TableRow>
+        {/* Filters and Transaction List */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Filters Sidebar */}
+          <div className="lg:col-span-1">
+            <TransactionFilters
+              filters={filters}
+              onFiltersChange={setFilters}
+            />
+          </div>
+
+          {/* Transaction List */}
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Riwayat Transaksi</CardTitle>
+                <CardDescription>
+                  {filteredTransactions.length === transactions.length
+                    ? `Semua transaksi (${transactions.length} transaksi)`
+                    : `${filteredTransactions.length} dari ${transactions.length} transaksi`}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingTransactions ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : filteredTransactions.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Wallet className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">
+                      {transactions.length === 0
+                        ? "Belum ada transaksi. Mulai kerja dan dapatkan penghasilan!"
+                        : "Tidak ada transaksi yang cocok dengan filter."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {filteredTransactions.map((transaction) => (
+                      <TransactionCard
+                        key={transaction.id}
+                        transaction={transaction}
+                        onSelect={setSelectedTransaction}
+                        isSelected={selectedTransaction?.id === transaction.id}
+                      />
                     ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Transaction Detail Dialog */}
+        <TransactionDetailDialog
+          transaction={selectedTransaction}
+          open={selectedTransaction !== null}
+          onOpenChange={(open) => {
+            if (!open) setSelectedTransaction(null)
+          }}
+        />
       </div>
     </div>
   )
