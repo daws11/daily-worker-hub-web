@@ -3,7 +3,7 @@
   "spec": "006-job-posting-system",
   "state": "building",
   "subtasks": {
-    "completed": 13,
+    "completed": 16,
     "total": 24,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 15,
+    "number": 18,
     "started_at": "2026-02-22T07:42:10.379983"
   },
-  "last_update": "2026-02-22T08:14:08.710710"
+  "last_update": "2026-02-22T08:18:41.949768"
 }
