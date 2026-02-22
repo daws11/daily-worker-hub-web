@@ -111,7 +111,8 @@
             "command": "grep -q \"calculateReliabilityScore\" lib/supabase/queries/bookings.ts && echo 'Function created'",
             "expected": "Function created"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created calculateReliabilityScore function with weighted scoring (attendance 40%, punctuality 30%, rating 30%), returns 1-5 score. Also added getWorkerReliabilityMetrics helper function."
         }
       ]
     },
@@ -485,5 +486,5 @@
   "planStatus": "in_progress",
   "xstateState": "coding",
   "executionPhase": "coding",
-  "updated_at": "2026-02-22T04:57:04.001Z"
+  "updated_at": "2026-02-22T04:59:29.762Z"
 }
