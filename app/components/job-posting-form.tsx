@@ -59,6 +59,21 @@ export const jobPostingFormSchema = z.object({
 }).refine((data) => data.wageMin <= data.wageMax, {
   message: "Minimum wage cannot be greater than maximum wage",
   path: ["wageMin"],
+}).refine((data) => {
+  if (!data.date) return true
+  const selectedDate = new Date(data.date)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return selectedDate >= today
+}, {
+  message: "Date cannot be in the past",
+  path: ["date"],
+}).refine((data) => {
+  if (!data.startTime || !data.endTime) return true
+  return data.startTime < data.endTime
+}, {
+  message: "End time must be after start time",
+  path: ["endTime"],
 })
 
 export type JobPostingFormValues = z.infer<typeof jobPostingFormSchema>
@@ -168,9 +183,13 @@ export function JobPostingForm({
                   <Input
                     type="date"
                     disabled={disabled}
+                    min={new Date().toISOString().split('T')[0]}
                     {...field}
                   />
                 </FormControl>
+                <FormDescription>
+                  Select the date when the job is scheduled.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
