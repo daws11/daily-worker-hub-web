@@ -78,6 +78,43 @@ export const jobPostingFormSchema = z.object({
 
 export type JobPostingFormValues = z.infer<typeof jobPostingFormSchema>
 
+// LocalStorage key for draft data
+const DRAFT_STORAGE_KEY = "job-posting-form-draft"
+
+// Helper functions for localStorage operations
+const saveDraft = (data: JobPostingFormValues) => {
+  try {
+    if (typeof window === "undefined") return
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({
+      data,
+      timestamp: Date.now(),
+    }))
+  } catch (error) {
+    // Silently fail if localStorage is not available
+  }
+}
+
+const loadDraft = (): { data: JobPostingFormValues; timestamp: number } | null => {
+  try {
+    if (typeof window === "undefined") return null
+    const draft = localStorage.getItem(DRAFT_STORAGE_KEY)
+    if (!draft) return null
+    return JSON.parse(draft)
+  } catch (error) {
+    // Return null if localStorage is not available or data is corrupted
+    return null
+  }
+}
+
+const clearDraft = () => {
+  try {
+    if (typeof window === "undefined") return
+    localStorage.removeItem(DRAFT_STORAGE_KEY)
+  } catch (error) {
+    // Silently fail if localStorage is not available
+  }
+}
+
 export interface JobPostingFormProps {
   onSubmit?: (values: JobPostingFormValues) => void | Promise<void>
   defaultValues?: Partial<JobPostingFormValues>
@@ -95,6 +132,9 @@ export function JobPostingForm({
   submitButtonText = "Post Job",
   className,
 }: JobPostingFormProps) {
+  const [draftRestored, setDraftRestored] = React.useState(false)
+  const [hasDraft, setHasDraft] = React.useState(false)
+
   const form = useForm<JobPostingFormValues>({
     resolver: zodResolver(jobPostingFormSchema),
     defaultValues: {
@@ -117,15 +157,59 @@ export function JobPostingForm({
   const positionType = form.watch("positionType")
   const area = form.watch("area")
 
+  // Load draft from localStorage on mount
+  React.useEffect(() => {
+    const draft = loadDraft()
+    if (draft) {
+      form.reset(draft.data)
+      setDraftRestored(true)
+      setHasDraft(true)
+    }
+  }, [form])
+
+  // Auto-save form data to localStorage on changes
+  React.useEffect(() => {
+    const subscription = form.watch((value) => {
+      const formValues = form.getValues()
+      // Only save if form has any meaningful data
+      const hasData = Object.values(formValues).some(v =>
+        v !== undefined && v !== null && v !== "" && (Array.isArray(v) ? v.length > 0 : true)
+      )
+      if (hasData) {
+        saveDraft(formValues as JobPostingFormValues)
+        setHasDraft(true)
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [form])
+
   const handleSubmit = async (values: JobPostingFormValues) => {
     if (onSubmit) {
       await onSubmit(values)
+      clearDraft()
+      setHasDraft(false)
     }
+  }
+
+  const handleReset = () => {
+    form.reset()
+    clearDraft()
+    setHasDraft(false)
+    setDraftRestored(false)
   }
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className={cn("space-y-6", className)}>
+        {/* Draft Banner */}
+        {draftRestored && hasDraft && (
+          <div className="rounded-md border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
+            <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+              Draft restored from your previous session. Your progress has been saved.
+            </p>
+          </div>
+        )}
+
         {/* Title */}
         <FormField
           control={form.control}
@@ -383,7 +467,7 @@ export function JobPostingForm({
           <Button
             type="button"
             variant="outline"
-            onClick={() => form.reset()}
+            onClick={handleReset}
             disabled={disabled || isLoading}
           >
             Reset
