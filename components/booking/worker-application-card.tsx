@@ -1,11 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { Calendar, Phone, Star } from "lucide-react"
+import { Calendar, Phone } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ReliabilityScore } from "@/components/worker/reliability-score"
 import { cn } from "@/lib/utils"
 
 type BookingStatus = "pending" | "accepted" | "rejected" | "in_progress" | "completed" | "cancelled"
@@ -37,50 +38,6 @@ const statusVariants: Record<BookingStatus, { variant: "default" | "secondary" |
   in_progress: { variant: "default", label: "In Progress" },
   completed: { variant: "secondary", label: "Completed" },
   cancelled: { variant: "destructive", label: "Cancelled" },
-}
-
-function ReliabilityScore({ score }: { score?: number }) {
-  if (score === undefined || score === null) {
-    return (
-      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        <span className="font-medium">No score yet</span>
-      </div>
-    )
-  }
-
-  const clampedScore = Math.max(1, Math.min(5, score))
-  const fullStars = Math.floor(clampedScore)
-  const hasHalfStar = clampedScore % 1 >= 0.5
-
-  const getScoreColor = (score: number) => {
-    if (score >= 4.5) return "text-green-600"
-    if (score >= 3.5) return "text-yellow-600"
-    if (score >= 2.5) return "text-orange-500"
-    return "text-red-500"
-  }
-
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex items-center" aria-label={`Reliability score: ${clampedScore} out of 5 stars`}>
-        {[...Array(5)].map((_, i) => (
-          <Star
-            key={i}
-            className={cn(
-              "h-4 w-4",
-              i < fullStars
-                ? cn("fill-current", getScoreColor(clampedScore))
-                : i === fullStars && hasHalfStar
-                  ? cn("fill-current", getScoreColor(clampedScore), "opacity-50")
-                  : "text-muted-foreground/30"
-            )}
-          />
-        ))}
-      </div>
-      <span className={cn("text-sm font-semibold", getScoreColor(clampedScore))}>
-        {clampedScore.toFixed(1)}
-      </span>
-    </div>
-  )
 }
 
 export function WorkerApplicationCard({
@@ -134,7 +91,13 @@ export function WorkerApplicationCard({
             <div className="flex-1 min-w-0">
               <CardTitle className="text-lg truncate">{worker.full_name}</CardTitle>
               <div className="flex items-center gap-2 mt-1">
-                <ReliabilityScore score={reliabilityScore} />
+                {reliabilityScore !== undefined && reliabilityScore !== null ? (
+                  <ReliabilityScore score={reliabilityScore} />
+                ) : (
+                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    <span className="font-medium">No score yet</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
