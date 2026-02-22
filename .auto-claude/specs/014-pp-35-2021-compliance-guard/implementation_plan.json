@@ -166,7 +166,7 @@
             "command": "npx tsc --noEmit",
             "expected": "No TypeScript errors"
           },
-          "status": "pending"
+          "status": "completed"
         }
       ]
     },

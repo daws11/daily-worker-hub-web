@@ -112,6 +112,39 @@
 - Pattern Compliance: Follows the same structure as lib/supabase/queries/bookings.ts
 - TypeScript Verification: No new TypeScript errors introduced
 
+## Subtask 2-3: Create getComplianceRecords query function ✅ COMPLETED
+- File: lib/supabase/queries/compliance.ts
+- Status: COMPLETE - Query function implemented following project patterns
+- Functions Created:
+  - getComplianceRecords(businessId, limit)
+    - Returns all compliance records for a business with worker details
+    - Used for audit purposes to track worker compliance history
+    - Same as getBusinessComplianceRecords (audit-focused alias)
+- Pattern Compliance: Follows the same structure as lib/supabase/queries/bookings.ts
+- TypeScript Verification: No new TypeScript errors introduced
+
+## Subtask 2-4: Create getAlternativeWorkers query function ✅ COMPLETED
+- File: lib/supabase/queries/compliance.ts
+- Status: COMPLETE - Query function implemented following project patterns
+- Functions Created:
+  - getAlternativeWorkers(businessId, month?, limit)
+    - Returns workers who haven't reached the 21-day PP 35/2021 limit
+    - Returns AlternativeWorker[] with:
+      - Worker details: id, full_name, avatar_url, phone, bio
+      - Compliance info: daysWorked, complianceStatus, warningLevel
+    - Logic:
+      - Fetches all workers from database
+      - Checks compliance status for each worker
+      - Filters out blocked workers (21+ days)
+      - Sorts by availability (days worked ascending)
+      - Limits results to specified number (default: 20)
+    - Defaults to current month if not provided
+- Type Exports Added:
+  - AlternativeWorker: interface for worker with compliance info
+  - WorkerRow: type alias for Database['public']['Tables']['workers']['Row']
+- Pattern Compliance: Follows the same structure as lib/supabase/queries/bookings.ts
+- TypeScript Verification: No compliance-related TypeScript errors
+
 ## Quality Checklist ✅
 - [x] Follows patterns from reference files (initial_schema.sql, kyc_verifications.sql, bookings.ts)
 - [x] No console.log/print debugging statements
