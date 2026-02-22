@@ -6,6 +6,94 @@ import type { Database } from "../supabase/types"
 type Dispute = Database["public"]["Tables"]["disputes"]["Row"]
 type Booking = Database["public"]["Tables"]["bookings"]["Row"]
 
+// Types for bookings with joined data
+type BookingWithJob = Booking & {
+  jobs: {
+    id: string
+    title: string
+    budget_max: number
+  } | null
+}
+
+type BookingWithJobAndUsers = Booking & {
+  jobs: {
+    id: string
+    title: string
+    budget_max: number
+  } | null
+  workers: {
+    id: string
+    full_name: string
+    phone: string | null
+    email: string | null
+  } | null
+  businesses: {
+    id: string
+    name: string
+    phone: string | null
+    email: string | null
+  } | null
+}
+
+type DisputeWithBooking = Dispute & {
+  bookings: {
+    id: string
+    status: Booking["status"]
+    final_price: number | null
+    worker_id: string
+    business_id: string
+    payment_status: string
+  } | null
+}
+
+type DisputeWithFullBooking = Dispute & {
+  bookings: {
+    id: string
+    status: Booking["status"]
+    final_price: number | null
+    jobs: {
+      id: string
+      title: string
+      budget_max: number
+    } | null
+    workers: {
+      id: string
+      full_name: string
+      phone: string | null
+      email: string | null
+    } | null
+    businesses: {
+      id: string
+      name: string
+      phone: string | null
+      email: string | null
+    } | null
+  } | null
+}
+
+type DisputeWithBookingForList = Dispute & {
+  bookings: {
+    id: string
+    status: Booking["status"]
+    final_price: number | null
+    jobs: {
+      id: string
+      title: string
+    } | null
+    workers: {
+      id: string
+      full_name: string
+      avatar_url: string | null
+    } | null
+    businesses: {
+      id: string
+      name: string
+      phone: string | null
+      email: string | null
+    } | null
+  } | null
+}
+
 export type DisputeResult = {
   success: boolean
   error?: string
@@ -47,8 +135,11 @@ export async function raiseDispute(
       return { success: false, error: "Booking tidak ditemukan" }
     }
 
+    // Type assertion for joined query result
+    const typedBooking = booking as BookingWithJob
+
     // Check if booking is in a valid state for dispute
-    if (booking.payment_status !== "pending_review") {
+    if (typedBooking.payment_status !== "pending_review") {
       return { success: false, error: `Hanya booking dengan status pembayaran pending_review yang bisa disengketakan` }
     }
 
@@ -149,8 +240,11 @@ export async function raiseDisputeByWorker(
       return { success: false, error: "Booking tidak ditemukan" }
     }
 
+    // Type assertion for joined query result
+    const typedBooking = booking as BookingWithJob
+
     // Check if booking is in a valid state for dispute
-    if (booking.payment_status !== "pending_review") {
+    if (typedBooking.payment_status !== "pending_review") {
       return { success: false, error: `Hanya booking dengan status pembayaran pending_review yang bisa disengketakan` }
     }
 
@@ -261,7 +355,7 @@ export async function getDispute(disputeId: string) {
       return { success: false, error: error.message, data: null }
     }
 
-    return { success: true, data, error: null }
+    return { success: true, data: data as DisputeWithFullBooking | null, error: null }
   } catch (error) {
     return { success: false, error: "Gagal mengambil data sengketa", data: null }
   }
@@ -300,7 +394,7 @@ export async function getBusinessDisputes(businessId: string) {
       return { success: false, error: error.message, data: null }
     }
 
-    return { success: true, data, error: null }
+    return { success: true, data: data as DisputeWithBookingForList[] | null, error: null }
   } catch (error) {
     return { success: false, error: "Gagal mengambil data sengketa", data: null }
   }
@@ -340,7 +434,7 @@ export async function getWorkerDisputes(workerId: string) {
       return { success: false, error: error.message, data: null }
     }
 
-    return { success: true, data, error: null }
+    return { success: true, data: data as DisputeWithBookingForList[] | null, error: null }
   } catch (error) {
     return { success: false, error: "Gagal mengambil data sengketa", data: null }
   }
@@ -384,7 +478,8 @@ export async function resolveDispute(
       return { success: false, error: "Sengketa sudah diselesaikan" }
     }
 
-    const bookingData = dispute.bookings as any
+    const typedDispute = dispute as DisputeWithBooking
+    const bookingData = typedDispute.bookings!
 
     let newDisputeStatus: 'resolved' | 'rejected'
     let newPaymentStatus: 'available' | 'cancelled' | 'pending_review'
@@ -591,7 +686,7 @@ export async function getPendingDisputes() {
       return { success: false, error: error.message, data: null }
     }
 
-    return { success: true, data, error: null }
+    return { success: true, data: data as DisputeWithFullBooking[] | null, error: null }
   } catch (error) {
     return { success: false, error: "Gagal mengambil data sengketa", data: null }
   }
