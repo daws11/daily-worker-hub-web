@@ -12,12 +12,7 @@ type WalletTransactionRow = Database["public"]["Tables"]["wallet_transactions"][
 type WalletTransactionType = WalletTransactionRow["type"]
 
 export interface TransactionCardProps {
-  transaction: {
-    id: string
-    amount: number
-    type: WalletTransactionType
-    description: string | null
-    created_at: string
+  transaction: WalletTransactionRow & {
     bookings?: {
       id: string
       jobs: {
@@ -26,7 +21,7 @@ export interface TransactionCardProps {
       }
     } | null
   }
-  onSelect?: (transactionId: string) => void
+  onSelect?: (transaction: TransactionCardProps["transaction"]) => void
   isSelected?: boolean
 }
 
@@ -116,7 +111,7 @@ export function TransactionCard({ transaction, onSelect, isSelected }: Transacti
         onSelect && "cursor-pointer",
         isSelected && "ring-2 ring-primary ring-offset-2"
       )}
-      onClick={() => onSelect?.(transaction.id)}
+      onClick={() => onSelect?.(transaction)}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">

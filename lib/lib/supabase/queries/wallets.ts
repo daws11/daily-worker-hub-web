@@ -1,7 +1,8 @@
-import { supabase } from "../client"
-import type { Database } from "../types"
+import { supabase } from "@/lib/supabase/client"
+import type { Database } from "@/lib/supabase/types"
 
 type WalletRow = Database["public"]["Tables"]["wallets"]["Row"]
+type WalletInsert = Database["public"]["Tables"]["wallets"]["Insert"]
 type WalletUpdate = Database["public"]["Tables"]["wallets"]["Update"]
 
 /**
@@ -118,7 +119,7 @@ export async function calculatePendingBalance(walletId: string) {
       return { data: null, error }
     }
 
-    const pendingBalance = data?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) ?? 0
+    const pendingBalance = data?.reduce((sum: number, transaction: any) => sum + Number(transaction.amount), 0) ?? 0
 
     return { data: pendingBalance, error: null }
   } catch (error) {
@@ -144,7 +145,7 @@ export async function getTotalEarnings(walletId: string) {
       return { data: null, error }
     }
 
-    const totalEarnings = data?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) ?? 0
+    const totalEarnings = data?.reduce((sum: number, transaction: any) => sum + Number(transaction.amount), 0) ?? 0
 
     return { data: totalEarnings, error: null }
   } catch (error) {

@@ -1,5 +1,5 @@
-import { supabase } from "../client"
-import type { Database } from "../types"
+import { supabase } from "@/lib/supabase/client"
+import type { Database } from "@/lib/supabase/types"
 
 type WalletTransactionRow = Database["public"]["Tables"]["wallet_transactions"]["Row"]
 

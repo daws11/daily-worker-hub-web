@@ -164,6 +164,22 @@ export interface Database {
           created_at: string
           updated_at: string
         }
+        Insert: {
+          id?: string
+          user_id: string
+          balance?: number
+          pending_balance?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          balance?: number
+          pending_balance?: number
+          created_at?: string
+          updated_at?: string
+        }
       }
       wallet_transactions: {
         Row: {
@@ -174,6 +190,24 @@ export interface Database {
           booking_id: string | null
           description: string | null
           created_at: string
+        }
+        Insert: {
+          id?: string
+          wallet_id: string
+          amount: number
+          type: 'credit' | 'debit' | 'pending' | 'released'
+          booking_id?: string | null
+          description?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          wallet_id?: string
+          amount?: number
+          type?: 'credit' | 'debit' | 'pending' | 'released'
+          booking_id?: string | null
+          description?: string | null
+          created_at?: string
         }
       }
       messages: {

@@ -88,7 +88,7 @@ export default function WorkerWalletPage() {
                 user_id: user.id,
                 balance: 0,
                 pending_balance: 0,
-              })
+              } as any)
               .select()
               .single()
 
