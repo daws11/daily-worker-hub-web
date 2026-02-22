@@ -98,3 +98,63 @@ CREATE TRIGGER set_compliance_tracking_updated_at
   BEFORE UPDATE ON public.compliance_tracking
   FOR EACH ROW
   EXECUTE FUNCTION update_compliance_tracking_updated_at();
+
+-- ============================================================================
+-- FUNCTION: calculate_days_worked
+-- ============================================================================
+-- Calculates the number of days worked by a worker for a business in a specific month.
+-- This is used to track compliance with PP 35/2021 (21-day limit for daily workers).
+--
+-- Parameters:
+--   p_business_id UUID - The business ID
+--   p_worker_id UUID - The worker ID
+--   p_month DATE - First day of the month (e.g., '2026-02-01'::date)
+--
+-- Returns:
+--   INTEGER - Count of accepted/completed bookings in the specified month
+-- ============================================================================
+
+CREATE OR REPLACE FUNCTION calculate_days_worked(
+  p_business_id UUID,
+  p_worker_id UUID,
+  p_month DATE
+)
+RETURNS INTEGER AS $$
+DECLARE
+  v_days_worked INTEGER;
+  v_month_start DATE;
+  v_month_end DATE;
+BEGIN
+  -- Calculate the start and end of the month
+  v_month_start := date_trunc('month', p_month);
+  v_month_end := (date_trunc('month', p_month) + interval '1 month' - interval '1 day')::DATE;
+
+  -- Count bookings with accepted or completed status within the month
+  -- A booking counts as a day worked if it was accepted or completed
+  -- and its start_date falls within the target month
+  SELECT COUNT(*)
+  INTO v_days_worked
+  FROM public.bookings
+  WHERE business_id = p_business_id
+    AND worker_id = p_worker_id
+    AND status IN ('accepted', 'completed')
+    AND start_date >= v_month_start
+    AND start_date <= v_month_end;
+
+  -- Ensure non-negative result
+  IF v_days_worked IS NULL THEN
+    v_days_worked := 0;
+  END IF;
+
+  RETURN v_days_worked;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Log error and return 0 on failure
+    RAISE WARNING 'Error calculating days worked for business %, worker %, month %: %',
+      p_business_id, p_worker_id, p_month, SQLERRM;
+    RETURN 0;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Add comment for documentation
+COMMENT ON FUNCTION calculate_days_worked IS 'Calculates days worked by a worker for a business in a month. Counts accepted/completed bookings with start_date in the specified month. Used for PP 35/2021 compliance tracking (21-day limit).';
