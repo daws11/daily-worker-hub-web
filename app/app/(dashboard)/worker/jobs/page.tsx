@@ -7,9 +7,12 @@ import { useAuth } from "@/app/providers/auth-provider"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { supabase } from "@/lib/supabase/client"
 import type { Database } from "@/lib/supabase/types"
-import { Briefcase, Calendar, Building2, MapPin, Wallet, Loader2 } from "lucide-react"
+import { cancelApplication } from "@/lib/actions/job-applications"
+import { Briefcase, Calendar, Building2, MapPin, Wallet, Loader2, X } from "lucide-react"
 
 type WorkersRow = Database["public"]["Tables"]["workers"]["Row"]
 type Job = Database["public"]["Tables"]["jobs"]["Row"]
@@ -39,6 +42,9 @@ export default function WorkerJobsPage() {
   const [worker, setWorker] = useState<WorkersRow | null>(null)
   const [applications, setApplications] = useState<ApplicationWithDetails[]>([])
   const [isLoadingApplications, setIsLoadingApplications] = useState(true)
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
+  const [applicationToCancel, setApplicationToCancel] = useState<ApplicationWithDetails | null>(null)
+  const [isCancelling, setIsCancelling] = useState(false)
 
   // Fetch worker profile
   useEffect(() => {
@@ -172,6 +178,49 @@ export default function WorkerJobsPage() {
     }
   }
 
+  // Handle cancel application
+  const handleCancelApplication = async () => {
+    if (!applicationToCancel || !worker) return
+
+    setIsCancelling(true)
+    try {
+      const result = await cancelApplication(applicationToCancel.id, worker.id)
+
+      if (!result.success) {
+        toast.error(result.error || "Gagal membatalkan lamaran")
+        return
+      }
+
+      toast.success("Lamaran berhasil dibatalkan")
+
+      // Update local state - remove the cancelled application or update its status
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === applicationToCancel.id
+            ? { ...app, status: "cancelled" as const }
+            : app
+        )
+      )
+
+      setCancelDialogOpen(false)
+      setApplicationToCancel(null)
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
+  // Open cancel dialog
+  const openCancelDialog = (application: ApplicationWithDetails) => {
+    setApplicationToCancel(application)
+    setCancelDialogOpen(true)
+  }
+
+  // Close cancel dialog
+  const closeCancelDialog = () => {
+    setCancelDialogOpen(false)
+    setApplicationToCancel(null)
+  }
+
   // Calculate stats
   const stats = {
     total: applications.length,
@@ -268,6 +317,7 @@ export default function WorkerJobsPage() {
                       <TableHead>Perusahaan</TableHead>
                       <TableHead>Tanggal Lamar</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Aksi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -311,6 +361,19 @@ export default function WorkerJobsPage() {
                             {getStatusLabel(application.status)}
                           </Badge>
                         </TableCell>
+                        <TableCell>
+                          {application.status === "pending" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openCancelDialog(application)}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Batalkan
+                            </Button>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -319,6 +382,48 @@ export default function WorkerJobsPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Cancel Confirmation Dialog */}
+        <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Batalkan Lamaran?</DialogTitle>
+              <DialogDescription>
+                Anda yakin ingin membatalkan lamaran untuk pekerjaan{" "}
+                <span className="font-semibold">
+                  {applicationToCancel?.jobs.title}
+                </span>
+                ?
+                <br />
+                <br />
+                Tindakan ini tidak dapat dibatalkan.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={closeCancelDialog}
+                disabled={isCancelling}
+              >
+                Batal
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleCancelApplication}
+                disabled={isCancelling}
+              >
+                {isCancelling ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Membatalkan...
+                  </>
+                ) : (
+                  "Ya, Batalkan Lamaran"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

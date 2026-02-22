@@ -244,7 +244,9 @@
               "Status badges display correctly (pending/accepted/rejected)"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Implemented application history view in app/app/(dashboard)/worker/jobs/page.tsx with table-based display showing job title, budget, location, business name, application date, and color-coded status badges (pending/outline, accepted/default, rejected/destructive, in_progress/secondary, completed/default, cancelled/destructive). Includes stats cards showing total/pending/accepted/completed counts. Fetches worker profile from database based on authenticated user, then loads all applications with job and business details. Uses Indonesian language for all UI labels. Loading and empty states with appropriate UI.",
+          "updated_at": "2026-02-22T04:22:00.000000+00:00"
         },
         {
           "id": "subtask-4-3",

@@ -94,8 +94,42 @@ Session 3 (2026-02-22):
   * Follows patterns from table.tsx, badge.tsx, card.tsx, and button.tsx
   * Indonesian language for all UI labels
 
+Session 4 (2026-02-22):
+- subtask-3-3: COMPLETED - Created ApplicantList component
+  * File: components/applicant-list.tsx
+  * Table-based display of applicants for a job from business perspective
+  * Shows worker avatar, name, bio, phone, application date
+  * Status badge with color coding (pending/accepted/rejected)
+  * Loading state with spinner animation
+  * Empty state with user icon and message
+  * Accept and reject action buttons for pending applicants
+  * Uses lucide-react icons (User, Calendar, Phone, Check, X, MoreVertical)
+  * Follows patterns from table.tsx, badge.tsx, card.tsx, button.tsx, and avatar.tsx
+  * Indonesian language for all UI labels
+- subtask-4-1: COMPLETED - Implemented worker jobs page
+  * File: app/app/dashboard-worker-jobs/page.tsx
+  * Job listing using JobCard component
+  * One-tap apply functionality
+  * Stats cards showing total/applied/accepted/completed counts
+  * Loading states with spinner animation
+  * Error handling with toast notifications
+  * Integrated ApplicationList for application history
+  * Worker profile fetched from database based on authenticated user
+  * Applied job IDs tracked to disable apply buttons
+  * Indonesian language for all UI elements
+- subtask-4-2: COMPLETED - Implemented application history view
+  * File: app/app/(dashboard)/worker/jobs/page.tsx
+  * Table-based display showing job title, budget, location, business name, application date
+  * Color-coded status badges (pending/outline, accepted/default, rejected/destructive, in_progress/secondary, completed/default, cancelled/destructive)
+  * Stats cards showing total/pending/accepted/completed counts
+  * Fetches worker profile and applications with job and business details
+  * Loading state with spinner animation
+  * Empty state with briefcase icon and message
+  * Indonesian language for all UI labels
+
 === CURRENT STATUS ===
 Phase 1 (Database Schema & Migrations): 2/2 subtasks completed
 Phase 2 (Server Actions & API Layer): 3/3 subtasks completed
-Phase 3 (UI Components): 2/3 subtasks completed
-Next: Phase 3 - UI Components (subtask-3-3 - ApplicantList component)
+Phase 3 (UI Components): 3/3 subtasks completed
+Phase 4 (Worker Dashboard): 2/3 subtasks completed
+Next: Phase 4 - Worker Dashboard (subtask-4-3 - Cancel application functionality)
