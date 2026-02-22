@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useAuth } from '../../../providers/auth-provider'
 
 export default function BusinessJobsPage() {
@@ -16,7 +17,7 @@ export default function BusinessJobsPage() {
       padding: '1rem'
     }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Header with logout button */}
+        {/* Header with action buttons */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -26,24 +27,43 @@ export default function BusinessJobsPage() {
           <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>
             Dashboard Business - Jobs
           </h1>
-          <button
-            onClick={handleLogout}
-            disabled={isLoading}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: isLoading ? '#9ca3af' : '#ef4444',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.375rem',
-              fontWeight: 500,
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              fontSize: '0.875rem',
-              opacity: isLoading ? 0.6 : 1,
-              transition: 'background-color 0.2s'
-            }}
-          >
-            {isLoading ? 'Memproses...' : 'Keluar'}
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Link
+              href="/business/profile"
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#2563eb',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                cursor: 'pointer',
+                textDecoration: 'none',
+                transition: 'background-color 0.2s'
+              }}
+            >
+              Profil Bisnis
+            </Link>
+            <button
+              onClick={handleLogout}
+              disabled={isLoading}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: isLoading ? '#9ca3af' : '#ef4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.375rem',
+                fontWeight: 500,
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                fontSize: '0.875rem',
+                opacity: isLoading ? 0.6 : 1,
+                transition: 'background-color 0.2s'
+              }}
+            >
+              {isLoading ? 'Memproses...' : 'Keluar'}
+            </button>
+          </div>
         </div>
 
         <div style={{

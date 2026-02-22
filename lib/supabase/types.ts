@@ -26,14 +26,16 @@ export interface Database {
           id: string
           user_id: string
           name: string
-          description: string
-          phone: string
-          email: string
-          website: string
-          is_verified: boolean
+          business_type: 'hotel' | 'villa' | 'restaurant' | 'event_company' | 'other'
           address: string
-          lat: number
-          lng: number
+          area: 'Badung' | 'Denpasar' | 'Gianyar' | 'Tabanan' | 'Buleleng' | 'Klungkung' | 'Karangasem' | 'Bangli' | 'Jembrana'
+          phone?: string
+          email?: string
+          website?: string
+          description?: string
+          avatar_url?: string
+          business_license_url?: string
+          verification_status: 'pending' | 'verified' | 'rejected'
           created_at: string
           updated_at: string
         }
