@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test:e2e:business-topup": "node --loader ts-node/esm scripts/test-e2e-business-topup.ts"
   },
   "keywords": [],
   "author": "",

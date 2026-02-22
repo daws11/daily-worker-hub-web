@@ -116,7 +116,7 @@ export default function BusinessWalletPage() {
       }
 
       const amount = Number(topUpAmount)
-      if (amount < 50000) return
+      if (amount < 500000) return
 
       try {
         const result = await calculateTopUpFee(amount)
@@ -144,8 +144,8 @@ export default function BusinessWalletPage() {
     if (!business) return
 
     const amount = Number(topUpAmount)
-    if (isNaN(amount) || amount < 50000) {
-      toast.error("Minimal top-up Rp 50.000")
+    if (isNaN(amount) || amount < 500000) {
+      toast.error("Minimal top-up Rp 500.000")
       return
     }
 
@@ -302,7 +302,7 @@ export default function BusinessWalletPage() {
               Top Up Saldo
             </CardTitle>
             <CardDescription>
-              Isi saldo wallet menggunakan QRIS (minimal Rp 50.000)
+              Isi saldo wallet menggunakan QRIS (minimal Rp 500.000)
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -315,12 +315,12 @@ export default function BusinessWalletPage() {
                   placeholder="Masukkan jumlah top up"
                   value={topUpAmount}
                   onChange={(e) => setTopUpAmount(e.target.value)}
-                  min={50000}
+                  min={500000}
                   step={1000}
                   disabled={isProcessingPayment}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Minimal: Rp 50.000 | Maksimal: Rp 100.000.000
+                  Minimal: Rp 500.000 | Maksimal: Rp 100.000.000
                 </p>
               </div>
 
@@ -345,7 +345,7 @@ export default function BusinessWalletPage() {
 
               <Button
                 type="submit"
-                disabled={!topUpAmount || isProcessingPayment || Number(topUpAmount) < 50000}
+                disabled={!topUpAmount || isProcessingPayment || Number(topUpAmount) < 500000}
                 className="w-full"
               >
                 {isProcessingPayment ? (

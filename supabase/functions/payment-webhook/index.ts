@@ -80,7 +80,7 @@ serve(async (req) => {
     // Find the payment transaction by external_id (transaction ID)
     const { data: transaction, error: transactionError } = await supabase
       .from('payment_transactions')
-      .select('id, business_id, amount, status, wallet_id')
+      .select('id, business_id, amount, status')
       .eq('id', payload.external_id)
       .single()
 
@@ -132,20 +132,20 @@ serve(async (req) => {
     }
 
     // If payment succeeded, credit the business wallet
-    if (newStatus === 'success' && transaction.wallet_id) {
-      // Get current wallet balance
+    if (newStatus === 'success') {
+      // Get the business wallet
       const { data: wallet, error: walletError } = await supabase
         .from('wallets')
         .select('id, balance')
-        .eq('id', transaction.wallet_id)
+        .eq('business_id', transaction.business_id)
         .single()
 
       if (walletError || !wallet) {
-        throw new Error('Wallet not found')
+        throw new Error('Wallet not found for business')
       }
 
       // Credit the wallet with the payment amount
-      const newBalance = wallet.balance + transaction.amount
+      const newBalance = Number(wallet.balance) + Number(transaction.amount)
 
       const { error: creditError } = await supabase
         .from('wallets')
@@ -153,7 +153,7 @@ serve(async (req) => {
           balance: newBalance,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', transaction.wallet_id)
+        .eq('id', wallet.id)
 
       if (creditError) {
         throw new Error(`Failed to credit wallet: ${creditError.message}`)
