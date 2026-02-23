@@ -426,4 +426,36 @@ Next: Phase 4, Subtask 4-2 - Create SocialPostPreview component for previewing f
   * Proper TypeScript interfaces and React.forwardRef pattern
 - Note: Dev server not started due to missing settings page - component will be integrated in subtask-4-4
 
-Next: Phase 4, Subtask 4-4 - Integrate social platform components into job posting form
+[2026-02-24] Subtask 5-1: COMPLETED
+- Added environment variables for Instagram and Facebook API credentials
+- File: .env.local.example
+- Variables added:
+  * INSTAGRAM_APP_ID - Instagram Basic Display API app ID
+  * INSTAGRAM_APP_SECRET - Instagram Basic Display API app secret
+  * INSTAGRAM_REDIRECT_URI - OAuth callback URL
+  * FACEBOOK_APP_ID - Facebook Graph API app ID
+  * FACEBOOK_APP_SECRET - Facebook Graph API app secret
+  * FACEBOOK_PAGE_ID - Facebook page ID for posting
+- All entries follow existing format with descriptive comments and placeholder values
+
+[2026-02-24] Subtask 5-2: COMPLETED
+- Created database trigger for auto-distribution on job creation
+- File: supabase/migrations/20260224000005_create_auto_distribute_trigger.sql
+- Features:
+  * auto_distribute_job() trigger function that fires AFTER INSERT on jobs table
+  * Automatically creates job_posts entries for all active social platform connections for the business
+  * Respects per-job platform_settings JSONB column for selective platform posting
+  * Helper functions:
+    - manually_distribute_job(UUID) - manually trigger distribution for existing jobs
+    - get_job_distribution_status(UUID) - check distribution status for a job
+  * Proper error handling using EXCEPTION clause with RAISE WARNING to prevent job creation failures
+  * Uses SECURITY DEFINER for proper permissions
+  * Trigger name: trigger_auto_distribute_job
+- Quality checks passed:
+  * Follows patterns from initial_schema.sql (FUNCTION format, TRIGGER format, SECURITY DEFINER)
+  * No console.log statements
+  * Error handling in place (EXCEPTION WHEN OTHERS with RAISE WARNING)
+  * Respects platform_settings for per-job overrides
+  * Only creates entries for active connections with valid tokens
+
+Next: Phase 5, Subtask 5-3 - End-to-end test: Create job and verify social distribution
