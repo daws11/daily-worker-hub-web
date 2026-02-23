@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select'
 import { WageRangeSlider } from '@/components/job-marketplace/WageRangeSlider'
 import { JobFilters as JobFiltersType, PositionType } from '@/lib/types/job'
-import { X, Filter } from 'lucide-react'
+import { X, Filter, Shield, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface JobFiltersProps {
@@ -41,7 +41,9 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
     localFilters.wageMin ||
     localFilters.wageMax ||
     localFilters.deadlineAfter ||
-    localFilters.deadlineBefore
+    localFilters.deadlineBefore ||
+    localFilters.isUrgent ||
+    localFilters.verifiedOnly
   )
 
   const handlePositionChange = (value: string) => {
@@ -88,6 +90,24 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
     const newFilters = {
       ...localFilters,
       deadlineBefore: value || undefined,
+    }
+    setLocalFilters(newFilters)
+    onFiltersChange(newFilters)
+  }
+
+  const handleIsUrgentChange = (checked: boolean) => {
+    const newFilters = {
+      ...localFilters,
+      isUrgent: checked || undefined,
+    }
+    setLocalFilters(newFilters)
+    onFiltersChange(newFilters)
+  }
+
+  const handleVerifiedOnlyChange = (checked: boolean) => {
+    const newFilters = {
+      ...localFilters,
+      verifiedOnly: checked || undefined,
     }
     setLocalFilters(newFilters)
     onFiltersChange(newFilters)
@@ -205,6 +225,42 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
               />
             </div>
           </div>
+        </div>
+
+        {/* Verified Business Filter */}
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="verified-only"
+            checked={localFilters.verifiedOnly || false}
+            onChange={(e) => handleVerifiedOnlyChange(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
+          />
+          <Label
+            htmlFor="verified-only"
+            className="text-sm flex items-center gap-1.5 cursor-pointer"
+          >
+            <Shield className="h-3.5 w-3.5 text-blue-500" />
+            Verified Business Only
+          </Label>
+        </div>
+
+        {/* Emergency Only Filter */}
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="is-urgent"
+            checked={localFilters.isUrgent || false}
+            onChange={(e) => handleIsUrgentChange(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
+          />
+          <Label
+            htmlFor="is-urgent"
+            className="text-sm flex items-center gap-1.5 cursor-pointer"
+          >
+            <AlertCircle className="h-3.5 w-3.5 text-red-500" />
+            Emergency Only
+          </Label>
         </div>
       </CardContent>
     </Card>
