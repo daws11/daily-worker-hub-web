@@ -277,3 +277,49 @@ Session 10 (subtask-6-2):
 - Note: Implementation complete. Ready for manual browser testing at http://localhost:3000/dashboard/worker/bookings.
 
 === END SESSION 10 ===
+
+Session 11 (subtask-6-3):
+- Completed: Test review constraints and edge cases
+- Changes:
+  * Created comprehensive test documentation: test-review-constraints-edge-cases.md
+  * Created verification summary: constraint-verification-summary.md
+  * Verified all constraints via code analysis:
+  * Constraint 1 - Review button only shows for completed bookings:
+    - Business bookings page: `{booking.status === 'completed' && ...` (line 517)
+    - Worker bookings page: `canWriteReview = booking.status === "completed" && !hasExistingReview` (line 124)
+    - RLS policy: `bookings.status = 'completed'` check in database
+  * Constraint 2 - Only one review per user type per booking:
+    - Database UNIQUE constraint: `reviews_booking_id_reviewer_unique UNIQUE (booking_id, reviewer)`
+    - Frontend: fetchReviewsForBookings checks existing reviews before showing button
+  * Constraint 3 - Ratings validated (1-5 range):
+    - Schema: ratingSchema with .min(1) and .max(5)
+    - Form: Client validation checks rating !== 0 before submit
+    - Display: Math.max(1, Math.min(5, rating)) clamping
+  * Constraint 4 - Comments are optional:
+    - Schema: commentSchema is .optional()
+    - Form: Empty strings converted to undefined via .trim() || undefined
+    - Display: {comment && <CardContent...>} conditional rendering
+  * Constraint 5 - Would rehire only for business reviews:
+    - Form: `{isBusinessReview && (<FormField name="would_rehire"...>)}` conditional (line 266)
+    - Worker display: Shows would_rehire badge (lines 178-183)
+    - Business display: No would_rehire field in props or display
+  * Constraint 6 - Reviews display correctly on profiles:
+    - Worker reviews page: Uses ReviewList with entityType="worker" (reviews FROM businesses)
+    - Business reviews page: Uses ReviewList with entityType="business" (reviews FROM workers)
+    - Color coding: 4.5+ green, 3.5+ yellow, 2.5+ orange, <2.5 red
+    - Relative dates: Today, Yesterday, X days/weeks/months ago
+  * Edge cases verified:
+    - Whitespace-only comments converted to NULL
+    - Max length enforcement (1000 characters)
+    - Empty state handling with Star icon
+    - Rating clamping for display safety
+- Test documentation includes:
+  * 9 detailed test cases with step-by-step instructions
+  * Expected results for each test case
+  * SQL verification queries
+  * Test results summary table
+  * Database verification queries for various scenarios
+- Files created: test-review-constraints-edge-cases.md, constraint-verification-summary.md
+- Note: All constraints verified via code analysis. Ready for manual browser testing following test-review-constraints-edge-cases.md.
+
+=== END SESSION 11 ===
