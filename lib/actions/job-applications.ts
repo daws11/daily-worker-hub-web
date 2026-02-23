@@ -2,6 +2,7 @@
 
 import { createClient } from "../supabase/server"
 import type { Database } from "../supabase/types"
+import { createNotification } from "./notifications"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"]
 type Job = Database["public"]["Tables"]["jobs"]["Row"]
@@ -56,6 +57,39 @@ export async function applyForJob(jobId: string, workerId: string): Promise<Appl
       return { success: false, error: "Pekerjaan tidak ditemukan" }
     }
 
+    // Get job details for notification
+    const { data: jobDetails, error: jobDetailsError } = await supabase
+      .from("jobs")
+      .select("title")
+      .eq("id", jobId)
+      .single()
+
+    if (jobDetailsError || !jobDetails) {
+      return { success: false, error: "Pekerjaan tidak ditemukan" }
+    }
+
+    // Get worker details for notification
+    const { data: workerDetails, error: workerError } = await supabase
+      .from("workers")
+      .select("full_name")
+      .eq("id", workerId)
+      .single()
+
+    if (workerError || !workerDetails) {
+      return { success: false, error: "Data pekerja tidak ditemukan" }
+    }
+
+    // Get business owner's user_id
+    const { data: businessDetails, error: businessError } = await supabase
+      .from("businesses")
+      .select("user_id")
+      .eq("id", job.business_id)
+      .single()
+
+    if (businessError || !businessDetails) {
+      return { success: false, error: "Data bisnis tidak ditemukan" }
+    }
+
     // Create the booking (application)
     const newBooking: BookingInsert = {
       job_id: jobId,
@@ -76,6 +110,14 @@ export async function applyForJob(jobId: string, workerId: string): Promise<Appl
     if (error) {
       return { success: false, error: `Gagal melamar: ${error.message}` }
     }
+
+    // Create notification for business owner
+    await createNotification(
+      businessDetails.user_id,
+      "Pelamar Baru",
+      `${workerDetails.full_name} melamar untuk pekerjaan ${jobDetails.title}`,
+      `/dashboard-worker-jobs?job=${jobId}`
+    )
 
     return { success: true, data }
   } catch (error) {
