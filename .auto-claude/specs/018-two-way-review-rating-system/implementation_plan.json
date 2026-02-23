@@ -261,8 +261,8 @@
             "type": "manual",
             "instructions": "Verify 'Write Review' button appears for completed bookings without existing review, opens review form dialog"
           },
-          "status": "pending",
-          "notes": "Add review button that opens ReviewFormDialog. Check if review already exists for current user type"
+          "status": "completed",
+          "notes": "Added 'Tulis Ulasan' (Write Review) button to BookingActions component. Button appears for completed bookings without existing review when onWriteReview callback is provided. Props added: hasExistingReview (boolean, defaults to false), onWriteReview (callback function). Button uses Star icon with yellow fill, outline variant, respects size prop. No TypeScript errors introduced."
         }
       ]
     },
@@ -519,6 +519,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T02:20:10.013Z",
+  "updated_at": "2026-02-23T02:22:11.125Z",
   "last_updated": "2026-02-23T02:19:23.810982+00:00"
 }
