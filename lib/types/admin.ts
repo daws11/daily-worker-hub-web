@@ -114,6 +114,16 @@ export interface BusinessVerificationFilters {
   sortOrder?: 'asc' | 'desc'
 }
 
+export interface WorkerManagementFilters {
+  search?: string
+  kycStatus?: 'unverified' | 'pending' | 'verified' | 'rejected'
+  area?: string
+  createdAfter?: string
+  createdBefore?: string
+  sortBy?: 'created_at' | 'full_name' | 'email'
+  sortOrder?: 'asc' | 'desc'
+}
+
 export interface KYCVerificationFilters {
   search?: string
   status?: 'pending' | 'verified' | 'rejected'
@@ -362,6 +372,13 @@ export interface BusinessVerificationItem extends BusinessRow {
   user: UserRow
   submittedAt: string
   pendingDays: number
+}
+
+export interface WorkerManagementItem extends WorkerRow {
+  user: UserRow
+  bookingCount?: number
+  reviewCount?: number
+  averageRating?: number
 }
 
 export interface KYCVerificationItem extends KYCVerificationRow {
