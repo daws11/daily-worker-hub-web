@@ -217,4 +217,13 @@ Next Session: Coder agent will begin Phase 1, Subtask 1-1
   * Partial indexes for platform-specific filtering (instagram enabled, facebook enabled)
   * Documented structure: { platforms: { instagram: { enabled, custom_content }, facebook: { enabled, custom_content } } }
 
-Next: Subtask 1-5 - Generate TypeScript types from updated database schema
+[2026-02-24] Subtask 1-5: COMPLETED
+- TypeScript types for social_platforms, business_social_connections, and job_posts are already present
+- File: lib/supabase/types.ts
+- Verification: All required types found and match the database schema
+- Types include:
+  * social_platforms: id, platform_type, platform_name, description, status, api_version, auth_type, config, webhook_url, webhook_secret, is_available, created_at, updated_at
+  * business_social_connections: id, business_id, platform_id, access_token, refresh_token, platform_account_id, platform_account_name, platform_account_url, platform_page_id, scopes, token_expires_at, status, settings, error_count, last_error, last_error_at, last_verified_at, last_used_at, created_at, updated_at
+  * job_posts: id, job_id, connection_id, platform_post_id, platform_post_url, content, status, scheduled_at, posted_at, metrics, error_message, error_code, retry_count, last_retry_at, post_type, media_ids, created_at, updated_at
+
+Next: Phase 2, Subtask 2-1 - Create social-connect edge function for OAuth flow
