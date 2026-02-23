@@ -268,7 +268,9 @@
             "command": "grep -q 'export.*function.*connectSocialPlatform\\|export.*function.*disconnectSocialPlatform\\|export.*function.*getSocialConnections' lib/actions/social.ts && echo 'Actions exported'",
             "expected": "Actions exported"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created social platform server actions in lib/actions/social.ts. Includes: connectSocialPlatform (connect with OAuth tokens, duplicate check, platform verification), disconnectSocialPlatform (set status to revoked), getSocialConnections (list all with platform details), getSocialConnection (single connection by ID), updateConnectionError (track API errors with auto-disable after 5 errors), updateConnectionLastUsed (reset error count on success). All actions follow patterns from job-applications.ts with Indonesian error messages, proper type safety, and comprehensive error handling.",
+          "updated_at": "2026-02-24T04:25:00.000000+00:00"
         },
         {
           "id": "subtask-3-3",
@@ -689,6 +691,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T20:16:59.703Z",
+  "updated_at": "2026-02-23T20:22:04.895Z",
   "last_updated": "2026-02-23T20:09:15.742945+00:00"
 }
