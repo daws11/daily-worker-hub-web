@@ -7,8 +7,9 @@ import { getJobBookings } from '@/lib/supabase/queries/bookings'
 import type { JobsRow } from '@/lib/supabase/queries/jobs'
 import type { JobBookingWithDetails } from '@/lib/supabase/queries/bookings'
 import { QRCodeGenerator } from '@/components/attendance/qr-code-generator'
-import { Calendar, MapPin, Users, Loader2, AlertCircle, CheckCircle, XCircle, Clock, Building2, QrCode } from 'lucide-react'
+import { Calendar, MapPin, Users, Loader2, AlertCircle, CheckCircle, XCircle, Clock, Building2, QrCode, MessageCircle } from 'lucide-react'
 import { toast } from 'sonner'
+import { BookingMessagesDialog } from '@/components/messaging/booking-messages-dialog'
 
 interface JobWithAttendance extends JobsRow {
   bookings?: JobBookingWithDetails[]
@@ -32,6 +33,7 @@ export default function BusinessJobsPage() {
   const [jobs, setJobs] = useState<JobsData>({ total: 0, active: 0, completed: 0, jobsList: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [messageDialogs, setMessageDialogs] = useState<Record<string, boolean>>({})
 
   // Fetch business jobs with attendance data
   const fetchJobsWithAttendance = useCallback(async () => {
@@ -93,6 +95,11 @@ export default function BusinessJobsPage() {
   const handleQRRefresh = useCallback(() => {
     fetchJobsWithAttendance()
   }, [fetchJobsWithAttendance])
+
+  // Handle opening/closing message dialog
+  const handleMessageDialogOpen = useCallback((bookingId: string, open: boolean) => {
+    setMessageDialogs(prev => ({ ...prev, [bookingId]: open }))
+  }, [])
 
   // Format date to Indonesian locale
   const formatDate = (dateString: string) => {
@@ -467,6 +474,40 @@ export default function BusinessJobsPage() {
                               <span>Lokasi terverifikasi</span>
                             </div>
                           )}
+
+                          {/* Message Button */}
+                          {booking.worker && (
+                            <div style={{
+                              marginTop: '0.75rem',
+                              paddingTop: '0.75rem',
+                              borderTop: '1px solid #e5e7eb',
+                              display: 'flex',
+                              justifyContent: 'flex-end'
+                            }}>
+                              <button
+                                onClick={() => handleMessageDialogOpen(booking.id, true)}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '0.5rem',
+                                  padding: '0.5rem 1rem',
+                                  backgroundColor: '#2563eb',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '0.375rem',
+                                  fontSize: '0.875rem',
+                                  fontWeight: 500,
+                                  cursor: 'pointer',
+                                  transition: 'background-color 0.2s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
+                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                              >
+                                <MessageCircle style={{ width: '1rem', height: '1rem' }} />
+                                Pesan
+                              </button>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -525,6 +566,21 @@ export default function BusinessJobsPage() {
           </div>
         </dialog>
       ))}
+
+      {/* Message Dialogs */}
+      {jobs.jobsList?.map((job) =>
+        job.bookings?.map((booking) => (
+          <BookingMessagesDialog
+            key={`message-dialog-${booking.id}`}
+            bookingId={booking.id}
+            currentUserId={user?.id || ''}
+            receiverId={booking.worker?.id || ''}
+            receiverName={booking.worker?.full_name}
+            open={messageDialogs[booking.id] || false}
+            onOpenChange={(open) => handleMessageDialogOpen(booking.id, open)}
+          />
+        ))
+      )}
 
       <style jsx>{`
         @keyframes spin {
