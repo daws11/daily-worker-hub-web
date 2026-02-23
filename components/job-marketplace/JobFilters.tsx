@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { WageRangeSlider } from '@/components/job-marketplace/WageRangeSlider'
+import { DistanceRadiusFilter } from '@/components/job-marketplace/DistanceRadiusFilter'
 import { JobFilters as JobFiltersType, PositionType } from '@/lib/types/job'
 import { X, Filter, Shield, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -34,6 +35,7 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
   const [localFilters, setLocalFilters] = useState<JobFiltersType>(filters || {})
   const [deadlineAfter, setDeadlineAfter] = useState<string>(filters?.deadlineAfter || '')
   const [deadlineBefore, setDeadlineBefore] = useState<string>(filters?.deadlineBefore || '')
+  const [distanceRadius, setDistanceRadius] = useState<number>(filters?.radius || 10)
 
   const hasActiveFilters = Boolean(
     localFilters.positionType ||
@@ -43,7 +45,10 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
     localFilters.deadlineAfter ||
     localFilters.deadlineBefore ||
     localFilters.isUrgent ||
-    localFilters.verifiedOnly
+    localFilters.verifiedOnly ||
+    localFilters.lat ||
+    localFilters.lng ||
+    localFilters.radius
   )
 
   const handlePositionChange = (value: string) => {
@@ -113,11 +118,32 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
     onFiltersChange(newFilters)
   }
 
+  const handleDistanceRadiusChange = (value: number) => {
+    setDistanceRadius(value)
+    const newFilters = {
+      ...localFilters,
+      radius: value,
+    }
+    setLocalFilters(newFilters)
+    onFiltersChange(newFilters)
+  }
+
+  const handleLocationChange = (lat: number, lng: number) => {
+    const newFilters = {
+      ...localFilters,
+      lat,
+      lng,
+    }
+    setLocalFilters(newFilters)
+    onFiltersChange(newFilters)
+  }
+
   const handleClearFilters = () => {
     const clearedFilters: JobFiltersType = {}
     setLocalFilters(clearedFilters)
     setDeadlineAfter('')
     setDeadlineBefore('')
+    setDistanceRadius(10)
     onFiltersChange(clearedFilters)
   }
 
@@ -179,6 +205,20 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
             onChange={(e) => handleAreaChange(e.target.value)}
           />
         </div>
+
+        {/* Distance Radius Filter */}
+        <DistanceRadiusFilter
+          label="Distance Radius"
+          min={1}
+          max={50}
+          step={1}
+          value={localFilters.radius}
+          defaultValue={10}
+          onValueChange={handleDistanceRadiusChange}
+          onLocationChange={handleLocationChange}
+          unit="km"
+          showValue={true}
+        />
 
         {/* Wage Range Filter */}
         <div className="space-y-2">
