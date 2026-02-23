@@ -21,15 +21,14 @@ This document outlines the end-to-end testing steps for verifying that workers c
    - Frontend: http://localhost:3000
 
 3. Test data required:
-   - At least one business user account
    - At least one worker user account
-   - At least one job posting by the business
+   - At least one business user account
    - At least one completed booking (worker checked out)
 
 ### Test Accounts
 Ensure you have the following test accounts:
-- Business account: `business@test.com`
 - Worker account: `worker@test.com`
+- Business account: `business@test.com`
 
 ---
 
@@ -89,7 +88,7 @@ Ensure you have the following test accounts:
 - Form displays:
   - Star rating input (1-5 stars)
   - Comment textarea (optional)
-  - NO "Would Rehire" checkbox (worker-only feature)
+  - NO "Would Rehire" checkbox (worker reviews don't have this field)
 
 ### Verification Points
 - [ ] Dialog opens smoothly
@@ -97,7 +96,7 @@ Ensure you have the following test accounts:
 - [ ] Star rating component is interactive
 - [ ] Stars highlight on hover
 - [ ] Comment field accepts text input
-- [ ] "Would Rehire" checkbox is NOT visible (business-only)
+- [ ] "Would Rehire" checkbox is NOT present
 - [ ] "Batal" (Cancel) and "Kirim Ulasan" (Submit) buttons are present
 
 ---
@@ -106,8 +105,8 @@ Ensure you have the following test accounts:
 
 ### Steps
 1. Click on a star to select rating (e.g., 5 stars)
-2. Enter a comment (e.g., "Bisnis yang baik dan membayar tepat waktu")
-3. Verify "Would Rehire" checkbox is NOT present
+2. Enter a comment (e.g., "Bisnis yang profesional dan membayar tepat waktu")
+3. Verify there is NO "Would Rehire" checkbox
 4. Click "Kirim Ulasan" (Submit Review)
 
 ### Expected Result
@@ -120,12 +119,12 @@ Ensure you have the following test accounts:
 ### Verification Points
 - [ ] Rating selection works correctly
 - [ ] Comment field accepts up to 1000 characters
-- [ ] "Would Rehire" checkbox is NOT present
+- [ ] No "Would Rehire" checkbox is shown
 - [ ] Submit button is disabled until rating is selected
 - [ ] Form submission succeeds without errors
 - [ ] Success toast appears
 - [ ] Dialog closes after successful submission
-- [ ] Booking card shows "Ulasan diberikan" with star icon
+- [ ] Booking card shows "Ulasan diberikan" with rating
 
 ---
 
@@ -133,7 +132,7 @@ Ensure you have the following test accounts:
 
 ### Steps
 1. Logout as worker user
-2. Login as the business that was reviewed
+2. Login as the business who was reviewed
 3. Navigate to `/dashboard/business/reviews`
 
 ### Expected Result
@@ -144,17 +143,19 @@ Ensure you have the following test accounts:
   - Rating value (e.g., "5.0")
   - Worker name and avatar
   - Comment text
-  - NO "Would Rehire" badge (business-only field)
+  - NO "Would Rehire" badge (worker reviews don't have this)
   - Relative date (e.g., "Today")
+  - Briefcase icon indicating worker review
 
 ### Verification Points
 - [ ] Business reviews page loads without errors
 - [ ] New review appears in the list
 - [ ] Star rating displays correctly with color coding
 - [ ] Rating value is accurate
-- [ ] Worker information is displayed
+- [ ] Worker information is displayed (name, avatar)
 - [ ] Comment text is shown
-- [ ] "Would Rehire" badge is NOT visible
+- [ ] "Would Rehire" badge is NOT present
+- [ ] Briefcase icon is shown to indicate worker review
 - [ ] Date is displayed correctly
 
 ---
@@ -164,18 +165,26 @@ Ensure you have the following test accounts:
 ### Steps
 1. While on business's reviews page, check the rating summary
 2. Note the average rating
-3. Verify the review count increased
+3. Refresh the page to ensure data persistence
+4. Verify the average rating calculation
 
 ### Expected Result
 - Average rating reflects the new review
 - Review count is incremented
-- Rating is displayed with proper star visualization
+- Rating is color-coded appropriately (green for high, yellow for medium, etc.)
+- Rating summary displays correctly
 
 ### Verification Points
 - [ ] Average rating is calculated correctly
 - [ ] Review count is incremented
-- [ ] Rating displays with correct star visualization
-- [ ] Color coding matches rating level
+- [ ] Average rating displays with correct star visualization
+- [ ] Color coding matches rating level:
+  - 4.5-5.0: Green (Excellent)
+  - 4.0-4.4: Light green
+  - 3.5-3.9: Yellow (Good)
+  - 3.0-3.4: Orange (Fair)
+  - Below 3.0: Red (Poor)
+- [ ] Data persists after page refresh
 
 ---
 
@@ -189,11 +198,12 @@ Ensure you have the following test accounts:
 
 ### Expected Result
 - Submit button remains disabled
+- Or if enabled, validation error appears
 - Form does not submit
 
 ### Verification Points
 - [ ] Rating is validated as required
-- [ ] Submit button is disabled when no rating selected
+- [ ] Appropriate error message appears
 - [ ] Review is not created in database
 
 ---
@@ -237,21 +247,20 @@ Ensure you have the following test accounts:
 
 ---
 
-### Test Case 10: Verify Worker Cannot See "Would Rehire" Field
+### Test Case 10: Worker Cannot See Would Rehire Checkbox
 
 ### Steps
-1. Open review form as worker
-2. Verify form elements
+1. Open review form for any completed booking
+2. Verify the form structure
 
 ### Expected Result
+- The "Would Rehire" checkbox is NOT visible
 - Only rating and comment fields are present
-- "Would Rehire" checkbox is NOT present
-- Form description mentions "pengalaman Anda dengan bisnis" (your experience with the business)
 
 ### Verification Points
-- [ ] Would Rehire checkbox is not visible
-- [ ] Form text is appropriate for worker reviewing business
-- [ ] No business-specific fields shown
+- [ ] Would Rehire field is exclusive to business reviews
+- [ ] Worker review form has fewer fields than business review form
+- [ ] Form is simpler and more focused on rating and comment
 
 ---
 
@@ -265,8 +274,6 @@ SELECT
   id,
   booking_id,
   reviewer,
-  business_id,
-  worker_id,
   rating,
   comment,
   would_rehire,
@@ -285,7 +292,7 @@ FROM reviews
 WHERE reviewer = 'worker'
 GROUP BY business_id;
 
--- Check unique constraint enforcement
+-- Check unique constraint enforcement (one review per worker per booking)
 SELECT
   booking_id,
   reviewer,
@@ -295,14 +302,14 @@ GROUP BY booking_id, reviewer
 HAVING COUNT(*) > 1;
 -- Should return 0 rows (no duplicates)
 
--- Verify would_rehire is null for worker reviews
+-- Verify would_rehire is NULL for worker reviews
 SELECT
   id,
   reviewer,
   would_rehire
 FROM reviews
 WHERE reviewer = 'worker'
-LIMIT 10;
+LIMIT 5;
 -- All should have would_rehire = NULL
 ```
 
@@ -329,6 +336,17 @@ npm run build
 ```
 
 Expected: Build completes without errors
+
+---
+
+## Key Differences from Business Reviews Worker Flow
+
+1. **Reviewer Type**: Worker reviews have `reviewer = 'worker'` instead of `'business'`
+2. **No Would Rehire**: Worker reviews do NOT have the `would_rehire` checkbox
+3. **Target Entity**: Worker reviews target businesses, stored with `business_id`
+4. **Display Location**: Worker reviews appear on business's reviews page
+5. **Rating Impact**: Worker reviews affect business average rating, not worker reliability score
+6. **Icon**: Worker reviews show Briefcase icon instead of Building icon
 
 ---
 
@@ -360,13 +378,13 @@ Due to sandbox environment restrictions, some automated testing cannot be perfor
 | TC1: Login as Worker User | ☐ Pass ☐ Fail | |
 | TC2: Navigate to Completed Booking | ☐ Pass ☐ Fail | |
 | TC3: Click Write Review Button | ☐ Pass ☐ Fail | |
-| TC4: Submit Review | ☐ Pass ☐ Fail | |
+| TC4: Submit Review (No Would Rehire) | ☐ Pass ☐ Fail | |
 | TC5: Verify Review in Business Page | ☐ Pass ☐ Fail | |
-| TC6: Verify Business Rating Update | ☐ Pass ☐ Fail | |
+| TC6: Verify Business Average Rating Update | ☐ Pass ☐ Fail | |
 | TC7: Review Validation | ☐ Pass ☐ Fail | |
 | TC8: Multiple Reviews Constraint | ☐ Pass ☐ Fail | |
 | TC9: Empty Comment Test | ☐ Pass ☐ Fail | |
-| TC10: No Would Rehire for Workers | ☐ Pass ☐ Fail | |
+| TC10: No Would Rehire Checkbox | ☐ Pass ☐ Fail | |
 
 ### Overall Status: ☐ Pass ☐ Fail
 
