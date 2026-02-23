@@ -35,11 +35,13 @@ Official documentation repository for **Daily Worker Hub** - Web MVP.
 | **analysis-bali-competitor-deep-dive.md** | Competitor Analysis (@balijobs, FB Groups, etc.) | ✅ Complete |
 | **analysis-bali-daily-worker-social-media.md** | Social Media Recruitment Trends | ✅ Complete |
 | **whitepaper.md** | Project Whitepaper | ✅ Complete |
+| **SETUP.md** | Development Setup Guide (Supabase, Android, Web Environment) | ✅ Complete |
+| **SOCIAL_PLATFORM_SETUP.md** | Social Platform Integration Guide (Instagram/Facebook OAuth, API Setup) | ✅ Complete |
 | **README.md** | This file | ✅ Complete |
 
 ### Setup & Deployment
 
-See `Setup.md` and `Architecture.md` for detailed setup instructions:
+See `SETUP.md`, `SOCIAL_PLATFORM_SETUP.md`, and `Architecture.md` for detailed setup instructions:
 
 1. **VPS Setup** (Ubuntu 22.04)
    - Install Docker, Nginx, Node.js, PM2
