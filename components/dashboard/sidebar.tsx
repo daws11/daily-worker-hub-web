@@ -3,6 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useAuth } from "@/app/providers/auth-provider"
+import { useMessages } from "@/lib/hooks/use-messages"
 import { cn } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -10,15 +11,30 @@ import { SidebarItem } from "./sidebar-item"
 import { UserMenu } from "./user-menu"
 import { workerNavItems, businessNavItems } from "./navigation-config"
 import { Briefcase } from "lucide-react"
+import type { NavItem } from "./navigation-config"
 
 interface SidebarProps {
   className?: string
 }
 
 export function Sidebar({ className }: SidebarProps) {
-  const { userRole } = useAuth()
+  const { user, userRole } = useAuth()
+  const { unreadCount } = useMessages({
+    userId: user?.id,
+    autoFetch: true,
+  })
 
-  const navItems = userRole === "worker" ? workerNavItems : businessNavItems
+  const navItems = React.useMemo(() => {
+    const baseItems = userRole === "worker" ? workerNavItems : businessNavItems
+
+    return baseItems.map((item) => {
+      // Add unread badge to Messages menu item
+      if (item.href === "/worker/messages" || item.href === "/business/messages") {
+        return { ...item, badge: unreadCount }
+      }
+      return item
+    })
+  }, [userRole, unreadCount])
 
   return (
     <div

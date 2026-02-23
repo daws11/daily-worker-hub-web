@@ -5,6 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import type { NavItem } from "./navigation-config"
+import { UnreadBadge } from "@/components/messaging/unread-badge"
 
 interface SidebarItemProps extends NavItem {
   onClose?: () => void
@@ -14,6 +15,7 @@ export function SidebarItem({
   href,
   label,
   icon: Icon,
+  badge,
   onClose,
 }: SidebarItemProps) {
   const pathname = usePathname()
@@ -32,7 +34,10 @@ export function SidebarItem({
       )}
     >
       <Icon className={cn("h-4 w-4", isActive && "text-accent-foreground")} />
-      {label}
+      <span className="flex-1">{label}</span>
+      {badge !== undefined && badge > 0 && (
+        <UnreadBadge count={badge} size="sm" />
+      )}
     </Link>
   )
 }
