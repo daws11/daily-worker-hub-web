@@ -3,7 +3,7 @@
   "spec": "023-progressive-web-app-pwa-capabilities",
   "state": "building",
   "subtasks": {
-    "completed": 6,
+    "completed": 7,
     "total": 10,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 13,
+    "number": 14,
     "started_at": "2026-02-24T01:16:34.891110"
   },
-  "last_update": "2026-02-24T02:15:03.712707"
+  "last_update": "2026-02-24T02:16:08.788453"
 }
