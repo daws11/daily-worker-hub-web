@@ -12,11 +12,11 @@ type UsersRow = Database["public"]["Tables"]["users"]["Row"]
 type AuthContextType = {
   user: User | null
   session: Session | null
-  userRole: 'worker' | 'business' | null
+  userRole: 'worker' | 'business' | 'admin' | null
   isLoading: boolean
-  signIn: (email: string, password: string, role: 'worker' | 'business') => Promise<void>
+  signIn: (email: string, password: string, role: 'worker' | 'business' | 'admin') => Promise<void>
   signOut: () => Promise<void>
-  signUp: (email: string, password: string, fullName: string, role: 'worker' | 'business') => Promise<void>
+  signUp: (email: string, password: string, fullName: string, role: 'worker' | 'business' | 'admin') => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -24,7 +24,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
-  const [userRole, setUserRole] = useState<'worker' | 'business' | null>(null)
+  const [userRole, setUserRole] = useState<'worker' | 'business' | 'admin' | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetchUserRole()
   }, [user])
 
-  const signUp = async (email: string, password: string, fullName: string, role: 'worker' | 'business') => {
+  const signUp = async (email: string, password: string, fullName: string, role: 'worker' | 'business' | 'admin') => {
     setIsLoading(true)
     try {
       // 1. Sign up with Supabase Auth
@@ -123,7 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signIn = async (email: string, password: string, role: 'worker' | 'business') => {
+  const signIn = async (email: string, password: string, role: 'worker' | 'business' | 'admin') => {
     setIsLoading(true)
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -146,8 +146,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Redirect based on role
       if (role === 'worker') {
         router.push("/dashboard-worker-jobs")
-      } else {
+      } else if (role === 'business') {
         router.push("/dashboard-business-jobs")
+      } else {
+        router.push("/dashboard-admin")
       }
     } catch (error) {
       console.error('Sign in error:', error)
