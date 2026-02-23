@@ -64,7 +64,9 @@
             "command": "supabase migration up && echo 'Migration applied'",
             "expected": "Migration applied"
           },
-          "status": "completed"
+          "status": "completed",
+          "notes": "Migration file created with RLS policies, indexes, and helper functions following the established patterns from the codebase.",
+          "updated_at": "2026-02-23T19:32:22.059547+00:00"
         },
         {
           "id": "subtask-1-4",
@@ -82,7 +84,9 @@
             "command": "psql 'postgresql://postgres:postgres@localhost:54322/postgres' -c '\\d jobs' | grep platform_settings",
             "expected": "platform_settings"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Migration file created with platform_settings JSONB column, GIN index for efficient querying, and partial indexes for platform-specific filtering. Column stores per-job platform posting overrides (instagram, facebook).",
+          "updated_at": "2026-02-24T03:33:00.000000+00:00"
         },
         {
           "id": "subtask-1-5",
@@ -671,5 +675,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T19:29:11.811Z"
+  "updated_at": "2026-02-23T19:32:47.408Z",
+  "last_updated": "2026-02-23T19:32:22.059554+00:00"
 }
