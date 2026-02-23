@@ -259,4 +259,54 @@ Next Session: Coder agent will begin Phase 1, Subtask 1-1
   * Connection last_used_at timestamp updates
   * 5 helper functions: buildInstagramCaption, formatCurrency, generateJobImageUrl, markJobPostFailed, markJobPostPosted, updateConnectionLastUsed
 
-Next: Phase 2, Subtask 2-3 - Create social-facebook edge function for posting to Facebook Graph API
+[2026-02-24] Subtask 2-3: COMPLETED
+- Created social-facebook edge function for posting to Facebook Graph API
+- File: supabase/functions/social-facebook/index.ts
+- Features:
+  * POST endpoint: Posts job listings to Facebook pages
+  * Job/connection fetching from database with verification
+  * Facebook message formatting with emojis and hashtags
+  * IDR currency formatting for Indonesian context
+  * Facebook Graph API v18.0 page feed posting
+  * Message with job details, link to job, and call-to-action
+  * Optional image attachment with job image URL
+  * Job post status tracking (pending/posted/failed)
+  * Duplicate post detection (skip if already posted)
+  * Error handling with database updates
+  * Connection last_used_at timestamp updates
+  * 5 helper functions: buildFacebookMessage, formatCurrency, markJobPostFailed, markJobPostPosted, updateConnectionLastUsed
+
+[2026-02-24] Subtask 2-4: COMPLETED
+- Created social-distribute edge function for orchestrating multi-platform posting
+- File: supabase/functions/social-distribute/index.ts
+- Features:
+  * POST endpoint: Orchestrates posting to multiple social platforms
+  * Fetches all active social connections for a business
+  * Groups connections by platform type for efficiency
+  * Supports optional platform filtering (platforms array)
+  * Supports custom content per platform (custom_content object)
+  * Calls platform-specific edge functions (social-facebook, social-instagram)
+  * Returns detailed results with success/failure status per platform
+  * Summary statistics: total, successful, failed, already_posted
+  * Error handling with partial success support
+  * 4 helper functions: fetchActiveConnections, groupConnectionsByPlatform, distributeToPlatform, formatDistributionResults
+
+[2026-02-24] Subtask 2-5: COMPLETED
+- Created social-webhook edge function for handling platform webhook callbacks
+- File: supabase/functions/social-webhook/index.ts
+- Features:
+  * POST endpoint: Handles webhook callbacks from social platforms
+  * Webhook signature verification using X-Webhook-Secret header
+  * Platform lookup against social_platforms table
+  * Event type determination from various payload formats
+  * Support for Instagram/Facebook Graph API webhook format
+  * Event handlers:
+    - metrics_update: Updates job_posts metrics (impressions, reach, engagement, likes, comments, shares)
+    - post_published: Marks job post as posted with platform_post_url
+    - post_deleted: Updates job post status to deleted
+    - post_failed: Records failure with error_message and error_code
+    - subscription_update: Acknowledges webhook subscription verification
+  * Test mode for empty payloads without signature
+  * 6 helper functions: determineEventType, processWebhookEvent, handleMetricsUpdate, handlePostPublished, handlePostDeleted, handlePostFailed, extractPlatformPostId, extractPostUrl, extractMetrics
+
+Next: Phase 3, Subtask 3-1 - Create social platform TypeScript types
