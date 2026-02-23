@@ -142,3 +142,25 @@ export interface JobApplication {
   created_at: string
   updated_at: string
 }
+
+export interface SavedSearch {
+  id: string
+  worker_id: string
+  name: string
+  filters: JobFilters
+  is_favorite: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateSavedSearchInput {
+  name: string
+  filters: JobFilters
+  is_favorite?: boolean
+}
+
+export interface UpdateSavedSearchInput {
+  name?: string
+  filters?: JobFilters
+  is_favorite?: boolean
+}

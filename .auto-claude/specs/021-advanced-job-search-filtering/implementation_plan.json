@@ -49,7 +49,7 @@
             "command": "psql $DATABASE_URL -c \"\\d saved_searches\" | head -5",
             "expected": "saved_searches"
           },
-          "status": "pending"
+          "status": "completed"
         }
       ]
     },
@@ -79,7 +79,7 @@
             "command": "npx tsc --noEmit",
             "expected": "no errors"
           },
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "subtask-2-2",
@@ -581,5 +581,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T09:52:29.575Z"
+  "updated_at": "2026-02-23T10:08:17.373Z"
 }
