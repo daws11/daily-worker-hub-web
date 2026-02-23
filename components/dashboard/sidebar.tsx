@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { useAuth } from "@/app/providers/auth-provider"
 import { useMessages } from "@/lib/hooks/use-messages"
+import { useRealtimeMessages } from "@/lib/hooks/use-realtime-messages"
 import { cn } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -19,10 +20,22 @@ interface SidebarProps {
 
 export function Sidebar({ className }: SidebarProps) {
   const { user, userRole } = useAuth()
-  const { unreadCount } = useMessages({
+  const { unreadCount, fetchUnreadCount } = useMessages({
     userId: user?.id,
     autoFetch: true,
   })
+
+  // Subscribe to realtime message updates for the current user
+  // This refreshes the unread count badge when new messages arrive
+  useRealtimeMessages(
+    { receiverId: user?.id, enabled: !!user?.id },
+    {
+      onMessageChange: async () => {
+        // Refresh unread count when any message change occurs
+        await fetchUnreadCount()
+      },
+    }
+  )
 
   const navItems = React.useMemo(() => {
     const baseItems = userRole === "worker" ? workerNavItems : businessNavItems

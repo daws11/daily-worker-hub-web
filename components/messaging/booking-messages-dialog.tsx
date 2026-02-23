@@ -82,9 +82,10 @@ export function BookingMessagesDialog({
   // Mark messages as read when dialog opens
   React.useEffect(() => {
     if (open) {
-      markBookingAsRead(bookingId, receiverId)
+      // Mark messages received by current user as read
+      markBookingAsRead(bookingId, currentUserId)
     }
-  }, [open, bookingId, receiverId, markBookingAsRead])
+  }, [open, bookingId, currentUserId, markBookingAsRead])
 
   const handleSendMessage = async (receiverId: string, content: string, bookingId?: string) => {
     await sendNewMessage(receiverId, content, bookingId)
