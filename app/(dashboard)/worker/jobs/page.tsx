@@ -7,8 +7,11 @@ import { JobFilters } from '@/components/job-marketplace/JobFilters'
 import { JobSort } from '@/components/job-marketplace/JobSort'
 import { JobListWithHeader } from '@/components/job-marketplace/JobList'
 import { JobDetailDialog } from '@/components/job-marketplace/JobDetailDialog'
+import { SavedSearchesDialog } from '@/components/job-marketplace/SavedSearchesDialog'
 import { CheckInOutButton } from '@/components/attendance/check-in-out-button'
 import { QRCodeScanner } from '@/components/attendance/qr-code-scanner'
+import { Button } from '@/components/ui/button'
+import { Bookmark } from 'lucide-react'
 import { useJobs } from '@/lib/hooks/useJobs'
 import { useBookings } from '@/lib/hooks/use-bookings'
 import { useAttendance } from '@/lib/hooks/use-attendance'
@@ -30,6 +33,9 @@ export default function WorkerJobsPage() {
   const [selectedJob, setSelectedJob] = useState<JobWithRelations | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isApplying, setIsApplying] = useState(false)
+
+  // State for saved searches dialog
+  const [savedSearchesOpen, setSavedSearchesOpen] = useState(false)
 
   // State for QR scanner
   const [scannerOpen, setScannerOpen] = useState(false)
@@ -170,6 +176,12 @@ export default function WorkerJobsPage() {
   // Handle sort change
   const handleSortChange = useCallback((newSort: JobSortOption) => {
     setSort(newSort)
+  }, [])
+
+  // Handle load saved search
+  const handleLoadSavedSearch = useCallback((savedFilters: JobFiltersType) => {
+    setFilters(savedFilters)
+    setSearch(savedFilters.search || '')
   }, [])
 
   // Handle retry on error
@@ -360,7 +372,16 @@ export default function WorkerJobsPage() {
                   className="w-full sm:max-w-md"
                 />
               </div>
-              <div className="flex-shrink-0">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="default"
+                  onClick={() => setSavedSearchesOpen(true)}
+                  className="flex-shrink-0"
+                >
+                  <Bookmark className="h-4 w-4 mr-2" />
+                  Saved Searches
+                </Button>
                 <JobSort
                   value={sort}
                   onSortChange={handleSortChange}
@@ -407,6 +428,15 @@ export default function WorkerJobsPage() {
           onSuccess={handleScannerSuccess}
         />
       )}
+
+      {/* Saved Searches Dialog */}
+      <SavedSearchesDialog
+        open={savedSearchesOpen}
+        onOpenChange={setSavedSearchesOpen}
+        currentFilters={{ ...filters, search }}
+        onLoadSearch={handleLoadSavedSearch}
+        workerId={user?.id}
+      />
     </div>
   )
 }
