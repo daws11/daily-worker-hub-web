@@ -398,7 +398,9 @@
               "Can select area from suggestions"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Replaced JobSearch with SearchAutocomplete in app/(dashboard)/worker/jobs/page.tsx:\n- Replaced JobSearch import with SearchAutocomplete\n- Added SearchSuggestion type import from lib/api/autocomplete\n- Added handleSuggestionSelect callback handler for future analytics/filter logic\n- Updated search component to use SearchAutocomplete with onSuggestionSelect prop\n- Updated placeholder text from 'Search jobs by keyword or position...' to 'Search jobs by position or area...'\n\nThe component now provides autocomplete suggestions for positions (job titles) and areas (addresses) when users type in the search box.",
+          "updated_at": "2026-02-23T21:00:00.000Z"
         }
       ]
     },
@@ -431,7 +433,9 @@
               "Clicking opens saved searches dialog"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Saved search button already implemented as part of subtask-4-4:\n- Button with Bookmark icon appears in search/sort bar\n- Clicking opens SavedSearchesDialog\n- Dialog integrated with currentFilters and onLoadSearch callbacks\n- Positioned alongside JobSort component near filters",
+          "updated_at": "2026-02-23T21:15:00.000Z"
         },
         {
           "id": "subtask-7-2",
@@ -603,6 +607,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T14:33:33.836Z",
+  "updated_at": "2026-02-23T15:08:45.019Z",
   "last_updated": "2026-02-23T20:10:00.000000+00:00"
 }
