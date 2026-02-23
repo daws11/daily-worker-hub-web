@@ -3,23 +3,23 @@
   "spec": "025-worker-earnings-income-analytics",
   "state": "building",
   "subtasks": {
-    "completed": 3,
+    "completed": 7,
     "total": 14,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Server Actions",
+    "current": "UI Components - Tables & Lists",
     "id": null,
-    "total": 1
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 5,
+    "number": 9,
     "started_at": "2026-02-24T04:44:32.321468"
   },
-  "last_update": "2026-02-24T04:58:48.437290"
+  "last_update": "2026-02-24T05:12:10.075161"
 }
