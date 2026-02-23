@@ -47,8 +47,8 @@
             "command": "npm run type-check",
             "expected": "No TypeScript errors"
           },
-          "status": "pending",
-          "notes": "Run 'supabase gen types typescript' to regenerate Database types from new schema"
+          "status": "completed",
+          "notes": "Added reviewer_type enum, updated reviews table with business_id, reviewer, and would_rehire columns, added foreign key relationship for business_id"
         }
       ]
     },
@@ -517,5 +517,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T09:48:00.000Z"
+  "updated_at": "2026-02-23T01:51:13.611Z"
 }

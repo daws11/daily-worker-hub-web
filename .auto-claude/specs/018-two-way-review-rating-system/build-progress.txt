@@ -1,0 +1,72 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Two-Way Review & Rating System
+Workspace: managed by orchestrator
+Started: 2026-02-23
+
+Workflow Type: feature
+Rationale: Multi-service feature requiring database schema changes, query functions, and multiple UI components with clear dependencies
+
+Session 1 (Planner):
+- Created implementation_plan.json
+- Created project_index.json
+- Created context.json
+- Created init.sh
+- Created build-progress.txt
+
+Phase Summary:
+- Phase 1 - Database Schema Migration: 2 subtasks, depends on []
+- Phase 2 - Review Query Functions: 2 subtasks, depends on [phase-1-database]
+- Phase 3 - Review UI Components: 4 subtasks, depends on [phase-2-queries]
+- Phase 4 - Profile Page Integration: 3 subtasks, depends on [phase-3-components]
+- Phase 5 - Reliability Score Integration: 2 subtasks, depends on [phase-2-queries]
+- Phase 6 - Testing and Validation: 3 subtasks, depends on [phase-4-integration, phase-5-reliability]
+
+Services Involved:
+- database: PostgreSQL (Supabase)
+- frontend: Next.js 14 + TypeScript + Tailwind CSS
+
+Key Findings from Investigation:
+- Existing reviews table only supports business->worker reviews
+- Current schema missing: reviewer_type, business_id, would_rehire
+- Need to update UNIQUE constraint from (booking_id, worker_id) to (booking_id, reviewer_type)
+- ReliabilityScore component exists with star display logic
+- Bookings queries show patterns for database operations
+- Forms use react-hook-form + zod validation pattern
+
+Implementation Details:
+- Migration will add reviewer_type ENUM ('business', 'worker')
+- Migration will add business_id column and would_rehire boolean
+- RLS policies need update to allow workers to create reviews
+- Review form dialog will conditionally show would_rehire for businesses
+- Reviews will be displayed on both worker and business profile pages
+
+Parallelism Analysis:
+- Max parallel phases: 2
+- Phase 4 (Integration) and Phase 5 (Reliability) can run in parallel
+- Recommended workers: 1 (mostly sequential due to dependencies)
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  npm run dev
+
+Then open:
+  - Frontend: http://localhost:3000
+  - Worker Reviews: http://localhost:3000/dashboard/worker/reviews
+  - Business Reviews: http://localhost:3000/dashboard/business/reviews
+
+=== END SESSION 1 ===
+
+Session 2 (subtask-1-2):
+- Completed: Update TypeScript types after database schema changes
+- Changes:
+  * Added reviewer_type enum ('business' | 'worker') to Database.public.Enums
+  * Updated reviews table Row type to include: business_id, reviewer, would_rehire
+  * Updated reviews table Insert and Update types with new columns
+  * Added foreign key relationship for business_id -> businesses(id)
+- File modified: lib/supabase/types.ts (git forced add as directory is gitignored)
+- Note: TypeScript type-check shows pre-existing errors in unrelated files, no errors in types.ts
+
+=== END SESSION 2 ===
