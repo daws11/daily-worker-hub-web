@@ -1,0 +1,675 @@
+{
+  "feature": "Multi-Platform Job Distribution",
+  "description": "Automatic job distribution to Instagram and Facebook. Businesses post once on Daily Worker Hub, and jobs are automatically formatted and posted to connected social media accounts.",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a multi-service feature requiring database schema changes, backend API development (edge functions), and frontend UI components. The workflow follows the standard feature pattern: Database → Backend → Frontend → Integration.",
+  "phases": [
+    {
+      "id": "phase-1-database",
+      "name": "Database Schema",
+      "type": "implementation",
+      "description": "Create database tables for social platforms, business connections, and job posts with RLS policies",
+      "depends_on": [],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create social_platforms table with platform types and configuration",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/20260224000001_create_social_platforms.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase db reset --db-url 'postgresql://postgres:postgres@localhost:54322/postgres' && echo 'Migration applied successfully'",
+            "expected": "Migration applied successfully"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Create business_social_connections table for OAuth tokens and settings",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/20260224000002_create_business_social_connections.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase migration up && echo 'Migration applied'",
+            "expected": "Migration applied"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Create job_posts table to track social media posts for each job",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/20260224000003_create_job_posts.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase migration up && echo 'Migration applied'",
+            "expected": "Migration applied"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-1-4",
+          "description": "Add platform_settings column to jobs table for per-job overrides",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/20260224000004_add_platform_settings_to_jobs.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/migrations/2025022200000009_create_bank_accounts.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql 'postgresql://postgres:postgres@localhost:54322/postgres' -c '\\d jobs' | grep platform_settings",
+            "expected": "platform_settings"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-1-5",
+          "description": "Generate TypeScript types from updated database schema",
+          "service": "database",
+          "files_to_create": [],
+          "files_to_modify": [
+            "lib/supabase/types.ts"
+          ],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'social_platforms\\|business_social_connections\\|job_posts' lib/supabase/types.ts && echo 'Types found'",
+            "expected": "Types found"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-backend",
+      "name": "Backend Edge Functions",
+      "type": "implementation",
+      "description": "Create Supabase Edge Functions for Instagram and Facebook API integrations",
+      "depends_on": [
+        "phase-1-database"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create social-connect edge function for OAuth flow (Instagram/Facebook)",
+          "service": "edge_functions",
+          "files_to_create": [
+            "supabase/functions/social-connect/index.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/functions/reliability-score/index.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase functions serve social-connect --no-verify-jwt && sleep 3 && curl -s http://localhost:54321/functions/v1/social-connect -X OPTIONS -I | grep -i 'access-control'",
+            "expected": "access-control-allow-origin"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create social-instagram edge function for posting to Instagram Graph API",
+          "service": "edge_functions",
+          "files_to_create": [
+            "supabase/functions/social-instagram/index.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/functions/reliability-score/index.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase functions deploy social-instagram --project-ref localhost && echo 'Function deployed'",
+            "expected": "Function deployed"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Create social-facebook edge function for posting to Facebook Graph API",
+          "service": "edge_functions",
+          "files_to_create": [
+            "supabase/functions/social-facebook/index.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/functions/reliability-score/index.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase functions deploy social-facebook --project-ref localhost && echo 'Function deployed'",
+            "expected": "Function deployed"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-4",
+          "description": "Create social-distribute edge function for orchestrating multi-platform posting",
+          "service": "edge_functions",
+          "files_to_create": [
+            "supabase/functions/social-distribute/index.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/functions/reliability-score/index.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "curl -s http://localhost:54321/functions/v1/social-distribute -X POST -H 'Content-Type: application/json' -d '{\"job_id\":\"test\"}' | grep -q 'success\\|error' && echo 'API responds'",
+            "expected": "API responds"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-5",
+          "description": "Create social-webhook edge function for handling platform webhook callbacks",
+          "service": "edge_functions",
+          "files_to_create": [
+            "supabase/functions/social-webhook/index.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/functions/payment-webhook/index.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "curl -s http://localhost:54321/functions/v1/social-webhook -X POST -d '{}' | grep -q 'received' && echo 'Webhook handles'",
+            "expected": "Webhook handles"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-frontend-types",
+      "name": "Frontend Types & Utilities",
+      "type": "implementation",
+      "description": "Create TypeScript types and server actions for social platform features",
+      "depends_on": [
+        "phase-1-database"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create social platform TypeScript types",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/types/social.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/types/job.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check 2>&1 | grep -q 'lib/types/social.ts' || echo 'No type errors in social.ts'",
+            "expected": "No type errors"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create social platform server actions (connect, disconnect, list)",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/actions/social.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/actions/job-applications.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'export.*function.*connectSocialPlatform\\|export.*function.*disconnectSocialPlatform\\|export.*function.*getSocialConnections' lib/actions/social.ts && echo 'Actions exported'",
+            "expected": "Actions exported"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Create content formatter utilities for Instagram and Facebook posts",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/utils/social-content.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/utils.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "node -e \"require('./lib/utils/social-content.ts').formatForInstagram({title: 'Test', description: 'Desc', budget_min: 100})\" && echo 'Formatter works'",
+            "expected": "Formatter works"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-frontend-ui",
+      "name": "Frontend UI Components",
+      "type": "implementation",
+      "description": "Create React components for social platform connection and post preview",
+      "depends_on": [
+        "phase-2-backend",
+        "phase-3-frontend-types"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create SocialPlatformConnect component for OAuth connection UI",
+          "service": "frontend",
+          "files_to_create": [
+            "app/components/social-platform-connect.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "app/components/job-posting-form.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/business/jobs",
+            "checks": [
+              "Social platform connect buttons render",
+              "No console errors"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Create SocialPostPreview component for previewing formatted posts",
+          "service": "frontend",
+          "files_to_create": [
+            "app/components/social-post-preview.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/card.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/business/jobs/create",
+            "checks": [
+              "Post preview renders for Instagram",
+              "Post preview renders for Facebook"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-3",
+          "description": "Create SocialPlatformSettings component for per-platform toggles",
+          "service": "frontend",
+          "files_to_create": [
+            "app/components/social-platform-settings.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/switch.tsx",
+            "components/ui/select.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/business/settings/social",
+            "checks": [
+              "Platform toggle switches work",
+              "Platform settings save"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-4",
+          "description": "Integrate social platform components into job posting form",
+          "service": "frontend",
+          "files_to_create": [],
+          "files_to_modify": [
+            "app/components/job-posting-form.tsx",
+            "app/(dashboard)/business/jobs/page.tsx"
+          ],
+          "patterns_from": [
+            "app/components/job-posting-form.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/business/jobs/create",
+            "checks": [
+              "Social platform options appear in form",
+              "Can enable/disable platforms per job"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-5",
+          "description": "Create social performance analytics page component",
+          "service": "frontend",
+          "files_to_create": [
+            "app/(dashboard)/business/analytics/page.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "app/(dashboard)/business/wallet/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/business/analytics",
+            "checks": [
+              "Analytics page loads",
+              "Shows post performance metrics"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-integration",
+      "name": "Integration & Testing",
+      "type": "integration",
+      "description": "Wire all services together, test end-to-end flow, add environment variables",
+      "depends_on": [
+        "phase-2-backend",
+        "phase-3-frontend-types",
+        "phase-4-frontend-ui"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Add environment variables for Instagram and Facebook API credentials",
+          "service": "frontend",
+          "files_to_create": [],
+          "files_to_modify": [
+            ".env.local.example"
+          ],
+          "patterns_from": [
+            ".env.local.example"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify .env.local.example contains INSTAGRAM_APP_ID, INSTAGRAM_APP_SECRET, INSTAGRAM_REDIRECT_URI, FACEBOOK_APP_ID, FACEBOOK_APP_SECRET, FACEBOOK_PAGE_ID"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Create database trigger for auto-distribution on job creation",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/20260224000005_create_auto_distribute_trigger.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql 'postgresql://postgres:postgres@localhost:54322/postgres' -c \"SELECT tgname FROM pg_trigger WHERE tgname LIKE '%auto_distribute%'\" | grep -q 'auto_distribute' && echo 'Trigger exists'",
+            "expected": "Trigger exists"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-3",
+          "description": "End-to-end test: Create job and verify social distribution",
+          "service": "all",
+          "files_to_create": [
+            "scripts/test-social-distribution.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "scripts/test-e2e-worker-withdrawal.ts"
+          ],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Connect test Instagram account via OAuth",
+              "Create a new job posting with Instagram enabled",
+              "Verify job_posts table has new entry",
+              "Verify social-instagram function was called",
+              "Check Instagram test account for post"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-4",
+          "description": "Create Supabase function for webhook signature verification",
+          "service": "edge_functions",
+          "files_to_create": [
+            "supabase/functions/social-webhook/verify.ts"
+          ],
+          "files_to_modify": [
+            "supabase/functions/social-webhook/index.ts"
+          ],
+          "patterns_from": [
+            "supabase/functions/payment-webhook/index.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "curl -s http://localhost:54321/functions/v1/social-webhook -X POST -H 'X-Hub-Signature: test' -d '{}' | grep -q 'Invalid signature\\|verified' && echo 'Webhook verification works'",
+            "expected": "Webhook verification works"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-5",
+          "description": "Update documentation with social platform setup instructions",
+          "service": "frontend",
+          "files_to_create": [
+            "docs/SOCIAL_PLATFORM_SETUP.md"
+          ],
+          "files_to_modify": [
+            "docs/README.md"
+          ],
+          "patterns_from": [
+            "docs/SETUP.md"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Review documentation for clarity on OAuth flow, API setup, and troubleshooting"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 5,
+    "total_subtasks": 25,
+    "services_involved": [
+      "database",
+      "edge_functions",
+      "frontend"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 2,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-3-frontend-types"
+          ],
+          "reason": "Frontend types can be developed in parallel with backend edge functions (both depend only on database)"
+        }
+      ],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution due to tight dependencies between backend and frontend UI"
+    },
+    "startup_command": "npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "high",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "unit",
+      "integration",
+      "e2e"
+    ],
+    "security_scanning_required": true,
+    "staging_deployment_required": true,
+    "acceptance_criteria": [
+      "All database migrations apply successfully",
+      "Edge functions deploy without errors",
+      "OAuth flow works for Instagram and Facebook",
+      "Jobs auto-distribute to connected platforms",
+      "Post preview displays correctly",
+      "Performance analytics show engagement metrics",
+      "No sensitive tokens exposed in client code"
+    ],
+    "verification_steps": [
+      {
+        "name": "Type Checking",
+        "command": "npm run type-check",
+        "expected_outcome": "No TypeScript errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Database Migration Test",
+        "command": "supabase db reset --db-url 'postgresql://postgres:postgres@localhost:54322/postgres'",
+        "expected_outcome": "All migrations apply successfully",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Edge Function Deployment",
+        "command": "supabase functions deploy --project-ref localhost",
+        "expected_outcome": "All edge functions deploy",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "OAuth Integration Test",
+        "command": "node scripts/test-social-distribution.ts",
+        "expected_outcome": "OAuth flow completes successfully",
+        "type": "integration",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "End-to-End Job Distribution",
+        "command": "node scripts/test-social-distribution.ts",
+        "expected_outcome": "Job creates post on connected platforms",
+        "type": "e2e",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Secrets Scan",
+        "command": "grep -r 'sk_test\\|pk_test\\|APP_SECRET.*[a-zA-Z0-9]{20,}' --include='*.ts' --include='*.tsx' app/ lib/ | grep -v '.env' || echo 'No secrets found'",
+        "expected_outcome": "No secrets found",
+        "type": "security",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "High risk due to: (1) Third-party API integrations (Instagram/Facebook) which can fail, (2) OAuth security requirements, (3) Potential for exposed credentials in client code, (4) Complex multi-service coordination. Full testing and security scanning required."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": true,
+      "commands": [
+        "npm run type-check"
+      ],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": true,
+      "commands": [
+        "node scripts/test-social-distribution.ts"
+      ],
+      "services_to_test": [
+        "edge_functions",
+        "database"
+      ]
+    },
+    "e2e_tests": {
+      "required": true,
+      "commands": [
+        "node scripts/test-social-distribution.ts"
+      ],
+      "flows": [
+        "oauth-connect",
+        "job-create-distribute",
+        "post-performance-tracking"
+      ]
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/business/jobs/create",
+          "checks": [
+            "Social platform options render",
+            "Post preview works"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/business/settings/social",
+          "checks": [
+            "Platform connection buttons work",
+            "Settings save"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "social_platforms-table-exists",
+        "business_social_connections-table-exists",
+        "job_posts-table-exists",
+        "rls-policies-defined"
+      ]
+    },
+    "security_verification": {
+      "required": true,
+      "checks": [
+        "no-tokens-in-client-code",
+        "oauth-flow-secure",
+        "webhook-signature-verification",
+        "rls-policies-enforce-business-isolation"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "xstateState": "backlog",
+  "executionPhase": "coding",
+  "updated_at": "2026-02-23T19:14:05.455Z"
+}
