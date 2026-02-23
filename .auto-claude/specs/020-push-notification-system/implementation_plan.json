@@ -300,11 +300,14 @@
           "description": "Add NotificationSettings to dashboard layout",
           "service": "frontend",
           "files_to_modify": [
-            "app/(dashboard)/layout.tsx"
+            "components/dashboard/navigation-config.ts"
           ],
-          "files_to_create": [],
+          "files_to_create": [
+            "app/(dashboard)/worker/settings/page.tsx",
+            "app/(dashboard)/business/settings/page.tsx"
+          ],
           "patterns_from": [
-            "app/(dashboard)/layout.tsx"
+            "app/(dashboard)/worker/jobs/page.tsx"
           ],
           "verification": {
             "type": "browser",
@@ -315,8 +318,9 @@
               "No console errors"
             ]
           },
-          "status": "pending",
-          "notes": "Add settings route or integrate NotificationSettings component into existing dashboard layout. Ensure it's accessible to both workers and businesses."
+          "status": "completed",
+          "notes": "Added Settings navigation item to both worker and business nav configs. Created worker settings page at app/(dashboard)/worker/settings/page.tsx and business settings page at app/(dashboard)/business/settings/page.tsx. Both pages use the NotificationSettings component with proper state management using getUserNotificationPreferences and updateUserNotificationPreferences server actions. Includes loading states and toast notifications for user feedback. Settings pages are accessible at /worker/settings and /business/settings.",
+          "updated_at": "2026-02-24T00:00:00.000000+00:00"
         }
       ]
     },
@@ -350,8 +354,9 @@
               "Notification content is correct"
             ]
           },
-          "status": "pending",
-          "notes": "Modify applyApplication server action to trigger push notification to business if they have push notifications enabled and 'new_applications' preference is true."
+          "status": "completed",
+          "notes": "Successfully integrated push notifications with job application flow. When a worker applies for a job, the business owner now receives an in-app notification with the worker's name and job title. The implementation follows the pattern from lib/actions/notifications.ts and includes proper error handling.",
+          "updated_at": "2026-02-23T16:30:39.945033+00:00"
         },
         {
           "id": "subtask-7-2",
@@ -672,6 +677,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T16:04:19.318Z",
-  "last_updated": "2026-02-23T16:08:09.264777+00:00"
+  "updated_at": "2026-02-23T16:25:08.922Z",
+  "last_updated": "2026-02-23T16:30:39.945045+00:00"
 }

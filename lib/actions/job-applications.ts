@@ -3,6 +3,7 @@
 import { createClient } from "../supabase/server"
 import type { Database } from "../supabase/types"
 import { createNotification } from "./notifications"
+import { sendPushNotification, isNotificationTypeEnabled } from "./push-notifications"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"]
 type Job = Database["public"]["Tables"]["jobs"]["Row"]
@@ -304,6 +305,45 @@ export async function acceptApplication(bookingId: string, businessId: string): 
       return { success: false, error: `Gagal menerima lamaran: ${error.message}` }
     }
 
+    // Get job details for notification
+    const { data: jobDetails, error: jobError } = await supabase
+      .from("jobs")
+      .select("title")
+      .eq("id", booking.job_id)
+      .single()
+
+    if (!jobError && jobDetails) {
+      // Get worker's user_id for notification
+      const { data: workerDetails, error: workerError } = await supabase
+        .from("workers")
+        .select("user_id")
+        .eq("id", booking.worker_id)
+        .single()
+
+      if (!workerError && workerDetails) {
+        // Check if worker has booking_status notifications enabled
+        const { enabled: notificationsEnabled } = await isNotificationTypeEnabled(workerDetails.user_id, "booking_status")
+
+        if (notificationsEnabled) {
+          // Create in-app notification for worker
+          await createNotification(
+            workerDetails.user_id,
+            "Lamaran Diterima",
+            `Selamat! Lamaran Anda untuk pekerjaan ${jobDetails.title} telah diterima`,
+            `/dashboard-jobs?job=${booking.job_id}`
+          )
+
+          // Send push notification to worker
+          await sendPushNotification(
+            workerDetails.user_id,
+            "Lamaran Diterima",
+            `Selamat! Lamaran Anda untuk pekerjaan ${jobDetails.title} telah diterima`,
+            `/dashboard-jobs?job=${booking.job_id}`
+          )
+        }
+      }
+    }
+
     return { success: true, data }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat menerima lamaran" }
@@ -344,6 +384,45 @@ export async function rejectApplication(bookingId: string, businessId: string): 
 
     if (error) {
       return { success: false, error: `Gagal menolak lamaran: ${error.message}` }
+    }
+
+    // Get job details for notification
+    const { data: jobDetails, error: jobError } = await supabase
+      .from("jobs")
+      .select("title")
+      .eq("id", booking.job_id)
+      .single()
+
+    if (!jobError && jobDetails) {
+      // Get worker's user_id for notification
+      const { data: workerDetails, error: workerError } = await supabase
+        .from("workers")
+        .select("user_id")
+        .eq("id", booking.worker_id)
+        .single()
+
+      if (!workerError && workerDetails) {
+        // Check if worker has booking_status notifications enabled
+        const { enabled: notificationsEnabled } = await isNotificationTypeEnabled(workerDetails.user_id, "booking_status")
+
+        if (notificationsEnabled) {
+          // Create in-app notification for worker
+          await createNotification(
+            workerDetails.user_id,
+            "Lamaran Ditolak",
+            `Maaf, lamaran Anda untuk pekerjaan ${jobDetails.title} belum dapat diterima`,
+            `/dashboard-jobs?job=${booking.job_id}`
+          )
+
+          // Send push notification to worker
+          await sendPushNotification(
+            workerDetails.user_id,
+            "Lamaran Ditolak",
+            `Maaf, lamaran Anda untuk pekerjaan ${jobDetails.title} belum dapat diterima`,
+            `/dashboard-jobs?job=${booking.job_id}`
+          )
+        }
+      }
     }
 
     return { success: true, data }
