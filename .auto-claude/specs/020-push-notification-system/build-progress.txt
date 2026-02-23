@@ -587,3 +587,105 @@ before sending notifications, respecting user settings. The notification include
 links to the relevant job page for easy access.
 
 === END SESSION 12 ===
+
+=== SESSION 13: Subtask 7-3 Implementation ===
+Date: 2026-02-24
+
+Subtask 7-3: Integrate push notifications with payment confirmations (notify both parties)
+Status: ✅ COMPLETED
+
+Files Modified:
+- supabase/functions/payment-webhook/index.ts
+
+Implementation Details:
+- Modified payment-webhook edge function to send push notifications when payment succeeds
+- Added web-push import for VAPID authentication
+- Added configureVapidKeys() function for Web Push API configuration
+- Added sendPaymentNotification() helper function that:
+  * Checks user notification preferences (payment_confirmation)
+  * Creates in-app notifications in the notifications table
+  * Sends push notifications using Web Push API directly
+  * Handles expired subscriptions (HTTP 410) by cleaning them up
+  * Uses correct column names from push_subscriptions table (keys_p256h, keys_auth)
+- Payment success flow:
+  * Business owner always receives notification on successful wallet top-up
+  * If payment metadata includes booking_id, worker also receives notification
+  * Notifications include formatted amount and relevant links
+  * Indonesian messages for user-friendly communication
+- Updated transaction query to include metadata field
+- Notifications sent after wallet is successfully credited
+- Errors in notification sending don't fail the webhook (logged but ignored)
+
+Notification Content:
+- Business notification:
+  * Title: "Pembayaran Berhasil"
+  * Body: "Top-up wallet sebesar Rp {amount} telah berhasil. Saldo Anda telah ditambahkan."
+  * Link: /dashboard-business-wallet
+- Worker notification (when payment is for a booking):
+  * Title: "Pembayaran Diterima"
+  * Body: "Pembayaran sebesar Rp {amount} untuk pekerjaan "{job_title}" telah berhasil."
+  * Link: /dashboard-jobs
+
+Git Commit:
+- 01f53fa - auto-claude: subtask-7-3 - Integrate push notifications with payment confirmations
+
+Quality Checklist:
+- ✅ Follows patterns from reference files (lib/actions/notifications.ts, send-push-notification edge function)
+- ✅ No console.log/print debugging statements
+- ✅ Error handling in place (try-catch with graceful degradation)
+- ✅ Verification requires manual payment flow testing
+- ✅ Clean commit with descriptive message
+
+Note: The integration sends both in-app notifications and push notifications when payments succeed.
+Business users are notified of successful wallet top-ups. If the payment is related to a booking (via metadata.booking_id),
+the worker also receives a payment confirmation notification. The implementation respects user notification preferences
+by checking the payment_confirmation setting before sending notifications.
+
+=== END SESSION 13 ===
+
+=== SESSION 14: Subtask 7-5 Implementation ===
+Date: 2026-02-24
+
+Subtask 7-5: Initialize push notification subscription on app mount for authenticated users
+Status: ✅ COMPLETED
+
+Files Modified:
+- app/providers/auth-provider.tsx
+
+Implementation Details:
+- Added push notification initialization to AuthProvider for authenticated users
+- When a user logs in, the app now:
+  * Requests notification permission (if not already set)
+  * Subscribes them to push notifications using Web Push API
+  * Stores the subscription in the database
+- Key implementation details:
+  * Import subscribeToPushNotifications action from lib/actions/push-notifications
+  * Add useEffect hook that initializes push notifications when user is authenticated
+  * Check browser support (serviceWorker, PushManager, Notification APIs)
+  * Request notification permission on first visit for authenticated users
+  * Subscribe to push notifications and store subscription in database
+  * Handle existing subscriptions by verifying they are stored in database
+  * Use ref (pushInitRef) to prevent re-initialization on re-renders
+  * Silent error handling to avoid interrupting user experience
+  * Reset ref when user logs out to allow re-initialization on next login
+  * Convert VAPID key from base64 to Uint8Array for Web Push API
+  * Register service worker if not already registered
+  * Check for existing subscription before creating new one
+- No changes needed to layout.tsx as AuthProvider is already included there
+
+Git Commit:
+- 2d4d2e5 - auto-claude: subtask-7-5 - Initialize push notification subscription on app mount
+
+Quality Checklist:
+- ✅ Follows patterns from reference files (app/providers/auth-provider.tsx)
+- ✅ No console.log/print debugging statements
+- ✅ Error handling in place (silent failure to not interrupt UX)
+- ✅ TypeScript type-check passes (no new errors related to auth-provider.tsx)
+- ✅ Clean commit with descriptive message
+
+Note: This implementation automatically requests push notification permission when users log in
+for the first time. The permission request appears in the browser, and if the user accepts, the
+subscription is stored in the push_subscriptions table for future use. The implementation respects
+user choices (does not re-ask if denied) and handles existing subscriptions gracefully.
+
+=== END SESSION 14 ===
