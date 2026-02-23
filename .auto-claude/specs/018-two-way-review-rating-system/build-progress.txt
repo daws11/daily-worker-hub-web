@@ -88,3 +88,60 @@ Session 3 (subtask-3-1):
 - Note: Component ready for use in review form dialog
 
 === END SESSION 3 ===
+
+Session 4 (subtask-3-2):
+- Completed: Create review form dialog component
+- Changes:
+  * Created components/review/review-form-dialog.tsx
+  * Dialog wrapper for modal review form with proper close/reset behavior
+  * Star rating input using ReviewRatingInput component (required field)
+  * Optional text comment field with textarea (max 1000 characters)
+  * 'Would rehire' checkbox - only shows for business reviews (isBusinessReview check)
+  * Form validation using react-hook-form + zod with onBlur mode
+  * Error handling: submit error alert, validation error summary, field-level errors
+  * Toast notifications for success and error states
+  * Different titles/descriptions for business vs worker reviews
+  * Form state management: isSubmitting, hasSubmitted, submitError, ratingValue
+  * onSubmit: sanitizes empty strings to undefined, creates review via createReview query
+  * Proper cleanup on dialog close: resets form, rating, error states
+  * Submit button disabled until rating is selected
+- Files created: components/review/review-form-dialog.tsx
+- Pattern followed: components/business/profile-form.tsx
+- Note: Component ready for integration with booking actions and profile pages
+
+=== END SESSION 4 ===
+
+Session 5 (subtask-3-3):
+- Completed: Create review display components
+- Changes:
+  * Created components/review/worker-review-display.tsx
+  * Created components/review/business-review-display.tsx
+  * WorkerReviewDisplay: Shows reviews about workers (from businesses)
+    - Star rating display with color coding (green/yellow/orange/red based on rating)
+    - Numeric rating value display (e.g., "4.5")
+    - Relative date formatting (Today, Yesterday, X days/weeks/months ago)
+    - Optional comment display with muted text style
+    - "Would Rehire" badge with CheckCircle2 icon (only for worker reviews)
+    - Reviewer info display: business avatar, business name, date
+    - Size variants (sm/md/lg) with appropriate spacing and text sizes
+    - Empty state handling in WorkerReviewList component
+  * BusinessReviewDisplay: Shows reviews about businesses (from workers)
+    - Star rating display with same color coding
+    - Numeric rating value display
+    - Relative date formatting
+    - Optional comment display
+    - Reviewer info display: worker avatar, worker name, Briefcase icon, date
+    - No would_rehire badge (worker-only field)
+    - Same size variants and empty state handling
+  * Both components follow patterns from:
+    - reliability-score.tsx: Star display logic, color coding based on rating
+    - worker-application-card.tsx: Card layout, avatar usage, date formatting
+  * Internal helper functions:
+    - getInitials(name): Generates initials from name for avatar fallback
+    - formatDate(dateString): Converts date to relative format
+    - StarRating component: Reusable star rating display with proper ARIA labels
+- Files created: components/review/worker-review-display.tsx, components/review/business-review-display.tsx
+- Pattern followed: components/worker/reliability-score.tsx, components/booking/worker-application-card.tsx
+- Note: Components verified with TypeScript compilation, ready for profile page integration
+
+=== END SESSION 5 ===
