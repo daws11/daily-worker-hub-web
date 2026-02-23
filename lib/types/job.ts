@@ -43,6 +43,7 @@ export interface Job {
   address: string
   lat: number
   lng: number
+  is_urgent: boolean
   created_at: string
   updated_at: string
 }

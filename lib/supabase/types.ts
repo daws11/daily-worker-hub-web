@@ -202,6 +202,7 @@ export type Database = {
           deadline: string | null
           description: string | null
           id: string
+          is_urgent: boolean
           lat: number | null
           lng: number | null
           requirements: string | null
@@ -219,6 +220,7 @@ export type Database = {
           deadline?: string | null
           description?: string | null
           id?: string
+          is_urgent?: boolean
           lat?: number | null
           lng?: number | null
           requirements?: string | null
@@ -236,6 +238,7 @@ export type Database = {
           deadline?: string | null
           description?: string | null
           id?: string
+          is_urgent?: boolean
           lat?: number | null
           lng?: number | null
           requirements?: string | null
