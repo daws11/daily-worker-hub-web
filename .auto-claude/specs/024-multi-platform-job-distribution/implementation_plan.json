@@ -196,7 +196,9 @@
             "command": "curl -s http://localhost:54321/functions/v1/social-distribute -X POST -H 'Content-Type: application/json' -d '{\"job_id\":\"test\"}' | grep -q 'success\\|error' && echo 'API responds'",
             "expected": "API responds"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created social-distribute edge function that orchestrates multi-platform posting. Features include: fetching all active social connections for a business, grouping connections by platform type, supporting optional platform filtering, supporting custom content per platform, calling platform-specific edge functions (social-facebook, social-instagram), returning detailed results with success/failure status, summary statistics (total, successful, failed, already_posted). All quality checks passed: follows reliability-score pattern, proper error handling, CORS headers configured, no console.log statements.",
+          "updated_at": "2026-02-24T04:11:00.000000+00:00"
         },
         {
           "id": "subtask-2-5",
@@ -683,6 +685,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T20:07:15.208Z",
+  "updated_at": "2026-02-23T20:09:56.388Z",
   "last_updated": "2026-02-23T20:09:15.742945+00:00"
 }
