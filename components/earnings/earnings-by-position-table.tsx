@@ -79,7 +79,7 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
             <div className="flex items-center gap-2">
-              {showIcon && <Briefcase className="h-5 w-5 text-muted-foreground" />}
+              {showIcon && <Briefcase className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
               <CardTitle>{title}</CardTitle>
             </div>
             <CardDescription>{description}</CardDescription>
@@ -100,14 +100,14 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
           <Card ref={ref} className={cn("w-full", className)} {...props}>
             <CardHeader>
               <div className="flex items-center gap-2">
-                {showIcon && <Briefcase className="h-5 w-5 text-muted-foreground" />}
+                {showIcon && <Briefcase className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
                 <CardTitle>{title}</CardTitle>
               </div>
               <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Briefcase className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                <Briefcase className="h-12 w-12 text-muted-foreground/50 mb-3" aria-hidden="true" />
                 <p className="text-sm text-muted-foreground">
                   Belum ada data pendapatan berdasarkan posisi
                 </p>
@@ -139,7 +139,7 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
             {bestPerformingPosition && (
               <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
                 <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="h-4 w-4 text-primary" />
+                  <TrendingUp className="h-4 w-4 text-primary" aria-hidden="true" />
                   <span className="text-sm font-medium text-primary">Posisi Terbaik</span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -165,17 +165,17 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
             )}
 
             {/* Table */}
-            <div className="rounded-md border">
+            <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[60px]">Peringkat</TableHead>
-                    <TableHead>Posisi Pekerjaan</TableHead>
-                    <TableHead>Kategori</TableHead>
-                    <TableHead className="text-right">Total Pendapatan</TableHead>
-                    <TableHead className="text-right">Pekerjaan</TableHead>
-                    <TableHead className="text-right">Rata-rata</TableHead>
-                    <TableHead>Pekerjaan Terakhir</TableHead>
+                    <TableHead scope="col" className="w-[60px]">Peringkat</TableHead>
+                    <TableHead scope="col">Posisi Pekerjaan</TableHead>
+                    <TableHead scope="col">Kategori</TableHead>
+                    <TableHead scope="col" className="text-right">Total Pendapatan</TableHead>
+                    <TableHead scope="col" className="text-right">Pekerjaan</TableHead>
+                    <TableHead scope="col" className="text-right">Rata-rata</TableHead>
+                    <TableHead scope="col">Pekerjaan Terakhir</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -197,7 +197,7 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             {isBestPerforming && (
-                              <TrendingUp className="h-4 w-4 text-primary" />
+                              <TrendingUp className="h-4 w-4 text-primary" aria-hidden="true" />
                             )}
                             <span>{position.position_title}</span>
                           </div>
@@ -220,7 +220,7 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
+                            <Calendar className="h-3 w-3" aria-hidden="true" />
                             <span>{formatDate(position.last_booking_date)}</span>
                           </div>
                         </TableCell>
@@ -232,20 +232,20 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
             </div>
 
             {/* Summary statistics */}
-            <div className="flex items-center justify-between pt-2 border-t text-sm">
-              <div className="text-center flex-1">
+            <div className="flex items-center justify-between pt-2 border-t text-sm flex-wrap gap-2">
+              <div className="text-center flex-1 min-w-[100px]">
                 <p className="text-xs text-muted-foreground">Total Pendapatan</p>
                 <p className="font-semibold">
                   {formatIDR(data.reduce((sum, item) => sum + item.total_earnings, 0))}
                 </p>
               </div>
-              <div className="text-center flex-1 border-x px-4">
+              <div className="text-center flex-1 min-w-[100px] border-x px-4">
                 <p className="text-xs text-muted-foreground">Total Pekerjaan</p>
                 <p className="font-semibold">
                   {data.reduce((sum, item) => sum + item.bookings_count, 0)}
                 </p>
               </div>
-              <div className="text-center flex-1">
+              <div className="text-center flex-1 min-w-[100px]">
                 <p className="text-xs text-muted-foreground">Rata-rata per Posisi</p>
                 <p className="font-semibold">
                   {formatIDR(

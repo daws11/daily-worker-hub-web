@@ -43,7 +43,7 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
             <div className="flex items-center gap-2">
-              {showIcon && <BarChart3 className="h-5 w-5 text-muted-foreground" />}
+              {showIcon && <BarChart3 className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
               <CardTitle>{title}</CardTitle>
             </div>
             <CardDescription>{description}</CardDescription>
@@ -64,7 +64,7 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
           <Card ref={ref} className={cn("w-full", className)} {...props}>
             <CardHeader>
               <div className="flex items-center gap-2">
-                {showIcon && <BarChart3 className="h-5 w-5 text-muted-foreground" />}
+                {showIcon && <BarChart3 className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
                 <CardTitle>{title}</CardTitle>
               </div>
               <CardDescription>{description}</CardDescription>
@@ -221,14 +221,14 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
             </div>
 
             {/* Summary statistics */}
-            <div className="flex items-center justify-between pt-2 border-t text-sm">
-              <div className="text-center flex-1">
+            <div className="flex items-center justify-between pt-2 border-t text-sm flex-wrap gap-2">
+              <div className="text-center flex-1 min-w-[100px]">
                 <p className="text-xs text-muted-foreground">Total Pendapatan</p>
                 <p className="font-semibold">
                   {formatIDR(chartData.reduce((sum, item) => sum + item.earnings, 0))}
                 </p>
               </div>
-              <div className="text-center flex-1 border-x px-4">
+              <div className="text-center flex-1 min-w-[100px] border-x px-4">
                 <p className="text-xs text-muted-foreground">Rata-rata</p>
                 <p className="font-semibold">
                   {formatIDR(
@@ -236,7 +236,7 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
                   )}
                 </p>
               </div>
-              <div className="text-center flex-1">
+              <div className="text-center flex-1 min-w-[100px]">
                 <p className="text-xs text-muted-foreground">Tertinggi</p>
                 <p className="font-semibold">{formatIDR(maxEarnings)}</p>
               </div>

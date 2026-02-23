@@ -85,7 +85,7 @@ const ProjectedIncomeCard = React.forwardRef<HTMLDivElement, ProjectedIncomeCard
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
             <div className="flex items-center gap-2">
-              {showIcon && <TrendingUp className="h-5 w-5 text-muted-foreground" />}
+              {showIcon && <TrendingUp className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
               <CardTitle>{title}</CardTitle>
             </div>
             <CardDescription>{description}</CardDescription>
@@ -105,14 +105,14 @@ const ProjectedIncomeCard = React.forwardRef<HTMLDivElement, ProjectedIncomeCard
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
             <div className="flex items-center gap-2">
-              {showIcon && <TrendingUp className="h-5 w-5 text-muted-foreground" />}
+              {showIcon && <TrendingUp className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
               <CardTitle>{title}</CardTitle>
             </div>
             <CardDescription>{description}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center justify-center py-6 text-center">
-              <AlertCircle className="h-8 w-8 text-muted-foreground mb-2" />
+              <AlertCircle className="h-8 w-8 text-muted-foreground mb-2" aria-hidden="true" />
               <p className="text-sm text-muted-foreground">
                 Data tidak cukup untuk membuat proyeksi
               </p>
@@ -173,10 +173,15 @@ const ProjectedIncomeCard = React.forwardRef<HTMLDivElement, ProjectedIncomeCard
             {projection.factors.trend_percentage !== 0 && (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Tren:</span>
-                <span className={cn(
-                  "text-sm font-medium",
-                  projection.factors.trend_percentage > 0 ? "text-green-600" : "text-red-600"
-                )}>
+                <span
+                  className={cn(
+                    "text-sm font-medium",
+                    projection.factors.trend_percentage > 0 ? "text-green-600" : "text-red-600"
+                  )}
+                  aria-label={`${
+                    projection.factors.trend_percentage > 0 ? "Kenaikan" : "Penurunan"
+                  } ${Math.abs(projection.factors.trend_percentage).toFixed(1)}%`}
+                >
                   {projection.factors.trend_percentage > 0 ? "+" : ""}
                   {projection.factors.trend_percentage.toFixed(1)}%
                 </span>
@@ -218,8 +223,8 @@ const ProjectedIncomeCard = React.forwardRef<HTMLDivElement, ProjectedIncomeCard
 
             {/* Disclaimer for low confidence */}
             {projection.confidence === 'low' && (
-              <div className="flex items-start gap-2 p-3 bg-muted rounded-md">
-                <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div className="flex items-start gap-2 p-3 bg-muted rounded-md" role="alert" aria-live="polite">
+                <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" aria-hidden="true" />
                 <p className="text-xs text-muted-foreground">
                   Proyeksi ini memiliki tingkat keyakinan rendah. Selesaikan lebih banyak pekerjaan untuk meningkatkan akurasi.
                 </p>

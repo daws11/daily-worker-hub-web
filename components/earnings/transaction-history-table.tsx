@@ -180,16 +180,16 @@ const TransactionHistoryTable = React.forwardRef<HTMLDivElement, TransactionHist
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Jenis Transaksi</TableHead>
-                  <TableHead>Pekerjaan</TableHead>
-                  <TableHead>Bisnis</TableHead>
-                  <TableHead>Tanggal</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Jumlah</TableHead>
+                  <TableHead scope="col">Jenis Transaksi</TableHead>
+                  <TableHead scope="col">Pekerjaan</TableHead>
+                  <TableHead scope="col">Bisnis</TableHead>
+                  <TableHead scope="col">Tanggal</TableHead>
+                  <TableHead scope="col">Status</TableHead>
+                  <TableHead scope="col" className="text-right">Jumlah</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -197,25 +197,25 @@ const TransactionHistoryTable = React.forwardRef<HTMLDivElement, TransactionHist
                   <TableRow key={transaction.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
-                        {getTransactionIcon(transaction.type)}
+                        <span aria-hidden="true">{getTransactionIcon(transaction.type)}</span>
                         <span>{getTypeLabel(transaction.type)}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Briefcase className="h-3 w-3 text-muted-foreground" />
+                        <Briefcase className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
                         <span className="text-sm">{transaction.job_title}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Building2 className="h-3 w-3 text-muted-foreground" />
+                        <Building2 className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
                         <span className="text-sm text-muted-foreground">{transaction.business_name}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
+                        <Calendar className="h-3 w-3" aria-hidden="true" />
                         <span>{formatDate(transaction.created_at)}</span>
                       </div>
                     </TableCell>
@@ -225,8 +225,10 @@ const TransactionHistoryTable = React.forwardRef<HTMLDivElement, TransactionHist
                       </Badge>
                     </TableCell>
                     <TableCell className={`text-right font-medium ${getAmountColor(transaction.type)}`}>
-                      {getAmountPrefix(transaction.type)}
-                      {formatIDR(transaction.amount)}
+                      <span aria-label={`${getTypeLabel(transaction.type)}: ${formatIDR(transaction.amount)}`}>
+                        {getAmountPrefix(transaction.type)}
+                        {formatIDR(transaction.amount)}
+                      </span>
                     </TableCell>
                   </TableRow>
                 ))}

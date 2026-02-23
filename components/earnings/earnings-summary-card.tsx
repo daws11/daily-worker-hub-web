@@ -41,7 +41,7 @@ const EarningsSummaryCard = React.forwardRef<HTMLDivElement, EarningsSummaryCard
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
             <div className="flex items-center gap-2">
-              {showIcon && <TrendingUp className="h-5 w-5 text-muted-foreground" />}
+              {showIcon && <TrendingUp className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
               <CardTitle>{title}</CardTitle>
             </div>
             <CardDescription>{description}</CardDescription>
@@ -61,7 +61,7 @@ const EarningsSummaryCard = React.forwardRef<HTMLDivElement, EarningsSummaryCard
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
             <div className="flex items-center gap-2">
-              {showIcon && <TrendingUp className="h-5 w-5 text-muted-foreground" />}
+              {showIcon && <TrendingUp className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
               <CardTitle>{title}</CardTitle>
             </div>
             <CardDescription>{description}</CardDescription>
@@ -88,7 +88,7 @@ const EarningsSummaryCard = React.forwardRef<HTMLDivElement, EarningsSummaryCard
       <Card ref={ref} className={cn("w-full", className)} {...props}>
         <CardHeader>
           <div className="flex items-center gap-2">
-            {showIcon && <TrendingUp className="h-5 w-5 text-muted-foreground" />}
+            {showIcon && <TrendingUp className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
             <CardTitle>{title}</CardTitle>
           </div>
           <CardDescription>{description}</CardDescription>
@@ -112,7 +112,10 @@ const EarningsSummaryCard = React.forwardRef<HTMLDivElement, EarningsSummaryCard
             {summary.month_over_month_change !== 0 && (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-muted-foreground">Perubahan:</span>
-                <span className={cn("text-sm font-medium", changeColor)}>
+                <span
+                  className={cn("text-sm font-medium", changeColor)}
+                  aria-label={`${isPositiveChange ? "Kenaikan" : "Penurunan"} ${Math.abs(summary.month_over_month_change).toFixed(1)}%`}
+                >
                   {changePrefix}{summary.month_over_month_change.toFixed(1)}%
                 </span>
               </div>
