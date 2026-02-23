@@ -3,23 +3,23 @@
   "spec": "022-business-analytics-dashboard",
   "state": "building",
   "subtasks": {
-    "completed": 4,
+    "completed": 12,
     "total": 14,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Analytics UI Components",
+    "current": "Navigation Integration",
     "id": null,
-    "total": 8
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 7,
+    "number": 15,
     "started_at": "2026-02-24T01:43:37.079942"
   },
-  "last_update": "2026-02-24T02:25:41.699200"
+  "last_update": "2026-02-24T03:03:56.816502"
 }
