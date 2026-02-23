@@ -311,8 +311,9 @@
             "type": "manual",
             "instructions": "Verify review summary appears on worker profile, clicking shows reviews page"
           },
-          "status": "pending",
-          "notes": "Add review summary with star rating and review count to worker booking cards and profile"
+          "status": "completed",
+          "notes": "Added reviews section to BookingCard component with:\n- New BusinessRatingSummary interface for business rating data\n- New businessRating prop on BookingCardProps\n- Reviews section showing business rating from worker reviews (only for completed bookings)\n- Uses ReliabilityScore component to display average rating\n- Link to /dashboard/worker/reviews page\n- Follows pattern from reliability-score.tsx with star display and color coding\n- Handles null ratings gracefully with \"No ratings\" fallback text",
+          "updated_at": "2026-02-23T02:30:53.598167+00:00"
         }
       ]
     },
@@ -520,6 +521,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T02:25:11.843Z",
-  "last_updated": "2026-02-23T02:19:23.810982+00:00"
+  "updated_at": "2026-02-23T02:28:25.027Z",
+  "last_updated": "2026-02-23T02:30:53.598178+00:00"
 }
