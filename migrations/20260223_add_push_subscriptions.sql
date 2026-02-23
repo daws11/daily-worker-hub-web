@@ -63,6 +63,17 @@ CREATE POLICY "Service role can view all push subscriptions" ON push_subscriptio
   FOR SELECT USING (auth.role() = 'service_role');
 
 -- ----------------------------------------------------------------------------
+-- Create update_updated_at_column function if it doesn't exist
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ----------------------------------------------------------------------------
 -- Create trigger for updated_at timestamp
 -- ----------------------------------------------------------------------------
 CREATE TRIGGER update_push_subscriptions_updated_at

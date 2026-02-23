@@ -69,6 +69,17 @@ CREATE POLICY "Service role can view all notification preferences" ON user_notif
   FOR SELECT USING (auth.role() = 'service_role');
 
 -- ----------------------------------------------------------------------------
+-- Create update_updated_at_column function if it doesn't exist
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ----------------------------------------------------------------------------
 -- Create trigger for updated_at timestamp
 -- ----------------------------------------------------------------------------
 CREATE TRIGGER update_user_notification_preferences_updated_at
