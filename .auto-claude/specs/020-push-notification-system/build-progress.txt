@@ -536,3 +536,54 @@ For browser push notifications, the sendPushNotification function from push-noti
 integrated in a future update once the edge function infrastructure is fully tested.
 
 === END SESSION 11 ===
+
+=== SESSION 12: Subtask 7-2 Implementation ===
+Date: 2026-02-24
+
+Subtask 7-2: Integrate push notifications with booking status changes (notify workers of status updates)
+Status: ✅ COMPLETED
+
+Files Modified:
+- lib/actions/job-applications.ts
+
+Implementation Details:
+- Modified acceptApplication and rejectApplication functions to send notifications to workers
+- Added imports for sendPushNotification and isNotificationTypeEnabled from push-notifications.ts
+- When a business accepts a worker's application:
+  * Fetch job title from jobs table
+  * Fetch worker's user_id from workers table
+  * Check if worker has booking_status notifications enabled
+  * If enabled, create in-app notification with:
+    - Title: "Lamaran Diterima"
+    - Body: "Selamat! Lamaran Anda untuk pekerjaan {job_title} telah diterima"
+    - Link: /dashboard-jobs?job={job_id}
+  * Send push notification with same content
+- When a business rejects a worker's application:
+  * Fetch job title from jobs table
+  * Fetch worker's user_id from workers table
+  * Check if worker has booking_status notifications enabled
+  * If enabled, create in-app notification with:
+    - Title: "Lamaran Ditolak"
+    - Body: "Maaf, lamaran Anda untuk pekerjaan {job_title} belum dapat diterima"
+    - Link: /dashboard-jobs?job={job_id}
+  * Send push notification with same content
+- Proper error handling for each database query
+- Notification creation uses await but doesn't block the main operation
+- Follows existing patterns from lib/actions/notifications.ts
+
+Git Commit:
+- 8e7f1ed - auto-claude: subtask-7-2 - Integrate push notifications with booking status changes
+
+Quality Checklist:
+- ✅ Follows patterns from reference files (lib/actions/notifications.ts)
+- ✅ No console.log/print debugging statements
+- ✅ Error handling in place (try-catch with descriptive error messages)
+- ✅ TypeScript type-check passes (no new errors in job-applications.ts)
+- ✅ Clean commit with descriptive message
+
+Note: This integration creates both in-app and push notifications for workers when their booking
+status changes (accepted/rejected). The implementation checks the worker's notification preferences
+before sending notifications, respecting user settings. The notification includes the job title and
+links to the relevant job page for easy access.
+
+=== END SESSION 12 ===
