@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from './providers/auth-provider'
 import { Toaster } from '../components/ui/sonner'
+import { PWAInstallPrompt } from '@/components/pwa-install-prompt'
+import { PWAOfflineBanner } from '@/components/pwa-offline-banner'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -51,6 +53,8 @@ export default function RootLayout({
           {children}
         </AuthProvider>
         <Toaster />
+        <PWAOfflineBanner />
+        <PWAInstallPrompt />
       </body>
     </html>
   )
