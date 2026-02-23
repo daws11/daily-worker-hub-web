@@ -41,8 +41,8 @@ export async function createNotification(
       is_read: false,
     }
 
-    const { data, error } = await supabase
-      .from("notifications")
+    const { data, error } = await (supabase
+      .from("notifications") as any)
       .insert(newNotification)
       .select()
       .single()
@@ -80,8 +80,8 @@ export async function markNotificationAsRead(
     }
 
     // Update the notification as read
-    const { data, error } = await supabase
-      .from("notifications")
+    const { data, error } = await (supabase
+      .from("notifications") as any)
       .update({ is_read: true })
       .eq("id", notificationId)
       .eq("user_id", userId)
@@ -105,8 +105,8 @@ export async function markAllNotificationsAsRead(userId: string): Promise<Notifi
   try {
     const supabase = await createClient()
 
-    const { data, error } = await supabase
-      .from("notifications")
+    const { data, error } = await (supabase
+      .from("notifications") as any)
       .update({ is_read: true })
       .eq("user_id", userId)
       .eq("is_read", false)

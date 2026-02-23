@@ -176,25 +176,27 @@ export async function getJobById(id: string): Promise<{
       return { data: null, error: new Error('Job not found') }
     }
 
+    const jobData = data as JobWithRelations
+
     const jobWithRelations: JobWithRelations = {
-      id: data.id,
-      business_id: data.business_id,
-      category_id: data.category_id,
-      title: data.title,
-      description: data.description,
-      requirements: data.requirements,
-      budget_min: data.budget_min,
-      budget_max: data.budget_max,
-      status: data.status,
-      deadline: data.deadline,
-      address: data.address,
-      lat: data.lat,
-      lng: data.lng,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-      category: data.category,
-      business: data.business,
-      skills: data.skills || [],
+      id: jobData.id,
+      business_id: jobData.business_id,
+      category_id: jobData.category_id,
+      title: jobData.title,
+      description: jobData.description,
+      requirements: jobData.requirements,
+      budget_min: jobData.budget_min,
+      budget_max: jobData.budget_max,
+      status: jobData.status,
+      deadline: jobData.deadline,
+      address: jobData.address,
+      lat: jobData.lat,
+      lng: jobData.lng,
+      created_at: jobData.created_at,
+      updated_at: jobData.updated_at,
+      category: jobData.category,
+      business: jobData.business,
+      skills: jobData.skills || [],
     }
 
     return { data: jobWithRelations, error: null }

@@ -56,11 +56,14 @@ export async function applyForJob(jobId: string, workerId: string): Promise<Appl
       return { success: false, error: "Pekerjaan tidak ditemukan" }
     }
 
+    // Type the job data properly
+    const jobData = job as Pick<Job, 'business_id'>
+
     // Create the booking (application)
     const newBooking: BookingInsert = {
       job_id: jobId,
       worker_id: workerId,
-      business_id: job.business_id,
+      business_id: jobData.business_id,
       status: "pending",
       start_date: new Date().toISOString(),
       end_date: new Date().toISOString(),
@@ -69,7 +72,7 @@ export async function applyForJob(jobId: string, workerId: string): Promise<Appl
 
     const { data, error } = await supabase
       .from("bookings")
-      .insert(newBooking)
+      .insert(newBooking as any)
       .select()
       .single()
 
@@ -103,13 +106,15 @@ export async function cancelApplication(bookingId: string, workerId: string): Pr
       return { success: false, error: "Lamaran tidak ditemukan" }
     }
 
-    if (booking.status !== "pending") {
+    const bookingData = booking as Booking
+
+    if (bookingData.status !== "pending") {
       return { success: false, error: "Hanya lamaran yang masih pending yang bisa dibatalkan" }
     }
 
     // Update the booking status to cancelled
-    const { data, error } = await supabase
-      .from("bookings")
+    const { data, error } = await (supabase
+      .from("bookings") as any)
       .update({ status: "cancelled" })
       .eq("id", bookingId)
       .eq("worker_id", workerId)
@@ -245,13 +250,15 @@ export async function acceptApplication(bookingId: string, businessId: string): 
       return { success: false, error: "Lamaran tidak ditemukan" }
     }
 
-    if (booking.status !== "pending") {
+    const bookingData = booking as Booking
+
+    if (bookingData.status !== "pending") {
       return { success: false, error: "Hanya lamaran dengan status pending yang bisa diterima" }
     }
 
     // Update the booking status to accepted
-    const { data, error } = await supabase
-      .from("bookings")
+    const { data, error } = await (supabase
+      .from("bookings") as any)
       .update({ status: "accepted" })
       .eq("id", bookingId)
       .eq("business_id", businessId)
@@ -287,13 +294,15 @@ export async function rejectApplication(bookingId: string, businessId: string): 
       return { success: false, error: "Lamaran tidak ditemukan" }
     }
 
-    if (booking.status !== "pending") {
+    const bookingData = booking as Booking
+
+    if (bookingData.status !== "pending") {
       return { success: false, error: "Hanya lamaran dengan status pending yang bisa ditolak" }
     }
 
     // Update the booking status to rejected
-    const { data, error } = await supabase
-      .from("bookings")
+    const { data, error } = await (supabase
+      .from("bookings") as any)
       .update({ status: "rejected" })
       .eq("id", bookingId)
       .eq("business_id", businessId)

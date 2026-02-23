@@ -140,7 +140,7 @@ function FormSkillsSelectInner<
   placeholder,
   disabled,
   className,
-}: FormSkillsSelectProps<TFieldValues, TName> & {
+}: Pick<FormSkillsSelectProps<TFieldValues, TName>, "skills" | "placeholder" | "disabled" | "className"> & {
   field: { value: string[]; onChange: (value: string[]) => void }
 }) {
   return (

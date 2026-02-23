@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Wallet } from "lucide-react"
+import { Wallet as WalletIcon } from "lucide-react"
 
 import {
   Card,
@@ -57,7 +57,7 @@ const WalletBalance = React.forwardRef<HTMLDivElement, WalletBalanceProps>(
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
             <div className="flex items-center gap-2">
-              {showIcon && <Wallet className="h-5 w-5 text-muted-foreground" />}
+              {showIcon && <WalletIcon className="h-5 w-5 text-muted-foreground" />}
               <CardTitle>{getDefaultTitle()}</CardTitle>
             </div>
             <CardDescription>{getDefaultDescription()}</CardDescription>
@@ -77,7 +77,7 @@ const WalletBalance = React.forwardRef<HTMLDivElement, WalletBalanceProps>(
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
             <div className="flex items-center gap-2">
-              {showIcon && <Wallet className="h-5 w-5 text-muted-foreground" />}
+              {showIcon && <WalletIcon className="h-5 w-5 text-muted-foreground" />}
               <CardTitle>{getDefaultTitle()}</CardTitle>
             </div>
             <CardDescription>{getDefaultDescription()}</CardDescription>
@@ -99,7 +99,7 @@ const WalletBalance = React.forwardRef<HTMLDivElement, WalletBalanceProps>(
       <Card ref={ref} className={cn("w-full", className)} {...props}>
         <CardHeader>
           <div className="flex items-center gap-2">
-            {showIcon && <Wallet className="h-5 w-5 text-muted-foreground" />}
+            {showIcon && <WalletIcon className="h-5 w-5 text-muted-foreground" />}
             <CardTitle>{getDefaultTitle()}</CardTitle>
           </div>
           <CardDescription>{getDefaultDescription()}</CardDescription>

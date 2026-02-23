@@ -49,11 +49,8 @@ const publicRoutes = [
  * Routes that require authentication
  */
 const protectedRoutes = [
-  '/dashboard-business-jobs',
-  '/dashboard-worker-jobs',
-  '/dashboard/business',
-  '/dashboard/worker',
-  '/dashboard/worker/bookings',
+  '/worker',      // Protects all /worker/* routes
+  '/business',    // Protects all /business/* routes
 ]
 
 /**
@@ -95,12 +92,12 @@ export async function middleware(request: NextRequest) {
       // Redirect to appropriate dashboard based on user role
       const userRole = session.user?.user_metadata?.role
       if (userRole === 'worker') {
-        return NextResponse.redirect(new URL('/dashboard-worker-jobs', origin))
+        return NextResponse.redirect(new URL('/worker/jobs', origin))
       } else if (userRole === 'business') {
-        return NextResponse.redirect(new URL('/dashboard-business-jobs', origin))
+        return NextResponse.redirect(new URL('/business/jobs', origin))
       }
       // Default fallback
-      return NextResponse.redirect(new URL('/dashboard-worker-jobs', origin))
+      return NextResponse.redirect(new URL('/worker/jobs', origin))
     }
   }
 

@@ -61,7 +61,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       if (error) {
-        console.error('Error fetching user role:', error)
+        // User exists in auth but not in public.users - this is OK for unregistered users
+        // Just set role to null instead of logging error
+        setUserRole(null)
         return
       }
 
@@ -81,6 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           data: {
             full_name: fullName,
+            role: role,
           },
         },
       })
@@ -145,9 +148,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Redirect based on role
       if (role === 'worker') {
-        router.push("/dashboard-worker-jobs")
+        router.push("/worker/jobs")
       } else {
-        router.push("/dashboard-business-jobs")
+        router.push("/business/jobs")
       }
     } catch (error) {
       console.error('Sign in error:', error)

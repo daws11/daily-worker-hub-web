@@ -2,8 +2,8 @@ import { supabase } from './client'
 import type { Database } from './types'
 
 type BusinessRow = Database['public']['Tables']['businesses']['Row']
-type BusinessInsert = Database['public']['Tables']['businesses']['Insert']
-type BusinessUpdate = Database['public']['Tables']['businesses']['Update']
+type BusinessInsert = any
+type BusinessUpdate = any
 
 /**
  * Get a business profile by user ID
@@ -100,8 +100,8 @@ export async function updateBusinessProfile(
   businessData: BusinessUpdate
 ): Promise<{ data: BusinessRow | null; error?: string }> {
   try {
-    const { data, error } = await supabase
-      .from('businesses')
+    const { data, error } = await (supabase
+      .from('businesses') as any)
       .update(businessData)
       .eq('id', businessId)
       .select()

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Camera, CameraOff, X } from "lucide-react"
-import { Html5Qrcode, Html5QrcodeError } from "html5-qrcode"
+import { Html5Qrcode } from "html5-qrcode"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -69,12 +69,9 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
             // Process the QR code
             await processQRCode(decodedText)
           },
-          (errorMessage: string, error?: Html5QrcodeError) => {
+          (errorMessage: string) => {
             // Ignore scan errors (happens when no QR code is in frame)
-            // Only log non-critical errors
-            if (error?.type !== 0) {
-              // Type 0 is "no code found", which is expected when scanning
-            }
+            // The html5-qrcode library sends error messages continuously when scanning
           }
         )
 
@@ -203,9 +200,11 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
     React.useEffect(() => {
       return () => {
         if (scannerRef.current) {
-          scannerRef.current.clear().catch(() => {
+          try {
+            scannerRef.current.clear()
+          } catch {
             // Ignore cleanup errors
-          })
+          }
         }
       }
     }, [])

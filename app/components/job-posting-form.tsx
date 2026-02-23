@@ -61,9 +61,7 @@ export const jobPostingFormSchema = z.object({
     "setup_crew",
     "supervisor",
     "manager",
-  ], {
-    required_error: "Please select a position type",
-  }),
+  ]),
   date: z.string().min(1, "Please select a date"),
   startTime: z.string().min(1, "Please select a start time"),
   endTime: z.string().min(1, "Please select an end time"),
