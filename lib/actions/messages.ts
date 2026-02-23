@@ -2,6 +2,7 @@
 
 import { createClient } from "../supabase/server"
 import type { Database } from "../supabase/types"
+import { createNotification } from "./notifications"
 
 type Message = Database["public"]["Tables"]["messages"]["Row"]
 
@@ -49,6 +50,29 @@ export async function sendMessage(
 
     if (error) {
       return { success: false, error: `Gagal mengirim pesan: ${error.message}` }
+    }
+
+    // Create notification for the receiver
+    try {
+      // Fetch sender's user profile to get their name
+      const { data: senderProfile } = await supabase
+        .from("users")
+        .select("full_name")
+        .eq("id", senderId)
+        .single()
+
+      const senderName = senderProfile?.full_name || "Seseorang"
+      const messagePreview = content.length > 50 ? content.substring(0, 50) + "..." : content
+
+      await createNotification(
+        receiverId,
+        `Pesan Baru dari ${senderName}`,
+        messagePreview,
+        "/messages"
+      )
+    } catch (notificationError) {
+      // Don't fail the message send if notification creation fails
+      // The message was already sent successfully
     }
 
     return { success: true, data }
