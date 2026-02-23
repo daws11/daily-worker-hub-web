@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { WageRangeSlider } from '@/components/job-marketplace/WageRangeSlider'
 import { JobFilters as JobFiltersType, PositionType } from '@/lib/types/job'
 import { X, Filter } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -31,8 +32,6 @@ const positionTypes: { value: PositionType; label: string }[] = [
 
 export function JobFilters({ filters, onFiltersChange, className }: JobFiltersProps) {
   const [localFilters, setLocalFilters] = useState<JobFiltersType>(filters || {})
-  const [wageMin, setWageMin] = useState<string>(filters?.wageMin?.toString() || '')
-  const [wageMax, setWageMax] = useState<string>(filters?.wageMax?.toString() || '')
   const [deadlineAfter, setDeadlineAfter] = useState<string>(filters?.deadlineAfter || '')
   const [deadlineBefore, setDeadlineBefore] = useState<string>(filters?.deadlineBefore || '')
 
@@ -63,23 +62,12 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
     onFiltersChange(newFilters)
   }
 
-  const handleWageMinChange = (value: string) => {
-    setWageMin(value)
-    const numValue = value ? parseInt(value, 10) : undefined
+  const handleWageRangeChange = (value: [number, number]) => {
+    const [minWage, maxWage] = value
     const newFilters = {
       ...localFilters,
-      wageMin: numValue,
-    }
-    setLocalFilters(newFilters)
-    onFiltersChange(newFilters)
-  }
-
-  const handleWageMaxChange = (value: string) => {
-    setWageMax(value)
-    const numValue = value ? parseInt(value, 10) : undefined
-    const newFilters = {
-      ...localFilters,
-      wageMax: numValue,
+      wageMin: minWage,
+      wageMax: maxWage,
     }
     setLocalFilters(newFilters)
     onFiltersChange(newFilters)
@@ -108,8 +96,6 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
   const handleClearFilters = () => {
     const clearedFilters: JobFiltersType = {}
     setLocalFilters(clearedFilters)
-    setWageMin('')
-    setWageMax('')
     setDeadlineAfter('')
     setDeadlineBefore('')
     onFiltersChange(clearedFilters)
@@ -176,28 +162,20 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
 
         {/* Wage Range Filter */}
         <div className="space-y-2">
-          <Label className="text-sm">Wage Range (IDR)</Label>
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <Input
-                type="number"
-                placeholder="Min"
-                min="0"
-                value={wageMin}
-                onChange={(e) => handleWageMinChange(e.target.value)}
-              />
-            </div>
-            <span className="text-muted-foreground text-sm">to</span>
-            <div className="flex-1">
-              <Input
-                type="number"
-                placeholder="Max"
-                min="0"
-                value={wageMax}
-                onChange={(e) => handleWageMaxChange(e.target.value)}
-              />
-            </div>
-          </div>
+          <WageRangeSlider
+            label="Wage Range"
+            min={0}
+            max={10000000}
+            step={100000}
+            value={
+              localFilters.wageMin !== undefined && localFilters.wageMax !== undefined
+                ? [localFilters.wageMin, localFilters.wageMax]
+                : undefined
+            }
+            defaultValue={[0, 10000000]}
+            onValueChange={handleWageRangeChange}
+            currency="IDR"
+          />
         </div>
 
         {/* Deadline Filter */}
