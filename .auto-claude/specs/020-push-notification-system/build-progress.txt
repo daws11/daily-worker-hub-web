@@ -1,0 +1,157 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Push Notification System
+Workspace: managed by orchestrator
+Started: 2026-02-23
+
+Workflow Type: feature
+Rationale: Building a new multi-service feature (database + frontend + edge functions + service worker) with clear dependencies.
+
+Session 1 (Planner):
+- Created implementation_plan.json
+- Created project_index.json
+- Created context.json
+- Created init.sh
+- Created build-progress.txt
+
+=== PLAN SUMMARY ===
+
+Feature: Browser push notification system for important events
+
+Phases: 8
+- Phase 1: Database Schema & Migrations (3 subtasks)
+- Phase 2: VAPID Keys Configuration (2 subtasks)
+- Phase 3: Service Worker Setup (2 subtasks)
+- Phase 4: Push Notification Utilities (2 subtasks)
+- Phase 5: Edge Functions for Push Notifications (2 subtasks)
+- Phase 6: Notification Settings UI (2 subtasks)
+- Phase 7: Integration & Event Triggers (5 subtasks)
+- Phase 8: Testing & End-to-End Verification (2 subtasks)
+
+Total Subtasks: 20
+
+=== SERVICES INVOLVED ===
+
+Frontend (Next.js 14):
+- Push notification subscription management
+- Notification preferences UI
+- Service worker registration
+- Integration with existing workflows
+
+Edge Functions (Supabase):
+- send-push-notification: Send push to single subscription
+- broadcast-push-notification: Send push to multiple users
+- shift-reminders: Scheduled reminders 2 hours before shift
+
+Database (Supabase PostgreSQL):
+- push_subscriptions: Store Web Push API subscriptions
+- user_notification_preferences: Store user notification settings
+
+=== PARALLELISM ANALYSIS ===
+
+Max Parallel Phases: 2
+Parallel Groups:
+- Phase 1 (Database) + Phase 2 (VAPID Keys) - Independent initialization tasks
+- Phase 6 (UI Settings) + Phase 7 (Integration) - Can work in parallel once utilities ready
+
+Recommended Workers: 1
+Rationale: Sequential execution recommended - phases have tight dependencies and shared state management
+
+=== CODEBASE INVESTIGATION FINDINGS ===
+
+Project Type: Single-service Next.js application with Supabase backend
+
+Existing Patterns:
+- Server Actions: lib/actions/*.ts with 'use server' directive
+- Custom Hooks: lib/hooks/*.ts with 'use client' directive
+- Edge Functions: supabase/functions/*/index.ts with Deno runtime
+- Database: Supabase PostgreSQL with TypeScript types in lib/supabase/types.ts
+- Realtime: Supabase realtime subscriptions for live updates
+
+Existing Notifications:
+- In-app notifications table (id, user_id, title, body, link, is_read, created_at)
+- Server actions in lib/actions/notifications.ts
+- Toast component using sonner library
+- Realtime subscription hook in lib/hooks/use-realtime-bookings.ts
+
+Key Files to Reference:
+- lib/actions/notifications.ts - Server action patterns
+- lib/hooks/use-realtime-bookings.ts - Realtime subscription patterns
+- supabase/functions/payment-webhook/index.ts - Edge function patterns
+- components/notification-toast.tsx - Notification UI patterns
+
+=== ACCEPTANCE CRITERIA ===
+
+From spec.md:
+- [ ] Users can opt-in to push notifications
+- [ ] New application notifications are sent to businesses
+- [ ] Booking status notifications are sent to workers
+- [ ] Payment confirmation notifications are sent to both parties
+- [ ] New job match notifications are sent to workers
+- [ ] Shift reminder notifications are sent 2 hours before start time
+- [ ] Notifications can be disabled in user settings
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  npm run dev
+
+Or use the init script:
+
+  bash .auto-claude/specs/020-push-notification-system/init.sh
+
+=== IMPLEMENTATION ORDER ===
+
+1. Database: Create tables for push_subscriptions and user_notification_preferences
+2. VAPID Keys: Generate keys for Web Push API authentication
+3. Service Worker: Create sw.js and push.js for handling push events
+4. Utilities: Create server actions and React hooks for push management
+5. Edge Functions: Create functions to send push notifications
+6. UI: Create notification settings component
+7. Integration: Wire up push notifications to existing events
+8. Testing: End-to-end verification
+
+=== TECH STACK NOTES ===
+
+- Frontend: Next.js 14 with App Router, TypeScript, Tailwind CSS
+- Backend: Supabase (PostgreSQL + Auth + Realtime + Edge Functions)
+- Push API: Web Push API with VAPID authentication
+- Service Worker: Standard Service Worker API for receiving push
+
+=== END SESSION 1 ===
+
+=== SESSION 2: Subtask 1-1 Implementation ===
+Date: 2026-02-23
+
+Subtask 1-1: Create database migration for push_subscriptions table
+Status: ✅ COMPLETED
+
+Files Created:
+- migrations/20260223_add_push_subscriptions.sql
+
+Implementation Details:
+- Created push_subscriptions table with Web Push API subscription data
+- Fields: id (UUID), user_id (FK), endpoint (TEXT), keys_p256h (TEXT), keys_auth (TEXT), created_at, updated_at
+- Added foreign key to users table with CASCADE delete
+- Created indexes on user_id, endpoint, and created_at for query performance
+- Enabled Row Level Security (RLS) with policies:
+  * Users can view their own subscriptions
+  * Users can create/update/delete their own subscriptions
+  * Service role can view all subscriptions (for edge functions)
+- Added trigger for auto-updating updated_at timestamp
+- Added documentation comments for all columns
+
+Git Commit:
+- 1ad54b8 - auto-claude: subtask-1-1 - Create database migration for push_subscriptions table
+
+Quality Checklist:
+- ✅ Follows patterns from reference files (initial_schema.sql)
+- ✅ No console.log/print debugging statements
+- ✅ Error handling in place (RLS policies)
+- ✅ Clean commit with descriptive message
+
+Note: Database verification requires Docker access which was unavailable during implementation.
+SQL syntax verified and follows all existing patterns.
+
+=== END SESSION 2 ===

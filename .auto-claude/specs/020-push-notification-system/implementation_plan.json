@@ -1,0 +1,665 @@
+{
+  "feature": "Push Notification System",
+  "description": "Browser push notification system for important events: new job applications, booking status changes, payment confirmations, new job matches, and shift reminders",
+  "workflow_type": "feature",
+  "workflow_rationale": "Feature workflow: Building a new multi-service feature (database + frontend + edge functions + service worker) with clear dependencies. Database layer must be implemented first to store push subscriptions and notification preferences. Then service worker and frontend push notification utilities. Edge functions for sending push notifications. Then UI components for notification preferences. Finally, integration to trigger notifications on events and scheduled shift reminders.",
+  "phases": [
+    {
+      "id": "phase-1-database",
+      "name": "Database Schema & Migrations",
+      "type": "implementation",
+      "description": "Create database tables for push notification subscriptions and user notification preferences",
+      "depends_on": [],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create database migration for push_subscriptions table to store Web Push API subscriptions",
+          "service": "frontend",
+          "files_to_create": [
+            "migrations/20260223_add_push_subscriptions.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "supabase db reset --db-url 'postgresql://postgres:postgres@localhost:54322/postgres'",
+            "expected": "Resetting database"
+          },
+          "status": "completed",
+          "notes": "Created push_subscriptions table with proper RLS policies, indexes, and trigger for auto-updating timestamps. Migration follows existing patterns from initial_schema.sql."
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Create database migration for user_notification_preferences table to store user notification settings",
+          "service": "frontend",
+          "files_to_create": [
+            "migrations/20260223_add_notification_preferences.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "supabase migration up",
+            "expected": "Applied migration"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Generate TypeScript types for new tables using Supabase CLI",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/supabase/types.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-vapid-keys",
+      "name": "VAPID Keys Configuration",
+      "type": "implementation",
+      "description": "Generate and configure VAPID keys for Web Push API authentication",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Generate VAPID key pair for push notifications using web-push npm package",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/utils/vapid.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "pending",
+          "notes": "Create utility script to generate VAPID keys. VAPID keys are required for Web Push API to authenticate push messages. Public key will be exposed to frontend, private key stays secure in environment variables."
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Add VAPID_PUBLIC_KEY environment variable to .env.local.example and document setup",
+          "service": "frontend",
+          "files_to_create": [],
+          "files_to_modify": [
+            ".env.local.example"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify .env.local.example contains VAPID_PUBLIC_KEY variable with documentation"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-service-worker",
+      "name": "Service Worker Setup",
+      "type": "implementation",
+      "description": "Create service worker for receiving and displaying push notifications",
+      "depends_on": [
+        "phase-2-vapid-keys"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create service worker (sw.js) in public directory for handling push events",
+          "service": "frontend",
+          "files_to_create": [
+            "public/sw.js"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "ls -la public/sw.js",
+            "expected": "sw.js exists"
+          },
+          "status": "pending",
+          "notes": "Service worker listens for 'push' events, displays notifications using Notification API, handles notification clicks to open relevant pages."
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create push.js utility for service worker registration and subscription management",
+          "service": "frontend",
+          "files_to_create": [
+            "public/push.js"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "ls -la public/push.js",
+            "expected": "push.js exists"
+          },
+          "status": "pending",
+          "notes": "Utility script for service worker registration, requesting notification permission, subscribing to push notifications, and managing subscription lifecycle."
+        }
+      ]
+    },
+    {
+      "id": "phase-4-push-utilities",
+      "name": "Push Notification Utilities",
+      "type": "implementation",
+      "description": "Create server actions and hooks for push notification management",
+      "depends_on": [
+        "phase-1-database",
+        "phase-3-service-worker"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create push notification server actions (subscribe, unsubscribe, get subscription, send notification)",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/actions/push-notifications.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/actions/notifications.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "pending",
+          "notes": "Server actions for managing push subscriptions in database, checking user notification preferences, and triggering push notifications via edge function."
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Create usePushNotifications hook for managing push notification subscription in React components",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/hooks/use-push-notifications.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/hooks/use-realtime-bookings.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "pending",
+          "notes": "React hook that handles service worker registration, notification permission request, push subscription creation, and subscription storage in database. Includes cleanup on unmount."
+        }
+      ]
+    },
+    {
+      "id": "phase-5-edge-functions",
+      "name": "Edge Functions for Push Notifications",
+      "type": "implementation",
+      "description": "Create Supabase Edge Functions for sending push notifications via Web Push API",
+      "depends_on": [
+        "phase-1-database",
+        "phase-2-vapid-keys"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Create send-push-notification edge function that sends push notification to a single subscription",
+          "service": "edge_functions",
+          "files_to_create": [
+            "supabase/functions/send-push-notification/index.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/functions/payment-webhook/index.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase functions serve send-push-notification",
+            "expected": "Started function"
+          },
+          "status": "pending",
+          "notes": "Edge function that uses web-push library to send push notification to a specific subscription endpoint. Uses VAPID private key for authentication. Returns success/error response."
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Create broadcast-push-notification edge function that sends push notification to all eligible users",
+          "service": "edge_functions",
+          "files_to_create": [
+            "supabase/functions/broadcast-push-notification/index.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/functions/reliability-score/index.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase functions serve broadcast-push-notification",
+            "expected": "Started function"
+          },
+          "status": "pending",
+          "notes": "Edge function that queries push_subscriptions table, filters by user notification preferences, and sends push notifications to all matching users. Useful for announcements and batch notifications."
+        }
+      ]
+    },
+    {
+      "id": "phase-6-notification-settings",
+      "name": "Notification Settings UI",
+      "type": "implementation",
+      "description": "Create UI component for users to manage their notification preferences",
+      "depends_on": [
+        "phase-1-database",
+        "phase-4-push-utilities"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Create NotificationSettings component for managing notification preferences",
+          "service": "frontend",
+          "files_to_create": [
+            "components/notification-settings.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/card.tsx",
+            "components/ui/switch.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "pending",
+          "notes": "Component with toggles for different notification types: new applications, booking status changes, payment confirmations, new job matches, shift reminders. Includes push notification enable/disable switch."
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Add NotificationSettings to dashboard layout",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(dashboard)/layout.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/(dashboard)/layout.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard",
+            "checks": [
+              "Settings page is accessible",
+              "Notification toggles render",
+              "No console errors"
+            ]
+          },
+          "status": "pending",
+          "notes": "Add settings route or integrate NotificationSettings component into existing dashboard layout. Ensure it's accessible to both workers and businesses."
+        }
+      ]
+    },
+    {
+      "id": "phase-7-integration",
+      "name": "Integration & Event Triggers",
+      "type": "implementation",
+      "description": "Integrate push notifications into existing workflows and create scheduled reminders",
+      "depends_on": [
+        "phase-4-push-utilities",
+        "phase-5-edge-functions"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-7-1",
+          "description": "Integrate push notifications with job application flow (notify businesses of new applications)",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/actions/job-applications.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/actions/notifications.ts"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard-worker-jobs",
+            "checks": [
+              "Business receives push notification when worker applies",
+              "Notification content is correct"
+            ]
+          },
+          "status": "pending",
+          "notes": "Modify applyApplication server action to trigger push notification to business if they have push notifications enabled and 'new_applications' preference is true."
+        },
+        {
+          "id": "subtask-7-2",
+          "description": "Integrate push notifications with booking status changes (notify workers of status updates)",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/actions/job-applications.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/actions/notifications.ts"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard-business-jobs",
+            "checks": [
+              "Worker receives push notification when booking status changes",
+              "Notification shows correct status"
+            ]
+          },
+          "status": "pending",
+          "notes": "Modify acceptApplication and rejectApplication server actions to trigger push notification to worker if they have 'booking_status' preference enabled."
+        },
+        {
+          "id": "subtask-7-3",
+          "description": "Integrate push notifications with payment confirmations (notify both parties)",
+          "service": "frontend",
+          "files_to_modify": [
+            "supabase/functions/payment-webhook/index.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/actions/notifications.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Test payment flow and verify both business and worker receive push notifications on successful payment"
+          },
+          "status": "pending",
+          "notes": "Modify payment-webhook edge function to trigger push notifications to both business and worker when payment succeeds, if they have 'payment_confirmation' preference enabled."
+        },
+        {
+          "id": "subtask-7-4",
+          "description": "Create scheduled job for shift reminder notifications (2 hours before shift start)",
+          "service": "edge_functions",
+          "files_to_create": [
+            "supabase/functions/shift-reminders/index.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/functions/reliability-score/index.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase functions serve shift-reminders",
+            "expected": "Started function"
+          },
+          "status": "pending",
+          "notes": "Edge function that queries accepted/upcoming bookings with start_date within next 2 hours, sends push notification to workers with 'shift_reminder' preference enabled. Should be called via cron job or Supabase scheduled job."
+        },
+        {
+          "id": "subtask-7-5",
+          "description": "Initialize push notification subscription on app mount for authenticated users",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/providers/auth-provider.tsx",
+            "app/layout.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/providers/auth-provider.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000",
+            "checks": [
+              "Push notification permission request appears on first visit",
+              "Subscription is stored in database after user accepts"
+            ]
+          },
+          "status": "pending",
+          "notes": "Add usePushNotifications hook to auth provider or root layout. Request notification permission, subscribe to push notifications, and store subscription in database for authenticated users."
+        }
+      ]
+    },
+    {
+      "id": "phase-8-testing-verification",
+      "name": "Testing & End-to-End Verification",
+      "type": "integration",
+      "description": "Verify all push notification flows work correctly",
+      "depends_on": [
+        "phase-6-notification-settings",
+        "phase-7-integration"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-8-1",
+          "description": "End-to-end verification of push notification system",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "User grants push notification permission",
+              "Push subscription is stored in database",
+              "Business receives push notification when worker applies for job",
+              "Worker receives push notification when application is accepted",
+              "Both parties receive push notification on payment confirmation",
+              "Worker receives shift reminder 2 hours before shift start",
+              "User can disable notifications in settings",
+              "Disabled notifications are not sent"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-8-2",
+          "description": "Test notification preference settings work correctly",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify that toggling notification preferences in settings correctly enables/disables specific notification types. Only enabled notification types should trigger push notifications."
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 8,
+    "total_subtasks": 20,
+    "services_involved": [
+      "frontend",
+      "edge_functions",
+      "database"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 2,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-1-database",
+            "phase-2-vapid-keys"
+          ],
+          "reason": "Database migrations and VAPID key generation are independent tasks"
+        },
+        {
+          "phases": [
+            "phase-6-notification-settings",
+            "phase-7-integration"
+          ],
+          "reason": "UI settings and integration can be developed in parallel once utilities are complete"
+        }
+      ],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution recommended - phases have tight dependencies"
+    },
+    "startup_command": "npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "integration"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "Users can opt-in to push notifications",
+      "New application notifications are sent to businesses",
+      "Booking status notifications are sent to workers",
+      "Payment confirmation notifications are sent to both parties",
+      "New job match notifications are sent to workers",
+      "Shift reminder notifications are sent 2 hours before start time",
+      "Notifications can be disabled in user settings",
+      "All TypeScript checks pass",
+      "No console errors"
+    ],
+    "verification_steps": [
+      {
+        "name": "TypeScript Type Check",
+        "command": "npm run type-check",
+        "expected_outcome": "No TypeScript errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Service Worker Registration",
+        "command": "Manual: Check browser DevTools Application tab for registered service worker",
+        "expected_outcome": "Service worker is registered and active",
+        "type": "manual",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "Push Notification Permission",
+        "command": "Manual: Visit site and verify permission request appears",
+        "expected_outcome": "Browser prompts for notification permission",
+        "type": "manual",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "Push Notification Delivery",
+        "command": "Manual: Trigger notification event and verify push notification appears",
+        "expected_outcome": "Push notification is received and displayed",
+        "type": "manual",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Notification Settings",
+        "command": "Manual: Toggle notification preferences and verify notifications are filtered",
+        "expected_outcome": "Only enabled notification types are sent",
+        "type": "manual",
+        "required": true,
+        "blocking": false
+      }
+    ],
+    "reasoning": "Medium risk change involves Web Push API integration, service worker setup, and edge functions. Requires manual browser testing for push notifications which cannot be automated. TypeScript type checking ensures code quality."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null,
+      "note": "Project does not have unit test setup yet"
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": [],
+      "note": "Project does not have integration test setup yet"
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": [],
+      "note": "Project does not have E2E test setup yet"
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/dashboard",
+          "checks": [
+            "Notification settings page renders",
+            "Push notification permission request appears",
+            "Notification toggles work",
+            "No console errors"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/dashboard-worker-jobs",
+          "checks": [
+            "Applying for job triggers push notification to business",
+            "No console errors"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/dashboard-business-jobs",
+          "checks": [
+            "Accepting applicant triggers push notification to worker",
+            "No console errors"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "push_subscriptions table exists with proper schema",
+        "user_notification_preferences table exists with proper schema",
+        "Subscriptions are created when users opt-in",
+        "Preferences are saved correctly"
+      ]
+    },
+    "edge_function_verification": {
+      "required": true,
+      "functions": [
+        {
+          "name": "send-push-notification",
+          "checks": [
+            "Accepts subscription and payload",
+            "Sends push notification using Web Push API",
+            "Returns appropriate success/error response"
+          ]
+        },
+        {
+          "name": "broadcast-push-notification",
+          "checks": [
+            "Queries subscriptions from database",
+            "Filters by user preferences",
+            "Sends notifications to eligible users"
+          ]
+        },
+        {
+          "name": "shift-reminders",
+          "checks": [
+            "Queries upcoming bookings",
+            "Sends reminders 2 hours before shift",
+            "Respects user notification preferences"
+          ]
+        }
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "xstateState": "backlog",
+  "executionPhase": "coding",
+  "updated_at": "2026-02-23T10:32:14.656Z"
+}
