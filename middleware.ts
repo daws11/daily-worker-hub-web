@@ -56,6 +56,11 @@ const protectedRoutes = [
 ]
 
 /**
+ * Routes that require admin role
+ */
+const adminRoutes = ['/admin', '/admin/']
+
+/**
  * Middleware to protect routes
  * Checks for Supabase session and redirects unauthenticated users
  */
@@ -79,6 +84,9 @@ export async function middleware(request: NextRequest) {
   const isPublicRoute = publicRoutes.some((route) =>
     pathname === route || pathname.startsWith(route)
   )
+  const isAdminRoute = adminRoutes.some((route) =>
+    pathname.startsWith(route)
+  )
 
   // Redirect unauthenticated users from protected routes to login
   if (isProtectedRoute && !session) {
@@ -87,13 +95,37 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(redirectUrl)
   }
 
+  // Handle admin routes
+  if (isAdminRoute) {
+    // Redirect unauthenticated users to login
+    if (!session) {
+      const redirectUrl = new URL('/login', origin)
+      redirectUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    // Redirect authenticated non-admin users to their appropriate dashboard
+    const userRole = session.user?.user_metadata?.role
+    if (userRole !== 'admin') {
+      if (userRole === 'worker') {
+        return NextResponse.redirect(new URL('/dashboard-worker-jobs', origin))
+      } else if (userRole === 'business') {
+        return NextResponse.redirect(new URL('/dashboard-business-jobs', origin))
+      }
+      // Default fallback
+      return NextResponse.redirect(new URL('/dashboard-worker-jobs', origin))
+    }
+  }
+
   // Redirect authenticated users away from auth pages to dashboard
   if (isPublicRoute && session) {
     // Check if trying to access login/register while authenticated
     if (pathname === '/login' || pathname === '/register') {
       // Redirect to appropriate dashboard based on user role
       const userRole = session.user?.user_metadata?.role
-      if (userRole === 'worker') {
+      if (userRole === 'admin') {
+        return NextResponse.redirect(new URL('/admin', origin))
+      } else if (userRole === 'worker') {
         return NextResponse.redirect(new URL('/dashboard-worker-jobs', origin))
       } else if (userRole === 'business') {
         return NextResponse.redirect(new URL('/dashboard-business-jobs', origin))
