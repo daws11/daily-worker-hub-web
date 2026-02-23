@@ -416,8 +416,9 @@
             "command": "supabase functions serve shift-reminders",
             "expected": "Started function"
           },
-          "status": "pending",
-          "notes": "Edge function that queries accepted/upcoming bookings with start_date within next 2 hours, sends push notification to workers with 'shift_reminder' preference enabled. Should be called via cron job or Supabase scheduled job."
+          "status": "completed",
+          "notes": "Created shift-reminders edge function at supabase/functions/shift-reminders/index.ts. Queries bookings with start_date within next 2 hours (status accepted or in_progress), joins with workers to get user_id, filters by user_notification_preferences.shift_reminders, sends push notifications using Web Push API with VAPID authentication, creates in-app notifications, handles expired subscriptions (410) by cleaning them up. Returns detailed summary with total_bookings, total_workers, notifications_sent, failed, and expired_cleaned counts. Function should be called via cron job or Supabase scheduled job to periodically check for upcoming shifts. Follows patterns from reliability-score and broadcast-push-notification edge functions with proper error handling and Indonesian error messages.",
+          "updated_at": "2026-02-24T00:47:00.000000+00:00"
         },
         {
           "id": "subtask-7-5",
@@ -679,6 +680,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T16:39:45.868Z",
+  "updated_at": "2026-02-23T16:45:23.071Z",
   "last_updated": "2026-02-23T16:30:39.945045+00:00"
 }
