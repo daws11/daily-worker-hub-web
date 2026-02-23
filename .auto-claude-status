@@ -3,13 +3,13 @@
   "spec": "020-push-notification-system",
   "state": "building",
   "subtasks": {
-    "completed": 10,
+    "completed": 11,
     "total": 20,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Edge Functions for Push Notifications",
+    "current": "Notification Settings UI",
     "id": null,
     "total": 2
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 27,
+    "number": 30,
     "started_at": "2026-02-23T18:03:16.623203"
   },
-  "last_update": "2026-02-23T23:37:25.970676"
+  "last_update": "2026-02-24T00:04:19.282051"
 }
