@@ -1,13 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { Calendar, Clock, MapPin, DollarSign, Building2, CheckCircle } from "lucide-react"
+import { Calendar, Clock, MapPin, DollarSign, Building2, CheckCircle, MessageCircle } from "lucide-react"
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { BookingStatusBadge, type BookingStatus } from "@/components/worker/booking-status-badge"
 import { CancelBookingDialog } from "@/components/worker/cancel-booking-dialog"
+import { BookingMessagesDialog } from "@/components/messaging/booking-messages-dialog"
 
 export interface BookingJob {
   id: string
@@ -37,6 +38,7 @@ export interface Booking {
 
 export interface BookingCardProps {
   booking: Booking
+  workerId: string
   onCancel?: (bookingId: string) => void | Promise<void>
 }
 
@@ -72,9 +74,10 @@ function mapBookingStatus(
   return status as BookingStatus
 }
 
-function BookingCard({ booking, onCancel }: BookingCardProps) {
+function BookingCard({ booking, workerId, onCancel }: BookingCardProps) {
   const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false)
   const [isCancelling, setIsCancelling] = React.useState(false)
+  const [messageDialogOpen, setMessageDialogOpen] = React.useState(false)
 
   const handleCancelConfirm = async () => {
     if (!onCancel) return
@@ -147,20 +150,30 @@ function BookingCard({ booking, onCancel }: BookingCardProps) {
           </div>
         </CardContent>
 
-        <CardFooter className="flex justify-between pt-4">
+        <CardFooter className="flex justify-between items-center pt-4 gap-2">
           <span className="text-xs text-muted-foreground">
             Booked on {formatDate(booking.created_at)}
           </span>
-          {canCancel && onCancel && (
+          <div className="flex gap-2">
             <Button
-              variant="destructive"
+              variant="outline"
               size="sm"
-              onClick={() => setCancelDialogOpen(true)}
-              disabled={isCancelling}
+              onClick={() => setMessageDialogOpen(true)}
             >
-              Cancel Booking
+              <MessageCircle className="h-4 w-4 mr-1" />
+              Message
             </Button>
-          )}
+            {canCancel && onCancel && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setCancelDialogOpen(true)}
+                disabled={isCancelling}
+              >
+                Cancel Booking
+              </Button>
+            )}
+          </div>
         </CardFooter>
       </Card>
 
@@ -170,6 +183,17 @@ function BookingCard({ booking, onCancel }: BookingCardProps) {
         onConfirm={handleCancelConfirm}
         isLoading={isCancelling}
       />
+
+      {booking.business && (
+        <BookingMessagesDialog
+          bookingId={booking.id}
+          currentUserId={workerId}
+          receiverId={booking.business.id}
+          receiverName={booking.business.name}
+          open={messageDialogOpen}
+          onOpenChange={setMessageDialogOpen}
+        />
+      )}
     </>
   )
 }
