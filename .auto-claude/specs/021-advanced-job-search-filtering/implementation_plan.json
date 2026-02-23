@@ -1,0 +1,585 @@
+{
+  "feature": "Advanced Job Search & Filtering",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a multi-feature enhancement involving database changes, API enhancements, new UI components, and saved search functionality. The work follows a clear dependency order: database first, then API, then UI components, then integration.",
+  "phases": [
+    {
+      "id": "phase-1-database",
+      "name": "Database Schema Changes",
+      "type": "implementation",
+      "description": "Add is_urgent column to jobs table and create saved_searches table",
+      "depends_on": [],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Add is_urgent column to jobs table",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations"
+          ],
+          "files_to_create": [
+            "supabase/migrations/20260223000001_add_is_urgent_to_jobs.sql"
+          ],
+          "patterns_from": [
+            "supabase/migrations/20250222000000_add_booking_notes.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"\\d jobs\" | grep is_urgent",
+            "expected": "is_urgent"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Create saved_searches table with RLS policies",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations"
+          ],
+          "files_to_create": [
+            "supabase/migrations/20260223000002_create_saved_searches.sql"
+          ],
+          "patterns_from": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"\\d saved_searches\" | head -5",
+            "expected": "saved_searches"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-types",
+      "name": "Type Definitions",
+      "type": "implementation",
+      "description": "Update TypeScript types for new filters and saved searches",
+      "depends_on": [
+        "phase-1-database"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Update JobFilters type with new filter options",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/types/job.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/types/job.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "no errors"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create SavedSearch types and interfaces",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/types/job.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/types/job.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "no errors"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-api",
+      "name": "API Layer Enhancement",
+      "type": "implementation",
+      "description": "Add new filter support to getJobs API and create saved searches API",
+      "depends_on": [
+        "phase-2-types"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Add radius, verified, and emergency filters to getJobs",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/api/jobs.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/api/jobs.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify that getJobs function accepts new filter parameters: radius, verifiedOnly, isUrgent"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create saved searches API functions",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/api"
+          ],
+          "files_to_create": [
+            "lib/api/saved-searches.ts"
+          ],
+          "patterns_from": [
+            "lib/api/jobs.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify API functions: getSavedSearches, createSavedSearch, updateSavedSearch, deleteSavedSearch"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Create autocomplete API for positions and areas",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/api"
+          ],
+          "files_to_create": [
+            "lib/api/autocomplete.ts"
+          ],
+          "patterns_from": [
+            "lib/api/jobs.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify getSearchSuggestions function returns position and area suggestions"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-ui-components",
+      "name": "New UI Components",
+      "type": "implementation",
+      "description": "Create new UI components for advanced filters",
+      "depends_on": [
+        "phase-3-api"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create SearchAutocomplete component",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/job-marketplace/SearchAutocomplete.tsx"
+          ],
+          "patterns_from": [
+            "components/ui/select.tsx",
+            "components/job-marketplace/JobSearch.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard/worker/jobs",
+            "checks": [
+              "Autocomplete dropdown appears when typing in search",
+              "Positions and areas are suggested",
+              "Can select a suggestion from dropdown"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Create WageRangeSlider component",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/job-marketplace/WageRangeSlider.tsx"
+          ],
+          "patterns_from": [
+            "components/ui/select.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard/worker/jobs",
+            "checks": [
+              "Slider with two handles appears",
+              "Can drag handles to set min/max wage",
+              "Displays current wage range values"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-3",
+          "description": "Create DistanceRadiusFilter component",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/job-marketplace/DistanceRadiusFilter.tsx"
+          ],
+          "patterns_from": [
+            "components/job-marketplace/WageRangeSlider.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard/worker/jobs",
+            "checks": [
+              "Radius slider appears",
+              "Can adjust distance radius",
+              "Requires user location or shows location prompt"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-4",
+          "description": "Create SavedSearchesDialog component",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/job-marketplace/SavedSearchesDialog.tsx"
+          ],
+          "patterns_from": [
+            "components/ui/dialog.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard/worker/jobs",
+            "checks": [
+              "Dialog shows list of saved searches",
+              "Can save current filters",
+              "Can load a saved search",
+              "Can delete a saved search"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-enhance-filters",
+      "name": "Enhance JobFilters Component",
+      "type": "implementation",
+      "description": "Update JobFilters component with new filter options",
+      "depends_on": [
+        "phase-4-ui-components"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Add verified business and emergency filters to JobFilters",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/job-marketplace/JobFilters.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/job-marketplace/JobFilters.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard/worker/jobs",
+            "checks": [
+              "Verified business checkbox appears",
+              "Emergency only checkbox appears",
+              "Filters apply correctly when selected"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Replace wage inputs with WageRangeSlider",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/job-marketplace/JobFilters.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/job-marketplace/JobFilters.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard/worker/jobs",
+            "checks": [
+              "Wage range slider displays instead of two inputs",
+              "Slider responds to filter changes"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-3",
+          "description": "Add DistanceRadiusFilter to JobFilters",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/job-marketplace/JobFilters.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/job-marketplace/JobFilters.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard/worker/jobs",
+            "checks": [
+              "Distance radius filter appears",
+              "Request for location permission when used"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-6-enhance-search",
+      "name": "Enhance JobSearch Component",
+      "type": "implementation",
+      "description": "Replace JobSearch with SearchAutocomplete",
+      "depends_on": [
+        "phase-4-ui-components"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Replace JobSearch with SearchAutocomplete in worker jobs page",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard/worker/jobs",
+            "checks": [
+              "Search shows autocomplete suggestions",
+              "Can select position from suggestions",
+              "Can select area from suggestions"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-7-saved-searches",
+      "name": "Saved Searches Feature",
+      "type": "implementation",
+      "description": "Add saved search button and functionality",
+      "depends_on": [
+        "phase-4-ui-components"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-7-1",
+          "description": "Add saved search button to worker jobs page",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard/worker/jobs",
+            "checks": [
+              "Save search button appears near filters",
+              "Clicking opens saved searches dialog"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-7-2",
+          "description": "Create useSavedSearches hook",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/hooks"
+          ],
+          "files_to_create": [
+            "lib/hooks/useSavedSearches.ts"
+          ],
+          "patterns_from": [
+            "lib/hooks/useJobs.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify hook provides: savedSearches, saveSearch, loadSearch, deleteSearch functions"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-8-integration",
+      "name": "Integration & Testing",
+      "type": "integration",
+      "description": "End-to-end testing of all features together",
+      "depends_on": [
+        "phase-5-enhance-filters",
+        "phase-6-enhance-search",
+        "phase-7-saved-searches"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-8-1",
+          "description": "End-to-end verification of advanced job search",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Type in search and verify autocomplete suggestions appear",
+              "Select a position from suggestions and verify jobs update",
+              "Adjust wage range slider and verify filter applies",
+              "Set distance radius and verify location prompt",
+              "Enable verified business filter and verify only verified businesses show",
+              "Enable emergency filter and verify only urgent jobs show",
+              "Save current search and verify it appears in saved searches",
+              "Load a saved search and verify filters are applied"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 8,
+    "total_subtasks": 20,
+    "services_involved": [
+      "database",
+      "frontend"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 2,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-6-enhance-search",
+            "phase-7-saved-searches"
+          ],
+          "reason": "Both depend only on phase-4, modify different parts of the UI"
+        }
+      ],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution recommended due to tight dependencies"
+    },
+    "startup_command": "npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "unit",
+      "integration"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All existing tests pass",
+      "New code has test coverage",
+      "No TypeScript errors",
+      "All acceptance criteria from spec.md are met"
+    ],
+    "verification_steps": [
+      {
+        "name": "Type Check",
+        "command": "npm run type-check",
+        "expected_outcome": "No TypeScript errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Build Check",
+        "command": "npm run build",
+        "expected_outcome": "Build succeeds without errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Browser Verification",
+        "command": "Manual browser testing at http://localhost:3000/dashboard/worker/jobs",
+        "expected_outcome": "All filter options work correctly",
+        "type": "manual",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Medium risk change involves database schema changes and multiple new UI components. Type checking and build verification ensure code quality."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/dashboard/worker/jobs",
+          "checks": [
+            "Search autocomplete suggests positions and areas",
+            "Wage range slider filters by min/max",
+            "Distance radius filter works with location",
+            "Emergency filter shows only urgent jobs",
+            "Verified business filter shows only verified employers",
+            "Searches can be saved and loaded"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "is_urgent column exists on jobs table",
+        "saved_searches table exists with RLS policies"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "xstateState": "backlog",
+  "executionPhase": "coding",
+  "updated_at": "2026-02-23T09:52:29.575Z"
+}
