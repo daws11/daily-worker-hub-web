@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "013-payment-gateway-integration-qris-payouts",
+  "spec": "023-progressive-web-app-pwa-capabilities",
   "state": "building",
   "subtasks": {
-    "completed": 25,
-    "total": 26,
+    "completed": 4,
+    "total": 10,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Integration and Testing",
+    "current": "PWA Integration",
     "id": null,
-    "total": 1
+    "total": 5
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 36,
-    "started_at": "2026-02-22T15:25:22.780616"
+    "number": 10,
+    "started_at": "2026-02-24T01:16:34.891110"
   },
-  "last_update": "2026-02-22T18:37:53.034340"
+  "last_update": "2026-02-24T02:04:52.348123"
 }
