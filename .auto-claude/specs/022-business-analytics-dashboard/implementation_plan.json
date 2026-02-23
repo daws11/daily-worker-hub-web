@@ -1,0 +1,429 @@
+{
+  "feature": "Business Analytics Dashboard",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a new feature that builds on existing database patterns. It requires frontend-only development (new page, components, queries) that follows the existing dashboard structure. No backend API changes needed since Supabase handles data access.",
+  "phases": [
+    {
+      "id": "phase-1-setup",
+      "name": "Setup and Dependencies",
+      "type": "setup",
+      "description": "Install chart library and create type definitions",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Install recharts library for data visualization",
+          "service": "frontend",
+          "files_to_modify": [
+            "package.json"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "grep -q '\"recharts\"' package.json && echo 'recharts installed' || (npm install recharts && echo 'recharts installed')",
+            "expected": "recharts installed"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Create analytics type definitions",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/types/analytics.ts"
+          ],
+          "patterns_from": [
+            "lib/types/wallet.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit lib/types/analytics.ts 2>&1 | head -1 || echo 'OK'",
+            "expected": "OK"
+          },
+          "status": "completed",
+          "notes": "Created analytics type definitions following wallet.ts pattern. Includes PositionStats, HiringTrend, WorkerReliability, SpendingSummary, ComplianceStatus, and AnalyticsExportData types with filter types."
+        }
+      ]
+    },
+    {
+      "id": "phase-2-data-layer",
+      "name": "Data Query Functions",
+      "type": "implementation",
+      "description": "Create Supabase query functions for analytics data aggregation",
+      "depends_on": [
+        "phase-1-setup"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create analytics query functions file with spending, worker count, positions, reliability, and trends queries",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/supabase/queries/analytics.ts"
+          ],
+          "patterns_from": [
+            "lib/supabase/queries/bookings.ts",
+            "lib/supabase/queries/transactions.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Review lib/supabase/queries/analytics.ts - verify all functions exist: getBusinessSpending, getUniqueWorkerCount, getPopularPositions, getAverageReliabilityScore, getSeasonalTrends, getComplianceStatus"
+          },
+          "status": "completed",
+          "notes": "Created analytics query functions file with 6 functions: getBusinessSpending, getUniqueWorkerCount, getPopularPositions, getAverageReliabilityScore, getSeasonalTrends, getComplianceStatus. Follows bookings.ts and transactions.ts patterns with proper error handling and type definitions."
+        }
+      ]
+    },
+    {
+      "id": "phase-3-components",
+      "name": "Analytics UI Components",
+      "type": "implementation",
+      "description": "Create reusable analytics dashboard components",
+      "depends_on": [
+        "phase-2-data-layer"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create stats card component for displaying key metrics",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/analytics/analytics-stats-card.tsx"
+          ],
+          "patterns_from": [
+            "app/(dashboard)/business/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify component accepts title, value, icon, and trend props"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create spending chart component using recharts LineChart",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/analytics/analytics-spending-chart.tsx"
+          ],
+          "patterns_from": [
+            "components/analytics/analytics-stats-card.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify component displays spending over time with proper formatting"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Create positions chart component using recharts BarChart",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/analytics/analytics-positions-chart.tsx"
+          ],
+          "patterns_from": [
+            "components/analytics/analytics-spending-chart.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify component displays most hired position types"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-4",
+          "description": "Create reliability score chart component using recharts",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/analytics/analytics-reliability-chart.tsx"
+          ],
+          "patterns_from": [
+            "components/analytics/analytics-spending-chart.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify component displays average reliability of hired workers"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-5",
+          "description": "Create seasonal trends chart component using recharts AreaChart",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/analytics/analytics-trends-chart.tsx"
+          ],
+          "patterns_from": [
+            "components/analytics/analytics-spending-chart.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify component displays hiring patterns by month"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-6",
+          "description": "Create compliance status badge component",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/analytics/analytics-compliance-badge.tsx"
+          ],
+          "patterns_from": [
+            "components/business/verification-badge.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify component shows PP 35/2021 compliance status"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-7",
+          "description": "Create date range filter component",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/analytics/analytics-date-filter.tsx"
+          ],
+          "patterns_from": [
+            "components/wallet/transaction-filters.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify component allows selecting date range for analytics"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-8",
+          "description": "Create CSV export button component",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/analytics/analytics-csv-export.tsx"
+          ],
+          "patterns_from": [
+            "lib/utils/file-upload.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify component exports analytics data as downloadable CSV file"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-page",
+      "name": "Analytics Dashboard Page",
+      "type": "implementation",
+      "description": "Create the main analytics dashboard page",
+      "depends_on": [
+        "phase-3-components"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create analytics dashboard page integrating all components",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "app/(dashboard)/business/analytics/page.tsx"
+          ],
+          "patterns_from": [
+            "app/(dashboard)/business/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/business/analytics",
+            "checks": [
+              "Page loads without errors",
+              "Stats cards display metrics",
+              "Charts render data",
+              "Date filter works"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-integration",
+      "name": "Navigation Integration",
+      "type": "integration",
+      "description": "Add analytics link to business navigation",
+      "depends_on": [
+        "phase-4-page"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Add analytics navigation item to business dashboard",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/dashboard/navigation-config.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/dashboard/navigation-config.ts"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/business/jobs",
+            "checks": [
+              "Sidebar shows Analytics link",
+              "Clicking Analytics navigates to correct page"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "End-to-end verification of analytics dashboard",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Navigate to business dashboard",
+              "Click Analytics navigation item",
+              "Verify stats cards show correct totals",
+              "Verify charts render with data",
+              "Test date range filter",
+              "Test CSV export functionality",
+              "Verify compliance badge displays"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "manual"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All analytics components render without errors",
+      "Charts display accurate data from database",
+      "Date range filtering updates all charts",
+      "CSV export downloads correctly formatted data",
+      "Navigation links function properly"
+    ],
+    "verification_steps": [
+      {
+        "name": "Type Check",
+        "command": "npm run type-check",
+        "expected_outcome": "No TypeScript errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Build Verification",
+        "command": "npm run build",
+        "expected_outcome": "Build succeeds without errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Browser Verification",
+        "command": "npm run dev",
+        "expected_outcome": "Dev server starts and analytics page loads",
+        "type": "manual",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Medium risk feature requiring manual browser verification for visual components. Type checking and build ensure code quality."
+  },
+  "summary": {
+    "total_phases": 5,
+    "total_subtasks": 14,
+    "services_involved": [
+      "frontend"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 1,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-3-components"
+          ],
+          "reason": "All 8 component subtasks can be developed in parallel once data layer is complete"
+        }
+      ],
+      "recommended_workers": 1,
+      "speedup_estimate": "Component development can be parallelized within phase 3"
+    },
+    "startup_command": "npm run dev"
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/business/analytics",
+          "checks": [
+            "All stats cards display with correct values",
+            "Spending chart renders with data",
+            "Positions chart shows most hired roles",
+            "Reliability chart displays worker quality",
+            "Trends chart shows seasonal patterns",
+            "Compliance badge visible",
+            "Date filter updates all charts",
+            "CSV export downloads file"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": false,
+      "checks": []
+    }
+  },
+  "qa_signoff": null,
+  "executionPhase": "coding",
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "updated_at": "2026-02-23T18:16:23.272Z"
+}
