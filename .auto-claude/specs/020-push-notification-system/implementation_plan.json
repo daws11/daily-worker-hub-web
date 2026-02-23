@@ -257,8 +257,9 @@
             "command": "supabase functions serve broadcast-push-notification",
             "expected": "Started function"
           },
-          "status": "pending",
-          "notes": "Edge function that queries push_subscriptions table, filters by user notification preferences, and sends push notifications to all matching users. Useful for announcements and batch notifications."
+          "status": "completed",
+          "notes": "Created broadcast-push-notification edge function that queries push_subscriptions table joined with user_notification_preferences, filters by notification_type parameter (new_applications, booking_status, payment_confirmation, new_job_matches, shift_reminders), and sends push notifications to all matching users using Web Push API. Handles expired subscriptions (410) by cleaning them up from database. Returns detailed summary with sent/failed counts. Follows existing patterns from reliability-score edge function with proper error handling and Indonesian error messages.",
+          "updated_at": "2026-02-23T23:40:00.000000+00:00"
         }
       ]
     },
@@ -670,6 +671,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T15:22:47.291Z",
+  "updated_at": "2026-02-23T15:37:26.029Z",
   "last_updated": "2026-02-23T15:36:45.260537+00:00"
 }
