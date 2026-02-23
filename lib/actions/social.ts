@@ -113,7 +113,7 @@ export async function connectSocialPlatform(
       platform_account_url: input.platform_account_url || null,
       platform_page_id: input.platform_page_id || null,
       scopes: input.scopes || null,
-      settings: input.settings || {},
+      settings: (input.settings || {}) as any,
       status: "active",
       error_count: 0,
       last_verified_at: new Date().toISOString(),
@@ -363,5 +363,96 @@ export async function updateConnectionLastUsed(
     return { success: true, data: data as BusinessSocialConnection }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat mengupdate timestamp" }
+  }
+}
+
+/**
+ * Update platform settings for a business connection
+ * Updates the settings JSONB field with auto-post preferences
+ */
+export async function updatePlatformSettings(
+  connectionId: string,
+  businessId: string,
+  settings: {
+    autoPostEnabled?: boolean
+    defaultPostTiming?: 'immediate' | 'scheduled'
+    scheduledTime?: string
+    customFormatting?: boolean
+    hashtags?: string[]
+  }
+): Promise<SocialConnectionResult> {
+  try {
+    const supabase = await createClient()
+
+    // Verify the connection belongs to the business
+    const { data: connection, error: fetchError } = await supabase
+      .from("business_social_connections")
+      .select("id, settings, status")
+      .eq("id", connectionId)
+      .eq("business_id", businessId)
+      .single()
+
+    if (fetchError || !connection) {
+      return { success: false, error: "Koneksi tidak ditemukan" }
+    }
+
+    const connectionData = connection as SocialConnectionRow
+    const currentSettings = (connectionData.settings as Record<string, unknown>) || {}
+
+    // Merge settings
+    const updatedSettings = {
+      ...currentSettings,
+      ...settings,
+    }
+
+    // Update the connection settings
+    const { data, error } = await (supabase
+      .from("business_social_connections") as any)
+      .update({
+        settings: updatedSettings,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", connectionId)
+      .eq("business_id", businessId)
+      .select()
+      .single()
+
+    if (error) {
+      return { success: false, error: `Gagal mengupdate pengaturan: ${error.message}` }
+    }
+
+    return { success: true, data: data as BusinessSocialConnection }
+  } catch (error) {
+    return { success: false, error: "Terjadi kesalahan saat mengupdate pengaturan" }
+  }
+}
+
+/**
+ * Get platform settings for a business connection
+ * Returns the settings JSONB field
+ */
+export async function getPlatformSettings(
+  connectionId: string,
+  businessId: string
+): Promise<{ success: boolean; error?: string; data?: Record<string, unknown> }> {
+  try {
+    const supabase = await createClient()
+
+    const { data, error } = await supabase
+      .from("business_social_connections")
+      .select("settings")
+      .eq("id", connectionId)
+      .eq("business_id", businessId)
+      .single()
+
+    if (error || !data) {
+      return { success: false, error: "Koneksi tidak ditemukan" }
+    }
+
+    const settings = (data as { settings: Record<string, unknown> | null }).settings || {}
+
+    return { success: true, data: settings }
+  } catch (error) {
+    return { success: false, error: "Gagal mengambil pengaturan" }
   }
 }
