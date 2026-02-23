@@ -25,6 +25,8 @@ export interface JobFilters {
   deadlineAfter?: string
   deadlineBefore?: string
   skills?: string[]
+  isUrgent?: boolean
+  verifiedOnly?: boolean
 }
 
 export interface Job {
