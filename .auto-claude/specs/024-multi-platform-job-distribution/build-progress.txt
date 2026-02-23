@@ -309,4 +309,96 @@ Next Session: Coder agent will begin Phase 1, Subtask 1-1
   * Test mode for empty payloads without signature
   * 6 helper functions: determineEventType, processWebhookEvent, handleMetricsUpdate, handlePostPublished, handlePostDeleted, handlePostFailed, extractPlatformPostId, extractPostUrl, extractMetrics
 
-Next: Phase 3, Subtask 3-1 - Create social platform TypeScript types
+[2026-02-24] Subtask 3-1: COMPLETED
+- Created social platform TypeScript types
+- File: lib/types/social.ts
+- Types created:
+  * SocialPlatform: Platform definitions and configurations
+  * BusinessSocialConnection: Business connections to social platforms
+  * BusinessSocialConnectionWithPlatform: Connection with platform details
+  * JobPost: Social media posts for jobs
+  * JobPostWithRelations: Job post with job and connection details
+  * Enums: SocialPlatformType, SocialPlatformStatus, ConnectionStatus, JobPostStatus
+  * Input types: CreateConnectionInput, UpdateConnectionInput, CreateJobPostInput, UpdateJobPostInput
+  * Output types: ConnectionListResponse, JobPostListResponse
+  * Utility types: ConnectionSettings, JobPostContent, JobPostMetrics, PlatformPostResult
+- Follows pattern from lib/types/job.ts
+- Type check passed: No type errors in social.ts
+
+[2026-02-24] Subtask 3-2: COMPLETED
+- Created social platform server actions
+- File: lib/actions/social.ts
+- Actions created:
+  * connectSocialPlatform: Connect business social platform with OAuth tokens
+    - Duplicate connection check
+    - Platform availability verification
+    - Updates existing inactive connections
+  * disconnectSocialPlatform: Disconnect/revoke social platform connection
+    - Sets status to 'revoked'
+    - Validates connection ownership
+  * getSocialConnections: List all connections for a business
+    - Filters by platform_id and status
+    - Includes platform details (join with social_platforms)
+  * getSocialConnection: Get single connection by ID
+  * updateConnectionError: Track API errors with auto-disable after 5 errors
+  * updateConnectionLastUsed: Reset error count on successful use
+- Follows pattern from lib/actions/job-applications.ts
+- Indonesian error messages for consistency
+- Proper type safety using Database types
+- Comprehensive error handling
+
+Next: Phase 3, Subtask 3-3 - Create content formatter utilities for Instagram and Facebook posts
+
+[2026-02-24] Subtask 3-3: COMPLETED
+- Created content formatter utilities for Instagram and Facebook posts
+- File: lib/utils/social-content.ts
+- Functions created:
+  * formatForInstagram: Formats job content for Instagram (2,200 char limit)
+    - Title with emojis, business name, description (truncated)
+    - Job details: budget (IDR format), location, deadline
+    - Call to action with link in bio
+    - Hashtags: #lowongankerja, #karir, #loker, #jobhunt, #kerja, #recruitment
+    - Returns: FormattedSocialContent (text, hashtags, CTA, characterCount, withinLimit)
+  * formatForFacebook: Formats job content for Facebook (63,206 char limit)
+    - Header with emojis, business name
+    - Full description and requirements
+    - Job details with budget, location, deadline
+    - Call to action with application URL
+    - Additional hashtags: #vacancy, #career
+  * formatForLinkedIn: Formats job content for LinkedIn (3,000 char limit)
+    - Professional format with emojis
+    - "About the role" section
+    - Details list with compensation, location, deadline
+    - 3-5 hashtags as recommended for LinkedIn
+  * formatForTwitter: Formats job content for Twitter/X (280 char limit)
+    - Very concise format
+    - Title, budget, truncated description
+    - Minimal hashtags
+  * Helper functions:
+    - formatBudget: Formats budget range in IDR currency
+    - formatDate: Formats date with relative dates (Today, Tomorrow, In X days)
+    - truncateText: Truncates text with ellipsis
+    - getPlatformCharacterLimit: Returns character limit for platform
+    - validatePlatformContent: Validates content is within platform limit
+- Follows pattern from lib/utils.ts
+- Type check passed: No errors
+- Verification passed: Formatter works with test input
+
+[2026-02-24] Subtask 4-1: COMPLETED
+- Created SocialPlatformConnect component for OAuth connection UI
+- File: app/components/social-platform-connect.tsx
+- Features:
+  * Support for Instagram, Facebook, LinkedIn, and Twitter platforms
+  * OAuth connect/disconnect functionality with popup flow
+  * Connection status display with account info (account name, last used date)
+  * Loading states and skeleton UI during fetch
+  * Error handling with Indonesian error messages
+  * Platform configuration with icons, colors, and descriptions
+  * Callback for parent component to track connection changes
+  * Follows pattern from job-posting-form.tsx (use client, React namespace, cn utility, isLoading state, setError)
+  * Uses server actions: getSocialConnections, disconnectSocialPlatform
+  * Uses Card components from shadcn/ui
+  * No console.log statements
+  * Type check passed: No type errors in social-platform-connect.tsx
+
+Next: Phase 4, Subtask 4-2 - Create SocialPostPreview component for previewing formatted posts
