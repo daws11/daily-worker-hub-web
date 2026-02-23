@@ -78,8 +78,8 @@
             "command": "npm run type-check",
             "expected": "No TypeScript errors in reviews.ts"
           },
-          "status": "pending",
-          "notes": "Create functions: createReview, getReviewsForWorker, getReviewsForBusiness, getWorkerAverageRating, getBusinessAverageRating, getReviewByBookingAndType"
+          "status": "completed",
+          "notes": "Created lib/supabase/queries/reviews.ts with functions: getReviewsForWorker, getReviewsForBusiness, getReviewByBookingAndType, getReviewById, createReview, updateReview, deleteReview, getWorkerAverageRating, getBusinessAverageRating, getWorkerRatingBreakdown, getWorkerRehireRate. All functions follow error handling pattern from bookings.ts."
         },
         {
           "id": "subtask-2-2",
@@ -517,5 +517,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T01:51:13.611Z"
+  "updated_at": "2026-02-23T01:54:26.856Z"
 }
