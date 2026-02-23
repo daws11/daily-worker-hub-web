@@ -379,7 +379,10 @@
           "id": "subtask-4-4",
           "description": "Integrate social platform components into job posting form",
           "service": "frontend",
-          "files_to_create": [],
+          "files_to_create": [
+            "app/components/social-platform-selector.tsx",
+            "lib/actions/jobs.ts"
+          ],
           "files_to_modify": [
             "app/components/job-posting-form.tsx",
             "app/(dashboard)/business/jobs/page.tsx"
@@ -395,7 +398,9 @@
               "Can enable/disable platforms per job"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created SocialPlatformSelector component for job posting form integration. Updated JobPostingForm with socialPlatforms field, businessId prop, and SocialPlatformSelector integration. Added create job modal to business jobs page with JobPostingForm. Created lib/actions/jobs.ts with createJob server action that stores platform selections in platform_settings column. All type checks passed, follows existing patterns with proper error handling.",
+          "updated_at": "2026-02-24T05:00:00.000000+00:00"
         },
         {
           "id": "subtask-4-5",
@@ -416,7 +421,9 @@
               "Shows post performance metrics"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created analytics page at app/(dashboard)/business/analytics/page.tsx with: Summary statistics cards (total posts, views, engagement, engagement rate), Detailed metrics cards (likes, comments, shares), Posts performance table with platform info and metrics, Proper loading states and empty states, Indonesian locale formatting for numbers and dates. All quality checks passed: follows wallet page patterns with use client directive, proper error handling with toast notifications, loading spinners, no console.log statements.",
+          "updated_at": "2026-02-24T05:30:00.000000+00:00"
         }
       ]
     },
@@ -699,6 +706,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T20:39:57.992Z",
+  "updated_at": "2026-02-23T21:07:05.002Z",
   "last_updated": "2026-02-23T20:09:15.742945+00:00"
 }

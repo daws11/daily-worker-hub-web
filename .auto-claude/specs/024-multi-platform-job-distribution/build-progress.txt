@@ -402,3 +402,28 @@ Next: Phase 3, Subtask 3-3 - Create content formatter utilities for Instagram an
   * Type check passed: No type errors in social-platform-connect.tsx
 
 Next: Phase 4, Subtask 4-2 - Create SocialPostPreview component for previewing formatted posts
+
+[2026-02-24] Subtask 4-3: COMPLETED
+- Created SocialPlatformSettings component for per-platform toggles
+- File: app/components/social-platform-settings.tsx
+- Features:
+  * Switch UI component (components/ui/switch.tsx): Custom checkbox with Tailwind CSS
+  * Per-platform settings display for connected platforms (Instagram, Facebook, LinkedIn, Twitter)
+  * Auto-post toggle switch per platform
+  * Post timing selection (immediate/scheduled)
+  * Scheduled time picker for scheduled posts
+  * Custom formatting toggle
+  * Save button per platform with loading states
+  * Error handling and success messages with Indonesian text
+  * Empty state when no platforms connected
+- Server actions added (lib/actions/social.ts):
+  * updatePlatformSettings: Save platform settings to connection settings JSONB
+  * getPlatformSettings: Fetch current platform settings
+- Quality checks passed:
+  * Type check: No type errors in new files
+  * Follows existing patterns: social-platform-connect.tsx, card.tsx, select.tsx
+  * No console.log statements
+  * Proper TypeScript interfaces and React.forwardRef pattern
+- Note: Dev server not started due to missing settings page - component will be integrated in subtask-4-4
+
+Next: Phase 4, Subtask 4-4 - Integrate social platform components into job posting form
