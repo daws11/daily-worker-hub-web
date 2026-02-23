@@ -4,7 +4,11 @@ import './globals.css'
 import { AuthProvider } from './providers/auth-provider'
 import { Toaster } from '../components/ui/sonner'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+})
 
 export const metadata: Metadata = {
   title: 'Daily Worker Hub',

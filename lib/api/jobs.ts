@@ -194,7 +194,7 @@ export async function getJobById(id: string): Promise<{
       updated_at: data.updated_at,
       category: data.category,
       business: data.business,
-      skills: data.skills || [],
+      skills: [],
     }
 
     return { data: jobWithRelations, error: null }

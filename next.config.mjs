@@ -9,20 +9,19 @@ export default withPWA({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === "development",
-  workboxOptions: {
-    disableDevLogs: true,
-    // Cache strategies for PWA
-    runtimeCaching: [
-      {
-        urlPattern: /^https?.*/,
-        handler: "NetworkFirst",
-        options: {
-          cacheName: "offlineCache",
-          expiration: {
-            maxEntries: 200,
-          },
+  // Disable workbox logs
+  sw: "sw.js",
+  // Cache strategies for PWA
+  runtimeCaching: [
+    {
+      urlPattern: /^https?.*/,
+      handler: "NetworkFirst",
+      options: {
+        cacheName: "offlineCache",
+        expiration: {
+          maxEntries: 200,
         },
       },
-    ],
-  },
+    },
+  ],
 })(config);
