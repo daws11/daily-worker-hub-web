@@ -7,8 +7,10 @@ import { getJobBookings } from '@/lib/supabase/queries/bookings'
 import type { JobsRow } from '@/lib/supabase/queries/jobs'
 import type { JobBookingWithDetails } from '@/lib/supabase/queries/bookings'
 import { QRCodeGenerator } from '@/components/attendance/qr-code-generator'
-import { Calendar, MapPin, Users, Loader2, AlertCircle, CheckCircle, XCircle, Clock, Building2, QrCode } from 'lucide-react'
+import { JobPostingForm, type JobPostingFormValues } from '@/app/components/job-posting-form'
+import { Calendar, MapPin, Users, Loader2, AlertCircle, CheckCircle, XCircle, Clock, Building2, QrCode, Plus } from 'lucide-react'
 import { toast } from 'sonner'
+import { createJob } from '@/lib/actions/jobs'
 
 interface JobWithAttendance extends JobsRow {
   bookings?: JobBookingWithDetails[]
@@ -32,6 +34,8 @@ export default function BusinessJobsPage() {
   const [jobs, setJobs] = useState<JobsData>({ total: 0, active: 0, completed: 0, jobsList: [] })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Fetch business jobs with attendance data
   const fetchJobsWithAttendance = useCallback(async () => {
@@ -94,6 +98,56 @@ export default function BusinessJobsPage() {
     fetchJobsWithAttendance()
   }, [fetchJobsWithAttendance])
 
+  // Handle job creation
+  const handleCreateJob = async (values: JobPostingFormValues) => {
+    if (!user?.id) return
+
+    setIsSubmitting(true)
+    try {
+      // Get business ID for the user
+      const businessId = user.id
+
+      // Create job with social platform data
+      const result = await createJob({
+        businessId,
+        title: values.title,
+        positionType: values.positionType,
+        deadline: `${values.date}T${values.endTime}:00`,
+        address: values.address,
+        budgetMin: values.wageMin * values.workersNeeded,
+        budgetMax: values.wageMax * values.workersNeeded,
+        wageMin: values.wageMin,
+        wageMax: values.wageMax,
+        workersNeeded: values.workersNeeded,
+        description: values.description,
+        requirements: values.requirements,
+        area: values.area,
+        // Store social platform selections in platform_settings
+        platformSettings: values.socialPlatforms?.reduce((acc, platform) => {
+          acc[platform.platformType] = {
+            enabled: platform.enabled,
+            connectionId: platform.connectionId,
+          }
+          return acc
+        }, {} as Record<string, { enabled: boolean; connectionId: string }>),
+      })
+
+      if (result.error) {
+        toast.error(result.error)
+        return
+      }
+
+      toast.success('Lowongan pekerjaan berhasil dibuat')
+      setIsCreateModalOpen(false)
+      fetchJobsWithAttendance()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Gagal membuat lowongan'
+      toast.error(message)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   // Format date to Indonesian locale
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
@@ -125,13 +179,38 @@ export default function BusinessJobsPage() {
     }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Page Header */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-            Pekerjaan Saya
-          </h1>
-          <p style={{ color: '#666', fontSize: '0.875rem' }}>
-            Kelola pekerjaan dan pantau kehadiran pekerja
-          </p>
+        <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+              Pekerjaan Saya
+            </h1>
+            <p style={{ color: '#666', fontSize: '0.875rem' }}>
+              Kelola pekerjaan dan pantau kehadiran pekerja
+            </p>
+          </div>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.5rem',
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'background-color 0.2s',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+          >
+            <Plus style={{ width: '1.125rem', height: '1.125rem' }} />
+            Buat Lowongan
+          </button>
         </div>
 
         {/* Error State */}
@@ -525,6 +604,89 @@ export default function BusinessJobsPage() {
           </div>
         </dialog>
       ))}
+
+      {/* Create Job Modal */}
+      {isCreateModalOpen && (
+        <dialog
+          open={isCreateModalOpen}
+          style={{
+            border: 'none',
+            borderRadius: '0.5rem',
+            padding: 0,
+            maxWidth: '700px',
+            width: '90%',
+            maxHeight: '90vh',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsCreateModalOpen(false)
+            }
+          }}
+        >
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            maxHeight: '90vh',
+            backgroundColor: 'white',
+            borderRadius: '0.5rem',
+            overflow: 'hidden'
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '1.5rem',
+              borderBottom: '1px solid #e5e7eb',
+              backgroundColor: '#f9fafb',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>
+                  Buat Lowongan Pekerjaan
+                </h2>
+                <p style={{ color: '#666', fontSize: '0.875rem', margin: '0.25rem 0 0 0' }}>
+                  Isi detail lowongan dan bagikan ke social media
+                </p>
+              </div>
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  color: '#666',
+                  cursor: 'pointer',
+                  padding: '0.25rem',
+                  borderRadius: '0.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Content */}
+            <div style={{
+              padding: '1.5rem',
+              overflowY: 'auto',
+              flex: 1
+            }}>
+              <JobPostingForm
+                onSubmit={handleCreateJob}
+                isLoading={isSubmitting}
+                disabled={isSubmitting}
+                submitButtonText="Publikasikan Lowongan"
+                businessId={user?.id}
+              />
+            </div>
+          </div>
+        </dialog>
+      )}
 
       <style jsx>{`
         @keyframes spin {

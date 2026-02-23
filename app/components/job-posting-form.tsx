@@ -24,6 +24,7 @@ import { WageRateInput } from "@/app/components/wage-rate-input"
 import { WorkersNeededCounter } from "@/app/components/workers-needed-counter"
 import { JobRequirementsSelect, type JobRequirement } from "@/app/components/job-requirements-select"
 import { JobDraftBanner } from "@/app/components/job-draft-banner"
+import { SocialPlatformSelector, type PlatformSelection } from "@/app/components/social-platform-selector"
 
 // Zod schema for job posting form validation
 export const jobPostingFormSchema = z.object({
@@ -72,6 +73,11 @@ export const jobPostingFormSchema = z.object({
   workersNeeded: z.number().min(1, "At least 1 worker is required").max(100, "Maximum 100 workers allowed"),
   requirements: z.array(z.string()).min(1, "Please select at least one requirement"),
   description: z.string().min(20, "Description must be at least 20 characters").max(1000, "Description must be at most 1000 characters"),
+  socialPlatforms: z.array(z.object({
+    platformType: z.string(),
+    connectionId: z.string(),
+    enabled: z.boolean(),
+  })).optional(),
 }).refine((data) => data.wageMin <= data.wageMax, {
   message: "Minimum wage cannot be greater than maximum wage",
   path: ["wageMin"],
@@ -138,6 +144,7 @@ export interface JobPostingFormProps {
   disabled?: boolean
   submitButtonText?: string
   className?: string
+  businessId?: string
 }
 
 export function JobPostingForm({
@@ -147,8 +154,10 @@ export function JobPostingForm({
   disabled = false,
   submitButtonText = "Post Job",
   className,
+  businessId,
 }: JobPostingFormProps) {
   const [draftTimestamp, setDraftTimestamp] = React.useState<number | undefined>(undefined)
+  const [selectedSocialPlatforms, setSelectedSocialPlatforms] = React.useState<PlatformSelection[]>([])
 
   const form = useForm<JobPostingFormValues>({
     resolver: zodResolver(jobPostingFormSchema),
@@ -165,6 +174,7 @@ export function JobPostingForm({
       workersNeeded: 1,
       requirements: [],
       description: "",
+      socialPlatforms: [],
       ...defaultValues,
     },
   })
@@ -210,7 +220,12 @@ export function JobPostingForm({
 
   const handleSubmit = async (values: JobPostingFormValues) => {
     if (onSubmit) {
-      await onSubmit(values)
+      // Include selected social platforms in the submission
+      const valuesWithPlatforms = {
+        ...values,
+        socialPlatforms: selectedSocialPlatforms,
+      }
+      await onSubmit(valuesWithPlatforms)
       clearDraft()
       setDraftTimestamp(undefined)
     }
@@ -485,6 +500,16 @@ export function JobPostingForm({
             </FormItem>
           )}
         />
+
+        {/* Social Platform Selection */}
+        {businessId && (
+          <SocialPlatformSelector
+            businessId={businessId}
+            selectedPlatforms={selectedSocialPlatforms.map((p) => p.platformType)}
+            onSelectionChange={setSelectedSocialPlatforms}
+            disabled={disabled}
+          />
+        )}
 
         {/* Submit Button */}
         <div className="flex justify-end gap-3">
