@@ -292,8 +292,9 @@
             "command": "npm run type-check",
             "expected": "No TypeScript errors"
           },
-          "status": "pending",
-          "notes": "Modify calculateReliabilityScore to query reviews table instead of booking.rating field, or update booking.rating to sync from reviews"
+          "status": "completed",
+          "notes": "Modified calculateReliabilityScore to accept averageRating parameter from reviews table, updated getWorkerReliabilityMetrics to query reviews table for ratings instead of using booking.rating field. Maintains backward compatibility with null averageRating default value.",
+          "updated_at": "2026-02-23T10:30:00.000+00:00"
         },
         {
           "id": "subtask-5-2",
@@ -519,6 +520,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T02:22:11.125Z",
+  "updated_at": "2026-02-23T02:25:11.843Z",
   "last_updated": "2026-02-23T02:19:23.810982+00:00"
 }
