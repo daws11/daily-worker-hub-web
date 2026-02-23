@@ -218,8 +218,9 @@
               "Average rating is shown"
             ]
           },
-          "status": "pending",
-          "notes": "Shows all reviews received by worker with average rating and breakdown"
+          "status": "completed",
+          "notes": "Worker reviews page already implemented at app/(dashboard)/worker/reviews/page.tsx. Follows the same pattern as worker/bookings/page.tsx with useAuth hook, inline styles, logout button, and ReviewList component. No TypeScript errors related to reviews. Build cache confirms page was successfully compiled.",
+          "updated_at": "2026-02-23T02:19:23.810976+00:00"
         },
         {
           "id": "subtask-4-2",
@@ -241,8 +242,9 @@
               "Average rating is shown"
             ]
           },
-          "status": "pending",
-          "notes": "Shows all reviews received by business with average rating"
+          "status": "completed",
+          "notes": "Created app/(dashboard)/business/reviews/page.tsx following the pattern from worker/reviews/page.tsx. Page includes: loading state with spinner animation, error state for auth failures, star icon in header matching business/jobs page pattern, Indonesian text ('Ulasan Bisnis'), uses ReviewList component with entityType='business' to display reviews from workers with average rating.",
+          "updated_at": "2026-02-23T10:20:00.000+00:00"
         },
         {
           "id": "subtask-4-3",
@@ -517,5 +519,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T02:09:24.867Z"
+  "updated_at": "2026-02-23T02:20:10.013Z",
+  "last_updated": "2026-02-23T02:19:23.810982+00:00"
 }
