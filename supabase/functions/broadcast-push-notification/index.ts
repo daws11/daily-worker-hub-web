@@ -102,8 +102,8 @@ serve(async (req) => {
         id,
         user_id,
         endpoint,
-        p256dh_key,
-        auth_key,
+        keys_p256h,
+        keys_auth,
         user_notification_preferences (
           push_enabled,
           new_applications,
@@ -171,7 +171,7 @@ serve(async (req) => {
     for (const subscription of subscriptions) {
       try {
         // Validate subscription data
-        if (!subscription.endpoint || !subscription.p256dh_key || !subscription.auth_key) {
+        if (!subscription.endpoint || !subscription.keys_p256h || !subscription.keys_auth) {
           failedCount++
           results.push({
             user_id: subscription.user_id,
@@ -185,8 +185,8 @@ serve(async (req) => {
         const pushSubscription = {
           endpoint: subscription.endpoint,
           keys: {
-            p256dh: subscription.p256dh_key,
-            auth: subscription.auth_key
+            p256dh: subscription.keys_p256h,
+            auth: subscription.keys_auth
           }
         }
 
