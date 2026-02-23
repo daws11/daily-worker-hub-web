@@ -46,7 +46,7 @@
             "command": "supabase migration up && echo 'Migration applied'",
             "expected": "Migration applied"
           },
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "subtask-1-3",
@@ -64,7 +64,7 @@
             "command": "supabase migration up && echo 'Migration applied'",
             "expected": "Migration applied"
           },
-          "status": "pending"
+          "status": "completed"
         },
         {
           "id": "subtask-1-4",
@@ -671,5 +671,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-23T19:19:46.227Z"
+  "updated_at": "2026-02-23T19:29:11.811Z"
 }
