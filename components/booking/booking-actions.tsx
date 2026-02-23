@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Check, X } from "lucide-react"
+import { Check, X, Star } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -19,6 +19,9 @@ export interface BookingActionsProps {
   variant?: "default" | "outline" | "ghost"
   className?: string
   showLabels?: boolean
+  // Review-related props
+  hasExistingReview?: boolean
+  onWriteReview?: () => void
 }
 
 export function BookingActions({
@@ -32,12 +35,16 @@ export function BookingActions({
   variant = "default",
   className,
   showLabels = true,
+  hasExistingReview = false,
+  onWriteReview,
 }: BookingActionsProps) {
   const [isAccepting, setIsAccepting] = React.useState(false)
   const [isRejecting, setIsRejecting] = React.useState(false)
 
   const isPending = status === "pending"
+  const isCompleted = status === "completed"
   const isActionDisabled = disabled || isLoading || !isPending
+  const canWriteReview = isCompleted && !hasExistingReview && onWriteReview
 
   const handleAccept = async () => {
     if (isActionDisabled || !onAccept) return
@@ -120,6 +127,19 @@ export function BookingActions({
               {showLabels && <span>Reject</span>}
             </>
           )}
+        </Button>
+      )}
+
+      {canWriteReview && (
+        <Button
+          variant="outline"
+          size={getButtonSize()}
+          onClick={onWriteReview}
+          disabled={disabled || isLoading}
+          aria-label={`Write review for booking ${bookingId}`}
+        >
+          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+          {showLabels && <span>Tulis Ulasan</span>}
         </Button>
       )}
     </div>
