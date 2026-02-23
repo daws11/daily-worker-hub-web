@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from 'react'
 import { useAuth } from '@/providers/auth-provider'
-import { JobSearch } from '@/components/job-marketplace/JobSearch'
+import { SearchAutocomplete } from '@/components/job-marketplace/SearchAutocomplete'
+import type { SearchSuggestion } from '@/lib/api/autocomplete'
 import { JobFilters } from '@/components/job-marketplace/JobFilters'
 import { JobSort } from '@/components/job-marketplace/JobSort'
 import { JobListWithHeader } from '@/components/job-marketplace/JobList'
@@ -166,6 +167,13 @@ export default function WorkerJobsPage() {
   // Handle search change
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value)
+  }, [])
+
+  // Handle suggestion select from autocomplete
+  const handleSuggestionSelect = useCallback((suggestion: SearchSuggestion) => {
+    // When a suggestion is selected, we can optionally update filters
+    // For now, the search text is already set by the component
+    // This callback can be used for analytics or additional filter logic
   }, [])
 
   // Handle filters change
@@ -365,10 +373,11 @@ export default function WorkerJobsPage() {
             {/* Search and Sort Bar */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex-1">
-                <JobSearch
+                <SearchAutocomplete
                   value={search}
                   onSearchChange={handleSearchChange}
-                  placeholder="Search jobs by keyword or position..."
+                  onSuggestionSelect={handleSuggestionSelect}
+                  placeholder="Search jobs by position or area..."
                   className="w-full sm:max-w-md"
                 />
               </div>
