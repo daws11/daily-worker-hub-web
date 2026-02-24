@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "014-pp-35-2021-compliance-guard",
+  "spec": "015-reliability-score-calculation",
   "state": "building",
   "subtasks": {
-    "completed": 13,
-    "total": 23,
+    "completed": 5,
+    "total": 15,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Frontend Integration",
+    "current": "Backend Logic",
     "id": null,
-    "total": 5
+    "total": 3
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 19,
-    "started_at": "2026-02-22T20:04:13.434804"
+    "number": 8,
+    "started_at": "2026-02-22T19:54:40.140957"
   },
-  "last_update": "2026-02-22T21:57:30.171405"
+  "last_update": "2026-02-22T20:46:27.580470"
 }

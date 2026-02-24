@@ -69,6 +69,8 @@ export type Database = {
           status: Database["public"]["Enums"]["booking_status"]
           updated_at: string
           worker_id: string
+          actual_start_time: string | null
+          actual_end_time: string | null
         }
         Insert: {
           business_id: string
@@ -81,6 +83,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["booking_status"]
           updated_at?: string
           worker_id: string
+          actual_start_time?: string | null
+          actual_end_time?: string | null
         }
         Update: {
           business_id?: string
@@ -93,6 +97,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["booking_status"]
           updated_at?: string
           worker_id?: string
+          actual_start_time?: string | null
+          actual_end_time?: string | null
         }
         Relationships: [
           {
@@ -329,6 +335,83 @@ export type Database = {
           },
         ]
       }
+      kyc_verifications: {
+        Row: {
+          id: string
+          worker_id: string
+          status: 'unverified' | 'pending' | 'verified' | 'rejected'
+          document_type: string | null
+          document_url: string | null
+          selfie_url: string | null
+          rejection_reason: string | null
+          submitted_at: string | null
+          reviewed_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          worker_id: string
+          status?: 'unverified' | 'pending' | 'verified' | 'rejected'
+          document_type?: string | null
+          document_url?: string | null
+          selfie_url?: string | null
+          rejection_reason?: string | null
+          submitted_at?: string | null
+          reviewed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          worker_id?: string
+          status?: 'unverified' | 'pending' | 'verified' | 'rejected'
+          document_type?: string | null
+          document_url?: string | null
+          selfie_url?: string | null
+          rejection_reason?: string | null
+          submitted_at?: string | null
+          reviewed_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kyc_verifications_worker_id_fkey"
+            columns: ["worker_id"]
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      worker_skills: {
+        Row: {
+          worker_id: string
+          skill_id: string
+        }
+        Insert: {
+          worker_id: string
+          skill_id: string
+        }
+        Update: {
+          worker_id?: string
+          skill_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_skills_worker_id_fkey"
+            columns: ["worker_id"]
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "worker_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           booking_id: string | null
@@ -374,6 +457,49 @@ export type Database = {
             foreignKeyName: "messages_sender_id_fkey"
             columns: ["sender_id"]
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reliability_score_history: {
+        Row: {
+          id: string
+          worker_id: string
+          score: number
+          attendance_rate: number
+          punctuality_rate: number
+          avg_rating: number
+          completed_jobs_count: number
+          calculated_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          worker_id: string
+          score: number
+          attendance_rate: number
+          punctuality_rate: number
+          avg_rating: number
+          completed_jobs_count: number
+          calculated_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          worker_id?: string
+          score?: number
+          attendance_rate?: number
+          punctuality_rate?: number
+          avg_rating?: number
+          completed_jobs_count?: number
+          calculated_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reliability_score_history_worker_id_fkey"
+            columns: ["worker_id"]
+            referencedRelation: "workers"
             referencedColumns: ["id"]
           },
         ]
@@ -625,6 +751,10 @@ export type Database = {
           phone: string | null
           updated_at: string
           user_id: string
+          reliability_score: number | null
+          gender?: string | null
+          experience_years?: number | null
+          kyc_status?: 'unverified' | 'pending' | 'verified' | 'rejected' | null
         }
         Insert: {
           address?: string | null
@@ -640,6 +770,10 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id: string
+          reliability_score?: number | null
+          gender?: string | null
+          experience_years?: number | null
+          kyc_status?: 'unverified' | 'pending' | 'verified' | 'rejected' | null
         }
         Update: {
           address?: string | null
@@ -655,6 +789,10 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
+          reliability_score?: number | null
+          gender?: string | null
+          experience_years?: number | null
+          kyc_status?: 'unverified' | 'pending' | 'verified' | 'rejected' | null
         }
         Relationships: [
           {

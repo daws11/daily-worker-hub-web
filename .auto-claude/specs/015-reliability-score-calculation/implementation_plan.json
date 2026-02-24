@@ -1,0 +1,493 @@
+{
+  "feature": "Reliability Score Calculation System",
+  "workflow_type": "feature",
+  "workflow_rationale": "Building a new multi-service feature (database changes, edge functions, server actions, and UI components) with clear service dependencies. Database schema changes must come first, followed by backend logic, then UI components.",
+  "phases": [
+    {
+      "id": "phase-1-database",
+      "name": "Database Schema Changes",
+      "type": "implementation",
+      "description": "Add columns for tracking actual times (for punctuality) and create reliability score history table",
+      "depends_on": [],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Add actual_start_time and actual_end_time columns to bookings table",
+          "service": "database",
+          "files_to_modify": [],
+          "files_to_create": [
+            "supabase/migrations/20260222_add_booking_time_tracking.sql"
+          ],
+          "patterns_from": [
+            "supabase/migrations/20250222000003_alter_workers_table.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"\\d bookings\" | grep actual",
+            "expected": "actual_start_time | actual_end_time"
+          },
+          "status": "completed",
+          "notes": "Migration created. actual_start_time and actual_end_time columns added with indexes and documentation."
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Create reliability_score_history table for tracking score changes over time",
+          "service": "database",
+          "files_to_modify": [],
+          "files_to_create": [
+            "supabase/migrations/20260222_create_reliability_score_history.sql"
+          ],
+          "patterns_from": [
+            "supabase/migrations/20250222000001_create_kyc_verifications.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"\\d reliability_score_history\"",
+            "expected": "worker_id | score | attendance_rate | punctuality_rate | avg_rating"
+          },
+          "status": "completed",
+          "notes": "Migration created with table structure including worker_id, score (1.0-5.0), attendance_rate, punctuality_rate, avg_rating columns. Added CHECK constraints, indexes, RLS policies (workers can view own history, admins can view all), and comprehensive documentation."
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Add RLS policies for reliability_score_history table",
+          "service": "database",
+          "files_to_modify": [],
+          "files_to_create": [
+            "supabase/migrations/20260222_add_reliability_score_rls.sql"
+          ],
+          "patterns_from": [
+            "supabase/migrations/20260222000005_add_rls_policies.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"SELECT * FROM pg_policies WHERE tablename = 'reliability_score_history'\"",
+            "expected": "reliability_score_history policies"
+          },
+          "status": "completed",
+          "notes": "RLS policies created: Workers can view their own score history (read-only), Admins can view all score history, Service role can insert score history records. Score history is immutable - no update/delete policies ensure data integrity and auditability."
+        },
+        {
+          "id": "subtask-1-4",
+          "description": "Regenerate TypeScript types from updated schema",
+          "service": "database",
+          "files_to_modify": [
+            "lib/supabase/types.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "grep -c \"reliability_score_history\" lib/supabase/types.ts",
+            "expected": "1"
+          },
+          "status": "completed",
+          "notes": "Added actual_start_time and actual_end_time columns to bookings table type. Added reliability_score_history table type with id, worker_id, score, attendance_rate, punctuality_rate, avg_rating, completed_jobs_count, calculated_at, and created_at fields."
+        }
+      ]
+    },
+    {
+      "id": "phase-2-backend",
+      "name": "Backend Logic",
+      "type": "implementation",
+      "description": "Update edge function and create server actions for score calculation",
+      "depends_on": [
+        "phase-1-database"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Update reliability-score edge function with correct formula (40/30/30)",
+          "service": "edge_functions",
+          "files_to_modify": [
+            "supabase/functions/reliability-score/index.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "api",
+            "method": "POST",
+            "url": "http://localhost:54321/functions/v1/reliability-score",
+            "body": "{\"worker_id\": \"test-worker-id\"}",
+            "expected_status": 200
+          },
+          "status": "completed",
+          "notes": "Implemented 40% attendance + 30% punctuality + 30% ratings formula. Added punctuality calculation using actual_start_time and actual_end_time. Created migration to add reliability_score column to workers table. Enabled update code and added score history recording."
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create database query functions for reliability score operations",
+          "service": "queries",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/supabase/queries/reliability-score.ts"
+          ],
+          "patterns_from": [
+            "lib/supabase/queries/jobs.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -c \"export async function\" lib/supabase/queries/reliability-score.ts",
+            "expected": "5"
+          },
+          "status": "completed",
+          "notes": "Created 5 query functions: calculateScore (40/30/30 formula), getScoreHistory (fetch history), getWorkerScore (fetch current score), updateScore (update worker score), recordScoreHistory (record to history table). All follow patterns from jobs.ts with proper error handling, types, and JSDoc comments."
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Create server actions for triggering score calculation",
+          "service": "actions",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/actions/reliability-score.ts"
+          ],
+          "patterns_from": [
+            "lib/actions/job-applications.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Review file exports: calculateWorkerScore, getWorkerScoreWithHistory, triggerScoreUpdate"
+          },
+          "status": "completed",
+          "notes": "Created server actions: calculateWorkerScore (calculates and updates score after job completion), getWorkerScoreWithHistory (fetches current score with history), triggerScoreUpdate (manual recalculation). Follows patterns from job-applications.ts with 'use server' directive, {success, error?, data?} return types, Indonesian error messages, and proper error handling."
+        }
+      ]
+    },
+    {
+      "id": "phase-3-ui-components",
+      "name": "UI Components",
+      "type": "implementation",
+      "description": "Create React components for displaying reliability scores and history",
+      "depends_on": [
+        "phase-2-backend"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create ReliabilityBadge component to display score with stars",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/worker/reliability-badge.tsx"
+          ],
+          "patterns_from": [
+            "components/ui/badge.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Component renders 1-5 stars based on score prop, handles null/undefined scores"
+          },
+          "status": "completed",
+          "notes": "Component created with 6 color-coded variants (excellent/verygood/good/fair/poor/none). Displays 1-5 stars based on score prop, handles null/undefined scores with 'N/A' display. Uses class-variance-authority for variants, supports dark mode, and follows existing badge patterns."
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create ScoreBreakdown component to show attendance/punctuality/ratings breakdown",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/worker/score-breakdown.tsx"
+          ],
+          "patterns_from": [
+            "components/ui/card.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Component displays three metrics with percentages and visual indicators"
+          },
+          "status": "completed",
+          "notes": "Component created with three metrics (attendance/punctuality/ratings) displaying percentages and visual progress bars with color coding. Shows weight breakdown (40%/30%/30%), includes formula explanation, and follows Card component patterns with proper error handling."
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Create ScoreHistory component to show score trend over time",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/worker/score-history.tsx"
+          ],
+          "patterns_from": [
+            "components/ui/card.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Component displays history as list or simple chart, showing date and score changes"
+          },
+          "status": "completed",
+          "notes": "Component created with history list display showing date, score changes, and trend indicators. Uses Card component pattern, displays color-coded scores (green/yellow/orange/red), includes trend badges showing improvement/decline with icons, shows completed jobs count, handles empty state with helpful message, limits entries with optional prop, and formats dates relative to today (Today, Yesterday, X days ago).",
+          "updated_at": "2026-02-22T17:22:55.388376+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-integration",
+      "name": "Integration Pages",
+      "type": "implementation",
+      "description": "Integrate score components into worker profile and business views",
+      "depends_on": [
+        "phase-3-ui-components"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Add reliability score display to worker profile page",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/app/(dashboard)/worker/profile/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard/worker/profile",
+            "checks": [
+              "ReliabilityBadge displays worker's score",
+              "ScoreBreakdown shows calculation details",
+              "ScoreHistory shows trend (if history exists)"
+            ]
+          },
+          "status": "completed",
+          "notes": "Added imports for ReliabilityBadge, ScoreBreakdown, and ScoreHistory components. Created state for reliabilityScore, scoreBreakdown, and scoreHistory. Implemented useEffect to fetch worker's reliability score and history from database. Added UI section after KYC banners showing: score header with ReliabilityBadge, explanation text, and grid layout for ScoreBreakdown and ScoreHistory cards. ScoreBreakdown only shows when data exists. ScoreHistory displays up to 5 entries with current score context. Follows existing inline style patterns from the page."
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Add reliability score display to business job applicant view",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/applicant-list.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/worker/reliability-badge.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard/business/jobs",
+            "checks": [
+              "Each applicant shows reliability score badge",
+              "Workers with 5+ completed jobs show reliable scores",
+              "New workers show 'Insufficient data' indicator"
+            ]
+          },
+          "status": "completed",
+          "notes": "Added reliability_score to ApplicantWithDetails type, updated getApplicants function to select reliability_score from workers, added ReliabilityBadge component to applicant list table with new \"Skor Keandalan\" column. Workers with scores 1.0-5.0 show color-coded badges, and 0 score shows N/A indicator."
+        }
+      ]
+    },
+    {
+      "id": "phase-5-automation",
+      "name": "Automation Triggers",
+      "type": "integration",
+      "description": "Set up automatic score calculation after job completion",
+      "depends_on": [
+        "phase-2-backend"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Create database trigger to auto-calculate score when booking completes",
+          "service": "database",
+          "files_to_modify": [],
+          "files_to_create": [
+            "supabase/migrations/20260222_add_score_trigger.sql"
+          ],
+          "patterns_from": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"SELECT tgname FROM pg_trigger WHERE tgname LIKE '%reliability%';\"",
+            "expected": "trigger_recalculate_reliability_score"
+          },
+          "status": "completed",
+          "notes": "Created calculate_reliability_score function with weighted formula (40% attendance + 30% punctuality + 30% ratings). Created update_reliability_score_for_booking trigger function that fires when booking status changes to 'completed'. Automatically updates workers.reliability_score and creates reliability_score_history records. Includes error handling to prevent booking failures from score calculation issues."
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Add score calculation to job completion flow in acceptApplication action",
+          "service": "actions",
+          "files_to_modify": [
+            "lib/actions/job-applications.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/actions/job-applications.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Review acceptApplication and any completeBooking functions for score calculation call"
+          },
+          "status": "pending",
+          "notes": "Alternative or backup to database trigger, ensures score updates on completion"
+        },
+        {
+          "id": "subtask-5-3",
+          "description": "End-to-end verification of automatic score calculation",
+          "service": "integration",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Create a new job posting",
+              "Worker applies and gets accepted",
+              "Mark booking as completed",
+              "Verify reliability score is recalculated",
+              "Verify score history entry is created",
+              "Verify score displays correctly in worker profile"
+            ]
+          },
+          "status": "pending",
+          "notes": "Full workflow test: job application -> completion -> score calculation -> display"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 5,
+    "total_subtasks": 14,
+    "services_involved": [
+      "database",
+      "edge_functions",
+      "queries",
+      "actions",
+      "frontend"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 2,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-3-ui-components",
+            "phase-4-integration"
+          ],
+          "reason": "UI components can be developed while integration pages are being modified"
+        }
+      ],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution recommended due to database-first dependencies"
+    },
+    "startup_command": "npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "manual"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "Reliability scores calculate automatically after job completion",
+      "Score formula uses 40% attendance + 30% punctuality + 30% ratings",
+      "Scores range from 1.0 to 5.0 stars",
+      "Score history is tracked in reliability_score_history table",
+      "Workers with <5 completed jobs show 'Insufficient data'",
+      "Score breakdown is transparent in worker profile",
+      "Businesses can see worker reliability scores when hiring"
+    ],
+    "verification_steps": [
+      {
+        "name": "Type Check",
+        "command": "npm run type-check",
+        "expected_outcome": "No TypeScript errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Build Check",
+        "command": "npm run build",
+        "expected_outcome": "Build completes successfully",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Manual UI Verification",
+        "command": "Navigate to worker profile and verify score display",
+        "expected_outcome": "All score components render correctly",
+        "type": "manual",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "Database Schema Verification",
+        "command": "psql $DATABASE_URL -c \"\\d bookings\" | grep actual && psql $DATABASE_URL -c \"\\d reliability_score_history\"",
+        "expected_outcome": "New columns and table exist",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Medium risk feature involving database schema changes and score calculation logic. Manual testing required for UI verification. Type checking and build verification ensure code quality."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null,
+      "notes": "No test framework configured. Type checking used as validation."
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": [],
+      "notes": "Manual end-to-end verification performed"
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": [],
+      "notes": "Manual verification of job completion -> score calculation flow"
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/dashboard/worker/profile",
+          "checks": [
+            "Reliability score badge displays with correct number of stars",
+            "Score breakdown shows attendance/punctuality/ratings percentages",
+            "Score history shows past scores (if applicable)",
+            "No console errors"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/dashboard/business/jobs",
+          "checks": [
+            "Applicant list shows reliability scores",
+            "Score badge renders correctly",
+            "New workers show 'Insufficient data' for <5 jobs"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "bookings table has actual_start_time and actual_end_time columns",
+        "reliability_score_history table exists with proper structure",
+        "RLS policies exist for reliability_score_history table",
+        "Workers table reliability_score column is populated"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "executionPhase": "coding",
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "updated_at": "2026-02-22T17:42:15.749Z",
+  "xstateState": "backlog",
+  "recoveryNote": "Task recovered from stuck state at 2026-02-22T15:41:06.709Z",
+  "last_updated": "2026-02-22T17:22:55.388392+00:00"
+}

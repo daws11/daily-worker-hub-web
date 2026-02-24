@@ -1,0 +1,338 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Reliability Score Calculation System
+Workspace: /Users/yanuar/Documents/daws/daily-worker-hub-web/.auto-claude/worktrees/tasks/015-reliability-score-calculation
+Started: 2026-02-22
+
+Workflow Type: feature
+Rationale: Building a new multi-service feature with clear service dependencies.
+           Database schema changes must come first, followed by backend logic,
+           then UI components.
+
+Session 1 (Planner):
+- Created implementation_plan.json
+- Created project_index.json
+- Created context.json
+- Created init.sh
+- Created build-progress.txt
+
+=== FEATURE OVERVIEW ===
+
+Automated reliability scoring system that calculates worker scores (1-5 stars)
+based on three weighted factors:
+  • 40% Attendance Rate: completed_bookings / total_bookings
+  • 30% Punctuality Rate: on-time arrivals / total completed jobs
+  • 30% Average Ratings: from business reviews
+
+=== PHASE SUMMARY ===
+
+Phase 1: Database Schema Changes (4 subtasks)
+  - Add actual_start_time, actual_end_time to bookings (for punctuality)
+  - Create reliability_score_history table (for trend tracking)
+  - Add RLS policies for score history
+  - Regenerate TypeScript types
+
+Phase 2: Backend Logic (3 subtasks)
+  - Update reliability-score edge function with 40/30/30 formula
+  - Create database query functions
+  - Create server actions for score calculation
+
+Phase 3: UI Components (3 subtasks)
+  - Create ReliabilityBadge component (star display)
+  - Create ScoreBreakdown component (transparent metrics)
+  - Create ScoreHistory component (trend visualization)
+
+Phase 4: Integration Pages (2 subtasks)
+  - Add score display to worker profile page
+  - Add score display to business applicant view
+
+Phase 5: Automation Triggers (3 subtasks)
+  - Create database trigger for auto-calculation
+  - Add calculation to job completion flow
+  - End-to-end verification
+
+=== SERVICES INVOLVED ===
+
+  • database: PostgreSQL schema changes, migrations
+  • edge_functions: Supabase Edge Functions (Deno)
+  • queries: Database query functions (TypeScript)
+  • actions: Next.js server actions
+  • frontend: React components and pages
+
+=== PARALLELISM ANALYSIS ===
+
+Max parallel phases: 2 (UI components and integration pages can overlap)
+Recommended workers: 1 (Sequential execution recommended due to dependencies)
+
+=== DISCOVERY NOTES ===
+
+1. Existing Implementation Found:
+   - File: supabase/functions/reliability-score/index.ts
+   - Status: Uses wrong formula (50/50), update code commented out
+   - Action: Update with 40/30/30 formula and enable updates
+
+2. Database Schema:
+   - Workers table already has reliability_score column (number type)
+   - Bookings table has start_date/end_date but needs actual times for punctuality
+   - Reviews table exists for ratings
+   - No reliability_score_history table yet
+
+3. Code Patterns:
+   - Server actions: "use server", return {success, error?, data?}
+   - Edge functions: Deno.serve(), CORS headers, service role key
+   - Components: "use client", lucide-react icons, sonner toasts
+   - Types: Auto-generated in lib/supabase/types.ts
+
+4. Tech Stack:
+   - Next.js 14 (App Router)
+   - TypeScript
+   - Tailwind CSS + shadcn/ui
+   - Supabase (PostgreSQL + Auth + Edge Functions)
+
+=== ACCEPTANCE CRITERIA ===
+
+  [ ] Reliability scores calculate automatically after job completion
+  [ ] Score formula: 40% attendance + 30% punctuality + 30% ratings
+  [ ] Scores range from 1.0 to 5.0 stars
+  [ ] Score history is tracked in reliability_score_history table
+  [ ] Workers with <5 completed jobs show "Insufficient data"
+  [ ] Score breakdown is transparent in worker profile
+  [ ] Businesses can see worker reliability scores when hiring
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  cd /Users/yanuar/Documents/daws/daily-worker-hub-web/.auto-claude/worktrees/tasks/015-reliability-score-calculation
+  npm run dev
+
+Or use the init script:
+
+  source .auto-claude/specs/015-reliability-score-calculation/init.sh
+
+=== VERIFICATION STRATEGY ===
+
+Risk Level: medium
+
+Required Verification:
+  1. Type Check: npm run type-check
+  2. Build: npm run build
+  3. Manual UI: Check worker profile page
+  4. Database: Verify new columns and tables
+
+Manual Testing Required:
+  - Job completion -> score calculation flow
+  - Worker profile score display
+  - Business applicant view scores
+
+=== END SESSION 1 ===
+
+Session Type: Planning
+Files Created:
+  • implementation_plan.json (5 phases, 14 subtasks)
+  • project_index.json (service and infrastructure info)
+  • context.json (patterns and existing implementations)
+  • init.sh (development environment setup)
+  • build-progress.txt (this file)
+
+Next Session: Implementation (Coder Agent)
+  - Begin with Phase 1, Subtask 1-1: Add booking time tracking columns
+  - Follow subtask order respecting dependencies
+  - Mark each subtask complete after verification
+
+=== SESSION 2: IMPLEMENTATION STARTED ===
+
+Date: 2026-02-22
+
+[COMPLETED] Subtask 1-1: Add actual_start_time and actual_end_time columns to bookings table
+  • Created: supabase/migrations/20260222_add_booking_time_tracking.sql
+  • Added columns: actual_start_time TIMESTAMPTZ, actual_end_time TIMESTAMPTZ
+  • Added indexes for efficient querying
+  • Added documentation comments
+  • Commit: 1c22935
+  • Plan updated: subtask-1-1 status = completed
+
+[COMPLETED] Subtask 1-2: Create reliability_score_history table for tracking score changes over time
+  • Created: supabase/migrations/20260222_create_reliability_score_history.sql
+  • Table structure:
+    - id UUID (primary key)
+    - worker_id UUID (foreign key to workers)
+    - score NUMERIC(3,2) CHECK (1.0-5.0)
+    - attendance_rate NUMERIC(5,2) CHECK (0-100)
+    - punctuality_rate NUMERIC(5,2) CHECK (0-100)
+    - avg_rating NUMERIC(3,2) CHECK (1.0-5.0)
+    - completed_jobs_count INTEGER (for 5+ job threshold)
+    - calculated_at TIMESTAMPTZ
+    - created_at TIMESTAMPTZ
+  • Added indexes: worker_id, calculated_at DESC, composite (worker_id, calculated_at)
+  • RLS policies enabled:
+    - Workers can view own history
+    - Admins can view all history
+  • Comprehensive documentation via COMMENT statements
+  • Commit: c790733
+  • Plan updated: subtask-1-2 status = completed
+
+[COMPLETED] Subtask 1-3: Add RLS policies for reliability_score_history table
+  • Created: supabase/migrations/20260222_add_reliability_score_rls.sql
+  • RLS policies:
+    - Workers can view own score history (read-only)
+    - Admins can view all score history
+    - Service role can insert score history records
+  • Score history is immutable (no update/delete policies)
+  • Commit: 4fd68b8
+  • Plan updated: subtask-1-3 status = completed
+
+[COMPLETED] Subtask 1-4: Regenerate TypeScript types from updated schema
+  • Updated: lib/supabase/types.ts
+  • Added to bookings table type:
+    - actual_start_time: string | null
+    - actual_end_time: string | null
+  • Added reliability_score_history table type with:
+    - id, worker_id, score, attendance_rate, punctuality_rate, avg_rating
+    - completed_jobs_count, calculated_at, created_at
+  • Commit: 8b2f9a4
+  • Plan updated: subtask-1-4 status = completed
+
+=== PHASE 2: BACKEND LOGIC STARTED ===
+
+[COMPLETED] Subtask 2-1: Update reliability-score edge function with correct formula (40/30/30)
+  • Updated: supabase/functions/reliability-score/index.ts
+  • Formula implemented: 40% attendance + 30% punctuality + 30% ratings
+  • Punctuality calculation:
+    - Compares actual_start_time vs scheduled start_date (with 1-hour grace)
+    - Compares actual_end_time vs scheduled end_date (with 1-hour grace)
+    - Default 100% if no time data available
+  • Created: supabase/migrations/20260222_add_reliability_score_to_workers.sql
+    - Added reliability_score column to workers table (NUMERIC(3,2) with CHECK 1.0-5.0)
+    - Created index for sorting by reliability score
+  • Enabled update code to persist reliability_score to workers table
+  • Added score history recording to reliability_score_history table
+  • Response includes: attendance_rate, punctuality_rate, avg_rating metrics
+  • Commit: cacaae7
+  • Plan updated: subtask-2-1 status = completed
+
+[NEXT] Subtask 2-2: Create database query functions for reliability score operations
+  • File to create: lib/supabase/queries/reliability-score.ts
+  • Functions: calculateScore, getScoreHistory, getWorkerScore, updateScore, recordScoreHistory
+  • Pattern from: lib/supabase/queries/jobs.ts
+
+=== SESSION 8: UI COMPONENTS STARTED ===
+
+Date: 2026-02-23
+
+[COMPLETED] Subtask 3-1: Create ReliabilityBadge component to display score with stars
+  • Created: components/worker/reliability-badge.tsx
+  • Features:
+    - Displays 1-5 stars based on score prop (rounded score)
+    - Color-coded variants: excellent (green), verygood (lime), good (yellow), fair (orange), poor (red), none (gray)
+    - Handles null/undefined scores with "N/A" display
+    - Uses class-variance-authority for styling variants
+    - Supports dark mode
+    - Optional showStars prop to show/hide stars
+  • Pattern from: components/ui/badge.tsx and components/worker/kyc-status-badge.tsx
+  • Commit: 5b185a7
+  • Plan updated: subtask-3-1 status = completed
+
+[NEXT] Subtask 3-2: Create ScoreBreakdown component to show attendance/punctuality/ratings breakdown
+  • File exists: components/worker/score-breakdown.tsx (already implemented)
+  • Features:
+    - Displays three metrics (attendance, punctuality, ratings) with percentages
+    - Visual progress bars with color coding (green ≥90%, yellow ≥75%, red <75%)
+    - Shows weight breakdown (40%/30%/30%)
+    - Includes formula explanation: (Attendance × 0.4) + (Punctuality × 0.3) + (Rating × 0.3)
+    - Uses Card component patterns (Card, CardHeader, CardTitle, CardDescription, CardContent)
+    - Internal MetricItem component for consistent metric display
+    - Proper value clamping with Math.max/Math.min
+  • Pattern from: components/ui/card.tsx
+  • Plan updated: subtask-3-2 status = completed
+
+[COMPLETED] Subtask 3-3: Create ScoreHistory component to show score trend over time
+  • Created: components/worker/score-history.tsx
+  • Features:
+    - Displays history as a list with date, score, and trend indicators
+    - Shows dates relative to today (Today, Yesterday, X days ago, or formatted date)
+    - Displays completed jobs count for each entry
+    - Color-coded scores: green (4.5+), yellow (3.5+), orange (2.5+), red (<2.5)
+    - Trend badges showing improvement/decline with icons (TrendingUp/TrendingDown/Minus)
+    - Handles empty state with helpful message
+    - Optional limit prop to control number of entries shown (default 10)
+    - Shows "Showing X of Y entries" when limited
+  • Uses Card component patterns (Card, CardHeader, CardTitle, CardDescription, CardContent)
+  • Internal components: TrendBadge, getScoreColor, formatDate
+  • Pattern from: components/ui/card.tsx
+  • Commit: 3507536
+  • Plan updated: subtask-3-3 status = completed
+
+[COMPLETED] Subtask 4-1: Add reliability score display to worker profile page
+  • Updated: app/app/(dashboard)/worker/profile/page.tsx
+  • Added imports:
+    - ReliabilityBadge from components/worker/reliability-badge
+    - ScoreBreakdown from components/worker/score-breakdown
+    - ScoreHistory from components/worker/score-history
+    - ScoreHistoryEntry type
+  • Added state:
+    - reliabilityScore (number | null)
+    - scoreBreakdown (attendance_rate, punctuality_rate, avg_rating, completed_jobs_count)
+    - scoreHistory (ScoreHistoryEntry[])
+    - isLoadingScore (boolean)
+  • Added useEffect to fetch:
+    - Worker's reliability_score from workers table
+    - Latest score breakdown from reliability_score_history
+    - Score history (up to 10 entries) from reliability_score_history
+  • Added UI section after KYC banners:
+    - Score header card with title and ReliabilityBadge
+    - Explanation text about score calculation
+    - Grid layout for ScoreBreakdown and ScoreHistory cards
+    - ScoreBreakdown only renders when data exists
+    - ScoreHistory shows up to 5 entries with current score context
+  • Pattern from: app/app/(dashboard)/worker/jobs/page.tsx
+  • Commit: 00c6624
+  • Plan updated: subtask-4-1 status = completed
+
+[COMPLETED] Subtask 4-2: Add reliability score display to business job applicant view
+  • Updated: components/applicant-list.tsx
+  • Updated: lib/data/jobs.ts
+  • Changes to lib/data/jobs.ts:
+    - Added reliability_score to ApplicantWithDetails type
+    - Updated getApplicants() function to select reliability_score from workers
+  • Changes to components/applicant-list.tsx:
+    - Added import for ReliabilityBadge component
+    - Added "Skor Keandalan" column header to table
+    - Added reliability score badge display in each applicant row
+    - ReliabilityBadge shows score with showStars={false} for compact display
+    - Workers with scores 1.0-5.0 show color-coded badges (excellent/verygood/good/fair/poor)
+    - Workers with 0 or null score show "N/A" indicator (insufficient data)
+  • Pattern from: components/worker/reliability-badge.tsx
+  • Commit: 8cc65b7
+  • Plan updated: subtask-4-2 status = completed
+
+[COMPLETED] Subtask 5-1: Create database trigger to auto-calculate score when booking completes
+  • Created: supabase/migrations/20260222_add_score_trigger.sql
+  • Functions created:
+    - calculate_reliability_score(p_worker_id UUID) RETURNS NUMERIC(3, 2)
+      * Calculates attendance rate (completed / total bookings)
+      * Calculates punctuality rate (bookings with actual_start_time / completed)
+      * Gets average rating from reviews table
+      * Applies weighted formula: 40% attendance + 30% punctuality + 30% ratings
+      * Returns score 1.0-5.0 rounded to 2 decimal places
+    - update_reliability_score_for_booking() RETURNS TRIGGER
+      * Trigger function that fires when booking status changes to 'completed'
+      * Calls calculate_reliability_score for the worker
+      * Updates workers.reliability_score column
+      * Creates reliability_score_history record with score breakdown
+      * Includes error handling to prevent booking failures
+  • Trigger created: trigger_recalculate_reliability_score
+    * AFTER UPDATE ON public.bookings
+    * FOR EACH ROW
+    * Executes update_reliability_score_for_booking()
+  • Pattern from: supabase/migrations/20250222000001_initial_schema.sql
+  • SECURITY DEFINER used for both functions
+  • Proper error handling with EXCEPTION block and RAISE WARNING
+  • Documentation comments added for functions and trigger
+  • Grant permissions for postgres user to execute functions
+  • Commit: e19b4b7
+  • Plan updated: subtask-5-1 status = completed
+
+[NEXT] Phase 5: Automation Triggers (remaining 2 subtasks)
+  • Subtask 5-2: Add score calculation to job completion flow
+  • Subtask 5-3: End-to-end verification of automatic score calculation

@@ -23,6 +23,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "./ui/avatar"
+import { ReliabilityBadge } from "./worker/reliability-badge"
 import { cn } from "@/lib/utils"
 import type { ApplicantWithDetails } from "@/lib/data/jobs"
 import type { ComplianceStatusResult, AlternativeWorker } from "@/lib/supabase/queries/compliance"
@@ -196,6 +197,7 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
               <TableHeader>
                 <TableRow>
                   <TableHead>Pelamar</TableHead>
+                  <TableHead>Skor Keandalan</TableHead>
                   <TableHead>No. Telepon</TableHead>
                   <TableHead>Tanggal Lamar</TableHead>
                   <TableHead>Status</TableHead>
@@ -228,6 +230,12 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
                           )}
                         </div>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <ReliabilityBadge
+                        score={applicant.workers.reliability_score}
+                        showStars={false}
+                      />
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 text-sm">
