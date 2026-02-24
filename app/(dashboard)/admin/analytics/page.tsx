@@ -20,9 +20,11 @@ import {
   Calendar,
   Loader2,
   RefreshCw,
+  Download,
 } from "lucide-react"
 import { getAnalyticsDashboard } from "@/lib/actions/analytics"
 import type { DateRangeFilter } from "@/lib/types/analytics"
+import { exportToCSV, exportToPDF, formatAnalyticsDataForExport, generateExportFilename } from "@/lib/utils/export"
 
 type DashboardData = {
   user_growth: { metrics: Array<{ date: string; new_workers: number; new_businesses: number; total_new_users: number; cumulative_users: number }> }
@@ -85,6 +87,38 @@ export default function AdminAnalyticsPage() {
       toast.success("Data analytics berhasil diperbarui")
     } finally {
       setIsRefreshing(false)
+    }
+  }
+
+  // Handle CSV export
+  const handleExportCSV = () => {
+    if (!dashboardData) {
+      toast.error("Tidak ada data untuk diekspor")
+      return
+    }
+
+    try {
+      const exportData = formatAnalyticsDataForExport(dashboardData, dateRangePreset)
+      const filename = generateExportFilename("analytics-platform", dateRangePreset)
+      exportToCSV(exportData, filename)
+      toast.success("Data berhasil diekspor ke CSV")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Gagal mengekspor data")
+    }
+  }
+
+  // Handle PDF export
+  const handleExportPDF = () => {
+    if (!dashboardData) {
+      toast.error("Tidak ada data untuk diekspor")
+      return
+    }
+
+    try {
+      exportToPDF("Laporan Analitik Platform")
+      toast.info("Pilih 'Save as PDF' pada dialog print")
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Gagal mengekspor data")
     }
   }
 
@@ -186,24 +220,44 @@ export default function AdminAnalyticsPage() {
               Pantau metrik kunci dan performa platform
             </p>
           </div>
-          <Button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            variant="outline"
-            size="sm"
-          >
-            {isRefreshing ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Memuat...
-              </>
-            ) : (
-              <>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Refresh
-              </>
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleExportCSV}
+              disabled={!dashboardData}
+              variant="outline"
+              size="sm"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              CSV
+            </Button>
+            <Button
+              onClick={handleExportPDF}
+              disabled={!dashboardData}
+              variant="outline"
+              size="sm"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              PDF
+            </Button>
+            <Button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              variant="outline"
+              size="sm"
+            >
+              {isRefreshing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Memuat...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Refresh
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         {/* Date Range Filter */}
