@@ -2,7 +2,7 @@
   "feature": "Emergency Job Cancellation & Rescheduling",
   "description": "# Emergency Job Cancellation & Rescheduling\n\nEmergency cancellation system allowing workers and businesses to cancel bookings with valid reasons (illness, emergency) and minimal penalties. Includes rescheduling options and notification to affected parties.\n\n## Rationale\nEmergencies happen, and a fair cancellation policy reduces no-shows by allowing workers to cancel properly rather than simply not showing up. This builds trust and understanding in the community.\n\n## User Stories\n- As a worker, I want to cancel if I'm sick so that I don't negatively impact my reliability\n- As a business, I want to know if a worker has an emergency so that I can find a replacement\n- As both parties, I want a fair cancellation policy so that emergencies don't ruin relationships\n\n## Acceptance Criteria\n- [ ] Workers can cancel bookings with emergency reasons\n- [ ] Businesses can cancel bookings with valid reasons\n- [ ] Cancellation reasons are categorized (illness, emergency, etc.)\n- [ ] Minimal penalties apply for emergency cancellations\n- [ ] Rescheduling options are offered when possible\n- [ ] Affected parties are notified immediately\n- [ ] Repeated cancellations affect reliability score\n- [ ] Businesses can leave notes about cancellations",
   "created_at": "2026-02-21T21:45:12.366Z",
-  "updated_at": "2026-02-24T20:45:00.000Z",
+  "updated_at": "2026-02-24T14:28:49.180Z",
   "status": "in_progress",
   "workflow_type": "feature",
   "workflow_rationale": "This is a feature workflow because we're adding new functionality (emergency cancellation with reasons) that spans multiple layers: database schema changes, new server actions, and enhanced UI components. The feature has clear dependencies: database must be created before server actions can use it, and server actions must exist before UI can consume them.",
@@ -227,7 +227,8 @@
             "type": "manual",
             "instructions": "Verify component has: reason dropdown, note textarea, shows penalty info, submit button"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created components/worker/emergency-cancellation-dialog.tsx with: (1) Reason dropdown with grouped categories (illness, family_emergency, personal_emergency, weather, transportation, schedule_conflict, other), (2) Note textarea with character count, (3) Penalty info display with color coding (green for 0%, yellow for 10%, orange for 25%+), (4) Submit button with loading state, (5) Error handling with user-friendly messages, (6) Controlled/uncontrolled dialog state following pattern from WorkerNotesDialog. Component fetches cancellation reasons on mount and calls cancelBookingWithReason on submit."
         },
         {
           "id": "subtask-3-2",
