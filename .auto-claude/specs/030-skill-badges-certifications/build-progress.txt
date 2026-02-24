@@ -237,5 +237,17 @@ Subtask 3-1: Create SkillBadgeDisplay component for showing badges
 - Type-check: Passed
 - Git commit: 1c23ea8
 
+[2026-02-25 00:30:00] Subtask 3-3 COMPLETED: Create BadgeFilterSelect component for filtering by badges
+- Created: components/badge/badge-filter-select.tsx
+- Features:
+  * BadgeFilterSelect - Multi-select dropdown for badge filtering
+  * FormBadgeFilterSelect - react-hook-form integration wrapper
+  * Shows available badges that haven't been selected yet
+  * Displays selected badges as removable chips
+  * Supports disabled state and custom placeholder
+  * Follows SkillsSelect pattern from components/worker/skills-select.tsx
+- Type-check: Passed
+- Git commit: 0d211f1
+
 === NEXT SUBTASK ===
-Subtask 3-3: Create BadgeFilterSelect component for filtering by badges
+Subtask 3-4: Create BadgeGrid component for displaying badge collection
