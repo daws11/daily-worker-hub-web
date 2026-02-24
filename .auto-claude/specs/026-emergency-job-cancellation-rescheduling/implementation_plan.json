@@ -2,7 +2,7 @@
   "feature": "Emergency Job Cancellation & Rescheduling",
   "description": "# Emergency Job Cancellation & Rescheduling\n\nEmergency cancellation system allowing workers and businesses to cancel bookings with valid reasons (illness, emergency) and minimal penalties. Includes rescheduling options and notification to affected parties.\n\n## Rationale\nEmergencies happen, and a fair cancellation policy reduces no-shows by allowing workers to cancel properly rather than simply not showing up. This builds trust and understanding in the community.\n\n## User Stories\n- As a worker, I want to cancel if I'm sick so that I don't negatively impact my reliability\n- As a business, I want to know if a worker has an emergency so that I can find a replacement\n- As both parties, I want a fair cancellation policy so that emergencies don't ruin relationships\n\n## Acceptance Criteria\n- [ ] Workers can cancel bookings with emergency reasons\n- [ ] Businesses can cancel bookings with valid reasons\n- [ ] Cancellation reasons are categorized (illness, emergency, etc.)\n- [ ] Minimal penalties apply for emergency cancellations\n- [ ] Rescheduling options are offered when possible\n- [ ] Affected parties are notified immediately\n- [ ] Repeated cancellations affect reliability score\n- [ ] Businesses can leave notes about cancellations",
   "created_at": "2026-02-21T21:45:12.366Z",
-  "updated_at": "2026-02-24T14:31:20.146Z",
+  "updated_at": "2026-02-24T14:37:46.612Z",
   "status": "in_progress",
   "workflow_type": "feature",
   "workflow_rationale": "This is a feature workflow because we're adding new functionality (emergency cancellation with reasons) that spans multiple layers: database schema changes, new server actions, and enhanced UI components. The feature has clear dependencies: database must be created before server actions can use it, and server actions must exist before UI can consume them.",
@@ -263,7 +263,8 @@
             "type": "manual",
             "instructions": "Verify business can cancel accepted bookings with notes about cancellation"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created WorkerCancellationDialog component following WorkerNotesDialog pattern with: (1) Dialog with AlertTriangle icon for visual warning, (2) Mandatory cancellation notes textarea with character count, (3) 'Keep Booking' and 'Cancel Booking' buttons with destructive styling, (4) Loading state during cancellation, (5) Controlled/uncontrolled dialog state support. Updated WorkerApplicationCard to add: (1) onCancelBooking prop, (2) Cancellation button (X icon) that appears next to status badge for accepted bookings, (3) Button only visible when status is 'accepted' and onCancelBooking is provided, (4) click handler properly stops propagation to prevent card selection."
         },
         {
           "id": "subtask-3-4",
@@ -280,7 +281,8 @@
             "type": "manual",
             "instructions": "Verify page refreshes booking list after cancellation"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Verified worker bookings page refreshes booking list after cancellation. The implementation was already complete from previous subtasks: BookingList component has handleCancel callback that calls loadBookings(), which is passed through BookingCard to EmergencyCancellationDialog as onSuccess. When cancellation completes, onSuccess triggers handleCancel, which refreshes the bookings list. No code changes were needed to the page itself."
         }
       ]
     },
