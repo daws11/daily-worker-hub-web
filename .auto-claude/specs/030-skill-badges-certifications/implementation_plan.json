@@ -65,7 +65,8 @@
             "type": "manual",
             "instructions": "Verify RLS policies are created: Workers can view their badges, admins can manage all badges, public can view badges"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added public read policy 'Public can view worker badges' for public profile access. All RLS policies verified: Workers can view/insert/delete own badges, admins can view/insert/delete/update all badges, businesses can verify their authorized badges. Indexes exist on worker_id, badge_id, verification_status, verified_by."
         }
       ]
     },
@@ -542,5 +543,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-24T15:35:41.710Z"
+  "updated_at": "2026-02-24T15:38:32.285Z"
 }
