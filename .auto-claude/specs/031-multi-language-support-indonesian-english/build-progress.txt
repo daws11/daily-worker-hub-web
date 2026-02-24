@@ -197,6 +197,18 @@ To continue building this spec, run:
   - Status labels now use common translation keys
   - Added 'use client' directive for client-side translation support
   - TypeScript type-check passes
+- subtask-6-6: Date/time utilities updated for dynamic locale ✅
+  - Updated lib/utils/date.ts with formatDate, formatDateTime, formatTime, formatShortDate functions
+  - All functions accept Locale type ('id' or 'en') and default to 'id'
+  - Updated JobCard.tsx and JobDetailDialog.tsx to use new formatDate with locale
+  - TypeScript type-check passes, verification command passes
+- subtask-6-7: Toast notifications translated ✅
+  - Updated auth-provider.tsx, use-attendance.ts, and use-bookings.ts to use useTranslation hook for all toast messages
+  - Added missing translation keys to both en.json and id.json:
+    - Auth: registrationFailed, registrationUserNotCreated, registrationProfileFailed, registrationSuccessPleaseLogin, loginFailed, loginFailedGeneric, loginSessionNotCreated, logoutFailed
+    - Attendance: fetchAttendanceListFailed, fetchWorkerHistoryFailed, fetchJobHistoryFailed, fetchWorkerStatsFailed, calculateAttendanceRateFailed, checkInSuccess, checkOutSuccess, checkInFailed, checkOutFailed, locationVerificationPassed, locationVerificationFailed
+    - Bookings: fetchBookingsFailed, fetchBookingFailed, updateStatusSuccess, updateStatusFailed, bulkUpdateSuccess, bulkUpdateFailed, addNotesSuccess, addNotesFailed, createBookingSuccess, createBookingFailed, deleteBookingSuccess, deleteBookingFailed
+  - TypeScript type-check passes
 
 Phase 7 - Integration & Polish: PENDING (0/5 subtasks)
 

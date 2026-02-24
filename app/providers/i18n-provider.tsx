@@ -57,8 +57,8 @@ function saveLocale(locale: Locale) {
  *
  * This provider:
  * - Loads translations for the current locale
- * - Detects language preference from localStorage, browser locale, or default
- * - Persists language changes to localStorage
+ * - Detects language preference from cookie, localStorage, browser locale, or default
+ * - Persists language changes to both cookie and localStorage
  * - Provides translation function and locale controls via context
  *
  * @example
@@ -88,18 +88,58 @@ export function I18nProvider({ children, defaultLocale }: I18nProviderProps) {
   const [isLoaded, setIsLoaded] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
+  /**
+   * Get locale from cookie (set by middleware)
+   */
+  function getCookieLocale(): Locale | null {
+    if (typeof window === 'undefined') return null
+
+    try {
+      const match = document.cookie.match(new RegExp('(^| )user-locale=([^;]+)'))
+      if (match && (match[2] === 'id' || match[2] === 'en')) {
+        return match[2] as Locale
+      }
+    } catch {
+      // Cookie access may fail
+    }
+    return null
+  }
+
+  /**
+   * Set locale cookie
+   */
+  function setCookieLocale(locale: Locale) {
+    if (typeof window === 'undefined') return
+
+    try {
+      const maxAge = 60 * 60 * 24 * 365 // 1 year
+      document.cookie = `user-locale=${locale}; path=/; max-age=${maxAge}; SameSite=lax`
+    } catch {
+      // Cookie setting may fail
+    }
+  }
+
   // Load translations and detect initial locale
   useEffect(() => {
     async function initializeLocale() {
       setIsLoading(true)
 
-      // Priority: 1) Stored preference, 2) Browser locale, 3) Default
-      const stored = getStoredLocale() || detectBrowserLocale()
-      setLocaleState(stored)
+      // Priority: 1) Cookie (from middleware), 2) localStorage, 3) Browser locale, 4) Default
+      const cookieLocale = getCookieLocale()
+      const storedLocale = getStoredLocale()
+      const browserLocale = detectBrowserLocale()
+
+      const initialLocale = cookieLocale || storedLocale || browserLocale
+      setLocaleState(initialLocale)
+
+      // Sync localStorage if cookie was set by middleware
+      if (cookieLocale && cookieLocale !== storedLocale) {
+        saveLocale(cookieLocale)
+      }
 
       // Preload translations
       try {
-        await loadTranslations(stored)
+        await loadTranslations(initialLocale)
       } catch {
         // Fallback to default locale if loading fails
         await loadTranslations(i18nConfig.defaultLocale)
@@ -123,7 +163,7 @@ export function I18nProvider({ children, defaultLocale }: I18nProviderProps) {
   }, [locale, isLoaded])
 
   /**
-   * Set locale and persist to localStorage
+   * Set locale and persist to both cookie and localStorage
    */
   const setLocale = async (newLocale: Locale) => {
     if (newLocale === locale || isLoading) return
@@ -137,6 +177,7 @@ export function I18nProvider({ children, defaultLocale }: I18nProviderProps) {
       // Update state
       setLocaleState(newLocale)
       saveLocale(newLocale)
+      setCookieLocale(newLocale)
     } catch {
       // Keep current locale if loading fails
       console.error(`Failed to load translations for locale: ${newLocale}`)
