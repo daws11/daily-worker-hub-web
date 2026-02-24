@@ -3,7 +3,7 @@
   "spec": "031-multi-language-support-indonesian-english",
   "state": "building",
   "subtasks": {
-    "completed": 26,
+    "completed": 29,
     "total": 31,
     "in_progress": 1,
     "failed": 0
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 28,
+    "number": 31,
     "started_at": "2026-02-24T23:55:22.765652"
   },
-  "last_update": "2026-02-25T01:31:22.362196"
+  "last_update": "2026-02-25T01:39:13.872560"
 }
