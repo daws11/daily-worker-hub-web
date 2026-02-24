@@ -206,3 +206,20 @@ Subtask 2-3: Update Supabase types to include new badge tables
 
 === NEXT SUBTASK ===
 Subtask 3-1: Create SkillBadgeDisplay component for showing badges
+
+[2026-02-25 00:05:00] Subtask 3-1 COMPLETED: Create SkillBadgeDisplay component for showing badges
+- Created: components/badge/skill-badge-display.tsx
+- Features:
+  * SkillBadgeDisplay - Main component with icon, name, description, verification status
+  * SkillBadgeChip - Compact inline display variant
+  * SkillBadgeIcon - Icon-only display for grids
+  * Uses class-variance-authority for variants (size: sm/md/lg, status: pending/verified/rejected/default, variant: default/outline/ghost)
+  * Dynamic icon loading from lucide-react based on badge.icon string
+  * Shows verification status with appropriate icons (Clock, CheckCircle2, XCircle)
+  * Shows certified badge indicator for is_certified badges
+  * Displays verified date when available
+- Type-check: Passed
+- Git commit: ee71a0d
+
+=== NEXT SUBTASK ===
+Subtask 3-2: Create BadgeVerificationForm component for badge requests
