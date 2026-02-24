@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { useAuth } from "@/app/providers/auth-provider"
+import { useTranslation } from "@/lib/i18n/hooks"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -39,6 +40,7 @@ type WalletBalance = {
 
 export default function BusinessWalletPage() {
   const { user } = useAuth()
+  const { t, locale } = useTranslation()
   const router = useRouter()
   const [business, setBusiness] = useState<BusinessesRow | null>(null)
   const [walletBalance, setWalletBalance] = useState<WalletBalance | null>(null)
@@ -65,7 +67,7 @@ export default function BusinessWalletPage() {
         .single()
 
       if (error || !data) {
-        toast.error("Profil bisnis tidak ditemukan")
+        toast.error(t('errors.loadFailed'))
         return
       }
 
@@ -73,7 +75,7 @@ export default function BusinessWalletPage() {
     }
 
     fetchBusiness()
-  }, [user, router])
+  }, [user, router, t])
 
   // Fetch wallet balance
   useEffect(() => {
@@ -85,7 +87,7 @@ export default function BusinessWalletPage() {
         const result = await getBusinessWalletBalance(business.id)
 
         if (!result.success || !result.data) {
-          toast.error(result.error || "Gagal memuat saldo wallet")
+          toast.error(result.error || t('errors.loadFailed'))
           return
         }
 
@@ -96,7 +98,7 @@ export default function BusinessWalletPage() {
     }
 
     fetchWalletBalance()
-  }, [business])
+  }, [business, t])
 
   // Fetch payment history
   useEffect(() => {
@@ -108,7 +110,7 @@ export default function BusinessWalletPage() {
         const result = await getBusinessPaymentHistory(business.id)
 
         if (!result.success || !result.data) {
-          toast.error(result.error || "Gagal memuat riwayat transaksi")
+          toast.error(result.error || t('errors.loadFailed'))
           return
         }
 
@@ -119,7 +121,7 @@ export default function BusinessWalletPage() {
     }
 
     fetchTransactions()
-  }, [business])
+  }, [business, t])
 
   // Calculate fee when amount changes
   useEffect(() => {
@@ -159,7 +161,7 @@ export default function BusinessWalletPage() {
 
     const amount = Number(topUpAmount)
     if (isNaN(amount) || amount < 500000) {
-      toast.error("Minimal top-up Rp 500.000")
+      toast.error(locale === 'id' ? 'Minimal top-up Rp 500.000' : 'Minimum top-up Rp 500.000')
       return
     }
 
@@ -168,14 +170,17 @@ export default function BusinessWalletPage() {
       const result = await initializeQrisPayment(business.id, amount)
 
       if (!result.success || !result.data) {
-        toast.error(result.error || "Gagal membuat pembayaran QRIS")
+        toast.error(result.error || t('wallet.paymentFailed'))
         return
       }
 
       // Redirect to payment URL
       if (result.data.payment_url) {
         window.open(result.data.payment_url, "_blank")
-        toast.success("Pembayaran QRIS berhasil dibuat. Silakan selesaikan pembayaran.")
+        toast.success(locale === 'id'
+          ? 'Pembayaran QRIS berhasil dibuat. Silakan selesaikan pembayaran.'
+          : 'QRIS payment created successfully. Please complete the payment.'
+        )
         // Refresh transactions after a delay
         setTimeout(() => {
           window.location.reload()
@@ -186,9 +191,9 @@ export default function BusinessWalletPage() {
     }
   }
 
-  // Format currency to Indonesian Rupiah
+  // Format currency to Indonesian Rupiah (for now, always IDR)
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("id-ID", {
+    return new Intl.NumberFormat(locale === 'id' ? 'id-ID' : 'en-US', {
       style: "currency",
       currency: "IDR",
       minimumFractionDigits: 0,
@@ -196,9 +201,9 @@ export default function BusinessWalletPage() {
     }).format(amount)
   }
 
-  // Format date to Indonesian locale
+  // Format date based on current locale
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("id-ID", {
+    return new Date(dateString).toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -213,28 +218,28 @@ export default function BusinessWalletPage() {
       case "success":
         return {
           variant: "default" as const,
-          label: "Berhasil",
+          label: t('common.success'),
           icon: CheckCircle2,
           className: "bg-green-100 text-green-800 hover:bg-green-100",
         }
       case "pending":
         return {
           variant: "secondary" as const,
-          label: "Menunggu",
+          label: t('common.pending'),
           icon: Clock,
           className: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
         }
       case "failed":
         return {
           variant: "destructive" as const,
-          label: "Gagal",
+          label: t('common.failed'),
           icon: XCircle,
           className: "bg-red-100 text-red-800 hover:bg-red-100",
         }
       case "expired":
         return {
           variant: "outline" as const,
-          label: "Kadaluarsa",
+          label: locale === 'id' ? 'Kadaluarsa' : 'Expired',
           icon: AlertCircle,
           className: "bg-gray-100 text-gray-800 hover:bg-gray-100",
         }
@@ -253,7 +258,7 @@ export default function BusinessWalletPage() {
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Memuat profil bisnis...</p>
+          <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -264,9 +269,12 @@ export default function BusinessWalletPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold">Wallet Bisnis</h1>
+          <h1 className="text-2xl font-bold">{locale === 'id' ? 'Wallet Bisnis' : 'Business Wallet'}</h1>
           <p className="text-[#666]">
-            Kelola saldo dan riwayat transaksi Anda
+            {locale === 'id'
+              ? 'Kelola saldo dan riwayat transaksi Anda'
+              : 'Manage your balance and transaction history'
+            }
           </p>
         </div>
 
@@ -279,8 +287,11 @@ export default function BusinessWalletPage() {
                   <Wallet className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl">Saldo Wallet</CardTitle>
-                  <CardDescription>Saldo yang tersedia untuk digunakan</CardDescription>
+                  <CardTitle className="text-xl">{t('wallet.currentBalance')}</CardTitle>
+                  <CardDescription>{locale === 'id'
+                    ? 'Saldo yang tersedia untuk digunakan'
+                    : 'Balance available for use'
+                  }</CardDescription>
                 </div>
               </div>
             </div>
@@ -294,14 +305,17 @@ export default function BusinessWalletPage() {
               <div className="space-y-4">
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-bold text-blue-600">
-                    {walletBalance ? formatCurrency(walletBalance.balance) : "Rp 0"}
+                    {walletBalance ? formatCurrency(walletBalance.balance) : formatCurrency(0)}
                   </span>
                   <span className="text-lg text-muted-foreground">
                     {walletBalance?.currency || "IDR"}
                   </span>
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Saldo akan bertambah setelah pembayaran QRIS berhasil
+                  {locale === 'id'
+                    ? 'Saldo akan bertambah setelah pembayaran QRIS berhasil'
+                    : 'Balance will increase after successful QRIS payment'
+                  }
                 </div>
               </div>
             )}
@@ -313,20 +327,23 @@ export default function BusinessWalletPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              Top Up Saldo
+              {t('wallet.topUp')}
             </CardTitle>
             <CardDescription>
-              Isi saldo wallet menggunakan QRIS (minimal Rp 500.000)
+              {locale === 'id'
+                ? 'Isi saldo wallet menggunakan QRIS (minimal Rp 500.000)'
+                : 'Top up wallet balance using QRIS (min. Rp 500.000)'
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleTopUp} className="space-y-4">
               <div className="grid w-full items-center gap-1.5">
-                <Label htmlFor="amount">Jumlah Top Up (Rp)</Label>
+                <Label htmlFor="amount">{t('wallet.topUpAmount')} (Rp)</Label>
                 <Input
                   id="amount"
                   type="number"
-                  placeholder="Masukkan jumlah top up"
+                  placeholder={locale === 'id' ? 'Masukkan jumlah top up' : 'Enter top up amount'}
                   value={topUpAmount}
                   onChange={(e) => setTopUpAmount(e.target.value)}
                   min={500000}
@@ -334,23 +351,23 @@ export default function BusinessWalletPage() {
                   disabled={isProcessingPayment}
                 />
                 <p className="text-sm text-muted-foreground">
-                  Minimal: Rp 500.000 | Maksimal: Rp 100.000.000
+                  {locale === 'id' ? 'Minimal: Rp 500.000 | Maksimal: Rp 100.000.000' : 'Minimum: Rp 500.000 | Maximum: Rp 100.000.000'}
                 </p>
               </div>
 
               {feeBreakdown && (
                 <div className="bg-blue-50 p-4 rounded-lg space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Jumlah Top Up:</span>
+                    <span className="text-muted-foreground">{t('wallet.topUpAmount')}:</span>
                     <span className="font-medium">{formatCurrency(feeBreakdown.amount)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Biaya Admin (0.7% + Rp 500):</span>
+                    <span className="text-muted-foreground">{locale === 'id' ? 'Biaya Admin (0.7% + Rp 500):' : 'Admin Fee (0.7% + Rp 500):'}</span>
                     <span className="font-medium">{formatCurrency(feeBreakdown.fee_amount)}</span>
                   </div>
                   <div className="border-t pt-2 mt-2">
                     <div className="flex justify-between">
-                      <span className="font-semibold">Total Pembayaran:</span>
+                      <span className="font-semibold">{locale === 'id' ? 'Total Pembayaran:' : 'Total Payment:'}</span>
                       <span className="font-bold text-blue-600">{formatCurrency(feeBreakdown.total_amount)}</span>
                     </div>
                   </div>
@@ -365,12 +382,12 @@ export default function BusinessWalletPage() {
                 {isProcessingPayment ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Memproses...
+                    {t('common.processing')}
                   </>
                 ) : (
                   <>
                     <ArrowUpRight className="mr-2 h-4 w-4" />
-                    Bayar dengan QRIS
+                    {locale === 'id' ? 'Bayar dengan QRIS' : 'Pay with QRIS'}
                   </>
                 )}
               </Button>
@@ -381,9 +398,12 @@ export default function BusinessWalletPage() {
         {/* Transaction History */}
         <Card>
           <CardHeader>
-            <CardTitle>Riwayat Transaksi</CardTitle>
+            <CardTitle>{t('wallet.transactionHistory')}</CardTitle>
             <CardDescription>
-              Daftar semua transaksi top up wallet Anda
+              {locale === 'id'
+                ? 'Daftar semua transaksi top up wallet Anda'
+                : 'List of all your wallet top up transactions'
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -395,7 +415,7 @@ export default function BusinessWalletPage() {
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <Wallet className="h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">
-                  Belum ada riwayat transaksi
+                  {t('wallet.noTransactions')}
                 </p>
               </div>
             ) : (
@@ -403,10 +423,10 @@ export default function BusinessWalletPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Tanggal</TableHead>
-                      <TableHead>Jumlah</TableHead>
-                      <TableHead>Biaya Admin</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>{t('common.date')}</TableHead>
+                      <TableHead>{t('wallet.transactionAmount')}</TableHead>
+                      <TableHead>{locale === 'id' ? 'Biaya Admin' : 'Admin Fee'}</TableHead>
+                      <TableHead>{t('common.status')}</TableHead>
                       <TableHead>Payment Provider</TableHead>
                     </TableRow>
                   </TableHeader>
