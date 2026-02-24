@@ -60,6 +60,9 @@ export type Database = {
       bookings: {
         Row: {
           business_id: string
+          cancellation_note: string | null
+          cancellation_reason_id: string | null
+          cancelled_at: string | null
           created_at: string
           end_date: string | null
           final_price: number | null
@@ -72,6 +75,9 @@ export type Database = {
         }
         Insert: {
           business_id: string
+          cancellation_note?: string | null
+          cancellation_reason_id?: string | null
+          cancelled_at?: string | null
           created_at?: string
           end_date?: string | null
           final_price?: number | null
@@ -84,6 +90,9 @@ export type Database = {
         }
         Update: {
           business_id?: string
+          cancellation_note?: string | null
+          cancellation_reason_id?: string | null
+          cancelled_at?: string | null
           created_at?: string
           end_date?: string | null
           final_price?: number | null
@@ -102,6 +111,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "bookings_cancellation_reason_id_fkey"
+            columns: ["cancellation_reason_id"]
+            referencedRelation: "cancellation_reasons"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bookings_job_id_fkey"
             columns: ["job_id"]
             referencedRelation: "jobs"
@@ -114,6 +129,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cancellation_reasons: {
+        Row: {
+          category: Database["public"]["Enums"]["cancellation_reason_category"]
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          name: string
+          penalty_percentage: number
+          requires_verification: boolean
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["cancellation_reason_category"]
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          penalty_percentage?: number
+          requires_verification?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["cancellation_reason_category"]
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          penalty_percentage?: number
+          requires_verification?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       businesses: {
         Row: {
@@ -637,6 +691,14 @@ export type Database = {
         | "in_progress"
         | "completed"
         | "cancelled"
+      cancellation_reason_category:
+        | "illness"
+        | "family_emergency"
+        | "personal_emergency"
+        | "weather"
+        | "transportation"
+        | "schedule_conflict"
+        | "other"
       job_status: "open" | "in_progress" | "completed" | "cancelled"
       report_status: "pending" | "reviewing" | "resolved" | "dismissed"
       report_type: "user" | "job" | "business" | "booking"
@@ -1410,6 +1472,15 @@ export const Constants = {
         "in_progress",
         "completed",
         "cancelled",
+      ],
+      cancellation_reason_category: [
+        "illness",
+        "family_emergency",
+        "personal_emergency",
+        "weather",
+        "transportation",
+        "schedule_conflict",
+        "other",
       ],
       job_status: ["open", "in_progress", "completed", "cancelled"],
       report_status: ["pending", "reviewing", "resolved", "dismissed"],
