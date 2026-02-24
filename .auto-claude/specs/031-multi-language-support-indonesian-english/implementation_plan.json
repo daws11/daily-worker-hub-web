@@ -555,7 +555,9 @@
             "type": "manual",
             "instructions": "Verify booking action buttons show translated text, worker notes dialog labels are translated"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Translated booking-actions.tsx and worker-notes-dialog.tsx components with useTranslation hook. Added new translation keys to both en.json and id.json: accept, reject, workerNotesDescription, workerNotesDetailedPlaceholder, characterCount, characterCount_plural. All hardcoded strings replaced with translation keys: Accept/Reject buttons use t('bookings.accept')/t('bookings.reject'), Worker Notes title uses t('bookings.workerNotes'), dialog description with workerName param uses t('bookings.workerNotesDescription'), Notes label uses t('common.notes'), placeholder uses t('bookings.workerNotesDetailedPlaceholder'), character count text uses pluralization helper, Cancel button uses t('common.cancel'), Save button uses t('bookings.saveNotes')/t('common.saving'). TypeScript type-check passes.",
+          "updated_at": "2026-02-25T00:00:00.000000+00:00"
         },
         {
           "id": "subtask-6-4",
