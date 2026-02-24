@@ -405,3 +405,50 @@ Commit: 5303067 - "auto-claude: subtask-3-2 - Update booking card to use emergen
 Next: Subtask 3-3 - Add business-side cancellation with notes
 
 === END SESSION 11 ===
+
+=== SESSION 12 - SUBTASK 4-1 COMPLETION ===
+Date: 2026-02-24
+
+Subtask 4-1: End-to-end test: Worker cancels with emergency reason
+Status: COMPLETED
+
+Files Created:
+- scripts/test-e2e-emergency-cancellation.ts
+- scripts/test-e2e-emergency-cancellation.sh
+
+Files Modified:
+- package.json (added test:e2e:emergency-cancellation script)
+
+Implementation Details:
+- Created comprehensive E2E test script following pattern from test-e2e-worker-withdrawal.ts
+- Test covers all required verification steps:
+  * Step 1: Get or create test data (worker, business, job, booking)
+  * Step 2: Verify worker views accepted booking
+  * Step 3: Get illness cancellation reason (emergency, 0% penalty)
+  * Step 4: Worker cancels booking with emergency reason
+  * Step 5: Verify booking status changed to cancelled
+  * Step 6: Verify business received notification
+  * Step 7: Verify worker reliability score with minimal penalty
+- Created shell script wrapper for easy execution
+- Added npm script: test:e2e:emergency-cancellation
+- Test verifies:
+  * Booking status updates to 'cancelled'
+  * Cancellation reason and note are stored
+  * Notification is created for business
+  * Emergency cancellations (0% penalty) do not negatively impact reliability score
+  * Cancellation breakdown is tracked (emergency, partial penalty, full penalty)
+
+Manual Verification:
+✓ TypeScript compilation passes
+✓ Test script follows existing patterns
+✓ All verification steps covered
+✓ Npm script added for easy test execution
+
+Note: Build test failed due to network issue with Google Fonts (unrelated to this feature).
+The code is valid and type-check passes.
+
+Commit: (pending)
+
+Next: Subtask 4-2 - End-to-end test: Business cancels worker booking
+
+=== END SESSION 12 ===
