@@ -170,6 +170,49 @@ export type Database = {
           },
         ]
       }
+      badges: {
+        Row: {
+          category: Database["public"]["Enums"]["badge_category"]
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          is_certified: boolean
+          name: string
+          provider_id: string | null
+          slug: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["badge_category"]
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          is_certified?: boolean
+          name: string
+          provider_id?: string | null
+          slug: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["badge_category"]
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          is_certified?: boolean
+          name?: string
+          provider_id?: string | null
+          slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "badges_provider_id_fkey"
+            columns: ["provider_id"]
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           created_at: string
@@ -567,6 +610,52 @@ export type Database = {
         }
         Relationships: []
       }
+      worker_badges: {
+        Row: {
+          badge_id: string
+          created_at: string
+          verification_status: Database["public"]["Enums"]["badge_verification_status"]
+          verified_at: string | null
+          verified_by: string | null
+          worker_id: string
+        }
+        Insert: {
+          badge_id: string
+          created_at?: string
+          verification_status: Database["public"]["Enums"]["badge_verification_status"]
+          verified_at?: string | null
+          verified_by?: string | null
+          worker_id: string
+        }
+        Update: {
+          badge_id?: string
+          created_at?: string
+          verification_status?: Database["public"]["Enums"]["badge_verification_status"]
+          verified_at?: string | null
+          verified_by?: string | null
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "worker_badges_verified_by_fkey"
+            columns: ["verified_by"]
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "worker_badges_worker_id_fkey"
+            columns: ["worker_id"]
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workers: {
         Row: {
           address: string | null
@@ -630,6 +719,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      badge_category: "certification" | "skill" | "specialization" | "training"
+      badge_verification_status: "pending" | "rejected" | "verified"
       booking_status:
         | "pending"
         | "accepted"
@@ -1403,6 +1494,8 @@ export const Constants = {
   },
   public: {
     Enums: {
+      badge_category: ["certification", "skill", "specialization", "training"],
+      badge_verification_status: ["pending", "rejected", "verified"],
       booking_status: [
         "pending",
         "accepted",
