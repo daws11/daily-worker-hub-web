@@ -3,6 +3,7 @@
 -- ============================================================================
 -- This migration adds cancellation reasons enum and table for emergency
 -- job cancellations with valid reasons and minimal penalties.
+-- It also adds cancellation tracking columns to the bookings table.
 -- Version: 20260224_add_emergency_cancellation
 -- Date: 2026-02-24
 -- ============================================================================
@@ -70,6 +71,20 @@ ALTER TABLE cancellation_reasons ENABLE ROW LEVEL SECURITY;
 -- Cancellation reasons are viewable by everyone
 CREATE POLICY "Cancellation reasons are viewable by everyone"
   ON cancellation_reasons FOR SELECT USING (true);
+
+-- ============================================================================
+-- MODIFY BOOKINGS TABLE - Add cancellation tracking columns
+-- ============================================================================
+
+-- Add cancellation columns to bookings table
+ALTER TABLE bookings
+  ADD COLUMN cancellation_reason_id UUID REFERENCES cancellation_reasons(id) ON DELETE SET NULL,
+  ADD COLUMN cancellation_note TEXT,
+  ADD COLUMN cancelled_at TIMESTAMPTZ;
+
+-- Create index for cancellation_reason_id
+CREATE INDEX idx_bookings_cancellation_reason_id ON bookings(cancellation_reason_id);
+CREATE INDEX idx_bookings_cancelled_at ON bookings(cancelled_at);
 
 -- ============================================================================
 -- SEED DATA
