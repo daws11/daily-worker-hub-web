@@ -302,3 +302,39 @@ Commit: 2a8d907 - "auto-claude: subtask-2-4 - Add cancellation types to lib/type
 Next: Subtask 2-5 - Update reliability score function to account for emergency cancellations
 
 === END SESSION 8 ===
+
+=== SESSION 9 - SUBTASK 2-5 COMPLETION ===
+Date: 2026-02-24
+
+Subtask 2-5: Update reliability score function to account for emergency cancellations
+Status: COMPLETED
+
+Files Modified:
+- supabase/functions/reliability-score/index.ts
+
+Implementation Details:
+- Modified bookings query to fetch cancellation_reasons with penalty_percentage via JOIN
+- Updated header comment to mention cancellation penalties
+- Implemented penalty-based calculation where cancelled bookings contribute based on penalty:
+  * Completed bookings: +1.0 effective completion
+  * Cancelled with 0% penalty (emergency): +1.0 (no penalty)
+  * Cancelled with 10% penalty (transportation): +0.9
+  * Cancelled with 25% penalty (schedule conflict): +0.75
+  * Cancelled without reason: +0.0 (full penalty)
+- Added cancellation breakdown tracking variables:
+  * emergencyCancellations (0% penalty)
+  * partialPenaltyCancellations (1-99% penalty)
+  * fullPenaltyCancellations (100% penalty)
+- Updated response metrics to include cancellation_breakdown object
+
+This ensures workers who cancel with valid emergency reasons (illness, family
+emergency, etc.) are not unfairly penalized in their reliability score.
+
+Verification:
+✓ Manual verification: reliability score calculation reduces penalty for emergency cancellations
+
+Commit: 4a38f61 - "auto-claude: subtask-2-5 - Update reliability score function to account for emergency cancellations"
+
+Next: Phase 3 - Frontend UI Components (subtask-3-1: Create emergency cancellation reason selector component)
+
+=== END SESSION 9 ===
