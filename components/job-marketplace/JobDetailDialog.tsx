@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { JobWithRelations } from '@/lib/types/job'
 import { formatIDR } from '@/lib/utils/currency'
-import { formatDateIndo } from '@/lib/utils/date'
+import { formatDate } from '@/lib/utils/date'
 import { isUMKCompliant } from '@/lib/constants/wage'
 import {
   MapPin,
@@ -44,7 +44,7 @@ export function JobDetailDialog({
   onApply,
   isApplying = false,
 }: JobDetailDialogProps) {
-  const { t } = useTranslation()
+  const { t, locale } = useTranslation()
 
   if (!job) return null
 
@@ -116,7 +116,7 @@ export function JobDetailDialog({
               <Calendar className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-sm font-medium">{t('jobs.applicationDeadline')}</p>
-                <p className="text-sm text-muted-foreground">{formatDateIndo(job.deadline)}</p>
+                <p className="text-sm text-muted-foreground">{formatDate(job.deadline, locale)}</p>
               </div>
             </div>
           </div>

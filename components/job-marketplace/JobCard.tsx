@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { JobWithRelations } from '@/lib/types/job'
 import { formatIDR } from '@/lib/utils/currency'
-import { formatDateIndo } from '@/lib/utils/date'
+import { formatDate } from '@/lib/utils/date'
 import { isUMKCompliant } from '@/lib/constants/wage'
 import { MapPin, Calendar, Banknote, Building2, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -18,7 +18,7 @@ interface JobCardProps {
 }
 
 export function JobCard({ job, onClick, className }: JobCardProps) {
-  const { t } = useTranslation()
+  const { t, locale } = useTranslation()
 
   // Check if job is Rate Bali compliant (using minimum wage)
   const isRateBaliCompliant = isUMKCompliant(job.budget_min, job.address)
@@ -97,7 +97,7 @@ export function JobCard({ job, onClick, className }: JobCardProps) {
       <CardFooter className="pt-2 sm:pt-3 border-t px-3 sm:px-6">
         <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
           <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-          <span className="line-clamp-1">{t('jobs.deadlineLabel')} {formatDateIndo(job.deadline)}</span>
+          <span className="line-clamp-1">{t('jobs.deadlineLabel')} {formatDate(job.deadline, locale)}</span>
         </div>
       </CardFooter>
     </Card>
