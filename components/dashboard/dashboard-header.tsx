@@ -3,6 +3,7 @@
 import * as React from "react"
 import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { LanguageSwitcher } from "@/components/ui/language-switcher"
 
 interface DashboardHeaderProps {
   onMenuClick: () => void
@@ -26,6 +27,9 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
       <span className="font-semibold text-lg">
         Daily<span className="text-primary">Worker</span>
       </span>
+      <div className="ml-auto">
+        <LanguageSwitcher />
+      </div>
     </header>
   )
 }

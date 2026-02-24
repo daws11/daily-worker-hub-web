@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import { SidebarItem } from "./sidebar-item"
 import { UserMenu } from "./user-menu"
 import { workerNavItems, businessNavItems } from "./navigation-config"
+import { LanguageSwitcher } from "@/components/ui/language-switcher"
 import { Briefcase } from "lucide-react"
 
 interface SidebarProps {
@@ -35,6 +36,11 @@ export function Sidebar({ className }: SidebarProps) {
         <Link href="/" className="font-semibold text-lg">
           Daily<span className="text-primary">Worker</span>
         </Link>
+      </div>
+
+      {/* Language Switcher */}
+      <div className="border-b px-6 py-3">
+        <LanguageSwitcher />
       </div>
 
       {/* Navigation */}
