@@ -1,0 +1,206 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Multi-Language Support (Indonesian & English)
+Workspace: tasks/031-multi-language-support-indonesian-english
+Started: 2026-02-24
+
+Workflow Type: FEATURE
+Rationale: This is a feature implementation that requires building new i18n infrastructure
+from scratch. The phases follow dependency order: database schema first, then i18n
+infrastructure, then providers, then components, then translation of existing content,
+and finally integration.
+
+Session 1 (Planner):
+- Created implementation_plan.json
+- Created project_index.json
+- Created context.json
+- Created init.sh
+- Created build-progress.txt
+
+Phase Summary:
+- Phase 1 - Database Schema: 2 subtasks, depends on []
+- Phase 2 - I18n Infrastructure: 5 subtasks, depends on [phase-1-database]
+- Phase 3 - I18n Provider: 2 subtasks, depends on [phase-2-i18n-infrastructure]
+- Phase 4 - Language Switcher: 2 subtasks, depends on [phase-3-provider]
+- Phase 5 - Page Translations: 8 subtasks, depends on [phase-3-provider]
+- Phase 6 - Component Translations: 7 subtasks, depends on [phase-3-provider]
+- Phase 7 - Integration & Polish: 5 subtasks, depends on [phase-4-language-switcher, phase-5-page-translations, phase-6-component-translations]
+
+Total: 7 phases, 33 subtasks
+
+Services Involved:
+- Database: Add language_preference column to users table
+- Frontend: Build i18n infrastructure, translate all pages and components
+
+=== CODEBASE INVESTIGATION FINDINGS ===
+
+Project Type:
+- Next.js 14 with App Router
+- TypeScript
+- Tailwind CSS
+- Supabase (PostgreSQL + Auth)
+
+Current State:
+- All text is hardcoded in Indonesian
+- lang="id" set statically in root layout
+- Date/time formatting uses 'id-ID' locale
+- No existing i18n infrastructure
+- Toast notifications are hardcoded Indonesian strings
+
+Database Schema:
+- users table exists with basic fields
+- Missing: language_preference column (to be added)
+- Pattern: Timestamp-prefixed SQL migrations
+
+Key Patterns Identified:
+- Provider Pattern: React Context with custom hook (see auth-provider.tsx)
+- Constants Pattern: Arrays of objects with value/label properties
+- Date Formatting: Intl.DateTimeFormat with hardcoded locale (needs dynamic)
+- Component Structure: Functional components with TypeScript interfaces
+- Middleware Pattern: Next.js middleware for route protection
+- Migration Pattern: SQL files in supabase/migrations/ directory
+
+Files to Create:
+- supabase/migrations/20260224_add_language_preference.sql
+- lib/i18n/types.ts
+- lib/i18n/locales/en.json
+- lib/i18n/locales/id.json
+- lib/i18n/config.ts
+- lib/i18n/hooks.ts
+- app/providers/i18n-provider.tsx
+- components/ui/language-switcher.tsx
+
+Files to Modify:
+- lib/supabase/types.ts (add language_preference)
+- app/layout.tsx (integrate I18nProvider, dynamic lang/dir)
+- app/(dashboard)/layout.tsx (add LanguageSwitcher)
+- All page files (add useTranslation hook)
+- All component files (add useTranslation hook)
+- lib/utils/date.ts (dynamic locale)
+- middleware.ts (language detection)
+- All hooks with toast notifications (translated messages)
+
+=== PARALLELISM ANALYSIS ===
+
+Max parallel phases: 3
+Parallel groups:
+- Phase 5 (Page Translations) and Phase 6 (Component Translations) can run in parallel
+  Reason: Both depend only on phase-3-provider, work on different files
+
+Recommended workers: 2
+Speedup estimate: 1.5x faster than sequential
+
+=== VERIFICATION STRATEGY ===
+
+Risk Level: MEDIUM
+- Type checking required (no unit tests configured)
+- Lint check required
+- Production build verification
+- Manual browser testing for language switching
+- Translation completeness check
+
+Acceptance Criteria:
+- [ ] Users can switch between Indonesian and English
+- [ ] All UI elements are translated
+- [ ] Notifications are sent in user's preferred language
+- [ ] Language preference is saved per user
+- [ ] Translation system supports adding more languages
+- [ ] Content is culturally appropriate for each language
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  1. Start the development server:
+     npm run dev
+
+  2. Or use the init script:
+     source .auto-claude/specs/031-multi-language-support-indonesian-english/init.sh
+
+  3. A separate coder agent will:
+     - Read implementation_plan.json for subtask list
+     - Find next pending subtask (respecting dependencies)
+     - Implement the actual code changes
+
+=== SUBTASK COMPLETIONS ===
+
+[2026-02-25] Phase 1 - Database Schema: COMPLETED (2/2 subtasks)
+- subtask-1-1: Migration for language_preference column
+- subtask-1-2: TypeScript types updated
+
+[2026-02-25] Phase 2 - I18n Infrastructure: COMPLETED (5/5 subtasks)
+- subtask-2-1: i18n TypeScript types created
+- subtask-2-2: English translation file (en.json) created
+- subtask-2-3: Indonesian translation file (id.json) created
+- subtask-2-4: i18n configuration (config.ts) created
+- subtask-2-5: useTranslation hook (hooks.ts) created
+
+[2026-02-24] Phase 3 - I18n Provider: COMPLETED (2/2 subtasks)
+- subtask-3-1: I18nProvider component created
+- subtask-3-2: I18nProvider integrated into root layout
+
+[2026-02-25] Phase 4 - Language Switcher Component: COMPLETED (2/2 subtasks)
+- subtask-4-1: LanguageSwitcher component created
+- subtask-4-2: LanguageSwitcher added to dashboard layout
+
+[2026-02-25] Phase 5 - Page Translations: IN PROGRESS (8/8 subtasks)
+- subtask-5-1: Landing page (app/page.tsx) translated ✅
+  - Added landing section to en.json and id.json
+  - Updated app/page.tsx to use useTranslation hook
+  - All hardcoded strings replaced with t() calls
+- subtask-5-2: Login page translated ✅
+- subtask-5-3: Register page translated ✅
+- subtask-5-4: Worker jobs page (app/(dashboard)/worker/jobs/page.tsx) translated ✅
+  - Added useTranslation hook import and usage
+  - Replaced all hardcoded text with translation keys (t function)
+  - Updated date/time formatting to use dynamic locale
+  - Updated toast messages to use translations
+  - Updated status badge text to use translations
+  - Updated page headers, labels, and placeholders
+- subtask-5-5: Business jobs page translated ✅
+- subtask-5-6: Worker attendance page translated ✅
+- subtask-5-7: Business job attendance page translated ✅
+- subtask-5-8: Wallet pages (worker and business) translated ✅
+  - Added useTranslation hook to both wallet pages
+  - All hardcoded text replaced with translation keys
+  - Date/currency formatting now locale-aware
+  - Bank names translated based on locale
+  - Status badges use translated labels
+
+[2026-02-25] Phase 6 - Component Translations: IN PROGRESS (5/7 subtasks)
+- subtask-6-1: Job marketplace components (JobCard, JobFilters, JobSearch, JobSort, JobList) translated ✅
+  - Added 'use client' directive to JobCard.tsx and imported useTranslation hook
+  - JobCard: Translated 'Rate Bali' badge and 'Deadline:' label
+  - JobFilters: Translated all filter labels (position type, area/location, wage range, deadline)
+  - JobSearch: Translated placeholder and 'Clear search' sr-only text
+  - JobSort: Translated sort options and placeholder using useMemo for performance
+  - JobList: Translated empty state titles/descriptions and job count labels
+  - TypeScript type-check passes
+- subtask-6-2: JobDetailDialog component translated ✅
+  - Added new translation keys to en.json and id.json
+  - Translated dialog content: wageRangeLabel, applicationDeadline, requiredSkills, businessProfile, applyForJob
+  - All hardcoded strings replaced with translation keys
+  - TypeScript type-check passes
+- subtask-6-3: Booking components (booking-actions, worker-notes-dialog) translated ✅
+  - Added new translation keys to en.json and id.json: accept, reject, workerNotesDescription, workerNotesDetailedPlaceholder, characterCount, characterCount_plural
+  - booking-actions.tsx: Accept/Reject buttons use t('bookings.accept')/t('bookings.reject'), Processing uses t('common.processing')
+  - worker-notes-dialog.tsx: Worker Notes title, description with workerName param, Notes label, placeholder, character count (pluralized), Cancel button, Save/Saving button
+  - TypeScript type-check passes
+- subtask-6-4: Attendance components (QRCodeScanner, CheckInOutButton, AttendanceHistory) translated ✅
+  - Added new translation keys for QR scanner, camera errors, location errors, attendance history
+  - Date/time formatting updated to use dynamic locale
+  - TypeScript type-check passes
+- subtask-6-5: Applicant list component translated ✅
+  - Added new translation keys: loadingApplicants, noApplicants, noApplicantsMessage, applicantCount, applicantsHeader, phoneHeader, applicationDateHeader, actionHeader, noAction
+  - All hardcoded Indonesian text replaced with translation keys
+  - Date/time formatting updated to use dynamic locale
+  - Status labels now use common translation keys
+  - Added 'use client' directive for client-side translation support
+  - TypeScript type-check passes
+
+Phase 7 - Integration & Polish: PENDING (0/5 subtasks)
+
+=== END SESSION 1 (PLANNING) ===
+
+NOTE: Do NOT start implementation. A separate coder agent will handle
+implementation in a subsequent session. This session was for planning only.
