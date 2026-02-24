@@ -2,7 +2,7 @@
   "feature": "Emergency Job Cancellation & Rescheduling",
   "description": "# Emergency Job Cancellation & Rescheduling\n\nEmergency cancellation system allowing workers and businesses to cancel bookings with valid reasons (illness, emergency) and minimal penalties. Includes rescheduling options and notification to affected parties.\n\n## Rationale\nEmergencies happen, and a fair cancellation policy reduces no-shows by allowing workers to cancel properly rather than simply not showing up. This builds trust and understanding in the community.\n\n## User Stories\n- As a worker, I want to cancel if I'm sick so that I don't negatively impact my reliability\n- As a business, I want to know if a worker has an emergency so that I can find a replacement\n- As both parties, I want a fair cancellation policy so that emergencies don't ruin relationships\n\n## Acceptance Criteria\n- [ ] Workers can cancel bookings with emergency reasons\n- [ ] Businesses can cancel bookings with valid reasons\n- [ ] Cancellation reasons are categorized (illness, emergency, etc.)\n- [ ] Minimal penalties apply for emergency cancellations\n- [ ] Rescheduling options are offered when possible\n- [ ] Affected parties are notified immediately\n- [ ] Repeated cancellations affect reliability score\n- [ ] Businesses can leave notes about cancellations",
   "created_at": "2026-02-21T21:45:12.366Z",
-  "updated_at": "2026-02-24T14:39:21.566Z",
+  "updated_at": "2026-02-24T14:42:46.499Z",
   "status": "in_progress",
   "workflow_type": "feature",
   "workflow_rationale": "This is a feature workflow because we're adding new functionality (emergency cancellation with reasons) that spans multiple layers: database schema changes, new server actions, and enhanced UI components. The feature has clear dependencies: database must be created before server actions can use it, and server actions must exist before UI can consume them.",
@@ -329,9 +329,16 @@
           "id": "subtask-4-2",
           "description": "End-to-end test: Business cancels worker booking",
           "all_services": true,
-          "files_to_modify": [],
-          "files_to_create": [],
-          "patterns_from": [],
+          "files_to_create": [
+            "scripts/test-e2e-business-cancellation.ts",
+            "scripts/test-e2e-business-cancellation.sh"
+          ],
+          "files_to_modify": [
+            "package.json"
+          ],
+          "patterns_from": [
+            "scripts/test-e2e-emergency-cancellation.ts"
+          ],
           "verification": {
             "type": "e2e",
             "steps": [
@@ -341,7 +348,8 @@
               "Booking status changes to cancelled"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created comprehensive E2E test script (test-e2e-business-cancellation.ts) following pattern from test-e2e-emergency-cancellation.ts. Test covers the complete business cancellation flow: (1) Setup test data (worker, business, job, booking), (2) Verify business views worker booking on /business/jobs page, (3) Get schedule_conflict cancellation reason for business, (4) Simulate business cancellation with reason and note via WorkerCancellationDialog, (5) Verify booking status changes to cancelled, (6) Verify worker receives notification with cancellation details, (7) Verify cancellation note and reason are stored. Shell script wrapper and npm script (test:e2e:business-cancellation) added for easy execution. TypeScript compilation passes."
         },
         {
           "id": "subtask-4-3",
