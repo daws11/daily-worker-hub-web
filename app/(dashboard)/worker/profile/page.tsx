@@ -79,6 +79,11 @@ export default function WorkerProfilePage() {
         setExperienceYears(data.experience_years?.toString() || "")
         setKycStatus(data.kyc_status || 'unverified')
 
+        // Set reliability score if available
+        if (data.reliability_score !== null && data.reliability_score !== undefined) {
+          setReliabilityScore(data.reliability_score)
+        }
+
         // If rejected, load the rejection reason
         if (data.kyc_status === 'rejected') {
           const { data: kycData } = await supabase

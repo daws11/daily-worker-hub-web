@@ -3,6 +3,7 @@ import { Calendar, Phone, User, Check, X, MoreVertical } from "lucide-react"
 
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
+import { ReliabilityScore } from "./worker/reliability-score"
 import {
   Table,
   TableBody,
@@ -199,6 +200,7 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
                   <TableHead>Pelamar</TableHead>
                   <TableHead>Skor Keandalan</TableHead>
                   <TableHead>No. Telepon</TableHead>
+                  <TableHead>Skor Reliabilitas</TableHead>
                   <TableHead>Tanggal Lamar</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Kepatuhan</TableHead>
@@ -242,6 +244,13 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
                         <Phone className="h-4 w-4 text-muted-foreground" />
                         <span>{applicant.workers.phone}</span>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {applicant.workers.reliability_score !== null ? (
+                        <ReliabilityScore score={applicant.workers.reliability_score} showValue size="sm" />
+                      ) : (
+                        <span className="text-sm text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">

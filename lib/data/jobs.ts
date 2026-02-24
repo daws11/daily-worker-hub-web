@@ -70,7 +70,7 @@ export type ApplicantWithDetails = Booking & {
     phone: string
     bio: string
     avatar_url: string
-    reliability_score: number
+    reliability_score: number | null
   }
 }
 
@@ -273,4 +273,27 @@ export async function getJobsByBusiness(businessId: string, filters?: {
   status?: Job["status"]
 }): Promise<JobsResult> {
   return getJobs({ ...filters, business_id: businessId })
+}
+
+/**
+ * Check if a worker should show 'New' badge (fewer than 5 completed jobs)
+ */
+export async function shouldShowNewBadge(workerId: string): Promise<boolean> {
+  try {
+    const supabase = await createClient()
+
+    const { count, error } = await supabase
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("worker_id", workerId)
+      .eq("status", "completed")
+
+    if (error) {
+      return false
+    }
+
+    return (count || 0) < 5
+  } catch (error) {
+    return false
+  }
 }

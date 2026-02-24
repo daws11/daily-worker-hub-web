@@ -1,7 +1,50 @@
 import * as React from "react"
 import { Star, StarHalf } from "lucide-react"
+import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
+
+// NewWorkerBadge variants
+const newWorkerVariants = cva(
+  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  {
+    variants: {
+      isNew: {
+        true: "border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
+        false: "hidden",
+      },
+    },
+    defaultVariants: {
+      isNew: true,
+    },
+  }
+)
+
+export interface NewWorkerBadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof newWorkerVariants> {
+  completedJobs: number
+  threshold?: number
+}
+
+export function NewWorkerBadge({
+  completedJobs,
+  threshold = 5,
+  className,
+  isNew,
+  ...props
+}: NewWorkerBadgeProps) {
+  const isNewWorker = completedJobs < threshold
+
+  return (
+    <div
+      className={cn(newWorkerVariants({ isNew: isNewWorker }), className)}
+      {...props}
+    >
+      New
+    </div>
+  )
+}
 
 export interface ReliabilityScoreProps {
   score: number
@@ -43,16 +86,16 @@ export function ReliabilityScore({
   const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0)
 
   const getScoreColor = (score: number) => {
-    if (score >= 4.5) return "text-green-600 dark:text-green-400"
-    if (score >= 3.5) return "text-yellow-600 dark:text-yellow-400"
-    if (score >= 2.5) return "text-orange-600 dark:text-orange-400"
+    if (score === 5.0) return "text-yellow-600 dark:text-yellow-400"
+    if (score >= 4.0) return "text-green-600 dark:text-green-400"
+    if (score >= 3.0) return "text-yellow-600 dark:text-yellow-400"
     return "text-red-600 dark:text-red-400"
   }
 
   const getStarColor = (score: number) => {
-    if (score >= 4.5) return "fill-green-500 text-green-500 dark:fill-green-400 dark:text-green-400"
-    if (score >= 3.5) return "fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400"
-    if (score >= 2.5) return "fill-orange-500 text-orange-500 dark:fill-orange-400 dark:text-orange-400"
+    if (score === 5.0) return "fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400"
+    if (score >= 4.0) return "fill-green-500 text-green-500 dark:fill-green-400 dark:text-green-400"
+    if (score >= 3.0) return "fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400"
     return "fill-red-500 text-red-500 dark:fill-red-400 dark:text-red-400"
   }
 
@@ -108,10 +151,9 @@ export function ReliabilityScore({
 export interface ReliabilityScoreBreakdownProps {
   score: number
   breakdown?: {
-    completedJobs?: number
-    onTimeDelivery?: number
-    qualityRating?: number
-    communication?: number
+    attendanceRate?: number
+    punctualityRate?: number
+    averageRating?: number
   }
   size?: "sm" | "md" | "lg"
   className?: string
@@ -129,28 +171,22 @@ export function ReliabilityScoreBreakdown({
 
       {breakdown && (
         <div className="space-y-2">
-          {breakdown.completedJobs !== undefined && (
+          {breakdown.attendanceRate !== undefined && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Completed Jobs</span>
-              <span className="font-medium">{breakdown.completedJobs}</span>
+              <span className="text-muted-foreground">Attendance Rate</span>
+              <span className="font-medium">{breakdown.attendanceRate}%</span>
             </div>
           )}
-          {breakdown.onTimeDelivery !== undefined && (
+          {breakdown.punctualityRate !== undefined && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">On-time Delivery</span>
-              <span className="font-medium">{breakdown.onTimeDelivery}%</span>
+              <span className="text-muted-foreground">Punctuality Rate</span>
+              <span className="font-medium">{breakdown.punctualityRate}%</span>
             </div>
           )}
-          {breakdown.qualityRating !== undefined && (
+          {breakdown.averageRating !== undefined && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Quality Rating</span>
-              <span className="font-medium">{breakdown.qualityRating}/5</span>
-            </div>
-          )}
-          {breakdown.communication !== undefined && (
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Communication</span>
-              <span className="font-medium">{breakdown.communication}/5</span>
+              <span className="text-muted-foreground">Average Rating</span>
+              <span className="font-medium">{breakdown.averageRating.toFixed(1)}/5</span>
             </div>
           )}
         </div>
