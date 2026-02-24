@@ -2,7 +2,7 @@
   "feature": "Multi-Language Support (Indonesian & English)",
   "description": "# Multi-Language Support (Indonesian & English)\n\nFull localization support for Indonesian and English languages. Users can switch languages, and all UI elements, notifications, and content are translated. Includes RTL support for future language expansion.\n\n## Rationale\nBali's hospitality workforce includes both local and international workers. Multi-language support makes the platform accessible to all users and provides a competitive advantage over monolingual competitors.\n\n## User Stories\n- As a local worker, I want to use the app in Indonesian so that I can understand everything\n- As an expat business owner, I want to use the app in English so that I can navigate easily\n- As a user, I want to switch languages so that I can use whichever is more comfortable\n\n## Acceptance Criteria\n- [ ] Users can switch between Indonesian and English\n- [ ] All UI elements are translated\n- [ ] Notifications are sent in user's preferred language\n- [ ] Job postings maintain original language or can be auto-translated\n- [ ] Language preference is saved per user\n- [ ] Translation system supports adding more languages\n- [ ] Content is culturally appropriate for each language\n",
   "created_at": "2026-02-21T21:45:13.417Z",
-  "updated_at": "2026-02-24T17:24:23.131Z",
+  "updated_at": "2026-02-24T17:26:58.457Z",
   "status": "in_progress",
   "workflow_type": "feature",
   "workflow_rationale": "This is a feature implementation that requires building new i18n infrastructure from scratch. The phases follow dependency order: database schema first, then i18n infrastructure, then providers, then components, then translation of existing content, and finally integration.",
@@ -615,7 +615,9 @@
             "command": "grep -q 'locale' lib/utils/date.ts && echo 'Date utils updated'",
             "expected": "Date utils updated"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Updated lib/utils/date.ts to support dynamic locale parameter. Added formatDate, formatDateTime, formatTime, and formatShortDate functions. All functions accept Locale type ('id' or 'en') and default to 'id'. Updated JobCard.tsx and JobDetailDialog.tsx to use new formatDate with locale from useTranslation hook. Maintained backward compatibility with default parameter. TypeScript type-check passes, verification command passes.",
+          "updated_at": "2026-02-24T17:26:36.402607+00:00"
         },
         {
           "id": "subtask-6-7",
@@ -634,7 +636,9 @@
             "type": "manual",
             "instructions": "Trigger various actions (login, logout, check-in) and verify toast messages appear in selected language"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Updated auth-provider.tsx, use-attendance.ts, and use-bookings.ts to use useTranslation hook for all toast messages. Added missing translation keys to both en.json and id.json for auth (registration/login/logout messages), attendance (fetch/check-in/check-out/location verification messages), and bookings (fetch/update/create/delete messages). TypeScript type-check passed.",
+          "updated_at": "2026-02-25T00:00:00.000000+00:00"
         }
       ]
     },
@@ -899,5 +903,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "last_updated": "2026-02-25T00:00:00.000000+00:00"
+  "last_updated": "2026-02-24T17:26:36.402622+00:00"
 }

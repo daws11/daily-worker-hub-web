@@ -15,6 +15,7 @@ import {
   type JobBookingWithDetails,
 } from "../supabase/queries/bookings"
 import type { Database } from "../supabase/types"
+import { useTranslation } from "../i18n/hooks"
 
 type BookingRow = Database["public"]["Tables"]["bookings"]["Row"]
 type BookingStatus = BookingRow["status"]
@@ -44,6 +45,7 @@ type UseBookingsReturn = {
 
 export function useBookings(options: UseBookingsOptions = {}): UseBookingsReturn {
   const { jobId, workerId, businessId, bookingId, autoFetch = true } = options
+  const { t } = useTranslation()
 
   const [bookings, setBookings] = useState<JobBookingWithDetails[] | null>(null)
   const [booking, setBooking] = useState<JobBookingWithDetails | null>(null)
@@ -73,15 +75,15 @@ export function useBookings(options: UseBookingsOptions = {}): UseBookingsReturn
 
       if (result.error) {
         setError(result.error.message)
-        toast.error("Gagal mengambil data booking: " + result.error.message)
+        toast.error(t('bookings.fetchBookingsFailed', { message: result.error.message }))
         return
       }
 
       setBookings(result.data as JobBookingWithDetails[] | null)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
       setError(errorMessage)
-      toast.error("Gagal mengambil data booking: " + errorMessage)
+      toast.error(t('bookings.fetchBookingsFailed', { message: errorMessage }))
     } finally {
       setIsLoading(false)
     }
@@ -100,15 +102,15 @@ export function useBookings(options: UseBookingsOptions = {}): UseBookingsReturn
 
       if (result.error) {
         setError(result.error.message)
-        toast.error("Gagal mengambil data booking: " + result.error.message)
+        toast.error(t('bookings.fetchBookingFailed', { message: result.error.message }))
         return
       }
 
       setBooking(result.data as JobBookingWithDetails | null)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
       setError(errorMessage)
-      toast.error("Gagal mengambil data booking: " + errorMessage)
+      toast.error(t('bookings.fetchBookingFailed', { message: errorMessage }))
     } finally {
       setIsLoading(false)
     }
@@ -123,18 +125,18 @@ export function useBookings(options: UseBookingsOptions = {}): UseBookingsReturn
 
       if (result.error) {
         setError(result.error.message)
-        toast.error("Gagal mengupdate status booking: " + result.error.message)
+        toast.error(t('bookings.updateStatusFailed', { message: result.error.message }))
         return
       }
 
-      toast.success("Status booking berhasil diperbarui")
+      toast.success(t('bookings.updateStatusSuccess'))
 
       // Refresh bookings after update
       await fetchBookings()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
       setError(errorMessage)
-      toast.error("Gagal mengupdate status booking: " + errorMessage)
+      toast.error(t('bookings.updateStatusFailed', { message: errorMessage }))
     } finally {
       setIsLoading(false)
     }
@@ -149,18 +151,18 @@ export function useBookings(options: UseBookingsOptions = {}): UseBookingsReturn
 
       if (result.error) {
         setError(result.error.message)
-        toast.error("Gagal mengupdate status booking: " + result.error.message)
+        toast.error(t('bookings.bulkUpdateFailed', { message: result.error.message }))
         return
       }
 
-      toast.success(`${bookingIds.length} booking berhasil diperbarui`)
+      toast.success(t('bookings.bulkUpdateSuccess', { count: bookingIds.length }))
 
       // Refresh bookings after update
       await fetchBookings()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
       setError(errorMessage)
-      toast.error("Gagal mengupdate status booking: " + errorMessage)
+      toast.error(t('bookings.bulkUpdateFailed', { message: errorMessage }))
     } finally {
       setIsLoading(false)
     }
@@ -175,18 +177,18 @@ export function useBookings(options: UseBookingsOptions = {}): UseBookingsReturn
 
       if (result.error) {
         setError(result.error.message)
-        toast.error("Gagal menambahkan catatan: " + result.error.message)
+        toast.error(t('bookings.addNotesFailed', { message: result.error.message }))
         return
       }
 
-      toast.success("Catatan berhasil ditambahkan")
+      toast.success(t('bookings.addNotesSuccess'))
 
       // Refresh bookings after update
       await fetchBookings()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
       setError(errorMessage)
-      toast.error("Gagal menambahkan catatan: " + errorMessage)
+      toast.error(t('bookings.addNotesFailed', { message: errorMessage }))
     } finally {
       setIsLoading(false)
     }
@@ -201,18 +203,18 @@ export function useBookings(options: UseBookingsOptions = {}): UseBookingsReturn
 
       if (result.error) {
         setError(result.error.message)
-        toast.error("Gagal membuat booking: " + result.error.message)
+        toast.error(t('bookings.createBookingFailed', { message: result.error.message }))
         return
       }
 
-      toast.success("Booking berhasil dibuat")
+      toast.success(t('bookings.createBookingSuccess'))
 
       // Refresh bookings after creation
       await fetchBookings()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
       setError(errorMessage)
-      toast.error("Gagal membuat booking: " + errorMessage)
+      toast.error(t('bookings.createBookingFailed', { message: errorMessage }))
     } finally {
       setIsLoading(false)
     }
@@ -227,18 +229,18 @@ export function useBookings(options: UseBookingsOptions = {}): UseBookingsReturn
 
       if (result.error) {
         setError(result.error.message)
-        toast.error("Gagal menghapus booking: " + result.error.message)
+        toast.error(t('bookings.deleteBookingFailed', { message: result.error.message }))
         return
       }
 
-      toast.success("Booking berhasil dihapus")
+      toast.success(t('bookings.deleteBookingSuccess'))
 
       // Refresh bookings after deletion
       await fetchBookings()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
       setError(errorMessage)
-      toast.error("Gagal menghapus booking: " + errorMessage)
+      toast.error(t('bookings.deleteBookingFailed', { message: errorMessage }))
     } finally {
       setIsLoading(false)
     }

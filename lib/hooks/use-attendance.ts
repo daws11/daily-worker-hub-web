@@ -20,6 +20,7 @@ import type {
   AttendanceStats,
   LocationVerificationResult,
 } from "../types/attendance"
+import { useTranslation } from "../i18n/hooks"
 
 type UseAttendanceOptions = {
   workerId?: string
@@ -58,6 +59,7 @@ type UseAttendanceReturn = {
 
 export function useAttendance(options: UseAttendanceOptions = {}): UseAttendanceReturn {
   const { workerId, jobId, businessId } = options
+  const { t } = useTranslation()
 
   const [attendanceList, setAttendanceList] = useState<AttendanceListResponse | null>(null)
   const [workerHistory, setWorkerHistory] = useState<WorkerAttendanceHistory | null>(null)
@@ -91,15 +93,15 @@ export function useAttendance(options: UseAttendanceOptions = {}): UseAttendance
 
       if (result.error) {
         setError(result.error.message)
-        toast.error("Gagal mengambil data kehadiran: " + result.error.message)
+        toast.error(t('attendance.fetchAttendanceListFailed', { message: result.error.message }))
         return
       }
 
       setAttendanceList(result.data)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
       setError(errorMessage)
-      toast.error("Gagal mengambil data kehadiran: " + errorMessage)
+      toast.error(t('attendance.fetchAttendanceListFailed', { message: errorMessage }))
     } finally {
       setIsLoading(false)
     }
@@ -114,15 +116,15 @@ export function useAttendance(options: UseAttendanceOptions = {}): UseAttendance
 
       if (result.error) {
         setError(result.error.message)
-        toast.error("Gagal mengambil riwayat kehadiran: " + result.error.message)
+        toast.error(t('attendance.fetchWorkerHistoryFailed', { message: result.error.message }))
         return
       }
 
       setWorkerHistory(result.data)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
       setError(errorMessage)
-      toast.error("Gagal mengambil riwayat kehadiran: " + errorMessage)
+      toast.error(t('attendance.fetchWorkerHistoryFailed', { message: errorMessage }))
     } finally {
       setIsLoading(false)
     }
@@ -137,15 +139,15 @@ export function useAttendance(options: UseAttendanceOptions = {}): UseAttendance
 
       if (result.error) {
         setError(result.error.message)
-        toast.error("Gagal mengambil riwayat kehadiran pekerjaan: " + result.error.message)
+        toast.error(t('attendance.fetchJobHistoryFailed', { message: result.error.message }))
         return
       }
 
       setJobHistory(result.data)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
       setError(errorMessage)
-      toast.error("Gagal mengambil riwayat kehadiran pekerjaan: " + errorMessage)
+      toast.error(t('attendance.fetchJobHistoryFailed', { message: errorMessage }))
     } finally {
       setIsLoading(false)
     }
@@ -160,15 +162,15 @@ export function useAttendance(options: UseAttendanceOptions = {}): UseAttendance
 
       if (result.error) {
         setError(result.error.message)
-        toast.error("Gagal mengambil statistik kehadiran: " + result.error.message)
+        toast.error(t('attendance.fetchWorkerStatsFailed', { message: result.error.message }))
         return
       }
 
       setAttendanceStats(result.data)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
       setError(errorMessage)
-      toast.error("Gagal mengambil statistik kehadiran: " + errorMessage)
+      toast.error(t('attendance.fetchWorkerStatsFailed', { message: errorMessage }))
     } finally {
       setIsLoading(false)
     }
@@ -183,15 +185,15 @@ export function useAttendance(options: UseAttendanceOptions = {}): UseAttendance
 
       if (result.error) {
         setError(result.error.message)
-        toast.error("Gagal menghitung tingkat kehadiran: " + result.error.message)
+        toast.error(t('attendance.calculateAttendanceRateFailed', { message: result.error.message }))
         return
       }
 
       setAttendanceRate(result.data)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
       setError(errorMessage)
-      toast.error("Gagal menghitung tingkat kehadiran: " + errorMessage)
+      toast.error(t('attendance.calculateAttendanceRateFailed', { message: errorMessage }))
     } finally {
       setIsLoading(false)
     }
@@ -207,12 +209,12 @@ export function useAttendance(options: UseAttendanceOptions = {}): UseAttendance
       setLocationVerified(result)
 
       if (!result.is_verified && result.status !== 'unverified') {
-        toast.warning("Lokasi Anda berada di luar jangkauan yang ditentukan")
+        toast.warning(t('attendance.locationVerificationFailed'))
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
       setError(errorMessage)
-      toast.error("Gagal memverifikasi lokasi: " + errorMessage)
+      toast.error(t('attendance.locationVerificationFailed'))
     } finally {
       setIsLoading(false)
     }
@@ -227,18 +229,18 @@ export function useAttendance(options: UseAttendanceOptions = {}): UseAttendance
 
       if (result.error) {
         setError(result.error.message)
-        toast.error("Gagal check-in: " + result.error.message)
+        toast.error(t('attendance.checkInFailed', { message: result.error.message }))
         return
       }
 
-      toast.success("Check-in berhasil")
+      toast.success(t('attendance.checkInSuccess'))
 
       // Refresh attendance data after check-in
       await fetchAttendanceList()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
       setError(errorMessage)
-      toast.error("Gagal check-in: " + errorMessage)
+      toast.error(t('attendance.checkInFailed', { message: errorMessage }))
     } finally {
       setIsLoading(false)
     }
@@ -253,18 +255,18 @@ export function useAttendance(options: UseAttendanceOptions = {}): UseAttendance
 
       if (result.error) {
         setError(result.error.message)
-        toast.error("Gagal check-out: " + result.error.message)
+        toast.error(t('attendance.checkOutFailed', { message: result.error.message }))
         return
       }
 
-      toast.success("Check-out berhasil")
+      toast.success(t('attendance.checkOutSuccess'))
 
       // Refresh attendance data after check-out
       await fetchAttendanceList()
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Terjadi kesalahan tak terduga"
+      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
       setError(errorMessage)
-      toast.error("Gagal check-out: " + errorMessage)
+      toast.error(t('attendance.checkOutFailed', { message: errorMessage }))
     } finally {
       setIsLoading(false)
     }
