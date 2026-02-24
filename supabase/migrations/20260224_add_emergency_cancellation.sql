@@ -134,7 +134,7 @@ INSERT INTO cancellation_reasons (id, category, name, description, requires_veri
 
   -- Other (variable penalty - case by case)
   ('80000000-0000-0000-0000-000000000013', 'other', 'Other Reason', 'Other reason not listed above (requires approval)', TRUE, 25, TRUE, 13)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (id) DO NOTHING;
 
 -- ============================================================================
 -- END OF MIGRATION
