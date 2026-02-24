@@ -1,0 +1,341 @@
+{
+  "feature": "Platform Analytics & Reporting Dashboard",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a new feature that adds comprehensive analytics to the platform. It involves database schema additions, query functions, server actions, and a new admin dashboard page. The phases follow the data flow: database → queries → actions → UI.",
+  "phases": [
+    {
+      "id": "phase-1-database",
+      "name": "Database Views & Functions",
+      "type": "implementation",
+      "description": "Create optimized database views and aggregate functions for analytics queries to ensure efficient data retrieval",
+      "depends_on": [],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create analytics database migration with views for all metrics",
+          "service": "database",
+          "files_to_modify": [],
+          "files_to_create": [
+            "supabase/migrations/20260224_create_analytics_views.sql"
+          ],
+          "patterns_from": [
+            "supabase/migrations/20260222_create_wallets.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"SELECT * FROM analytics_user_growth LIMIT 1;\" 2>/dev/null || echo 'Views need to be created'",
+            "expected": "no connection errors"
+          },
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-types",
+      "name": "TypeScript Types",
+      "type": "implementation",
+      "description": "Create TypeScript type definitions for all analytics data structures",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create analytics TypeScript types file",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/types/analytics.ts"
+          ],
+          "patterns_from": [
+            "lib/types/payment.ts",
+            "lib/types/job.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit lib/types/analytics.ts",
+            "expected": "0 errors"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-queries",
+      "name": "Database Query Functions",
+      "type": "implementation",
+      "description": "Create Supabase query functions for fetching analytics data",
+      "depends_on": [
+        "phase-1-database"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create analytics query functions in lib/supabase/queries/analytics.ts",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/supabase/queries/analytics.ts"
+          ],
+          "patterns_from": [
+            "lib/supabase/queries/wallets.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit lib/supabase/queries/analytics.ts",
+            "expected": "0 errors"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-actions",
+      "name": "Server Actions",
+      "type": "implementation",
+      "description": "Create server actions for analytics data fetching with date filtering",
+      "depends_on": [
+        "phase-3-queries",
+        "phase-2-types"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create analytics server actions with date filtering",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/actions/analytics.ts"
+          ],
+          "patterns_from": [
+            "lib/actions/payments.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit lib/actions/analytics.ts",
+            "expected": "0 errors"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-dashboard",
+      "name": "Admin Dashboard UI",
+      "type": "implementation",
+      "description": "Create the admin analytics dashboard page with all metrics",
+      "depends_on": [
+        "phase-4-actions"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Add admin analytics navigation to navigation-config.ts",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/dashboard/navigation-config.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/dashboard/navigation-config.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit components/dashboard/navigation-config.ts",
+            "expected": "0 errors"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Create admin analytics dashboard page at app/(dashboard)/admin/analytics/page.tsx",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "app/(dashboard)/admin/analytics/page.tsx"
+          ],
+          "patterns_from": [
+            "app/(dashboard)/business/wallet/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/admin/analytics",
+            "checks": [
+              "Page renders without errors",
+              "All metric cards display"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-6-export",
+      "name": "Export Functionality",
+      "type": "implementation",
+      "description": "Add CSV and PDF export functionality for analytics reports",
+      "depends_on": [
+        "phase-5-dashboard"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Create export utility functions and add export buttons to dashboard",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(dashboard)/admin/analytics/page.tsx"
+          ],
+          "files_to_create": [
+            "lib/utils/export.ts"
+          ],
+          "patterns_from": [
+            "lib/utils/date.ts"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/admin/analytics",
+            "checks": [
+              "Export buttons visible",
+              "CSV download works",
+              "PDF generation works"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-7-integration",
+      "name": "Integration & Testing",
+      "type": "integration",
+      "description": "End-to-end verification of all analytics features",
+      "depends_on": [
+        "phase-6-export"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-7-1",
+          "description": "End-to-end verification of analytics dashboard",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Navigate to admin analytics page",
+              "Verify all 7 metric cards load (user growth, job completion, transactions, geographic, categories, compliance, revenue)",
+              "Verify date range filter works and updates all metrics",
+              "Verify CSV export works for each metric",
+              "Verify PDF export generates complete report"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 7,
+    "total_subtasks": 9,
+    "services_involved": [
+      "database",
+      "frontend"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 2,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-2-types"
+          ],
+          "reason": "Type definitions are independent of database implementation"
+        }
+      ],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution recommended due to data flow dependencies"
+    },
+    "startup_command": "npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "manual"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All 7 metric categories display correctly",
+      "Date range filtering works for all metrics",
+      "CSV export works for all metrics",
+      "PDF export generates complete report",
+      "Only admin role users can access analytics",
+      "Dashboard loads within acceptable time",
+      "All data is accurately aggregated"
+    ],
+    "verification_steps": [
+      {
+        "name": "TypeScript Compilation",
+        "command": "npx tsc --noEmit",
+        "expected_outcome": "No type errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Medium risk change adds new admin functionality but doesn't modify existing features. Manual verification of data accuracy and UI functionality is required."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/admin/analytics",
+          "checks": [
+            "All 7 metric cards render",
+            "Date range picker functional",
+            "Export buttons present and working",
+            "No console errors",
+            "Responsive layout works"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "analytics_views_migration_exists",
+        "RLS_policies_for_admin_only",
+        "all_views_return_data"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "xstateState": "backlog",
+  "executionPhase": "coding",
+  "updated_at": "2026-02-24T15:10:13.694Z"
+}
