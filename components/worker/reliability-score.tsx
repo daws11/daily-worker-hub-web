@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Star, StarHalf } from "lucide-react"
+import { Award, Star, StarHalf } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -8,6 +8,7 @@ export interface ReliabilityScoreProps {
   showValue?: boolean
   showLabel?: boolean
   size?: "sm" | "md" | "lg"
+  badgeCount?: number
   className?: string
 }
 
@@ -34,6 +35,7 @@ export function ReliabilityScore({
   showValue = true,
   showLabel = false,
   size = "md",
+  badgeCount,
   className,
 }: ReliabilityScoreProps) {
   // Clamp score between 0 and 5
@@ -101,6 +103,13 @@ export function ReliabilityScore({
            "Poor"}
         </span>
       )}
+
+      {badgeCount !== undefined && badgeCount > 0 && (
+        <div className={cn("inline-flex items-center gap-1 text-purple-600 dark:text-purple-400", labelSizeVariants[size])} title={`${badgeCount} badge${badgeCount > 1 ? 's' : ''}`}>
+          <Award className={cn(sizeVariants[size], "fill-purple-500 text-purple-500 dark:fill-purple-400 dark:text-purple-400")} />
+          <span className="font-medium">{badgeCount}</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -112,6 +121,7 @@ export interface ReliabilityScoreBreakdownProps {
     onTimeDelivery?: number
     qualityRating?: number
     communication?: number
+    badgeCount?: number
   }
   size?: "sm" | "md" | "lg"
   className?: string
@@ -125,7 +135,13 @@ export function ReliabilityScoreBreakdown({
 }: ReliabilityScoreBreakdownProps) {
   return (
     <div className={cn("space-y-3", className)}>
-      <ReliabilityScore score={score} showValue showLabel size={size} />
+      <ReliabilityScore
+        score={score}
+        showValue
+        showLabel
+        size={size}
+        badgeCount={breakdown?.badgeCount}
+      />
 
       {breakdown && (
         <div className="space-y-2">
@@ -151,6 +167,15 @@ export function ReliabilityScoreBreakdown({
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Communication</span>
               <span className="font-medium">{breakdown.communication}/5</span>
+            </div>
+          )}
+          {breakdown.badgeCount !== undefined && breakdown.badgeCount > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Award className="h-3.5 w-3.5 text-purple-500" />
+                Badges
+              </span>
+              <span className="font-medium text-purple-600 dark:text-purple-400">{breakdown.badgeCount}</span>
             </div>
           )}
         </div>
