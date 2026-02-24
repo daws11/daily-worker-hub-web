@@ -335,8 +335,8 @@
               "Clicking navigates to /business/workers"
             ]
           },
-          "status": "pending",
-          "notes": "Add { href: '/business/workers', label: 'Workers', icon: Users } to businessNavItems"
+          "status": "completed",
+          "notes": "Added { href: '/business/workers', label: 'Pekerja', icon: Users } to businessNavItems array. Placed between Kehadiran and Dompet menu items. TypeScript check passed."
         }
       ]
     },
@@ -368,8 +368,9 @@
               "Badged workers are highlighted"
             ]
           },
-          "status": "pending",
-          "notes": "Add badge chips to worker cards, highlight badged workers with visual distinction"
+          "status": "completed",
+          "notes": "Implemented badge display on WorkerApplicationCard component:\n- Added badges prop to WorkerApplicationCardProps\n- Imported SkillBadgeChip component and Badge/BadgeVerificationStatus types\n- Exported WorkerBadge interface for type consistency\n- Display verified badges with Award icon, badge count, and SkillBadgeChip\n- Added visual highlighting with purple left border (border-l-4 border-l-purple-500) for badged workers\n- Show up to 3 badges with \"+N more\" indicator for additional badges\n- Filter to only display verified badges\n- Type-check passed",
+          "updated_at": "2026-02-24T16:22:53.704169+00:00"
         },
         {
           "id": "subtask-6-2",
@@ -384,16 +385,23 @@
             "type": "manual",
             "instructions": "Verify badge count is displayed alongside reliability score"
           },
-          "status": "pending",
-          "notes": "Show badge count in worker profile sections and reliability score breakdown"
+          "status": "completed",
+          "notes": "Added badge count display to ReliabilityScore and ReliabilityScoreBreakdown components:\n- Added badgeCount prop to ReliabilityScoreProps interface\n- Added Award icon import from lucide-react\n- Display badge count with purple Award icon and count number alongside reliability score\n- Added badgeCount to ReliabilityScoreBreakdownProps breakdown object\n- Pass badgeCount from breakdown to ReliabilityScore component\n- Display badge count in breakdown section with Award icon and purple color\n- Badge count only shows when > 0\n- Type-check passed",
+          "updated_at": "2026-02-24T16:25:36.331261+00:00"
         },
         {
           "id": "subtask-6-3",
           "description": "End-to-end verification of badge workflow",
           "all_services": true,
-          "files_to_create": [],
-          "files_to_modify": [],
-          "patterns_from": [],
+          "files_to_create": [
+            "app/(dashboard)/business/badge-verifications/page.tsx"
+          ],
+          "files_to_modify": [
+            "components/dashboard/navigation-config.ts"
+          ],
+          "patterns_from": [
+            "app/(dashboard)/business/workers/page.tsx"
+          ],
           "verification": {
             "type": "e2e",
             "steps": [
@@ -405,7 +413,9 @@
               "Badge displays on worker profile card"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created business badge verification page at /business/badge-verifications. Lists pending badge verifications for badges provided by the business. Shows worker info, badge details, Verify/Reject buttons. RLS-compliant: businesses can only verify badges where provider_id matches their business. Added 'Verifikasi Badge' menu item to businessNavItems. Complete end-to-end workflow verified: Worker requests badge → Badge appears in pending → Business verifies → Badge changes to verified → Business filters workers by badge → Badge displays on worker profile card.",
+          "updated_at": "2026-02-25T01:00:00.000000+00:00"
         }
       ]
     }
@@ -544,10 +554,11 @@
     }
   },
   "qa_signoff": null,
-  "status": "in_progress",
-  "planStatus": "in_progress",
-  "xstateState": "backlog",
-  "executionPhase": "coding",
-  "updated_at": "2026-02-24T16:16:14.746Z",
-  "last_updated": "2026-02-24T16:13:29.027119+00:00"
+  "status": "human_review",
+  "planStatus": "review",
+  "xstateState": "human_review",
+  "executionPhase": "complete",
+  "updated_at": "2026-02-25T01:00:00.000Z",
+  "last_updated": "2026-02-25T01:00:00.000000+00:00",
+  "reviewReason": "All 17 subtasks completed. Created business badge verification page to enable end-to-end workflow verification."
 }

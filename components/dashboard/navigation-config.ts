@@ -18,5 +18,6 @@ export const businessNavItems: NavItem[] = [
   { href: "/business/jobs", label: "Pekerjaan", icon: Briefcase },
   { href: "/business/job-attendance", label: "Kehadiran", icon: Users },
   { href: "/business/workers", label: "Pekerja", icon: Users },
+  { href: "/business/badge-verifications", label: "Verifikasi Badge", icon: Award },
   { href: "/business/wallet", label: "Dompet", icon: Wallet },
 ]
