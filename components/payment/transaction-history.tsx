@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Calendar, Wallet, ArrowUpCircle, ArrowDownCircle, AlertCircle } from "lucide-react"
 
-import { Badge } from "./ui/badge"
+import { Badge } from "@/components/ui/badge"
 import {
   Table,
   TableBody,
@@ -9,14 +9,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./ui/table"
+} from "@/components/ui/table"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card"
+} from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 import type { TransactionHistory } from "@/lib/types/payment"
 

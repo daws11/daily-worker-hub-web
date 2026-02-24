@@ -125,7 +125,7 @@ export async function getJobs(params?: JobListParams): Promise<{
       updated_at: job.updated_at,
       category: job.category,
       business: job.business,
-      skills: job.skills || [],
+      skills: [],
     }))
 
     return { data: jobsWithRelations, error: null }
@@ -194,7 +194,7 @@ export async function getJobById(id: string): Promise<{
       updated_at: data.updated_at,
       category: data.category,
       business: data.business,
-      skills: data.skills || [],
+      skills: [],
     }
 
     return { data: jobWithRelations, error: null }

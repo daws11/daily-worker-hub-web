@@ -58,7 +58,6 @@ export function getUMK(name: string): number | undefined {
     negara: UMK_2025.Jembrana, // Alias for Jembrana regency capital
     semarapura: UMK_2025.Klungkung, // Alias for Klungkung regency capital
     amlapura: UMK_2025.Karangasem, // Alias for Karangasem regency capital
-    bangli: UMK_2025.Bangli, // Same name as regency
   }
 
   return regencyMap[normalizedName]

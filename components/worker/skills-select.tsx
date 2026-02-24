@@ -131,18 +131,21 @@ interface FormSkillsSelectProps<
   className?: string
 }
 
-function FormSkillsSelectInner<
-  TFieldValues extends Record<string, any> = Record<string, any>,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
->({
+interface FormSkillsSelectInnerProps {
+  field: { value: string[]; onChange: (value: string[]) => void }
+  skills: Skill[]
+  placeholder?: string
+  disabled?: boolean
+  className?: string
+}
+
+function FormSkillsSelectInner({
   field,
   skills,
   placeholder,
   disabled,
   className,
-}: FormSkillsSelectProps<TFieldValues, TName> & {
-  field: { value: string[]; onChange: (value: string[]) => void }
-}) {
+}: FormSkillsSelectInnerProps) {
   return (
     <SkillsSelect
       skills={skills}
