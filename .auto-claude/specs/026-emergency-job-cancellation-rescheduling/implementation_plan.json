@@ -2,7 +2,7 @@
   "feature": "Emergency Job Cancellation & Rescheduling",
   "description": "# Emergency Job Cancellation & Rescheduling\n\nEmergency cancellation system allowing workers and businesses to cancel bookings with valid reasons (illness, emergency) and minimal penalties. Includes rescheduling options and notification to affected parties.\n\n## Rationale\nEmergencies happen, and a fair cancellation policy reduces no-shows by allowing workers to cancel properly rather than simply not showing up. This builds trust and understanding in the community.\n\n## User Stories\n- As a worker, I want to cancel if I'm sick so that I don't negatively impact my reliability\n- As a business, I want to know if a worker has an emergency so that I can find a replacement\n- As both parties, I want a fair cancellation policy so that emergencies don't ruin relationships\n\n## Acceptance Criteria\n- [ ] Workers can cancel bookings with emergency reasons\n- [ ] Businesses can cancel bookings with valid reasons\n- [ ] Cancellation reasons are categorized (illness, emergency, etc.)\n- [ ] Minimal penalties apply for emergency cancellations\n- [ ] Rescheduling options are offered when possible\n- [ ] Affected parties are notified immediately\n- [ ] Repeated cancellations affect reliability score\n- [ ] Businesses can leave notes about cancellations",
   "created_at": "2026-02-21T21:45:12.366Z",
-  "updated_at": "2026-02-24T14:20:35.588Z",
+  "updated_at": "2026-02-24T14:30:00.000Z",
   "status": "in_progress",
   "workflow_type": "feature",
   "workflow_rationale": "This is a feature workflow because we're adding new functionality (emergency cancellation with reasons) that spans multiple layers: database schema changes, new server actions, and enhanced UI components. The feature has clear dependencies: database must be created before server actions can use it, and server actions must exist before UI can consume them.",
@@ -159,7 +159,8 @@
             "command": "grep -n 'getWorkerCancellationHistory' lib/actions/cancellations.ts",
             "expected": "Function exists"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Implemented getWorkerCancellationHistory function following pattern from getWorkerApplications. Queries bookings table for cancelled bookings with cancellation reasons, includes related job and business data, orders by cancelled_at descending. Returns standard success/error response with proper error handling."
         },
         {
           "id": "subtask-2-4",
