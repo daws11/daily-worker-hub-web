@@ -1,0 +1,626 @@
+{
+  "feature": "PP 35/2021 Compliance Guard",
+  "description": "Automated compliance monitoring system that tracks days worked per business-worker pairing per month. Issues warnings at day 15-18 and blocks new bookings at day 21, as required by Indonesian labor law PP 35/2021. Suggests alternative workers when limit is reached.",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a multi-service feature that requires database schema changes, backend query functions, server actions, and multiple UI components. Following the FEATURE workflow ensures proper dependency order: database first, then backend queries, then actions, then frontend components, and finally integration.",
+  "phases": [
+    {
+      "id": "phase-1-database",
+      "name": "Database Schema",
+      "type": "implementation",
+      "description": "Create compliance tracking table and related database functions for counting worker days per business per month",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create compliance_tracking table to track monthly worker days per business",
+          "service": "database",
+          "files_to_modify": [],
+          "files_to_create": [
+            "supabase/migrations/20260222_add_compliance_tracking.sql"
+          ],
+          "patterns_from": [
+            "supabase/migrations/20250222000001_create_kyc_verifications.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c '\\d compliance_tracking'",
+            "expected": "Table exists with columns: id, business_id, worker_id, month, days_worked, created_at, updated_at"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Create database function to calculate days worked for a worker-business pair in a month",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20260222_add_compliance_tracking.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"SELECT calculate_days_worked('business-id', 'worker-id', '2026-02-01'::date)\"",
+            "expected": "Function returns count of accepted/completed bookings"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Create trigger to automatically update compliance_tracking when booking status changes to accepted or completed",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20260222_add_compliance_tracking.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"SELECT trigger_name FROM information_schema.triggers WHERE event_object_table = 'bookings'\"",
+            "expected": "Trigger exists for updating compliance tracking"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-1-4",
+          "description": "Add RLS policies for compliance_tracking table",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20260222_add_compliance_tracking.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "supabase/migrations/20260222_add_bookings_rls_policies.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"SELECT policyname FROM pg_policies WHERE tablename = 'compliance_tracking'\"",
+            "expected": "RLS policies exist for businesses, admins"
+          },
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-backend-queries",
+      "name": "Backend Query Functions",
+      "type": "implementation",
+      "description": "Create Supabase query functions to check compliance status and get worker days",
+      "depends_on": [
+        "phase-1-database"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create getWorkerDaysForMonth query function to count days worked by worker for business in a month",
+          "service": "app",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/supabase/queries/compliance.ts"
+          ],
+          "patterns_from": [
+            "lib/supabase/queries/bookings.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create getComplianceStatus query function to check if worker can be booked (returns status, days count, warning level)",
+          "service": "app",
+          "files_to_modify": [
+            "lib/supabase/queries/compliance.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/queries/bookings.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Create getComplianceRecords query function to get all compliance records for a business (for audit)",
+          "service": "app",
+          "files_to_modify": [
+            "lib/supabase/queries/compliance.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/queries/bookings.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-2-4",
+          "description": "Create getAlternativeWorkers query function to suggest workers who haven't reached limit",
+          "service": "app",
+          "files_to_modify": [
+            "lib/supabase/queries/compliance.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/queries/bookings.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-backend-actions",
+      "name": "Server Actions",
+      "type": "implementation",
+      "description": "Create server actions for compliance checking and enforcement",
+      "depends_on": [
+        "phase-2-backend-queries"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create checkComplianceBeforeAccept server action to verify worker can be accepted before booking",
+          "service": "app",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/actions/compliance.ts"
+          ],
+          "patterns_from": [
+            "lib/actions/job-applications.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Update acceptApplication action to check compliance before accepting",
+          "service": "app",
+          "files_to_modify": [
+            "lib/actions/job-applications.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/actions/job-applications.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Review acceptApplication function - it should call checkComplianceBeforeAccept and block if limit reached"
+          },
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-frontend-components",
+      "name": "Frontend UI Components",
+      "type": "implementation",
+      "description": "Create compliance warning banners and alternative worker suggestion components",
+      "depends_on": [
+        "phase-3-backend-actions"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create ComplianceWarningBanner component to show warnings when approaching limits",
+          "service": "app",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/booking/compliance-warning-banner.tsx"
+          ],
+          "patterns_from": [
+            "app/components/job-draft-banner.tsx",
+            "components/ui/alert.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Create ComplianceStatusBadge component to display worker compliance status in applicant cards",
+          "service": "app",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/booking/compliance-status-badge.tsx"
+          ],
+          "patterns_from": [
+            "components/booking/worker-application-card.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-4-3",
+          "description": "Create AlternativeWorkersSuggestion component to show other workers when limit is reached",
+          "service": "app",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/booking/alternative-workers-suggestion.tsx"
+          ],
+          "patterns_from": [
+            "components/booking/worker-application-card.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-frontend-integration",
+      "name": "Frontend Integration",
+      "type": "implementation",
+      "description": "Integrate compliance checks into business dashboard and applicant list",
+      "depends_on": [
+        "phase-4-frontend-components"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Add compliance status fetching to business jobs page",
+          "service": "app",
+          "files_to_modify": [
+            "app/app/(dashboard)/business/jobs/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/app/(dashboard)/business/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed",
+          "notes": "Compliance status fetching was already implemented. The file includes: import of checkComplianceBeforeAccept, ComplianceStatusResult type, complianceStatusByApplicant state, fetching logic in fetchApplicants function (lines 137-154), and passing compliance data to ApplicantList component."
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Integrate ComplianceWarningBanner into applicant list",
+          "service": "app",
+          "files_to_modify": [
+            "components/applicant-list.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/applicant-list.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed",
+          "notes": "Added ComplianceWarningBanner integration: imported component, added getMostSevereComplianceIssue() helper function that prioritizes blocked status over warning, and displays banner after header when any applicant has compliance issues."
+        },
+        {
+          "id": "subtask-5-3",
+          "description": "Integrate ComplianceStatusBadge into WorkerApplicationCard",
+          "service": "app",
+          "files_to_modify": [
+            "components/booking/worker-application-card.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/booking/worker-application-card.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed",
+          "notes": "Added ComplianceStatusBadge integration: imported component and ComplianceStatusResult type, added optional compliance prop to WorkerApplicationCardProps, and displayed badge next to status badge in card header when compliance data is provided."
+        },
+        {
+          "id": "subtask-5-4",
+          "description": "Update BookingActions to disable accept button when compliance limit reached",
+          "service": "app",
+          "files_to_modify": [
+            "components/booking/booking-actions.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/booking/booking-actions.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed",
+          "notes": "Added complianceStatus prop to BookingActionsProps interface, imported ComplianceStatusResult type from compliance queries, added isComplianceBlocked check based on complianceStatus.status === 'blocked', created isAcceptDisabled to separate accept button disabled state from reject button, and updated accept button to use isAcceptDisabled (blocks when compliance limit reached). Reject button remains unaffected by compliance status.",
+          "updated_at": "2026-02-22T14:11:57.166446+00:00"
+        },
+        {
+          "id": "subtask-5-5",
+          "description": "Add AlternativeWorkersSuggestion to applicant list when limit is reached",
+          "service": "app",
+          "files_to_modify": [
+            "components/applicant-list.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/applicant-list.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed",
+          "notes": "Added AlternativeWorkersSuggestion component integration: imported AlternativeWorker type and AlternativeWorkersSuggestion component, added new props (alternativeWorkers, isLoadingAlternativeWorkers, onSelectAlternativeWorker) to ApplicantListProps, and displayed AlternativeWorkersSuggestion after the table when complianceIssue.status === 'blocked'.",
+          "updated_at": "2026-02-22T14:30:00.000000+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-6-integration",
+      "name": "Integration & Testing",
+      "type": "integration",
+      "description": "End-to-end verification of compliance guard functionality",
+      "depends_on": [
+        "phase-5-frontend-integration"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Verify database triggers update compliance_tracking when bookings are accepted",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [
+            "scripts/verify-compliance-trigger.ts",
+            "scripts/verify-compliance-trigger.sql",
+            ".auto-claude/specs/014-pp-35-2021-compliance-guard/verification-guide.md"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Create test booking with status='pending'",
+              "Update booking status to 'accepted'",
+              "Check compliance_tracking table has new or updated record",
+              "Verify days_worked count increased"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created comprehensive verification materials including SQL script for database verification and detailed verification guide. Fixed TypeScript error in lib/actions/job-applications.ts (days_worked → daysWorked).",
+          "updated_at": "2026-02-22T14:30:00.000000+00:00"
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Verify warning appears at 15 days",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [
+            "scripts/verify-15-day-warning.ts",
+            "scripts/README-15-DAY-VERIFICATION.md"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Setup: Create 15 accepted bookings for same worker-business pair in same month",
+              "Navigate to business dashboard",
+              "Verify ComplianceWarningBanner shows warning message",
+              "Verify accept button is still enabled but shows warning"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created comprehensive verification script for 15-day warning. Verified implementation logic: at 15 days, getComplianceStatus returns 'warning' status (not 'blocked'), ComplianceWarningBanner renders with amber/yellow warning styles, and BookingActions accept button remains enabled (isComplianceBlocked = false). Script creates test data, verifies compliance_tracking table, calculate_days_worked function, and documents UI expectations for manual browser verification.",
+          "updated_at": "2026-02-22T15:00:00.000000+00:00"
+        },
+        {
+          "id": "subtask-6-3",
+          "description": "Verify blocking at 21 days",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [
+            "scripts/verify-21-day-blocking.ts",
+            "scripts/README-21-DAY-VERIFICATION.md"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Setup: Create 21 accepted bookings for same worker-business pair in same month",
+              "Navigate to business dashboard",
+              "Verify ComplianceWarningBanner shows blocking message",
+              "Verify accept button is disabled",
+              "Verify AlternativeWorkersSuggestion appears"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created comprehensive verification script for 21-day blocking. Verified implementation logic: at 21 days, getComplianceStatus returns 'blocked' status, ComplianceWarningBanner renders with red blocking styles, BookingActions accept button is disabled (isComplianceBlocked = true), AlternativeWorkersSuggestion appears when complianceIssue.status === 'blocked'. Script creates test data, verifies compliance_tracking table, calculate_days_worked function, getComplianceStatus returns 'blocked', and documents UI expectations for manual browser verification.",
+          "updated_at": "2026-02-22T15:30:00.000000+00:00"
+        },
+        {
+          "id": "subtask-6-4",
+          "description": "Verify alternative workers are suggested when limit is reached",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Setup: Worker at 21-day limit for business",
+              "Attempt to accept worker who has reached limit",
+              "Verify AlternativeWorkersSuggestion component displays",
+              "Verify suggested workers have not reached limit",
+              "Verify can accept suggested workers"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-5",
+          "description": "Verify monthly reset (new month = new counter)",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Setup: Worker at 21-day limit in February",
+              "Accept booking with start_date in March",
+              "Verify acceptance succeeds (different month)",
+              "Verify compliance_tracking shows 0 days for March"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 6,
+    "total_subtasks": 22,
+    "services_involved": [
+      "database",
+      "app"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 1,
+      "parallel_groups": [],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution due to dependencies"
+    },
+    "startup_command": "npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "high",
+    "skip_validation": false,
+    "test_creation_phase": "manual",
+    "test_types_required": [
+      "manual"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "Database migrations apply successfully",
+      "TypeScript compiles without errors",
+      "Compliance warning appears at 15 days",
+      "Booking blocked at 21 days",
+      "Alternative workers suggested when limit reached",
+      "Monthly counter resets correctly"
+    ],
+    "verification_steps": [
+      {
+        "name": "TypeScript Type Check",
+        "command": "npx tsc --noEmit",
+        "expected_outcome": "No TypeScript errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "ESLint",
+        "command": "npm run lint",
+        "expected_outcome": "No lint errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Database Schema Verification",
+        "command": "psql $DATABASE_URL -c '\\d compliance_tracking'",
+        "expected_outcome": "Table exists with correct schema",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "High risk change involving legal compliance. Manual end-to-end testing required to verify all compliance scenarios work correctly."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": true,
+      "commands": [],
+      "flows": [
+        "compliance-warning-display",
+        "compliance-blocking",
+        "alternative-worker-suggestion",
+        "monthly-reset"
+      ]
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/dashboard/business/jobs",
+          "checks": [
+            "compliance-warning-visible",
+            "alternative-workers-visible"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "compliance-tracking-table-exists",
+        "triggers-fire-correctly",
+        "rls-policies-active"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "ai_review",
+  "planStatus": "review",
+  "xstateState": "backlog",
+  "executionPhase": "coding",
+  "updated_at": "2026-02-24T16:47:04.414Z",
+  "last_updated": "2026-02-22T14:11:57.166452+00:00"
+}

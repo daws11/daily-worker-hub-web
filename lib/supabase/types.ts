@@ -115,6 +115,49 @@ export type Database = {
           },
         ]
       }
+      compliance_tracking: {
+        Row: {
+          id: string
+          business_id: string
+          worker_id: string
+          month: string
+          days_worked: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          business_id: string
+          worker_id: string
+          month: string
+          days_worked?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          business_id?: string
+          worker_id?: string
+          month?: string
+          days_worked?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_tracking_business_id_fkey"
+            columns: ["business_id"]
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_tracking_worker_id_fkey"
+            columns: ["worker_id"]
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       businesses: {
         Row: {
           address: string | null

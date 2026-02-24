@@ -2,6 +2,7 @@
 
 import { createClient } from "../supabase/server"
 import type { Database } from "../supabase/types"
+import { checkComplianceBeforeAccept } from "./compliance"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"]
 type Job = Database["public"]["Tables"]["jobs"]["Row"]
@@ -233,6 +234,7 @@ export async function getJobApplicants(jobId: string, businessId: string) {
 
 /**
  * Business accepts an applicant
+ * Checks PP 35/2021 compliance before accepting (21-day limit for daily workers)
  */
 export async function acceptApplication(bookingId: string, businessId: string): Promise<ApplicationResult> {
   try {
@@ -254,6 +256,21 @@ export async function acceptApplication(bookingId: string, businessId: string): 
 
     if (bookingData.status !== "pending") {
       return { success: false, error: "Hanya lamaran dengan status pending yang bisa diterima" }
+    }
+
+    // Check PP 35/2021 compliance before accepting
+    const complianceCheck = await checkComplianceBeforeAccept(booking.worker_id, businessId)
+
+    if (!complianceCheck.success) {
+      return { success: false, error: complianceCheck.error || "Gagal mengecek kepatuhan PP 35/2021" }
+    }
+
+    if (!complianceCheck.canAccept) {
+      const daysWorked = complianceCheck.data?.daysWorked || 0
+      return {
+        success: false,
+        error: `Pekerja telah mencapai batas 21 hari kerja dalam sebulan sesuai PP 35/2021 (${daysWorked} hari). Tidak dapat menerima lamaran.`
+      }
     }
 
     // Update the booking status to accepted

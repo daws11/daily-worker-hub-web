@@ -25,16 +25,24 @@ import {
 } from "./ui/avatar"
 import { cn } from "@/lib/utils"
 import type { ApplicantWithDetails } from "@/lib/data/jobs"
+import type { ComplianceStatusResult, AlternativeWorker } from "@/lib/supabase/queries/compliance"
+import { ComplianceStatusBadge } from "@/components/booking/compliance-status-badge"
+import { ComplianceWarningBanner } from "@/components/booking/compliance-warning-banner"
+import { AlternativeWorkersSuggestion } from "@/components/booking/alternative-workers-suggestion"
 
 export interface ApplicantListProps extends React.HTMLAttributes<HTMLDivElement> {
   applicants: ApplicantWithDetails[]
   onAccept?: (applicantId: string) => void
   onReject?: (applicantId: string) => void
   isLoading?: boolean
+  complianceStatusByApplicant?: Record<string, ComplianceStatusResult>
+  alternativeWorkers?: AlternativeWorker[]
+  isLoadingAlternativeWorkers?: boolean
+  onSelectAlternativeWorker?: (workerId: string) => void
 }
 
 const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
-  ({ applicants, onAccept, onReject, isLoading = false, className, ...props }, ref) => {
+  ({ applicants, onAccept, onReject, isLoading = false, complianceStatusByApplicant, alternativeWorkers, isLoadingAlternativeWorkers = false, onSelectAlternativeWorker, className, ...props }, ref) => {
     // Format date to Indonesian locale
     const formatDate = (dateString: string) => {
       return new Date(dateString).toLocaleDateString("id-ID", {
@@ -108,6 +116,30 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
       return (applicant.status === "pending" || applicant.status === "accepted") && onReject
     }
 
+    // Find the most severe compliance issue among applicants
+    const getMostSevereComplianceIssue = (): ComplianceStatusResult | null => {
+      if (!complianceStatusByApplicant) return null
+
+      let mostSevere: ComplianceStatusResult | null = null
+
+      for (const applicant of applicants) {
+        const compliance = complianceStatusByApplicant[applicant.id]
+        if (!compliance) continue
+
+        // Prioritize blocked status over warning
+        if (compliance.status === "blocked") {
+          return compliance
+        }
+        if (compliance.status === "warning" && !mostSevere) {
+          mostSevere = compliance
+        }
+      }
+
+      return mostSevere
+    }
+
+    const complianceIssue = getMostSevereComplianceIssue()
+
     if (isLoading) {
       return (
         <Card ref={ref} className={cn("w-full", className)} {...props}>
@@ -154,6 +186,11 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {complianceIssue && (
+            <div className="mb-4">
+              <ComplianceWarningBanner compliance={complianceIssue} />
+            </div>
+          )}
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -162,6 +199,7 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
                   <TableHead>No. Telepon</TableHead>
                   <TableHead>Tanggal Lamar</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Kepatuhan</TableHead>
                   <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
@@ -208,6 +246,18 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
                         {getStatusLabel(applicant.status)}
                       </Badge>
                     </TableCell>
+                    <TableCell>
+                      {complianceStatusByApplicant?.[applicant.id] ? (
+                        <ComplianceStatusBadge
+                          compliance={complianceStatusByApplicant[applicant.id]}
+                          showDays
+                          showIcon
+                          size="sm"
+                        />
+                      ) : (
+                        <span className="text-sm text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         {canAccept(applicant) && (
@@ -250,6 +300,15 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
               </TableBody>
             </Table>
           </div>
+          {complianceIssue?.status === "blocked" && (
+            <div className="mt-6">
+              <AlternativeWorkersSuggestion
+                workers={alternativeWorkers ?? []}
+                isLoading={isLoadingAlternativeWorkers}
+                onSelectWorker={onSelectAlternativeWorker}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     )

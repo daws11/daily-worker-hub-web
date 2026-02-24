@@ -5,6 +5,7 @@ import { Check, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import type { ComplianceStatusResult } from "@/lib/supabase/queries/compliance"
 
 type BookingStatus = "pending" | "accepted" | "rejected" | "in_progress" | "completed" | "cancelled"
 
@@ -15,6 +16,7 @@ export interface BookingActionsProps {
   onReject?: (bookingId: string) => Promise<void> | void
   isLoading?: boolean
   disabled?: boolean
+  complianceStatus?: ComplianceStatusResult | null
   size?: "default" | "sm" | "lg"
   variant?: "default" | "outline" | "ghost"
   className?: string
@@ -28,6 +30,7 @@ export function BookingActions({
   onReject,
   isLoading = false,
   disabled = false,
+  complianceStatus,
   size = "default",
   variant = "default",
   className,
@@ -37,7 +40,9 @@ export function BookingActions({
   const [isRejecting, setIsRejecting] = React.useState(false)
 
   const isPending = status === "pending"
+  const isComplianceBlocked = complianceStatus?.status === "blocked"
   const isActionDisabled = disabled || isLoading || !isPending
+  const isAcceptDisabled = isActionDisabled || isComplianceBlocked
 
   const handleAccept = async () => {
     if (isActionDisabled || !onAccept) return
@@ -90,7 +95,7 @@ export function BookingActions({
           variant={getAcceptVariant()}
           size={getButtonSize()}
           onClick={handleAccept}
-          disabled={isActionDisabled}
+          disabled={isAcceptDisabled}
           aria-label={`Accept booking ${bookingId}`}
         >
           {isAccepting ? (
