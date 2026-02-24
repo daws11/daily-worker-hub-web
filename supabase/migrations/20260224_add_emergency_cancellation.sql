@@ -68,9 +68,25 @@ CREATE TRIGGER update_cancellation_reasons_updated_at
 -- Enable RLS on cancellation_reasons table
 ALTER TABLE cancellation_reasons ENABLE ROW LEVEL SECURITY;
 
--- Cancellation reasons are viewable by everyone
-CREATE POLICY "Cancellation reasons are viewable by everyone"
-  ON cancellation_reasons FOR SELECT USING (true);
+-- Public read access
+CREATE POLICY "Cancellation reasons: Public read access" ON cancellation_reasons
+  FOR SELECT
+  USING (true);
+
+-- Admins can insert cancellation reasons
+CREATE POLICY "Cancellation reasons: Admin insert access" ON cancellation_reasons
+  FOR INSERT
+  WITH CHECK (is_admin());
+
+-- Admins can update cancellation reasons
+CREATE POLICY "Cancellation reasons: Admin update access" ON cancellation_reasons
+  FOR UPDATE
+  USING (is_admin());
+
+-- Admins can delete cancellation reasons
+CREATE POLICY "Cancellation reasons: Admin delete access" ON cancellation_reasons
+  FOR DELETE
+  USING (is_admin());
 
 -- ============================================================================
 -- MODIFY BOOKINGS TABLE - Add cancellation tracking columns
