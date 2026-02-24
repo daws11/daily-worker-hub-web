@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useAuth } from '@/providers/auth-provider'
 import { useAttendance } from '@/lib/hooks/use-attendance'
+import { useTranslation } from '@/lib/i18n/hooks'
 import { QRCodeGenerator } from '@/components/attendance/qr-code-generator'
 import { getBusinessJobs } from '@/lib/supabase/queries/jobs'
 import { getJobBookings } from '@/lib/supabase/queries/bookings'
@@ -23,6 +24,7 @@ interface JobWithAttendance extends JobsRow {
 
 export default function BusinessJobAttendancePage() {
   const { user } = useAuth()
+  const { t, locale } = useTranslation()
   const [jobs, setJobs] = useState<JobWithAttendance[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -63,32 +65,32 @@ export default function BusinessJobAttendancePage() {
 
       setJobs(jobsWithAttendance)
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Gagal memuat data'
+      const message = err instanceof Error ? err.message : t('errors.loadFailed')
       setError(message)
       toast.error(message)
     } finally {
       setLoading(false)
     }
-  }, [user?.id])
+  }, [user?.id, t])
 
   // Handle QR code refresh
   const handleQRRefresh = useCallback(() => {
     fetchJobsWithAttendance()
   }, [fetchJobsWithAttendance])
 
-  // Format date to Indonesian locale
+  // Format date based on current locale
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
+    return new Date(dateString).toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
     })
   }
 
-  // Format time to Indonesian locale
+  // Format time based on current locale
   const formatTime = (dateString: string | null) => {
     if (!dateString) return '-'
-    return new Date(dateString).toLocaleTimeString('id-ID', {
+    return new Date(dateString).toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', {
       hour: '2-digit',
       minute: '2-digit',
     })
@@ -109,10 +111,10 @@ export default function BusinessJobAttendancePage() {
         {/* Page Header */}
         <div style={{ marginBottom: '1.5rem' }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-            Kehadiran Pekerja
+            {t('jobAttendance.title')}
           </h1>
           <p style={{ color: '#666', fontSize: '0.875rem' }}>
-            Kelola QR code dan pantau kehadiran pekerja untuk setiap pekerjaan aktif
+            {t('jobAttendance.subtitle')}
           </p>
         </div>
 
@@ -131,7 +133,7 @@ export default function BusinessJobAttendancePage() {
             <AlertCircle style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
             <div>
               <p style={{ color: '#991b1b', fontWeight: 500, marginBottom: '0.25rem' }}>
-                Gagal memuat data
+                {t('errors.loadFailed')}
               </p>
               <p style={{ color: '#b91c1c', fontSize: '0.875rem' }}>{error}</p>
             </div>
@@ -153,7 +155,7 @@ export default function BusinessJobAttendancePage() {
               }}
             >
               <Loader2 style={{ width: '1rem', height: '1rem' }} />
-              Coba Lagi
+              {t('common.tryAgain')}
             </button>
           </div>
         )}
@@ -168,7 +170,7 @@ export default function BusinessJobAttendancePage() {
             textAlign: 'center'
           }}>
             <Loader2 style={{ width: '2rem', height: '2rem', color: '#2563eb', margin: '0 auto 1rem', animation: 'spin 1s linear infinite' }} />
-            <p style={{ color: '#666' }}>Memuat data kehadiran...</p>
+            <p style={{ color: '#666' }}>{t('jobAttendance.loading')}</p>
           </div>
         )}
 
@@ -184,10 +186,10 @@ export default function BusinessJobAttendancePage() {
           }}>
             <Building2 style={{ width: '3rem', height: '3rem', color: '#9ca3af', margin: '0 auto 1rem' }} />
             <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Tidak Ada Pekerjaan Aktif
+              {t('jobAttendance.noActiveJobs')}
             </h3>
             <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-              Buat pekerjaan baru dan terima pendaftaran pekerja untuk mulai melacak kehadiran
+              {t('jobAttendance.noActiveJobsDesc')}
             </p>
           </div>
         )}
@@ -229,19 +231,19 @@ export default function BusinessJobAttendancePage() {
                           <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb' }}>
                             {job.stats.total}
                           </div>
-                          <div style={{ fontSize: '0.75rem', color: '#666' }}>Total</div>
+                          <div style={{ fontSize: '0.75rem', color: '#666' }}>{t('common.total')}</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>
                             {job.stats.checkedIn}
                           </div>
-                          <div style={{ fontSize: '0.75rem', color: '#666' }}>Check In</div>
+                          <div style={{ fontSize: '0.75rem', color: '#666' }}>{t('attendance.checkIn')}</div>
                         </div>
                         <div style={{ textAlign: 'center' }}>
                           <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#6b7280' }}>
                             {job.stats.checkedOut}
                           </div>
-                          <div style={{ fontSize: '0.75rem', color: '#666' }}>Check Out</div>
+                          <div style={{ fontSize: '0.75rem', color: '#666' }}>{t('attendance.checkOut')}</div>
                         </div>
                       </div>
                     )}
@@ -266,7 +268,7 @@ export default function BusinessJobAttendancePage() {
                   <div style={{ padding: '1.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
                       <Users style={{ width: '1.25rem', height: '1.25rem', color: '#666' }} />
-                      <h4 style={{ fontSize: '1rem', fontWeight: 600 }}>Daftar Pekerja</h4>
+                      <h4 style={{ fontSize: '1rem', fontWeight: 600 }}>{t('jobAttendance.workerList')}</h4>
                     </div>
 
                     {!job.bookings || job.bookings.length === 0 ? (
@@ -278,7 +280,7 @@ export default function BusinessJobAttendancePage() {
                         borderRadius: '0.375rem'
                       }}>
                         <Users style={{ width: '2rem', height: '2rem', margin: '0 auto 0.5rem' }} />
-                        <p style={{ fontSize: '0.875rem' }}>Belum ada pekerja</p>
+                        <p style={{ fontSize: '0.875rem' }}>{t('jobAttendance.noWorkers')}</p>
                       </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '350px', overflowY: 'auto' }}>
@@ -318,7 +320,7 @@ export default function BusinessJobAttendancePage() {
                               </div>
                               <div style={{ flex: 1 }}>
                                 <p style={{ fontWeight: 500, fontSize: '0.875rem', margin: 0 }}>
-                                  {booking.worker?.full_name || 'Pekerja'}
+                                  {booking.worker?.full_name || t('jobAttendance.worker')}
                                 </p>
                                 <p style={{ fontSize: '0.75rem', color: '#666', margin: 0 }}>
                                   {booking.worker?.phone || ''}
@@ -337,7 +339,7 @@ export default function BusinessJobAttendancePage() {
                                   gap: '0.25rem'
                                 }}>
                                   <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />
-                                  Selesai
+                                  {t('attendance.completed')}
                                 </div>
                               ) : booking.check_in_at ? (
                                 <div style={{
@@ -352,7 +354,7 @@ export default function BusinessJobAttendancePage() {
                                   gap: '0.25rem'
                                 }}>
                                   <Clock style={{ width: '0.875rem', height: '0.875rem' }} />
-                                  Bekerja
+                                  {t('attendance.working')}
                                 </div>
                               ) : (
                                 <div style={{
@@ -367,7 +369,7 @@ export default function BusinessJobAttendancePage() {
                                   gap: '0.25rem'
                                 }}>
                                   <XCircle style={{ width: '0.875rem', height: '0.875rem' }} />
-                                  Belum
+                                  {t('attendance.notYet')}
                                 </div>
                               )}
                             </div>
@@ -375,11 +377,11 @@ export default function BusinessJobAttendancePage() {
                             {/* Attendance Times */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.75rem' }}>
                               <div>
-                                <span style={{ color: '#666' }}>Check In: </span>
+                                <span style={{ color: '#666' }}>{t('attendance.checkIn')}: </span>
                                 <span style={{ fontWeight: 500 }}>{formatTime(booking.check_in_at)}</span>
                               </div>
                               <div>
-                                <span style={{ color: '#666' }}>Check Out: </span>
+                                <span style={{ color: '#666' }}>{t('attendance.checkOut')}: </span>
                                 <span style={{ fontWeight: 500 }}>{formatTime(booking.check_out_at)}</span>
                               </div>
                             </div>
@@ -397,7 +399,7 @@ export default function BusinessJobAttendancePage() {
                                 color: '#10b981'
                               }}>
                                 <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />
-                                <span>Lokasi terverifikasi</span>
+                                <span>{t('business.locationVerified')}</span>
                               </div>
                             )}
                           </div>

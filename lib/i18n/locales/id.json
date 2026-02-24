@@ -464,6 +464,16 @@
     "locationVerified": "Lokasi terverifikasi",
     "loadingJobs": "Memuat data pekerjaan..."
   },
+  "jobAttendance": {
+    "title": "Kehadiran Pekerja",
+    "subtitle": "Kelola QR code dan pantau kehadiran pekerja untuk setiap pekerjaan aktif",
+    "loading": "Memuat data kehadiran...",
+    "noActiveJobs": "Tidak Ada Pekerjaan Aktif",
+    "noActiveJobsDesc": "Buat pekerjaan baru dan terima pendaftaran pekerja untuk mulai melacak kehadiran",
+    "workerList": "Daftar Pekerja",
+    "noWorkers": "Belum ada pekerja",
+    "worker": "Pekerja"
+  },
   "worker": {
     "myBookings": "Booking Saya",
     "bookingHistory": "Riwayat Booking",

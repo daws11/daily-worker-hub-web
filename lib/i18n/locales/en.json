@@ -464,6 +464,16 @@
     "locationVerified": "Location verified",
     "loadingJobs": "Loading job data..."
   },
+  "jobAttendance": {
+    "title": "Worker Attendance",
+    "subtitle": "Manage QR codes and monitor worker attendance for each active job",
+    "loading": "Loading attendance data...",
+    "noActiveJobs": "No Active Jobs",
+    "noActiveJobsDesc": "Create new jobs and accept worker registrations to start tracking attendance",
+    "workerList": "Worker List",
+    "noWorkers": "No workers yet",
+    "worker": "Worker"
+  },
   "worker": {
     "myBookings": "My Bookings",
     "bookingHistory": "Booking History",

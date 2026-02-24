@@ -2,7 +2,7 @@
   "feature": "Multi-Language Support (Indonesian & English)",
   "description": "# Multi-Language Support (Indonesian & English)\n\nFull localization support for Indonesian and English languages. Users can switch languages, and all UI elements, notifications, and content are translated. Includes RTL support for future language expansion.\n\n## Rationale\nBali's hospitality workforce includes both local and international workers. Multi-language support makes the platform accessible to all users and provides a competitive advantage over monolingual competitors.\n\n## User Stories\n- As a local worker, I want to use the app in Indonesian so that I can understand everything\n- As an expat business owner, I want to use the app in English so that I can navigate easily\n- As a user, I want to switch languages so that I can use whichever is more comfortable\n\n## Acceptance Criteria\n- [ ] Users can switch between Indonesian and English\n- [ ] All UI elements are translated\n- [ ] Notifications are sent in user's preferred language\n- [ ] Job postings maintain original language or can be auto-translated\n- [ ] Language preference is saved per user\n- [ ] Translation system supports adding more languages\n- [ ] Content is culturally appropriate for each language\n",
   "created_at": "2026-02-21T21:45:13.417Z",
-  "updated_at": "2026-02-24T16:52:25.923Z",
+  "updated_at": "2026-02-24T16:56:21.459Z",
   "status": "in_progress",
   "workflow_type": "feature",
   "workflow_rationale": "This is a feature implementation that requires building new i18n infrastructure from scratch. The phases follow dependency order: database schema first, then i18n infrastructure, then providers, then components, then translation of existing content, and finally integration.",
@@ -402,7 +402,9 @@
               "Job cards show translated content"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Translated business jobs page with useTranslation hook. All hardcoded Indonesian text replaced with translation keys: business.jobsPageTitle, business.jobsPageSubtitle, errors.loadFailed, common.tryAgain, business.loadingJobs, business.totalJobs, business.activeJobs, common.completed, business.noActiveJobs, business.noActiveJobsDescription, business.qrCodeButton, attendance.workers, attendance.checkIn, attendance.checkOut, attendance.workerList, attendance.worker, common.completed, attendance.working, attendance.notYet, bookings.checkInAt, bookings.checkOutAt, business.locationVerified, common.close. Added new translation keys to both id.json and en.json. Date/time formatting updated to use dynamic locale (id-ID for Indonesian, en-US for English). TypeScript type-check passes.",
+          "updated_at": "2026-02-24T16:54:14.466133+00:00"
         },
         {
           "id": "subtask-5-6",
@@ -423,7 +425,9 @@
               "Check-in buttons translated"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Translated worker attendance page with useTranslation hook. All hardcoded Indonesian text replaced with translation keys: attendance.title, attendance.subtitle, attendance.enableLocation, attendance.enableLocationDescription, errors.failedToLoadData, common.retry, attendance.todaysSchedule, attendance.noScheduleToday, availability.noJobsMessage, common.job, common.business, attendance.checkIn, attendance.checkOut, attendance.history. Date/time formatting updated to use dynamic locale (id-ID for Indonesian, en-US for English). TypeScript type-check passes.",
+          "updated_at": "2026-02-25T00:00:00.000000+00:00"
         },
         {
           "id": "subtask-5-7",
@@ -881,5 +885,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "last_updated": "2026-02-24T16:44:10.452180+00:00"
+  "last_updated": "2026-02-24T16:54:14.466145+00:00"
 }
