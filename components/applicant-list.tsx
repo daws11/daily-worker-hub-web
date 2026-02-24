@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { Calendar, Phone, User, Check, X, MoreVertical } from "lucide-react"
 
@@ -25,6 +27,7 @@ import {
 } from "./ui/avatar"
 import { cn } from "@/lib/utils"
 import type { ApplicantWithDetails } from "@/lib/data/jobs"
+import { useTranslation } from "@/lib/i18n/hooks"
 
 export interface ApplicantListProps extends React.HTMLAttributes<HTMLDivElement> {
   applicants: ApplicantWithDetails[]
@@ -35,9 +38,17 @@ export interface ApplicantListProps extends React.HTMLAttributes<HTMLDivElement>
 
 const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
   ({ applicants, onAccept, onReject, isLoading = false, className, ...props }, ref) => {
-    // Format date to Indonesian locale
+    const { t, locale } = useTranslation()
+
+    // Locale mapping for date formatting
+    const localeMap: Record<string, string> = {
+      id: "id-ID",
+      en: "en-US"
+    }
+
+    // Format date based on current locale
     const formatDate = (dateString: string) => {
-      return new Date(dateString).toLocaleDateString("id-ID", {
+      return new Date(dateString).toLocaleDateString(localeMap[locale] || locale, {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -68,21 +79,21 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
       }
     }
 
-    // Get status label in Indonesian
+    // Get status label using translation
     const getStatusLabel = (status: ApplicantWithDetails["status"]): string => {
       switch (status) {
         case "pending":
-          return "Menunggu"
+          return t('common.pending')
         case "accepted":
-          return "Diterima"
+          return t('common.accepted')
         case "rejected":
-          return "Ditolak"
+          return t('common.rejected')
         case "in_progress":
-          return "Sedang Berjalan"
+          return t('common.inProgress')
         case "completed":
-          return "Selesai"
+          return t('common.completed')
         case "cancelled":
-          return "Dibatalkan"
+          return t('common.cancelled')
         default:
           return status
       }
@@ -112,8 +123,8 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
       return (
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
-            <CardTitle>Daftar Pelamar</CardTitle>
-            <CardDescription>Memuat data pelamar...</CardDescription>
+            <CardTitle>{t('business.applicantList')}</CardTitle>
+            <CardDescription>{t('business.loadingApplicants')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-center py-8">
@@ -128,16 +139,16 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
       return (
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
-            <CardTitle>Daftar Pelamar</CardTitle>
+            <CardTitle>{t('business.applicantList')}</CardTitle>
             <CardDescription>
-              Belum ada pelamar untuk pekerjaan ini
+              {t('business.noApplicants')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <UserIcon className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                Belum ada pelamar. Bagikan pekerjaan ini untuk mendapatkan pelamar!
+                {t('business.noApplicantsMessage')}
               </p>
             </div>
           </CardContent>
@@ -148,9 +159,9 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
     return (
       <Card ref={ref} className={cn("w-full", className)} {...props}>
         <CardHeader>
-          <CardTitle>Daftar Pelamar</CardTitle>
+          <CardTitle>{t('business.applicantList')}</CardTitle>
           <CardDescription>
-            Daftar pekerja yang melamar pekerjaan ini ({applicants.length} pelamar)
+            {t('business.applicants')} ({t('business.applicantCount', { count: applicants.length })})
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -158,11 +169,11 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Pelamar</TableHead>
-                  <TableHead>No. Telepon</TableHead>
-                  <TableHead>Tanggal Lamar</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
+                  <TableHead>{t('business.applicantsHeader')}</TableHead>
+                  <TableHead>{t('business.phoneHeader')}</TableHead>
+                  <TableHead>{t('business.applicationDateHeader')}</TableHead>
+                  <TableHead>{t('common.status')}</TableHead>
+                  <TableHead className="text-right">{t('business.actionHeader')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -218,7 +229,7 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
                             className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
                           >
                             <Check className="h-4 w-4" />
-                            <span className="sr-only">Terima Pelamar</span>
+                            <span className="sr-only">{t('business.acceptApplicant')}</span>
                           </Button>
                         )}
                         {canReject(applicant) && (
@@ -229,7 +240,7 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
                             className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
                           >
                             <X className="h-4 w-4" />
-                            <span className="sr-only">Tolak Pelamar</span>
+                            <span className="sr-only">{t('business.rejectApplicant')}</span>
                           </Button>
                         )}
                         {!canAccept(applicant) && !canReject(applicant) && (
@@ -240,7 +251,7 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
                             className="h-8 w-8 p-0"
                           >
                             <MoreVertical className="h-4 w-4" />
-                            <span className="sr-only">Tidak ada aksi</span>
+                            <span className="sr-only">{t('business.noAction')}</span>
                           </Button>
                         )}
                       </div>
