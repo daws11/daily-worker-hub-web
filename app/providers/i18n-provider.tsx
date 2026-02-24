@@ -4,6 +4,11 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import { loadTranslations, getTranslation, i18nConfig, isLocaleRTL } from '../../lib/i18n/config'
 import { I18nContext } from '../../lib/i18n/hooks'
 import type { Locale, I18nContextValue } from '../../lib/i18n/types'
+import { supabase } from '../../lib/supabase/client'
+import type { User } from '@supabase/supabase-js'
+import type { Database } from '../../lib/supabase/types'
+
+type UsersRow = Database['public']['Tables']['users']['Row']
 
 const STORAGE_KEY = 'user-locale-preference'
 
@@ -57,8 +62,8 @@ function saveLocale(locale: Locale) {
  *
  * This provider:
  * - Loads translations for the current locale
- * - Detects language preference from cookie, localStorage, browser locale, or default
- * - Persists language changes to both cookie and localStorage
+ * - Detects language preference from database (if logged in), cookie, localStorage, browser locale, or default
+ * - Persists language changes to database (if logged in), cookie, and localStorage
  * - Provides translation function and locale controls via context
  *
  * @example
@@ -87,6 +92,7 @@ export function I18nProvider({ children, defaultLocale }: I18nProviderProps) {
   const [locale, setLocaleState] = useState<Locale>(defaultLocale || i18nConfig.defaultLocale)
   const [isLoaded, setIsLoaded] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
 
   /**
    * Get locale from cookie (set by middleware)
@@ -119,22 +125,57 @@ export function I18nProvider({ children, defaultLocale }: I18nProviderProps) {
     }
   }
 
+  // Get initial session and listen for auth changes
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+    })
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
   // Load translations and detect initial locale
   useEffect(() => {
     async function initializeLocale() {
       setIsLoading(true)
 
-      // Priority: 1) Cookie (from middleware), 2) localStorage, 3) Browser locale, 4) Default
+      // Priority: 1) Database (if logged in), 2) Cookie (from middleware), 3) localStorage, 4) Browser locale, 5) Default
+      let dbLocale: Locale | null = null
+
+      // Fetch language preference from database if user is logged in
+      if (user) {
+        const { data, error } = await supabase
+          .from('users')
+          .select('language_preference')
+          .eq('id', user.id)
+          .single()
+
+        if (!error && data?.language_preference) {
+          const pref = data.language_preference
+          if (pref === 'id' || pref === 'en') {
+            dbLocale = pref as Locale
+          }
+        }
+      }
+
       const cookieLocale = getCookieLocale()
       const storedLocale = getStoredLocale()
       const browserLocale = detectBrowserLocale()
 
-      const initialLocale = cookieLocale || storedLocale || browserLocale
+      const initialLocale = dbLocale || cookieLocale || storedLocale || browserLocale
       setLocaleState(initialLocale)
 
-      // Sync localStorage if cookie was set by middleware
-      if (cookieLocale && cookieLocale !== storedLocale) {
-        saveLocale(cookieLocale)
+      // Sync localStorage if needed
+      if ((dbLocale || cookieLocale) && (dbLocale || cookieLocale) !== storedLocale) {
+        saveLocale((dbLocale || cookieLocale)!)
       }
 
       // Preload translations
@@ -151,7 +192,7 @@ export function I18nProvider({ children, defaultLocale }: I18nProviderProps) {
     }
 
     initializeLocale()
-  }, [defaultLocale])
+  }, [defaultLocale, user])
 
   // Update HTML lang and dir attributes when locale changes
   useEffect(() => {
@@ -163,7 +204,7 @@ export function I18nProvider({ children, defaultLocale }: I18nProviderProps) {
   }, [locale, isLoaded])
 
   /**
-   * Set locale and persist to both cookie and localStorage
+   * Set locale and persist to database, cookie, and localStorage
    */
   const setLocale = async (newLocale: Locale) => {
     if (newLocale === locale || isLoading) return
@@ -178,6 +219,19 @@ export function I18nProvider({ children, defaultLocale }: I18nProviderProps) {
       setLocaleState(newLocale)
       saveLocale(newLocale)
       setCookieLocale(newLocale)
+
+      // Persist to database if user is logged in
+      if (user) {
+        const { error } = await supabase
+          .from('users')
+          .update({ language_preference: newLocale })
+          .eq('id', user.id)
+
+        if (error) {
+          // Log error but don't fail the locale change
+          console.error('Failed to save language preference to database:', error)
+        }
+      }
     } catch {
       // Keep current locale if loading fails
       console.error(`Failed to load translations for locale: ${newLocale}`)
