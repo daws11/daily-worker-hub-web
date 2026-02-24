@@ -1,25 +1,25 @@
 {
   "active": true,
   "spec": "022-business-analytics-dashboard",
-  "state": "building",
+  "state": "planning",
   "subtasks": {
-    "completed": 12,
-    "total": 14,
+    "completed": 0,
+    "total": 0,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Navigation Integration",
+    "current": "Install Dependencies",
     "id": null,
-    "total": 2
+    "total": 1
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 15,
-    "started_at": "2026-02-24T01:43:37.079942"
+    "number": 2,
+    "started_at": "2026-02-24T21:54:12.468584"
   },
-  "last_update": "2026-02-24T03:03:56.816502"
+  "last_update": "2026-02-24T22:02:20.186062"
 }
