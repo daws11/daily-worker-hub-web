@@ -114,8 +114,8 @@
             "type": "manual",
             "instructions": "Verify functions are exported: getBadges, getWorkerBadges, requestBadge, verifyBadge, getWorkersByBadge"
           },
-          "status": "pending",
-          "notes": "Create CRUD functions: getBadges(), getWorkerBadges(workerId), requestBadge(), verifyBadge(), getWorkersByBadge(badgeId)"
+          "status": "completed",
+          "notes": "Created lib/supabase/queries/badges.ts with all required CRUD functions: getBadges(), getWorkerBadges(workerId), requestBadge(), verifyBadge(), getWorkersByBadge(badgeId). Plus helper functions: getBadgeById, createBadge, updateBadge, deleteBadge, getPendingBadgeVerifications, searchBadges, getBadgesByProvider, getWorkerBadgeById, deleteWorkerBadge. All functions follow jobs.ts pattern with proper error handling. TypeScript check passed."
         },
         {
           "id": "subtask-2-3",
@@ -543,5 +543,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-24T15:43:08.034Z"
+  "updated_at": "2026-02-24T15:47:22.326Z"
 }
