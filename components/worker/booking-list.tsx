@@ -75,23 +75,9 @@ async function fetchBookings(workerId: string): Promise<Booking[]> {
   return (data as Booking[]) || []
 }
 
-async function cancelBooking(bookingId: string): Promise<void> {
-  const { data, error } = await supabase
-    .from("bookings")
-    // @ts-ignore - Supabase type inference issue with React 19
-    .update({ status: "cancelled" })
-    .eq("id", bookingId)
-    .select()
-
-  if (error) {
-    throw error
-  }
-}
-
 function BookingList({ workerId }: BookingListProps) {
   const [bookings, setBookings] = React.useState<Booking[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
-  const [isCancelling, setIsCancelling] = React.useState<string | null>(null)
 
   const loadBookings = React.useCallback(async () => {
     setIsLoading(true)
@@ -110,16 +96,9 @@ function BookingList({ workerId }: BookingListProps) {
   }, [loadBookings])
 
   const handleCancel = async (bookingId: string) => {
-    setIsCancelling(bookingId)
-    try {
-      await cancelBooking(bookingId)
-      toast.success("Booking berhasil dibatalkan")
-      await loadBookings()
-    } catch (error: any) {
-      toast.error("Gagal membatalkan booking: " + error.message)
-    } finally {
-      setIsCancelling(null)
-    }
+    // Refresh the bookings list after cancellation
+    // The actual cancellation is handled by EmergencyCancellationDialog
+    await loadBookings()
   }
 
   if (isLoading) {
@@ -156,11 +135,8 @@ function BookingList({ workerId }: BookingListProps) {
                   <BookingCard
                     key={booking.id}
                     booking={booking}
-                    onCancel={
-                      booking.status === "pending"
-                        ? () => handleCancel(booking.id)
-                        : undefined
-                    }
+                    workerId={workerId}
+                    onCancel={() => handleCancel(booking.id)}
                   />
                 ))}
               </div>

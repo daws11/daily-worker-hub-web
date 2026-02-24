@@ -1,13 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { Calendar, Clock, MapPin, DollarSign, Building2, CheckCircle } from "lucide-react"
+import { Calendar, Clock, MapPin, DollarSign, Building2, CheckCircle, AlertTriangle } from "lucide-react"
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { BookingStatusBadge, type BookingStatus } from "@/components/worker/booking-status-badge"
-import { CancelBookingDialog } from "@/components/worker/cancel-booking-dialog"
+import { EmergencyCancellationDialog } from "@/components/worker/emergency-cancellation-dialog"
 
 export interface BookingJob {
   id: string
@@ -37,6 +37,7 @@ export interface Booking {
 
 export interface BookingCardProps {
   booking: Booking
+  workerId: string
   onCancel?: (bookingId: string) => void | Promise<void>
 }
 
@@ -72,23 +73,20 @@ function mapBookingStatus(
   return status as BookingStatus
 }
 
-function BookingCard({ booking, onCancel }: BookingCardProps) {
+function BookingCard({ booking, workerId, onCancel }: BookingCardProps) {
   const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false)
   const [isCancelling, setIsCancelling] = React.useState(false)
 
   const handleCancelConfirm = async () => {
-    if (!onCancel) return
-    setIsCancelling(true)
-    try {
-      await onCancel(booking.id)
-      setCancelDialogOpen(false)
-    } finally {
-      setIsCancelling(false)
-    }
+    setCancelDialogOpen(false)
+    // The EmergencyCancellationDialog handles the cancellation internally
+    // This callback is just for refreshing the list
+    onCancel?.(booking.id)
   }
 
-  const canCancel = booking.status === "pending"
+  const canCancel = booking.status === "pending" || booking.status === "accepted"
   const displayStatus = mapBookingStatus(booking.status)
+  const isEmergencyCancellation = booking.status === "accepted"
 
   return (
     <>
@@ -151,24 +149,29 @@ function BookingCard({ booking, onCancel }: BookingCardProps) {
           <span className="text-xs text-muted-foreground">
             Booked on {formatDate(booking.created_at)}
           </span>
-          {canCancel && onCancel && (
+          {canCancel && (
             <Button
-              variant="destructive"
+              variant={isEmergencyCancellation ? "outline" : "destructive"}
               size="sm"
               onClick={() => setCancelDialogOpen(true)}
               disabled={isCancelling}
+              className={isEmergencyCancellation ? "border-orange-500 text-orange-600 hover:bg-orange-50" : ""}
             >
-              Cancel Booking
+              {isEmergencyCancellation && <AlertTriangle className="h-4 w-4 mr-2" />}
+              {isEmergencyCancellation ? "Emergency Cancel" : "Cancel Booking"}
             </Button>
           )}
         </CardFooter>
       </Card>
 
-      <CancelBookingDialog
+      <EmergencyCancellationDialog
         open={cancelDialogOpen}
         onOpenChange={setCancelDialogOpen}
-        onConfirm={handleCancelConfirm}
-        isLoading={isCancelling}
+        bookingId={booking.id}
+        workerId={workerId}
+        jobTitle={booking.job?.title || "Unknown Job"}
+        businessName={booking.business?.name}
+        onSuccess={handleCancelConfirm}
       />
     </>
   )
