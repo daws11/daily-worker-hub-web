@@ -1,0 +1,464 @@
+{
+  "feature": "Emergency Job Cancellation & Rescheduling",
+  "description": "# Emergency Job Cancellation & Rescheduling\n\nEmergency cancellation system allowing workers and businesses to cancel bookings with valid reasons (illness, emergency) and minimal penalties. Includes rescheduling options and notification to affected parties.\n\n## Rationale\nEmergencies happen, and a fair cancellation policy reduces no-shows by allowing workers to cancel properly rather than simply not showing up. This builds trust and understanding in the community.\n\n## User Stories\n- As a worker, I want to cancel if I'm sick so that I don't negatively impact my reliability\n- As a business, I want to know if a worker has an emergency so that I can find a replacement\n- As both parties, I want a fair cancellation policy so that emergencies don't ruin relationships\n\n## Acceptance Criteria\n- [ ] Workers can cancel bookings with emergency reasons\n- [ ] Businesses can cancel bookings with valid reasons\n- [ ] Cancellation reasons are categorized (illness, emergency, etc.)\n- [ ] Minimal penalties apply for emergency cancellations\n- [ ] Rescheduling options are offered when possible\n- [ ] Affected parties are notified immediately\n- [ ] Repeated cancellations affect reliability score\n- [ ] Businesses can leave notes about cancellations",
+  "created_at": "2026-02-21T21:45:12.366Z",
+  "updated_at": "2026-02-24T14:06:04.476Z",
+  "status": "in_progress",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a feature workflow because we're adding new functionality (emergency cancellation with reasons) that spans multiple layers: database schema changes, new server actions, and enhanced UI components. The feature has clear dependencies: database must be created before server actions can use it, and server actions must exist before UI can consume them.",
+  "phases": [
+    {
+      "id": "phase-1-database",
+      "name": "Database Schema",
+      "type": "implementation",
+      "description": "Create database schema for cancellation reasons and add cancellation tracking to bookings table",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create cancellation reasons enum and table",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/20260224_add_emergency_cancellation.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/migrations/001_initial_schema.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"SELECT COUNT(*) FROM cancellation_reasons;\"",
+            "expected": "reasons exist in table"
+          },
+          "status": "completed",
+          "notes": "Created cancellation_reason_category enum with 7 categories (illness, family_emergency, personal_emergency, weather, transportation, schedule_conflict, other). Created cancellation_reasons table with proper indexes, RLS policies, and seed data with 13 predefined reasons."
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Add cancellation columns to bookings table",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20260224_add_emergency_cancellation.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "supabase/migrations/20250222000001_initial_schema.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"\\d bookings\" | grep cancellation",
+            "expected": "cancellation_reason_id and cancellation_note columns"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Add RLS policies for cancellation reasons",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20260224_add_emergency_cancellation.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "supabase/migrations/002_rls_policies.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"SELECT policyname FROM pg_policies WHERE tablename = 'cancellation_reasons';\"",
+            "expected": "RLS policies exist"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-1-4",
+          "description": "Seed cancellation reasons data",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20260224_add_emergency_cancellation.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "supabase/migrations/003_seed_data.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "psql $DATABASE_URL -c \"SELECT name FROM cancellation_reasons ORDER BY penalty_score;\"",
+            "expected": "Predefined reasons (illness, emergency, etc.)"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-server-actions",
+      "name": "Server Actions",
+      "type": "implementation",
+      "description": "Create server actions for emergency cancellation with notifications and reliability score updates",
+      "depends_on": [
+        "phase-1-database"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create cancellations server action file with TypeScript types",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/actions/cancellations.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/actions/job-applications.ts",
+            "lib/actions/notifications.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cat lib/actions/cancellations.ts | head -20",
+            "expected": "'use server' directive with type definitions"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Implement cancelBookingWithReason function",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/actions/cancellations.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/actions/job-applications.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Review cancelBookingWithReason function has: status update to cancelled, cancellation reason/note storage, notification to affected party"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Implement getWorkerCancellationHistory function",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/actions/cancellations.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/actions/job-applications.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -n 'getWorkerCancellationHistory' lib/actions/cancellations.ts",
+            "expected": "Function exists"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-4",
+          "description": "Add cancellation types to lib/types/booking.ts",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/types/cancellation.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/types/attendance.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cat lib/types/cancellation.ts | grep -E 'CancellationReason|EmergencyCancellation'",
+            "expected": "Type definitions exist"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-5",
+          "description": "Update reliability score function to account for emergency cancellations",
+          "service": "edge_functions",
+          "files_to_modify": [
+            "supabase/functions/reliability-score/index.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "supabase/functions/reliability-score/index.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify reliability score calculation reduces penalty for emergency cancellations with valid reasons"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-frontend-ui",
+      "name": "Frontend UI Components",
+      "type": "implementation",
+      "description": "Create enhanced cancellation dialog with reason selection and rescheduling options",
+      "depends_on": [
+        "phase-2-server-actions"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create emergency cancellation reason selector component",
+          "service": "frontend",
+          "files_to_create": [
+            "components/worker/emergency-cancellation-dialog.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/worker/cancel-booking-dialog.tsx",
+            "components/booking/worker-notes-dialog.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify component has: reason dropdown, note textarea, shows penalty info, submit button"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Update booking card to use emergency cancellation dialog",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/worker/booking-card.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/worker/booking-card.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify booking card shows emergency cancellation button for accepted/pending bookings"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Add business-side cancellation with notes",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/booking/worker-application-card.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/booking/worker-notes-dialog.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify business can cancel accepted bookings with notes about cancellation"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-4",
+          "description": "Update worker bookings page to handle cancellation",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(dashboard)/worker/bookings/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/(dashboard)/worker/bookings/page.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify page refreshes booking list after cancellation"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-integration",
+      "name": "Integration & Testing",
+      "type": "integration",
+      "description": "Wire all components together, test end-to-end cancellation flow",
+      "depends_on": [
+        "phase-2-server-actions",
+        "phase-3-frontend-ui"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "End-to-end test: Worker cancels with emergency reason",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Worker views accepted booking",
+              "Worker clicks emergency cancel button",
+              "Worker selects illness reason and adds note",
+              "Booking status changes to cancelled",
+              "Business receives notification",
+              "Worker reliability score updated with minimal penalty"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "End-to-end test: Business cancels worker booking",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Business views worker booking",
+              "Business cancels with reason",
+              "Worker receives notification",
+              "Booking status changes to cancelled"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-3",
+          "description": "Verify repeated cancellations affect reliability score",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Worker cancels multiple bookings",
+              "Check reliability score calculation",
+              "Verify penalty increases with repeated cancellations"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 4,
+    "total_subtasks": 15,
+    "services_involved": [
+      "database",
+      "frontend",
+      "edge_functions"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 1,
+      "parallel_groups": [],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution required due to dependencies"
+    },
+    "startup_command": "npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "unit",
+      "integration"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "Database migration applies successfully",
+      "Cancellation reasons are properly seeded",
+      "Workers can cancel with emergency reasons",
+      "Businesses can cancel with notes",
+      "Notifications are sent to affected parties",
+      "Reliability scores are updated appropriately",
+      "UI components render without errors"
+    ],
+    "verification_steps": [
+      {
+        "name": "Database Migration",
+        "command": "supabase db push",
+        "expected_outcome": "Migration applies successfully",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Type Check",
+        "command": "npm run type-check",
+        "expected_outcome": "No TypeScript errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Build Verification",
+        "command": "npm run build",
+        "expected_outcome": "Build succeeds without errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Medium risk change involving database schema changes, new server actions, and UI components. Requires database migration testing and type safety verification."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": true,
+      "commands": [
+        "npm run build"
+      ],
+      "services_to_test": [
+        "frontend",
+        "database"
+      ]
+    },
+    "e2e_tests": {
+      "required": true,
+      "commands": [
+        "Manual testing in browser"
+      ],
+      "flows": [
+        "worker-emergency-cancellation",
+        "business-cancellation-with-notes"
+      ]
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/worker/bookings",
+          "checks": [
+            "cancellation dialog renders",
+            "reason selector works"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/business/jobs",
+          "checks": [
+            "booking management works"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "cancellation_reasons table exists",
+        "bookings table has new columns",
+        "RLS policies enabled"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "planStatus": "in_progress",
+  "xstateState": "backlog",
+  "executionPhase": "coding"
+}

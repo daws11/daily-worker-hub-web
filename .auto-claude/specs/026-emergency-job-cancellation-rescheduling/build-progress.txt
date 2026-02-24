@@ -1,0 +1,139 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Emergency Job Cancellation & Rescheduling
+Workspace: managed by orchestrator
+Started: 2026-02-24 14:00:00
+
+Workflow Type: feature
+Rationale: This is a feature workflow because we're adding new functionality (emergency cancellation with reasons) that spans multiple layers: database schema changes, new server actions, and enhanced UI components.
+
+Session 1 (Planner):
+- Created implementation_plan.json
+- Created project_index.json
+- Created context.json
+- Created init.sh
+- Created build-progress.txt
+
+Phase Summary:
+- Phase 1 - Database Schema: 4 subtasks, depends on []
+- Phase 2 - Server Actions: 5 subtasks, depends on [phase-1-database]
+- Phase 3 - Frontend UI Components: 4 subtasks, depends on [phase-2-server-actions]
+- Phase 4 - Integration & Testing: 3 subtasks, depends on [phase-2-server-actions, phase-3-frontend-ui]
+
+Services Involved:
+- database: PostgreSQL via Supabase
+- frontend: Next.js 14 + TypeScript + Tailwind CSS
+- edge_functions: Deno-based Supabase Edge Functions
+
+Parallelism Analysis:
+- Max parallel phases: 1
+- Recommended workers: 1
+- Parallel groups: None - sequential execution required due to dependencies
+
+=== CODEBASE INVESTIGATION SUMMARY ===
+
+Project Type: Single Next.js + TypeScript + Supabase project
+
+Tech Stack:
+- Frontend: Next.js 14, React 19, TypeScript, Tailwind CSS
+- Backend: Supabase (PostgreSQL), Edge Functions
+- UI: Radix UI components (dialog, select, etc.)
+
+Existing Patterns Found:
+1. Server Actions Pattern:
+   - All in lib/actions/ with 'use server' directive
+   - Use createClient() for Supabase
+   - Return { success, error, data } objects
+   - Reference: lib/actions/job-applications.ts
+
+2. Component Pattern:
+   - 'use client' directive for client components
+   - TypeScript interfaces for props
+   - React.useState for local state
+   - Reference: components/worker/cancel-booking-dialog.tsx
+
+3. Dialog Pattern:
+   - @radix-ui/react-dialog Dialog components
+   - DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter
+   - Reference: components/worker/cancel-booking-dialog.tsx
+
+4. Notification Pattern:
+   - createNotification() from lib/actions/notifications.ts
+   - Parameters: userId, title, body, link
+   - Reference: lib/actions/notifications.ts
+
+5. Database Pattern:
+   - Migrations in supabase/migrations/
+   - RLS policies on all tables
+   - ENUM types for status fields
+   - Reference: supabase/migrations/001_initial_schema.sql
+
+Files Requiring Changes:
+1. Database:
+   - NEW: supabase/migrations/20260224_add_emergency_cancellation.sql
+
+2. Server Actions:
+   - NEW: lib/actions/cancellations.ts
+   - NEW: lib/types/cancellation.ts
+   - MODIFY: supabase/functions/reliability-score/index.ts
+
+3. Components:
+   - MODIFY: components/worker/cancel-booking-dialog.tsx (enhance or replace)
+   - MODIFY: components/worker/booking-card.tsx
+   - MODIFY: components/booking/worker-application-card.tsx
+
+4. Pages:
+   - MODIFY: app/(dashboard)/worker/bookings/page.tsx
+   - MODIFY: app/(dashboard)/business/jobs/page.tsx
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  npm run dev
+
+Or use the init script:
+
+  ./init.sh
+
+=== END SESSION 1 ===
+
+Planner agent completed. Ready for coder agent to begin implementation.
+
+=== SESSION 2 - SUBTASK 1-1 COMPLETION ===
+Date: 2026-02-24
+
+Subtask 1-1: Create cancellation reasons enum and table
+Status: COMPLETED
+
+Files Created:
+- supabase/migrations/20260224_add_emergency_cancellation.sql
+
+Implementation Details:
+- Created cancellation_reason_category enum with 7 categories:
+  * illness (medical-related)
+  * family_emergency (family issues)
+  * personal_emergency (personal emergencies)
+  * weather (severe weather)
+  * transportation (vehicle/transit issues)
+  * schedule_conflict (double booking)
+  * other (catch-all with approval)
+- Created cancellation_reasons table with:
+  * id (UUID primary key)
+  * category (cancellation_reason_category enum)
+  * name (reason title)
+  * description (detailed explanation)
+  * requires_verification (BOOLEAN)
+  * penalty_percentage (INTEGER 0-100)
+  * is_active (BOOLEAN)
+  * sort_order (INTEGER)
+  * created_at/updated_at (TIMESTAMPTZ)
+- Added indexes on category, is_active, sort_order
+- Created RLS policy for public read access
+- Added updated_at trigger
+- Seeded 13 predefined cancellation reasons with appropriate penalties
+
+Commit: da50a89 - "auto-claude: subtask-1-1 - Create cancellation reasons enum and table"
+
+Next: Subtask 1-2 - Add cancellation columns to bookings table
+
