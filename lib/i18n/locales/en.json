@@ -259,7 +259,8 @@
     "present": "Present",
     "absent": "Absent",
     "late": "Late",
-    "onTime": "On Time"
+    "onTime": "On Time",
+    "notYet": "Not Yet"
   },
   "wallet": {
     "title": "Wallet",
@@ -452,7 +453,16 @@
     "verified": "Verified",
     "notVerified": "Not Verified",
     "verifyBusiness": "Verify Business",
-    "verificationPending": "Verification Pending"
+    "verificationPending": "Verification Pending",
+    "jobsPageTitle": "My Jobs",
+    "jobsPageSubtitle": "Manage jobs and monitor worker attendance",
+    "totalJobs": "Total Jobs",
+    "activeJobs": "Active Jobs",
+    "noActiveJobs": "No Active Jobs",
+    "noActiveJobsDescription": "Create new job to start tracking worker attendance",
+    "qrCodeButton": "QR Code",
+    "locationVerified": "Location verified",
+    "loadingJobs": "Loading job data..."
   },
   "worker": {
     "myBookings": "My Bookings",

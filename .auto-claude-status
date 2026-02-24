@@ -3,23 +3,23 @@
   "spec": "031-multi-language-support-indonesian-english",
   "state": "building",
   "subtasks": {
-    "completed": 1,
+    "completed": 15,
     "total": 31,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Database Schema",
+    "current": "Page Translations",
     "id": null,
-    "total": 2
+    "total": 8
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 3,
+    "number": 17,
     "started_at": "2026-02-24T23:55:22.765652"
   },
-  "last_update": "2026-02-25T00:00:54.771819"
+  "last_update": "2026-02-25T00:52:25.936736"
 }

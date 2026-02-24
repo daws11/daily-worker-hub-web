@@ -259,7 +259,8 @@
     "present": "Hadir",
     "absent": "Tidak Hadir",
     "late": "Terlambat",
-    "onTime": "Tepat Waktu"
+    "onTime": "Tepat Waktu",
+    "notYet": "Belum"
   },
   "wallet": {
     "title": "Dompet",
@@ -452,7 +453,16 @@
     "verified": "Terverifikasi",
     "notVerified": "Belum Terverifikasi",
     "verifyBusiness": "Verifikasi Bisnis",
-    "verificationPending": "Verifikasi Tertunda"
+    "verificationPending": "Verifikasi Tertunda",
+    "jobsPageTitle": "Pekerjaan Saya",
+    "jobsPageSubtitle": "Kelola pekerjaan dan pantau kehadiran pekerja",
+    "totalJobs": "Total Pekerjaan",
+    "activeJobs": "Pekerjaan Aktif",
+    "noActiveJobs": "Tidak Ada Pekerjaan Aktif",
+    "noActiveJobsDescription": "Buat pekerjaan baru untuk mulai melacak kehadiran pekerja",
+    "qrCodeButton": "QR Code",
+    "locationVerified": "Lokasi terverifikasi",
+    "loadingJobs": "Memuat data pekerjaan..."
   },
   "worker": {
     "myBookings": "Booking Saya",
