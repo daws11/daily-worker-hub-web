@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "@/lib/i18n/hooks"
 import { validateJobQRCode } from "@/lib/supabase/queries/jobs"
 
 export type QRScannerMode = "check-in" | "check-out"
@@ -28,6 +29,7 @@ export interface QRCodeScannerProps extends React.HTMLAttributes<HTMLDivElement>
 
 const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
   ({ bookingId, mode, open, onOpenChange, onSuccess, className, ...props }, ref) => {
+    const { t } = useTranslation()
     const scannerRef = React.useRef<Html5Qrcode | null>(null)
     const [isScanning, setIsScanning] = React.useState(false)
     const [cameraError, setCameraError] = React.useState<string | null>(null)
@@ -35,7 +37,7 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
     const scannerContainerId = React.useRef(`qr-scanner-${bookingId}-${mode}`)
 
     // Get mode display text
-    const modeText = mode === "check-in" ? "Check-in" : "Check-out"
+    const modeText = mode === "check-in" ? t("attendance.modeCheckIn") : t("attendance.modeCheckOut")
 
     // Start scanning
     const startScanning = React.useCallback(async () => {
@@ -43,7 +45,7 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
 
       // Check if camera is available
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        const errorMessage = "Kamera tidak tersedia. Pastikan perangkat memiliki kamera dan izin diberikan."
+        const errorMessage = t("attendance.cameraNotAvailable")
         setCameraError(errorMessage)
         toast.error(errorMessage)
         return
@@ -77,20 +79,20 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
 
         setIsScanning(true)
       } catch (error) {
-        let errorMessage = "Gagal mengakses kamera"
+        let errorMessage = t("attendance.cameraAccessFailed")
         if (error instanceof Error) {
           if (error.name === "NotAllowedError") {
-            errorMessage = "Izin kamera ditolak. Silakan izinkan akses kamera di pengaturan browser."
+            errorMessage = t("attendance.cameraPermissionDenied")
           } else if (error.name === "NotFoundError") {
-            errorMessage = "Kamera tidak ditemukan pada perangkat ini."
+            errorMessage = t("attendance.cameraNotFound")
           } else if (error.name === "NotSupportedError") {
-            errorMessage = "Browser ini tidak mendukung akses kamera."
+            errorMessage = t("attendance.cameraNotSupported")
           }
         }
         setCameraError(errorMessage)
         toast.error(errorMessage)
       }
-    }, [])
+    }, [t])
 
     // Stop scanning
     const stopScanning = React.useCallback(async () => {
@@ -117,7 +119,7 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
           const result = await validateJobQRCode(decodedText)
 
           if (!result.isValid) {
-            toast.error(result.error || "QR Code tidak valid")
+            toast.error(result.error || t("attendance.qrCodeInvalid"))
             setProcessing(false)
             // Restart scanning
             await startScanning()
@@ -142,12 +144,12 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
               lng = position.coords.longitude
             } catch (error) {
               // Location capture failed, but continue without it
-              let locationWarning = "Gagal mengambil lokasi GPS"
+              let locationWarning = t("attendance.locationCaptureFailed")
               if (error instanceof Error) {
                 if (error.name === "NotAllowedError") {
-                  locationWarning = "Izin lokasi ditolak. Melanjutkan tanpa verifikasi lokasi."
+                  locationWarning = t("attendance.locationPermissionDenied")
                 } else if (error.name === "TimeoutError") {
-                  locationWarning = "Waktu habis mengambil lokasi. Melanjutkan tanpa verifikasi lokasi."
+                  locationWarning = t("attendance.locationTimeout")
                 }
               }
               toast.warning(locationWarning)
@@ -155,21 +157,22 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
           }
 
           // Success! Call the success callback
-          toast.success(`${modeText} berhasil`)
+          const successMessage = mode === "check-in" ? t("attendance.checkInSuccess") : t("attendance.checkOutSuccess")
+          toast.success(successMessage)
 
           onSuccess?.(result.jobId!, lat, lng)
 
           // Close the dialog
           onOpenChange(false)
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : "Gagal memproses QR Code"
+          const errorMessage = error instanceof Error ? error.message : t("attendance.failedToProcessQRCode")
           toast.error(errorMessage)
           setProcessing(false)
           // Restart scanning
           await startScanning()
         }
       },
-      [processing, onSuccess, onOpenChange, modeText, startScanning]
+      [processing, onSuccess, onOpenChange, mode, t, startScanning]
     )
 
     // Close dialog handler
@@ -223,9 +226,9 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div>
-                <DialogTitle>Scan QR Code untuk {modeText}</DialogTitle>
+                <DialogTitle>{t("attendance.scanQRCodeFor", { mode: modeText })}</DialogTitle>
                 <DialogDescription>
-                  Arahkan kamera ke QR Code yang ditampilkan oleh penyedia kerja
+                  {t("attendance.qrScannerDescription")}
                 </DialogDescription>
               </div>
               {!processing && (
@@ -236,7 +239,7 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
                   disabled={processing}
                 >
                   <X className="h-4 w-4" />
-                  <span className="sr-only">Tutup</span>
+                  <span className="sr-only">{t("common.close")}</span>
                 </Button>
               )}
             </div>
@@ -251,7 +254,7 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
                 <div className="absolute inset-0 flex items-center justify-center bg-muted">
                   <div className="text-center space-y-2">
                     <Camera className="h-8 w-8 mx-auto text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">Memuat kamera...</p>
+                    <p className="text-sm text-muted-foreground">{t("attendance.loadingCamera")}</p>
                   </div>
                 </div>
               )}
@@ -269,7 +272,9 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
                 <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
                   <div className="text-center space-y-2">
                     <div className="h-8 w-8 mx-auto border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                    <p className="text-sm font-medium">Memproses {modeText}...</p>
+                    <p className="text-sm font-medium">
+                      {mode === "check-in" ? t("attendance.processingCheckIn") : t("attendance.processingCheckOut")}
+                    </p>
                   </div>
                 </div>
               )}
@@ -279,8 +284,8 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
             <div className="rounded-lg border bg-muted/30 p-3">
               <p className="text-xs text-muted-foreground text-center">
                 {isScanning
-                  ? "Pastikan QR Code terlihat jelas dalam frame"
-                  : "Kamera akan aktif secara otomatis"}
+                  ? t("attendance.ensureQRCodeVisible")
+                  : t("attendance.cameraActivateAutomatically")}
               </p>
             </div>
 
@@ -292,7 +297,7 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
                 variant="outline"
               >
                 <Camera className="h-4 w-4 mr-2" />
-                Coba Lagi
+                {t("common.tryAgain")}
               </Button>
             )}
 
@@ -302,7 +307,7 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
                 className="w-full"
                 variant="outline"
               >
-                Batal
+                {t("common.cancel")}
               </Button>
             )}
           </div>
