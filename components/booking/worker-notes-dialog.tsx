@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "@/lib/i18n/hooks"
 
 export interface WorkerNotesDialogProps {
   bookingId: string
@@ -36,6 +37,7 @@ export function WorkerNotesDialog({
   open: controlledOpen,
   onOpenChange,
 }: WorkerNotesDialogProps) {
+  const { t } = useTranslation()
   const [internalOpen, setInternalOpen] = React.useState(false)
   const [notes, setNotes] = React.useState(existingNotes)
   const [isSaving, setIsSaving] = React.useState(false)
@@ -78,6 +80,11 @@ export function WorkerNotesDialog({
     handleOpenChange(false)
   }
 
+  // Get character count text with pluralization
+  const getCharacterCountText = (count: number) => {
+    return t(count === 1 ? 'bookings.characterCount' : 'bookings.characterCount_plural', { count })
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {trigger && (
@@ -88,20 +95,20 @@ export function WorkerNotesDialog({
 
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Worker Notes</DialogTitle>
+          <DialogTitle>{t('bookings.workerNotes')}</DialogTitle>
           <DialogDescription>
-            Add notes for {workerName}. These notes are private and only visible to you.
+            {t('bookings.workerNotesDescription', { workerName })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{t('common.notes')}</Label>
             <textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Enter notes about this worker (e.g., performance, reliability, skills...)"
+              placeholder={t('bookings.workerNotesDetailedPlaceholder')}
               className={cn(
                 "flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-y",
                 "scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/30"
@@ -109,7 +116,7 @@ export function WorkerNotesDialog({
               disabled={isSaving}
             />
             <p className="text-xs text-muted-foreground">
-              {notes.length} character{notes.length !== 1 ? "s" : ""}
+              {getCharacterCountText(notes.length)}
             </p>
           </div>
         </div>
@@ -121,14 +128,14 @@ export function WorkerNotesDialog({
             onClick={handleCancel}
             disabled={isSaving}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             type="button"
             onClick={handleSave}
             disabled={isSaving || notes.trim() === existingNotes.trim()}
           >
-            {isSaving ? "Saving..." : "Save Notes"}
+            {isSaving ? t('common.saving') : t('bookings.saveNotes')}
           </Button>
         </DialogFooter>
       </DialogContent>

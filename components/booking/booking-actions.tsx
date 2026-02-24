@@ -5,6 +5,7 @@ import { Check, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "@/lib/i18n/hooks"
 
 type BookingStatus = "pending" | "accepted" | "rejected" | "in_progress" | "completed" | "cancelled"
 
@@ -33,6 +34,7 @@ export function BookingActions({
   className,
   showLabels = true,
 }: BookingActionsProps) {
+  const { t } = useTranslation()
   const [isAccepting, setIsAccepting] = React.useState(false)
   const [isRejecting, setIsRejecting] = React.useState(false)
 
@@ -91,14 +93,14 @@ export function BookingActions({
           size={getButtonSize()}
           onClick={handleAccept}
           disabled={isActionDisabled}
-          aria-label={`Accept booking ${bookingId}`}
+          aria-label={t('bookings.accept', { bookingId })}
         >
           {isAccepting ? (
-            <>Processing...</>
+            <>{t('common.processing')}</>
           ) : (
             <>
               <Check className="h-4 w-4" />
-              {showLabels && <span>Accept</span>}
+              {showLabels && <span>{t('bookings.accept')}</span>}
             </>
           )}
         </Button>
@@ -110,14 +112,14 @@ export function BookingActions({
           size={getButtonSize()}
           onClick={handleReject}
           disabled={isActionDisabled}
-          aria-label={`Reject booking ${bookingId}`}
+          aria-label={t('bookings.reject', { bookingId })}
         >
           {isRejecting ? (
-            <>Processing...</>
+            <>{t('common.processing')}</>
           ) : (
             <>
               <X className="h-4 w-4" />
-              {showLabels && <span>Reject</span>}
+              {showLabels && <span>{t('bookings.reject')}</span>}
             </>
           )}
         </Button>
