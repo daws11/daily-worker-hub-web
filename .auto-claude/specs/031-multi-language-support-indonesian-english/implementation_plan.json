@@ -1,0 +1,858 @@
+{
+  "feature": "Multi-Language Support (Indonesian & English)",
+  "description": "# Multi-Language Support (Indonesian & English)\n\nFull localization support for Indonesian and English languages. Users can switch languages, and all UI elements, notifications, and content are translated. Includes RTL support for future language expansion.\n\n## Rationale\nBali's hospitality workforce includes both local and international workers. Multi-language support makes the platform accessible to all users and provides a competitive advantage over monolingual competitors.\n\n## User Stories\n- As a local worker, I want to use the app in Indonesian so that I can understand everything\n- As an expat business owner, I want to use the app in English so that I can navigate easily\n- As a user, I want to switch languages so that I can use whichever is more comfortable\n\n## Acceptance Criteria\n- [ ] Users can switch between Indonesian and English\n- [ ] All UI elements are translated\n- [ ] Notifications are sent in user's preferred language\n- [ ] Job postings maintain original language or can be auto-translated\n- [ ] Language preference is saved per user\n- [ ] Translation system supports adding more languages\n- [ ] Content is culturally appropriate for each language\n",
+  "created_at": "2026-02-21T21:45:13.417Z",
+  "updated_at": "2026-02-24T15:59:46.580Z",
+  "status": "in_progress",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a feature implementation that requires building new i18n infrastructure from scratch. The phases follow dependency order: database schema first, then i18n infrastructure, then providers, then components, then translation of existing content, and finally integration.",
+  "phases": [
+    {
+      "id": "phase-1-database",
+      "name": "Database Schema",
+      "type": "implementation",
+      "description": "Add language_preference column to users table and update TypeScript types",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create migration to add language_preference column to users table",
+          "service": "database",
+          "files_to_modify": [],
+          "files_to_create": [
+            "supabase/migrations/20260224_add_language_preference.sql"
+          ],
+          "patterns_from": [
+            "supabase/migrations/20250222000003_alter_workers_table.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'language_preference' supabase/migrations/20260224_add_language_preference.sql && echo 'Migration created'",
+            "expected": "Migration created"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Update TypeScript types for language preference in users table",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/supabase/types.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'language_preference' lib/supabase/types.ts && echo 'Types updated'",
+            "expected": "Types updated"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-i18n-infrastructure",
+      "name": "I18n Infrastructure",
+      "type": "implementation",
+      "description": "Create translation files, types, configuration, and hooks for i18n system",
+      "depends_on": [
+        "phase-1-database"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create i18n TypeScript types and interfaces",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/i18n/types.ts"
+          ],
+          "patterns_from": [
+            "lib/types/job.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'export type Locale' lib/i18n/types.ts && echo 'Types created'",
+            "expected": "Types created"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create English translation file with all UI strings",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/i18n/locales/en.json"
+          ],
+          "patterns_from": [
+            "lib/constants/position-types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "test -f lib/i18n/locales/en.json && echo 'English translations created'",
+            "expected": "English translations created"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Create Indonesian translation file with all UI strings",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/i18n/locales/id.json"
+          ],
+          "patterns_from": [
+            "lib/i18n/locales/en.json"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "test -f lib/i18n/locales/id.json && echo 'Indonesian translations created'",
+            "expected": "Indonesian translations created"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-4",
+          "description": "Create i18n configuration with translation loader",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/i18n/config.ts"
+          ],
+          "patterns_from": [
+            "lib/utils/date.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'export const getTranslations' lib/i18n/config.ts && echo 'Config created'",
+            "expected": "Config created"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-5",
+          "description": "Create useTranslation hook for accessing translations",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/i18n/hooks.ts"
+          ],
+          "patterns_from": [
+            "lib/hooks/useJobs.ts",
+            "app/providers/auth-provider.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'export function useTranslation' lib/i18n/hooks.ts && echo 'Hook created'",
+            "expected": "Hook created"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-provider",
+      "name": "I18n Provider",
+      "type": "implementation",
+      "description": "Create I18nProvider component and integrate into root layout",
+      "depends_on": [
+        "phase-2-i18n-infrastructure"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create I18nProvider component with language state management",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "app/providers/i18n-provider.tsx"
+          ],
+          "patterns_from": [
+            "app/providers/auth-provider.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'export function I18nProvider' app/providers/i18n-provider.tsx && echo 'Provider created'",
+            "expected": "Provider created"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Integrate I18nProvider into root layout",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/layout.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/layout.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000",
+            "checks": [
+              "Page loads without errors",
+              "I18nProvider is in component tree"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-language-switcher",
+      "name": "Language Switcher Component",
+      "type": "implementation",
+      "description": "Create language switcher UI component and add to dashboard layout",
+      "depends_on": [
+        "phase-3-provider"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create LanguageSwitcher component with dropdown",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/ui/language-switcher.tsx"
+          ],
+          "patterns_from": [
+            "components/ui/select.tsx",
+            "lib/constants/position-types.ts"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000",
+            "checks": [
+              "Language switcher renders",
+              "Shows Indonesian and English options"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Add LanguageSwitcher to dashboard layout",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(dashboard)/layout.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/(dashboard)/layout.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/jobs",
+            "checks": [
+              "Language switcher visible on dashboard",
+              "Switching language updates UI"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-page-translations",
+      "name": "Page Translations",
+      "type": "implementation",
+      "description": "Translate all pages to use useTranslation hook",
+      "depends_on": [
+        "phase-3-provider"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Translate landing page (app/page.tsx)",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000",
+            "checks": [
+              "Page shows translated content",
+              "Language switch updates text immediately"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Translate login page (app/(auth)/login/page.tsx)",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(auth)/login/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/login",
+            "checks": [
+              "Form labels are translated",
+              "Button text changes with language"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-3",
+          "description": "Translate register page (app/(auth)/register/page.tsx)",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(auth)/register/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/(auth)/login/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/register",
+            "checks": [
+              "All form fields translated",
+              "Validation messages translated"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-4",
+          "description": "Translate worker jobs page (app/(dashboard)/worker/jobs/page.tsx)",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/jobs",
+            "checks": [
+              "Job marketplace translated",
+              "Bookings section translated",
+              "Status badges translated"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-5",
+          "description": "Translate business jobs page (app/(dashboard)/business/jobs/page.tsx)",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(dashboard)/business/jobs/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/business/jobs",
+            "checks": [
+              "All UI text translated",
+              "Job cards show translated content"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-6",
+          "description": "Translate worker attendance page (app/(dashboard)/worker/attendance/page.tsx)",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(dashboard)/worker/attendance/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/attendance",
+            "checks": [
+              "Attendance section translated",
+              "Check-in buttons translated"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-7",
+          "description": "Translate business job attendance page (app/(dashboard)/business/job-attendance/page.tsx)",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(dashboard)/business/job-attendance/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/(dashboard)/worker/attendance/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/business/job-attendance",
+            "checks": [
+              "QR code section translated",
+              "Worker list translated"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-8",
+          "description": "Translate wallet pages (worker and business)",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(dashboard)/worker/wallet/page.tsx",
+            "app/(dashboard)/business/wallet/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/(dashboard)/worker/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/wallet",
+            "checks": [
+              "Wallet balance display translated",
+              "Transaction history translated"
+            ]
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-6-component-translations",
+      "name": "Component Translations",
+      "type": "implementation",
+      "description": "Translate all shared components (job marketplace, booking, attendance)",
+      "depends_on": [
+        "phase-3-provider"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Translate job marketplace components (JobCard, JobFilters, JobSearch, JobSort, JobList)",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/job-marketplace/JobCard.tsx",
+            "components/job-marketplace/JobFilters.tsx",
+            "components/job-marketplace/JobSearch.tsx",
+            "components/job-marketplace/JobSort.tsx",
+            "components/job-marketplace/JobList.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/job-marketplace/JobCard.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/jobs",
+            "checks": [
+              "Job cards show translated labels",
+              "Filter options translated",
+              "Search placeholder translated"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Translate JobDetailDialog component",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/job-marketplace/JobDetailDialog.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/job-marketplace/JobCard.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/jobs",
+            "checks": [
+              "Job detail dialog shows translated content",
+              "Apply button text translated"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-3",
+          "description": "Translate booking components (booking-actions, worker-notes-dialog)",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/booking/booking-actions.tsx",
+            "components/booking/worker-notes-dialog.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/booking/booking-actions.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify booking action buttons show translated text, worker notes dialog labels are translated"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-4",
+          "description": "Translate attendance components (QRCodeScanner, CheckInOutButton, AttendanceHistory)",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/attendance/qr-code-scanner.tsx",
+            "components/attendance/check-in-out-button.tsx",
+            "components/attendance/attendance-history.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/attendance/check-in-out-button.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify check-in/out buttons show translated text, attendance history table headers translated"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-5",
+          "description": "Translate applicant list component",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/applicant-list.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/applicant-list.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify applicant list shows translated labels and status badges"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-6",
+          "description": "Update date/time utilities to use dynamic locale",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/utils/date.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/utils/date.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -q 'locale' lib/utils/date.ts && echo 'Date utils updated'",
+            "expected": "Date utils updated"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-7",
+          "description": "Update all toast notifications to use translated messages",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/providers/auth-provider.tsx",
+            "lib/hooks/use-attendance.ts",
+            "lib/hooks/use-bookings.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/providers/auth-provider.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Trigger various actions (login, logout, check-in) and verify toast messages appear in selected language"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-7-integration",
+      "name": "Integration & Polish",
+      "type": "integration",
+      "description": "Wire everything together, verify end-to-end functionality, and handle edge cases",
+      "depends_on": [
+        "phase-4-language-switcher",
+        "phase-5-page-translations",
+        "phase-6-component-translations"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-7-1",
+          "description": "Update middleware to detect and persist language preference",
+          "service": "frontend",
+          "files_to_modify": [
+            "middleware.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "middleware.ts"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000",
+            "checks": [
+              "Language preference persists across page refreshes",
+              "Browser locale detected on first visit"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-7-2",
+          "description": "Update root layout to set lang and dir attributes dynamically",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/layout.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/layout.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000",
+            "checks": [
+              "HTML lang attribute changes with language",
+              "dir attribute set (ltr for both en and id)"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-7-3",
+          "description": "Add language preference persistence to database",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/providers/i18n-provider.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/providers/auth-provider.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "1. Select English language, 2. Check database users.language_preference column, 3. Verify it saved 'en'"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-7-4",
+          "description": "End-to-end verification: language switching across all pages",
+          "service": "all",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Navigate to landing page - verify Indonesian text shows",
+              "Switch to English - verify all text changes to English",
+              "Navigate to login page - verify still in English",
+              "Login and navigate to dashboard - verify English persists",
+              "Switch back to Indonesian - verify all text changes to Indonesian",
+              "Refresh page - verify language preference persists",
+              "Logout and login again - verify language preference remembered"
+            ]
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-7-5",
+          "description": "Handle missing translation keys gracefully",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/i18n/config.ts",
+            "lib/i18n/hooks.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/i18n/config.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Use a translation key that doesn't exist - verify it shows fallback (key name) without crashing"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 7,
+    "total_subtasks": 33,
+    "services_involved": [
+      "database",
+      "frontend"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 3,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-5-page-translations",
+            "phase-6-component-translations"
+          ],
+          "reason": "Both depend only on phase-3-provider, work on different files"
+        }
+      ],
+      "recommended_workers": 2,
+      "speedup_estimate": "1.5x faster than sequential"
+    },
+    "startup_command": "npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "unit",
+      "integration"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "Users can switch between Indonesian and English",
+      "All UI elements are translated",
+      "Notifications are sent in user's preferred language",
+      "Language preference is saved per user",
+      "Translation system supports adding more languages",
+      "Content is culturally appropriate for each language"
+    ],
+    "verification_steps": [
+      {
+        "name": "TypeScript Type Check",
+        "command": "npm run type-check",
+        "expected_outcome": "No type errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Lint Check",
+        "command": "npm run lint",
+        "expected_outcome": "No lint errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Build Verification",
+        "command": "npm run build",
+        "expected_outcome": "Production build succeeds",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Language Switching Test",
+        "command": "Manual browser test",
+        "expected_outcome": "Language switches work across all pages",
+        "type": "manual",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "Translation Completeness Check",
+        "command": "Verify all hardcoded strings are replaced with t() calls",
+        "expected_outcome": "All pages use translation system",
+        "type": "manual",
+        "required": true,
+        "blocking": false
+      }
+    ],
+    "reasoning": "Medium risk change - adds new i18n infrastructure and modifies many files. Requires type checking and build verification to ensure no breaking changes. Manual testing required for UI verification."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null,
+      "notes": "No unit test framework configured. Type checking used instead."
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000",
+          "checks": [
+            "Renders in default language (Indonesian)",
+            "Language switcher visible"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/login",
+          "checks": [
+            "Form labels translated",
+            "Button text translated"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/worker/jobs",
+          "checks": [
+            "Job marketplace translated",
+            "Bookings section translated"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/business/jobs",
+          "checks": [
+            "Business dashboard translated"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "Migration executed: language_preference column added",
+        "Column accepts 'id' and 'en' values",
+        "Column defaults to 'id'",
+        "Users can update their language preference"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "planStatus": "in_progress",
+  "xstateState": "backlog",
+  "executionPhase": "coding"
+}
