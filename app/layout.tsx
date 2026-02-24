@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { cookies } from 'next/headers'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from './providers/auth-provider'
@@ -12,13 +13,25 @@ export const metadata: Metadata = {
   description: 'Platform Harian Lepas Pekerja & Pelaku Usaha',
 }
 
-export default function RootLayout({
+/**
+ * Get locale from cookie or return default
+ */
+async function getLocale(): Promise<string> {
+  const cookieStore = await cookies()
+  const locale = cookieStore.get('user-locale')?.value
+  // Validate locale - only 'id' or 'en' are supported
+  return locale === 'id' || locale === 'en' ? locale : 'id'
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const locale = await getLocale()
+
   return (
-    <html lang="id">
+    <html lang={locale} dir="ltr">
       <body className={inter.className}>
         <I18nProvider>
           <AuthProvider>
