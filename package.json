@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "verify-reliability-score": "bash scripts/verify-reliability-score.sh"
   },
   "keywords": [],
   "author": "",

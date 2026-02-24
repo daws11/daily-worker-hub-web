@@ -324,8 +324,8 @@
             "type": "manual",
             "instructions": "Review acceptApplication and any completeBooking functions for score calculation call"
           },
-          "status": "pending",
-          "notes": "Alternative or backup to database trigger, ensures score updates on completion"
+          "status": "completed",
+          "notes": "Score calculation already implemented in completeBooking function (line 353-357). Function calls calculateWorkerScore after updating booking status to 'completed', acting as a backup to the database trigger. Follows existing patterns with proper error handling and comments."
         },
         {
           "id": "subtask-5-3",
@@ -486,8 +486,8 @@
   "executionPhase": "coding",
   "status": "in_progress",
   "planStatus": "in_progress",
-  "updated_at": "2026-02-22T17:42:15.749Z",
+  "updated_at": "2026-02-24T17:38:14.095Z",
   "xstateState": "backlog",
-  "recoveryNote": "Task recovered from stuck state at 2026-02-22T15:41:06.709Z",
+  "recoveryNote": "Task recovered from stuck state at 2026-02-24T17:36:28.537Z",
   "last_updated": "2026-02-22T17:22:55.388392+00:00"
 }

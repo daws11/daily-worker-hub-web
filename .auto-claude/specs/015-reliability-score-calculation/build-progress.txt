@@ -333,6 +333,17 @@ Date: 2026-02-23
   • Commit: e19b4b7
   • Plan updated: subtask-5-1 status = completed
 
-[NEXT] Phase 5: Automation Triggers (remaining 2 subtasks)
-  • Subtask 5-2: Add score calculation to job completion flow
+[COMPLETED] Subtask 5-2: Add score calculation to job completion flow in acceptApplication action
+  • File verified: lib/actions/job-applications.ts
+  • Implementation status: ALREADY COMPLETE
+  • The completeBooking function (lines 319-363) already includes score calculation:
+    - Calls calculateWorkerScore(booking.worker_id) after status update to "completed"
+    - Serves as a backup to the database trigger from subtask-5-1
+    - Properly imported from "./reliability-score" at line 5
+    - Includes error handling and clear documentation comments
+  • Pattern followed: Uses same return type pattern as other functions in file
+  • Verification: Manual review confirmed score calculation is properly integrated
+  • Plan updated: subtask-5-2 status = completed
+
+[NEXT] Phase 5: Automation Triggers (1 remaining subtask)
   • Subtask 5-3: End-to-end verification of automatic score calculation
