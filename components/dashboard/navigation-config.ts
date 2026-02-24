@@ -17,5 +17,6 @@ export const workerNavItems: NavItem[] = [
 export const businessNavItems: NavItem[] = [
   { href: "/business/jobs", label: "Pekerjaan", icon: Briefcase },
   { href: "/business/job-attendance", label: "Kehadiran", icon: Users },
+  { href: "/business/workers", label: "Pekerja", icon: Users },
   { href: "/business/wallet", label: "Dompet", icon: Wallet },
 ]
