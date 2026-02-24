@@ -542,5 +542,16 @@
     "events": "Events",
     "other": "Other",
     "management": "Management"
+  },
+  "landing": {
+    "title": "Daily Worker Hub",
+    "tagline": "Daily Worker & Business Platform",
+    "loginButton": "Sign In (Login)",
+    "registerButton": "Sign Up (Register)",
+    "projectStatus": "Project Status:",
+    "phase1": "Phase 1: Setup & Infrastructure",
+    "phase2": "Phase 2: shadcn/ui & Authentication",
+    "phase3": "Phase 3: Business Portal",
+    "phase4": "Phase 4: Worker Portal"
   }
 }

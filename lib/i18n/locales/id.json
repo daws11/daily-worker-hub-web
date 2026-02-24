@@ -542,5 +542,16 @@
     "events": "Acara",
     "other": "Lainnya",
     "management": "Manajemen"
+  },
+  "landing": {
+    "title": "Daily Worker Hub",
+    "tagline": "Platform Harian Lepas Pekerja & Pelaku Usaha",
+    "loginButton": "Masuk (Login)",
+    "registerButton": "Daftar (Register)",
+    "projectStatus": "Status Project:",
+    "phase1": "Phase 1: Setup & Infrastructure",
+    "phase2": "Phase 2: shadcn/ui & Authentication",
+    "phase3": "Phase 3: Business Portal",
+    "phase4": "Phase 4: Worker Portal"
   }
 }

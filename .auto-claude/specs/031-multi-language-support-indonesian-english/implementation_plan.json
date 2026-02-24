@@ -2,7 +2,7 @@
   "feature": "Multi-Language Support (Indonesian & English)",
   "description": "# Multi-Language Support (Indonesian & English)\n\nFull localization support for Indonesian and English languages. Users can switch languages, and all UI elements, notifications, and content are translated. Includes RTL support for future language expansion.\n\n## Rationale\nBali's hospitality workforce includes both local and international workers. Multi-language support makes the platform accessible to all users and provides a competitive advantage over monolingual competitors.\n\n## User Stories\n- As a local worker, I want to use the app in Indonesian so that I can understand everything\n- As an expat business owner, I want to use the app in English so that I can navigate easily\n- As a user, I want to switch languages so that I can use whichever is more comfortable\n\n## Acceptance Criteria\n- [ ] Users can switch between Indonesian and English\n- [ ] All UI elements are translated\n- [ ] Notifications are sent in user's preferred language\n- [ ] Job postings maintain original language or can be auto-translated\n- [ ] Language preference is saved per user\n- [ ] Translation system supports adding more languages\n- [ ] Content is culturally appropriate for each language\n",
   "created_at": "2026-02-21T21:45:13.417Z",
-  "updated_at": "2026-02-24T16:17:53.529Z",
+  "updated_at": "2026-02-24T16:32:11.472Z",
   "status": "in_progress",
   "workflow_type": "feature",
   "workflow_rationale": "This is a feature implementation that requires building new i18n infrastructure from scratch. The phases follow dependency order: database schema first, then i18n infrastructure, then providers, then components, then translation of existing content, and finally integration.",
@@ -251,7 +251,9 @@
               "Shows Indonesian and English options"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created lib/constants/languages.ts with Language interface and LANGUAGES array containing Indonesian (id) and English (en) options with flags, labels, and native names. Created components/ui/language-switcher.tsx using Radix UI Select component that displays current language with flag indicator and provides dropdown to select languages. Integrates with useTranslation hook for locale management. Responsive design with accessible aria labels. Follows patterns from components/ui/select.tsx and lib/constants/position-types.ts.",
+          "updated_at": "2026-02-25T00:00:00.000000+00:00"
         },
         {
           "id": "subtask-4-2",
@@ -272,7 +274,9 @@
               "Switching language updates UI"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added LanguageSwitcher to Sidebar component (desktop view) and DashboardHeader component (mobile view). Imported LanguageSwitcher component and placed it in appropriate locations: below brand/logo in Sidebar with border separator, and at the end of DashboardHeader with ml-auto positioning. TypeScript compilation passes.",
+          "updated_at": "2026-02-25T00:00:00.000000+00:00"
         }
       ]
     },
@@ -305,7 +309,9 @@
               "Language switch updates text immediately"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added landing section to both en.json and id.json with translations for title, tagline, login button, register button, project status, and phases. Updated app/page.tsx to import and use useTranslation hook. All hardcoded text replaced with t() function calls. TypeScript compilation passes, JSON files validated.",
+          "updated_at": "2026-02-25T00:00:00.000000+00:00"
         },
         {
           "id": "subtask-5-2",

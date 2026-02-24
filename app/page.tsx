@@ -1,8 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslation } from "@/lib/i18n/hooks"
 
 export default function HomePage() {
+  const { t } = useTranslation()
   const [loginHovered, setLoginHovered] = useState(false)
   const [registerHovered, setRegisterHovered] = useState(false)
 
@@ -32,12 +34,12 @@ export default function HomePage() {
         gap: '2rem'
       }}>
         <div style={{ textAlign: 'center' }}>
-          <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold' }}>Daily Worker Hub</h1>
+          <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold' }}>{t('landing.title')}</h1>
           <p style={{ marginTop: '0.5rem', color: '#a1a1aa' }}>
-            Platform Harian Lepas Pekerja & Pelaku Usaha
+            {t('landing.tagline')}
           </p>
         </div>
-        
+
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <button
             onClick={handleLoginClick}
@@ -58,7 +60,7 @@ export default function HomePage() {
               transition: 'background-color 0.2s'
             }}
           >
-            Masuk (Login)
+            {t('landing.loginButton')}
           </button>
           <button
             onClick={handleRegisterClick}
@@ -79,10 +81,10 @@ export default function HomePage() {
               transition: 'background-color 0.2s'
             }}
           >
-            Daftar (Register)
+            {t('landing.registerButton')}
           </button>
         </div>
-        
+
         <div style={{
           backgroundColor: '#27272a',
           borderRadius: '0.5rem',
@@ -90,12 +92,12 @@ export default function HomePage() {
           fontSize: '0.875rem',
           color: '#a1a1aa'
         }}>
-          <p style={{ fontWeight: 500, color: 'white', marginBottom: '0.5rem' }}>Status Project:</p>
+          <p style={{ fontWeight: 500, color: 'white', marginBottom: '0.5rem' }}>{t('landing.projectStatus')}</p>
           <ul style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', listStyle: 'none', padding: 0, margin: 0 }}>
-            <li>✅ Phase 1: Setup & Infrastructure</li>
-            <li>✅ Phase 2: shadcn/ui & Authentication</li>
-            <li>⏳ Phase 3: Business Portal</li>
-            <li>⏳ Phase 4: Worker Portal</li>
+            <li>✅ {t('landing.phase1')}</li>
+            <li>✅ {t('landing.phase2')}</li>
+            <li>⏳ {t('landing.phase3')}</li>
+            <li>⏳ {t('landing.phase4')}</li>
           </ul>
         </div>
       </div>
