@@ -338,3 +338,70 @@ Commit: 4a38f61 - "auto-claude: subtask-2-5 - Update reliability score function 
 Next: Phase 3 - Frontend UI Components (subtask-3-1: Create emergency cancellation reason selector component)
 
 === END SESSION 9 ===
+
+=== SESSION 10 - SUBTASK 3-1 COMPLETION ===
+Date: 2026-02-24
+
+Subtask 3-1: Create emergency cancellation reason selector component
+Status: COMPLETED
+
+Files Created:
+- components/worker/emergency-cancellation-dialog.tsx
+
+Implementation Details:
+- Created EmergencyCancellationDialog component with:
+  * Reason dropdown with grouped categories (illness, family_emergency, personal_emergency, weather, transportation, schedule_conflict, other)
+  * Note textarea with character count
+  * Penalty info display with color coding (green for 0%, yellow for 10%, orange for 25%+)
+  * Submit button with loading state
+  * Error handling with user-friendly messages
+  * Controlled/uncontrolled dialog state following pattern from WorkerNotesDialog
+- Component fetches cancellation reasons via getActiveCancellationReasons on mount
+- Calls cancelBookingWithReason on submit with bookingId, reasonId, note, and workerId
+- Props include bookingId, workerId, jobTitle, businessName, onCancel, onSuccess, trigger, open, onOpenChange
+- Uses DialogTrigger for custom trigger buttons
+- Shows Indonesian labels for categories
+
+Manual Verification:
+✓ Component has reason dropdown
+✓ Note textarea with character count
+✓ Shows penalty info
+✓ Submit button with loading state
+
+Commit: (included in next session)
+
+Next: Subtask 3-2 - Update booking card to use emergency cancellation dialog
+
+=== END SESSION 10 ===
+
+=== SESSION 11 - SUBTASK 3-2 COMPLETION ===
+Date: 2026-02-24
+
+Subtask 3-2: Update booking card to use emergency cancellation dialog
+Status: COMPLETED
+
+Files Modified:
+- components/worker/booking-card.tsx
+- components/worker/booking-list.tsx
+
+Implementation Details:
+- Updated BookingCard to use EmergencyCancellationDialog instead of CancelBookingDialog
+- Added workerId prop to BookingCardProps
+- Extended canCancel to include both "pending" and "accepted" bookings (was only pending)
+- Added distinct UI for emergency cancellation:
+  * Accepted bookings: outline button with orange styling and AlertTriangle icon, labeled "Emergency Cancel"
+  * Pending bookings: standard destructive button, labeled "Cancel Booking"
+- Updated BookingList to pass workerId to BookingCard
+- Removed unused cancelBooking function and isCancelling state from BookingList
+- The EmergencyCancellationDialog handles the actual cancellation via server action
+- BookingList's handleCancel now only refreshes the booking list after cancellation
+
+Manual Verification:
+✓ Booking card shows emergency cancellation button for accepted bookings
+✓ Booking card shows cancel button for pending bookings
+
+Commit: 5303067 - "auto-claude: subtask-3-2 - Update booking card to use emergency cancellation dialog"
+
+Next: Subtask 3-3 - Add business-side cancellation with notes
+
+=== END SESSION 11 ===

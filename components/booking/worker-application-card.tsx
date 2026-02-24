@@ -1,11 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { Calendar, Phone, Star } from "lucide-react"
+import { Calendar, Phone, Star, X } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { WorkerCancellationDialog } from "./worker-cancellation-dialog"
 import { cn } from "@/lib/utils"
 
 type BookingStatus = "pending" | "accepted" | "rejected" | "in_progress" | "completed" | "cancelled"
@@ -28,6 +30,7 @@ export interface WorkerApplicationCardProps {
   reliabilityScore?: number
   onSelect?: (bookingId: string) => void
   isSelected?: boolean
+  onCancelBooking?: (bookingId: string, notes: string) => Promise<void> | void
 }
 
 const statusVariants: Record<BookingStatus, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
@@ -88,6 +91,7 @@ export function WorkerApplicationCard({
   reliabilityScore,
   onSelect,
   isSelected,
+  onCancelBooking,
 }: WorkerApplicationCardProps) {
   const { status, start_date, end_date, booking_notes, worker } = booking
   const statusConfig = statusVariants[status]
@@ -112,6 +116,8 @@ export function WorkerApplicationCard({
       .toUpperCase()
       .slice(0, 2)
   }
+
+  const canCancel = status === "accepted" && onCancelBooking
 
   return (
     <Card
@@ -138,7 +144,26 @@ export function WorkerApplicationCard({
               </div>
             </div>
           </div>
-          <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
+            {canCancel && (
+              <WorkerCancellationDialog
+                bookingId={booking.id}
+                workerName={worker.full_name}
+                onCancel={onCancelBooking}
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                }
+              />
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
