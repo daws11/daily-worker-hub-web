@@ -41,3 +41,46 @@ export function useTranslation(): I18nContextValue {
 
   return context
 }
+
+/**
+ * Safe hook to access translations with graceful fallback
+ * Returns a safe translation function even if used outside I18nProvider
+ * Useful for non-component utilities or edge cases
+ *
+ * @returns Safe translation function that returns the key if context is unavailable
+ *
+ * @example
+ * ```tsx
+ * function MyUtility() {
+ *   const { t } = useTranslationSafe()
+ *   // Will return the key itself if used outside I18nProvider
+ *   const message = t('some.key') // Returns 'some.key' if no context
+ * }
+ * ```
+ */
+export function useTranslationSafe(): {
+  t: (key: string, params?: Record<string, string | number>) => string
+} {
+  try {
+    const context = useContext(I18nContext)
+
+    if (context === undefined) {
+      // Return a safe fallback that returns the key itself
+      return {
+        t: (key: string) => {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn(`[i18n] useTranslationSafe: No I18nContext available, returning key: ${key}`)
+          }
+          return key
+        },
+      }
+    }
+
+    return { t: context.t }
+  } catch {
+    // Handle any errors gracefully
+    return {
+      t: (key: string) => key,
+    }
+  }
+}

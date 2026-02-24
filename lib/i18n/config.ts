@@ -80,46 +80,64 @@ export function getTranslations(locale: Locale): TranslationNamespace {
 }
 
 /**
+ * Handle missing translation keys gracefully
+ * @param key - The translation key that was not found
+ * @param reason - Why the translation failed
+ * @returns The key itself as a fallback
+ */
+function handleMissingKey(key: string, reason: string): string {
+  // Log warning in development to help catch missing translations
+  if (process.env.NODE_ENV === 'development') {
+    console.warn(`[i18n] Translation key not found (${reason}): ${key}`)
+  }
+  // Return the key itself as a graceful fallback
+  return key
+}
+
+/**
  * Get a specific translation value by key
  * @param locale - The locale code
  * @param key - Dot-notation key (e.g., 'common.save', 'auth.login')
  * @param params - Optional parameters for string interpolation
- * @returns Translated string with parameters interpolated
+ * @returns Translated string with parameters interpolated, or the key itself if not found
  */
 export function getTranslation(
   locale: Locale,
   key: string,
   params?: Record<string, string | number>
 ): string {
-  const translations = getTranslations(locale)
-  const keys = key.split('.')
-  let value: unknown = translations
+  try {
+    const translations = getTranslations(locale)
+    const keys = key.split('.')
+    let value: unknown = translations
 
-  // Navigate through nested keys
-  for (const k of keys) {
-    if (value && typeof value === 'object' && k in value) {
-      value = (value as Record<string, unknown>)[k]
-    } else {
-      // Return the key itself if translation not found
-      console.warn(`Translation key not found: ${key}`)
-      return key
+    // Navigate through nested keys
+    for (const k of keys) {
+      if (value && typeof value === 'object' && k in value) {
+        value = (value as Record<string, unknown>)[k]
+      } else {
+        // Return the key itself if translation not found
+        return handleMissingKey(key, 'path not found')
+      }
     }
-  }
 
-  // Ensure the final value is a string
-  if (typeof value !== 'string') {
-    console.warn(`Translation value is not a string: ${key}`)
-    return key
-  }
+    // Ensure the final value is a string
+    if (typeof value !== 'string') {
+      return handleMissingKey(key, 'value is not a string')
+    }
 
-  // Interpolate parameters if provided
-  if (params) {
-    return value.replace(/\{(\w+)\}/g, (match, paramKey) => {
-      return params[paramKey]?.toString() ?? match
-    })
-  }
+    // Interpolate parameters if provided
+    if (params) {
+      return value.replace(/\{(\w+)\}/g, (match, paramKey) => {
+        return params[paramKey]?.toString() ?? match
+      })
+    }
 
-  return value
+    return value
+  } catch (error) {
+    // Handle any unexpected errors gracefully
+    return handleMissingKey(key, `error: ${error instanceof Error ? error.message : 'unknown'}`)
+  }
 }
 
 /**
