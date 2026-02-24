@@ -3,6 +3,7 @@
 // ============================================================================
 // Calculates and updates worker reliability scores based on:
 // - Booking completion rate (attendance)
+// - Cancellation penalties (emergency cancellations have reduced/zero penalty)
 // - Average rating from reviews
 // - Recent activity (last 90 days)
 //
@@ -45,10 +46,18 @@ serve(async (req) => {
     // Calculate date 90 days ago
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
 
-    // Get completed bookings in last 90 days
+    // Get all bookings with cancellation details in last 90 days
     const { data: bookings, error: bookingsError } = await supabase
       .from('bookings')
-      .select('id, status, created_at')
+      .select(`
+        id,
+        status,
+        created_at,
+        cancellation_reason_id,
+        cancellation_reasons (
+          penalty_percentage
+        )
+      `)
       .eq('worker_id', worker_id)
       .gte('created_at', ninetyDaysAgo)
 
@@ -56,10 +65,36 @@ serve(async (req) => {
       throw new Error(`Failed to fetch bookings: ${bookingsError.message}`)
     }
 
-    // Calculate completion rate
+    // Calculate completion rate with penalty-adjusted cancellations
     const totalBookings = bookings?.length || 0
+
+    // Calculate effective completions accounting for cancellation penalties
+    let effectiveCompletions = 0
+    let emergencyCancellations = 0
+    let partialPenaltyCancellations = 0
+    let fullPenaltyCancellations = 0
     const completedBookings = bookings?.filter(b => b.status === 'completed').length || 0
-    const completionRate = totalBookings > 0 ? (completedBookings / totalBookings) * 100 : 100
+
+    bookings?.forEach(booking => {
+      if (booking.status === 'completed') {
+        effectiveCompletions += 1
+      } else if (booking.status === 'cancelled') {
+        const penaltyPercent = booking.cancellation_reasons?.penalty_percentage ?? 100
+        const effectiveValue = 1 - (penaltyPercent / 100)
+        effectiveCompletions += effectiveValue
+
+        // Track cancellation types for reporting
+        if (penaltyPercent === 0) {
+          emergencyCancellations++
+        } else if (penaltyPercent < 100) {
+          partialPenaltyCancellations++
+        } else {
+          fullPenaltyCancellations++
+        }
+      }
+    })
+
+    const completionRate = totalBookings > 0 ? (effectiveCompletions / totalBookings) * 100 : 100
 
     // Get average rating from reviews
     const { data: reviews, error: reviewsError } = await supabase
@@ -109,7 +144,12 @@ serve(async (req) => {
           completion_rate: Number(completionRate.toFixed(2)),
           total_reviews: totalReviews,
           avg_rating: Number(avgRating.toFixed(2)),
-          period_days: 90
+          period_days: 90,
+          cancellation_breakdown: {
+            emergency_cancellations: emergencyCancellations,
+            partial_penalty_cancellations: partialPenaltyCancellations,
+            full_penalty_cancellations: fullPenaltyCancellations
+          }
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
