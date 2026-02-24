@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -15,6 +15,7 @@ import {
 import { JobFilters as JobFiltersType, PositionType } from '@/lib/types/job'
 import { X, Filter } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n/hooks'
 
 interface JobFiltersProps {
   filters?: JobFiltersType
@@ -22,14 +23,16 @@ interface JobFiltersProps {
   className?: string
 }
 
-const positionTypes: { value: PositionType; label: string }[] = [
-  { value: 'full_time', label: 'Full Time' },
-  { value: 'part_time', label: 'Part Time' },
-  { value: 'contract', label: 'Contract' },
-  { value: 'temporary', label: 'Temporary' },
-]
-
 export function JobFilters({ filters, onFiltersChange, className }: JobFiltersProps) {
+  const { t } = useTranslation()
+
+  const positionTypes: { value: PositionType; label: string }[] = useMemo(() => [
+    { value: 'full_time', label: t('jobs.fullTime') },
+    { value: 'part_time', label: t('jobs.partTime') },
+    { value: 'contract', label: t('jobs.contract') },
+    { value: 'temporary', label: t('jobs.temporary') },
+  ], [t])
+
   const [localFilters, setLocalFilters] = useState<JobFiltersType>(filters || {})
   const [wageMin, setWageMin] = useState<string>(filters?.wageMin?.toString() || '')
   const [wageMax, setWageMax] = useState<string>(filters?.wageMax?.toString() || '')
@@ -121,7 +124,7 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <Filter className="h-4 w-4" />
-            Filters
+            {t('jobs.filters')}
           </CardTitle>
           {hasActiveFilters && (
             <Button
@@ -131,7 +134,7 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
               className="h-8 text-xs"
             >
               <X className="h-3 w-3 mr-1" />
-              Clear All
+              {t('common.clearAll')}
             </Button>
           )}
         </div>
@@ -140,17 +143,17 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
         {/* Position Type Filter */}
         <div className="space-y-2">
           <Label htmlFor="position-type" className="text-sm">
-            Position Type
+            {t('jobs.positionType')}
           </Label>
           <Select
             value={localFilters.positionType || 'all'}
             onValueChange={handlePositionChange}
           >
             <SelectTrigger id="position-type">
-              <SelectValue placeholder="All positions" />
+              <SelectValue placeholder={t('jobs.allPositions')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All positions</SelectItem>
+              <SelectItem value="all">{t('jobs.allPositions')}</SelectItem>
               {positionTypes.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
                   {type.label}
@@ -163,12 +166,12 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
         {/* Area Filter */}
         <div className="space-y-2">
           <Label htmlFor="area" className="text-sm">
-            Area / Location
+            {t('jobs.areaLocation')}
           </Label>
           <Input
             id="area"
             type="text"
-            placeholder="e.g. Kuta, Seminyak"
+            placeholder={t('jobs.areaPlaceholder')}
             value={localFilters.area || ''}
             onChange={(e) => handleAreaChange(e.target.value)}
           />
@@ -176,22 +179,22 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
 
         {/* Wage Range Filter */}
         <div className="space-y-2">
-          <Label className="text-sm">Wage Range (IDR)</Label>
+          <Label className="text-sm">{t('jobs.wageRange')}</Label>
           <div className="flex items-center gap-2">
             <div className="flex-1">
               <Input
                 type="number"
-                placeholder="Min"
+                placeholder={t('jobs.minWage')}
                 min="0"
                 value={wageMin}
                 onChange={(e) => handleWageMinChange(e.target.value)}
               />
             </div>
-            <span className="text-muted-foreground text-sm">to</span>
+            <span className="text-muted-foreground text-sm">{t('common.to')}</span>
             <div className="flex-1">
               <Input
                 type="number"
-                placeholder="Max"
+                placeholder={t('jobs.maxWage')}
                 min="0"
                 value={wageMax}
                 onChange={(e) => handleWageMaxChange(e.target.value)}
@@ -202,11 +205,11 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
 
         {/* Deadline Filter */}
         <div className="space-y-2">
-          <Label className="text-sm">Deadline</Label>
+          <Label className="text-sm">{t('jobs.deadline')}</Label>
           <div className="space-y-2">
             <div className="space-y-1">
               <Label htmlFor="deadline-after" className="text-xs text-muted-foreground">
-                From
+                {t('common.from')}
               </Label>
               <Input
                 id="deadline-after"
@@ -217,7 +220,7 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
             </div>
             <div className="space-y-1">
               <Label htmlFor="deadline-before" className="text-xs text-muted-foreground">
-                To
+                {t('jobs.sortDeadline')}
               </Label>
               <Input
                 id="deadline-before"

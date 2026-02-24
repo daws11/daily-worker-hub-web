@@ -6,6 +6,7 @@ import { JobWithRelations } from '@/lib/types/job'
 import { Card, CardContent } from '@/components/ui/card'
 import { Loader2, Briefcase, SearchX } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n/hooks'
 
 interface JobListProps {
   jobs: JobWithRelations[]
@@ -21,9 +22,13 @@ export function JobList({
   loading = false,
   onJobClick,
   className,
-  emptyTitle = 'No jobs found',
-  emptyDescription = 'Try adjusting your filters or search terms'
+  emptyTitle,
+  emptyDescription
 }: JobListProps) {
+  const { t } = useTranslation()
+
+  const emptyTitleText = emptyTitle || t('jobs.noJobsMatchCriteria')
+  const emptyDescriptionText = emptyDescription || t('jobs.tryAdjustingFilters')
   // Show loading state
   if (loading) {
     return (
@@ -60,8 +65,8 @@ export function JobList({
           <div className="rounded-full bg-muted p-3 sm:p-4 mb-3 sm:mb-4">
             <SearchX className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
           </div>
-          <h3 className="text-base sm:text-lg font-semibold mb-2">{emptyTitle}</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-sm">{emptyDescription}</p>
+          <h3 className="text-base sm:text-lg font-semibold mb-2">{emptyTitleText}</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-sm">{emptyDescriptionText}</p>
         </CardContent>
       </Card>
     )
@@ -102,6 +107,8 @@ export function JobListWithHeader({
   emptyTitle,
   emptyDescription
 }: JobListWithHeaderProps) {
+  const { t } = useTranslation()
+
   return (
     <div className={cn('space-y-3 sm:space-y-4', className)}>
       {(title || subtitle) && (
@@ -112,7 +119,7 @@ export function JobListWithHeader({
               <h2 className="text-lg sm:text-xl font-semibold">{title}</h2>
               {!loading && jobs.length > 0 && (
                 <span className="text-xs sm:text-sm text-muted-foreground">
-                  ({jobs.length} {jobs.length === 1 ? 'job' : 'jobs'})
+                  ({jobs.length} {jobs.length === 1 ? t('jobs.title') : t('navigation.myBookings')})
                 </span>
               )}
             </div>

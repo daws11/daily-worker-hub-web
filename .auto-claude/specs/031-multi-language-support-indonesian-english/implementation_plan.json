@@ -2,7 +2,7 @@
   "feature": "Multi-Language Support (Indonesian & English)",
   "description": "# Multi-Language Support (Indonesian & English)\n\nFull localization support for Indonesian and English languages. Users can switch languages, and all UI elements, notifications, and content are translated. Includes RTL support for future language expansion.\n\n## Rationale\nBali's hospitality workforce includes both local and international workers. Multi-language support makes the platform accessible to all users and provides a competitive advantage over monolingual competitors.\n\n## User Stories\n- As a local worker, I want to use the app in Indonesian so that I can understand everything\n- As an expat business owner, I want to use the app in English so that I can navigate easily\n- As a user, I want to switch languages so that I can use whichever is more comfortable\n\n## Acceptance Criteria\n- [ ] Users can switch between Indonesian and English\n- [ ] All UI elements are translated\n- [ ] Notifications are sent in user's preferred language\n- [ ] Job postings maintain original language or can be auto-translated\n- [ ] Language preference is saved per user\n- [ ] Translation system supports adding more languages\n- [ ] Content is culturally appropriate for each language\n",
   "created_at": "2026-02-21T21:45:13.417Z",
-  "updated_at": "2026-02-24T16:56:21.459Z",
+  "updated_at": "2026-02-24T17:03:46.312Z",
   "status": "in_progress",
   "workflow_type": "feature",
   "workflow_rationale": "This is a feature implementation that requires building new i18n infrastructure from scratch. The phases follow dependency order: database schema first, then i18n infrastructure, then providers, then components, then translation of existing content, and finally integration.",
@@ -448,7 +448,9 @@
               "Worker list translated"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Translated business job attendance page with useTranslation hook. All hardcoded Indonesian text replaced with translation keys: jobAttendance.title, jobAttendance.subtitle, jobAttendance.loading, jobAttendance.noActiveJobs, jobAttendance.noActiveJobsDesc, jobAttendance.workerList, jobAttendance.noWorkers, jobAttendance.worker, common.total, common.tryAgain, attendance.checkIn, attendance.checkOut, attendance.completed, attendance.working, attendance.notYet, business.locationVerified. Added new jobAttendance section to both id.json and en.json with translations for title, subtitle, loading, noActiveJobs, noActiveJobsDesc, workerList, noWorkers, worker. Date/time formatting updated to use dynamic locale (id-ID for Indonesian, en-US for English). TypeScript compilation passes.",
+          "updated_at": "2026-02-24T16:59:40.157863+00:00"
         },
         {
           "id": "subtask-5-8",
@@ -470,7 +472,9 @@
               "Transaction history translated"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Translated worker and business wallet pages with useTranslation hook. All hardcoded Indonesian text replaced with translation keys from wallet namespace (wallet.title, wallet.currentBalance, wallet.availableBalance, wallet.withdrawFunds, wallet.withdrawAmount, wallet.withdrawAccount, wallet.withdrawalHistory, wallet.transactionHistory, wallet.topUp, wallet.topUpAmount, wallet.noTransactions, etc.) and common namespace (common.date, common.status, common.loading, common.processing, common.completed, common.pending, common.failed, common.cancelled, common.success, errors.loadFailed, errors.insufficientFunds, validation.required). Date/currency formatting updated to use dynamic locale (id-ID for Indonesian, en-US for English). Bank name helper function updated with locale-aware names. Status badges use translated labels. TypeScript type-check passes.",
+          "updated_at": "2026-02-25T00:00:00.000000+00:00"
         }
       ]
     },
@@ -508,7 +512,9 @@
               "Search placeholder translated"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Translated all job marketplace components with useTranslation hook. JobCard: 'Rate Bali' badge and 'Deadline:' label now use t('jobs.rateBali') and t('jobs.deadlineLabel'). JobFilters: All labels translated including filters title, position type, area/location, wage range, and deadline filters. JobSearch: Placeholder and 'Clear search' text translated. JobSort: Sort options and placeholder translated using useMemo for performance. JobList: Empty state titles and job count labels translated. TypeScript type-check passes.",
+          "updated_at": "2026-02-25T00:00:00.000000+00:00"
         },
         {
           "id": "subtask-6-2",
@@ -885,5 +891,5 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "last_updated": "2026-02-24T16:54:14.466145+00:00"
+  "last_updated": "2026-02-24T16:59:40.157871+00:00"
 }
