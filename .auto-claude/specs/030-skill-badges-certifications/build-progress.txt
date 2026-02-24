@@ -161,4 +161,35 @@ Then open:
 === NEXT SUBTASK ===
 Subtask 2-1: Create badge types in lib/types/badge.ts
 
+[2026-02-24 23:55:00] Subtask 2-1 COMPLETED: Create badge types in lib/types/badge.ts
+- Created: lib/types/badge.ts
+- Types: Badge, WorkerBadge, BadgeCategory, BadgeVerificationStatus
+- Input types: CreateBadgeInput, UpdateBadgeInput, CreateWorkerBadgeInput
+- Response types: BadgeResponse, WorkerBadgeResponse, BadgeWithVerificationStatus
+- Filter types: BadgeFilter, WorkerBadgeFilter
+- Git commit: (auto-claude)
+
+[2026-02-24 23:58:00] Subtask 2-2 COMPLETED: Create badge query functions in lib/supabase/queries/badges.ts
+- Created: lib/supabase/queries/badges.ts
+- Functions:
+  * getBadges(category?) - Get all badges, optionally filtered by category
+  * getWorkerBadges(workerId, status?) - Get all badges for a worker
+  * requestBadge(workerId, badgeId) - Worker requests a badge
+  * verifyBadge(workerBadgeId, verifierId, status) - Verify/reject a badge
+  * getWorkersByBadge(badgeId, status?) - Get workers with a specific badge
+  * getBadgeById(badgeId) - Get single badge with relations
+  * createBadge(badgeData) - Create new badge
+  * updateBadge(badgeId, updates) - Update badge
+  * deleteBadge(badgeId) - Delete badge
+  * getPendingBadgeVerifications(businessId) - Get pending verifications for a business
+  * searchBadges(searchTerm, category?, limit?) - Search badges
+  * getBadgesByProvider(providerId) - Get badges by provider
+  * getWorkerBadgeById(workerBadgeId) - Get single worker badge
+  * deleteWorkerBadge(workerBadgeId) - Delete worker badge
+- Follows jobs.ts pattern with proper error handling
+- Git commit: 2a8024e
+
+=== NEXT SUBTASK ===
+Subtask 2-3: Update Supabase types to include new badge tables
+
 === END SESSION 2 ===
