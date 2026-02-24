@@ -1,14 +1,23 @@
 "use client"
 
 import * as React from "react"
-import { Calendar, Phone, Star } from "lucide-react"
+import { Calendar, Phone, Star, Award } from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { SkillBadgeChip } from "@/components/badge/skill-badge-display"
 import { cn } from "@/lib/utils"
+import type { Badge as BadgeType, BadgeVerificationStatus } from "@/lib/types/badge"
 
 type BookingStatus = "pending" | "accepted" | "rejected" | "in_progress" | "completed" | "cancelled"
+
+export interface WorkerBadge {
+  id: string
+  badge_id: string
+  verification_status: BadgeVerificationStatus
+  badge: BadgeType
+}
 
 export interface WorkerApplicationCardProps {
   booking: {
@@ -26,6 +35,7 @@ export interface WorkerApplicationCardProps {
     }
   }
   reliabilityScore?: number
+  badges?: WorkerBadge[]
   onSelect?: (bookingId: string) => void
   isSelected?: boolean
 }
@@ -86,11 +96,16 @@ function ReliabilityScore({ score }: { score?: number }) {
 export function WorkerApplicationCard({
   booking,
   reliabilityScore,
+  badges,
   onSelect,
   isSelected,
 }: WorkerApplicationCardProps) {
   const { status, start_date, end_date, booking_notes, worker } = booking
   const statusConfig = statusVariants[status]
+
+  // Filter verified badges for display
+  const verifiedBadges = badges?.filter(b => b.verification_status === 'verified') || []
+  const hasBadges = verifiedBadges.length > 0
 
   const formatDate = (dateString: string) => {
     try {
@@ -118,7 +133,8 @@ export function WorkerApplicationCard({
       className={cn(
         "transition-all hover:shadow-md",
         onSelect && "cursor-pointer",
-        isSelected && "ring-2 ring-primary ring-offset-2"
+        isSelected && "ring-2 ring-primary ring-offset-2",
+        hasBadges && "border-l-4 border-l-purple-500"
       )}
       onClick={() => onSelect?.(booking.id)}
     >
@@ -144,6 +160,33 @@ export function WorkerApplicationCard({
       <CardContent className="space-y-3">
         {worker.bio && (
           <p className="text-sm text-muted-foreground line-clamp-2">{worker.bio}</p>
+        )}
+
+        {/* Badges Section */}
+        {hasBadges && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-1.5">
+              <Award className="h-4 w-4 text-purple-600" />
+              <span className="text-xs font-medium text-muted-foreground">
+                Badges ({verifiedBadges.length})
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {verifiedBadges.slice(0, 3).map((wb) => (
+                <SkillBadgeChip
+                  key={wb.id}
+                  badge={wb.badge}
+                  verificationStatus={wb.verification_status}
+                  size="sm"
+                />
+              ))}
+              {verifiedBadges.length > 3 && (
+                <div className="flex items-center px-2 py-1 text-xs font-medium text-muted-foreground bg-muted rounded-md">
+                  +{verifiedBadges.length - 3} more
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
