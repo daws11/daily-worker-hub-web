@@ -181,8 +181,9 @@
             "type": "manual",
             "instructions": "Verify form allows selecting badge and uploading verification document"
           },
-          "status": "pending",
-          "notes": "Form with BadgeSelect, file upload for certificate/document, submit button. Use react-hook-form + zod"
+          "status": "completed",
+          "notes": "Created BadgeVerificationForm component following profile-form.tsx pattern:\n- Badge selection dropdown grouped by category (skill, training, certification, specialization)\n- File upload for verification documents (PDF, JPG, PNG up to 10MB)\n- Optional notes field for additional information\n- Form validation with Indonesian error messages using react-hook-form + zod\n- Integration with requestBadge query and uploadBadgeVerificationDocument storage function\n- Shows selected badge info with certified indicator\n- Error handling and loading states\n\nAlso created:\n- lib/schemas/badge.ts - Zod validation schema for badge verification requests\n- Added uploadBadgeVerificationDocument and deleteBadgeVerificationDocument to lib/supabase/storage.ts\n\nType-check passed.",
+          "updated_at": "2026-02-24T16:02:55.278021+00:00"
         },
         {
           "id": "subtask-3-3",
@@ -544,6 +545,6 @@
   "planStatus": "in_progress",
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "updated_at": "2026-02-24T15:54:46.381Z",
-  "last_updated": "2026-02-24T15:50:21.987259+00:00"
+  "updated_at": "2026-02-24T16:00:43.555Z",
+  "last_updated": "2026-02-24T16:02:55.278032+00:00"
 }

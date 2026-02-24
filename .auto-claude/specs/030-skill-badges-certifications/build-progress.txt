@@ -221,5 +221,21 @@ Subtask 3-1: Create SkillBadgeDisplay component for showing badges
 - Type-check: Passed
 - Git commit: ee71a0d
 
+[2026-02-25 00:20:00] Subtask 3-2 COMPLETED: Create BadgeVerificationForm component for badge requests
+- Created: components/badge/badge-verification-form.tsx
+- Created: lib/schemas/badge.ts - Zod validation schema
+- Modified: lib/supabase/storage.ts - Added uploadBadgeVerificationDocument and deleteBadgeVerificationDocument
+- Features:
+  * Badge selection dropdown grouped by category (Keahlian, Pelatihan, Sertifikasi, Spesialisasi)
+  * File upload for verification documents (PDF, JPG, PNG up to 10MB)
+  * Optional notes field for additional information (max 1000 characters)
+  * Shows selected badge info with certified indicator
+  * Form validation with Indonesian error messages using react-hook-form + zod
+  * Integration with requestBadge query and storage upload
+  * Error handling and loading states
+  * Follows profile-form.tsx pattern
+- Type-check: Passed
+- Git commit: 1c23ea8
+
 === NEXT SUBTASK ===
-Subtask 3-2: Create BadgeVerificationForm component for badge requests
+Subtask 3-3: Create BadgeFilterSelect component for filtering by badges
