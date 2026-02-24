@@ -205,3 +205,64 @@ Commit: c39264c - "auto-claude: subtask-1-4 - Seed cancellation reasons data"
 
 Next: Phase 2 - Server Actions (subtask-2-1: Create cancellations server action file)
 
+=== SESSION 6 - SUBTASK 2-1 COMPLETION ===
+Date: 2026-02-24
+
+Subtask 2-1: Create cancellations server action file with TypeScript types
+Status: COMPLETED
+
+Files Created:
+- lib/actions/cancellations.ts
+
+Files Modified:
+- lib/supabase/types.ts
+
+Implementation Details:
+- Created lib/actions/cancellations.ts following patterns from job-applications.ts and notifications.ts
+- Added cancellation_reason_category enum to types.ts
+- Added cancellation_reasons table type definition
+- Updated bookings table with cancellation columns (cancellation_reason_id, cancellation_note, cancelled_at)
+- Functions created:
+  * getActiveCancellationReasons() - Get all active cancellation reasons
+  * workerCancelBooking() - Worker cancels an accepted booking
+  * businessCancelBooking() - Business cancels an accepted booking
+  * getCancellationReason() - Get a specific cancellation reason
+  * getWorkerCancellationHistory() - Get worker's cancellation history
+  * getBusinessCancellationHistory() - Get business's cancellation history
+
+Commit: (already included in subtask-2-2)
+
+Next: Subtask 2-2 - Implement cancelBookingWithReason function
+
+=== SESSION 7 - SUBTASK 2-2 COMPLETION ===
+Date: 2026-02-24
+
+Subtask 2-2: Implement cancelBookingWithReason function
+Status: COMPLETED
+
+Files Modified:
+- lib/actions/cancellations.ts
+
+Implementation Details:
+- Implemented cancelBookingWithReason() function that:
+  * Accepts bookingId, cancellationReasonId, cancellationNote, and options (workerId or businessId)
+  * Validates booking ownership and status before cancellation
+  * Only allows cancellation of 'accepted' or 'in_progress' bookings
+  * Updates booking status to 'cancelled'
+  * Stores cancellation_reason_id and cancellation_note
+  * Sets cancelled_at timestamp
+  * Sends notification to affected party (worker or business) via createNotification
+  * Returns { success, error?, data? } result object
+- Added TypeScript types for Worker, Business, and Job tables
+- Imported createNotification from lib/actions/notifications.ts
+- Follows code patterns from job-applications.ts (result objects, error handling, Indonesian error messages)
+
+Manual Verification:
+✓ Status update to cancelled
+✓ Cancellation reason/note storage
+✓ Notification to affected party
+
+Commit: 3878537 - "auto-claude: subtask-2-2 - Implement cancelBookingWithReason function"
+
+Next: Subtask 2-3 - Implement getWorkerCancellationHistory function (already exists, needs verification)
+
