@@ -3,8 +3,10 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "../../providers/auth-provider"
+import { useTranslation } from "@/lib/i18n/hooks"
 
 export default function LoginPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { signIn, isLoading } = useAuth()
   const [email, setEmail] = useState("")
@@ -34,13 +36,13 @@ export default function LoginPage() {
         padding: '2rem'
       }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '1.5rem' }}>
-          Masuk ke Akun
+          {t('auth.loginTitle')}
         </h1>
-        
+
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-              Email
+              {t('auth.email')}
             </label>
             <input
               type="email"
@@ -53,14 +55,14 @@ export default function LoginPage() {
                 borderRadius: '0.375rem',
                 outline: 'none'
               }}
-              placeholder="email@contoh.com"
+              placeholder={t('auth.emailPlaceholder')}
               required
             />
           </div>
-          
+
           <div>
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-              Password
+              {t('auth.password')}
             </label>
             <input
               type="password"
@@ -73,14 +75,14 @@ export default function LoginPage() {
                 borderRadius: '0.375rem',
                 outline: 'none'
               }}
-              placeholder="••••••"
+              placeholder={t('auth.passwordPlaceholder')}
               required
             />
           </div>
-          
+
           <div>
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-              Tipe Akun
+              {t('auth.accountType')}
             </label>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
@@ -92,9 +94,9 @@ export default function LoginPage() {
                   onChange={(e) => setRole(e.target.value as "worker" | "business")}
                   style={{ cursor: 'pointer' }}
                 />
-                <span>Worker</span>
+                <span>{t('auth.worker')}</span>
               </label>
-              
+
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                 <input
                   type="radio"
@@ -104,11 +106,11 @@ export default function LoginPage() {
                   onChange={(e) => setRole(e.target.value as "worker" | "business")}
                   style={{ cursor: 'pointer' }}
                 />
-                <span>Business</span>
+                <span>{t('auth.business')}</span>
               </label>
             </div>
           </div>
-          
+
           <button
             type="submit"
             disabled={isLoading}
@@ -123,14 +125,14 @@ export default function LoginPage() {
               cursor: isLoading ? 'not-allowed' : 'pointer',
             }}
           >
-            {isLoading ? 'Masuk...' : 'Masuk'}
+            {isLoading ? t('auth.loggingIn') : t('auth.login')}
           </button>
         </form>
-        
+
         <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.875rem', color: '#4b5563' }}>
-          Belum punya akun?{' '}
+          {t('auth.noAccount')}{' '}
           <a href="/register" style={{ color: '#2563eb', textDecoration: 'none' }}>
-            Daftar disini
+            {t('auth.registerHere')}
           </a>
         </p>
       </div>
