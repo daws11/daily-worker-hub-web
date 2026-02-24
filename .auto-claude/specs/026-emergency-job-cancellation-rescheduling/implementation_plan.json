@@ -110,7 +110,9 @@
           "files_to_create": [
             "lib/actions/cancellations.ts"
           ],
-          "files_to_modify": [],
+          "files_to_modify": [
+            "lib/supabase/types.ts"
+          ],
           "patterns_from": [
             "lib/actions/job-applications.ts",
             "lib/actions/notifications.ts"
@@ -120,7 +122,8 @@
             "command": "cat lib/actions/cancellations.ts | head -20",
             "expected": "'use server' directive with type definitions"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created lib/actions/cancellations.ts following patterns from job-applications.ts and notifications.ts. Added cancellation_reason_category enum to types.ts, added cancellation_reasons table type definition, updated bookings table with cancellation columns (cancellation_reason_id, cancellation_note, cancelled_at). Functions created: getActiveCancellationReasons, workerCancelBooking, businessCancelBooking, getCancellationReason, getWorkerCancellationHistory, getBusinessCancellationHistory."
         },
         {
           "id": "subtask-2-2",
