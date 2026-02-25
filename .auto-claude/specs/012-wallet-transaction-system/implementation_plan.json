@@ -478,6 +478,48 @@
     {
       "iteration": 2,
       "status": "approved",
+      "timestamp": "2026-02-22T16:57:26.433409+00:00",
+      "issues": [],
+      "duration_seconds": 322.47
+    }
+  ],
+  "qa_stats": {
+    "total_iterations": 2,
+    "last_iteration": 2,
+    "last_status": "approved",
+    "issues_by_type": {
+      "unknown": 1
+    }
+  },
+  "status": "human_review",
+  "planStatus": "review",
+  "xstateState": "human_review",
+  "executionPhase": "complete",
+<<<<<<< HEAD
+  "updated_at": "2026-02-22T16:57:26.453Z",
+  "last_updated": "2026-02-23T01:30:00.000Z",
+  "recoveryNote": "Task recovered from stuck state at 2026-02-22T15:40:50.161Z",
+  "lastEvent": {
+    "eventId": "bd764cf6-490c-4050-9385-0034ab18ac58",
+    "sequence": 1,
+    "type": "QA_PASSED",
+    "timestamp": "2026-02-22T16:57:26.433409+00:00"
+  },
+  "qa_iteration_history": [
+    {
+      "iteration": 1,
+      "status": "error",
+      "timestamp": "2026-02-22T16:52:02.866538+00:00",
+      "issues": [
+        {
+          "title": "QA error",
+          "description": "QA agent did not update implementation_plan.json"
+        }
+      ]
+    },
+    {
+      "iteration": 2,
+      "status": "approved",
       "timestamp": "2026-02-23T01:30:00.000Z",
       "issues": []
     },
@@ -497,5 +539,10 @@
       "unknown": 1
     }
   },
+=======
+  "updated_at": "2026-02-22T16:45:35.914Z",
+  "last_updated": "2026-02-22T08:20:10.288252+00:00",
+  "recoveryNote": "Task recovered from stuck state at 2026-02-22T15:40:50.161Z",
+>>>>>>> auto-claude/012-wallet-transaction-system
   "reviewReason": "completed"
 }
