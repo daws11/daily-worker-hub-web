@@ -27,9 +27,7 @@ import { cn } from "@/lib/utils"
 
 // Zod schema for QRIS payment form validation
 export const qrisPaymentFormSchema = z.object({
-  amount: z.number({
-    message: "Amount must be a number",
-  }).min(500000, "Minimum top-up amount is Rp 500.000"),
+  amount: z.number().min(500000, "Minimum top-up amount is Rp 500.000"),
 })
 
 export type QrisPaymentFormValues = z.infer<typeof qrisPaymentFormSchema>

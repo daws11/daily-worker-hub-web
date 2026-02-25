@@ -81,7 +81,7 @@ export interface Business {
 export interface JobWithRelations extends Job {
   category: Category
   business: Business
-  skills: Skill[]
+  skills?: Skill[]
   distance?: number
 }
 

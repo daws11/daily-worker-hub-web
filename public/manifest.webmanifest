@@ -1,0 +1,58 @@
+{
+  "name": "Daily Worker Hub",
+  "short_name": "DWH",
+  "description": "Platform Harian Lepas Pekerja & Pelaku Usaha",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5e9",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["business", "employment", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Cari Kerja",
+      "short_name": "Kerja",
+      "description": "Temukan pekerjaan harian",
+      "url": "/jobs",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Profil Saya",
+      "short_name": "Profil",
+      "description": "Lihat profil pekerja",
+      "url": "/profile",
+      "icons": [
+        {
+          "src": "/icons/icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}

@@ -124,7 +124,6 @@ interface FormSkillsSelectProps<
   TFieldValues extends Record<string, any> = Record<string, any>,
   TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
 > {
-  name: TName
   skills: Skill[]
   placeholder?: string
   disabled?: boolean
