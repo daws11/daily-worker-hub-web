@@ -806,45 +806,9 @@
       "timestamp": "2026-02-22T16:45:53.714834+00:00",
       "issues": [
         {
-          "title": "QA error",
-          "description": "QA agent did not update implementation_plan.json"
+
         }
       ]
-    },
-    {
-      "iteration": 3,
-      "status": "error",
-      "timestamp": "2026-02-22T16:53:07.644506+00:00",
-      "issues": [
-        {
-          "title": "QA error",
-          "description": "QA agent did not update implementation_plan.json"
-        }
-      ]
-    },
-    {
-      "iteration": 1,
-      "status": "error",
-      "timestamp": "2026-02-23T17:53:41.795662+00:00",
-      "issues": [
-        {
-          "title": "QA error",
-          "description": "QA agent did not update implementation_plan.json"
-        }
-      ]
-    },
-    {
-      "iteration": 2,
-      "status": "approved",
-      "timestamp": "2026-02-24T10:00:00.000Z",
-      "issues": []
-    },
-    {
-      "iteration": 2,
-      "status": "approved",
-      "timestamp": "2026-02-23T18:03:00.657510+00:00",
-      "issues": [],
-      "duration_seconds": 558.86
     }
   ],
   "qa_stats": {

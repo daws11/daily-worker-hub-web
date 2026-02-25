@@ -3,8 +3,8 @@
   "spec": "016-reliability-score-display",
   "state": "building",
   "subtasks": {
-    "completed": 11,
-    "total": 13,
+    "completed": 24,
+    "total": 25,
     "in_progress": 1,
     "failed": 0
   },
@@ -22,4 +22,4 @@
     "started_at": "2026-02-22T20:14:30.338567"
   },
   "last_update": "2026-02-22T21:15:30.911252"
-}
+  }
