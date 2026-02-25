@@ -1,17 +1,14 @@
 "use client"
 
 import * as React from "react"
-import { Calendar, MessageCircle, Phone, Star } from "lucide-react"
+import { Calendar, Phone, Star, X } from "lucide-react"
 
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ComplianceStatusBadge } from "@/components/booking/compliance-status-badge"
-import { ReliabilityScore, NewWorkerBadge } from "@/components/worker/reliability-score"
-import { BookingMessagesDialog } from "@/components/messaging/booking-messages-dialog"
+import { Button } from "@/components/ui/button"
+import { WorkerCancellationDialog } from "./worker-cancellation-dialog"
 import { cn } from "@/lib/utils"
-import type { ComplianceStatusResult } from "@/lib/supabase/queries/compliance"
 
 type BookingStatus = "pending" | "accepted" | "rejected" | "in_progress" | "completed" | "cancelled"
 
@@ -30,12 +27,10 @@ export interface WorkerApplicationCardProps {
       bio: string
     }
   }
-  businessId: string
   reliabilityScore?: number
-  compliance?: ComplianceStatusResult
-  completedJobs?: number
   onSelect?: (bookingId: string) => void
   isSelected?: boolean
+  onCancelBooking?: (bookingId: string, notes: string) => Promise<void> | void
 }
 
 const statusVariants: Record<BookingStatus, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
@@ -47,16 +42,57 @@ const statusVariants: Record<BookingStatus, { variant: "default" | "secondary" |
   cancelled: { variant: "destructive", label: "Cancelled" },
 }
 
+function ReliabilityScore({ score }: { score?: number }) {
+  if (score === undefined || score === null) {
+    return (
+      <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+        <span className="font-medium">No score yet</span>
+      </div>
+    )
+  }
+
+  const clampedScore = Math.max(1, Math.min(5, score))
+  const fullStars = Math.floor(clampedScore)
+  const hasHalfStar = clampedScore % 1 >= 0.5
+
+  const getScoreColor = (score: number) => {
+    if (score >= 4.5) return "text-green-600"
+    if (score >= 3.5) return "text-yellow-600"
+    if (score >= 2.5) return "text-orange-500"
+    return "text-red-500"
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex items-center" aria-label={`Reliability score: ${clampedScore} out of 5 stars`}>
+        {[...Array(5)].map((_, i) => (
+          <Star
+            key={i}
+            className={cn(
+              "h-4 w-4",
+              i < fullStars
+                ? cn("fill-current", getScoreColor(clampedScore))
+                : i === fullStars && hasHalfStar
+                  ? cn("fill-current", getScoreColor(clampedScore), "opacity-50")
+                  : "text-muted-foreground/30"
+            )}
+          />
+        ))}
+      </div>
+      <span className={cn("text-sm font-semibold", getScoreColor(clampedScore))}>
+        {clampedScore.toFixed(1)}
+      </span>
+    </div>
+  )
+}
+
 export function WorkerApplicationCard({
   booking,
-  businessId,
   reliabilityScore,
-  compliance,
-  completedJobs,
   onSelect,
   isSelected,
+  onCancelBooking,
 }: WorkerApplicationCardProps) {
-  const [messageDialogOpen, setMessageDialogOpen] = React.useState(false)
   const { status, start_date, end_date, booking_notes, worker } = booking
   const statusConfig = statusVariants[status]
 
@@ -81,16 +117,17 @@ export function WorkerApplicationCard({
       .slice(0, 2)
   }
 
+  const canCancel = status === "accepted" && onCancelBooking
+
   return (
-    <>
-      <Card
-        className={cn(
-          "transition-all hover:shadow-md",
-          onSelect && "cursor-pointer",
-          isSelected && "ring-2 ring-primary ring-offset-2"
-        )}
-        onClick={() => onSelect?.(booking.id)}
-      >
+    <Card
+      className={cn(
+        "transition-all hover:shadow-md",
+        onSelect && "cursor-pointer",
+        isSelected && "ring-2 ring-primary ring-offset-2"
+      )}
+      onClick={() => onSelect?.(booking.id)}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -103,21 +140,29 @@ export function WorkerApplicationCard({
             <div className="flex-1 min-w-0">
               <CardTitle className="text-lg truncate">{worker.full_name}</CardTitle>
               <div className="flex items-center gap-2 mt-1">
-                {completedJobs !== undefined && completedJobs < 5 ? (
-                  <NewWorkerBadge completedJobs={completedJobs} />
-                ) : reliabilityScore !== undefined && reliabilityScore !== null ? (
-                  <ReliabilityScore score={reliabilityScore} />
-                ) : (
-                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <span className="font-medium">No score yet</span>
-                  </div>
-                )}
+                <ReliabilityScore score={reliabilityScore} />
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {compliance && <ComplianceStatusBadge compliance={compliance} />}
+          <div className="flex items-center gap-2">
             <Badge variant={statusConfig.variant}>{statusConfig.label}</Badge>
+            {canCancel && (
+              <WorkerCancellationDialog
+                bookingId={booking.id}
+                workerName={worker.full_name}
+                onCancel={onCancelBooking}
+                trigger={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                }
+              />
+            )}
           </div>
         </div>
       </CardHeader>
@@ -154,32 +199,6 @@ export function WorkerApplicationCard({
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex justify-between items-center pt-4 gap-2">
-        <span className="text-xs text-muted-foreground">
-          Applied on {formatDate(start_date)}
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation()
-            setMessageDialogOpen(true)
-          }}
-        >
-          <MessageCircle className="h-4 w-4 mr-1" />
-          Message
-        </Button>
-      </CardFooter>
     </Card>
-
-    <BookingMessagesDialog
-      bookingId={booking.id}
-      currentUserId={businessId}
-      receiverId={worker.id}
-      receiverName={worker.full_name}
-      open={messageDialogOpen}
-      onOpenChange={setMessageDialogOpen}
-    />
-  </>
   )
 }

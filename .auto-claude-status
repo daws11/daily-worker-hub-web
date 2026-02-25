@@ -1,17 +1,17 @@
 {
   "active": true,
-  "spec": "025-worker-earnings-income-analytics",
+  "spec": "026-emergency-job-cancellation-rescheduling",
   "state": "building",
   "subtasks": {
-    "completed": 13,
-    "total": 14,
+    "completed": 15,
+    "total": 16,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Integration & Verification",
+    "current": "Integration & Testing",
     "id": null,
-    "total": 2
+    "total": 3
   },
   "workers": {
     "active": 0,
@@ -19,7 +19,7 @@
   },
   "session": {
     "number": 17,
-    "started_at": "2026-02-24T04:44:32.321468"
+    "started_at": "2026-02-24T21:58:41.301301"
   },
-  "last_update": "2026-02-24T05:34:41.048646"
+  "last_update": "2026-02-24T22:44:34.357364"
 }

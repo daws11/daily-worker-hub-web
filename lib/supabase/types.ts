@@ -57,91 +57,12 @@ export type Database = {
   }
   public: {
     Tables: {
-      business_social_connections: {
-        Row: {
-          access_token: string
-          business_id: string
-          created_at: string
-          error_count: number
-          id: string
-          last_error: string | null
-          last_error_at: string | null
-          last_used_at: string | null
-          last_verified_at: string | null
-          platform_account_id: string | null
-          platform_account_name: string | null
-          platform_account_url: string | null
-          platform_id: string
-          platform_page_id: string | null
-          refresh_token: string | null
-          scopes: string[] | null
-          settings: Json
-          status: Database["public"]["Enums"]["connection_status"]
-          token_expires_at: string | null
-          updated_at: string
-        }
-        Insert: {
-          access_token: string
-          business_id: string
-          created_at?: string
-          error_count?: number
-          id?: string
-          last_error?: string | null
-          last_error_at?: string | null
-          last_used_at?: string | null
-          last_verified_at?: string | null
-          platform_account_id?: string | null
-          platform_account_name?: string | null
-          platform_account_url?: string | null
-          platform_id: string
-          platform_page_id?: string | null
-          refresh_token?: string | null
-          scopes?: string[] | null
-          settings?: Json
-          status?: Database["public"]["Enums"]["connection_status"]
-          token_expires_at?: string | null
-          updated_at?: string
-        }
-        Update: {
-          access_token?: string
-          business_id?: string
-          created_at?: string
-          error_count?: number
-          id?: string
-          last_error?: string | null
-          last_error_at?: string | null
-          last_used_at?: string | null
-          last_verified_at?: string | null
-          platform_account_id?: string | null
-          platform_account_name?: string | null
-          platform_account_url?: string | null
-          platform_id?: string
-          platform_page_id?: string | null
-          refresh_token?: string | null
-          scopes?: string[] | null
-          settings?: Json
-          status?: Database["public"]["Enums"]["connection_status"]
-          token_expires_at?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "business_social_connections_business_id_fkey"
-            columns: ["business_id"]
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "business_social_connections_platform_id_fkey"
-            columns: ["platform_id"]
-            referencedRelation: "social_platforms"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       bookings: {
         Row: {
           business_id: string
+          cancellation_note: string | null
+          cancellation_reason_id: string | null
+          cancelled_at: string | null
           created_at: string
           end_date: string | null
           final_price: number | null
@@ -154,6 +75,9 @@ export type Database = {
         }
         Insert: {
           business_id: string
+          cancellation_note?: string | null
+          cancellation_reason_id?: string | null
+          cancelled_at?: string | null
           created_at?: string
           end_date?: string | null
           final_price?: number | null
@@ -166,6 +90,9 @@ export type Database = {
         }
         Update: {
           business_id?: string
+          cancellation_note?: string | null
+          cancellation_reason_id?: string | null
+          cancelled_at?: string | null
           created_at?: string
           end_date?: string | null
           final_price?: number | null
@@ -184,6 +111,12 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "bookings_cancellation_reason_id_fkey"
+            columns: ["cancellation_reason_id"]
+            referencedRelation: "cancellation_reasons"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bookings_job_id_fkey"
             columns: ["job_id"]
             referencedRelation: "jobs"
@@ -196,6 +129,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cancellation_reasons: {
+        Row: {
+          category: Database["public"]["Enums"]["cancellation_reason_category"]
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          name: string
+          penalty_percentage: number
+          requires_verification: boolean
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["cancellation_reason_category"]
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          penalty_percentage?: number
+          requires_verification?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["cancellation_reason_category"]
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          penalty_percentage?: number
+          requires_verification?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       businesses: {
         Row: {
@@ -284,10 +256,8 @@ export type Database = {
           deadline: string | null
           description: string | null
           id: string
-          is_urgent: boolean
           lat: number | null
           lng: number | null
-          platform_settings: Json
           requirements: string | null
           status: Database["public"]["Enums"]["job_status"]
           title: string
@@ -303,10 +273,8 @@ export type Database = {
           deadline?: string | null
           description?: string | null
           id?: string
-          is_urgent?: boolean
           lat?: number | null
           lng?: number | null
-          platform_settings?: Json
           requirements?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           title: string
@@ -322,10 +290,8 @@ export type Database = {
           deadline?: string | null
           description?: string | null
           id?: string
-          is_urgent?: boolean
           lat?: number | null
           lng?: number | null
-          platform_settings?: Json
           requirements?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           title?: string
@@ -342,82 +308,6 @@ export type Database = {
             foreignKeyName: "jobs_category_id_fkey"
             columns: ["category_id"]
             referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      job_posts: {
-        Row: {
-          connection_id: string
-          content: Json
-          created_at: string
-          error_code: string | null
-          error_message: string | null
-          id: string
-          job_id: string
-          last_retry_at: string | null
-          media_ids: string[] | null
-          metrics: Json
-          platform_post_id: string | null
-          platform_post_url: string | null
-          post_type: string | null
-          posted_at: string | null
-          retry_count: number
-          scheduled_at: string | null
-          status: Database["public"]["Enums"]["job_post_status"]
-          updated_at: string
-        }
-        Insert: {
-          connection_id: string
-          content?: Json
-          created_at?: string
-          error_code?: string | null
-          error_message?: string | null
-          id?: string
-          job_id: string
-          last_retry_at?: string | null
-          media_ids?: string[] | null
-          metrics?: Json
-          platform_post_id?: string | null
-          platform_post_url?: string | null
-          post_type?: string | null
-          posted_at?: string | null
-          retry_count?: number
-          scheduled_at?: string | null
-          status?: Database["public"]["Enums"]["job_post_status"]
-          updated_at?: string
-        }
-        Update: {
-          connection_id?: string
-          content?: Json
-          created_at?: string
-          error_code?: string | null
-          error_message?: string | null
-          id?: string
-          job_id?: string
-          last_retry_at?: string | null
-          media_ids?: string[] | null
-          metrics?: Json
-          platform_post_id?: string | null
-          platform_post_url?: string | null
-          post_type?: string | null
-          posted_at?: string | null
-          retry_count?: number
-          scheduled_at?: string | null
-          status?: Database["public"]["Enums"]["job_post_status"]
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "job_posts_job_id_fkey"
-            columns: ["job_id"]
-            referencedRelation: "jobs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "job_posts_connection_id_fkey"
-            columns: ["connection_id"]
-            referencedRelation: "business_social_connections"
             referencedColumns: ["id"]
           },
         ]
@@ -634,54 +524,6 @@ export type Database = {
         }
         Relationships: []
       }
-      social_platforms: {
-        Row: {
-          api_version: string | null
-          auth_type: string
-          config: Json
-          created_at: string
-          description: string | null
-          id: string
-          is_available: boolean
-          platform_name: string
-          platform_type: Database["public"]["Enums"]["social_platform_type"]
-          status: Database["public"]["Enums"]["social_platform_status"]
-          updated_at: string
-          webhook_secret: string | null
-          webhook_url: string | null
-        }
-        Insert: {
-          api_version?: string | null
-          auth_type?: string
-          config?: Json
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_available?: boolean
-          platform_name: string
-          platform_type: Database["public"]["Enums"]["social_platform_type"]
-          status?: Database["public"]["Enums"]["social_platform_status"]
-          updated_at?: string
-          webhook_secret?: string | null
-          webhook_url?: string | null
-        }
-        Update: {
-          api_version?: string | null
-          auth_type?: string
-          config?: Json
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_available?: boolean
-          platform_name?: string
-          platform_type?: Database["public"]["Enums"]["social_platform_type"]
-          status?: Database["public"]["Enums"]["social_platform_status"]
-          updated_at?: string
-          webhook_secret?: string | null
-          webhook_url?: string | null
-        }
-        Relationships: []
-      }
       transactions: {
         Row: {
           amount: number
@@ -834,43 +676,6 @@ export type Database = {
           },
         ]
       }
-      saved_searches: {
-        Row: {
-          created_at: string
-          filters: Json
-          id: string
-          is_favorite: boolean
-          name: string
-          updated_at: string
-          worker_id: string
-        }
-        Insert: {
-          created_at?: string
-          filters?: Json
-          id?: string
-          is_favorite?: boolean
-          name: string
-          updated_at?: string
-          worker_id: string
-        }
-        Update: {
-          created_at?: string
-          filters?: Json
-          id?: string
-          is_favorite?: boolean
-          name?: string
-          updated_at?: string
-          worker_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "saved_searches_worker_id_fkey"
-            columns: ["worker_id"]
-            referencedRelation: "workers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
@@ -886,13 +691,17 @@ export type Database = {
         | "in_progress"
         | "completed"
         | "cancelled"
-      connection_status: "active" | "expired" | "pending" | "error" | "revoked"
-      job_post_status: "pending" | "posted" | "failed" | "deleted"
+      cancellation_reason_category:
+        | "illness"
+        | "family_emergency"
+        | "personal_emergency"
+        | "weather"
+        | "transportation"
+        | "schedule_conflict"
+        | "other"
       job_status: "open" | "in_progress" | "completed" | "cancelled"
       report_status: "pending" | "reviewing" | "resolved" | "dismissed"
       report_type: "user" | "job" | "business" | "booking"
-      social_platform_status: "active" | "inactive" | "maintenance"
-      social_platform_type: "facebook" | "instagram" | "linkedin" | "twitter"
       transaction_status: "pending" | "success" | "failed"
       transaction_type: "payment" | "refund"
       user_role: "worker" | "business"
@@ -1664,13 +1473,18 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
-      connection_status: ["active", "expired", "pending", "error", "revoked"],
-      job_post_status: ["pending", "posted", "failed", "deleted"],
+      cancellation_reason_category: [
+        "illness",
+        "family_emergency",
+        "personal_emergency",
+        "weather",
+        "transportation",
+        "schedule_conflict",
+        "other",
+      ],
       job_status: ["open", "in_progress", "completed", "cancelled"],
       report_status: ["pending", "reviewing", "resolved", "dismissed"],
       report_type: ["user", "job", "business", "booking"],
-      social_platform_status: ["active", "inactive", "maintenance"],
-      social_platform_type: ["facebook", "instagram", "linkedin", "twitter"],
       transaction_status: ["pending", "success", "failed"],
       transaction_type: ["payment", "refund"],
       user_role: ["worker", "business"],
