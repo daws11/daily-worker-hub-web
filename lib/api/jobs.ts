@@ -40,12 +40,15 @@ export async function getJobs(params?: JobListParams): Promise<{
           created_at
         )
       `)
+      .eq('status', 'open') // Always filter to show only open jobs
 
     // Apply filters
     if (filters) {
-      // Filter by status (only show open jobs by default)
       if (filters.search) {
-        query = query.ilike('title', `%${filters.search}%`)
+        // Search across title, description, and requirements
+        query = query.or(
+          `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%,requirements.ilike.%${filters.search}%`
+        )
       }
 
       if (filters.categoryId) {
@@ -176,8 +179,8 @@ export async function getJobById(id: string): Promise<{
       return { data: null, error: new Error('Job not found') }
     }
 
-    const jobData = data as JobWithRelations
-
+    // Type assertion for the mapped data
+    const jobData = data as any
     const jobWithRelations: JobWithRelations = {
       id: jobData.id,
       business_id: jobData.business_id,

@@ -33,7 +33,6 @@ export async function createClientComponentClient() {
     }
   )
 }
-
 export async function getClient() {
   const client = await createClient()
   return client
