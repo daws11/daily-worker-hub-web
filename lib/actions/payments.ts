@@ -2,59 +2,12 @@
 
 import { createClient } from "../supabase/server"
 import type { Database } from "../supabase/types"
-<<<<<<< HEAD
-import { createQrisPayment, calculatePaymentFee, createPayout, calculatePayoutFee } from "../utils/xendit"
-import { validateTopUpAmount, calculatePaymentFeeDetails, validatePaymentAmount } from "../utils/payment-validator"
+import { createQrisPayment, calculatePaymentFee } from "../utils/xendit"
+import { validateTopUpAmount, calculatePaymentFeeDetails } from "../utils/payment-validator"
 import { PAYMENT_CONSTANTS } from "../types/payment"
 
-type PaymentTransaction = {
-  id: string
-  business_id: string
-  amount: number
-  fee_amount: number
-  type: 'credit' | 'debit' | 'pending' | 'released'
-  status: 'success' | 'pending' | 'failed' | 'expired'
-  payment_provider: string
-  provider_payment_id: string | null
-  payment_url: string | null
-  qris_expires_at: string | null
-  metadata: Record<string, any> | null
-  created_at: string
-}
-
-type Wallet = {
-  id: string
-  business_id: string | null
-  worker_id: string | null
-  balance: number
-  pending_balance: number
-  created_at: string
-  updated_at: string
-}
-
-type PayoutRequest = {
-  id: string
-  worker_id: string
-  amount: number
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
-  bank_account_id: string | null
-  fee_amount: number
-  total_amount: number
-  net_amount?: number
-  rejection_reason: string | null
-  created_at: string
-  updated_at: string
-}
-
-type BankAccount = {
-  id: string
-  worker_id: string
-  bank_code: string
-  bank_account_number: string
-  bank_account_name: string
-  is_default: boolean
-  created_at: string
-}
+type PaymentTransaction = Database["public"]["Tables"]["payment_transactions"]["Row"]
+type Wallet = Database["public"]["Tables"]["wallets"]["Row"]
 
 // Type for creating a new payment transaction
 type PaymentTransactionInsert = Pick<
@@ -100,7 +53,20 @@ export type PayoutRequestResult = {
   success: boolean
   error?: string
   data?: {
-    payout_request: PayoutRequest
+    payout_request: {
+      id: string
+      worker_id: string
+      amount: number
+      fee_amount: number
+      net_amount: number
+      status: string
+      bank_account_number: string
+      bank_account_name: string
+      bank_code: string
+      requested_at: string
+      processed_at: string | null
+      completed_at: string | null
+    }
     estimated_arrival?: string
   }
 }
@@ -156,7 +122,7 @@ export async function initializeQrisPayment(
       metadata: metadata || {},
     }
 
-    const { data: transaction, error: transactionError } = await (supabase as any)
+    const { data: transaction, error: transactionError } = await supabase
       .from("payment_transactions")
       .insert(newTransaction)
       .select()
@@ -176,7 +142,7 @@ export async function initializeQrisPayment(
       })
 
       // Update transaction with payment details
-      const { error: updateError } = await (supabase as any)
+      const { error: updateError } = await supabase
         .from("payment_transactions")
         .update({
           payment_url: qrisPayment.payment_url,
@@ -198,7 +164,7 @@ export async function initializeQrisPayment(
       }
     } catch (xenditError) {
       // If Xendit fails, mark transaction as failed
-      await (supabase as any)
+      await supabase
         .from("payment_transactions")
         .update({
           status: "failed",
@@ -213,130 +179,17 @@ export async function initializeQrisPayment(
     }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat inisialisasi pembayaran QRIS" }
-=======
-
-type Booking = Database["public"]["Tables"]["bookings"]["Row"]
-type Wallet = Database["public"]["Tables"]["wallets"]["Row"]
-
-// Type for updating a booking's payment status
-type BookingPaymentUpdate = Pick<Booking, 'payment_status'>
-
-export type PaymentReleaseResult = {
-  success: boolean
-  error?: string
-  data?: Booking
-}
-
-export type BatchPaymentReleaseResult = {
-  success: boolean
-  error?: string
-  released_count?: number
-  failed_count?: number
-}
-
-/**
- * Release payment for a single booking
- * Checks if review deadline has passed and payment is not disputed
- * Moves funds from pending to available balance
- */
-export async function releasePaymentAction(
-  bookingId: string,
-  workerId: string
-): Promise<PaymentReleaseResult> {
-  try {
-    const supabase = await createClient()
-
-    // Get the booking with job details
-    const { data: booking, error: fetchError } = await supabase
-      .from("bookings")
-      .select(`
-        *,
-        jobs (
-          id,
-          title,
-          budget_max
-        )
-      `)
-      .eq("id", bookingId)
-      .eq("worker_id", workerId)
-      .single()
-
-    if (fetchError || !booking) {
-      return { success: false, error: "Booking tidak ditemukan" }
-    }
-
-    // Check if payment is still in review
-    if (booking.payment_status !== "pending_review") {
-      return { success: false, error: `Pembayaran tidak dalam status review: ${booking.payment_status}` }
-    }
-
-    // Check if review deadline has passed
-    if (!booking.review_deadline) {
-      return { success: false, error: "Batas waktu review tidak ditemukan" }
-    }
-
-    const now = new Date()
-    const reviewDeadline = new Date(booking.review_deadline)
-
-    if (now < reviewDeadline) {
-      return { success: false, error: "Batas waktu review belum tercapai" }
-    }
-
-    // Get the payment amount
-    const paymentAmount = booking.jobs?.budget_max || booking.final_price || 0
-
-    // Import dynamically to avoid circular dependency
-    const { releaseFundsAction } = await import("./wallets")
-    const walletResult = await releaseFundsAction(
-      workerId,
-      paymentAmount,
-      bookingId,
-      `Pembayaran tersedia untuk ${booking.jobs?.title || "pekerjaan"}`
-    )
-
-    if (!walletResult.success) {
-      return { success: false, error: walletResult.error || "Gagal melepaskan dana" }
-    }
-
-    // Update booking payment status
-    const { data: updatedBooking, error: updateError } = await supabase
-      .from("bookings")
-      .update({ payment_status: "available" })
-      .eq("id", bookingId)
-      .select()
-      .single()
-
-    if (updateError) {
-      return { success: false, error: `Gagal memperbarui status pembayaran: ${updateError.message}` }
-    }
-
-    // Send notification to worker
-    // Import dynamically to avoid circular dependency
-    const { createNotification } = await import("./notifications")
-    const jobTitle = booking.jobs?.title || "pekerjaan"
-    await createNotification(
-      workerId,
-      "Pembayaran Tersedia",
-      `Pembayaran sebesar Rp ${paymentAmount.toLocaleString("id-ID")} untuk ${jobTitle} kini tersedia di dompet Anda.`,
-      `/dashboard/worker/wallet`
-    )
-
-    return { success: true, data: updatedBooking }
-  } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat melepaskan pembayaran" }
->>>>>>> auto-claude/017-job-completion-payment-release
   }
 }
 
 /**
-<<<<<<< HEAD
  * Get wallet balance for a business
  */
 export async function getBusinessWalletBalance(businessId: string): Promise<WalletBalanceResult> {
   try {
     const supabase = await createClient()
 
-    const { data: wallet, error } = await (supabase as any)
+    const { data: wallet, error } = await supabase
       .from("wallets")
       .select("balance, currency")
       .eq("business_id", businessId)
@@ -348,7 +201,7 @@ export async function getBusinessWalletBalance(businessId: string): Promise<Wall
 
     // If wallet doesn't exist, create one with zero balance
     if (!wallet) {
-      const { data: newWallet, error: createError } = await (supabase as any)
+      const { data: newWallet, error: createError } = await supabase
         .from("wallets")
         .insert({
           business_id: businessId,
@@ -380,7 +233,7 @@ export async function getWorkerWalletBalance(workerId: string): Promise<WalletBa
   try {
     const supabase = await createClient()
 
-    const { data: wallet, error } = await (supabase as any)
+    const { data: wallet, error } = await supabase
       .from("wallets")
       .select("balance, currency")
       .eq("worker_id", workerId)
@@ -392,7 +245,7 @@ export async function getWorkerWalletBalance(workerId: string): Promise<WalletBa
 
     // If wallet doesn't exist, create one with zero balance
     if (!wallet) {
-      const { data: newWallet, error: createError } = await (supabase as any)
+      const { data: newWallet, error: createError } = await supabase
         .from("wallets")
         .insert({
           business_id: null,
@@ -427,7 +280,7 @@ export async function getBusinessPaymentHistory(
   try {
     const supabase = await createClient()
 
-    let query = (supabase as any)
+    let query = supabase
       .from("payment_transactions")
       .select("*")
       .eq("business_id", businessId)
@@ -463,7 +316,7 @@ export async function getPaymentTransactionDetails(
   try {
     const supabase = await createClient()
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("payment_transactions")
       .select("*")
       .eq("id", transactionId)
@@ -477,6 +330,147 @@ export async function getPaymentTransactionDetails(
     return { success: true, data }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat mengambil detail transaksi" }
+  }
+}
+
+/**
+ * Worker requests a payout to their bank account
+ * Creates payout request in database
+ */
+export async function requestPayout(
+  workerId: string,
+  amount: number,
+  bankAccountId?: string
+): Promise<PayoutRequestResult> {
+  try {
+    const supabase = await createClient()
+
+    // Validate minimum payout amount (Rp 50,000)
+    const MIN_PAYOUT_AMOUNT = 50000
+    if (amount < MIN_PAYOUT_AMOUNT) {
+      return {
+        success: false,
+        error: `Minimal penarikan Rp ${MIN_PAYOUT_AMOUNT.toLocaleString("id-ID")}`,
+      }
+    }
+
+    // Validate maximum payout amount (Rp 10,000,000)
+    const MAX_PAYOUT_AMOUNT = 10000000
+    if (amount > MAX_PAYOUT_AMOUNT) {
+      return {
+        success: false,
+        error: `Maksimal penarikan Rp ${MAX_PAYOUT_AMOUNT.toLocaleString("id-ID")}`,
+      }
+    }
+
+    // Get worker's wallet to check balance
+    const { data: wallet, error: walletError } = await (supabase as any)
+      .from("wallets")
+      .select("id, balance")
+      .eq("worker_id", workerId)
+      .maybeSingle()
+
+    if (walletError || !wallet) {
+      return { success: false, error: "Wallet tidak ditemukan" }
+    }
+
+    // Validate that worker has sufficient balance
+    if (amount > wallet.balance) {
+      return {
+        success: false,
+        error: `Saldo tidak cukup. Saldo tersedia: Rp ${wallet.balance.toLocaleString("id-ID")}`,
+      }
+    }
+
+    // Get worker's bank account
+    let bankAccount: any = null
+
+    if (bankAccountId) {
+      const { data: specifiedAccount, error: accountError } = await (supabase as any)
+        .from("bank_accounts")
+        .select("*")
+        .eq("id", bankAccountId)
+        .eq("worker_id", workerId)
+        .single()
+
+      if (accountError || !specifiedAccount) {
+        return { success: false, error: "Rekening bank tidak ditemukan" }
+      }
+      bankAccount = specifiedAccount
+    } else {
+      const { data: primaryAccount, error: primaryError } = await (supabase as any)
+        .from("bank_accounts")
+        .select("*")
+        .eq("worker_id", workerId)
+        .eq("is_primary", true)
+        .maybeSingle()
+
+      if (primaryError) {
+        return { success: false, error: "Gagal mengambil rekening bank" }
+      }
+
+      if (!primaryAccount) {
+        return {
+          success: false,
+          error: "Silakan tambahkan rekening bank terlebih dahulu",
+        }
+      }
+      bankAccount = primaryAccount
+    }
+
+    // Calculate payout fee (2%)
+    const feePercentage = 0.02
+    const feeAmount = Math.round(amount * feePercentage)
+    const netAmount = amount - feeAmount
+
+    // Create payout request
+    const { data: payoutRequest, error: payoutError } = await (supabase as any)
+      .from("payout_requests")
+      .insert({
+        worker_id: workerId,
+        amount: amount,
+        fee_amount: feeAmount,
+        net_amount: netAmount,
+        status: "pending",
+        bank_code: bankAccount.bank_code,
+        bank_account_number: bankAccount.bank_account_number,
+        bank_account_name: bankAccount.bank_account_name,
+        payment_provider: "manual",
+        provider_payout_id: null,
+        provider_response: {},
+        requested_at: new Date().toISOString(),
+        processed_at: null,
+        completed_at: null,
+        failed_at: null,
+        failure_reason: null,
+        metadata: { bank_account_id: bankAccount.id },
+      })
+      .select()
+      .single()
+
+    if (payoutError || !payoutRequest) {
+      return { success: false, error: `Gagal membuat permintaan penarikan: ${payoutError?.message}` }
+    }
+
+    // Debit wallet
+    const { error: debitError } = await (supabase as any)
+      .from("wallets")
+      .update({ balance: wallet.balance - amount })
+      .eq("id", wallet.id)
+
+    if (debitError) {
+      return { success: false, error: `Gagal mengurangi saldo wallet: ${debitError.message}` }
+    }
+
+    return {
+      success: true,
+      data: {
+        payout_request: payoutRequest,
+        estimated_arrival: "1-2 hari kerja",
+      },
+    }
+  } catch (error) {
+    return { success: false, error: "Terjadi kesalahan saat memproses permintaan penarikan" }
   }
 }
 
@@ -514,341 +508,5 @@ export async function calculateTopUpFee(amount: number): Promise<{
     }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat menghitung biaya top up" }
-=======
- * Release all payments that have passed their review deadline
- * This function should be called periodically (e.g., via cron job)
- * Processes all bookings with payment_status 'pending_review' where review_deadline < now
- */
-export async function releaseDuePaymentsAction(): Promise<BatchPaymentReleaseResult> {
-  try {
-    const supabase = await createClient()
-
-    const now = new Date().toISOString()
-
-    // Get all bookings that are ready for release
-    const { data: bookings, error: fetchError } = await supabase
-      .from("bookings")
-      .select(`
-        id,
-        worker_id,
-        payment_status,
-        review_deadline,
-        final_price,
-        jobs (
-          id,
-          title,
-          budget_max
-        )
-      `)
-      .eq("payment_status", "pending_review")
-      .lt("review_deadline", now)
-      .order("review_deadline", { ascending: true })
-
-    if (fetchError) {
-      return { success: false, error: `Gagal mengambil booking: ${fetchError.message}` }
-    }
-
-    if (!bookings || bookings.length === 0) {
-      return { success: true, released_count: 0, failed_count: 0 }
-    }
-
-    let releasedCount = 0
-    let failedCount = 0
-
-    // Import notification function once for batch processing
-    const { createNotification } = await import("./notifications")
-
-    // Process each booking
-    for (const booking of bookings) {
-      try {
-        const paymentAmount = booking.jobs?.budget_max || booking.final_price || 0
-
-        // Import dynamically to avoid circular dependency
-        const { releaseFundsAction } = await import("./wallets")
-        const walletResult = await releaseFundsAction(
-          booking.worker_id,
-          paymentAmount,
-          booking.id,
-          `Pembayaran tersedia untuk ${booking.jobs?.title || "pekerjaan"}`
-        )
-
-        if (!walletResult.success) {
-          failedCount++
-          continue
-        }
-
-        // Update booking payment status
-        const { error: updateError } = await supabase
-          .from("bookings")
-          .update({ payment_status: "available" })
-          .eq("id", booking.id)
-
-        if (updateError) {
-          failedCount++
-        } else {
-          releasedCount++
-
-          // Send notification to worker
-          const jobTitle = booking.jobs?.title || "pekerjaan"
-          await createNotification(
-            booking.worker_id,
-            "Pembayaran Tersedia",
-            `Pembayaran sebesar Rp ${paymentAmount.toLocaleString("id-ID")} untuk ${jobTitle} kini tersedia di dompet Anda.`,
-            `/dashboard/worker/wallet`
-          )
-        }
-      } catch {
-        failedCount++
-      }
-    }
-
-    return {
-      success: true,
-      released_count: releasedCount,
-      failed_count: failedCount,
-    }
-  } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat memproses pembayaran jatuh tempo" }
->>>>>>> auto-claude/017-job-completion-payment-release
-  }
-}
-
-/**
-<<<<<<< HEAD
- * Worker requests a payout to their bank account
- * Creates payout request and processes withdrawal via Xendit
- */
-export async function requestPayout(
-  workerId: string,
-  amount: number,
-  bankAccountId?: string
-): Promise<PayoutRequestResult> {
-  try {
-    const supabase = await createClient()
-
-    // Validate the payout amount (minimum amount check)
-    if (amount < PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT) {
-      return {
-        success: false,
-        error: `Minimal penarikan Rp ${PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT.toLocaleString("id-ID")}`,
-      }
-    }
-
-    if (amount > PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT) {
-      return {
-        success: false,
-        error: `Maksimal penarikan Rp ${PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT.toLocaleString("id-ID")}`,
-      }
-    }
-
-    // Get worker's wallet to check balance
-    const { data: wallet, error: walletError } = await (supabase as any)
-      .from("wallets")
-      .select("id, balance")
-      .eq("worker_id", workerId)
-      .maybeSingle()
-
-    if (walletError || !wallet) {
-      return { success: false, error: "Wallet tidak ditemukan" }
-    }
-
-    // Validate that worker has sufficient balance
-    const balanceValidation = validatePaymentAmount(amount, wallet.balance)
-    if (!balanceValidation.valid) {
-      return { success: false, error: balanceValidation.error }
-    }
-
-    // Get worker's bank account (use specified one or primary)
-    let bankAccount: BankAccount | null = null
-
-    if (bankAccountId) {
-      // Get the specified bank account
-      const { data: specifiedAccount, error: accountError } = await (supabase as any)
-        .from("bank_accounts")
-        .select("*")
-        .eq("id", bankAccountId)
-        .eq("worker_id", workerId)
-        .single()
-
-      if (accountError || !specifiedAccount) {
-        return { success: false, error: "Rekening bank tidak ditemukan" }
-      }
-      bankAccount = specifiedAccount
-    } else {
-      // Get primary bank account
-      const { data: primaryAccount, error: primaryError } = await (supabase as any)
-        .from("bank_accounts")
-        .select("*")
-        .eq("worker_id", workerId)
-        .eq("is_primary", true)
-        .maybeSingle()
-
-      if (primaryError) {
-        return { success: false, error: "Gagal mengambil rekening bank" }
-      }
-
-      if (!primaryAccount) {
-        return {
-          success: false,
-          error: "Silakan tambahkan rekening bank terlebih dahulu",
-        }
-      }
-      bankAccount = primaryAccount
-    }
-
-    // Calculate payout fee
-    const feeAmount = calculatePayoutFee(amount, bankAccount.bank_code)
-    const netAmount = amount - feeAmount
-
-    // Create payout request with pending status
-    const { data: payoutRequest, error: payoutError } = await (supabase as any)
-      .from("payout_requests")
-      .insert({
-        worker_id: workerId,
-        amount: amount,
-        fee_amount: feeAmount,
-        net_amount: netAmount,
-        status: "pending",
-        bank_code: bankAccount.bank_code,
-        bank_account_number: bankAccount.bank_account_number,
-        bank_account_name: bankAccount.bank_account_name,
-        payment_provider: "xendit",
-        provider_payout_id: null,
-        provider_response: {},
-        requested_at: new Date().toISOString(),
-        processed_at: null,
-        completed_at: null,
-        failed_at: null,
-        failure_reason: null,
-        metadata: { bank_account_id: bankAccount.id },
-      })
-      .select()
-      .single()
-
-    if (payoutError || !payoutRequest) {
-      return { success: false, error: `Gagal membuat permintaan penarikan: ${payoutError?.message}` }
-    }
-
-    // Create payout with Xendit
-    try {
-      const xenditPayout = await createPayout({
-        external_id: payoutRequest.id,
-        amount: netAmount,
-        bank_code: bankAccount.bank_code,
-        account_number: bankAccount.bank_account_number,
-        account_holder_name: bankAccount.bank_account_name,
-        description: `Penarikan saldo untuk worker ${workerId}`,
-      })
-
-      // Update payout request with Xendit details
-      const { data: updatedPayout, error: updateError } = await (supabase as any)
-        .from("payout_requests")
-        .update({
-          provider_payout_id: xenditPayout.id,
-          provider_response: xenditPayout,
-          status: "processing",
-          processed_at: new Date().toISOString(),
-        })
-        .eq("id", payoutRequest.id)
-        .select()
-        .single()
-
-      if (updateError || !updatedPayout) {
-        return { success: false, error: `Gagal menyimpan detail payout: ${updateError?.message}` }
-      }
-
-      // Debit wallet (balance will be locked for this payout)
-      const { error: debitError } = await (supabase as any)
-        .from("wallets")
-        .update({ balance: wallet.balance - amount })
-        .eq("id", wallet.id)
-
-      if (debitError) {
-        return { success: false, error: `Gagal mengurangi saldo wallet: ${debitError.message}` }
-      }
-
-      return {
-        success: true,
-        data: {
-          payout_request: updatedPayout,
-          estimated_arrival: xenditPayout.estimated_arrival_date,
-        },
-      }
-    } catch (xenditError) {
-      // If Xendit fails, mark payout request as failed
-      await (supabase as any)
-        .from("payout_requests")
-        .update({
-          status: "failed",
-          failed_at: new Date().toISOString(),
-          failure_reason: xenditError instanceof Error ? xenditError.message : "Gagal membuat payout",
-        })
-        .eq("id", payoutRequest.id)
-
-      return {
-        success: false,
-        error: `Gagal membuat payout: ${xenditError instanceof Error ? xenditError.message : "Unknown error"}`,
-      }
-    }
-  } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat memproses permintaan penarikan" }
-=======
- * Get payments that are pending release for a worker
- * Returns bookings where payment_status is 'pending_review'
- */
-export async function getPendingReleasePaymentsAction(
-  workerId: string
-): Promise<{
-  success: boolean
-  error?: string
-  data?: Array<{
-    booking_id: string
-    job_title: string
-    amount: number
-    review_deadline: string
-    hours_until_release: number
-  }>
-}> {
-  try {
-    const supabase = await createClient()
-
-    const { data: bookings, error } = await supabase
-      .from("bookings")
-      .select(`
-        id,
-        review_deadline,
-        final_price,
-        jobs (
-          title,
-          budget_max
-        )
-      `)
-      .eq("worker_id", workerId)
-      .eq("payment_status", "pending_review")
-      .order("review_deadline", { ascending: true })
-
-    if (error) {
-      return { success: false, error: `Gagal mengambil pembayaran: ${error.message}` }
-    }
-
-    const now = new Date()
-
-    const payments = (bookings || []).map((booking) => {
-      const reviewDeadline = new Date(booking.review_deadline || "")
-      const hoursUntilRelease = Math.max(0, (reviewDeadline.getTime() - now.getTime()) / (1000 * 60 * 60))
-
-      return {
-        booking_id: booking.id,
-        job_title: booking.jobs?.title || "Pekerjaan",
-        amount: booking.jobs?.budget_max || booking.final_price || 0,
-        review_deadline: booking.review_deadline || "",
-        hours_until_release: Math.round(hoursUntilRelease),
-      }
-    })
-
-    return { success: true, data: payments }
-  } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat mengambil pembayaran yang akan dilepas" }
->>>>>>> auto-claude/017-job-completion-payment-release
   }
 }

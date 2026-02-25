@@ -34,7 +34,7 @@ export default function BusinessesPage({ className, ...props }: BusinessesPagePr
   })
 
   const [filters, setFilters] = React.useState<BusinessVerificationFilters>({
-    sortBy: "created_at",
+    sortBy: "submitted_at",
     sortOrder: "desc",
   })
   const [searchInput, setSearchInput] = React.useState("")
@@ -43,22 +43,22 @@ export default function BusinessesPage({ className, ...props }: BusinessesPagePr
     setLoading(true)
     setError(null)
 
-    const { data, error: fetchError } = await getBusinessesForVerification(
-      filters,
-      pagination.page,
-      pagination.limit
-    )
+    try {
+      const { items, total, totalPages } = await getBusinessesForVerification(
+        filters,
+        pagination.page,
+        pagination.limit
+      )
 
-    if (fetchError) {
-      setError(fetchError)
-      setBusinesses([])
-    } else if (data) {
-      setBusinesses(data.items)
+      setBusinesses(items)
       setPagination((prev) => ({
         ...prev,
-        total: data.total,
-        totalPages: data.totalPages,
+        total,
+        totalPages,
       }))
+    } catch (fetchError) {
+      setError(fetchError instanceof Error ? fetchError.message : "Terjadi kesalahan")
+      setBusinesses([])
     }
 
     setLoading(false)
