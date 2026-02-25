@@ -156,6 +156,7 @@ function BookingList({ workerId }: BookingListProps) {
                   <BookingCard
                     key={booking.id}
                     booking={booking}
+                    workerId={workerId}
                     onCancel={
                       booking.status === "pending"
                         ? () => handleCancel(booking.id)

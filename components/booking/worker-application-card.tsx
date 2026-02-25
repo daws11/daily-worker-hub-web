@@ -1,13 +1,15 @@
 "use client"
 
 import * as React from "react"
-import { Calendar, Phone } from "lucide-react"
+import { Calendar, MessageCircle, Phone, Star } from "lucide-react"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ComplianceStatusBadge } from "@/components/booking/compliance-status-badge"
 import { ReliabilityScore, NewWorkerBadge } from "@/components/worker/reliability-score"
+import { BookingMessagesDialog } from "@/components/messaging/booking-messages-dialog"
 import { cn } from "@/lib/utils"
 import type { ComplianceStatusResult } from "@/lib/supabase/queries/compliance"
 
@@ -28,6 +30,7 @@ export interface WorkerApplicationCardProps {
       bio: string
     }
   }
+  businessId: string
   reliabilityScore?: number
   compliance?: ComplianceStatusResult
   completedJobs?: number
@@ -46,12 +49,14 @@ const statusVariants: Record<BookingStatus, { variant: "default" | "secondary" |
 
 export function WorkerApplicationCard({
   booking,
+  businessId,
   reliabilityScore,
   compliance,
   completedJobs,
   onSelect,
   isSelected,
 }: WorkerApplicationCardProps) {
+  const [messageDialogOpen, setMessageDialogOpen] = React.useState(false)
   const { status, start_date, end_date, booking_notes, worker } = booking
   const statusConfig = statusVariants[status]
 
@@ -77,14 +82,15 @@ export function WorkerApplicationCard({
   }
 
   return (
-    <Card
-      className={cn(
-        "transition-all hover:shadow-md",
-        onSelect && "cursor-pointer",
-        isSelected && "ring-2 ring-primary ring-offset-2"
-      )}
-      onClick={() => onSelect?.(booking.id)}
-    >
+    <>
+      <Card
+        className={cn(
+          "transition-all hover:shadow-md",
+          onSelect && "cursor-pointer",
+          isSelected && "ring-2 ring-primary ring-offset-2"
+        )}
+        onClick={() => onSelect?.(booking.id)}
+      >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -148,6 +154,32 @@ export function WorkerApplicationCard({
           </div>
         )}
       </CardContent>
+      <CardFooter className="flex justify-between items-center pt-4 gap-2">
+        <span className="text-xs text-muted-foreground">
+          Applied on {formatDate(start_date)}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={(e) => {
+            e.stopPropagation()
+            setMessageDialogOpen(true)
+          }}
+        >
+          <MessageCircle className="h-4 w-4 mr-1" />
+          Message
+        </Button>
+      </CardFooter>
     </Card>
+
+    <BookingMessagesDialog
+      bookingId={booking.id}
+      currentUserId={businessId}
+      receiverId={worker.id}
+      receiverName={worker.full_name}
+      open={messageDialogOpen}
+      onOpenChange={setMessageDialogOpen}
+    />
+  </>
   )
 }
