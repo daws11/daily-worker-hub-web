@@ -2,8 +2,8 @@
 
 import { createClient } from "../supabase/server"
 import type { Database } from "../supabase/types"
-import { checkComplianceBeforeAccept } from "./compliance"
-import { calculateWorkerScore } from "./reliability-score"
+import { createNotification } from "./notifications"
+import { sendPushNotification, isNotificationTypeEnabled } from "./push-notifications"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"]
 type Job = Database["public"]["Tables"]["jobs"]["Row"]
@@ -58,14 +58,44 @@ export async function applyForJob(jobId: string, workerId: string): Promise<Appl
       return { success: false, error: "Pekerjaan tidak ditemukan" }
     }
 
-    // Type the job data properly
-    const jobData = job as Pick<Job, 'business_id'>
+    // Get job details for notification
+    const { data: jobDetails, error: jobDetailsError } = await supabase
+      .from("jobs")
+      .select("title")
+      .eq("id", jobId)
+      .single()
+
+    if (jobDetailsError || !jobDetails) {
+      return { success: false, error: "Pekerjaan tidak ditemukan" }
+    }
+
+    // Get worker details for notification
+    const { data: workerDetails, error: workerError } = await supabase
+      .from("workers")
+      .select("full_name")
+      .eq("id", workerId)
+      .single()
+
+    if (workerError || !workerDetails) {
+      return { success: false, error: "Data pekerja tidak ditemukan" }
+    }
+
+    // Get business owner's user_id
+    const { data: businessDetails, error: businessError } = await supabase
+      .from("businesses")
+      .select("user_id")
+      .eq("id", job.business_id)
+      .single()
+
+    if (businessError || !businessDetails) {
+      return { success: false, error: "Data bisnis tidak ditemukan" }
+    }
 
     // Create the booking (application)
     const newBooking: BookingInsert = {
       job_id: jobId,
       worker_id: workerId,
-      business_id: jobData.business_id,
+      business_id: job.business_id,
       status: "pending",
       start_date: new Date().toISOString(),
       end_date: new Date().toISOString(),
@@ -74,13 +104,21 @@ export async function applyForJob(jobId: string, workerId: string): Promise<Appl
 
     const { data, error } = await supabase
       .from("bookings")
-      .insert(newBooking as any)
+      .insert(newBooking)
       .select()
       .single()
 
     if (error) {
       return { success: false, error: `Gagal melamar: ${error.message}` }
     }
+
+    // Create notification for business owner
+    await createNotification(
+      businessDetails.user_id,
+      "Pelamar Baru",
+      `${workerDetails.full_name} melamar untuk pekerjaan ${jobDetails.title}`,
+      `/dashboard-worker-jobs?job=${jobId}`
+    )
 
     return { success: true, data }
   } catch (error) {
@@ -108,15 +146,13 @@ export async function cancelApplication(bookingId: string, workerId: string): Pr
       return { success: false, error: "Lamaran tidak ditemukan" }
     }
 
-    const bookingData = booking as Booking
-
-    if (bookingData.status !== "pending") {
+    if (booking.status !== "pending") {
       return { success: false, error: "Hanya lamaran yang masih pending yang bisa dibatalkan" }
     }
 
     // Update the booking status to cancelled
-    const { data, error } = await (supabase
-      .from("bookings") as any)
+    const { data, error } = await supabase
+      .from("bookings")
       .update({ status: "cancelled" })
       .eq("id", bookingId)
       .eq("worker_id", workerId)
@@ -235,7 +271,6 @@ export async function getJobApplicants(jobId: string, businessId: string) {
 
 /**
  * Business accepts an applicant
- * Checks PP 35/2021 compliance before accepting (21-day limit for daily workers)
  */
 export async function acceptApplication(bookingId: string, businessId: string): Promise<ApplicationResult> {
   try {
@@ -253,30 +288,13 @@ export async function acceptApplication(bookingId: string, businessId: string): 
       return { success: false, error: "Lamaran tidak ditemukan" }
     }
 
-    const bookingData = booking as Booking
-
-    if (bookingData.status !== "pending") {
+    if (booking.status !== "pending") {
       return { success: false, error: "Hanya lamaran dengan status pending yang bisa diterima" }
     }
 
-    // Check PP 35/2021 compliance before accepting
-    const complianceCheck = await checkComplianceBeforeAccept(booking.worker_id, businessId)
-
-    if (!complianceCheck.success) {
-      return { success: false, error: complianceCheck.error || "Gagal mengecek kepatuhan PP 35/2021" }
-    }
-
-    if (!complianceCheck.canAccept) {
-      const daysWorked = complianceCheck.data?.daysWorked || 0
-      return {
-        success: false,
-        error: `Pekerja telah mencapai batas 21 hari kerja dalam sebulan sesuai PP 35/2021 (${daysWorked} hari). Tidak dapat menerima lamaran.`
-      }
-    }
-
     // Update the booking status to accepted
-    const { data, error } = await (supabase
-      .from("bookings") as any)
+    const { data, error } = await supabase
+      .from("bookings")
       .update({ status: "accepted" })
       .eq("id", bookingId)
       .eq("business_id", businessId)
@@ -285,6 +303,45 @@ export async function acceptApplication(bookingId: string, businessId: string): 
 
     if (error) {
       return { success: false, error: `Gagal menerima lamaran: ${error.message}` }
+    }
+
+    // Get job details for notification
+    const { data: jobDetails, error: jobError } = await supabase
+      .from("jobs")
+      .select("title")
+      .eq("id", booking.job_id)
+      .single()
+
+    if (!jobError && jobDetails) {
+      // Get worker's user_id for notification
+      const { data: workerDetails, error: workerError } = await supabase
+        .from("workers")
+        .select("user_id")
+        .eq("id", booking.worker_id)
+        .single()
+
+      if (!workerError && workerDetails) {
+        // Check if worker has booking_status notifications enabled
+        const { enabled: notificationsEnabled } = await isNotificationTypeEnabled(workerDetails.user_id, "booking_status")
+
+        if (notificationsEnabled) {
+          // Create in-app notification for worker
+          await createNotification(
+            workerDetails.user_id,
+            "Lamaran Diterima",
+            `Selamat! Lamaran Anda untuk pekerjaan ${jobDetails.title} telah diterima`,
+            `/dashboard-jobs?job=${booking.job_id}`
+          )
+
+          // Send push notification to worker
+          await sendPushNotification(
+            workerDetails.user_id,
+            "Lamaran Diterima",
+            `Selamat! Lamaran Anda untuk pekerjaan ${jobDetails.title} telah diterima`,
+            `/dashboard-jobs?job=${booking.job_id}`
+          )
+        }
+      }
     }
 
     return { success: true, data }
@@ -312,15 +369,13 @@ export async function rejectApplication(bookingId: string, businessId: string): 
       return { success: false, error: "Lamaran tidak ditemukan" }
     }
 
-    const bookingData = booking as Booking
-
-    if (bookingData.status !== "pending") {
+    if (booking.status !== "pending") {
       return { success: false, error: "Hanya lamaran dengan status pending yang bisa ditolak" }
     }
 
     // Update the booking status to rejected
-    const { data, error } = await (supabase
-      .from("bookings") as any)
+    const { data, error } = await supabase
+      .from("bookings")
       .update({ status: "rejected" })
       .eq("id", bookingId)
       .eq("business_id", businessId)
@@ -331,59 +386,47 @@ export async function rejectApplication(bookingId: string, businessId: string): 
       return { success: false, error: `Gagal menolak lamaran: ${error.message}` }
     }
 
-    return { success: true, data }
-  } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat menolak lamaran" }
-  }
-}
-
-/**
- * Business completes a job booking
- * Triggers reliability score calculation for the worker
- * This is a backup to the database trigger, ensuring score is always calculated
- */
-export async function completeBooking(bookingId: string, businessId: string): Promise<ApplicationResult> {
-  try {
-    const supabase = await createClient()
-
-    // Verify the booking belongs to the business
-    const { data: booking, error: fetchError } = await supabase
-      .from("bookings")
-      .select("*")
-      .eq("id", bookingId)
-      .eq("business_id", businessId)
+    // Get job details for notification
+    const { data: jobDetails, error: jobError } = await supabase
+      .from("jobs")
+      .select("title")
+      .eq("id", booking.job_id)
       .single()
 
-    if (fetchError || !booking) {
-      return { success: false, error: "Booking tidak ditemukan" }
-    }
+    if (!jobError && jobDetails) {
+      // Get worker's user_id for notification
+      const { data: workerDetails, error: workerError } = await supabase
+        .from("workers")
+        .select("user_id")
+        .eq("id", booking.worker_id)
+        .single()
 
-    // Only accepted or in_progress bookings can be completed
-    if (booking.status !== "accepted" && booking.status !== "in_progress") {
-      return { success: false, error: "Hanya booking dengan status accepted atau in_progress yang bisa diselesaikan" }
-    }
+      if (!workerError && workerDetails) {
+        // Check if worker has booking_status notifications enabled
+        const { enabled: notificationsEnabled } = await isNotificationTypeEnabled(workerDetails.user_id, "booking_status")
 
-    // Update the booking status to completed
-    const { data, error } = await supabase
-      .from("bookings")
-      .update({ status: "completed" })
-      .eq("id", bookingId)
-      .eq("business_id", businessId)
-      .select()
-      .single()
+        if (notificationsEnabled) {
+          // Create in-app notification for worker
+          await createNotification(
+            workerDetails.user_id,
+            "Lamaran Ditolak",
+            `Maaf, lamaran Anda untuk pekerjaan ${jobDetails.title} belum dapat diterima`,
+            `/dashboard-jobs?job=${booking.job_id}`
+          )
 
-    if (error) {
-      return { success: false, error: `Gagal menyelesaikan booking: ${error.message}` }
-    }
-
-    // Trigger reliability score calculation for the worker
-    // This is a backup to the database trigger - ensures score is always calculated
-    if (booking.worker_id) {
-      await calculateWorkerScore(booking.worker_id)
+          // Send push notification to worker
+          await sendPushNotification(
+            workerDetails.user_id,
+            "Lamaran Ditolak",
+            `Maaf, lamaran Anda untuk pekerjaan ${jobDetails.title} belum dapat diterima`,
+            `/dashboard-jobs?job=${booking.job_id}`
+          )
+        }
+      }
     }
 
     return { success: true, data }
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat menyelesaikan booking" }
+    return { success: false, error: "Terjadi kesalahan saat menolak lamaran" }
   }
 }

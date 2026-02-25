@@ -1,11 +1,12 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect } from "react"
+import { createContext, useContext, useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { supabase } from "../../lib/supabase/client"
 import type { User, Session, AuthError } from "@supabase/supabase-js"
 import type { Database } from "../../lib/supabase/types"
+import { subscribeToPushNotifications as subscribeToPushDB } from "../../lib/actions/push-notifications"
 
 type UsersRow = Database["public"]["Tables"]["users"]["Row"]
 
@@ -119,6 +120,126 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     fetchUserRole()
+  }, [user])
+
+  // Initialize push notifications for authenticated users
+  const pushInitRef = useRef(false)
+
+  useEffect(() => {
+    async function initializePushNotifications() {
+      // Only initialize once per session
+      if (pushInitRef.current || !user) {
+        return
+      }
+
+      pushInitRef.current = true
+
+      // Check if browser supports push notifications
+      if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+        return
+      }
+
+      try {
+        // Check current permission
+        const permission = Notification.permission
+
+        if (permission === 'denied') {
+          // User has already denied permission, don't ask again
+          return
+        }
+
+        if (permission === 'granted') {
+          // User already granted permission, subscribe them
+          await subscribeUser()
+        } else if (permission === 'default') {
+          // Request permission on first visit
+          const result = await Notification.requestPermission()
+
+          if (result === 'granted') {
+            await subscribeUser()
+          }
+        }
+      } catch (error) {
+        // Silently fail - don't interrupt user experience
+      }
+    }
+
+    async function subscribeUser() {
+      try {
+        // Get or register service worker
+        let registration = await navigator.serviceWorker.getRegistration()
+        if (!registration) {
+          registration = await navigator.serviceWorker.register('/sw.js')
+        }
+
+        // Check if already subscribed
+        const existingSubscription = await registration.pushManager.getSubscription()
+        if (existingSubscription) {
+          // Verify subscription is stored in database
+          const subscriptionJson = existingSubscription.toJSON()
+          if (subscriptionJson.endpoint && subscriptionJson.keys) {
+            await subscribeToPushDB(
+              user.id,
+              subscriptionJson.endpoint,
+              subscriptionJson.keys.auth || '',
+              subscriptionJson.keys.p256dh || ''
+            )
+          }
+          return
+        }
+
+        // Get VAPID public key
+        const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_KEY
+        if (!vapidPublicKey) {
+          return
+        }
+
+        // Convert VAPID key to Uint8Array
+        const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey) as BufferSource
+
+        // Subscribe to push notifications
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: convertedVapidKey,
+        })
+
+        // Store subscription in database
+        const subscriptionJson = subscription.toJSON()
+        if (subscriptionJson.endpoint && subscriptionJson.keys) {
+          await subscribeToPushDB(
+            user.id,
+            subscriptionJson.endpoint,
+            subscriptionJson.keys.auth || '',
+            subscriptionJson.keys.p256dh || ''
+          )
+        }
+      } catch (error) {
+        // Silently fail - don't interrupt user experience
+      }
+    }
+
+    // Convert VAPID public key from base64 to Uint8Array
+    function urlBase64ToUint8Array(base64String: string): Uint8Array {
+      const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+      const rawData = window.atob(base64)
+      const outputArray = new Uint8Array(rawData.length)
+
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i)
+      }
+
+      return outputArray
+    }
+
+    initializePushNotifications()
+
+    // Reset ref when user logs out
+    return () => {
+      if (!user) {
+        pushInitRef.current = false
+      }
+    }
   }, [user])
 
   const signUp = async (email: string, password: string, fullName: string, role: 'worker' | 'business') => {
