@@ -24,3 +24,7 @@ export const businessNavItems: NavItem[] = [
   { href: "/business/wallet", label: "Dompet", icon: Wallet },
   { href: "/business/settings", label: "Pengaturan", icon: Settings },
 ]
+
+export const adminNavItems: NavItem[] = [
+  { href: "/admin/analytics", label: "Analitik Platform", icon: BarChart },
+]
