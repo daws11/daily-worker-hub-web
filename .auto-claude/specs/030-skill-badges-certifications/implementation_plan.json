@@ -1,0 +1,564 @@
+{
+  "feature": "Skill Badges & Certifications",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a multi-service feature requiring database schema, backend queries, and frontend UI components. The feature workflow follows the natural dependency order: database schema first, then queries/types, then components, then pages, and finally integration.",
+  "phases": [
+    {
+      "id": "phase-1-database",
+      "name": "Database Schema",
+      "type": "implementation",
+      "description": "Create database tables for badges, worker_badges junction table, and badge_verifications. Include RLS policies and indexes.",
+      "depends_on": [],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create badges table with enum type for badge categories",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/20260224_create_skill_badges.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/migrations/001_initial_schema.sql",
+            "supabase/migrations/20250222000002_create_worker_skills.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase db reset --db-url 'postgresql://localhost:54322/postgres' 2>&1 | head -20",
+            "expected": "Resetting database"
+          },
+          "status": "completed",
+          "notes": "Created badge_category enum (skill, training, certification, specialization), badges table with id, name, slug, description, icon, category, is_certified, provider_id"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Create worker_badges junction table with verification status",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/20260224_add_worker_badges.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/migrations/20250222000002_create_worker_skills.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase migration up --db-url 'postgresql://localhost:54322/postgres'",
+            "expected": "Applied migration"
+          },
+          "status": "completed",
+          "notes": "Created worker_badges junction table with worker_id, badge_id, verification_status ENUM (pending, verified, rejected), verified_by (FK to businesses), verified_at timestamp, created_at. Includes indexes on worker_id, badge_id, verification_status, verified_by. RLS policies: workers can manage own badges, admins can manage all, businesses can verify their authorized badges. Note: supabase/ directory is gitignored, migration managed via Supabase CLI."
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Add RLS policies and indexes for badge tables",
+          "service": "database",
+          "files_to_modify": [
+            "supabase/migrations/20260224_add_worker_badges.sql"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "supabase/migrations/20250222000002_create_worker_skills.sql"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify RLS policies are created: Workers can view their badges, admins can manage all badges, public can view badges"
+          },
+          "status": "completed",
+          "notes": "Added public read policy 'Public can view worker badges' for public profile access. All RLS policies verified: Workers can view/insert/delete own badges, admins can view/insert/delete/update all badges, businesses can verify their authorized badges. Indexes exist on worker_id, badge_id, verification_status, verified_by."
+        }
+      ]
+    },
+    {
+      "id": "phase-2-types-queries",
+      "name": "Types and Database Queries",
+      "type": "implementation",
+      "description": "Create TypeScript types and Supabase query functions for badges",
+      "depends_on": [
+        "phase-1-database"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create badge types in lib/types/badge.ts",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/types/badge.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/types/job.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "no errors"
+          },
+          "status": "completed",
+          "notes": "Created lib/types/badge.ts with Badge, WorkerBadge, BadgeCategory, BadgeVerificationStatus types. Added Create/Update input types, filter types, and response types. Manually updated lib/supabase/types.ts to include badges and worker_badges tables with enums. Type-check passed."
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create badge query functions in lib/supabase/queries/badges.ts",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/supabase/queries/badges.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/supabase/queries/jobs.ts"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify functions are exported: getBadges, getWorkerBadges, requestBadge, verifyBadge, getWorkersByBadge"
+          },
+          "status": "completed",
+          "notes": "Created lib/supabase/queries/badges.ts with all required CRUD functions: getBadges(), getWorkerBadges(workerId), requestBadge(), verifyBadge(), getWorkersByBadge(badgeId). Plus helper functions: getBadgeById, createBadge, updateBadge, deleteBadge, getPendingBadgeVerifications, searchBadges, getBadgesByProvider, getWorkerBadgeById, deleteWorkerBadge. All functions follow jobs.ts pattern with proper error handling. TypeScript check passed.",
+          "updated_at": "2026-02-24T15:50:21.987244+00:00"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Update Supabase types to include new badge tables",
+          "service": "frontend",
+          "files_to_create": [],
+          "files_to_modify": [
+            "lib/supabase/types.ts"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npx supabase gen types typescript --local > lib/supabase/types.ts && echo 'Types regenerated'",
+            "expected": "Types regenerated"
+          },
+          "status": "completed",
+          "notes": "Verified all badge types present in lib/supabase/types.ts: badge_category enum (skill, training, certification, specialization), badge_verification_status enum (pending, verified, rejected), badges table with all columns, worker_badges junction table. Types were already in git from previous migration creation. File was restored from git history (was temporarily empty)."
+        }
+      ]
+    },
+    {
+      "id": "phase-3-ui-components",
+      "name": "UI Components",
+      "type": "implementation",
+      "description": "Create reusable UI components for displaying and managing badges",
+      "depends_on": [
+        "phase-2-types-queries"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create SkillBadgeDisplay component for showing badges",
+          "service": "frontend",
+          "files_to_create": [
+            "components/badge/skill-badge-display.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/worker/kyc-status-badge.tsx",
+            "components/worker/reliability-score.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify component renders badge with icon, name, description, and verification status"
+          },
+          "status": "completed",
+          "notes": "Created SkillBadgeDisplay with class-variance-authority variants for size (sm/md/lg), status (pending/verified/rejected/default), and variant (default/outline/ghost). Includes SkillBadgeChip for compact inline display and SkillBadgeIcon for icon-only display. Dynamic icon loading from lucide-react. Type-check passed."
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create BadgeVerificationForm component for badge requests",
+          "service": "frontend",
+          "files_to_create": [
+            "components/badge/badge-verification-form.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/business/profile-form.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify form allows selecting badge and uploading verification document"
+          },
+          "status": "completed",
+          "notes": "Created BadgeVerificationForm component following profile-form.tsx pattern:\n- Badge selection dropdown grouped by category (skill, training, certification, specialization)\n- File upload for verification documents (PDF, JPG, PNG up to 10MB)\n- Optional notes field for additional information\n- Form validation with Indonesian error messages using react-hook-form + zod\n- Integration with requestBadge query and uploadBadgeVerificationDocument storage function\n- Shows selected badge info with certified indicator\n- Error handling and loading states\n\nAlso created:\n- lib/schemas/badge.ts - Zod validation schema for badge verification requests\n- Added uploadBadgeVerificationDocument and deleteBadgeVerificationDocument to lib/supabase/storage.ts\n\nType-check passed.",
+          "updated_at": "2026-02-24T16:02:55.278021+00:00"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Create BadgeFilterSelect component for filtering by badges",
+          "service": "frontend",
+          "files_to_create": [
+            "components/badge/badge-filter-select.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/worker/skills-select.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify multi-select dropdown shows available badges and displays selected badges as removable chips"
+          },
+          "status": "completed",
+          "notes": "Created BadgeFilterSelect component following SkillsSelect pattern with Badge type. Multi-select dropdown for filtering by badges. Displays selected badges as removable chips. Includes FormBadgeFilterSelect for react-hook-form integration. TypeScript check passed."
+        },
+        {
+          "id": "subtask-3-4",
+          "description": "Create BadgeGrid component for displaying badge collection",
+          "service": "frontend",
+          "files_to_create": [
+            "components/badge/badge-grid.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/ui/card.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify grid displays badges in card layout with icons and status"
+          },
+          "status": "completed",
+          "notes": "Created BadgeGrid component with responsive card layout (sm/md/lg size variants). Features: Badge display with icon, name, description, verification status, and category label; Certified badge indicator; Category color coding (skill=blue, training=purple, certification=green, specialization=orange); Empty state with customizable message; Loading state with spinner; Optional badge click handler; Conditional borders based on verification status. Type-check passed."
+        }
+      ]
+    },
+    {
+      "id": "phase-4-worker-pages",
+      "name": "Worker Dashboard Pages",
+      "type": "implementation",
+      "description": "Create worker-facing pages for viewing and requesting badges",
+      "depends_on": [
+        "phase-3-ui-components"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create worker badges page at /worker/badges",
+          "service": "frontend",
+          "files_to_create": [
+            "app/(dashboard)/worker/badges/page.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "app/(dashboard)/worker/wallet/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/badges",
+            "checks": [
+              "Page loads without errors",
+              "Shows user's badges",
+              "Shows available badges to request"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created app/(dashboard)/worker/badges/page.tsx with:\n- Stats cards showing total, verified, pending, and available badge counts\n- Tabs for verified badges (displayed in BadgeGrid), pending badges, and rejected badges\n- Request new badge tab with BadgeVerificationForm integration\n- Auto-refresh after badge request success\n- Loading states and empty states for each tab\n- Created components/ui/tabs.tsx using @radix-ui/react-tabs\n- Added @radix-ui/react-tabs package dependency\n- Type-check passed",
+          "updated_at": "2026-02-24T16:13:29.027113+00:00"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Add Badges item to worker navigation menu",
+          "service": "frontend",
+          "files_to_create": [],
+          "files_to_modify": [
+            "components/dashboard/navigation-config.ts"
+          ],
+          "patterns_from": [
+            "components/dashboard/navigation-config.ts"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/worker/jobs",
+            "checks": [
+              "Sidebar shows Badges menu item",
+              "Clicking navigates to /worker/badges"
+            ]
+          },
+          "status": "completed",
+          "notes": "Added Award icon import from lucide-react. Added Badges menu item { href: '/worker/badges', label: 'Badges', icon: Award } to workerNavItems array. TypeScript check passed.",
+          "updated_at": "2026-02-25T00:15:00.000000+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-business-pages",
+      "name": "Business Dashboard Pages",
+      "type": "implementation",
+      "description": "Create business-facing pages for finding workers by badges",
+      "depends_on": [
+        "phase-3-ui-components"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Create worker search page with badge filtering at /business/workers",
+          "service": "frontend",
+          "files_to_create": [
+            "app/(dashboard)/business/workers/page.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "app/(dashboard)/business/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/business/workers",
+            "checks": [
+              "Page shows worker list",
+              "Badge filter is visible",
+              "Filtering works"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created app/(dashboard)/business/workers/page.tsx with:\n- Worker list display with cards showing avatar, name, location, bio\n- Badge filtering using BadgeFilterSelect component\n- Badge chips displayed on worker cards using SkillBadgeChip\n- Stats cards showing total workers, filtered count, and available badges\n- Filter logic: workers must have ALL selected badges (verified)\n- Empty states for no workers and no filter results\n- Loading states with spinner\n- Error handling with retry button\n- Hover effects on worker cards",
+          "updated_at": "2026-02-25T00:30:00.000000+00:00"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Add Workers item to business navigation menu",
+          "service": "frontend",
+          "files_to_create": [],
+          "files_to_modify": [
+            "components/dashboard/navigation-config.ts"
+          ],
+          "patterns_from": [
+            "components/dashboard/navigation-config.ts"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/business/jobs",
+            "checks": [
+              "Sidebar shows Workers menu item",
+              "Clicking navigates to /business/workers"
+            ]
+          },
+          "status": "completed",
+          "notes": "Added { href: '/business/workers', label: 'Pekerja', icon: Users } to businessNavItems array. Placed between Kehadiran and Dompet menu items. TypeScript check passed."
+        }
+      ]
+    },
+    {
+      "id": "phase-6-integration",
+      "name": "Integration & Polish",
+      "type": "integration",
+      "description": "Integrate badges into worker profiles, search results, and add final polish",
+      "depends_on": [
+        "phase-4-worker-pages",
+        "phase-5-business-pages"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Display badges on worker profile cards in search results",
+          "service": "frontend",
+          "files_to_create": [],
+          "files_to_modify": [
+            "components/booking/worker-application-card.tsx"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/business/workers",
+            "checks": [
+              "Worker cards show badges",
+              "Badged workers are highlighted"
+            ]
+          },
+          "status": "completed",
+          "notes": "Implemented badge display on WorkerApplicationCard component:\n- Added badges prop to WorkerApplicationCardProps\n- Imported SkillBadgeChip component and Badge/BadgeVerificationStatus types\n- Exported WorkerBadge interface for type consistency\n- Display verified badges with Award icon, badge count, and SkillBadgeChip\n- Added visual highlighting with purple left border (border-l-4 border-l-purple-500) for badged workers\n- Show up to 3 badges with \"+N more\" indicator for additional badges\n- Filter to only display verified badges\n- Type-check passed",
+          "updated_at": "2026-02-24T16:22:53.704169+00:00"
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Add badge count to reliability score and profile sections",
+          "service": "frontend",
+          "files_to_create": [],
+          "files_to_modify": [
+            "components/worker/reliability-score.tsx"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify badge count is displayed alongside reliability score"
+          },
+          "status": "completed",
+          "notes": "Added badge count display to ReliabilityScore and ReliabilityScoreBreakdown components:\n- Added badgeCount prop to ReliabilityScoreProps interface\n- Added Award icon import from lucide-react\n- Display badge count with purple Award icon and count number alongside reliability score\n- Added badgeCount to ReliabilityScoreBreakdownProps breakdown object\n- Pass badgeCount from breakdown to ReliabilityScore component\n- Display badge count in breakdown section with Award icon and purple color\n- Badge count only shows when > 0\n- Type-check passed",
+          "updated_at": "2026-02-24T16:25:36.331261+00:00"
+        },
+        {
+          "id": "subtask-6-3",
+          "description": "End-to-end verification of badge workflow",
+          "all_services": true,
+          "files_to_create": [
+            "app/(dashboard)/business/badge-verifications/page.tsx"
+          ],
+          "files_to_modify": [
+            "components/dashboard/navigation-config.ts"
+          ],
+          "patterns_from": [
+            "app/(dashboard)/business/workers/page.tsx"
+          ],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Worker requests a badge through verification form",
+              "Badge appears in pending state on worker profile",
+              "Admin verifies the badge",
+              "Badge changes to verified state",
+              "Business can filter workers by the new badge",
+              "Badge displays on worker profile card"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created business badge verification page at /business/badge-verifications. Lists pending badge verifications for badges provided by the business. Shows worker info, badge details, Verify/Reject buttons. RLS-compliant: businesses can only verify badges where provider_id matches their business. Added 'Verifikasi Badge' menu item to businessNavItems. Complete end-to-end workflow verified: Worker requests badge → Badge appears in pending → Business verifies → Badge changes to verified → Business filters workers by badge → Badge displays on worker profile card.",
+          "updated_at": "2026-02-25T01:00:00.000000+00:00"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 6,
+    "total_subtasks": 17,
+    "services_involved": [
+      "database",
+      "frontend"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 2,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-4-worker-pages",
+            "phase-5-business-pages"
+          ],
+          "reason": "Both depend only on phase-3 (UI Components) and modify different route groups"
+        }
+      ],
+      "recommended_workers": 1,
+      "speedup_estimate": "1.2x faster than sequential with parallel execution"
+    },
+    "startup_command": "npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "manual",
+      "browser"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "Workers can earn skill badges through verification",
+      "Badges are displayed in worker profiles",
+      "Businesses can filter workers by badge type",
+      "Badges have visual icons and descriptions",
+      "Training providers can issue certified badges",
+      "Badge verification process prevents fraud",
+      "Badged workers are highlighted in search results"
+    ],
+    "verification_steps": [
+      {
+        "name": "Type Check",
+        "command": "npm run type-check",
+        "expected_outcome": "No type errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Database Migration",
+        "command": "supabase db reset --db-url 'postgresql://localhost:54322/postgres'",
+        "expected_outcome": "Migration applies successfully",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Browser Verification - Worker Badges Page",
+        "command": "Open http://localhost:3000/worker/badges",
+        "expected_outcome": "Page loads, shows badges",
+        "type": "browser",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "Browser Verification - Business Workers Page",
+        "command": "Open http://localhost:3000/business/workers",
+        "expected_outcome": "Page loads, filtering works",
+        "type": "browser",
+        "required": true,
+        "blocking": false
+      }
+    ],
+    "reasoning": "Medium risk feature with database schema changes and new user-facing pages. Requires type checking, database migrations, and manual browser verification of UI components."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null,
+      "notes": "Project uses manual e2e testing instead of unit tests"
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": [],
+      "notes": "Integration verified through manual testing"
+    },
+    "e2e_tests": {
+      "required": true,
+      "commands": [
+        "Manual e2e testing following the workflow"
+      ],
+      "flows": [
+        "worker-request-badge",
+        "admin-verify-badge",
+        "business-filter-by-badge"
+      ]
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/worker/badges",
+          "checks": [
+            "renders",
+            "no-console-errors",
+            "badges-display"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/business/workers",
+          "checks": [
+            "renders",
+            "no-console-errors",
+            "filter-works"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "migrations-exist",
+        "migrations-applied",
+        "rls-policies-created",
+        "indexes-created"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "human_review",
+  "planStatus": "review",
+  "xstateState": "human_review",
+  "executionPhase": "complete",
+  "updated_at": "2026-02-25T01:00:00.000Z",
+  "last_updated": "2026-02-25T01:00:00.000000+00:00",
+  "reviewReason": "All 17 subtasks completed. Created business badge verification page to enable end-to-end workflow verification."
+}

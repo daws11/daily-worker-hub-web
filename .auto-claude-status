@@ -1,15 +1,15 @@
 {
   "active": true,
-  "spec": "028-platform-analytics-reporting",
+  "spec": "030-skill-badges-certifications",
   "state": "building",
   "subtasks": {
-    "completed": 7,
-    "total": 8,
+    "completed": 16,
+    "total": 17,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Integration & Testing",
+    "current": "Integration & Polish",
     "id": null,
     "total": 3
   },
@@ -18,8 +18,37 @@
     "max": 1
   },
   "session": {
+    "number": 18,
+    "started_at": "2026-02-24T23:25:08.810344"
+  },
+  "last_update": "2026-02-25T00:26:01.223722"
+}
+    "in_progress": 1,
+    "failed": 0
+  },
+  "phase": {
+<<<<<<< HEAD
+    "current": "Integration & Testing",
+=======
+    "current": "Integration & Polish",
+>>>>>>> auto-claude/030-skill-badges-certifications
+    "id": null,
+    "total": 3
+  },
+  "workers": {
+    "active": 0,
+    "max": 1
+  },
+  "session": {
+<<<<<<< HEAD
     "number": 9,
     "started_at": "2026-02-24T23:06:03.010329"
   },
   "last_update": "2026-02-24T23:36:40.917840"
+=======
+    "number": 18,
+    "started_at": "2026-02-24T23:25:08.810344"
+  },
+  "last_update": "2026-02-25T00:26:01.223722"
+>>>>>>> auto-claude/030-skill-badges-certifications
 }

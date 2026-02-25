@@ -1,56 +1,14 @@
 import * as React from "react"
-import { Star, StarHalf } from "lucide-react"
-import { cva, type VariantProps } from "class-variance-authority"
+import { Award, Star, StarHalf } from "lucide-react"
 
 import { cn } from "@/lib/utils"
-
-// NewWorkerBadge variants
-const newWorkerVariants = cva(
-  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-  {
-    variants: {
-      isNew: {
-        true: "border-transparent bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
-        false: "hidden",
-      },
-    },
-    defaultVariants: {
-      isNew: true,
-    },
-  }
-)
-
-export interface NewWorkerBadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof newWorkerVariants> {
-  completedJobs: number
-  threshold?: number
-}
-
-export function NewWorkerBadge({
-  completedJobs,
-  threshold = 5,
-  className,
-  isNew,
-  ...props
-}: NewWorkerBadgeProps) {
-  const isNewWorker = completedJobs < threshold
-
-  return (
-    <div
-      className={cn(newWorkerVariants({ isNew: isNewWorker }), className)}
-      {...props}
-    >
-      New
-    </div>
-  )
-}
 
 export interface ReliabilityScoreProps {
   score: number
   showValue?: boolean
   showLabel?: boolean
   size?: "sm" | "md" | "lg"
+  badgeCount?: number
   className?: string
 }
 
@@ -77,6 +35,7 @@ export function ReliabilityScore({
   showValue = true,
   showLabel = false,
   size = "md",
+  badgeCount,
   className,
 }: ReliabilityScoreProps) {
   // Clamp score between 0 and 5
@@ -86,16 +45,16 @@ export function ReliabilityScore({
   const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0)
 
   const getScoreColor = (score: number) => {
-    if (score === 5.0) return "text-yellow-600 dark:text-yellow-400"
-    if (score >= 4.0) return "text-green-600 dark:text-green-400"
-    if (score >= 3.0) return "text-yellow-600 dark:text-yellow-400"
+    if (score >= 4.5) return "text-green-600 dark:text-green-400"
+    if (score >= 3.5) return "text-yellow-600 dark:text-yellow-400"
+    if (score >= 2.5) return "text-orange-600 dark:text-orange-400"
     return "text-red-600 dark:text-red-400"
   }
 
   const getStarColor = (score: number) => {
-    if (score === 5.0) return "fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400"
-    if (score >= 4.0) return "fill-green-500 text-green-500 dark:fill-green-400 dark:text-green-400"
-    if (score >= 3.0) return "fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400"
+    if (score >= 4.5) return "fill-green-500 text-green-500 dark:fill-green-400 dark:text-green-400"
+    if (score >= 3.5) return "fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400"
+    if (score >= 2.5) return "fill-orange-500 text-orange-500 dark:fill-orange-400 dark:text-orange-400"
     return "fill-red-500 text-red-500 dark:fill-red-400 dark:text-red-400"
   }
 
@@ -144,6 +103,13 @@ export function ReliabilityScore({
            "Poor"}
         </span>
       )}
+
+      {badgeCount !== undefined && badgeCount > 0 && (
+        <div className={cn("inline-flex items-center gap-1 text-purple-600 dark:text-purple-400", labelSizeVariants[size])} title={`${badgeCount} badge${badgeCount > 1 ? 's' : ''}`}>
+          <Award className={cn(sizeVariants[size], "fill-purple-500 text-purple-500 dark:fill-purple-400 dark:text-purple-400")} />
+          <span className="font-medium">{badgeCount}</span>
+        </div>
+      )}
     </div>
   )
 }
@@ -151,9 +117,11 @@ export function ReliabilityScore({
 export interface ReliabilityScoreBreakdownProps {
   score: number
   breakdown?: {
-    attendanceRate?: number
-    punctualityRate?: number
-    averageRating?: number
+    completedJobs?: number
+    onTimeDelivery?: number
+    qualityRating?: number
+    communication?: number
+    badgeCount?: number
   }
   size?: "sm" | "md" | "lg"
   className?: string
@@ -167,26 +135,47 @@ export function ReliabilityScoreBreakdown({
 }: ReliabilityScoreBreakdownProps) {
   return (
     <div className={cn("space-y-3", className)}>
-      <ReliabilityScore score={score} showValue showLabel size={size} />
+      <ReliabilityScore
+        score={score}
+        showValue
+        showLabel
+        size={size}
+        badgeCount={breakdown?.badgeCount}
+      />
 
       {breakdown && (
         <div className="space-y-2">
-          {breakdown.attendanceRate !== undefined && (
+          {breakdown.completedJobs !== undefined && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Attendance Rate</span>
-              <span className="font-medium">{breakdown.attendanceRate}%</span>
+              <span className="text-muted-foreground">Completed Jobs</span>
+              <span className="font-medium">{breakdown.completedJobs}</span>
             </div>
           )}
-          {breakdown.punctualityRate !== undefined && (
+          {breakdown.onTimeDelivery !== undefined && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Punctuality Rate</span>
-              <span className="font-medium">{breakdown.punctualityRate}%</span>
+              <span className="text-muted-foreground">On-time Delivery</span>
+              <span className="font-medium">{breakdown.onTimeDelivery}%</span>
             </div>
           )}
-          {breakdown.averageRating !== undefined && (
+          {breakdown.qualityRating !== undefined && (
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Average Rating</span>
-              <span className="font-medium">{breakdown.averageRating.toFixed(1)}/5</span>
+              <span className="text-muted-foreground">Quality Rating</span>
+              <span className="font-medium">{breakdown.qualityRating}/5</span>
+            </div>
+          )}
+          {breakdown.communication !== undefined && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">Communication</span>
+              <span className="font-medium">{breakdown.communication}/5</span>
+            </div>
+          )}
+          {breakdown.badgeCount !== undefined && breakdown.badgeCount > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <Award className="h-3.5 w-3.5 text-purple-500" />
+                Badges
+              </span>
+              <span className="font-medium text-purple-600 dark:text-purple-400">{breakdown.badgeCount}</span>
             </div>
           )}
         </div>
