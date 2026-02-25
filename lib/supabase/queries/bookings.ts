@@ -365,17 +365,20 @@ export async function deleteBooking(bookingId: string) {
 
 /**
  * Calculate reliability score for a worker (1-5 stars)
- * Based on: attendance rate, punctuality, and average ratings
+ * Based on: attendance rate, punctuality, and average ratings from reviews
  *
- * @param bookings - Array of worker's bookings with ratings
+ * @param bookings - Array of worker's bookings
+ * @param averageRating - Average rating from reviews (null if no reviews)
  * @returns Reliability score from 1.0 to 5.0
  */
-export function calculateReliabilityScore(bookings: Array<{
-  status: string
-  rating?: number | null
-  check_in_at?: string | null
-  check_out_at?: string | null
-}>): number {
+export function calculateReliabilityScore(
+  bookings: Array<{
+    status: string
+    check_in_at?: string | null
+    check_out_at?: string | null
+  }>,
+  averageRating: number | null = null
+): number {
   if (!bookings || bookings.length === 0) {
     return 3.0 // Default score for new workers
   }
@@ -398,12 +401,10 @@ export function calculateReliabilityScore(bookings: Array<{
     : 0
   const punctualityScore = punctualityRate * 5.0
 
-  // 3. Rating Score (30% weight): Average rating from completed bookings
-  const bookingsWithRatings = completedBookings.filter(b => b.rating !== null && b.rating !== undefined)
-  const avgRating = bookingsWithRatings.length > 0
-    ? bookingsWithRatings.reduce((sum, b) => sum + (b.rating || 0), 0) / bookingsWithRatings.length
+  // 3. Rating Score (30% weight): Average rating from reviews
+  const ratingScore = averageRating !== null && averageRating > 0
+    ? averageRating
     : 4.0 // Default to 4.0 if no ratings yet
-  const ratingScore = avgRating
 
   // Calculate weighted average
   const weightedScore = (
@@ -422,20 +423,32 @@ export function calculateReliabilityScore(bookings: Array<{
  */
 export async function getWorkerReliabilityMetrics(workerId: string) {
   try {
-    const { data, error } = await supabase
+    // Fetch bookings data
+    const { data: bookingsData, error: bookingsError } = await supabase
       .from('bookings')
-      .select('status, rating, check_in_at, check_out_at')
+      .select('status, check_in_at, check_out_at')
       .eq('worker_id', workerId)
       .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Error fetching worker reliability metrics:', error)
-      return { data: null, error }
+    if (bookingsError) {
+      console.error('Error fetching worker reliability metrics:', bookingsError)
+      return { data: null, error: bookingsError }
     }
 
-    const bookings = (data || []) as unknown as Array<{
+    // Fetch average rating from reviews
+    const { data: reviewsData, error: reviewsError } = await supabase
+      .from('reviews')
+      .select('rating')
+      .eq('worker_id', workerId)
+      .eq('reviewer', 'business')
+
+    if (reviewsError) {
+      console.error('Error fetching worker reviews for reliability:', reviewsError)
+      return { data: null, error: reviewsError }
+    }
+
+    const bookings = (bookingsData || []) as unknown as Array<{
       status: string
-      rating?: number | null
       check_in_at?: string | null
       check_out_at?: string | null
     }>
@@ -453,11 +466,12 @@ export async function getWorkerReliabilityMetrics(workerId: string) {
       ? (bookingsWithCheckIn.length / completedBookings.length) * 100
       : 0
 
-    // Calculate average rating
-    const bookingsWithRatings = completedBookings.filter(b => b.rating !== null && b.rating !== undefined)
-    const avgRating = bookingsWithRatings.length > 0
-      ? bookingsWithRatings.reduce((sum, b) => sum + (b.rating || 0), 0) / bookingsWithRatings.length
-      : null
+    // Calculate average rating from reviews
+    let avgRating: number | null = null
+    if (reviewsData && reviewsData.length > 0) {
+      const sum = reviewsData.reduce((acc, review) => acc + (review.rating || 0), 0)
+      avgRating = sum / reviewsData.length
+    }
 
     const metrics = {
       totalBookings,
@@ -465,7 +479,7 @@ export async function getWorkerReliabilityMetrics(workerId: string) {
       attendanceRate: Math.round(attendanceRate),
       punctualityRate: Math.round(punctualityRate),
       averageRating: avgRating ? Math.round(avgRating * 10) / 10 : null,
-      reliabilityScore: calculateReliabilityScore(bookings)
+      reliabilityScore: calculateReliabilityScore(bookings, avgRating)
     }
 
     return { data: metrics, error: null }

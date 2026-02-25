@@ -34,3 +34,4 @@ supabase/
 
 # Auto Claude data directory
 .auto-claude/
+node_modules/

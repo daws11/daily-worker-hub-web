@@ -481,26 +481,35 @@ export type Database = {
       reviews: {
         Row: {
           booking_id: string
+          business_id: string | null
           comment: string | null
           created_at: string
           id: string
           rating: number
+          reviewer: Database["public"]["Enums"]["reviewer_type"]
+          would_rehire: boolean | null
           worker_id: string
         }
         Insert: {
           booking_id: string
+          business_id?: string | null
           comment?: string | null
           created_at?: string
           id?: string
           rating: number
+          reviewer?: Database["public"]["Enums"]["reviewer_type"]
+          would_rehire?: boolean | null
           worker_id: string
         }
         Update: {
           booking_id?: string
+          business_id?: string | null
           comment?: string | null
           created_at?: string
           id?: string
           rating?: number
+          reviewer?: Database["public"]["Enums"]["reviewer_type"]
+          would_rehire?: boolean | null
           worker_id?: string
         }
         Relationships: [
@@ -508,6 +517,12 @@ export type Database = {
             foreignKeyName: "reviews_booking_id_fkey"
             columns: ["booking_id"]
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_business_id_fkey"
+            columns: ["business_id"]
+            referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
           {
@@ -724,6 +739,7 @@ export type Database = {
       transaction_status: "pending" | "success" | "failed"
       transaction_type: "payment" | "refund"
       user_role: "worker" | "business"
+      reviewer_type: "business" | "worker"
     }
     CompositeTypes: {
       [_ in never]: never

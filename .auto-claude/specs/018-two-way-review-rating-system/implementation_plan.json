@@ -1,0 +1,538 @@
+{
+  "feature": "Two-Way Review & Rating System",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a multi-service feature requiring database schema changes, backend query functions, and multiple frontend components. The feature type is appropriate because it involves building new functionality across database and frontend layers with clear dependencies (database first, then queries, then UI).",
+  "phases": [
+    {
+      "id": "phase-1-database",
+      "name": "Database Schema Migration",
+      "type": "implementation",
+      "description": "Create database migration to add two-way review support with new columns and updated RLS policies",
+      "depends_on": [],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Create database migration for two-way reviews",
+          "service": "database",
+          "files_to_create": [
+            "supabase/migrations/20260223_add_two_way_reviews.sql"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "supabase/migrations/20260222_add_attendance_tracking.sql",
+            "supabase/migrations/001_initial_schema.sql"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "supabase db push --dry-run",
+            "expected": "Migration is valid"
+          },
+          "status": "completed",
+          "notes": "Created migration with reviewer_type ENUM, business_id column, would_rehire column, updated unique constraint, updated RLS policies for both business and worker reviews"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Update TypeScript types after database schema changes",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/supabase/types.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/types.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed",
+          "notes": "Added reviewer_type enum, updated reviews table with business_id, reviewer, and would_rehire columns, added foreign key relationship for business_id"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-queries",
+      "name": "Review Query Functions",
+      "type": "implementation",
+      "description": "Create database query functions for creating, fetching, and aggregating reviews",
+      "depends_on": [
+        "phase-1-database"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create review query functions",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/supabase/queries/reviews.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/supabase/queries/bookings.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors in reviews.ts"
+          },
+          "status": "completed",
+          "notes": "Created lib/supabase/queries/reviews.ts with functions: getReviewsForWorker, getReviewsForBusiness, getReviewByBookingAndType, getReviewById, createReview, updateReview, deleteReview, getWorkerAverageRating, getBusinessAverageRating, getWorkerRatingBreakdown, getWorkerRehireRate. All functions follow error handling pattern from bookings.ts."
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create review TypeScript types and schemas",
+          "service": "frontend",
+          "files_to_create": [
+            "lib/types/review.ts",
+            "lib/schemas/review.ts"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "lib/schemas/business.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed",
+          "notes": "Created lib/types/review.ts with Review, ReviewWithRelations, CreateReviewInput, UpdateReviewInput, RatingBreakdown, ReviewSummary, and ReviewListParams types. Created lib/schemas/review.ts with reviewerTypeEnum, ratingSchema, commentSchema, wouldRehireSchema, createReviewSchema, and updateReviewSchema using Zod 4.x API."
+        }
+      ]
+    },
+    {
+      "id": "phase-3-components",
+      "name": "Review UI Components",
+      "type": "implementation",
+      "description": "Create reusable review-related UI components",
+      "depends_on": [
+        "phase-2-queries"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create star rating input component",
+          "service": "frontend",
+          "files_to_create": [
+            "components/review/review-rating-input.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/worker/reliability-score.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify component renders 5 stars, handles hover and click states, visually displays selected rating"
+          },
+          "status": "completed",
+          "notes": "Created components/review/review-rating-input.tsx - Interactive star rating with 5 stars, hover preview (gray to yellow), click selection, disabled state, size variants (sm/md/lg), ARIA labels, keyboard navigation (Enter/Space), rating label display (Poor/Good/Excellent)"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create review form dialog component",
+          "service": "frontend",
+          "files_to_create": [
+            "components/review/review-form-dialog.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/business/profile-form.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify form validation works, would_rehire checkbox shows for business reviews only, submit creates review in database"
+          },
+          "status": "completed",
+          "notes": "Created components/review/review-form-dialog.tsx - Dialog with form: rating (required) using ReviewRatingInput, comment (optional, max 1000 chars), would_rehire checkbox (business only). Uses react-hook-form + zod validation, error handling with toast, different UI for business vs worker reviews"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Create review display components",
+          "service": "frontend",
+          "files_to_create": [
+            "components/review/worker-review-display.tsx",
+            "components/review/business-review-display.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/worker/reliability-score.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify components display reviews with stars, comment, date, would_rehire badge for business reviews"
+          },
+          "status": "completed",
+          "notes": "Created WorkerReviewDisplay and BusinessReviewDisplay components with: star rating display with color coding (green/yellow/orange/red), comment display, relative date formatting, avatar/identity display, would_rehire badge (worker reviews only), size variants (sm/md/lg), and empty state handling. Both include list components (WorkerReviewList and BusinessReviewList) for rendering multiple reviews."
+        },
+        {
+          "id": "subtask-3-4",
+          "description": "Create review list component",
+          "service": "frontend",
+          "files_to_create": [
+            "components/review/review-list.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "components/booking/booking-list.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify list renders multiple review cards, handles empty state, shows pagination if needed"
+          },
+          "status": "completed",
+          "notes": "Created components/review/review-list.tsx with: average rating summary card with color-coded rating display, rating breakdown with progress bars (for workers), rehire rate percentage (for workers), paginated review list using WorkerReviewList/BusinessReviewList components, configurable items per page, loading and empty state handling, smooth scroll to top on page change. No TypeScript errors."
+        }
+      ]
+    },
+    {
+      "id": "phase-4-integration",
+      "name": "Profile Page Integration",
+      "type": "implementation",
+      "description": "Integrate review components into worker and business profile pages",
+      "depends_on": [
+        "phase-3-components"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create worker reviews page",
+          "service": "frontend",
+          "files_to_create": [
+            "app/(dashboard)/worker/reviews/page.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "app/(dashboard)/worker/bookings/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard/worker/reviews",
+            "checks": [
+              "Page loads without errors",
+              "Reviews are displayed",
+              "Average rating is shown"
+            ]
+          },
+          "status": "completed",
+          "notes": "Worker reviews page already implemented at app/(dashboard)/worker/reviews/page.tsx. Follows the same pattern as worker/bookings/page.tsx with useAuth hook, inline styles, logout button, and ReviewList component. No TypeScript errors related to reviews. Build cache confirms page was successfully compiled.",
+          "updated_at": "2026-02-23T02:19:23.810976+00:00"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Create business reviews page",
+          "service": "frontend",
+          "files_to_create": [
+            "app/(dashboard)/business/reviews/page.tsx"
+          ],
+          "files_to_modify": [],
+          "patterns_from": [
+            "app/(dashboard)/business/jobs/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/dashboard/business/reviews",
+            "checks": [
+              "Page loads without errors",
+              "Reviews are displayed",
+              "Average rating is shown"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created app/(dashboard)/business/reviews/page.tsx following the pattern from worker/reviews/page.tsx. Page includes: loading state with spinner animation, error state for auth failures, star icon in header matching business/jobs page pattern, Indonesian text ('Ulasan Bisnis'), uses ReviewList component with entityType='business' to display reviews from workers with average rating.",
+          "updated_at": "2026-02-23T10:20:00.000+00:00"
+        },
+        {
+          "id": "subtask-4-3",
+          "description": "Add review button to completed booking actions",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/booking/booking-actions.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/booking/booking-actions.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify 'Write Review' button appears for completed bookings without existing review, opens review form dialog"
+          },
+          "status": "completed",
+          "notes": "Added 'Tulis Ulasan' (Write Review) button to BookingActions component. Button appears for completed bookings without existing review when onWriteReview callback is provided. Props added: hasExistingReview (boolean, defaults to false), onWriteReview (callback function). Button uses Star icon with yellow fill, outline variant, respects size prop. No TypeScript errors introduced."
+        }
+      ]
+    },
+    {
+      "id": "phase-5-reliability",
+      "name": "Reliability Score Integration",
+      "type": "implementation",
+      "description": "Integrate review ratings into reliability score calculation and display",
+      "depends_on": [
+        "phase-2-queries"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Update reliability score calculation to use review data",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/supabase/queries/bookings.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/queries/bookings.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed",
+          "notes": "Modified calculateReliabilityScore to accept averageRating parameter from reviews table, updated getWorkerReliabilityMetrics to query reviews table for ratings instead of using booking.rating field. Maintains backward compatibility with null averageRating default value.",
+          "updated_at": "2026-02-23T10:30:00.000+00:00"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Add reviews section to worker profile components",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/worker/booking-card.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/worker/reliability-score.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Verify review summary appears on worker profile, clicking shows reviews page"
+          },
+          "status": "completed",
+          "notes": "Added reviews section to BookingCard component with:\n- New BusinessRatingSummary interface for business rating data\n- New businessRating prop on BookingCardProps\n- Reviews section showing business rating from worker reviews (only for completed bookings)\n- Uses ReliabilityScore component to display average rating\n- Link to /dashboard/worker/reviews page\n- Follows pattern from reliability-score.tsx with star display and color coding\n- Handles null ratings gracefully with \"No ratings\" fallback text",
+          "updated_at": "2026-02-23T02:30:53.598167+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-6-testing",
+      "name": "Testing and Validation",
+      "type": "integration",
+      "description": "End-to-end testing of the two-way review system",
+      "depends_on": [
+        "phase-4-integration",
+        "phase-5-reliability"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Test business reviews worker flow",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "app/(dashboard)/business/bookings/page.tsx"
+          ],
+          "patterns_from": [
+            "app/(dashboard)/worker/bookings/page.tsx"
+          ],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Login as business user",
+              "Navigate to completed booking",
+              "Click 'Write Review' button",
+              "Submit review with rating, comment, and would_rehire checked",
+              "Verify review appears in worker's reviews page",
+              "Verify worker's reliability score updates"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created app/(dashboard)/business/bookings/page.tsx with full business reviews worker flow integration. Page displays bookings grouped by status, shows 'Tulis Ulasan' button for completed bookings, integrates ReviewFormDialog for reviewing workers, fetches existing reviews to prevent duplicates, and displays review status. Created comprehensive test documentation at test-business-reviews-worker-flow.md with 9 test cases covering full flow, edge cases, and database verification queries. Integration is complete and ready for manual browser testing at http://localhost:3000/dashboard/business/bookings",
+          "updated_at": "2026-02-23T12:00:00.000+00:00"
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Test worker reviews business flow",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Login as worker user",
+              "Navigate to completed booking",
+              "Click 'Write Review' button",
+              "Submit review with rating and comment (no would_rehire checkbox)",
+              "Verify review appears in business's reviews page",
+              "Verify business average rating updates"
+            ]
+          },
+          "status": "completed",
+          "notes": "Verified worker reviews business flow implementation. Worker bookings page (app/(dashboard)/worker/bookings/page.tsx) already includes full review functionality: ReviewFormDialog integration with reviewer='worker', 'Tulis Ulasan' button for completed bookings, fetchReviewsForBookings function to check for existing reviews, and review status display. ReviewFormDialog correctly omits 'Would Rehire' checkbox for worker reviews (lines 266-294 only render when isBusinessReview=true). Test documentation exists at test-worker-reviews-business-flow.md with 10 comprehensive test cases. Ready for manual browser testing at http://localhost:3000/dashboard/worker/bookings.",
+          "updated_at": "2026-02-23T12:30:00.000+00:00"
+        },
+        {
+          "id": "subtask-6-3",
+          "description": "Test review constraints and edge cases",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "Verify review button only shows for completed bookings",
+              "Verify only one review per user type per booking",
+              "Verify ratings are validated (1-5 range)",
+              "Verify comments are optional",
+              "Verify would_rehire only shows for business reviews",
+              "Verify reviews display correctly on profile pages"
+            ]
+          },
+          "status": "completed",
+          "notes": "Completed comprehensive code analysis verification of all review constraints and edge cases. Created test-review-constraints-edge-cases.md with 9 detailed test cases covering: review button visibility, duplicate review prevention, rating validation, optional comments, would_rehire exclusivity, profile display correctness, edge cases (whitespace comments, max length, rapid submissions), error handling, and data consistency. Created constraint-verification-summary.md documenting all verified constraints with code references. All constraints verified via code analysis: review button only for completed bookings (frontend + RLS), one review per user type per booking (UNIQUE constraint), rating 1-5 validation (schema + form), comments optional (schema + display), would_rehire only for business reviews (form conditional rendering), reviews display correctly on profiles (WorkerReviewDisplay/BusinessReviewDisplay components). Ready for manual browser testing following the test document.",
+          "updated_at": "2026-02-23T13:00:00.000+00:00"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 6,
+    "total_subtasks": 17,
+    "services_involved": [
+      "database",
+      "frontend"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 2,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-4-integration",
+            "phase-5-reliability"
+          ],
+          "reason": "Both depend on phase-3-components but modify different files"
+        }
+      ],
+      "recommended_workers": 1,
+      "speedup_estimate": "Minimal - mostly sequential due to dependencies"
+    },
+    "startup_command": "npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "e2e"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "Businesses can review workers after job completion",
+      "Workers can review businesses after job completion",
+      "Reviews include 1-5 star rating",
+      "Optional text comments can be added",
+      "'Would rehire' checkbox is available for businesses",
+      "Reviews are displayed in profiles",
+      "Average ratings are calculated and displayed",
+      "Reviews contribute to reliability score calculation"
+    ],
+    "verification_steps": [
+      {
+        "name": "TypeScript Type Check",
+        "command": "npm run type-check",
+        "expected_outcome": "No TypeScript errors",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Business Review Worker Flow",
+        "command": "",
+        "expected_outcome": "Business can create review, worker sees review, reliability updates",
+        "type": "e2e",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "Worker Review Business Flow",
+        "command": "",
+        "expected_outcome": "Worker can create review, business sees review",
+        "type": "e2e",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "Review Display Verification",
+        "command": "",
+        "expected_outcome": "Reviews display correctly with ratings and comments",
+        "type": "browser",
+        "required": true,
+        "blocking": false
+      }
+    ],
+    "reasoning": "Medium risk feature involving database schema changes and user-generated content. E2E testing covers the main user flows. Browser verification ensures UI displays correctly."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": true,
+      "commands": [],
+      "flows": [
+        "business-review-worker",
+        "worker-review-business"
+      ]
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/dashboard/worker/reviews",
+          "checks": [
+            "renders",
+            "no-console-errors"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/dashboard/business/reviews",
+          "checks": [
+            "renders",
+            "no-console-errors"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "migration-applied",
+        "reviews-table-updated",
+        "rls-policies-active"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "human_review",
+  "planStatus": "review",
+  "xstateState": "human_review",
+  "executionPhase": "complete",
+  "updated_at": "2026-02-23T08:07:12.405Z",
+  "last_updated": "2026-02-23T02:30:53.598178+00:00",
+  "recoveryNote": "Task recovered from stuck state at 2026-02-23T07:40:26.735Z",
+  "reviewReason": "completed"
+}

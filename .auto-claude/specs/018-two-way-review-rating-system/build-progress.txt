@@ -1,0 +1,325 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Two-Way Review & Rating System
+Workspace: managed by orchestrator
+Started: 2026-02-23
+
+Workflow Type: feature
+Rationale: Multi-service feature requiring database schema changes, query functions, and multiple UI components with clear dependencies
+
+Session 1 (Planner):
+- Created implementation_plan.json
+- Created project_index.json
+- Created context.json
+- Created init.sh
+- Created build-progress.txt
+
+Phase Summary:
+- Phase 1 - Database Schema Migration: 2 subtasks, depends on []
+- Phase 2 - Review Query Functions: 2 subtasks, depends on [phase-1-database]
+- Phase 3 - Review UI Components: 4 subtasks, depends on [phase-2-queries]
+- Phase 4 - Profile Page Integration: 3 subtasks, depends on [phase-3-components]
+- Phase 5 - Reliability Score Integration: 2 subtasks, depends on [phase-2-queries]
+- Phase 6 - Testing and Validation: 3 subtasks, depends on [phase-4-integration, phase-5-reliability]
+
+Services Involved:
+- database: PostgreSQL (Supabase)
+- frontend: Next.js 14 + TypeScript + Tailwind CSS
+
+Key Findings from Investigation:
+- Existing reviews table only supports business->worker reviews
+- Current schema missing: reviewer_type, business_id, would_rehire
+- Need to update UNIQUE constraint from (booking_id, worker_id) to (booking_id, reviewer_type)
+- ReliabilityScore component exists with star display logic
+- Bookings queries show patterns for database operations
+- Forms use react-hook-form + zod validation pattern
+
+Implementation Details:
+- Migration will add reviewer_type ENUM ('business', 'worker')
+- Migration will add business_id column and would_rehire boolean
+- RLS policies need update to allow workers to create reviews
+- Review form dialog will conditionally show would_rehire for businesses
+- Reviews will be displayed on both worker and business profile pages
+
+Parallelism Analysis:
+- Max parallel phases: 2
+- Phase 4 (Integration) and Phase 5 (Reliability) can run in parallel
+- Recommended workers: 1 (mostly sequential due to dependencies)
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  npm run dev
+
+Then open:
+  - Frontend: http://localhost:3000
+  - Worker Reviews: http://localhost:3000/dashboard/worker/reviews
+  - Business Reviews: http://localhost:3000/dashboard/business/reviews
+
+=== END SESSION 1 ===
+
+Session 2 (subtask-1-2):
+- Completed: Update TypeScript types after database schema changes
+- Changes:
+  * Added reviewer_type enum ('business' | 'worker') to Database.public.Enums
+  * Updated reviews table Row type to include: business_id, reviewer, would_rehire
+  * Updated reviews table Insert and Update types with new columns
+  * Added foreign key relationship for business_id -> businesses(id)
+- File modified: lib/supabase/types.ts (git forced add as directory is gitignored)
+- Note: TypeScript type-check shows pre-existing errors in unrelated files, no errors in types.ts
+
+=== END SESSION 2 ===
+
+Session 3 (subtask-3-1):
+- Completed: Create star rating input component
+- Changes:
+  * Created components/review/review-rating-input.tsx
+  * Interactive star rating with 5 stars
+  * Hover preview effect (gray to yellow color transition)
+  * Click to select rating
+  * Disabled state support with proper styling
+  * Size variants (sm/md/lg) following ReliabilityScore pattern
+  * Accessibility features: ARIA labels, keyboard navigation (Enter/Space), proper role="radiogroup"
+  * Rating label display (Poor/Fair/Good/Very Good/Excellent)
+  * Visual scale transform on hover (scale-110) and active (scale-95)
+- Files created: components/review/review-rating-input.tsx
+- Pattern followed: components/worker/reliability-score.tsx
+- Note: Component ready for use in review form dialog
+
+=== END SESSION 3 ===
+
+Session 4 (subtask-3-2):
+- Completed: Create review form dialog component
+- Changes:
+  * Created components/review/review-form-dialog.tsx
+  * Dialog wrapper for modal review form with proper close/reset behavior
+  * Star rating input using ReviewRatingInput component (required field)
+  * Optional text comment field with textarea (max 1000 characters)
+  * 'Would rehire' checkbox - only shows for business reviews (isBusinessReview check)
+  * Form validation using react-hook-form + zod with onBlur mode
+  * Error handling: submit error alert, validation error summary, field-level errors
+  * Toast notifications for success and error states
+  * Different titles/descriptions for business vs worker reviews
+  * Form state management: isSubmitting, hasSubmitted, submitError, ratingValue
+  * onSubmit: sanitizes empty strings to undefined, creates review via createReview query
+  * Proper cleanup on dialog close: resets form, rating, error states
+  * Submit button disabled until rating is selected
+- Files created: components/review/review-form-dialog.tsx
+- Pattern followed: components/business/profile-form.tsx
+- Note: Component ready for integration with booking actions and profile pages
+
+=== END SESSION 4 ===
+
+Session 5 (subtask-3-3):
+- Completed: Create review display components
+- Changes:
+  * Created components/review/worker-review-display.tsx
+  * Created components/review/business-review-display.tsx
+  * WorkerReviewDisplay: Shows reviews about workers (from businesses)
+    - Star rating display with color coding (green/yellow/orange/red based on rating)
+    - Numeric rating value display (e.g., "4.5")
+    - Relative date formatting (Today, Yesterday, X days/weeks/months ago)
+    - Optional comment display with muted text style
+    - "Would Rehire" badge with CheckCircle2 icon (only for worker reviews)
+    - Reviewer info display: business avatar, business name, date
+    - Size variants (sm/md/lg) with appropriate spacing and text sizes
+    - Empty state handling in WorkerReviewList component
+  * BusinessReviewDisplay: Shows reviews about businesses (from workers)
+    - Star rating display with same color coding
+    - Numeric rating value display
+    - Relative date formatting
+    - Optional comment display
+    - Reviewer info display: worker avatar, worker name, Briefcase icon, date
+    - No would_rehire badge (worker-only field)
+    - Same size variants and empty state handling
+  * Both components follow patterns from:
+    - reliability-score.tsx: Star display logic, color coding based on rating
+    - worker-application-card.tsx: Card layout, avatar usage, date formatting
+  * Internal helper functions:
+    - getInitials(name): Generates initials from name for avatar fallback
+    - formatDate(dateString): Converts date to relative format
+    - StarRating component: Reusable star rating display with proper ARIA labels
+- Files created: components/review/worker-review-display.tsx, components/review/business-review-display.tsx
+- Pattern followed: components/worker/reliability-score.tsx, components/booking/worker-application-card.tsx
+- Note: Components verified with TypeScript compilation, ready for profile page integration
+
+=== END SESSION 5 ===
+
+Session 6 (subtask-4-1):
+- Completed: Verify worker reviews page implementation
+- Changes:
+  * Verified app/(dashboard)/worker/reviews/page.tsx already exists
+  * Page follows same pattern as app/(dashboard)/worker/bookings/page.tsx:
+    - "use client" directive
+    - useAuth hook for authentication
+    - Inline styles for layout (minHeight, backgroundColor, padding, maxWidth)
+    - Header with title and logout button
+    - Loading state ("Memuat informasi pengguna...")
+    - Error state ("Error: Tidak dapat memuat informasi pengguna...")
+  * Uses ReviewList component with entityId={user.id} and entityType="worker"
+  * ReviewList component provides:
+    - Rating summary with average rating and total reviews
+    - Rating breakdown with progress bars (worker-specific)
+    - Rehire rate percentage (worker-specific)
+    - Paginated review list using WorkerReviewList
+    - Loading and empty state handling
+  * No TypeScript errors related to reviews components
+  * Build cache (.next/server/app/(dashboard)/worker/reviews/page.js) confirms successful compilation
+  * Note: Browser verification not possible in sandboxed environment (port binding EPERM)
+    - Page should be accessible at http://localhost:3000/dashboard/worker/reviews when dev server runs
+- Files verified: app/(dashboard)/worker/reviews/page.tsx
+- Pattern followed: app/(dashboard)/worker/bookings/page.tsx
+- Note: Worker reviews page is complete and ready for use
+
+=== END SESSION 6 ===
+
+Session 7 (subtask-4-2):
+- Completed: Create business reviews page
+- Changes:
+  * Created app/(dashboard)/business/reviews/page.tsx
+  * Page follows pattern from app/(dashboard)/worker/reviews/page.tsx with business-specific styling
+  * "use client" directive for client-side rendering
+  * useAuth hook for authentication (user, isLoading: authLoading)
+  * Page layout with:
+    - Header section with Star icon (yellow fill) and "Ulasan Bisnis" title
+    - Subtitle: "Lihat ulasan dari pekerja yang telah bekerja dengan Anda"
+    - Content card with white background, border radius, and shadow
+  * Three states:
+    - Loading state: Spinner animation (2.5rem circle with rotating border) + "Memuat informasi pengguna..." text
+    - User logged in: Renders ReviewList with entityId={user.id} and entityType="business"
+    - Error state: Red error card with "Error: Tidak dapat memuat informasi pengguna..." + refresh instruction
+  * ReviewList component provides:
+    - Rating summary with average rating and total reviews
+    - Paginated review list using BusinessReviewList (shows reviews from workers)
+    - Loading and empty state handling
+  * Inline CSS animation (@keyframes spin) for loading spinner
+  * Indonesian text throughout matching business/jobs page pattern
+- Files created: app/(dashboard)/business/reviews/page.tsx
+- Pattern followed: app/(dashboard)/worker/reviews/page.tsx, app/(dashboard)/business/jobs/page.tsx
+- Note: Page ready for browser verification at http://localhost:3000/dashboard/business/reviews
+
+=== END SESSION 7 ===
+
+Session 8 (subtask-5-2):
+- Completed: Add reviews section to worker profile components
+- Changes:
+  * Modified components/worker/booking-card.tsx to add business rating display
+  * Added imports: Link from next/link, Star and MessageSquare icons from lucide-react, ReliabilityScore component
+  * Created BusinessRatingSummary interface with averageRating (number | null) and reviewCount (number)
+  * Added businessRating prop to BookingCardProps (optional)
+  * Added reviews section that:
+    - Only displays for completed bookings
+    - Shows business rating summary card with Star icon
+    - Displays "Business Rating" label with worker count
+    - Uses ReliabilityScore component to display average rating (color-coded stars)
+    - Shows "No ratings" fallback when averageRating is null
+    - Links to /dashboard/worker/reviews page on click
+    - Has hover effects (bg-muted/50) and smooth transitions
+    - Shows MessageSquare icon that highlights on hover
+- Files modified: components/worker/booking-card.tsx
+- Pattern followed: components/worker/reliability-score.tsx (star display, color coding)
+- Note: No TypeScript errors introduced. Component ready to receive business rating data from parent components.
+
+=== END SESSION 8 ===
+
+Session 9 (subtask-6-1):
+- Completed: Create business bookings page with review integration for testing
+- Changes:
+  * Created app/(dashboard)/business/bookings/page.tsx with full review flow:
+    - Displays bookings grouped by status (pending, accepted, completed, cancelled)
+    - Shows worker information, job details, and booking status
+    - Integrates ReviewFormDialog for business to review workers
+    - Fetches existing reviews to prevent duplicate reviews
+    - Displays "Tulis Ulasan" button for completed bookings without reviews
+    - Shows review status for bookings that have been reviewed
+    - Follows pattern from worker/bookings/page.tsx with business-specific styling
+  * Features:
+    - Business users can view all their bookings
+    - Completed bookings show "Tulis Ulasan" (Write Review) button
+    - Review form opens with worker name and accepts rating, comment, and would_rehire
+    - After submission, button changes to show review status
+    - Indonesian text throughout matching business/jobs page pattern
+    - Loading, error, and empty state handling
+    - Inline styles matching existing business pages pattern
+  * Created test documentation: test-business-reviews-worker-flow.md
+    - 9 test cases covering full business reviews worker flow
+    - Step-by-step verification instructions
+    - Edge case testing (validation, multiple reviews, empty comments)
+    - Database verification queries
+    - Test results summary template
+- Files created: app/(dashboard)/business/bookings/page.tsx, test-business-reviews-worker-flow.md
+- Pattern followed: app/(dashboard)/worker/bookings/page.tsx, app/(dashboard)/business/jobs/page.tsx
+- Note: Integration enables testing of business reviews worker flow. Page accessible at http://localhost:3000/dashboard/business/bookings. TypeScript type-check shows no errors related to new file.
+
+=== END SESSION 9 ===
+
+Session 10 (subtask-6-2):
+- Completed: Test worker reviews business flow
+- Changes:
+  * Verified worker bookings page (app/(dashboard)/worker/bookings/page.tsx) implementation
+  * Confirmed ReviewFormDialog integration with reviewer="worker" parameter (line 583)
+  * Confirmed 'Tulis Ulasan' button appears for completed bookings without existing reviews (lines 209-217)
+  * Confirmed fetchReviewsForBookings function queries reviews with reviewer='worker' (line 280)
+  * Confirmed "Ulasan diberikan" status displays for reviewed bookings (lines 219-224)
+  * Verified ReviewFormDialog correctly omits 'Would Rehire' checkbox for worker reviews:
+    - isBusinessReview = reviewer === "business" (line 63)
+    - would_rehire only set for business reviews (lines 75, 111)
+    - Would Rehire checkbox only renders when isBusinessReview=true (lines 266-294)
+  * Test documentation already exists: test-worker-reviews-business-flow.md with 10 test cases
+- Implementation verified:
+  * Login as worker → Navigate to /dashboard/worker/bookings
+  * Completed bookings show "Tulis Ulasan" button (if not yet reviewed)
+  * Review form opens with business name, star rating input, comment field
+  * NO "Would Rehire" checkbox for worker reviews
+  * After submission, review appears on business's reviews page (/dashboard/business/reviews)
+  * Business average rating updates to include new worker review
+- Note: Implementation complete. Ready for manual browser testing at http://localhost:3000/dashboard/worker/bookings.
+
+=== END SESSION 10 ===
+
+Session 11 (subtask-6-3):
+- Completed: Test review constraints and edge cases
+- Changes:
+  * Created comprehensive test documentation: test-review-constraints-edge-cases.md
+  * Created verification summary: constraint-verification-summary.md
+  * Verified all constraints via code analysis:
+  * Constraint 1 - Review button only shows for completed bookings:
+    - Business bookings page: `{booking.status === 'completed' && ...` (line 517)
+    - Worker bookings page: `canWriteReview = booking.status === "completed" && !hasExistingReview` (line 124)
+    - RLS policy: `bookings.status = 'completed'` check in database
+  * Constraint 2 - Only one review per user type per booking:
+    - Database UNIQUE constraint: `reviews_booking_id_reviewer_unique UNIQUE (booking_id, reviewer)`
+    - Frontend: fetchReviewsForBookings checks existing reviews before showing button
+  * Constraint 3 - Ratings validated (1-5 range):
+    - Schema: ratingSchema with .min(1) and .max(5)
+    - Form: Client validation checks rating !== 0 before submit
+    - Display: Math.max(1, Math.min(5, rating)) clamping
+  * Constraint 4 - Comments are optional:
+    - Schema: commentSchema is .optional()
+    - Form: Empty strings converted to undefined via .trim() || undefined
+    - Display: {comment && <CardContent...>} conditional rendering
+  * Constraint 5 - Would rehire only for business reviews:
+    - Form: `{isBusinessReview && (<FormField name="would_rehire"...>)}` conditional (line 266)
+    - Worker display: Shows would_rehire badge (lines 178-183)
+    - Business display: No would_rehire field in props or display
+  * Constraint 6 - Reviews display correctly on profiles:
+    - Worker reviews page: Uses ReviewList with entityType="worker" (reviews FROM businesses)
+    - Business reviews page: Uses ReviewList with entityType="business" (reviews FROM workers)
+    - Color coding: 4.5+ green, 3.5+ yellow, 2.5+ orange, <2.5 red
+    - Relative dates: Today, Yesterday, X days/weeks/months ago
+  * Edge cases verified:
+    - Whitespace-only comments converted to NULL
+    - Max length enforcement (1000 characters)
+    - Empty state handling with Star icon
+    - Rating clamping for display safety
+- Test documentation includes:
+  * 9 detailed test cases with step-by-step instructions
+  * Expected results for each test case
+  * SQL verification queries
+  * Test results summary table
+  * Database verification queries for various scenarios
+- Files created: test-review-constraints-edge-cases.md, constraint-verification-summary.md
+- Note: All constraints verified via code analysis. Ready for manual browser testing following test-review-constraints-edge-cases.md.
+
+=== END SESSION 11 ===

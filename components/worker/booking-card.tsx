@@ -1,13 +1,15 @@
 "use client"
 
 import * as React from "react"
-import { Calendar, Clock, MapPin, DollarSign, Building2, CheckCircle } from "lucide-react"
+import { Calendar, Clock, MapPin, DollarSign, Building2, CheckCircle, Star, MessageSquare } from "lucide-react"
+import Link from "next/link"
 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { BookingStatusBadge, type BookingStatus } from "@/components/worker/booking-status-badge"
 import { CancelBookingDialog } from "@/components/worker/cancel-booking-dialog"
+import { ReliabilityScore } from "@/components/worker/reliability-score"
 
 export interface BookingJob {
   id: string
@@ -20,6 +22,11 @@ export interface BookingBusiness {
   id: string
   name: string
   is_verified: boolean
+}
+
+export interface BusinessRatingSummary {
+  averageRating: number | null
+  reviewCount: number
 }
 
 export interface Booking {
@@ -38,6 +45,7 @@ export interface Booking {
 export interface BookingCardProps {
   booking: Booking
   onCancel?: (bookingId: string) => void | Promise<void>
+  businessRating?: BusinessRatingSummary
 }
 
 function formatPrice(price: number): string {
@@ -72,7 +80,7 @@ function mapBookingStatus(
   return status as BookingStatus
 }
 
-function BookingCard({ booking, onCancel }: BookingCardProps) {
+function BookingCard({ booking, onCancel, businessRating }: BookingCardProps) {
   const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false)
   const [isCancelling, setIsCancelling] = React.useState(false)
 
@@ -114,6 +122,41 @@ function BookingCard({ booking, onCancel }: BookingCardProps) {
             <p className="text-sm text-muted-foreground line-clamp-2">
               {booking.job.description}
             </p>
+          )}
+
+          {/* Reviews Section - shows business rating from worker reviews */}
+          {businessRating && booking.status === "completed" && (
+            <Link
+              href="/dashboard/worker/reviews"
+              className="block group"
+            >
+              <div className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-muted/30 hover:bg-muted/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
+                    <Star className="h-5 w-5 fill-yellow-500 text-yellow-500 dark:fill-yellow-400 dark:text-yellow-400" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-medium">Business Rating</p>
+                    <p className="text-xs text-muted-foreground">
+                      From {businessRating.reviewCount} {businessRating.reviewCount === 1 ? 'worker' : 'workers'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {businessRating.averageRating !== null ? (
+                    <ReliabilityScore
+                      score={businessRating.averageRating}
+                      showValue={true}
+                      showLabel={false}
+                      size="sm"
+                    />
+                  ) : (
+                    <span className="text-sm text-muted-foreground">No ratings</span>
+                  )}
+                  <MessageSquare className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
+              </div>
+            </Link>
           )}
 
           <div className="flex flex-col gap-2 text-sm">
