@@ -1,23 +1,46 @@
 {
   "active": true,
-  "spec": "030-skill-badges-certifications",
+  "spec": "031-multi-language-support-indonesian-english",
   "state": "building",
   "subtasks": {
-    "completed": 16,
-    "total": 17,
+    "completed": 29,
+    "total": 31,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
     "current": "Integration & Polish",
     "id": null,
-    "total": 3
+    "total": 5
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
+    "number": 19,
+    "started_at": "2026-02-25T00:48:20.367590"
+  },
+  "last_update": "2026-02-25T01:31:13.651231"
+}
+    "in_progress": 1,
+    "failed": 0
+  },
+  "phase": {
+    "current": "Integration & Polish",
+    "id": null,
+<<<<<<< HEAD
+    "total": 3
+=======
+    "total": 5
+>>>>>>> auto-claude/031-multi-language-support-indonesian-english
+  },
+  "workers": {
+    "active": 0,
+    "max": 1
+  },
+  "session": {
+<<<<<<< HEAD
     "number": 18,
     "started_at": "2026-02-24T23:25:08.810344"
   },
@@ -51,4 +74,10 @@
   },
   "last_update": "2026-02-25T00:26:01.223722"
 >>>>>>> auto-claude/030-skill-badges-certifications
+=======
+    "number": 31,
+    "started_at": "2026-02-24T23:55:22.765652"
+  },
+  "last_update": "2026-02-25T01:39:13.872560"
+>>>>>>> auto-claude/031-multi-language-support-indonesian-english
 }

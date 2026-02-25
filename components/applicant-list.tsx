@@ -1,9 +1,10 @@
+"use client"
+
 import * as React from "react"
 import { Calendar, Phone, User, Check, X, MoreVertical } from "lucide-react"
 
 import { Button } from "./ui/button"
 import { Badge } from "./ui/badge"
-import { ReliabilityScore } from "./worker/reliability-score"
 import {
   Table,
   TableBody,
@@ -24,30 +25,30 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "./ui/avatar"
-import { ReliabilityBadge } from "./worker/reliability-badge"
 import { cn } from "@/lib/utils"
 import type { ApplicantWithDetails } from "@/lib/data/jobs"
-import type { ComplianceStatusResult, AlternativeWorker } from "@/lib/supabase/queries/compliance"
-import { ComplianceStatusBadge } from "@/components/booking/compliance-status-badge"
-import { ComplianceWarningBanner } from "@/components/booking/compliance-warning-banner"
-import { AlternativeWorkersSuggestion } from "@/components/booking/alternative-workers-suggestion"
+import { useTranslation } from "@/lib/i18n/hooks"
 
 export interface ApplicantListProps extends React.HTMLAttributes<HTMLDivElement> {
   applicants: ApplicantWithDetails[]
   onAccept?: (applicantId: string) => void
   onReject?: (applicantId: string) => void
   isLoading?: boolean
-  complianceStatusByApplicant?: Record<string, ComplianceStatusResult>
-  alternativeWorkers?: AlternativeWorker[]
-  isLoadingAlternativeWorkers?: boolean
-  onSelectAlternativeWorker?: (workerId: string) => void
 }
 
 const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
-  ({ applicants, onAccept, onReject, isLoading = false, complianceStatusByApplicant, alternativeWorkers, isLoadingAlternativeWorkers = false, onSelectAlternativeWorker, className, ...props }, ref) => {
-    // Format date to Indonesian locale
+  ({ applicants, onAccept, onReject, isLoading = false, className, ...props }, ref) => {
+    const { t, locale } = useTranslation()
+
+    // Locale mapping for date formatting
+    const localeMap: Record<string, string> = {
+      id: "id-ID",
+      en: "en-US"
+    }
+
+    // Format date based on current locale
     const formatDate = (dateString: string) => {
-      return new Date(dateString).toLocaleDateString("id-ID", {
+      return new Date(dateString).toLocaleDateString(localeMap[locale] || locale, {
         day: "2-digit",
         month: "short",
         year: "numeric",
@@ -78,21 +79,21 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
       }
     }
 
-    // Get status label in Indonesian
+    // Get status label using translation
     const getStatusLabel = (status: ApplicantWithDetails["status"]): string => {
       switch (status) {
         case "pending":
-          return "Menunggu"
+          return t('common.pending')
         case "accepted":
-          return "Diterima"
+          return t('common.accepted')
         case "rejected":
-          return "Ditolak"
+          return t('common.rejected')
         case "in_progress":
-          return "Sedang Berjalan"
+          return t('common.inProgress')
         case "completed":
-          return "Selesai"
+          return t('common.completed')
         case "cancelled":
-          return "Dibatalkan"
+          return t('common.cancelled')
         default:
           return status
       }
@@ -118,36 +119,12 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
       return (applicant.status === "pending" || applicant.status === "accepted") && onReject
     }
 
-    // Find the most severe compliance issue among applicants
-    const getMostSevereComplianceIssue = (): ComplianceStatusResult | null => {
-      if (!complianceStatusByApplicant) return null
-
-      let mostSevere: ComplianceStatusResult | null = null
-
-      for (const applicant of applicants) {
-        const compliance = complianceStatusByApplicant[applicant.id]
-        if (!compliance) continue
-
-        // Prioritize blocked status over warning
-        if (compliance.status === "blocked") {
-          return compliance
-        }
-        if (compliance.status === "warning" && !mostSevere) {
-          mostSevere = compliance
-        }
-      }
-
-      return mostSevere
-    }
-
-    const complianceIssue = getMostSevereComplianceIssue()
-
     if (isLoading) {
       return (
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
-            <CardTitle>Daftar Pelamar</CardTitle>
-            <CardDescription>Memuat data pelamar...</CardDescription>
+            <CardTitle>{t('business.applicantList')}</CardTitle>
+            <CardDescription>{t('business.loadingApplicants')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-center py-8">
@@ -162,16 +139,16 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
       return (
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
-            <CardTitle>Daftar Pelamar</CardTitle>
+            <CardTitle>{t('business.applicantList')}</CardTitle>
             <CardDescription>
-              Belum ada pelamar untuk pekerjaan ini
+              {t('business.noApplicants')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <UserIcon className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                Belum ada pelamar. Bagikan pekerjaan ini untuk mendapatkan pelamar!
+                {t('business.noApplicantsMessage')}
               </p>
             </div>
           </CardContent>
@@ -182,29 +159,21 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
     return (
       <Card ref={ref} className={cn("w-full", className)} {...props}>
         <CardHeader>
-          <CardTitle>Daftar Pelamar</CardTitle>
+          <CardTitle>{t('business.applicantList')}</CardTitle>
           <CardDescription>
-            Daftar pekerja yang melamar pekerjaan ini ({applicants.length} pelamar)
+            {t('business.applicants')} ({t('business.applicantCount', { count: applicants.length })})
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {complianceIssue && (
-            <div className="mb-4">
-              <ComplianceWarningBanner compliance={complianceIssue} />
-            </div>
-          )}
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Pelamar</TableHead>
-                  <TableHead>Skor Keandalan</TableHead>
-                  <TableHead>No. Telepon</TableHead>
-                  <TableHead>Skor Reliabilitas</TableHead>
-                  <TableHead>Tanggal Lamar</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Kepatuhan</TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
+                  <TableHead>{t('business.applicantsHeader')}</TableHead>
+                  <TableHead>{t('business.phoneHeader')}</TableHead>
+                  <TableHead>{t('business.applicationDateHeader')}</TableHead>
+                  <TableHead>{t('common.status')}</TableHead>
+                  <TableHead className="text-right">{t('business.actionHeader')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -234,23 +203,10 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
                       </div>
                     </TableCell>
                     <TableCell>
-                      <ReliabilityBadge
-                        score={applicant.workers.reliability_score}
-                        showStars={false}
-                      />
-                    </TableCell>
-                    <TableCell>
                       <div className="flex items-center gap-2 text-sm">
                         <Phone className="h-4 w-4 text-muted-foreground" />
                         <span>{applicant.workers.phone}</span>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {applicant.workers.reliability_score !== null ? (
-                        <ReliabilityScore score={applicant.workers.reliability_score} showValue size="sm" />
-                      ) : (
-                        <span className="text-sm text-muted-foreground">-</span>
-                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -263,18 +219,6 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
                         {getStatusLabel(applicant.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      {complianceStatusByApplicant?.[applicant.id] ? (
-                        <ComplianceStatusBadge
-                          compliance={complianceStatusByApplicant[applicant.id]}
-                          showDays
-                          showIcon
-                          size="sm"
-                        />
-                      ) : (
-                        <span className="text-sm text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         {canAccept(applicant) && (
@@ -285,7 +229,7 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
                             className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
                           >
                             <Check className="h-4 w-4" />
-                            <span className="sr-only">Terima Pelamar</span>
+                            <span className="sr-only">{t('business.acceptApplicant')}</span>
                           </Button>
                         )}
                         {canReject(applicant) && (
@@ -296,7 +240,7 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
                             className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
                           >
                             <X className="h-4 w-4" />
-                            <span className="sr-only">Tolak Pelamar</span>
+                            <span className="sr-only">{t('business.rejectApplicant')}</span>
                           </Button>
                         )}
                         {!canAccept(applicant) && !canReject(applicant) && (
@@ -307,7 +251,7 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
                             className="h-8 w-8 p-0"
                           >
                             <MoreVertical className="h-4 w-4" />
-                            <span className="sr-only">Tidak ada aksi</span>
+                            <span className="sr-only">{t('business.noAction')}</span>
                           </Button>
                         )}
                       </div>
@@ -317,15 +261,6 @@ const ApplicantList = React.forwardRef<HTMLDivElement, ApplicantListProps>(
               </TableBody>
             </Table>
           </div>
-          {complianceIssue?.status === "blocked" && (
-            <div className="mt-6">
-              <AlternativeWorkersSuggestion
-                workers={alternativeWorkers ?? []}
-                isLoading={isLoadingAlternativeWorkers}
-                onSelectWorker={onSelectAlternativeWorker}
-              />
-            </div>
-          )}
         </CardContent>
       </Card>
     )

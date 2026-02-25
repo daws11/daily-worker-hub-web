@@ -3,8 +3,10 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "../../providers/auth-provider"
+import { useTranslation } from "@/lib/i18n/hooks"
 
 export default function RegisterPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const { signUp, signInWithGoogle, isLoading } = useAuth()
   const [fullName, setFullName] = useState("")
@@ -39,13 +41,13 @@ export default function RegisterPage() {
         padding: '2rem'
       }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '1.5rem' }}>
-          Daftar Akun Baru
+          {t('auth.registerTitle')}
         </h1>
         
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-              Nama Lengkap
+              {t('auth.fullName')}
             </label>
             <input
               type="text"
@@ -58,14 +60,14 @@ export default function RegisterPage() {
                 borderRadius: '0.375rem',
                 outline: 'none'
               }}
-              placeholder="Budi Santoso"
+              placeholder={t('auth.fullNamePlaceholder')}
               required
             />
           </div>
           
           <div>
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-              Email
+              {t('auth.email')}
             </label>
             <input
               type="email"
@@ -78,14 +80,14 @@ export default function RegisterPage() {
                 borderRadius: '0.375rem',
                 outline: 'none'
               }}
-              placeholder="email@contoh.com"
+              placeholder={t('auth.emailPlaceholder')}
               required
             />
           </div>
           
           <div>
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-              Password
+              {t('auth.password')}
             </label>
             <input
               type="password"
@@ -98,14 +100,14 @@ export default function RegisterPage() {
                 borderRadius: '0.375rem',
                 outline: 'none'
               }}
-              placeholder="••••••"
+              placeholder={t('auth.passwordPlaceholder')}
               required
             />
           </div>
           
           <div>
             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-              Tipe Akun
+              {t('auth.accountType')}
             </label>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
@@ -117,9 +119,9 @@ export default function RegisterPage() {
                   onChange={(e) => setRole(e.target.value as "worker" | "business")}
                   style={{ cursor: 'pointer' }}
                 />
-                <span>Worker</span>
+                <span>{t('auth.worker')}</span>
               </label>
-              
+
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
                 <input
                   type="radio"
@@ -129,7 +131,7 @@ export default function RegisterPage() {
                   onChange={(e) => setRole(e.target.value as "worker" | "business")}
                   style={{ cursor: 'pointer' }}
                 />
-                <span>Business</span>
+                <span>{t('auth.business')}</span>
               </label>
             </div>
           </div>
@@ -148,7 +150,7 @@ export default function RegisterPage() {
               cursor: isLoading ? 'not-allowed' : 'pointer',
             }}
           >
-            {isLoading ? 'Mendaftar...' : 'Daftar'}
+            {isLoading ? t('auth.registering') : t('auth.register')}
           </button>
         </form>
 
@@ -196,9 +198,9 @@ export default function RegisterPage() {
         </button>
         
         <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.875rem', color: '#4b5563' }}>
-          Sudah punya akun?{' '}
+          {t('auth.hasAccount')}{' '}
           <a href="/login" style={{ color: '#2563eb', textDecoration: 'none' }}>
-            Masuk disini
+            {t('auth.loginHere')}
           </a>
         </p>
       </div>

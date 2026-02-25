@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Calendar, Clock, MapPin, CheckCircle, XCircle, AlertCircle } from "lucide-react"
+import { Calendar, Clock, MapPin, CheckCircle, XCircle, AlertCircle, TrendingUp } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import {
@@ -20,6 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "@/lib/i18n/hooks"
 import type { AttendanceWithRelations, AttendanceStats, LocationVerificationStatus } from "@/lib/types/attendance"
 
 export interface AttendanceHistoryProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -31,20 +32,22 @@ export interface AttendanceHistoryProps extends React.HTMLAttributes<HTMLDivElem
 
 const AttendanceHistory = React.forwardRef<HTMLDivElement, AttendanceHistoryProps>(
   ({ records, stats, isLoading = false, showStats = true, className, ...props }, ref) => {
-    // Format date to Indonesian locale
+    const { t, locale } = useTranslation()
+
+    // Format date to user's locale
     const formatDate = (dateString: string | null) => {
       if (!dateString) return "-"
-      return new Date(dateString).toLocaleDateString("id-ID", {
+      return new Date(dateString).toLocaleDateString(locale === "id" ? "id-ID" : "en-US", {
         day: "2-digit",
         month: "short",
         year: "numeric",
       })
     }
 
-    // Format time to Indonesian locale
+    // Format time to user's locale
     const formatTime = (dateString: string | null) => {
       if (!dateString) return "-"
-      return new Date(dateString).toLocaleTimeString("id-ID", {
+      return new Date(dateString).toLocaleTimeString(locale === "id" ? "id-ID" : "en-US", {
         hour: "2-digit",
         minute: "2-digit",
       })
@@ -58,7 +61,9 @@ const AttendanceHistory = React.forwardRef<HTMLDivElement, AttendanceHistoryProp
       const diffMs = end - start
       const hours = Math.floor(diffMs / (1000 * 60 * 60))
       const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
-      return `${hours}j ${minutes}m`
+      const hoursLabel = t("attendance.hours")
+      const minutesLabel = t("attendance.minutes")
+      return `${hours}${hoursLabel} ${minutes}${minutesLabel}`
     }
 
     // Get location verification badge variant
@@ -77,15 +82,15 @@ const AttendanceHistory = React.forwardRef<HTMLDivElement, AttendanceHistoryProp
       }
     }
 
-    // Get location verification label in Indonesian
+    // Get location verification label
     const getLocationLabel = (status: LocationVerificationStatus): string => {
       switch (status) {
         case "verified":
-          return "Terverifikasi"
+          return t("attendance.locationVerified")
         case "unverified":
-          return "Tidak Terverifikasi"
+          return t("attendance.locationUnverified")
         case "out_of_range":
-          return "Di Luar Jangkauan"
+          return t("attendance.locationOutOfRange")
         default:
           return status
       }
@@ -109,8 +114,8 @@ const AttendanceHistory = React.forwardRef<HTMLDivElement, AttendanceHistoryProp
       return (
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
-            <CardTitle>Riwayat Kehadiran</CardTitle>
-            <CardDescription>Memuat data kehadiran...</CardDescription>
+            <CardTitle>{t("attendance.attendanceHistory")}</CardTitle>
+            <CardDescription>{t("attendance.loadingAttendanceData")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-center py-8">
@@ -125,16 +130,16 @@ const AttendanceHistory = React.forwardRef<HTMLDivElement, AttendanceHistoryProp
       return (
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
-            <CardTitle>Riwayat Kehadiran</CardTitle>
+            <CardTitle>{t("attendance.attendanceHistory")}</CardTitle>
             <CardDescription>
-              Belum ada data kehadiran
+              {t("attendance.noAttendanceData")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <CalendarIcon className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground">
-                Belum ada riwayat kehadiran. Check in pada pekerjaan Anda untuk melihat riwayat di sini!
+                {t("attendance.noAttendanceHistory")}
               </p>
             </div>
           </CardContent>
@@ -145,9 +150,9 @@ const AttendanceHistory = React.forwardRef<HTMLDivElement, AttendanceHistoryProp
     return (
       <Card ref={ref} className={cn("w-full", className)} {...props}>
         <CardHeader>
-          <CardTitle>Riwayat Kehadiran</CardTitle>
+          <CardTitle>{t("attendance.attendanceHistory")}</CardTitle>
           <CardDescription>
-            Daftar kehadiran Anda ({records.length} record)
+            {t("bookings.myBookings")} ({records.length} {t("attendance.records")})
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -156,28 +161,28 @@ const AttendanceHistory = React.forwardRef<HTMLDivElement, AttendanceHistoryProp
               <div className="bg-muted/50 rounded-lg p-4">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Total Pekerjaan</span>
+                  <span className="text-sm text-muted-foreground">{t("attendance.totalJobs")}</span>
                 </div>
                 <p className="text-2xl font-bold mt-1">{stats.total_bookings}</p>
               </div>
               <div className="bg-muted/50 rounded-lg p-4">
                 <div className="flex items-center gap-2">
                   <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Hadir</span>
+                  <span className="text-sm text-muted-foreground">{t("attendance.present")}</span>
                 </div>
                 <p className="text-2xl font-bold mt-1">{stats.checked_in_bookings}</p>
               </div>
               <div className="bg-muted/50 rounded-lg p-4">
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Selesai</span>
+                  <span className="text-sm text-muted-foreground">{t("attendance.finished")}</span>
                 </div>
                 <p className="text-2xl font-bold mt-1">{stats.checked_out_bookings}</p>
               </div>
               <div className="bg-primary/10 rounded-lg p-4">
                 <div className="flex items-center gap-2">
-                  <TrendingUpIcon className="h-4 w-4 text-primary" />
-                  <span className="text-sm text-muted-foreground">Tingkat Kehadiran</span>
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  <span className="text-sm text-muted-foreground">{t("attendance.attendanceRate")}</span>
                 </div>
                 <p className="text-2xl font-bold mt-1 text-primary">{stats.attendance_rate}%</p>
               </div>
@@ -188,12 +193,12 @@ const AttendanceHistory = React.forwardRef<HTMLDivElement, AttendanceHistoryProp
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Tanggal</TableHead>
-                  <TableHead>Pekerjaan</TableHead>
-                  <TableHead>Check In</TableHead>
-                  <TableHead>Check Out</TableHead>
-                  <TableHead>Durasi</TableHead>
-                  <TableHead>Lokasi</TableHead>
+                  <TableHead>{t("attendance.date")}</TableHead>
+                  <TableHead>{t("attendance.job")}</TableHead>
+                  <TableHead>{t("attendance.checkIn")}</TableHead>
+                  <TableHead>{t("attendance.checkOut")}</TableHead>
+                  <TableHead>{t("attendance.duration")}</TableHead>
+                  <TableHead>{t("attendance.location")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -240,7 +245,7 @@ const AttendanceHistory = React.forwardRef<HTMLDivElement, AttendanceHistoryProp
                       ) : (
                         <Badge variant="outline" className="gap-1">
                           <AlertCircle className="h-3 w-3" />
-                          <span>Belum Check In</span>
+                          <span>{t("attendance.notCheckedIn")}</span>
                         </Badge>
                       )}
                     </TableCell>
@@ -273,25 +278,6 @@ function CalendarIcon({ className }: { className?: string }) {
       <line x1="16" x2="16" y1="2" y2="6" />
       <line x1="8" x2="8" y1="2" y2="6" />
       <line x1="3" x2="21" y1="10" y2="10" />
-    </svg>
-  )
-}
-
-// Helper component for the attendance rate icon
-function TrendingUpIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-      <polyline points="16 7 22 7 22 13" />
     </svg>
   )
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import {
   Select,
   SelectContent,
@@ -11,6 +11,7 @@ import {
 import { JobSortOption } from '@/lib/types/job'
 import { ArrowUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n/hooks'
 
 interface JobSortProps {
   value?: JobSortOption
@@ -18,15 +19,16 @@ interface JobSortProps {
   className?: string
 }
 
-const sortOptions: { value: JobSortOption; label: string }[] = [
-  { value: 'newest', label: 'Newest First' },
-  { value: 'oldest', label: 'Oldest First' },
-  { value: 'highest_wage', label: 'Highest Wage' },
-  { value: 'lowest_wage', label: 'Lowest Wage' },
-  { value: 'nearest', label: 'Nearest' },
-]
-
 export function JobSort({ value = 'newest', onSortChange, className }: JobSortProps) {
+  const { t } = useTranslation()
+
+  const sortOptions: { value: JobSortOption; label: string }[] = useMemo(() => [
+    { value: 'newest', label: t('jobs.sortNewest') },
+    { value: 'oldest', label: t('jobs.sortOldest') },
+    { value: 'highest_wage', label: t('jobs.sortWageHigh') },
+    { value: 'lowest_wage', label: t('jobs.sortWageLow') },
+    { value: 'nearest', label: t('jobs.sortDistance') },
+  ], [t])
   const handleSortChange = (newValue: string) => {
     onSortChange(newValue as JobSortOption)
   }
@@ -36,7 +38,7 @@ export function JobSort({ value = 'newest', onSortChange, className }: JobSortPr
       <ArrowUpDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
       <Select value={value} onValueChange={handleSortChange}>
         <SelectTrigger className="w-full sm:w-[180px] min-w-0">
-          <SelectValue placeholder="Sort by..." />
+          <SelectValue placeholder={t('jobs.sortBy')} />
         </SelectTrigger>
         <SelectContent>
           {sortOptions.map((option) => (

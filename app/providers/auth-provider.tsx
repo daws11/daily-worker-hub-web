@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { supabase } from "../../lib/supabase/client"
 import type { User, Session } from "@supabase/supabase-js"
 import type { Database } from "../../lib/supabase/types"
+import { useTranslation } from "../../lib/i18n/hooks"
 
 type UsersRow = Database["public"]["Tables"]["users"]["Row"]
 
@@ -27,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<'worker' | 'business' | 'admin' | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const { t } = useTranslation()
 
   useEffect(() => {
     // Get initial session
@@ -86,12 +88,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (signUpError) {
-        toast.error("Registrasi gagal: " + signUpError.message)
+        toast.error(t('auth.registrationFailed', { message: signUpError.message }))
         return
       }
 
       if (!user) {
-        toast.error("Registrasi gagal: User not created")
+        toast.error(t('auth.registrationUserNotCreated'))
         return
       }
 
@@ -109,15 +111,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (profileError) {
         console.error('Error creating user profile:', profileError)
-        toast.error("Registrasi berhasil, tapi profile gagal dibuat")
+        toast.error(t('auth.registrationProfileFailed'))
       } else {
-        toast.success("Registrasi berhasil! Silakan login.")
+        toast.success(t('auth.registrationSuccessPleaseLogin'))
       }
 
       router.push("/login")
     } catch (error) {
       console.error('Sign up error:', error)
-      toast.error("Registrasi gagal")
+      toast.error(t('auth.registrationFailedGeneric'))
     } finally {
       setIsLoading(false)
     }
@@ -132,16 +134,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (error) {
-        toast.error("Login gagal: " + error.message)
+        toast.error(t('auth.loginFailed', { message: error.message }))
         return
       }
 
       if (!data.session) {
-        toast.error("Login gagal: Session not created")
+        toast.error(t('auth.loginSessionNotCreated'))
         return
       }
 
-      toast.success("Login berhasil!")
+      toast.success(t('auth.loginSuccess'))
 
       // Redirect based on role
       if (role === 'worker') {
@@ -153,7 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       console.error('Sign in error:', error)
-      toast.error("Login gagal")
+      toast.error(t('auth.loginFailedGeneric'))
     } finally {
       setIsLoading(false)
     }
@@ -167,10 +169,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(null)
       setUserRole(null)
       router.push("/")
-      toast.success("Logout berhasil")
+      toast.success(t('auth.logoutSuccess'))
     } catch (error) {
       console.error('Sign out error:', error)
-      toast.error("Logout gagal")
+      toast.error(t('auth.logoutFailed'))
     } finally {
       setIsLoading(false)
     }

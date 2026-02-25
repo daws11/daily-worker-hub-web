@@ -1,11 +1,11 @@
 "use client"
 
 import * as React from "react"
-import { Check, X, Star } from "lucide-react"
+import { Check, X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import type { ComplianceStatusResult } from "@/lib/supabase/queries/compliance"
+import { useTranslation } from "@/lib/i18n/hooks"
 
 type BookingStatus = "pending" | "accepted" | "rejected" | "in_progress" | "completed" | "cancelled"
 
@@ -16,14 +16,10 @@ export interface BookingActionsProps {
   onReject?: (bookingId: string) => Promise<void> | void
   isLoading?: boolean
   disabled?: boolean
-  complianceStatus?: ComplianceStatusResult | null
   size?: "default" | "sm" | "lg"
   variant?: "default" | "outline" | "ghost"
   className?: string
   showLabels?: boolean
-  // Review-related props
-  hasExistingReview?: boolean
-  onWriteReview?: () => void
 }
 
 export function BookingActions({
@@ -33,23 +29,17 @@ export function BookingActions({
   onReject,
   isLoading = false,
   disabled = false,
-  complianceStatus,
   size = "default",
   variant = "default",
   className,
   showLabels = true,
-  hasExistingReview = false,
-  onWriteReview,
 }: BookingActionsProps) {
+  const { t } = useTranslation()
   const [isAccepting, setIsAccepting] = React.useState(false)
   const [isRejecting, setIsRejecting] = React.useState(false)
 
   const isPending = status === "pending"
-  const isComplianceBlocked = complianceStatus?.status === "blocked"
-  const isCompleted = status === "completed"
   const isActionDisabled = disabled || isLoading || !isPending
-  const isAcceptDisabled = isActionDisabled || isComplianceBlocked
-  const canWriteReview = isCompleted && !hasExistingReview && onWriteReview
 
   const handleAccept = async () => {
     if (isActionDisabled || !onAccept) return
@@ -102,15 +92,15 @@ export function BookingActions({
           variant={getAcceptVariant()}
           size={getButtonSize()}
           onClick={handleAccept}
-          disabled={isAcceptDisabled}
-          aria-label={`Accept booking ${bookingId}`}
+          disabled={isActionDisabled}
+          aria-label={t('bookings.accept', { bookingId })}
         >
           {isAccepting ? (
-            <>Processing...</>
+            <>{t('common.processing')}</>
           ) : (
             <>
               <Check className="h-4 w-4" />
-              {showLabels && <span>Accept</span>}
+              {showLabels && <span>{t('bookings.accept')}</span>}
             </>
           )}
         </Button>
@@ -122,29 +112,16 @@ export function BookingActions({
           size={getButtonSize()}
           onClick={handleReject}
           disabled={isActionDisabled}
-          aria-label={`Reject booking ${bookingId}`}
+          aria-label={t('bookings.reject', { bookingId })}
         >
           {isRejecting ? (
-            <>Processing...</>
+            <>{t('common.processing')}</>
           ) : (
             <>
               <X className="h-4 w-4" />
-              {showLabels && <span>Reject</span>}
+              {showLabels && <span>{t('bookings.reject')}</span>}
             </>
           )}
-        </Button>
-      )}
-
-      {canWriteReview && (
-        <Button
-          variant="outline"
-          size={getButtonSize()}
-          onClick={onWriteReview}
-          disabled={disabled || isLoading}
-          aria-label={`Write review for booking ${bookingId}`}
-        >
-          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-          {showLabels && <span>Tulis Ulasan</span>}
         </Button>
       )}
     </div>

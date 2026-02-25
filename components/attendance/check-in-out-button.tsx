@@ -5,6 +5,7 @@ import { LogIn, LogOut } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useTranslation } from "@/lib/i18n/hooks"
 
 type BookingStatus = "pending" | "accepted" | "rejected" | "in_progress" | "completed" | "cancelled"
 
@@ -40,9 +41,10 @@ export function CheckInOutButton({
   variant = "default",
   className,
   showLabel = true,
-  checkInLabel = "Check In",
-  checkOutLabel = "Check Out",
+  checkInLabel,
+  checkOutLabel,
 }: CheckInOutButtonProps) {
+  const { t } = useTranslation()
   const [isProcessing, setIsProcessing] = React.useState(false)
 
   // Determine attendance state based on booking status and timestamps
@@ -105,14 +107,14 @@ export function CheckInOutButton({
   // Render content based on state
   const renderContent = () => {
     if (isProcessing) {
-      return <span>Memproses...</span>
+      return <span>{t("attendance.processing")}</span>
     }
 
     if (attendanceState === "can_check_in") {
       return (
         <>
           <LogIn className="h-4 w-4" />
-          {showLabel && <span>{checkInLabel}</span>}
+          {showLabel && <span>{checkInLabel || t("attendance.checkIn")}</span>}
         </>
       )
     }
@@ -121,7 +123,7 @@ export function CheckInOutButton({
       return (
         <>
           <LogOut className="h-4 w-4" />
-          {showLabel && <span>{checkOutLabel}</span>}
+          {showLabel && <span>{checkOutLabel || t("attendance.checkOut")}</span>}
         </>
       )
     }
@@ -130,7 +132,7 @@ export function CheckInOutButton({
       return (
         <>
           <LogOut className="h-4 w-4" />
-          {showLabel && <span>Selesai</span>}
+          {showLabel && <span>{t("attendance.completed")}</span>}
         </>
       )
     }
@@ -139,7 +141,7 @@ export function CheckInOutButton({
     return (
       <>
         <LogIn className="h-4 w-4" />
-        {showLabel && <span>Tidak Tersedia</span>}
+        {showLabel && <span>{t("attendance.notAvailable")}</span>}
       </>
     )
   }
@@ -147,15 +149,15 @@ export function CheckInOutButton({
   // Get aria-label for accessibility
   const getAriaLabel = () => {
     if (attendanceState === "can_check_in") {
-      return `Check in untuk booking ${bookingId}`
+      return `${t("attendance.checkIn")} untuk booking ${bookingId}`
     }
     if (attendanceState === "can_check_out") {
-      return `Check out untuk booking ${bookingId}`
+      return `${t("attendance.checkOut")} untuk booking ${bookingId}`
     }
     if (attendanceState === "completed") {
-      return `Attendance selesai untuk booking ${bookingId}`
+      return `Attendance ${t("attendance.completed")} untuk booking ${bookingId}`
     }
-    return `Attendance tidak tersedia untuk booking ${bookingId}`
+    return `Attendance ${t("attendance.notAvailable")} untuk booking ${bookingId}`
   }
 
   return (

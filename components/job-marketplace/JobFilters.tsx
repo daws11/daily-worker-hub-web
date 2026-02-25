@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -12,11 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { WageRangeSlider } from '@/components/job-marketplace/WageRangeSlider'
-import { DistanceRadiusFilter } from '@/components/job-marketplace/DistanceRadiusFilter'
 import { JobFilters as JobFiltersType, PositionType } from '@/lib/types/job'
-import { X, Filter, Shield, AlertCircle } from 'lucide-react'
+import { X, Filter } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslation } from '@/lib/i18n/hooks'
 
 interface JobFiltersProps {
   filters?: JobFiltersType
@@ -24,18 +23,21 @@ interface JobFiltersProps {
   className?: string
 }
 
-const positionTypes: { value: PositionType; label: string }[] = [
-  { value: 'full_time', label: 'Full Time' },
-  { value: 'part_time', label: 'Part Time' },
-  { value: 'contract', label: 'Contract' },
-  { value: 'temporary', label: 'Temporary' },
-]
-
 export function JobFilters({ filters, onFiltersChange, className }: JobFiltersProps) {
+  const { t } = useTranslation()
+
+  const positionTypes: { value: PositionType; label: string }[] = useMemo(() => [
+    { value: 'full_time', label: t('jobs.fullTime') },
+    { value: 'part_time', label: t('jobs.partTime') },
+    { value: 'contract', label: t('jobs.contract') },
+    { value: 'temporary', label: t('jobs.temporary') },
+  ], [t])
+
   const [localFilters, setLocalFilters] = useState<JobFiltersType>(filters || {})
+  const [wageMin, setWageMin] = useState<string>(filters?.wageMin?.toString() || '')
+  const [wageMax, setWageMax] = useState<string>(filters?.wageMax?.toString() || '')
   const [deadlineAfter, setDeadlineAfter] = useState<string>(filters?.deadlineAfter || '')
   const [deadlineBefore, setDeadlineBefore] = useState<string>(filters?.deadlineBefore || '')
-  const [distanceRadius, setDistanceRadius] = useState<number>(filters?.radius || 10)
 
   const hasActiveFilters = Boolean(
     localFilters.positionType ||
@@ -43,12 +45,7 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
     localFilters.wageMin ||
     localFilters.wageMax ||
     localFilters.deadlineAfter ||
-    localFilters.deadlineBefore ||
-    localFilters.isUrgent ||
-    localFilters.verifiedOnly ||
-    localFilters.lat ||
-    localFilters.lng ||
-    localFilters.radius
+    localFilters.deadlineBefore
   )
 
   const handlePositionChange = (value: string) => {
@@ -69,12 +66,23 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
     onFiltersChange(newFilters)
   }
 
-  const handleWageRangeChange = (value: [number, number]) => {
-    const [minWage, maxWage] = value
+  const handleWageMinChange = (value: string) => {
+    setWageMin(value)
+    const numValue = value ? parseInt(value, 10) : undefined
     const newFilters = {
       ...localFilters,
-      wageMin: minWage,
-      wageMax: maxWage,
+      wageMin: numValue,
+    }
+    setLocalFilters(newFilters)
+    onFiltersChange(newFilters)
+  }
+
+  const handleWageMaxChange = (value: string) => {
+    setWageMax(value)
+    const numValue = value ? parseInt(value, 10) : undefined
+    const newFilters = {
+      ...localFilters,
+      wageMax: numValue,
     }
     setLocalFilters(newFilters)
     onFiltersChange(newFilters)
@@ -100,50 +108,13 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
     onFiltersChange(newFilters)
   }
 
-  const handleIsUrgentChange = (checked: boolean) => {
-    const newFilters = {
-      ...localFilters,
-      isUrgent: checked || undefined,
-    }
-    setLocalFilters(newFilters)
-    onFiltersChange(newFilters)
-  }
-
-  const handleVerifiedOnlyChange = (checked: boolean) => {
-    const newFilters = {
-      ...localFilters,
-      verifiedOnly: checked || undefined,
-    }
-    setLocalFilters(newFilters)
-    onFiltersChange(newFilters)
-  }
-
-  const handleDistanceRadiusChange = (value: number) => {
-    setDistanceRadius(value)
-    const newFilters = {
-      ...localFilters,
-      radius: value,
-    }
-    setLocalFilters(newFilters)
-    onFiltersChange(newFilters)
-  }
-
-  const handleLocationChange = (lat: number, lng: number) => {
-    const newFilters = {
-      ...localFilters,
-      lat,
-      lng,
-    }
-    setLocalFilters(newFilters)
-    onFiltersChange(newFilters)
-  }
-
   const handleClearFilters = () => {
     const clearedFilters: JobFiltersType = {}
     setLocalFilters(clearedFilters)
+    setWageMin('')
+    setWageMax('')
     setDeadlineAfter('')
     setDeadlineBefore('')
-    setDistanceRadius(10)
     onFiltersChange(clearedFilters)
   }
 
@@ -153,7 +124,7 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <Filter className="h-4 w-4" />
-            Filters
+            {t('jobs.filters')}
           </CardTitle>
           {hasActiveFilters && (
             <Button
@@ -163,7 +134,7 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
               className="h-8 text-xs"
             >
               <X className="h-3 w-3 mr-1" />
-              Clear All
+              {t('common.clearAll')}
             </Button>
           )}
         </div>
@@ -172,17 +143,17 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
         {/* Position Type Filter */}
         <div className="space-y-2">
           <Label htmlFor="position-type" className="text-sm">
-            Position Type
+            {t('jobs.positionType')}
           </Label>
           <Select
             value={localFilters.positionType || 'all'}
             onValueChange={handlePositionChange}
           >
             <SelectTrigger id="position-type">
-              <SelectValue placeholder="All positions" />
+              <SelectValue placeholder={t('jobs.allPositions')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All positions</SelectItem>
+              <SelectItem value="all">{t('jobs.allPositions')}</SelectItem>
               {positionTypes.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
                   {type.label}
@@ -195,56 +166,50 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
         {/* Area Filter */}
         <div className="space-y-2">
           <Label htmlFor="area" className="text-sm">
-            Area / Location
+            {t('jobs.areaLocation')}
           </Label>
           <Input
             id="area"
             type="text"
-            placeholder="e.g. Kuta, Seminyak"
+            placeholder={t('jobs.areaPlaceholder')}
             value={localFilters.area || ''}
             onChange={(e) => handleAreaChange(e.target.value)}
           />
         </div>
 
-        {/* Distance Radius Filter */}
-        <DistanceRadiusFilter
-          label="Distance Radius"
-          min={1}
-          max={50}
-          step={1}
-          value={localFilters.radius}
-          defaultValue={10}
-          onValueChange={handleDistanceRadiusChange}
-          onLocationChange={handleLocationChange}
-          unit="km"
-          showValue={true}
-        />
-
         {/* Wage Range Filter */}
         <div className="space-y-2">
-          <WageRangeSlider
-            label="Wage Range"
-            min={0}
-            max={10000000}
-            step={100000}
-            value={
-              localFilters.wageMin !== undefined && localFilters.wageMax !== undefined
-                ? [localFilters.wageMin, localFilters.wageMax]
-                : undefined
-            }
-            defaultValue={[0, 10000000]}
-            onValueChange={handleWageRangeChange}
-            currency="IDR"
-          />
+          <Label className="text-sm">{t('jobs.wageRange')}</Label>
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <Input
+                type="number"
+                placeholder={t('jobs.minWage')}
+                min="0"
+                value={wageMin}
+                onChange={(e) => handleWageMinChange(e.target.value)}
+              />
+            </div>
+            <span className="text-muted-foreground text-sm">{t('common.to')}</span>
+            <div className="flex-1">
+              <Input
+                type="number"
+                placeholder={t('jobs.maxWage')}
+                min="0"
+                value={wageMax}
+                onChange={(e) => handleWageMaxChange(e.target.value)}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Deadline Filter */}
         <div className="space-y-2">
-          <Label className="text-sm">Deadline</Label>
+          <Label className="text-sm">{t('jobs.deadline')}</Label>
           <div className="space-y-2">
             <div className="space-y-1">
               <Label htmlFor="deadline-after" className="text-xs text-muted-foreground">
-                From
+                {t('common.from')}
               </Label>
               <Input
                 id="deadline-after"
@@ -255,7 +220,7 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
             </div>
             <div className="space-y-1">
               <Label htmlFor="deadline-before" className="text-xs text-muted-foreground">
-                To
+                {t('jobs.sortDeadline')}
               </Label>
               <Input
                 id="deadline-before"
@@ -265,42 +230,6 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
               />
             </div>
           </div>
-        </div>
-
-        {/* Verified Business Filter */}
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="verified-only"
-            checked={localFilters.verifiedOnly || false}
-            onChange={(e) => handleVerifiedOnlyChange(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
-          />
-          <Label
-            htmlFor="verified-only"
-            className="text-sm flex items-center gap-1.5 cursor-pointer"
-          >
-            <Shield className="h-3.5 w-3.5 text-blue-500" />
-            Verified Business Only
-          </Label>
-        </div>
-
-        {/* Emergency Only Filter */}
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="is-urgent"
-            checked={localFilters.isUrgent || false}
-            onChange={(e) => handleIsUrgentChange(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
-          />
-          <Label
-            htmlFor="is-urgent"
-            className="text-sm flex items-center gap-1.5 cursor-pointer"
-          >
-            <AlertCircle className="h-3.5 w-3.5 text-red-500" />
-            Emergency Only
-          </Label>
         </div>
       </CardContent>
     </Card>

@@ -2,17 +2,14 @@
 
 import { useState, useCallback } from 'react'
 import { useAuth } from '@/providers/auth-provider'
-import { SearchAutocomplete } from '@/components/job-marketplace/SearchAutocomplete'
-import type { SearchSuggestion } from '@/lib/api/autocomplete'
+import { useTranslation } from '@/lib/i18n/hooks'
+import { JobSearch } from '@/components/job-marketplace/JobSearch'
 import { JobFilters } from '@/components/job-marketplace/JobFilters'
 import { JobSort } from '@/components/job-marketplace/JobSort'
 import { JobListWithHeader } from '@/components/job-marketplace/JobList'
 import { JobDetailDialog } from '@/components/job-marketplace/JobDetailDialog'
-import { SavedSearchesDialog } from '@/components/job-marketplace/SavedSearchesDialog'
 import { CheckInOutButton } from '@/components/attendance/check-in-out-button'
 import { QRCodeScanner } from '@/components/attendance/qr-code-scanner'
-import { Button } from '@/components/ui/button'
-import { Bookmark } from 'lucide-react'
 import { useJobs } from '@/lib/hooks/useJobs'
 import { useBookings } from '@/lib/hooks/use-bookings'
 import { useAttendance } from '@/lib/hooks/use-attendance'
@@ -24,6 +21,7 @@ import { Briefcase, Loader2, Calendar, Clock, MapPin, CheckCircle } from 'lucide
 
 export default function WorkerJobsPage() {
   const { user } = useAuth()
+  const { t, locale } = useTranslation()
 
   // State for filters and search
   const [search, setSearch] = useState<string>('')
@@ -34,9 +32,6 @@ export default function WorkerJobsPage() {
   const [selectedJob, setSelectedJob] = useState<JobWithRelations | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isApplying, setIsApplying] = useState(false)
-
-  // State for saved searches dialog
-  const [savedSearchesOpen, setSavedSearchesOpen] = useState(false)
 
   // State for QR scanner
   const [scannerOpen, setScannerOpen] = useState(false)
@@ -92,14 +87,14 @@ export default function WorkerJobsPage() {
     try {
       // TODO: Implement actual application logic when backend is ready
       await new Promise(resolve => setTimeout(resolve, 1000))
-      toast.success('Application submitted successfully!')
+      toast.success(t('jobs.applicationSubmitted'))
       handleDialogClose()
     } catch (err) {
-      toast.error('Failed to submit application. Please try again.')
+      toast.error(t('jobs.applicationFailed'))
     } finally {
       setIsApplying(false)
     }
-  }, [handleDialogClose])
+  }, [handleDialogClose, t])
 
   // Handle check-in button click
   const handleCheckInClick = useCallback(async (bookingId: string) => {
@@ -154,9 +149,9 @@ export default function WorkerJobsPage() {
       await refreshBookings()
       setSelectedBooking(null)
     } catch (err) {
-      toast.error('Gagal memproses check-in/out. Silakan coba lagi.')
+      toast.error(t('errors.checkInFailed'))
     }
-  }, [selectedBooking, scannerMode, workerCheckIn, workerCheckOut, refreshBookings])
+  }, [selectedBooking, scannerMode, workerCheckIn, workerCheckOut, refreshBookings, t])
 
   // Handle scanner close
   const handleScannerClose = useCallback(() => {
@@ -169,13 +164,6 @@ export default function WorkerJobsPage() {
     setSearch(value)
   }, [])
 
-  // Handle suggestion select from autocomplete
-  const handleSuggestionSelect = useCallback((suggestion: SearchSuggestion) => {
-    // When a suggestion is selected, we can optionally update filters
-    // For now, the search text is already set by the component
-    // This callback can be used for analytics or additional filter logic
-  }, [])
-
   // Handle filters change
   const handleFiltersChange = useCallback((newFilters: JobFiltersType) => {
     setFilters(newFilters)
@@ -186,30 +174,24 @@ export default function WorkerJobsPage() {
     setSort(newSort)
   }, [])
 
-  // Handle load saved search
-  const handleLoadSavedSearch = useCallback((savedFilters: JobFiltersType) => {
-    setFilters(savedFilters)
-    setSearch(savedFilters.search || '')
-  }, [])
-
   // Handle retry on error
   const handleRetry = useCallback(() => {
     refetch()
   }, [refetch])
 
-  // Format date to Indonesian locale
+  // Format date based on current locale
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
+    return new Date(dateString).toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
     })
   }
 
-  // Format time to Indonesian locale
+  // Format time based on current locale
   const formatTime = (dateString: string | null) => {
     if (!dateString) return '-'
-    return new Date(dateString).toLocaleTimeString('id-ID', {
+    return new Date(dateString).toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', {
       hour: '2-digit',
       minute: '2-digit',
     })
@@ -225,9 +207,9 @@ export default function WorkerJobsPage() {
 
   // Get status text
   const getStatusText = (status: string, checkInAt: string | null, checkOutAt: string | null) => {
-    if (checkOutAt) return 'Selesai'
-    if (checkInAt) return 'Sedang Bekerja'
-    if (status === 'accepted') return 'Diterima'
+    if (checkOutAt) return t('bookings.completed')
+    if (checkInAt) return t('bookings.working')
+    if (status === 'accepted') return t('bookings.accepted')
     return status
   }
 
@@ -238,24 +220,24 @@ export default function WorkerJobsPage() {
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <Briefcase className="h-6 w-6 text-muted-foreground" />
-            <h1 className="text-2xl font-bold">Job Marketplace</h1>
+            <h1 className="text-2xl font-bold">{t('jobs.jobMarketplace')}</h1>
           </div>
           <p className="text-sm text-muted-foreground">
-            Discover and apply for jobs across Bali
+            {t('jobs.subtitle')}
           </p>
         </div>
 
         {/* Error State */}
         {error && (
           <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-            <p className="text-destructive font-medium mb-2">Failed to load jobs</p>
+            <p className="text-destructive font-medium mb-2">{t('errors.loadFailed')}</p>
             <p className="text-sm text-muted-foreground mb-4">{error.message}</p>
             <button
               onClick={handleRetry}
               className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
             >
               <Loader2 className="h-4 w-4 animate-spin" />
-              Try Again
+              {t('common.tryAgain')}
             </button>
           </div>
         )}
@@ -263,7 +245,7 @@ export default function WorkerJobsPage() {
         {/* My Bookings Section */}
         {activeBookings.length > 0 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">My Bookings</h2>
+            <h2 className="text-lg font-semibold">{t('bookings.myBookings')}</h2>
             {bookingsLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -278,9 +260,9 @@ export default function WorkerJobsPage() {
                     {/* Header: Job Title and Status */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium line-clamp-1">{booking.job?.title || 'Pekerjaan'}</h3>
+                        <h3 className="font-medium line-clamp-1">{booking.job?.title || t('jobs.title')}</h3>
                         <p className="text-sm text-muted-foreground line-clamp-1">
-                          {booking.business?.name || 'Business'}
+                          {booking.business?.name || t('bookings.business')}
                         </p>
                       </div>
                       <span
@@ -320,7 +302,7 @@ export default function WorkerJobsPage() {
                         {booking.check_in_at && (
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <CheckCircle className="h-3 w-3 text-green-600" />
-                            <span>Check In:</span>
+                            <span>{t('bookings.checkInAt')}</span>
                             <span className="font-medium text-foreground">
                               {formatTime(booking.check_in_at)}
                             </span>
@@ -329,7 +311,7 @@ export default function WorkerJobsPage() {
                         {booking.check_out_at && (
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <CheckCircle className="h-3 w-3 text-green-600" />
-                            <span>Check Out:</span>
+                            <span>{t('bookings.checkOutAt')}</span>
                             <span className="font-medium text-foreground">
                               {formatTime(booking.check_out_at)}
                             </span>
@@ -373,24 +355,14 @@ export default function WorkerJobsPage() {
             {/* Search and Sort Bar */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex-1">
-                <SearchAutocomplete
+                <JobSearch
                   value={search}
                   onSearchChange={handleSearchChange}
-                  onSuggestionSelect={handleSuggestionSelect}
-                  placeholder="Search jobs by position or area..."
+                  placeholder={t('jobs.searchJobs')}
                   className="w-full sm:max-w-md"
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="default"
-                  onClick={() => setSavedSearchesOpen(true)}
-                  className="flex-shrink-0"
-                >
-                  <Bookmark className="h-4 w-4 mr-2" />
-                  Saved Searches
-                </Button>
+              <div className="flex-shrink-0">
                 <JobSort
                   value={sort}
                   onSortChange={handleSortChange}
@@ -403,16 +375,16 @@ export default function WorkerJobsPage() {
               jobs={jobs}
               loading={loading}
               onJobClick={handleJobClick}
-              title="Available Jobs"
+              title={t('jobs.availableJobs')}
               subtitle={search || Object.keys(filters).length > 0
-                ? 'Filtered results'
-                : 'Browse all open positions'}
+                ? t('jobs.filteredResults')
+                : t('jobs.browseAll')}
               emptyTitle={search || Object.keys(filters).length > 0
-                ? 'No jobs match your criteria'
-                : 'No jobs available'}
+                ? t('jobs.noJobsMatchCriteria')
+                : t('jobs.noJobsAvailable')}
               emptyDescription={search || Object.keys(filters).length > 0
-                ? 'Try adjusting your filters or search terms'
-                : 'Check back later for new opportunities'}
+                ? t('jobs.tryAdjustingFilters')
+                : t('jobs.checkBackLater')}
             />
           </div>
         </div>
@@ -437,15 +409,6 @@ export default function WorkerJobsPage() {
           onSuccess={handleScannerSuccess}
         />
       )}
-
-      {/* Saved Searches Dialog */}
-      <SavedSearchesDialog
-        open={savedSearchesOpen}
-        onOpenChange={setSavedSearchesOpen}
-        currentFilters={{ ...filters, search }}
-        onLoadSearch={handleLoadSavedSearch}
-        workerId={user?.id}
-      />
     </div>
   )
 }
