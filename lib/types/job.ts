@@ -25,6 +25,8 @@ export interface JobFilters {
   deadlineAfter?: string
   deadlineBefore?: string
   skills?: string[]
+  isUrgent?: boolean
+  verifiedOnly?: boolean
 }
 
 export interface Job {
@@ -41,6 +43,7 @@ export interface Job {
   address: string
   lat: number
   lng: number
+  is_urgent: boolean
   created_at: string
   updated_at: string
 }
@@ -139,4 +142,26 @@ export interface JobApplication {
   message: string
   created_at: string
   updated_at: string
+}
+
+export interface SavedSearch {
+  id: string
+  worker_id: string
+  name: string
+  filters: JobFilters
+  is_favorite: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateSavedSearchInput {
+  name: string
+  filters: JobFilters
+  is_favorite?: boolean
+}
+
+export interface UpdateSavedSearchInput {
+  name?: string
+  filters?: JobFilters
+  is_favorite?: boolean
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -12,8 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { JobFilters as JobFiltersType } from '@/lib/types/job'
-import { X, Filter } from 'lucide-react'
+import { WageRangeSlider } from '@/components/job-marketplace/WageRangeSlider'
+import { DistanceRadiusFilter } from '@/components/job-marketplace/DistanceRadiusFilter'
+import { JobFilters as JobFiltersType, PositionType } from '@/lib/types/job'
+import { X, Filter, Shield, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface JobFiltersProps {
@@ -22,45 +24,37 @@ interface JobFiltersProps {
   className?: string
 }
 
-// Categories that match our database
-const categories = [
-  { value: 'cat-1', label: 'Housekeeping' },
-  { value: 'cat-2', label: 'Driving' },
-  { value: 'cat-3', label: 'Cooking' },
-  { value: 'cat-4', label: 'Gardening' },
-  { value: 'cat-5', label: 'Construction' },
-  { value: 'cat-6', label: 'Security' },
+const positionTypes: { value: PositionType; label: string }[] = [
+  { value: 'full_time', label: 'Full Time' },
+  { value: 'part_time', label: 'Part Time' },
+  { value: 'contract', label: 'Contract' },
+  { value: 'temporary', label: 'Temporary' },
 ]
 
 export function JobFilters({ filters, onFiltersChange, className }: JobFiltersProps) {
   const [localFilters, setLocalFilters] = useState<JobFiltersType>(filters || {})
-  const [wageMin, setWageMin] = useState<string>(filters?.wageMin?.toString() || '')
-  const [wageMax, setWageMax] = useState<string>(filters?.wageMax?.toString() || '')
   const [deadlineAfter, setDeadlineAfter] = useState<string>(filters?.deadlineAfter || '')
   const [deadlineBefore, setDeadlineBefore] = useState<string>(filters?.deadlineBefore || '')
-
-  // Sync local state when filters prop changes
-  useEffect(() => {
-    setLocalFilters(filters || {})
-    setWageMin(filters?.wageMin?.toString() || '')
-    setWageMax(filters?.wageMax?.toString() || '')
-    setDeadlineAfter(filters?.deadlineAfter || '')
-    setDeadlineBefore(filters?.deadlineBefore || '')
-  }, [filters])
+  const [distanceRadius, setDistanceRadius] = useState<number>(filters?.radius || 10)
 
   const hasActiveFilters = Boolean(
-    localFilters.categoryId ||
+    localFilters.positionType ||
     localFilters.area ||
     localFilters.wageMin ||
     localFilters.wageMax ||
     localFilters.deadlineAfter ||
-    localFilters.deadlineBefore
+    localFilters.deadlineBefore ||
+    localFilters.isUrgent ||
+    localFilters.verifiedOnly ||
+    localFilters.lat ||
+    localFilters.lng ||
+    localFilters.radius
   )
 
-  const handleCategoryChange = (value: string) => {
+  const handlePositionChange = (value: string) => {
     const newFilters = {
       ...localFilters,
-      categoryId: value === 'all' ? undefined : value,
+      positionType: value === 'all' ? undefined : (value as PositionType),
     }
     setLocalFilters(newFilters)
     onFiltersChange(newFilters)
@@ -75,23 +69,12 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
     onFiltersChange(newFilters)
   }
 
-  const handleWageMinChange = (value: string) => {
-    setWageMin(value)
-    const numValue = value ? parseInt(value, 10) : undefined
+  const handleWageRangeChange = (value: [number, number]) => {
+    const [minWage, maxWage] = value
     const newFilters = {
       ...localFilters,
-      wageMin: numValue,
-    }
-    setLocalFilters(newFilters)
-    onFiltersChange(newFilters)
-  }
-
-  const handleWageMaxChange = (value: string) => {
-    setWageMax(value)
-    const numValue = value ? parseInt(value, 10) : undefined
-    const newFilters = {
-      ...localFilters,
-      wageMax: numValue,
+      wageMin: minWage,
+      wageMax: maxWage,
     }
     setLocalFilters(newFilters)
     onFiltersChange(newFilters)
@@ -117,13 +100,50 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
     onFiltersChange(newFilters)
   }
 
+  const handleIsUrgentChange = (checked: boolean) => {
+    const newFilters = {
+      ...localFilters,
+      isUrgent: checked || undefined,
+    }
+    setLocalFilters(newFilters)
+    onFiltersChange(newFilters)
+  }
+
+  const handleVerifiedOnlyChange = (checked: boolean) => {
+    const newFilters = {
+      ...localFilters,
+      verifiedOnly: checked || undefined,
+    }
+    setLocalFilters(newFilters)
+    onFiltersChange(newFilters)
+  }
+
+  const handleDistanceRadiusChange = (value: number) => {
+    setDistanceRadius(value)
+    const newFilters = {
+      ...localFilters,
+      radius: value,
+    }
+    setLocalFilters(newFilters)
+    onFiltersChange(newFilters)
+  }
+
+  const handleLocationChange = (lat: number, lng: number) => {
+    const newFilters = {
+      ...localFilters,
+      lat,
+      lng,
+    }
+    setLocalFilters(newFilters)
+    onFiltersChange(newFilters)
+  }
+
   const handleClearFilters = () => {
     const clearedFilters: JobFiltersType = {}
     setLocalFilters(clearedFilters)
-    setWageMin('')
-    setWageMax('')
     setDeadlineAfter('')
     setDeadlineBefore('')
+    setDistanceRadius(10)
     onFiltersChange(clearedFilters)
   }
 
@@ -149,23 +169,23 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Category Filter */}
+        {/* Position Type Filter */}
         <div className="space-y-2">
-          <Label htmlFor="category" className="text-sm">
-            Category
+          <Label htmlFor="position-type" className="text-sm">
+            Position Type
           </Label>
           <Select
-            value={localFilters.categoryId || 'all'}
-            onValueChange={handleCategoryChange}
+            value={localFilters.positionType || 'all'}
+            onValueChange={handlePositionChange}
           >
-            <SelectTrigger id="category">
-              <SelectValue placeholder="All categories" />
+            <SelectTrigger id="position-type">
+              <SelectValue placeholder="All positions" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All categories</SelectItem>
-              {categories.map((category) => (
-                <SelectItem key={category.value} value={category.value}>
-                  {category.label}
+              <SelectItem value="all">All positions</SelectItem>
+              {positionTypes.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -186,30 +206,36 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
           />
         </div>
 
+        {/* Distance Radius Filter */}
+        <DistanceRadiusFilter
+          label="Distance Radius"
+          min={1}
+          max={50}
+          step={1}
+          value={localFilters.radius}
+          defaultValue={10}
+          onValueChange={handleDistanceRadiusChange}
+          onLocationChange={handleLocationChange}
+          unit="km"
+          showValue={true}
+        />
+
         {/* Wage Range Filter */}
         <div className="space-y-2">
-          <Label className="text-sm">Wage Range (IDR)</Label>
-          <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <Input
-                type="number"
-                placeholder="Min"
-                min="0"
-                value={wageMin}
-                onChange={(e) => handleWageMinChange(e.target.value)}
-              />
-            </div>
-            <span className="text-muted-foreground text-sm">to</span>
-            <div className="flex-1">
-              <Input
-                type="number"
-                placeholder="Max"
-                min="0"
-                value={wageMax}
-                onChange={(e) => handleWageMaxChange(e.target.value)}
-              />
-            </div>
-          </div>
+          <WageRangeSlider
+            label="Wage Range"
+            min={0}
+            max={10000000}
+            step={100000}
+            value={
+              localFilters.wageMin !== undefined && localFilters.wageMax !== undefined
+                ? [localFilters.wageMin, localFilters.wageMax]
+                : undefined
+            }
+            defaultValue={[0, 10000000]}
+            onValueChange={handleWageRangeChange}
+            currency="IDR"
+          />
         </div>
 
         {/* Deadline Filter */}
@@ -239,6 +265,42 @@ export function JobFilters({ filters, onFiltersChange, className }: JobFiltersPr
               />
             </div>
           </div>
+        </div>
+
+        {/* Verified Business Filter */}
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="verified-only"
+            checked={localFilters.verifiedOnly || false}
+            onChange={(e) => handleVerifiedOnlyChange(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
+          />
+          <Label
+            htmlFor="verified-only"
+            className="text-sm flex items-center gap-1.5 cursor-pointer"
+          >
+            <Shield className="h-3.5 w-3.5 text-blue-500" />
+            Verified Business Only
+          </Label>
+        </div>
+
+        {/* Emergency Only Filter */}
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            id="is-urgent"
+            checked={localFilters.isUrgent || false}
+            onChange={(e) => handleIsUrgentChange(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 cursor-pointer"
+          />
+          <Label
+            htmlFor="is-urgent"
+            className="text-sm flex items-center gap-1.5 cursor-pointer"
+          >
+            <AlertCircle className="h-3.5 w-3.5 text-red-500" />
+            Emergency Only
+          </Label>
         </div>
       </CardContent>
     </Card>

@@ -23,294 +23,271 @@ export type Database = {
           variables?: Json
         }
         Returns: Json
-        }
       }
-      wallet_transactions: {
-        Row: {
-          id: string
-          wallet_id: string
-          email: string
-          full_name: string
-          avatar_url: string
-          role: 'worker' | 'business' | 'admin'
-          phone: string
-          created_at: string
-          updated_at: string
-        }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  pgbouncer: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      get_auth: {
+        Args: { p_usename: string }
+        Returns: {
+          password: string
+          username: string
+        }[]
       }
-      businesses: {
-        Row: {
-          id: string
-          user_id: string
-          name: string
-          business_type: 'hotel' | 'villa' | 'restaurant' | 'event_company' | 'other'
-          address: string
-          area: 'Badung' | 'Denpasar' | 'Gianyar' | 'Tabanan' | 'Buleleng' | 'Klungkung' | 'Karangasem' | 'Bangli' | 'Jembrana'
-          phone?: string
-          email?: string
-          website?: string
-          description?: string
-          avatar_url?: string
-          business_license_url?: string
-          verification_status: 'pending' | 'verified' | 'rejected'
-          created_at: string
-          updated_at: string
-        }
-      }
-      workers: {
-        Row: {
-          id: string
-          user_id: string
-          full_name: string
-          bio: string
-          avatar_url: string
-          phone: string
-          dob: string
-          address: string
-          location_name: string
-          lat: number
-          lng: number
-        }
-      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  public: {
+    Tables: {
       bookings: {
         Row: {
-          id: string
-          worker_id: string
           business_id: string
-          category_id: string
-          title: string
-          description: string
-          start_date: string
-          end_date: string
-          start_time: string
-          end_time: string
-          final_price: number
-          status: BookingStatus
           created_at: string
-          updated_at: string
-        }
-      }
-      transactions: {
-        Row: {
+          end_date: string | null
+          final_price: number | null
           id: string
-          wallet_id: string
-          amount: number
-          type: 'credit' | 'debit' | 'pending' | 'released'
-          booking_id?: string | null
-          description?: string | null
-          created_at: string
+          job_id: string
+          start_date: string | null
+          status: Database["public"]["Enums"]["booking_status"]
+          updated_at: string
+          worker_id: string
         }
         Insert: {
-          id?: string
-          wallet_id: string
-          amount: number
-          type: 'credit' | 'debit' | 'pending' | 'released'
-          booking_id?: string | null
-          description?: string | null
+          business_id: string
           created_at?: string
+          end_date?: string | null
+          final_price?: number | null
+          id?: string
+          job_id: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+          worker_id: string
         }
         Update: {
-          id?: string
-          wallet_id?: string
-          amount?: number
-          type?: 'credit' | 'debit' | 'pending' | 'released'
-          booking_id?: string | null
-          description?: string | null
+          business_id?: string
           created_at?: string
+          end_date?: string | null
+          final_price?: number | null
+          id?: string
+          job_id?: string
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["booking_status"]
+          updated_at?: string
+          worker_id?: string
         }
-      }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_business_id_fkey"
+            columns: ["business_id"]
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_job_id_fkey"
+            columns: ["job_id"]
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_worker_id_fkey"
+            columns: ["worker_id"]
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       businesses: {
         Row: {
+          address: string | null
+          created_at: string
+          description: string | null
+          email: string | null
           id: string
-          user_id: string
+          is_verified: boolean
+          lat: number | null
+          lng: number | null
           name: string
-          business_type: 'hotel' | 'villa' | 'restaurant' | 'event_company' | 'other'
-          address: string
-          area: 'Badung' | 'Denpasar' | 'Gianyar' | 'Tabanan' | 'Buleleng' | 'Klungkung' | 'Karangasem' | 'Bangli' | 'Jembrana'
-          phone?: string
-          email?: string
-          website?: string
-          description?: string
-          avatar_url?: string
-          business_license_url?: string
-          verification_status: 'pending' | 'verified' | 'rejected'
-          created_at: string
+          phone: string | null
           updated_at: string
-        }
-      }
-      workers: {
-        Row: {
-          id: string
           user_id: string
-          full_name: string
-          bio: string
-          avatar_url: string
-          phone: string
-          dob: string
-          address: string
-          location_name: string
-          lat: number
-          lng: number
-          gender: string | null
-          experience_years: number | null
-          kyc_status: 'unverified' | 'pending' | 'verified' | 'rejected'
-          reliability_score: number
-          created_at: string
-          updated_at: string
+          website: string | null
         }
-      }
-      kyc_verifications: {
-        Row: {
-          id: string
-          worker_id: string
-          ktp_number: string
-          ktp_image_url: string | null
-          selfie_image_url: string | null
-          ktp_extracted_data: Json
-          status: 'pending' | 'verified' | 'rejected'
-          rejection_reason: string | null
-          submitted_at: string
-          verified_at: string | null
-          created_at: string
-          updated_at: string
-          verified_by: string | null
-        }
-      }
-      worker_skills: {
-        Row: {
-          worker_id: string
-          skill_id: string
-          created_at: string
-        }
-      }
-      skills: {
-        Row: {
-          id: string
+        Insert: {
+          address?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_verified?: boolean
+          lat?: number | null
+          lng?: number | null
           name: string
-          slug: string
-          created_at: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
         }
+        Update: {
+          address?: string | null
+          created_at?: string
+          description?: string | null
+          email?: string | null
+          id?: string
+          is_verified?: boolean
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "businesses_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       categories: {
         Row: {
+          created_at: string
           id: string
           name: string
           slug: string
-          created_at: string
         }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
       }
       jobs: {
         Row: {
-          id: string
-          business_id: string
-          category_id?: string | null
-          position_type?: string
-          title: string
-          description: string
-          requirements: string
-          budget_min: number
+          address: string | null
           budget_max: number
-          status: 'draft' | 'open' | 'in_progress' | 'completed' | 'cancelled'
-          deadline: string
-          address: string
-          lat: number
-          lng: number
+          budget_min: number
+          business_id: string
+          category_id: string
           created_at: string
+          deadline: string | null
+          description: string | null
+          id: string
+          is_urgent: boolean
+          lat: number | null
+          lng: number | null
+          requirements: string | null
+          status: Database["public"]["Enums"]["job_status"]
+          title: string
           updated_at: string
         }
+        Insert: {
+          address?: string | null
+          budget_max?: number
+          budget_min?: number
+          business_id: string
+          category_id: string
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          is_urgent?: boolean
+          lat?: number | null
+          lng?: number | null
+          requirements?: string | null
+          status?: Database["public"]["Enums"]["job_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          budget_max?: number
+          budget_min?: number
+          business_id?: string
+          category_id?: string
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          id?: string
+          is_urgent?: boolean
+          lat?: number | null
+          lng?: number | null
+          requirements?: string | null
+          status?: Database["public"]["Enums"]["job_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_business_id_fkey"
+            columns: ["business_id"]
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_category_id_fkey"
+            columns: ["category_id"]
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       jobs_skills: {
         Row: {
           job_id: string
           skill_id: string
         }
-      }
-      bookings: {
-        Row: {
-          id: string
-          job_id: string
-          worker_id: string
-          business_id: string
-          status: 'pending' | 'accepted' | 'rejected' | 'in_progress' | 'completed' | 'cancelled'
-          start_date: string
-          end_date: string
-          final_price: number
-          booking_notes: string
-          checkout_time: string | null
-          payment_status: 'pending_review' | 'available' | 'released' | 'disputed' | 'cancelled'
-          review_deadline: string | null
-          created_at: string
-          updated_at: string
-        }
-      }
-      wallets: {
-        Row: {
-          id: string
-          user_id: string
-          pending_balance: number
-          available_balance: number
-          created_at: string
-          updated_at: string
-        }
-      }
-      wallet_transactions: {
-        Row: {
-          id: string
-          wallet_id: string
-          booking_id: string | null
-          amount: number
-          type: 'earn' | 'payout' | 'refund' | 'hold' | 'release'
-          status: 'pending_review' | 'available' | 'released' | 'disputed' | 'cancelled'
-          description: string | null
-          metadata: Json
-          created_at: string
-        }
-      }
-      disputes: {
-        Row: {
-          id: string
-          booking_id: string
-          raised_by: string
-          reason: string
-          status: 'pending' | 'investigating' | 'resolved' | 'rejected'
-          resolution: string | null
-          admin_notes: string | null
-          evidence_urls: string[] | null
-          created_at: string
-          updated_at: string
-          resolved_at: string | null
-        }
-      }
-      transactions: {
-        Row: {
-          id: string
-          booking_id: string
->>>>>>> auto-claude/017-job-completion-payment-release
-          amount: number
-          type: 'credit' | 'debit' | 'pending' | 'released'
-          booking_id?: string | null
-          description?: string | null
-          created_at: string
-        }
         Insert: {
-          id?: string
-          wallet_id: string
-          amount: number
-          type: 'credit' | 'debit' | 'pending' | 'released'
-          booking_id?: string | null
-          description?: string | null
-          created_at?: string
+          job_id: string
+          skill_id: string
         }
         Update: {
-          id?: string
-          wallet_id?: string
-          amount?: number
-          type?: 'credit' | 'debit' | 'pending' | 'released'
-          booking_id?: string | null
-          description?: string | null
-          created_at?: string
+          job_id?: string
+          skill_id?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_skills_job_id_fkey"
+            columns: ["job_id"]
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -357,49 +334,6 @@ export type Database = {
             foreignKeyName: "messages_sender_id_fkey"
             columns: ["sender_id"]
             referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      reliability_score_history: {
-        Row: {
-          id: string
-          worker_id: string
-          score: number
-          attendance_rate: number
-          punctuality_rate: number
-          avg_rating: number
-          completed_jobs_count: number
-          calculated_at: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          worker_id: string
-          score: number
-          attendance_rate: number
-          punctuality_rate: number
-          avg_rating: number
-          completed_jobs_count: number
-          calculated_at?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          worker_id?: string
-          score?: number
-          attendance_rate?: number
-          punctuality_rate?: number
-          avg_rating?: number
-          completed_jobs_count?: number
-          calculated_at?: string
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reliability_score_history_worker_id_fkey"
-            columns: ["worker_id"]
-            referencedRelation: "workers"
             referencedColumns: ["id"]
           },
         ]
@@ -481,35 +415,26 @@ export type Database = {
       reviews: {
         Row: {
           booking_id: string
-          business_id: string | null
           comment: string | null
           created_at: string
           id: string
           rating: number
-          reviewer: Database["public"]["Enums"]["reviewer_type"]
-          would_rehire: boolean | null
           worker_id: string
         }
         Insert: {
           booking_id: string
-          business_id?: string | null
           comment?: string | null
           created_at?: string
           id?: string
           rating: number
-          reviewer?: Database["public"]["Enums"]["reviewer_type"]
-          would_rehire?: boolean | null
           worker_id: string
         }
         Update: {
           booking_id?: string
-          business_id?: string | null
           comment?: string | null
           created_at?: string
           id?: string
           rating?: number
-          reviewer?: Database["public"]["Enums"]["reviewer_type"]
-          would_rehire?: boolean | null
           worker_id?: string
         }
         Relationships: [
@@ -517,12 +442,6 @@ export type Database = {
             foreignKeyName: "reviews_booking_id_fkey"
             columns: ["booking_id"]
             referencedRelation: "bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_business_id_fkey"
-            columns: ["business_id"]
-            referencedRelation: "businesses"
             referencedColumns: ["id"]
           },
           {
@@ -666,10 +585,6 @@ export type Database = {
           phone: string | null
           updated_at: string
           user_id: string
-          reliability_score: number | null
-          gender?: string | null
-          experience_years?: number | null
-          kyc_status?: 'unverified' | 'pending' | 'verified' | 'rejected' | null
         }
         Insert: {
           address?: string | null
@@ -685,10 +600,6 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id: string
-          reliability_score?: number | null
-          gender?: string | null
-          experience_years?: number | null
-          kyc_status?: 'unverified' | 'pending' | 'verified' | 'rejected' | null
         }
         Update: {
           address?: string | null
@@ -704,10 +615,6 @@ export type Database = {
           phone?: string | null
           updated_at?: string
           user_id?: string
-          reliability_score?: number | null
-          gender?: string | null
-          experience_years?: number | null
-          kyc_status?: 'unverified' | 'pending' | 'verified' | 'rejected' | null
         }
         Relationships: [
           {
@@ -718,85 +625,39 @@ export type Database = {
           },
         ]
       }
-      push_subscriptions: {
+      saved_searches: {
         Row: {
           created_at: string
-          endpoint: string
+          filters: Json
           id: string
-          keys_auth: string
-          keys_p256h: string
+          is_favorite: boolean
+          name: string
           updated_at: string
-          user_id: string
+          worker_id: string
         }
         Insert: {
           created_at?: string
-          endpoint: string
+          filters?: Json
           id?: string
-          keys_auth: string
-          keys_p256h: string
+          is_favorite?: boolean
+          name: string
           updated_at?: string
-          user_id: string
+          worker_id: string
         }
         Update: {
           created_at?: string
-          endpoint?: string
+          filters?: Json
           id?: string
-          keys_auth?: string
-          keys_p256h?: string
+          is_favorite?: boolean
+          name?: string
           updated_at?: string
-          user_id?: string
+          worker_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "push_subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_notification_preferences: {
-        Row: {
-          booking_status: boolean
-          created_at: string
-          id: string
-          new_applications: boolean
-          new_job_matches: boolean
-          payment_confirmation: boolean
-          push_enabled: boolean
-          shift_reminders: boolean
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          booking_status?: boolean
-          created_at?: string
-          id?: string
-          new_applications?: boolean
-          new_job_matches?: boolean
-          payment_confirmation?: boolean
-          push_enabled?: boolean
-          shift_reminders?: boolean
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          booking_status?: boolean
-          created_at?: string
-          id?: string
-          new_applications?: boolean
-          new_job_matches?: boolean
-          payment_confirmation?: boolean
-          push_enabled?: boolean
-          shift_reminders?: boolean
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_notification_preferences_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
+            foreignKeyName: "saved_searches_worker_id_fkey"
+            columns: ["worker_id"]
+            referencedRelation: "workers"
             referencedColumns: ["id"]
           },
         ]
@@ -822,7 +683,6 @@ export type Database = {
       transaction_status: "pending" | "success" | "failed"
       transaction_type: "payment" | "refund"
       user_role: "worker" | "business"
-      reviewer_type: "business" | "worker"
     }
     CompositeTypes: {
       [_ in never]: never
