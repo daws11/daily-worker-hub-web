@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { Camera, FileText, User, AlertCircle } from "lucide-react"
+import { Camera, FileText, User, AlertCircle, Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -308,11 +308,7 @@ export function ProfileForm({
         }
       }
 
-      toast.success(
-        mode === "create"
-          ? "Profil bisnis berhasil dibuat"
-          : "Profil bisnis berhasil diperbarui"
-      )
+      // Success toast is handled by parent component (page.tsx)
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : "Terjadi kesalahan tak terduga"
       setSubmitError(errorMsg)
@@ -698,11 +694,16 @@ export function ProfileForm({
                 type="submit"
                 disabled={isSubmitting || isUploadingAvatar || isUploadingLicense}
               >
-                {isSubmitting || isUploadingAvatar || isUploadingLicense
-                  ? "Menyimpan..."
-                  : mode === "create"
-                    ? "Buat Profil"
-                    : "Simpan Perubahan"}
+                {isSubmitting || isUploadingAvatar || isUploadingLicense ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Menyimpan...
+                  </>
+                ) : mode === "create" ? (
+                  "Buat Profil"
+                ) : (
+                  "Simpan Perubahan"
+                )}
               </Button>
             </div>
           </form>
