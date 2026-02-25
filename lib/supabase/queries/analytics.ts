@@ -1,537 +1,528 @@
 import { supabase } from '../client'
 import type { Database } from '../types'
+import type {
+  PlatformMetrics,
+  ChartDataPoint,
+  UserGrowthData,
+  JobActivityData,
+  RevenueData,
+  AreaStats,
+  AnalyticsTimeRange,
+} from '../../types/admin'
 
-// ============================================
-// TYPES
-// ============================================
-
-type BookingRow = Database['public']['Tables']['bookings']['Row']
-type JobRow = Database['public']['Tables']['jobs']['Row']
-type WorkerRow = Database['public']['Tables']['workers']['Row']
-
-export interface BusinessSpending {
-  total_spending: number
-  transaction_count: number
-  average_spending_per_booking: number
-}
-
-export interface WorkerCountAnalytics {
-  unique_workers: number
-  total_bookings: number
-  repeat_hire_rate: number
-}
-
-export interface PopularPosition {
-  position_title: string
-  count: number
-  percentage: number
-}
-
-export interface ReliabilityScoreAnalytics {
-  average_score: number
-  worker_count: number
-  distribution: {
-    excellent: number    // 4.5 - 5.0
-    good: number         // 3.5 - 4.4
-    fair: number         // 2.5 - 3.4
-    poor: number         // 1.0 - 2.4
-  }
-}
-
-export interface MonthlyTrend {
-  month: string
-  year: number
-  spending: number
-  booking_count: number
-  worker_count: number
-}
-
-export interface ComplianceStatus {
-  compliant_jobs: number
-  total_jobs: number
-  compliance_rate: number
-  issues: {
-    missing_deadline: number
-    missing_requirements: number
-    cancelled_bookings: number
-  }
-}
-
-export interface DateRange {
-  start_date?: string
-  end_date?: string
-}
-
-// ============================================
-// BUSINESS SPENDING
-// ============================================
+type UsersRow = Database['public']['Tables']['users']['Row']
+type JobsRow = Database['public']['Tables']['jobs']['Row']
+type BookingsRow = Database['public']['Tables']['bookings']['Row']
+type TransactionsRow = Database['public']['Tables']['transactions']['Row']
+type BusinessesRow = Database['public']['Tables']['businesses']['Row']
+type KYCVerificationsRow = Database['public']['Tables']['kyc_verifications']['Row']
+type ReportsRow = Database['public']['Tables']['reports']['Row']
 
 /**
- * Get total spending for a business across all bookings
- * @param businessId - The business ID
- * @param dateRange - Optional date range filter
- * @returns Business spending metrics
+ * Get platform metrics summary
+ * Returns aggregated statistics across all platform entities
  */
-export async function getBusinessSpending(
-  businessId: string,
-  dateRange?: DateRange
-) {
-  try {
-    let query = supabase
-      .from('bookings')
-      .select('final_price, created_at')
-      .eq('business_id', businessId)
-      .in('status', ['completed', 'in_progress', 'accepted'])
+export async function getPlatformMetrics(): Promise<PlatformMetrics> {
+  const now = new Date()
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-    if (dateRange?.start_date) {
-      query = query.gte('created_at', dateRange.start_date)
-    }
+  // Execute all queries in parallel for better performance
+  const [
+    usersResult,
+    jobsResult,
+    bookingsResult,
+    transactionsResult,
+    businessesResult,
+    kycResult,
+    reportsResult,
+  ] = await Promise.all([
+    // User metrics
+    supabase.from('users').select('id, role, created_at'),
+    // Job metrics
+    supabase.from('jobs').select('id, status, created_at'),
+    // Booking metrics
+    supabase.from('bookings').select('id, status, created_at'),
+    // Transaction metrics
+    supabase.from('transactions').select('id, amount, status, created_at'),
+    // Business verification metrics
+    supabase.from('businesses').select('id, verification_status, created_at'),
+    // KYC verification metrics
+    supabase.from('kyc_verifications').select('id, status, submitted_at, verified_at'),
+    // Reports metrics
+    supabase.from('reports').select('id, status, created_at'),
+  ])
 
-    if (dateRange?.end_date) {
-      query = query.lte('created_at', dateRange.end_date)
-    }
+  // Check for errors
+  if (usersResult.error) throw new Error(`Failed to fetch user metrics: ${usersResult.error.message}`)
+  if (jobsResult.error) throw new Error(`Failed to fetch job metrics: ${jobsResult.error.message}`)
+  if (bookingsResult.error) throw new Error(`Failed to fetch booking metrics: ${bookingsResult.error.message}`)
+  if (transactionsResult.error) throw new Error(`Failed to fetch transaction metrics: ${transactionsResult.error.message}`)
+  if (businessesResult.error) throw new Error(`Failed to fetch business metrics: ${businessesResult.error.message}`)
+  if (kycResult.error) throw new Error(`Failed to fetch KYC metrics: ${kycResult.error.message}`)
+  if (reportsResult.error) throw new Error(`Failed to fetch report metrics: ${reportsResult.error.message}`)
 
-    const { data, error } = await query
+  const users = (usersResult.data || []) as any[]
+  const jobs = (jobsResult.data || []) as any[]
+  const bookings = (bookingsResult.data || []) as any[]
+  const transactions = (transactionsResult.data || []) as any[]
+  const businesses = (businessesResult.data || []) as any[]
+  const kycVerifications = (kycResult.data || []) as any[]
+  const reportsData = (reportsResult.data || []) as any[]
 
-    if (error) {
-      console.error('Error fetching business spending:', error)
-      return { data: null, error }
-    }
+  // Calculate user metrics
+  const workers = users.filter(u => u.role === 'worker').length
+  const businessesCount = users.filter(u => u.role === 'business').length
+  const admins = users.filter(u => u.role === 'admin').length
+  const newUsersThisWeek = users.filter(u => u.created_at >= weekAgo).length
+  const newUsersThisMonth = users.filter(u => u.created_at >= monthAgo).length
 
-    const bookings = data || []
-    const totalSpending = bookings.reduce((sum, b) => sum + (b.final_price || 0), 0)
-    const transactionCount = bookings.length
-    const averageSpending = transactionCount > 0 ? totalSpending / transactionCount : 0
+  // Calculate job metrics
+  const activeJobs = jobs.filter(j => j.status === 'open' || j.status === 'in_progress').length
+  const completedJobs = jobs.filter(j => j.status === 'completed').length
+  const cancelledJobs = jobs.filter(j => j.status === 'cancelled').length
+  const newJobsThisWeek = jobs.filter(j => j.created_at >= weekAgo).length
+  const newJobsThisMonth = jobs.filter(j => j.created_at >= monthAgo).length
 
-    const result: BusinessSpending = {
-      total_spending: totalSpending,
-      transaction_count: transactionCount,
-      average_spending_per_booking: Math.round(averageSpending * 100) / 100
-    }
+  // Calculate booking metrics
+  const pendingBookings = bookings.filter(b => b.status === 'pending').length
+  const inProgressBookings = bookings.filter(b => b.status === 'in_progress').length
+  const completedBookings = bookings.filter(b => b.status === 'completed').length
+  const cancelledBookings = bookings.filter(b => b.status === 'cancelled').length
+  const newBookingsThisWeek = bookings.filter(b => b.created_at >= weekAgo).length
+  const newBookingsThisMonth = bookings.filter(b => b.created_at >= monthAgo).length
 
-    return { data: result, error: null }
-  } catch (error) {
-    console.error('Unexpected error fetching business spending:', error)
-    return { data: null, error }
+  // Calculate transaction metrics
+  const successfulTransactions = transactions.filter(t => t.status === 'success')
+  const pendingTransactions = transactions.filter(t => t.status === 'pending')
+  const totalVolume = successfulTransactions.reduce((sum, t) => sum + (t.amount || 0), 0)
+  const pendingVolume = pendingTransactions.reduce((sum, t) => sum + (t.amount || 0), 0)
+  const completedVolume = successfulTransactions.reduce((sum, t) => sum + (t.amount || 0), 0)
+  const thisWeekVolume = successfulTransactions
+    .filter(t => t.created_at >= weekAgo)
+    .reduce((sum, t) => sum + (t.amount || 0), 0)
+  const thisMonthVolume = successfulTransactions
+    .filter(t => t.created_at >= monthAgo)
+    .reduce((sum, t) => sum + (t.amount || 0), 0)
+
+  // Calculate verification metrics
+  const pendingBusiness = businesses.filter(b => b.verification_status === 'pending').length
+  const pendingKYC = kycVerifications.filter(k => k.status === 'pending').length
+  const approvedThisWeek = kycVerifications.filter(
+    k => k.status === 'verified' && k.verified_at && k.verified_at >= weekAgo
+  ).length
+  const rejectedThisWeek = kycVerifications.filter(
+    k => k.status === 'rejected' && k.verified_at && k.verified_at >= weekAgo
+  ).length
+
+  // Calculate dispute metrics (using reports as proxy)
+  const openDisputes = reportsData.filter(r => r.status === 'pending' || r.status === 'reviewing').length
+  const resolvedReports = reportsData.filter(r => r.status === 'resolved')
+  const resolvedThisWeek = resolvedReports.filter(r => r.created_at >= weekAgo).length
+  const resolvedThisMonth = resolvedReports.filter(r => r.created_at >= monthAgo).length
+
+  // Calculate report metrics
+  const pendingReports = reportsData.filter(r => r.status === 'pending').length
+  const openReports = reportsData.filter(r => r.status === 'pending' || r.status === 'reviewing').length
+  const reportsResolvedThisWeek = resolvedReports.filter(r => r.created_at >= weekAgo).length
+
+  return {
+    users: {
+      total: users.length,
+      workers,
+      businesses: businessesCount,
+      admins,
+      newThisWeek: newUsersThisWeek,
+      newThisMonth: newUsersThisMonth,
+    },
+    jobs: {
+      total: jobs.length,
+      active: activeJobs,
+      completed: completedJobs,
+      cancelled: cancelledJobs,
+      newThisWeek: newJobsThisWeek,
+      newThisMonth: newJobsThisMonth,
+    },
+    bookings: {
+      total: bookings.length,
+      pending: pendingBookings,
+      inProgress: inProgressBookings,
+      completed: completedBookings,
+      cancelled: cancelledBookings,
+      newThisWeek: newBookingsThisWeek,
+      newThisMonth: newBookingsThisMonth,
+    },
+    transactions: {
+      total: transactions.length,
+      totalVolume,
+      pendingVolume,
+      completedVolume,
+      thisWeekVolume,
+      thisMonthVolume,
+    },
+    verifications: {
+      pendingBusiness,
+      pendingKYC,
+      approvedThisWeek,
+      rejectedThisWeek,
+    },
+    disputes: {
+      open: openDisputes,
+      resolvedThisWeek: resolvedThisWeek,
+      resolvedThisMonth: resolvedThisMonth,
+      avgResolutionTime: 0, // Would need additional data for accurate calculation
+    },
+    reports: {
+      pending: pendingReports,
+      open: openReports,
+      resolvedThisWeek: reportsResolvedThisWeek,
+    },
   }
 }
 
-// ============================================
-// UNIQUE WORKER COUNT
-// ============================================
-
 /**
- * Get unique worker count for a business
- * @param businessId - The business ID
- * @param dateRange - Optional date range filter
- * @returns Worker count analytics
+ * Get user growth data over time
+ * Groups user registrations by date
  */
-export async function getUniqueWorkerCount(
-  businessId: string,
-  dateRange?: DateRange
-) {
-  try {
-    let query = supabase
-      .from('bookings')
-      .select('worker_id')
-      .eq('business_id', businessId)
+export async function getUserGrowthData(
+  timeRange: AnalyticsTimeRange
+): Promise<UserGrowthData[]> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, role, created_at')
+    .gte('created_at', timeRange.start)
+    .lte('created_at', timeRange.end)
+    .order('created_at', { ascending: true })
 
-    if (dateRange?.start_date) {
-      query = query.gte('created_at', dateRange.start_date)
-    }
-
-    if (dateRange?.end_date) {
-      query = query.lte('created_at', dateRange.end_date)
-    }
-
-    const { data, error } = await query
-
-    if (error) {
-      console.error('Error fetching unique worker count:', error)
-      return { data: null, error }
-    }
-
-    const bookings = data || []
-    const uniqueWorkers = new Set(bookings.map(b => b.worker_id))
-    const totalBookings = bookings.length
-
-    // Calculate repeat hire rate (bookings beyond first hire per worker)
-    const repeatHires = totalBookings - uniqueWorkers.size
-    const repeatHireRate = totalBookings > 0 ? (repeatHires / totalBookings) * 100 : 0
-
-    const result: WorkerCountAnalytics = {
-      unique_workers: uniqueWorkers.size,
-      total_bookings: totalBookings,
-      repeat_hire_rate: Math.round(repeatHireRate * 10) / 10
-    }
-
-    return { data: result, error: null }
-  } catch (error) {
-    console.error('Unexpected error fetching unique worker count:', error)
-    return { data: null, error }
+  if (error) {
+    throw new Error(`Failed to fetch user growth data: ${error.message}`)
   }
+
+  // Group by date
+  const groupedData = new Map<string, UserGrowthData>()
+  const users = (data || []) as any[]
+
+  // Initialize dates in range
+  const startDate = new Date(timeRange.start)
+  const endDate = new Date(timeRange.end)
+  const currentDate = new Date(startDate)
+
+  while (currentDate <= endDate) {
+    const dateKey = currentDate.toISOString().split('T')[0]
+    groupedData.set(dateKey, {
+      date: dateKey,
+      value: 0,
+      workers: 0,
+      businesses: 0,
+      total: 0,
+    })
+    currentDate.setDate(currentDate.getDate() + 1)
+  }
+
+  // Count users by date and role
+  let cumulativeWorkers = 0
+  let cumulativeBusinesses = 0
+
+  for (const user of users) {
+    const dateKey = user.created_at.split('T')[0]
+    const existing = groupedData.get(dateKey) || {
+      date: dateKey,
+      value: 0,
+      workers: 0,
+      businesses: 0,
+      total: 0,
+    }
+
+    if (user.role === 'worker') {
+      cumulativeWorkers++
+    } else if (user.role === 'business') {
+      cumulativeBusinesses++
+    }
+
+    const total = cumulativeWorkers + cumulativeBusinesses
+    groupedData.set(dateKey, {
+      date: dateKey,
+      value: total,
+      workers: cumulativeWorkers,
+      businesses: cumulativeBusinesses,
+      total,
+    })
+  }
+
+  return Array.from(groupedData.values())
 }
 
-// ============================================
-// POPULAR POSITIONS
-// ============================================
-
 /**
- * Get most popular job positions hired by a business
- * @param businessId - The business ID
- * @param dateRange - Optional date range filter
- * @param limit - Maximum number of positions to return (default: 10)
- * @returns Array of popular positions
+ * Get job activity data over time
+ * Groups job postings and completions by date
  */
-export async function getPopularPositions(
-  businessId: string,
-  dateRange?: DateRange,
-  limit = 10
-) {
-  try {
-    let query = supabase
-      .from('bookings')
-      .select(`
-        job_id,
-        jobs!inner(
-          title
-        )
-      `)
-      .eq('business_id', businessId)
+export async function getJobActivityData(
+  timeRange: AnalyticsTimeRange
+): Promise<JobActivityData[]> {
+  const { data, error } = await supabase
+    .from('jobs')
+    .select('id, status, created_at, updated_at')
+    .gte('created_at', timeRange.start)
+    .lte('created_at', timeRange.end)
+    .order('created_at', { ascending: true })
 
-    if (dateRange?.start_date) {
-      query = query.gte('created_at', dateRange.start_date)
-    }
-
-    if (dateRange?.end_date) {
-      query = query.lte('created_at', dateRange.end_date)
-    }
-
-    const { data, error } = await query
-
-    if (error) {
-      console.error('Error fetching popular positions:', error)
-      return { data: null, error }
-    }
-
-    // Count occurrences of each position
-    const positionCounts = new Map<string, number>()
-    let totalCount = 0
-
-    for (const booking of data || []) {
-      const job = booking.jobs as any
-      if (job?.title) {
-        const count = positionCounts.get(job.title) || 0
-        positionCounts.set(job.title, count + 1)
-        totalCount++
-      }
-    }
-
-    // Convert to array and sort by count
-    const positions: PopularPosition[] = Array.from(positionCounts.entries())
-      .map(([title, count]) => ({
-        position_title: title,
-        count,
-        percentage: totalCount > 0 ? Math.round((count / totalCount) * 1000) / 10 : 0
-      }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, limit)
-
-    return { data: positions, error: null }
-  } catch (error) {
-    console.error('Unexpected error fetching popular positions:', error)
-    return { data: null, error }
+  if (error) {
+    throw new Error(`Failed to fetch job activity data: ${error.message}`)
   }
-}
 
-// ============================================
-// AVERAGE RELIABILITY SCORE
-// ============================================
+  // Group by date
+  const groupedData = new Map<string, JobActivityData>()
+  const jobs = (data || []) as any[]
 
-/**
- * Get average reliability score for workers hired by a business
- * Uses the calculateReliabilityScore function from bookings.ts
- * @param businessId - The business ID
- * @param dateRange - Optional date range filter
- * @returns Reliability score analytics
- */
-export async function getAverageReliabilityScore(
-  businessId: string,
-  dateRange?: DateRange
-) {
-  try {
-    // First get all unique workers hired by this business
-    let workerQuery = supabase
-      .from('bookings')
-      .select('worker_id')
-      .eq('business_id', businessId)
+  // Initialize dates in range
+  const startDate = new Date(timeRange.start)
+  const endDate = new Date(timeRange.end)
+  const currentDate = new Date(startDate)
 
-    if (dateRange?.start_date) {
-      workerQuery = workerQuery.gte('created_at', dateRange.start_date)
+  while (currentDate <= endDate) {
+    const dateKey = currentDate.toISOString().split('T')[0]
+    groupedData.set(dateKey, {
+      date: dateKey,
+      value: 0,
+      posted: 0,
+      completed: 0,
+      cancelled: 0,
+    })
+    currentDate.setDate(currentDate.getDate() + 1)
+  }
+
+  // Count jobs by date and status
+  for (const job of jobs) {
+    const dateKey = job.created_at.split('T')[0]
+    const existing = groupedData.get(dateKey)
+
+    if (existing) {
+      existing.posted++
+      existing.value = existing.posted + existing.completed + existing.cancelled
     }
 
-    if (dateRange?.end_date) {
-      workerQuery = workerQuery.lte('created_at', dateRange.end_date)
-    }
+    // Track completions and cancellations by updated_at
+    if (job.status === 'completed' || job.status === 'cancelled') {
+      const updatedDateKey = job.updated_at.split('T')[0]
+      const updatedExisting = groupedData.get(updatedDateKey)
 
-    const { data: workerData, error: workerError } = await workerQuery
-
-    if (workerError) {
-      console.error('Error fetching workers for reliability score:', workerError)
-      return { data: null, error: workerError }
-    }
-
-    const uniqueWorkerIds = Array.from(new Set(workerData?.map(b => b.worker_id) || []))
-
-    // Get reliability metrics for each worker
-    let totalScore = 0
-    let workerCount = 0
-    const scores: number[] = []
-
-    for (const workerId of uniqueWorkerIds) {
-      // Get all bookings for this worker (across all businesses for accurate reliability)
-      const { data: bookings, error: bookingsError } = await supabase
-        .from('bookings')
-        .select('id, status')
-        .eq('worker_id', workerId)
-
-      if (!bookingsError && bookings) {
-        // Calculate reliability score
-        const completedBookings = bookings.filter(b => b.status === 'completed')
-        const totalBookings = bookings.length
-
-        if (totalBookings > 0) {
-          // Attendance score (40%)
-          const attendanceRate = completedBookings.length / totalBookings
-          const attendanceScore = attendanceRate * 5.0
-
-          // Rating score (30%) - fetch from reviews table
-          const completedBookingIds = completedBookings.map(b => b.id)
-          const { data: reviews } = await supabase
-            .from('reviews')
-            .select('rating')
-            .in('booking_id', completedBookingIds)
-
-          const ratings = reviews?.map(r => r.rating) || []
-          const avgRating = ratings.length > 0
-            ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
-            : 4.0
-          const ratingScore = avgRating
-
-          // Punctuality score (30%) - assuming all completed bookings were punctual
-          const punctualityScore = 4.0
-
-          const weightedScore = (
-            (attendanceScore * 0.40) +
-            (ratingScore * 0.30) +
-            (punctualityScore * 0.30)
-          )
-
-          const finalScore = Math.max(1.0, Math.min(5.0, weightedScore))
-          totalScore += finalScore
-          scores.push(finalScore)
-          workerCount++
+      if (updatedExisting) {
+        if (job.status === 'completed') {
+          updatedExisting.completed++
+        } else if (job.status === 'cancelled') {
+          updatedExisting.cancelled++
         }
+        updatedExisting.value = updatedExisting.posted + updatedExisting.completed + updatedExisting.cancelled
       }
     }
+  }
 
-    // Calculate distribution
-    const distribution = {
-      excellent: scores.filter(s => s >= 4.5).length,
-      good: scores.filter(s => s >= 3.5 && s < 4.5).length,
-      fair: scores.filter(s => s >= 2.5 && s < 3.5).length,
-      poor: scores.filter(s => s < 2.5).length
+  return Array.from(groupedData.values())
+}
+
+/**
+ * Get revenue data over time
+ * Groups successful transactions by date
+ */
+export async function getRevenueData(
+  timeRange: AnalyticsTimeRange
+): Promise<RevenueData[]> {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('id, amount, status, created_at')
+    .gte('created_at', timeRange.start)
+    .lte('created_at', timeRange.end)
+    .eq('status', 'success')
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    throw new Error(`Failed to fetch revenue data: ${error.message}`)
+  }
+
+  // Group by date
+  const groupedData = new Map<string, RevenueData>()
+  const transactions = (data || []) as any[]
+
+  // Initialize dates in range
+  const startDate = new Date(timeRange.start)
+  const endDate = new Date(timeRange.end)
+  const currentDate = new Date(startDate)
+
+  while (currentDate <= endDate) {
+    const dateKey = currentDate.toISOString().split('T')[0]
+    groupedData.set(dateKey, {
+      date: dateKey,
+      value: 0,
+      total: 0,
+      fees: 0,
+    })
+    currentDate.setDate(currentDate.getDate() + 1)
+  }
+
+  // Sum revenue by date
+  const platformFeeRate = 0.05 // 5% platform fee
+
+  for (const transaction of transactions) {
+    const dateKey = transaction.created_at.split('T')[0]
+    const existing = groupedData.get(dateKey)
+
+    if (existing) {
+      existing.total += transaction.amount || 0
+      existing.fees += (transaction.amount || 0) * platformFeeRate
+      existing.value = existing.total
     }
+  }
 
-    const result: ReliabilityScoreAnalytics = {
-      average_score: workerCount > 0 ? Math.round((totalScore / workerCount) * 100) / 100 : 0,
-      worker_count: workerCount,
-      distribution
+  return Array.from(groupedData.values())
+}
+
+/**
+ * Get statistics by area
+ * Returns aggregated metrics for each area in Bali
+ */
+export async function getAreaStats(): Promise<AreaStats[]> {
+  const areas = ['Badung', 'Denpasar', 'Gianyar', 'Tabanan', 'Buleleng', 'Klungkung', 'Karangasem', 'Bangli', 'Jembrana']
+
+  const [usersResult, businessesResult, jobsResult, bookingsResult, transactionsResult] = await Promise.all([
+    supabase.from('users').select('id, role').not('role', 'eq', 'admin'),
+    supabase.from('businesses').select('id, area'),
+    supabase.from('jobs').select('id, lat, lng'),
+    supabase.from('bookings').select('id, lat, lng'),
+    supabase.from('transactions').select('id, amount, status').eq('status', 'success'),
+  ])
+
+  if (usersResult.error) throw new Error(`Failed to fetch users: ${usersResult.error.message}`)
+  if (businessesResult.error) throw new Error(`Failed to fetch businesses: ${businessesResult.error.message}`)
+  if (jobsResult.error) throw new Error(`Failed to fetch jobs: ${jobsResult.error.message}`)
+  if (bookingsResult.error) throw new Error(`Failed to fetch bookings: ${bookingsResult.error.message}`)
+  if (transactionsResult.error) throw new Error(`Failed to fetch transactions: ${transactionsResult.error.message}`)
+
+  const users = (usersResult.data || []) as any[]
+  const businesses = (businessesResult.data || []) as any[]
+  const jobs = (jobsResult.data || []) as any[]
+  const bookings = (bookingsResult.data || []) as any[]
+  const transactions = (transactionsResult.data || []) as any[]
+
+  const totalRevenue = transactions.reduce((sum, t) => sum + (t.amount || 0), 0)
+
+  // Calculate stats per area
+  const areaStats: AreaStats[] = areas.map(area => {
+    const businessesInArea = businesses.filter(b => b.area === area)
+    const jobsInArea = jobs.filter(j => isInArea(j.lat, j.lng, area))
+    const bookingsInArea = bookings.filter(b => isInArea(b.lat, b.lng, area))
+
+    // Estimate revenue by area based on booking distribution
+    const revenueShare = bookingsInArea.length / Math.max(bookings.length, 1)
+    const areaRevenue = totalRevenue * revenueShare
+
+    return {
+      area,
+      users: businessesInArea.length, // Using business count as proxy for users
+      jobs: jobsInArea.length,
+      bookings: bookingsInArea.length,
+      revenue: areaRevenue,
     }
+  })
 
-    return { data: result, error: null }
-  } catch (error) {
-    console.error('Unexpected error fetching average reliability score:', error)
-    return { data: null, error }
+  return areaStats
+}
+
+/**
+ * Helper function to determine if coordinates are within an area
+ * This is a simplified implementation - in production you'd use proper geolocation
+ */
+function isInArea(lat: number, lng: number, area: string): boolean {
+  // Bali coordinates by area (simplified bounding boxes)
+  const areaBounds: Record<string, { minLat: number; maxLat: number; minLng: number; maxLng: number }> = {
+    Badung: { minLat: -8.8, maxLat: -8.5, minLng: 115.0, maxLng: 115.3 },
+    Denpasar: { minLat: -8.7, maxLat: -8.6, minLng: 115.2, maxLng: 115.25 },
+    Gianyar: { minLat: -8.7, maxLat: -8.4, minLng: 115.2, maxLng: 115.5 },
+    Tabanan: { minLat: -8.6, maxLat: -8.3, minLng: 114.9, maxLng: 115.2 },
+    Buleleng: { minLat: -8.2, maxLat: -8.0, minLng: 115.0, maxLng: 115.6 },
+    Klungkung: { minLat: -8.6, maxLat: -8.4, minLng: 115.4, maxLng: 115.6 },
+    Karangasem: { minLat: -8.6, maxLat: -8.3, minLng: 115.4, maxLng: 115.8 },
+    Bangli: { minLat: -8.5, maxLat: -8.2, minLng: 115.3, maxLng: 115.5 },
+    Jembrana: { minLat: -8.5, maxLat: -8.2, minLng: 114.6, maxLng: 114.9 },
+  }
+
+  const bounds = areaBounds[area]
+  if (!bounds) return false
+
+  return (
+    lat >= bounds.minLat &&
+    lat <= bounds.maxLat &&
+    lng >= bounds.minLng &&
+    lng <= bounds.maxLng
+  )
+}
+
+/**
+ * Get chart data for various metrics
+ * Generic function to fetch time-series data for any metric type
+ */
+export async function getChartData(
+  metric: 'users' | 'jobs' | 'bookings' | 'revenue',
+  timeRange: AnalyticsTimeRange
+): Promise<ChartDataPoint[]> {
+  switch (metric) {
+    case 'users':
+      return getUserGrowthData(timeRange)
+    case 'jobs':
+      return getJobActivityData(timeRange)
+    case 'bookings':
+      return getBookingActivityData(timeRange)
+    case 'revenue':
+      return getRevenueData(timeRange)
+    default:
+      return []
   }
 }
 
-// ============================================
-// SEASONAL TRENDS
-// ============================================
-
 /**
- * Get seasonal hiring and spending trends for a business
- * @param businessId - The business ID
- * @param dateRange - Optional date range filter
- * @returns Array of monthly trends
+ * Get booking activity data over time
+ * Groups bookings by date and status
  */
-export async function getSeasonalTrends(
-  businessId: string,
-  dateRange?: DateRange
-) {
-  try {
-    let query = supabase
-      .from('bookings')
-      .select('final_price, created_at, worker_id')
-      .eq('business_id', businessId)
-      .in('status', ['completed', 'in_progress', 'accepted'])
-      .order('created_at', { ascending: true })
+async function getBookingActivityData(
+  timeRange: AnalyticsTimeRange
+): Promise<ChartDataPoint[]> {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('id, status, created_at')
+    .gte('created_at', timeRange.start)
+    .lte('created_at', timeRange.end)
+    .order('created_at', { ascending: true })
 
-    if (dateRange?.start_date) {
-      query = query.gte('created_at', dateRange.start_date)
-    }
-
-    if (dateRange?.end_date) {
-      query = query.lte('created_at', dateRange.end_date)
-    }
-
-    const { data, error } = await query
-
-    if (error) {
-      console.error('Error fetching seasonal trends:', error)
-      return { data: null, error }
-    }
-
-    // Group by month
-    const monthlyData = new Map<string, {
-      spending: number
-      booking_count: number
-      workers: Set<string>
-    }>()
-
-    for (const booking of data || []) {
-      const date = new Date(booking.created_at)
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-
-      if (!monthlyData.has(monthKey)) {
-        monthlyData.set(monthKey, {
-          spending: 0,
-          booking_count: 0,
-          workers: new Set()
-        })
-      }
-
-      const monthData = monthlyData.get(monthKey)!
-      monthData.spending += booking.final_price || 0
-      monthData.booking_count += 1
-      monthData.workers.add(booking.worker_id)
-    }
-
-    // Convert to array format
-    const trends: MonthlyTrend[] = Array.from(monthlyData.entries())
-      .map(([monthKey, data]) => {
-        const [year, month] = monthKey.split('-')
-        return {
-          month: `${year}-${month}`,
-          year: parseInt(year, 10),
-          spending: data.spending,
-          booking_count: data.booking_count,
-          worker_count: data.workers.size
-        }
-      })
-      .sort((a, b) => {
-        if (a.year !== b.year) return a.year - b.year
-        return a.month.localeCompare(b.month)
-      })
-
-    return { data: trends, error: null }
-  } catch (error) {
-    console.error('Unexpected error fetching seasonal trends:', error)
-    return { data: null, error }
+  if (error) {
+    throw new Error(`Failed to fetch booking activity data: ${error.message}`)
   }
-}
 
-// ============================================
-// COMPLIANCE STATUS
-// ============================================
+  // Group by date
+  const groupedData = new Map<string, ChartDataPoint>()
+  const bookings = (data || []) as any[]
 
-/**
- * Get compliance status metrics for a business (PP 35/2021 adherence)
- * @param businessId - The business ID
- * @param dateRange - Optional date range filter
- * @returns Compliance status metrics
- */
-export async function getComplianceStatus(
-  businessId: string,
-  dateRange?: DateRange
-) {
-  try {
-    // Get all jobs for the business
-    let jobQuery = supabase
-      .from('jobs')
-      .select('id, deadline, requirements, status')
-      .eq('business_id', businessId)
+  // Initialize dates in range
+  const startDate = new Date(timeRange.start)
+  const endDate = new Date(timeRange.end)
+  const currentDate = new Date(startDate)
 
-    if (dateRange?.start_date) {
-      jobQuery = jobQuery.gte('created_at', dateRange.start_date)
-    }
-
-    if (dateRange?.end_date) {
-      jobQuery = jobQuery.lte('created_at', dateRange.end_date)
-    }
-
-    const { data: jobs, error: jobError } = await jobQuery
-
-    if (jobError) {
-      console.error('Error fetching jobs for compliance status:', jobError)
-      return { data: null, error: jobError }
-    }
-
-    // Get bookings for cancelled count
-    let bookingQuery = supabase
-      .from('bookings')
-      .select('id, status')
-      .eq('business_id', businessId)
-
-    if (dateRange?.start_date) {
-      bookingQuery = bookingQuery.gte('created_at', dateRange.start_date)
-    }
-
-    if (dateRange?.end_date) {
-      bookingQuery = bookingQuery.lte('created_at', dateRange.end_date)
-    }
-
-    const { data: bookings, error: bookingError } = await bookingQuery
-
-    if (bookingError) {
-      console.error('Error fetching bookings for compliance status:', bookingError)
-      return { data: null, error: bookingError }
-    }
-
-    // Analyze compliance
-    let missingDeadline = 0
-    let missingRequirements = 0
-
-    for (const job of jobs || []) {
-      if (!job.deadline) {
-        missingDeadline++
-      }
-      if (!job.requirements || job.requirements.trim() === '') {
-        missingRequirements++
-      }
-    }
-
-    const totalJobs = jobs?.length || 0
-    const compliantJobs = totalJobs - missingDeadline - missingRequirements
-    const complianceRate = totalJobs > 0 ? Math.round((compliantJobs / totalJobs) * 100) : 100
-
-    const cancelledBookings = bookings?.filter(b => b.status === 'cancelled').length || 0
-
-    const result: ComplianceStatus = {
-      compliant_jobs: Math.max(0, compliantJobs),
-      total_jobs: totalJobs,
-      compliance_rate: complianceRate,
-      issues: {
-        missing_deadline: missingDeadline,
-        missing_requirements: missingRequirements,
-        cancelled_bookings: cancelledBookings
-      }
-    }
-
-    return { data: result, error: null }
-  } catch (error) {
-    console.error('Unexpected error fetching compliance status:', error)
-    return { data: null, error }
+  while (currentDate <= endDate) {
+    const dateKey = currentDate.toISOString().split('T')[0]
+    groupedData.set(dateKey, {
+      date: dateKey,
+      value: 0,
+    })
+    currentDate.setDate(currentDate.getDate() + 1)
   }
+
+  // Count bookings by date
+  for (const booking of bookings) {
+    const dateKey = booking.created_at.split('T')[0]
+    const existing = groupedData.get(dateKey)
+
+    if (existing) {
+      existing.value++
+    }
+  }
+
+  return Array.from(groupedData.values())
 }

@@ -1,15 +1,15 @@
 {
   "active": true,
-  "spec": "026-emergency-job-cancellation-rescheduling",
+  "spec": "027-admin-dashboard-management",
   "state": "building",
   "subtasks": {
     "completed": 15,
-    "total": 16,
+    "total": 30,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Integration & Testing",
+    "current": "User Management Pages",
     "id": null,
     "total": 3
   },
@@ -18,8 +18,47 @@
     "max": 1
   },
   "session": {
+    "number": 14,
+    "started_at": "2026-02-24T01:33:50.909486"
+  },
+  "last_update": "2026-02-24T03:18:46.313304"
+}
+    "in_progress": 1,
+    "failed": 0
+  },
+"phase": {
+    "current": "User Management Pages",
+    "id": null,
+    "total": 3
+  },
+  "workers": {
+    "active": 0,
+    "max": 1
+  },
+  "session": {
+    "number": 14,
+    "started_at": "2026-02-24T01:33:50.909486"
+  },
+  "last_update": "2026-02-24T03:18:46.313304"
+}
+    "id": null,
+    "total": 3
+  },
+  "workers": {
+    "active": 0,
+    "max": 1
+  },
+  "session": {
+<<<<<<< HEAD
     "number": 17,
     "started_at": "2026-02-24T21:58:41.301301"
   },
   "last_update": "2026-02-24T22:44:34.357364"
 }
+=======
+    "number": 14,
+    "started_at": "2026-02-24T01:33:50.909486"
+  },
+  "last_update": "2026-02-24T03:18:46.313304"
+}
+>>>>>>> auto-claude/027-admin-dashboard-management
