@@ -1,4 +1,4 @@
-import { Briefcase, Calendar, CheckCircle, Wallet, Users, Settings } from "lucide-react"
+import { BarChart, Briefcase, Calendar, CheckCircle, Wallet, Users, Settings, MessageCircle } from "lucide-react"
 
 export interface NavItem {
   href: string
@@ -9,6 +9,7 @@ export interface NavItem {
 export const workerNavItems: NavItem[] = [
   { href: "/worker/jobs", label: "Job Marketplace", icon: Briefcase },
   { href: "/worker/bookings", label: "Booking Saya", icon: Calendar },
+  { href: "/worker/messages", label: "Pesan", icon: MessageCircle },
   { href: "/worker/attendance", label: "Absensi", icon: CheckCircle },
   { href: "/worker/wallet", label: "Dompet", icon: Wallet },
   { href: "/worker/settings", label: "Pengaturan", icon: Settings },
@@ -16,7 +17,9 @@ export const workerNavItems: NavItem[] = [
 
 export const businessNavItems: NavItem[] = [
   { href: "/business/jobs", label: "Pekerjaan", icon: Briefcase },
+  { href: "/business/messages", label: "Pesan", icon: MessageCircle },
   { href: "/business/job-attendance", label: "Kehadiran", icon: Users },
+  { href: "/business/analytics", label: "Analitik", icon: BarChart },
   { href: "/business/wallet", label: "Dompet", icon: Wallet },
   { href: "/business/settings", label: "Pengaturan", icon: Settings },
 ]

@@ -69,9 +69,12 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
             // Process the QR code
             await processQRCode(decodedText)
           },
-          (errorMessage: string) => {
+          (errorMessage: string, error?: any) => {
             // Ignore scan errors (happens when no QR code is in frame)
-            // The html5-qrcode library sends error messages continuously when scanning
+            // Only log non-critical errors
+            if (error?.type !== 0) {
+              // Type 0 is "no code found", which is expected when scanning
+            }
           }
         )
 

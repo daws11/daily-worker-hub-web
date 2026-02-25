@@ -24,12 +24,14 @@ export const areaEnum = z.enum([
 
 // Business profile schema for creation
 export const businessProfileSchema = z.object({
-  name: z.string().min(1, "Nama perusahaan wajib diisi")
+  name: z.string()
+    .min(1, "Nama perusahaan wajib diisi")
     .max(200, "Nama perusahaan maksimal 200 karakter"),
 
   business_type: businessTypeEnum,
 
-  address: z.string().min(1, "Alamat wajib diisi")
+  address: z.string()
+    .min(1, "Alamat wajib diisi")
     .max(500, "Alamat maksimal 500 karakter"),
 
   area: areaEnum,
