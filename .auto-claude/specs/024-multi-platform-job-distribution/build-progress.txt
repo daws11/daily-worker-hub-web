@@ -1,0 +1,461 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Multi-Platform Job Distribution
+Workspace: managed by orchestrator
+Started: 2026-02-24
+
+Workflow Type: feature
+Rationale: This is a multi-service feature requiring database schema changes, backend API development (edge functions), and frontend UI components. The workflow follows the standard feature pattern: Database → Backend → Frontend → Integration.
+
+Session 1 (Planner):
+- Created implementation_plan.json
+- Created project_index.json
+- Created context.json
+- Created init.sh
+- Phases: 5
+- Total subtasks: 25
+
+=== PHASE SUMMARY ===
+
+Phase 1: Database Schema (5 subtasks)
+- Create social_platforms table with platform types and configuration
+- Create business_social_connections table for OAuth tokens and settings
+- Create job_posts table to track social media posts for each job
+- Add platform_settings column to jobs table for per-job overrides
+- Generate TypeScript types from updated database schema
+Dependencies: None
+
+Phase 2: Backend Edge Functions (5 subtasks)
+- Create social-connect edge function for OAuth flow (Instagram/Facebook)
+- Create social-instagram edge function for posting to Instagram Graph API
+- Create social-facebook edge function for posting to Facebook Graph API
+- Create social-distribute edge function for orchestrating multi-platform posting
+- Create social-webhook edge function for handling platform webhook callbacks
+Dependencies: Phase 1 (Database Schema)
+
+Phase 3: Frontend Types & Utilities (3 subtasks)
+- Create social platform TypeScript types
+- Create social platform server actions (connect, disconnect, list)
+- Create content formatter utilities for Instagram and Facebook posts
+Dependencies: Phase 1 (Database Schema)
+Note: Can run in parallel with Phase 2
+
+Phase 4: Frontend UI Components (5 subtasks)
+- Create SocialPlatformConnect component for OAuth connection UI
+- Create SocialPostPreview component for previewing formatted posts
+- Create SocialPlatformSettings component for per-platform toggles
+- Integrate social platform components into job posting form
+- Create social performance analytics page component
+Dependencies: Phase 2 (Backend) and Phase 3 (Types)
+
+Phase 5: Integration & Testing (5 subtasks)
+- Add environment variables for Instagram and Facebook API credentials
+- Create database trigger for auto-distribution on job creation
+- End-to-end test: Create job and verify social distribution
+- Create Supabase function for webhook signature verification
+- Update documentation with social platform setup instructions
+Dependencies: Phase 2, 3, 4 (all previous phases)
+
+=== SERVICES INVOLVED ===
+
+Database (PostgreSQL via Supabase):
+- New tables: social_platforms, business_social_connections, job_posts
+- Modify: jobs table (add platform_settings column)
+- Triggers: auto-distribute on job creation
+
+Edge Functions (Deno via Supabase):
+- social-connect: OAuth flow handler
+- social-instagram: Instagram Graph API integration
+- social-facebook: Facebook Graph API integration
+- social-distribute: Multi-platform orchestration
+- social-webhook: Webhook signature verification and callback handling
+
+Frontend (Next.js):
+- New types: lib/types/social.ts
+- New actions: lib/actions/social.ts
+- New utilities: lib/utils/social-content.ts
+- New components: social-platform-connect, social-post-preview, social-platform-settings
+- Modified: job-posting-form, business jobs page
+- New page: business/analytics
+
+=== PARALLELISM ANALYSIS ===
+
+Max parallel phases: 2
+Parallel groups:
+- Phase 3 (Frontend Types) can run in parallel with Phase 2 (Backend Edge Functions)
+  Both depend only on Phase 1 (Database) and don't modify overlapping files
+
+Recommended workers: 1
+Reasoning: Sequential execution preferred due to tight dependencies between backend and frontend UI phases. Only one parallel opportunity exists (Phase 2 + Phase 3).
+
+=== INVESTIGATION FINDINGS ===
+
+Project Type: Single-service Next.js application with Supabase backend
+
+Tech Stack:
+- Frontend: Next.js 14 (App Router), React 19, TypeScript, Tailwind CSS, Radix UI
+- Backend: Supabase (PostgreSQL, Auth, Storage, Edge Functions with Deno)
+- Payment: Xendit (already integrated)
+- Forms: react-hook-form with zod validation
+
+Existing Patterns Found:
+1. Edge Functions follow reliability-score pattern:
+   - Deno runtime with 'serve' from https://deno.land/std@0.168.0/http/server.ts
+   - CORS headers for browser requests
+   - createClient from @supabase/supabase-js@2.38.4
+   - Environment variables via Deno.env.get()
+   - JSON request/response with error handling
+
+2. Server Actions pattern:
+   - "use server" directive at top
+   - createClient from lib/supabase/server.ts
+   - Return { success: boolean, error?: string, data?: T }
+
+3. Database pattern:
+   - UUID primary keys with uuid_generate_v4()
+   - timestamptz defaults with NOW()
+   - RLS policies in separate migration files
+   - Naming convention: YYYYMMDDhhmmss_description.sql
+
+4. Form component pattern:
+   - react-hook-form with zodResolver
+   - Radix UI components (shadcn/ui)
+   - Local storage for draft data
+   - onSubmit callback prop
+
+Files to Reference:
+- supabase/functions/reliability-score/index.ts (edge function pattern)
+- app/components/job-posting-form.tsx (form component pattern)
+- lib/api/jobs.ts (API query pattern)
+- lib/supabase/queries/jobs.ts (database query pattern)
+- supabase/migrations/20250222000001_initial_schema.sql (schema pattern)
+
+Business Context:
+From docs/analysis-bali-daily-worker-social-media.md:
+- Instagram and Facebook are PRIMARY platforms for hospitality job postings in Bali
+- 70% of jobs are filled through social media and word-of-mouth
+- Key hashtags: #BaliJobs, #LowonganKerjaBali, #BaliHospitality
+- Multi-platform distribution is a Phase 3 feature (per PRD.md)
+
+=== VERIFICATION STRATEGY ===
+
+Risk Level: HIGH
+Reasoning:
+- Third-party API integrations (Instagram/Facebook) which can fail
+- OAuth security requirements
+- Potential for exposed credentials in client code
+- Complex multi-service coordination
+
+Test Types Required: unit, integration, e2e
+Security Scanning Required: Yes
+Staging Deployment Required: Yes
+
+Acceptance Criteria:
+- All database migrations apply successfully
+- Edge functions deploy without errors
+- OAuth flow works for Instagram and Facebook
+- Jobs auto-distribute to connected platforms
+- Post preview displays correctly
+- Performance analytics show engagement metrics
+- No sensitive tokens exposed in client code
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 024 --parallel 1
+
+=== END SESSION 1 (PLANNER) ===
+
+Next Session: Coder agent will begin Phase 1, Subtask 1-1
+- Create social_platforms table migration
+
+=== SUBTASK COMPLETIONS ===
+
+[2026-02-24] Subtask 1-1: COMPLETED
+- Created social_platforms table migration
+- File: supabase/migrations/20260224000001_create_social_platforms.sql
+
+[2026-02-24] Subtask 1-2: COMPLETED
+- Created business_social_connections table for OAuth tokens and settings
+- File: supabase/migrations/20260224000002_create_business_social_connections.sql
+- Features:
+  * connection_status enum (active, expired, revoked, error, pending)
+  * OAuth credential storage (access_token, refresh_token, token_expires_at)
+  * Platform account identifiers
+  * Connection metadata (last_verified_at, last_used_at, scopes)
+  * Platform-specific settings JSONB
+  * Error tracking (last_error, error_count, last_error_at)
+  * UNIQUE constraint: one active connection per business per platform
+  * 6 helper functions for connection management
+  * Full RLS policies for business data isolation
+  * Indexes for performance (business_id, platform_id, status, token_expires_at)
+
+[2026-02-24] Subtask 1-3: COMPLETED
+- Created job_posts table to track social media posts for each job
+- File: supabase/migrations/20260224000003_create_job_posts.sql
+- Features:
+  * job_post_status enum (pending, posted, failed, deleted)
+  * Platform post identifiers and URLs
+  * Post content JSONB (caption, media_urls, hashtags)
+  * Post status and timing (scheduled_at, posted_at)
+  * Performance metrics JSONB (impressions, reach, engagement_rate, likes, comments, shares, clicks)
+  * Error tracking (error_message, error_code, retry_count, last_retry_at)
+  * Post metadata (post_type, media_ids)
+  * UNIQUE constraint: one post per job per connection
+  * 8 helper functions for job post management
+  * Full RLS policies with service role support
+  * Indexes for performance and queries
+
+[2026-02-24] Subtask 1-4: COMPLETED
+- Added platform_settings column to jobs table for per-job overrides
+- File: supabase/migrations/20260224000004_add_platform_settings_to_jobs.sql
+- Features:
+  * JSONB column for platform-specific settings
+  * Stores per-job overrides for Instagram and Facebook posting
+  * GIN index for efficient JSONB querying
+  * Partial indexes for platform-specific filtering (instagram enabled, facebook enabled)
+  * Documented structure: { platforms: { instagram: { enabled, custom_content }, facebook: { enabled, custom_content } } }
+
+[2026-02-24] Subtask 1-5: COMPLETED
+- TypeScript types for social_platforms, business_social_connections, and job_posts are already present
+- File: lib/supabase/types.ts
+- Verification: All required types found and match the database schema
+- Types include:
+  * social_platforms: id, platform_type, platform_name, description, status, api_version, auth_type, config, webhook_url, webhook_secret, is_available, created_at, updated_at
+  * business_social_connections: id, business_id, platform_id, access_token, refresh_token, platform_account_id, platform_account_name, platform_account_url, platform_page_id, scopes, token_expires_at, status, settings, error_count, last_error, last_error_at, last_verified_at, last_used_at, created_at, updated_at
+  * job_posts: id, job_id, connection_id, platform_post_id, platform_post_url, content, status, scheduled_at, posted_at, metrics, error_message, error_code, retry_count, last_retry_at, post_type, media_ids, created_at, updated_at
+
+[2026-02-24] Subtask 2-1: COMPLETED
+- Created social-connect edge function for OAuth flow (Instagram/Facebook)
+- File: supabase/functions/social-connect/index.ts
+- Features:
+  * GET endpoint: Returns OAuth authorization URL with CSRF protection
+  * POST endpoint: Handles OAuth callback, exchanges code for tokens
+  * DELETE endpoint: Disconnects a social platform
+  * Facebook Graph API v18.0 integration
+  * Page access token extraction for posting
+  * Token expiration tracking
+  * 6 helper functions for connection management
+  * Full error handling and CORS headers
+
+[2026-02-24] Subtask 2-2: COMPLETED
+- Created social-instagram edge function for posting to Instagram Graph API
+- File: supabase/functions/social-instagram/index.ts
+- Features:
+  * POST endpoint: Posts job listings to Instagram
+  * Job/content fetching from database with business and category info
+  * Connection verification (active, Instagram-specific)
+  * Instagram caption formatting with emojis and hashtags
+  * Default hashtags: #BaliJobs, #LowonganKerjaBali, #BaliHospitality
+  * IDR currency formatting for Indonesian context
+  * Instagram Graph API v18.0 two-step posting:
+    - Step 1: Create media container with image_url and caption
+    - Step 2: Publish container to Instagram
+  * Optional permalink fetching for post URL
+  * Job post status tracking (pending/posted/failed)
+  * Duplicate post detection (skip if already posted)
+  * Error handling with database updates
+  * Connection last_used_at timestamp updates
+  * 5 helper functions: buildInstagramCaption, formatCurrency, generateJobImageUrl, markJobPostFailed, markJobPostPosted, updateConnectionLastUsed
+
+[2026-02-24] Subtask 2-3: COMPLETED
+- Created social-facebook edge function for posting to Facebook Graph API
+- File: supabase/functions/social-facebook/index.ts
+- Features:
+  * POST endpoint: Posts job listings to Facebook pages
+  * Job/connection fetching from database with verification
+  * Facebook message formatting with emojis and hashtags
+  * IDR currency formatting for Indonesian context
+  * Facebook Graph API v18.0 page feed posting
+  * Message with job details, link to job, and call-to-action
+  * Optional image attachment with job image URL
+  * Job post status tracking (pending/posted/failed)
+  * Duplicate post detection (skip if already posted)
+  * Error handling with database updates
+  * Connection last_used_at timestamp updates
+  * 5 helper functions: buildFacebookMessage, formatCurrency, markJobPostFailed, markJobPostPosted, updateConnectionLastUsed
+
+[2026-02-24] Subtask 2-4: COMPLETED
+- Created social-distribute edge function for orchestrating multi-platform posting
+- File: supabase/functions/social-distribute/index.ts
+- Features:
+  * POST endpoint: Orchestrates posting to multiple social platforms
+  * Fetches all active social connections for a business
+  * Groups connections by platform type for efficiency
+  * Supports optional platform filtering (platforms array)
+  * Supports custom content per platform (custom_content object)
+  * Calls platform-specific edge functions (social-facebook, social-instagram)
+  * Returns detailed results with success/failure status per platform
+  * Summary statistics: total, successful, failed, already_posted
+  * Error handling with partial success support
+  * 4 helper functions: fetchActiveConnections, groupConnectionsByPlatform, distributeToPlatform, formatDistributionResults
+
+[2026-02-24] Subtask 2-5: COMPLETED
+- Created social-webhook edge function for handling platform webhook callbacks
+- File: supabase/functions/social-webhook/index.ts
+- Features:
+  * POST endpoint: Handles webhook callbacks from social platforms
+  * Webhook signature verification using X-Webhook-Secret header
+  * Platform lookup against social_platforms table
+  * Event type determination from various payload formats
+  * Support for Instagram/Facebook Graph API webhook format
+  * Event handlers:
+    - metrics_update: Updates job_posts metrics (impressions, reach, engagement, likes, comments, shares)
+    - post_published: Marks job post as posted with platform_post_url
+    - post_deleted: Updates job post status to deleted
+    - post_failed: Records failure with error_message and error_code
+    - subscription_update: Acknowledges webhook subscription verification
+  * Test mode for empty payloads without signature
+  * 6 helper functions: determineEventType, processWebhookEvent, handleMetricsUpdate, handlePostPublished, handlePostDeleted, handlePostFailed, extractPlatformPostId, extractPostUrl, extractMetrics
+
+[2026-02-24] Subtask 3-1: COMPLETED
+- Created social platform TypeScript types
+- File: lib/types/social.ts
+- Types created:
+  * SocialPlatform: Platform definitions and configurations
+  * BusinessSocialConnection: Business connections to social platforms
+  * BusinessSocialConnectionWithPlatform: Connection with platform details
+  * JobPost: Social media posts for jobs
+  * JobPostWithRelations: Job post with job and connection details
+  * Enums: SocialPlatformType, SocialPlatformStatus, ConnectionStatus, JobPostStatus
+  * Input types: CreateConnectionInput, UpdateConnectionInput, CreateJobPostInput, UpdateJobPostInput
+  * Output types: ConnectionListResponse, JobPostListResponse
+  * Utility types: ConnectionSettings, JobPostContent, JobPostMetrics, PlatformPostResult
+- Follows pattern from lib/types/job.ts
+- Type check passed: No type errors in social.ts
+
+[2026-02-24] Subtask 3-2: COMPLETED
+- Created social platform server actions
+- File: lib/actions/social.ts
+- Actions created:
+  * connectSocialPlatform: Connect business social platform with OAuth tokens
+    - Duplicate connection check
+    - Platform availability verification
+    - Updates existing inactive connections
+  * disconnectSocialPlatform: Disconnect/revoke social platform connection
+    - Sets status to 'revoked'
+    - Validates connection ownership
+  * getSocialConnections: List all connections for a business
+    - Filters by platform_id and status
+    - Includes platform details (join with social_platforms)
+  * getSocialConnection: Get single connection by ID
+  * updateConnectionError: Track API errors with auto-disable after 5 errors
+  * updateConnectionLastUsed: Reset error count on successful use
+- Follows pattern from lib/actions/job-applications.ts
+- Indonesian error messages for consistency
+- Proper type safety using Database types
+- Comprehensive error handling
+
+Next: Phase 3, Subtask 3-3 - Create content formatter utilities for Instagram and Facebook posts
+
+[2026-02-24] Subtask 3-3: COMPLETED
+- Created content formatter utilities for Instagram and Facebook posts
+- File: lib/utils/social-content.ts
+- Functions created:
+  * formatForInstagram: Formats job content for Instagram (2,200 char limit)
+    - Title with emojis, business name, description (truncated)
+    - Job details: budget (IDR format), location, deadline
+    - Call to action with link in bio
+    - Hashtags: #lowongankerja, #karir, #loker, #jobhunt, #kerja, #recruitment
+    - Returns: FormattedSocialContent (text, hashtags, CTA, characterCount, withinLimit)
+  * formatForFacebook: Formats job content for Facebook (63,206 char limit)
+    - Header with emojis, business name
+    - Full description and requirements
+    - Job details with budget, location, deadline
+    - Call to action with application URL
+    - Additional hashtags: #vacancy, #career
+  * formatForLinkedIn: Formats job content for LinkedIn (3,000 char limit)
+    - Professional format with emojis
+    - "About the role" section
+    - Details list with compensation, location, deadline
+    - 3-5 hashtags as recommended for LinkedIn
+  * formatForTwitter: Formats job content for Twitter/X (280 char limit)
+    - Very concise format
+    - Title, budget, truncated description
+    - Minimal hashtags
+  * Helper functions:
+    - formatBudget: Formats budget range in IDR currency
+    - formatDate: Formats date with relative dates (Today, Tomorrow, In X days)
+    - truncateText: Truncates text with ellipsis
+    - getPlatformCharacterLimit: Returns character limit for platform
+    - validatePlatformContent: Validates content is within platform limit
+- Follows pattern from lib/utils.ts
+- Type check passed: No errors
+- Verification passed: Formatter works with test input
+
+[2026-02-24] Subtask 4-1: COMPLETED
+- Created SocialPlatformConnect component for OAuth connection UI
+- File: app/components/social-platform-connect.tsx
+- Features:
+  * Support for Instagram, Facebook, LinkedIn, and Twitter platforms
+  * OAuth connect/disconnect functionality with popup flow
+  * Connection status display with account info (account name, last used date)
+  * Loading states and skeleton UI during fetch
+  * Error handling with Indonesian error messages
+  * Platform configuration with icons, colors, and descriptions
+  * Callback for parent component to track connection changes
+  * Follows pattern from job-posting-form.tsx (use client, React namespace, cn utility, isLoading state, setError)
+  * Uses server actions: getSocialConnections, disconnectSocialPlatform
+  * Uses Card components from shadcn/ui
+  * No console.log statements
+  * Type check passed: No type errors in social-platform-connect.tsx
+
+Next: Phase 4, Subtask 4-2 - Create SocialPostPreview component for previewing formatted posts
+
+[2026-02-24] Subtask 4-3: COMPLETED
+- Created SocialPlatformSettings component for per-platform toggles
+- File: app/components/social-platform-settings.tsx
+- Features:
+  * Switch UI component (components/ui/switch.tsx): Custom checkbox with Tailwind CSS
+  * Per-platform settings display for connected platforms (Instagram, Facebook, LinkedIn, Twitter)
+  * Auto-post toggle switch per platform
+  * Post timing selection (immediate/scheduled)
+  * Scheduled time picker for scheduled posts
+  * Custom formatting toggle
+  * Save button per platform with loading states
+  * Error handling and success messages with Indonesian text
+  * Empty state when no platforms connected
+- Server actions added (lib/actions/social.ts):
+  * updatePlatformSettings: Save platform settings to connection settings JSONB
+  * getPlatformSettings: Fetch current platform settings
+- Quality checks passed:
+  * Type check: No type errors in new files
+  * Follows existing patterns: social-platform-connect.tsx, card.tsx, select.tsx
+  * No console.log statements
+  * Proper TypeScript interfaces and React.forwardRef pattern
+- Note: Dev server not started due to missing settings page - component will be integrated in subtask-4-4
+
+[2026-02-24] Subtask 5-1: COMPLETED
+- Added environment variables for Instagram and Facebook API credentials
+- File: .env.local.example
+- Variables added:
+  * INSTAGRAM_APP_ID - Instagram Basic Display API app ID
+  * INSTAGRAM_APP_SECRET - Instagram Basic Display API app secret
+  * INSTAGRAM_REDIRECT_URI - OAuth callback URL
+  * FACEBOOK_APP_ID - Facebook Graph API app ID
+  * FACEBOOK_APP_SECRET - Facebook Graph API app secret
+  * FACEBOOK_PAGE_ID - Facebook page ID for posting
+- All entries follow existing format with descriptive comments and placeholder values
+
+[2026-02-24] Subtask 5-2: COMPLETED
+- Created database trigger for auto-distribution on job creation
+- File: supabase/migrations/20260224000005_create_auto_distribute_trigger.sql
+- Features:
+  * auto_distribute_job() trigger function that fires AFTER INSERT on jobs table
+  * Automatically creates job_posts entries for all active social platform connections for the business
+  * Respects per-job platform_settings JSONB column for selective platform posting
+  * Helper functions:
+    - manually_distribute_job(UUID) - manually trigger distribution for existing jobs
+    - get_job_distribution_status(UUID) - check distribution status for a job
+  * Proper error handling using EXCEPTION clause with RAISE WARNING to prevent job creation failures
+  * Uses SECURITY DEFINER for proper permissions
+  * Trigger name: trigger_auto_distribute_job
+- Quality checks passed:
+  * Follows patterns from initial_schema.sql (FUNCTION format, TRIGGER format, SECURITY DEFINER)
+  * No console.log statements
+  * Error handling in place (EXCEPTION WHEN OTHERS with RAISE WARNING)
+  * Respects platform_settings for per-job overrides
+  * Only creates entries for active connections with valid tokens
+
+Next: Phase 5, Subtask 5-3 - End-to-end test: Create job and verify social distribution

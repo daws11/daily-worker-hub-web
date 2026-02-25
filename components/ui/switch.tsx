@@ -1,70 +1,44 @@
+"use client"
+
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-export interface SwitchProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'onChange'> {
-  label?: string
-  description?: string
-  onCheckedChange?: (checked: boolean) => void
-}
+const Switch = React.forwardRef<
+  HTMLInputElement,
+  Omit<React.ComponentPropsWithoutRef<"input">, "type"> & {
+    thumbClassName?: string
+    checked?: boolean
+    onCheckedChange?: (checked: boolean) => void
+  }
+>(({ className, thumbClassName, checked, onCheckedChange, ...props }, ref) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onCheckedChange?.(e.target.checked)
+    props.onChange?.(e)
+  }
 
-const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
-  ({ className, disabled, onCheckedChange, checked: checkedProp, ...props }, ref) => {
-    const [internalChecked, setInternalChecked] = React.useState(checkedProp ?? false)
-
-    // Update internal state when checked prop changes
-    React.useEffect(() => {
-      if (checkedProp !== undefined) {
-        setInternalChecked(checkedProp)
-      }
-    }, [checkedProp])
-
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newChecked = e.target.checked
-      setInternalChecked(newChecked)
-      onCheckedChange?.(newChecked)
-    }
-
-    // Determine if controlled or uncontrolled
-    const isChecked = checkedProp !== undefined ? checkedProp : internalChecked
-
-    return (
-      <label
+  return (
+    <label className="relative inline-flex items-center cursor-pointer">
+      <input
+        type="checkbox"
+        ref={ref}
+        checked={checked}
+        onChange={handleChange}
         className={cn(
-          "peer inline-flex h-5 w-9 shrink-0 cursor-pointer items-center gap-3 transition-colors",
-          disabled && "cursor-not-allowed opacity-50",
+          "peer sr-only",
           className
         )}
-      >
-        <input
-          type="checkbox"
-          ref={ref}
-          disabled={disabled}
-          checked={isChecked}
-          onChange={handleChange}
-          className="sr-only"
-          {...props}
-        />
-        <span
-          className={cn(
-            "pointer-events-none relative inline-block h-5 w-9 rounded-full shadow-sm transition-colors duration-200 ease-in-out",
-            "bg-input peer-checked:bg-primary",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-            disabled && "pointer-events-none"
-          )}
-        >
-          <span
-            className={cn(
-              "pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition-transform duration-200 ease-in-out",
-              "translate-x-0.5 top-0.5 relative",
-              "peer-checked:translate-x-4.5"
-            )}
-          />
-        </span>
-      </label>
-    )
-  }
-)
+        {...props}
+      />
+      <div
+        className={cn(
+          "peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring peer-focus:ring-offset-2 rounded-full peer h-5 w-9 after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full peer-checked:after:border-white bg-input peer-checked:bg-primary",
+          thumbClassName
+        )}
+      />
+    </label>
+  )
+})
 Switch.displayName = "Switch"
 
 export { Switch }

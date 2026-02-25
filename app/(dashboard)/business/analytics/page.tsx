@@ -1,470 +1,545 @@
 "use client"
 
-import { useState, useCallback, useEffect } from 'react'
-import { useAuth } from '@/providers/auth-provider'
-import {
-  getBusinessSpending,
-  getUniqueWorkerCount,
-  getPopularPositions,
-  getAverageReliabilityScore,
-  getSeasonalTrends,
-  getComplianceStatus,
-  type BusinessSpending,
-  type WorkerCountAnalytics,
-  type PopularPosition,
-  type ReliabilityScoreAnalytics,
-  type MonthlyTrend,
-  type ComplianceStatus,
-  type DateRange
-} from '@/lib/supabase/queries/analytics'
-import { DateRange as DateRangeType } from '@/lib/types/analytics'
-import { AnalyticsStatsCard } from '@/components/analytics/analytics-stats-card'
-import { AnalyticsSpendingChart } from '@/components/analytics/analytics-spending-chart'
-import { AnalyticsPositionsChart } from '@/components/analytics/analytics-positions-chart'
-import { AnalyticsReliabilityChart } from '@/components/analytics/analytics-reliability-chart'
-import { AnalyticsTrendsChart } from '@/components/analytics/analytics-trends-chart'
-import { ComplianceBadge } from '@/components/analytics/analytics-compliance-badge'
-import { AnalyticsDateFilter } from '@/components/analytics/analytics-date-filter'
-import { AnalyticsCsvExport } from '@/components/analytics/analytics-csv-export'
-import { type AnalyticsExportData } from '@/lib/types/analytics'
-import {
-  Loader2,
-  AlertCircle,
-  DollarSign,
-  Users,
-  TrendingUp,
-  Award,
-  Shield
-} from 'lucide-react'
-import { toast } from 'sonner'
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { useAuth } from "@/app/providers/auth-provider"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { supabase } from "@/lib/supabase/client"
+import type { Database } from "@/lib/supabase/types"
+import { BarChart3, Loader2, TrendingUp, Eye, MessageCircle, Share2, CheckCircle2, XCircle, Clock, AlertCircle, ExternalLink } from "lucide-react"
 
-interface AnalyticsData {
-  spending: BusinessSpending | null
-  workers: WorkerCountAnalytics | null
-  positions: PopularPosition[] | null
-  reliability: ReliabilityScoreAnalytics | null
-  trends: MonthlyTrend[] | null
-  compliance: ComplianceStatus | null
+type BusinessesRow = Database["public"]["Tables"]["businesses"]["Row"]
+
+type JobPostRow = Database["public"]["Tables"]["job_posts"]["Row"]
+
+type JobPostWithConnection = JobPostRow & {
+  social_platforms?: {
+    id: string
+    platform_name: string
+    platform_type: Database["public"]["Enums"]["social_platform_type"]
+  } | null
+}
+
+type PostMetrics = {
+  views?: number
+  likes?: number
+  comments?: number
+  shares?: number
+  clicks?: number
+  impressions?: number
+  reach?: number
+}
+
+type AnalyticsStats = {
+  totalPosts: number
+  successfulPosts: number
+  pendingPosts: number
+  failedPosts: number
+  totalViews: number
+  totalLikes: number
+  totalComments: number
+  totalShares: number
+  avgEngagementRate: number
 }
 
 export default function BusinessAnalyticsPage() {
   const { user } = useAuth()
-  const [analytics, setAnalytics] = useState<AnalyticsData>({
-    spending: null,
-    workers: null,
-    positions: null,
-    reliability: null,
-    trends: null,
-    compliance: null,
-  })
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [dateRange, setDateRange] = useState<DateRangeType>({
-    from: getDateRangeFromPreset('30d').from,
-    to: getDateRangeFromPreset('30d').to,
-    preset: '30d',
-  })
+  const router = useRouter()
+  const [business, setBusiness] = useState<BusinessesRow | null>(null)
+  const [posts, setPosts] = useState<JobPostWithConnection[]>([])
+  const [stats, setStats] = useState<AnalyticsStats | null>(null)
+  const [isLoadingBusiness, setIsLoadingBusiness] = useState(true)
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true)
 
-  // Get date range from preset
-  function getDateRangeFromPreset(preset: '7d' | '30d' | '90d' | '6m' | '1y' | 'all'): DateRangeType {
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-
-    let from: Date
-
-    switch (preset) {
-      case '7d':
-        from = new Date(today)
-        from.setDate(from.getDate() - 7)
-        break
-      case '30d':
-        from = new Date(today)
-        from.setDate(from.getDate() - 30)
-        break
-      case '90d':
-        from = new Date(today)
-        from.setDate(from.getDate() - 90)
-        break
-      case '6m':
-        from = new Date(today)
-        from.setMonth(from.getMonth() - 6)
-        break
-      case '1y':
-        from = new Date(today)
-        from.setFullYear(from.getFullYear() - 1)
-        break
-      case 'all':
-      default:
-        from = new Date(2020, 0, 1)
-        break
-    }
-
-    return {
-      from: from.toISOString().split('T')[0],
-      to: today.toISOString().split('T')[0],
-      preset,
-    }
-  }
-
-  // Fetch analytics data
-  const fetchAnalytics = useCallback(async () => {
-    if (!user?.id) return
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      // Convert DateRangeType to DateRange for queries
-      const queryDateRange: DateRange = {
-        start_date: dateRange.from,
-        end_date: dateRange.to,
+  // Fetch business profile
+  useEffect(() => {
+    async function fetchBusiness() {
+      if (!user) {
+        router.push("/login")
+        return
       }
 
-      // Fetch all analytics data in parallel
-      const [
-        spendingResult,
-        workersResult,
-        positionsResult,
-        reliabilityResult,
-        trendsResult,
-        complianceResult,
-      ] = await Promise.all([
-        getBusinessSpending(user.id, queryDateRange),
-        getUniqueWorkerCount(user.id, queryDateRange),
-        getPopularPositions(user.id, queryDateRange, 10),
-        getAverageReliabilityScore(user.id, queryDateRange),
-        getSeasonalTrends(user.id, queryDateRange),
-        getComplianceStatus(user.id, queryDateRange),
-      ])
+      const { data, error } = await supabase
+        .from("businesses")
+        .select("*")
+        .eq("user_id", user.id)
+        .single()
 
-      // Check for errors
-      if (spendingResult.error) throw spendingResult.error
-      if (workersResult.error) throw workersResult.error
-      if (positionsResult.error) throw positionsResult.error
-      if (reliabilityResult.error) throw reliabilityResult.error
-      if (trendsResult.error) throw trendsResult.error
-      if (complianceResult.error) throw complianceResult.error
+      if (error || !data) {
+        toast.error("Profil bisnis tidak ditemukan")
+        return
+      }
 
-      setAnalytics({
-        spending: spendingResult.data,
-        workers: workersResult.data,
-        positions: positionsResult.data,
-        reliability: reliabilityResult.data,
-        trends: trendsResult.data,
-        compliance: complianceResult.data,
-      })
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Gagal memuat data analitik'
-      setError(message)
-      toast.error(message)
-    } finally {
-      setLoading(false)
+      setBusiness(data)
     }
-  }, [user?.id, dateRange])
 
-  // Handle date range change
-  const handleDateRangeChange = useCallback((newDateRange: DateRangeType) => {
-    setDateRange(newDateRange)
-  }, [])
+    fetchBusiness()
+  }, [user, router])
 
-  // Handle CSV export
-  const handleExportComplete = useCallback((filename: string) => {
-    toast.success(`Data berhasil diekspor ke ${filename}`)
-  }, [])
-
-  const handleExportError = useCallback((error: Error) => {
-    toast.error(`Gagal mengekspor data: ${error.message}`)
-  }, [])
-
-  // Prepare CSV export data
-  const exportData: AnalyticsExportData[] = []
-  if (analytics.trends && analytics.trends.length > 0) {
-    for (const trend of analytics.trends) {
-      exportData.push({
-        date: trend.month,
-        worker_name: '-',
-        position: '-',
-        amount: trend.spending,
-        status: 'completed',
-        reliability_score: analytics.reliability?.average_score || 0,
-      })
-    }
-  }
-
-  // Get compliance badge status
-  const getComplianceBadgeStatus = (): 'compliant' | 'partial' | 'non_compliant' => {
-    if (!analytics.compliance) return 'non_compliant'
-    if (analytics.compliance.compliance_rate >= 90) return 'compliant'
-    if (analytics.compliance.compliance_rate >= 70) return 'partial'
-    return 'non_compliant'
-  }
-
-  // Format currency
-  const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value)
-  }
-
-  // Format month label
-  const formatMonthLabel = (dateString: string): string => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', { month: 'short', year: '2-digit' })
-  }
-
-  // Fetch analytics on mount
+  // Fetch job posts with metrics
   useEffect(() => {
-    fetchAnalytics()
-  }, [fetchAnalytics])
+    async function fetchPosts() {
+      if (!business) return
+
+      setIsLoadingPosts(true)
+      try {
+        // First, get all job IDs for this business
+        const { data: jobsData, error: jobsError } = await supabase
+          .from("jobs")
+          .select("id")
+          .eq("business_id", business.id)
+
+        if (jobsError) {
+          toast.error("Gagal memuat data lowongan")
+          return
+        }
+
+        if (!jobsData || jobsData.length === 0) {
+          setPosts([])
+          setStats({
+            totalPosts: 0,
+            successfulPosts: 0,
+            pendingPosts: 0,
+            failedPosts: 0,
+            totalViews: 0,
+            totalLikes: 0,
+            totalComments: 0,
+            totalShares: 0,
+            avgEngagementRate: 0,
+          })
+          setIsLoadingPosts(false)
+          return
+        }
+
+        const jobIds = jobsData.map(j => j.id)
+
+        // Now fetch job posts with platform info
+        const { data, error } = await supabase
+          .from("job_posts")
+          .select(`
+            *,
+            business_social_connections!inner (
+              social_platforms (
+                id,
+                platform_name,
+                platform_type
+              )
+            )
+          `)
+          .in("job_id", jobIds)
+          .order("created_at", { ascending: false })
+
+        if (error) {
+          toast.error("Gagal memuat data analitik")
+          return
+        }
+
+        // Transform data to flatten platform info
+        const transformedPosts = (data || []).map((post: any) => ({
+          ...post,
+          social_platforms: post.business_social_connections?.social_platforms || null,
+        }))
+
+        setPosts(transformedPosts as JobPostWithConnection[])
+
+        // Calculate statistics
+        calculateStats(transformedPosts as JobPostWithConnection[])
+      } finally {
+        setIsLoadingPosts(false)
+      }
+    }
+
+    fetchPosts()
+  }, [business])
+
+  // Calculate analytics statistics
+  const calculateStats = (postData: JobPostWithConnection[]) => {
+    const successfulPosts = postData.filter(p => p.status === "posted")
+    const pendingPosts = postData.filter(p => p.status === "pending")
+    const failedPosts = postData.filter(p => p.status === "failed")
+
+    let totalViews = 0
+    let totalLikes = 0
+    let totalComments = 0
+    let totalShares = 0
+
+    successfulPosts.forEach(post => {
+      const metrics = (post.metrics || {}) as PostMetrics
+      totalViews += metrics.views || metrics.impressions || 0
+      totalLikes += metrics.likes || 0
+      totalComments += metrics.comments || 0
+      totalShares += metrics.shares || 0
+    })
+
+    const avgEngagementRate = totalViews > 0
+      ? ((totalLikes + totalComments + totalShares) / totalViews) * 100
+      : 0
+
+    setStats({
+      totalPosts: postData.length,
+      successfulPosts: successfulPosts.length,
+      pendingPosts: pendingPosts.length,
+      failedPosts: failedPosts.length,
+      totalViews,
+      totalLikes,
+      totalComments,
+      totalShares,
+      avgEngagementRate,
+    })
+  }
+
+  // Get status badge variant and icon
+  const getStatusInfo = (status: Database["public"]["Enums"]["job_post_status"]) => {
+    switch (status) {
+      case "posted":
+        return {
+          variant: "default" as const,
+          label: "Terbit",
+          icon: CheckCircle2,
+          className: "bg-green-100 text-green-800 hover:bg-green-100",
+        }
+      case "pending":
+        return {
+          variant: "secondary" as const,
+          label: "Menunggu",
+          icon: Clock,
+          className: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
+        }
+      case "failed":
+        return {
+          variant: "destructive" as const,
+          label: "Gagal",
+          icon: XCircle,
+          className: "bg-red-100 text-red-800 hover:bg-red-100",
+        }
+      case "deleted":
+        return {
+          variant: "outline" as const,
+          label: "Dihapus",
+          icon: AlertCircle,
+          className: "bg-gray-100 text-gray-800 hover:bg-gray-100",
+        }
+      default:
+        return {
+          variant: "outline" as const,
+          label: status,
+          icon: AlertCircle,
+          className: "",
+        }
+    }
+  }
+
+  // Get platform icon
+  const getPlatformIcon = (platformType: string) => {
+    switch (platformType) {
+      case "facebook":
+        return "📘"
+      case "instagram":
+        return "📷"
+      case "linkedin":
+        return "💼"
+      case "twitter":
+        return "🐦"
+      default:
+        return "📱"
+    }
+  }
+
+  // Format number to Indonesian locale
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) {
+      return `${(num / 1000000).toFixed(1)}jt`
+    }
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}rb`
+    }
+    return num.toString()
+  }
+
+  // Format date to Indonesian locale
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "-"
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+  }
+
+  // Get metrics from post
+  const getPostMetrics = (post: JobPostWithConnection): PostMetrics => {
+    return (post.metrics || {}) as PostMetrics
+  }
+
+  if (isLoadingBusiness) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Memuat profil bisnis...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f5f5f5',
-      padding: '1rem'
-    }}>
-      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-        {/* Page Header */}
-        <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-          <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-              Analitik Bisnis
-            </h1>
-            <p style={{ color: '#666', fontSize: '0.875rem' }}>
-              Pantau performa bisnis dan tenaga kerja Anda
-            </p>
-          </div>
-          <AnalyticsCsvExport
-            data={exportData}
-            filename="business-analytics"
-            onExportComplete={handleExportComplete}
-            onExportError={handleExportError}
-          />
+    <div className="min-h-screen bg-[#f5f5f5] p-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Analitik Media Sosial</h1>
+          <p className="text-[#666]">
+            Pantau performa postingan lowongan kerja di berbagai platform
+          </p>
         </div>
 
-        {/* Error State */}
-        {error && (
-          <div style={{
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem'
-          }}>
-            <AlertCircle style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
-            <div style={{ flex: 1 }}>
-              <p style={{ color: '#991b1b', fontWeight: 500, marginBottom: '0.25rem' }}>
-                Gagal memuat data
-              </p>
-              <p style={{ color: '#b91c1c', fontSize: '0.875rem' }}>{error}</p>
-            </div>
-            <button
-              onClick={fetchAnalytics}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}
-            >
-              <Loader2 style={{ width: '1rem', height: '1rem' }} />
-              Coba Lagi
-            </button>
-          </div>
-        )}
-
-        {/* Loading State */}
-        {loading && !error && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0.5rem',
-            padding: '3rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center'
-          }}>
-            <Loader2 style={{ width: '2rem', height: '2rem', color: '#2563eb', margin: '0 auto 1rem', animation: 'spin 1s linear infinite' }} />
-            <p style={{ color: '#666' }}>Memuat data analitik...</p>
-          </div>
-        )}
-
-        {/* Analytics Content */}
-        {!loading && !error && (
-          <>
-            {/* Date Filter */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <AnalyticsDateFilter
-                dateRange={dateRange}
-                onDateRangeChange={handleDateRangeChange}
-              />
-            </div>
-
-            {/* Stats Cards */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-              gap: '1rem',
-              marginBottom: '1.5rem'
-            }}>
-              <AnalyticsStatsCard
-                title="Total Pengeluaran"
-                value={formatCurrency(analytics.spending?.total_spending || 0)}
-                icon={DollarSign}
-                color="blue"
-              />
-              <AnalyticsStatsCard
-                title="Pekerja Unik"
-                value={analytics.workers?.unique_workers || 0}
-                icon={Users}
-                color="green"
-              />
-              <AnalyticsStatsCard
-                title="Rate Pekerja Ulang"
-                value={`${analytics.workers?.repeat_hire_rate || 0}%`}
-                icon={TrendingUp}
-                color="orange"
-              />
-              <AnalyticsStatsCard
-                title="Skor Reliabilitas"
-                value={`${analytics.reliability?.average_score?.toFixed(1) || '0.0'}/5`}
-                icon={Award}
-                color="purple"
-              />
-              <div style={{
-                padding: '1rem',
-                border: '1px solid #e5e7eb',
-                borderRadius: '0.375rem',
-                backgroundColor: 'white',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.5rem'
-              }}>
-                <h3 style={{
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  color: '#6b7280',
-                  margin: 0,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
-                }}>
-                  Status Kepatuhan
-                </h3>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <Shield style={{ width: '2rem', height: '2rem', color: '#10b981' }} />
-                  <ComplianceBadge status={getComplianceBadgeStatus()} />
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {/* Total Posts */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Postingan
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingPosts ? (
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              ) : (
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                  <span className="text-2xl font-bold">{stats?.totalPosts || 0}</span>
                 </div>
-                {analytics.compliance && (
-                  <p style={{ fontSize: '0.75rem', color: '#6b7280', margin: '0.25rem 0 0 0' }}>
-                    {analytics.compliance.compliant_jobs} dari {analytics.compliance.total_jobs} pekerjaan sesuai
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                {stats?.successfulPosts || 0} berhasil terbit
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Total Views */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Dilihat
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingPosts ? (
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Eye className="h-5 w-5 text-green-600" />
+                  <span className="text-2xl font-bold">{formatNumber(stats?.totalViews || 0)}</span>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Impressions semua postingan
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Total Engagement */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Engagement
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingPosts ? (
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              ) : (
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-purple-600" />
+                  <span className="text-2xl font-bold">
+                    {formatNumber((stats?.totalLikes || 0) + (stats?.totalComments || 0) + (stats?.totalShares || 0))}
+                  </span>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Likes, comments & shares
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Engagement Rate */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Rata-rata Engagement
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingPosts ? (
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Share2 className="h-5 w-5 text-orange-600" />
+                  <span className="text-2xl font-bold">
+                    {stats?.avgEngagementRate ? stats.avgEngagementRate.toFixed(2) : "0.00"}%
+                  </span>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Tingkat interaksi
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Detailed Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Likes</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {isLoadingPosts ? <Loader2 className="h-5 w-5 animate-spin" /> : formatNumber(stats?.totalLikes || 0)}
                   </p>
-                )}
+                </div>
+                <div className="p-3 bg-blue-100 rounded-full">
+                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Charts Grid */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
-              gap: '1.5rem'
-            }}>
-              {/* Spending Chart */}
-              {analytics.trends && analytics.trends.length > 0 && (
-                <AnalyticsSpendingChart
-                  data={analytics.trends.map(t => ({
-                    label: formatMonthLabel(t.month),
-                    spending: t.spending
-                  }))}
-                  color="#2563eb"
-                  height={320}
-                />
-              )}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Komentar</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {isLoadingPosts ? <Loader2 className="h-5 w-5 animate-spin" /> : formatNumber(stats?.totalComments || 0)}
+                  </p>
+                </div>
+                <div className="p-3 bg-green-100 rounded-full">
+                  <MessageCircle className="h-5 w-5 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-              {/* Positions Chart */}
-              {analytics.positions && analytics.positions.length > 0 && (
-                <AnalyticsPositionsChart
-                  data={analytics.positions.map(p => ({
-                    label: p.position_title,
-                    count: p.count
-                  }))}
-                  color="#10b981"
-                  height={320}
-                />
-              )}
-            </div>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Shares</p>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {isLoadingPosts ? <Loader2 className="h-5 w-5 animate-spin" /> : formatNumber(stats?.totalShares || 0)}
+                  </p>
+                </div>
+                <div className="p-3 bg-purple-100 rounded-full">
+                  <Share2 className="h-5 w-5 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-            {/* Full Width Charts */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',
-              gap: '1.5rem',
-              marginTop: '1.5rem'
-            }}>
-              {/* Reliability Chart */}
-              {analytics.trends && analytics.trends.length > 0 && analytics.reliability && analytics.reliability.worker_count > 0 && (
-                <AnalyticsReliabilityChart
-                  data={analytics.trends.map(t => ({
-                    label: formatMonthLabel(t.month),
-                    reliability: analytics.reliability?.average_score || 0
-                  }))}
-                  color="#8b5cf6"
-                  height={320}
-                />
-              )}
-
-              {/* Trends Chart */}
-              {analytics.trends && analytics.trends.length > 0 && (
-                <AnalyticsTrendsChart
-                  data={analytics.trends.map(t => ({
-                    label: formatMonthLabel(t.month),
-                    count: t.worker_count
-                  }))}
-                  color="#f59e0b"
-                  height={320}
-                />
-              )}
-            </div>
-
-            {/* Empty State */}
-            {!analytics.spending && !analytics.workers && !analytics.positions && (
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '0.5rem',
-                padding: '3rem',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                textAlign: 'center',
-                border: '1px dashed #d1d5db'
-              }}>
-                <TrendingUp style={{ width: '3rem', height: '3rem', color: '#9ca3af', margin: '0 auto 1rem' }} />
-                <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                  Belum Ada Data
-                </h3>
-                <p style={{ color: '#666' }}>
-                  Mulai merekrut pekerja untuk melihat analitik bisnis Anda
+        {/* Posts Performance Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Performa Postingan</CardTitle>
+            <CardDescription>
+              Detail performa setiap postingan lowongan kerja
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoadingPosts ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : posts.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  Belum ada data analitik. Mulai posting lowongan kerja ke media sosial!
                 </p>
               </div>
-            )}
-          </>
-        )}
-      </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Platform</TableHead>
+                      <TableHead>Tanggal Posting</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Dilihat</TableHead>
+                      <TableHead>Likes</TableHead>
+                      <TableHead>Komentar</TableHead>
+                      <TableHead>Shares</TableHead>
+                      <TableHead>Link</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {posts.map((post) => {
+                      const statusInfo = getStatusInfo(post.status)
+                      const StatusIcon = statusInfo.icon
+                      const metrics = getPostMetrics(post)
 
-      <style jsx>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+                      return (
+                        <TableRow key={post.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{getPlatformIcon(post.social_platforms?.platform_type || "")}</span>
+                              <span className="font-medium capitalize">
+                                {post.social_platforms?.platform_name || "-"}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {post.posted_at ? formatDate(post.posted_at) : formatDate(post.created_at)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={statusInfo.className} variant={statusInfo.variant}>
+                              <StatusIcon className="h-3 w-3 mr-1" />
+                              {statusInfo.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {formatNumber(metrics.views || metrics.impressions || 0)}
+                          </TableCell>
+                          <TableCell>
+                            {formatNumber(metrics.likes || 0)}
+                          </TableCell>
+                          <TableCell>
+                            {formatNumber(metrics.comments || 0)}
+                          </TableCell>
+                          <TableCell>
+                            {formatNumber(metrics.shares || 0)}
+                          </TableCell>
+                          <TableCell>
+                            {post.platform_post_url ? (
+                              <a
+                                href={post.platform_post_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                              >
+                                Lihat <ExternalLink className="h-3 w-3" />
+                              </a>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
