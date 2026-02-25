@@ -29,6 +29,264 @@ export type Database = {
         Row: {
           id: string
           wallet_id: string
+          email: string
+          full_name: string
+          avatar_url: string
+          role: 'worker' | 'business' | 'admin'
+          phone: string
+          created_at: string
+          updated_at: string
+        }
+      }
+      businesses: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          business_type: 'hotel' | 'villa' | 'restaurant' | 'event_company' | 'other'
+          address: string
+          area: 'Badung' | 'Denpasar' | 'Gianyar' | 'Tabanan' | 'Buleleng' | 'Klungkung' | 'Karangasem' | 'Bangli' | 'Jembrana'
+          phone?: string
+          email?: string
+          website?: string
+          description?: string
+          avatar_url?: string
+          business_license_url?: string
+          verification_status: 'pending' | 'verified' | 'rejected'
+          created_at: string
+          updated_at: string
+        }
+      }
+      workers: {
+        Row: {
+          id: string
+          user_id: string
+          full_name: string
+          bio: string
+          avatar_url: string
+          phone: string
+          dob: string
+          address: string
+          location_name: string
+          lat: number
+          lng: number
+        }
+      }
+      bookings: {
+        Row: {
+          id: string
+          worker_id: string
+          business_id: string
+          category_id: string
+          title: string
+          description: string
+          start_date: string
+          end_date: string
+          start_time: string
+          end_time: string
+          final_price: number
+          status: BookingStatus
+          created_at: string
+          updated_at: string
+        }
+      }
+      transactions: {
+        Row: {
+          id: string
+          wallet_id: string
+          amount: number
+          type: 'credit' | 'debit' | 'pending' | 'released'
+          booking_id?: string | null
+          description?: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          wallet_id: string
+          amount: number
+          type: 'credit' | 'debit' | 'pending' | 'released'
+          booking_id?: string | null
+          description?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          wallet_id?: string
+          amount?: number
+          type?: 'credit' | 'debit' | 'pending' | 'released'
+          booking_id?: string | null
+          description?: string | null
+          created_at?: string
+        }
+      }
+      }
+      businesses: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          business_type: 'hotel' | 'villa' | 'restaurant' | 'event_company' | 'other'
+          address: string
+          area: 'Badung' | 'Denpasar' | 'Gianyar' | 'Tabanan' | 'Buleleng' | 'Klungkung' | 'Karangasem' | 'Bangli' | 'Jembrana'
+          phone?: string
+          email?: string
+          website?: string
+          description?: string
+          avatar_url?: string
+          business_license_url?: string
+          verification_status: 'pending' | 'verified' | 'rejected'
+          created_at: string
+          updated_at: string
+        }
+      }
+      workers: {
+        Row: {
+          id: string
+          user_id: string
+          full_name: string
+          bio: string
+          avatar_url: string
+          phone: string
+          dob: string
+          address: string
+          location_name: string
+          lat: number
+          lng: number
+          gender: string | null
+          experience_years: number | null
+          kyc_status: 'unverified' | 'pending' | 'verified' | 'rejected'
+          reliability_score: number
+          created_at: string
+          updated_at: string
+        }
+      }
+      kyc_verifications: {
+        Row: {
+          id: string
+          worker_id: string
+          ktp_number: string
+          ktp_image_url: string | null
+          selfie_image_url: string | null
+          ktp_extracted_data: Json
+          status: 'pending' | 'verified' | 'rejected'
+          rejection_reason: string | null
+          submitted_at: string
+          verified_at: string | null
+          created_at: string
+          updated_at: string
+          verified_by: string | null
+        }
+      }
+      worker_skills: {
+        Row: {
+          worker_id: string
+          skill_id: string
+          created_at: string
+        }
+      }
+      skills: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          created_at: string
+        }
+      }
+      categories: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          created_at: string
+        }
+      }
+      jobs: {
+        Row: {
+          id: string
+          business_id: string
+          category_id?: string | null
+          position_type?: string
+          title: string
+          description: string
+          requirements: string
+          budget_min: number
+          budget_max: number
+          status: 'draft' | 'open' | 'in_progress' | 'completed' | 'cancelled'
+          deadline: string
+          address: string
+          lat: number
+          lng: number
+          created_at: string
+          updated_at: string
+        }
+      }
+      jobs_skills: {
+        Row: {
+          job_id: string
+          skill_id: string
+        }
+      }
+      bookings: {
+        Row: {
+          id: string
+          job_id: string
+          worker_id: string
+          business_id: string
+          status: 'pending' | 'accepted' | 'rejected' | 'in_progress' | 'completed' | 'cancelled'
+          start_date: string
+          end_date: string
+          final_price: number
+          booking_notes: string
+          checkout_time: string | null
+          payment_status: 'pending_review' | 'available' | 'released' | 'disputed' | 'cancelled'
+          review_deadline: string | null
+          created_at: string
+          updated_at: string
+        }
+      }
+      wallets: {
+        Row: {
+          id: string
+          user_id: string
+          pending_balance: number
+          available_balance: number
+          created_at: string
+          updated_at: string
+        }
+      }
+      wallet_transactions: {
+        Row: {
+          id: string
+          wallet_id: string
+          booking_id: string | null
+          amount: number
+          type: 'earn' | 'payout' | 'refund' | 'hold' | 'release'
+          status: 'pending_review' | 'available' | 'released' | 'disputed' | 'cancelled'
+          description: string | null
+          metadata: Json
+          created_at: string
+        }
+      }
+      disputes: {
+        Row: {
+          id: string
+          booking_id: string
+          raised_by: string
+          reason: string
+          status: 'pending' | 'investigating' | 'resolved' | 'rejected'
+          resolution: string | null
+          admin_notes: string | null
+          evidence_urls: string[] | null
+          created_at: string
+          updated_at: string
+          resolved_at: string | null
+        }
+      }
+      transactions: {
+        Row: {
+          id: string
+          booking_id: string
+>>>>>>> auto-claude/017-job-completion-payment-release
           amount: number
           type: 'credit' | 'debit' | 'pending' | 'released'
           booking_id?: string | null

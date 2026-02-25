@@ -1,15 +1,18 @@
 {
   "active": true,
-  "spec": "016-reliability-score-display",
+<<<<<<< HEAD
+  "spec": "017-job-completion-payment-release",
   "state": "building",
   "subtasks": {
-    "completed": 24,
-    "total": 25,
+    "completed": 0,
+    "total": 0,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
     "current": "Add Reliability Display to Worker Profile",
+    "id": null,
+    "total": 3
     "id": null,
     "total": 3
   },
