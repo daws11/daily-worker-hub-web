@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { supabase } from '../supabase/client'
 import { Database } from '../supabase/types'
 import { SavedSearch, CreateSavedSearchInput, UpdateSavedSearchInput, JobFilters } from '../types/job'

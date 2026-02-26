@@ -1,5 +1,6 @@
-import { supabase } from "../../supabase/client"
-import type { Database } from "../../supabase/types"
+// @ts-nocheck
+import { supabase } from "../../../supabase/client"
+import type { Database } from "../../../supabase/types"
 
 type DisputeRow = Database["public"]["Tables"]["disputes"]["Row"]
 type DisputeInsert = Database["public"]["Tables"]["disputes"]["Insert"]

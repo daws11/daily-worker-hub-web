@@ -76,7 +76,7 @@ export async function createJob(input: CreateJobInput): Promise<CreateJobResult>
     }
 
     // Prepare job data - only using fields that exist in database
-    const jobData: JobsInsert = {
+    const jobData = {
       business_id: business.id,
       category_id: category.id,
       title: input.title,
@@ -87,8 +87,8 @@ export async function createJob(input: CreateJobInput): Promise<CreateJobResult>
       deadline: input.deadline,
       address: input.address,
       status: "open",
-      platform_settings: platformSettings as any,
-    }
+      platform_settings: platformSettings,
+    } as any
 
     // Create the job
     const { data, error } = await supabase

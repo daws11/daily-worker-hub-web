@@ -18,6 +18,7 @@ type AuthContextType = {
   signIn: (email: string, password: string, role: 'worker' | 'business' | 'admin') => Promise<void>
   signOut: () => Promise<void>
   signUp: (email: string, password: string, fullName: string, role: 'worker' | 'business' | 'admin') => Promise<void>
+  signInWithGoogle: (role: 'worker' | 'business' | 'admin') => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -178,8 +179,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const signInWithGoogle = async (role: 'worker' | 'business' | 'admin') => {
+    setIsLoading(true)
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?role=${role}`,
+        },
+      })
+
+      if (error) {
+        toast.error(t('auth.loginFailed', { message: error.message }))
+      }
+    } catch (error) {
+      console.error('Google sign in error:', error)
+      toast.error(t('auth.loginFailedGeneric'))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, session, userRole, isLoading, signIn, signOut, signUp }}>
+    <AuthContext.Provider value={{ user, session, userRole, isLoading, signIn, signOut, signUp, signInWithGoogle }}>
       {children}
     </AuthContext.Provider>
   )

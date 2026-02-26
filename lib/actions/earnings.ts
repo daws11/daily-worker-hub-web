@@ -254,13 +254,13 @@ export async function getEarningsSummary(
     const totalEarnings = calculateTotalEarnings(transactions)
     const currentMonthEarnings = calculateEarningsInDateRange(
       transactions,
-      currentMonthStart,
+      currentMonthStart.toISOString(),
       endDate
     )
     const previousMonthEarnings = calculateEarningsInDateRange(
       transactions,
-      previousMonthStart,
-      previousMonthEnd
+      previousMonthStart.toISOString(),
+      previousMonthEnd.toISOString()
     )
 
     const totalBookings = transactions.length
@@ -712,13 +712,13 @@ export async function getIncomeProjection(
 
     const currentMonthEarnings = calculateEarningsInDateRange(
       transactions,
-      currentMonthStart,
+      currentMonthStart.toISOString(),
       endDateStr
     )
     const previousMonthEarnings = calculateEarningsInDateRange(
       transactions,
-      previousMonthStart,
-      previousMonthEnd
+      previousMonthStart.toISOString(),
+      previousMonthEnd.toISOString()
     )
 
     const trendPercentage = calculateTrend(currentMonthEarnings, previousMonthEarnings)

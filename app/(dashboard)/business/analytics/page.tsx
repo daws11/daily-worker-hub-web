@@ -13,13 +13,39 @@ import { BarChart3, Loader2, TrendingUp, Eye, MessageCircle, Share2, CheckCircle
 
 type BusinessesRow = Database["public"]["Tables"]["businesses"]["Row"]
 
-type JobPostRow = Database["public"]["Tables"]["job_posts"]["Row"]
+type JobPostRow = {
+  id: string
+  job_id: string
+  business_connection_id: string
+  platform_post_id: string | null
+  platform_post_url: string | null
+  status: 'pending' | 'posted' | 'failed' | 'deleted'
+  error_message: string | null
+  posted_at: string | null
+  metrics: {
+    views?: number
+    likes?: number
+    comments?: number
+    shares?: number
+    clicks?: number
+    impressions?: number
+    reach?: number
+  } | null
+  created_at: string
+  updated_at: string
+}
+
+type SocialPlatform = {
+  id: string
+  platform_name: string
+  platform_type: string
+}
 
 type JobPostWithConnection = JobPostRow & {
   social_platforms?: {
     id: string
     platform_name: string
-    platform_type: Database["public"]["Enums"]["social_platform_type"]
+    platform_type: string
   } | null
 }
 
@@ -117,7 +143,7 @@ export default function BusinessAnalyticsPage() {
         const jobIds = jobsData.map(j => j.id)
 
         // Now fetch job posts with platform info
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from("job_posts")
           .select(`
             *,
@@ -192,7 +218,7 @@ export default function BusinessAnalyticsPage() {
   }
 
   // Get status badge variant and icon
-  const getStatusInfo = (status: Database["public"]["Enums"]["job_post_status"]) => {
+  const getStatusInfo = (status: 'pending' | 'posted' | 'failed' | 'deleted') => {
     switch (status) {
       case "posted":
         return {

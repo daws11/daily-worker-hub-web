@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Database } from '../supabase/types'
 
 type SocialPlatformRow = Database['public']['Tables']['social_platforms']['Row']

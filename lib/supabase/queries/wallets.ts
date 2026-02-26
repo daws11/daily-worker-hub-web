@@ -13,6 +13,24 @@ type WalletsRow = {
   updated_at: string
 }
 
+export type WalletTransactionWithDetails = {
+  id: string
+  wallet_id: string
+  amount: number
+  type: 'hold' | 'release' | 'earn' | 'payout' | 'refund'
+  status: 'pending_review' | 'available' | 'released' | 'disputed' | 'cancelled'
+  booking_id: string | null
+  description: string | null
+  created_at: string
+  booking?: {
+    id: string
+    job?: {
+      id: string
+      title: string
+    }
+  } | null
+}
+
 /**
  * Create a new wallet
  */

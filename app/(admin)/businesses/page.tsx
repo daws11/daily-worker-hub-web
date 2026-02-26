@@ -44,11 +44,17 @@ export default function BusinessesPage({ className, ...props }: BusinessesPagePr
     setError(null)
 
     try {
-      const { items, total, totalPages } = await getBusinessesForVerification(
+      const { data, error: fetchError } = await getBusinessesForVerification(
         filters,
         pagination.page,
         pagination.limit
       )
+
+      if (fetchError) {
+        throw new Error(fetchError)
+      }
+
+      const { items, total, totalPages } = data
 
       setBusinesses(items)
       setPagination((prev) => ({

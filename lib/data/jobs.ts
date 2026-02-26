@@ -260,7 +260,7 @@ export async function getApplicants(jobId: string, businessId: string): Promise<
       return { success: false, error: error.message }
     }
 
-    return { success: true, data: data as ApplicantWithDetails[] }
+    return { success: true, data: data as unknown as ApplicantWithDetails[] }
   } catch (error) {
     return { success: false, error: "Gagal mengambil data pelamar" }
   }

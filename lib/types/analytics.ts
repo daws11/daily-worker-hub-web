@@ -4,7 +4,15 @@ import { Database } from '../supabase/types'
 // DATE RANGE TYPES
 // ============================================================================
 
-export type DateRangePreset = 'today' | 'yesterday' | 'last_7_days' | 'last_30_days' | 'last_90_days' | 'this_month' | 'last_month' | 'this_year' | 'custom'
+export type DateRangePreset = '7d' | '30d' | '90d' | '6m' | '1y' | 'all' | 'today' | 'yesterday' | 'last_7_days' | 'last_30_days' | 'last_90_days' | 'this_month' | 'last_month' | 'this_year' | 'custom'
+
+export interface DateRange {
+  from?: string
+  to?: string
+  start?: Date | undefined
+  end?: Date | undefined
+  preset?: DateRangePreset
+}
 
 export interface DateRangeFilter {
   preset?: DateRangePreset
@@ -391,4 +399,13 @@ export interface ChartDataset {
   label: string
   data: ChartDataPoint[]
   color?: string
+}
+
+export interface AnalyticsExportData {
+  date: string
+  worker_name: string
+  position: string
+  amount: number
+  status: string
+  reliability_score: number
 }

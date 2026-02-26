@@ -3,6 +3,7 @@ import withPWA from "next-pwa";
 const config = {
   reactStrictMode: true,
   pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
+  turbopack: {},
 };
 
 export default withPWA({

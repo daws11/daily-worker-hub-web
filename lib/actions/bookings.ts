@@ -54,7 +54,11 @@ type BookingWithJobAndWorker = Booking & {
 }
 
 // Type for updating a booking
-type BookingUpdate = Pick<Booking, 'status' | 'checkout_time' | 'payment_status' | 'review_deadline'>
+type BookingUpdate = Partial<Pick<Booking, 'status' | 'start_date' | 'end_date' | 'final_price' | 'cancellation_note' | 'cancelled_at' | 'cancellation_reason_id'>> & {
+  checkout_time?: string
+  payment_status?: string
+  review_deadline?: string
+}
 
 export type CheckoutResult = {
   success: boolean

@@ -4,7 +4,22 @@ import { Database } from '../supabase/types'
 type UserRow = Database['public']['Tables']['users']['Row']
 type BusinessRow = Database['public']['Tables']['businesses']['Row']
 type WorkerRow = Database['public']['Tables']['workers']['Row']
-type KYCVerificationRow = Database['public']['Tables']['kyc_verifications']['Row']
+type KYCVerificationRow = {
+  id: string
+  worker_id: string
+  ktp_number: string | null
+  ktp_photo_url: string | null
+  ktp_image_url: string | null
+  selfie_photo_url: string | null
+  selfie_image_url: string | null
+  status: 'pending' | 'verified' | 'rejected'
+  rejection_reason: string | null
+  submitted_at: string
+  verified_at: string | null
+  verified_by: string | null
+  created_at: string
+  updated_at: string
+}
 type JobRow = Database['public']['Tables']['jobs']['Row']
 type BookingRow = Database['public']['Tables']['bookings']['Row']
 type ReportRow = Database['public']['Tables']['reports']['Row']
@@ -372,6 +387,10 @@ export interface BusinessVerificationItem extends BusinessRow {
   user: UserRow
   submittedAt: string
   pendingDays: number
+  business_type?: string
+  verification_status?: 'pending' | 'verified' | 'rejected'
+  area?: string
+  business_license_url?: string | null
 }
 
 export interface WorkerManagementItem extends WorkerRow {
@@ -379,9 +398,13 @@ export interface WorkerManagementItem extends WorkerRow {
   bookingCount?: number
   reviewCount?: number
   averageRating?: number
+  kyc_status?: 'pending' | 'verified' | 'rejected'
+  experience_years?: number | null
+  reliability_score?: number
 }
 
 export interface KYCVerificationItem extends KYCVerificationRow {
+  id: string
   worker: WorkerRow
   user: UserRow
   submittedAt: string
@@ -399,7 +422,13 @@ export interface JobModerationItem extends JobRow {
 export interface DisputeItem {
   id: string
   booking_id: string
-  booking: BookingRow
+  booking: BookingRow & { 
+    area?: string
+    booking_notes?: string | null
+    job?: { title?: string }
+    business?: BusinessRow
+    worker?: WorkerRow
+  }
   reporter: UserRow
   reported: UserRow
   type: string

@@ -94,3 +94,35 @@ export function formatShortDate(dateString: string, locale: Locale = 'id'): stri
     year: 'numeric',
   }).format(date)
 }
+
+export function getStartOfMonth(date: Date | string = new Date()): Date {
+  const d = typeof date === 'string' ? new Date(date) : date
+  return new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0)
+}
+
+export function getEndOfMonth(date: Date | string = new Date()): Date {
+  const d = typeof date === 'string' ? new Date(date) : date
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
+}
+
+export function getStartOfDay(date: Date | string = new Date()): Date {
+  const d = typeof date === 'string' ? new Date(date) : date
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)
+}
+
+export function getEndOfDay(date: Date | string = new Date()): Date {
+  const d = typeof date === 'string' ? new Date(date) : date
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999)
+}
+
+export function getStartOfWeek(date: Date | string = new Date()): Date {
+  const d = typeof date === 'string' ? new Date(date) : date
+  const day = d.getDay()
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
+  return new Date(d.setDate(diff))
+}
+
+export function getEndOfWeek(date: Date | string = new Date()): Date {
+  const start = getStartOfWeek(date)
+  return new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000)
+}
