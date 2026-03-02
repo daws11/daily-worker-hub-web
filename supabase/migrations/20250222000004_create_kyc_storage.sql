@@ -17,13 +17,7 @@ ON CONFLICT (id) DO UPDATE SET
   file_size_limit = EXCLUDED.file_size_limit,
   allowed_mime_types = EXCLUDED.allowed_mime_types;
 
--- Add comment for documentation
-COMMENT ON COLUMN storage.buckets.file_size_limit IS 'Maximum file size in bytes (5MB for KYC documents)';
-COMMENT ON TABLE storage.buckets IS 'Storage bucket configuration for KYC documents';
-
--- Enable Row Level Security (RLS) for storage.objects
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
-
+-- Note: RLS is already enabled on storage.objects by Supabase
 -- Create RLS policies for KYC documents bucket
 
 -- Policy: Workers can upload their own KYC documents
@@ -119,11 +113,3 @@ CREATE POLICY "Admins can delete any KYC documents"
       WHERE id = auth.uid() AND role = 'admin'
     )
   );
-
--- Add comments for documentation
-COMMENT ON POLICY "Workers can upload own KYC documents" ON storage.objects IS 'Allows authenticated workers to upload KYC documents to their own folder';
-COMMENT ON POLICY "Workers can view own KYC documents" ON storage.objects IS 'Allows authenticated workers to view their own KYC documents';
-COMMENT ON POLICY "Workers can delete own pending KYC documents" ON storage.objects IS 'Allows workers to delete documents only when KYC is pending or unverified';
-COMMENT ON POLICY "Workers can update own pending KYC documents" ON storage.objects IS 'Allows workers to replace documents only when KYC is pending or unverified';
-COMMENT ON POLICY "Admins can view all KYC documents" ON storage.objects IS 'Allows admins to view all KYC documents for verification';
-COMMENT ON POLICY "Admins can delete any KYC documents" ON storage.objects IS 'Allows admins to delete any KYC documents if needed';

@@ -21,7 +21,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className
     )}
     {...props}
@@ -120,3 +120,91 @@ export {
   DialogTitle,
   DialogDescription,
 }
+
+/*
+// Example Usage:
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+
+// Basic Dialog
+<Dialog>
+  <DialogTrigger asChild>
+    <Button>Open Dialog</Button>
+  </DialogTrigger>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Are you sure?</DialogTitle>
+      <DialogDescription>
+        This action cannot be undone.
+      </DialogDescription>
+    </DialogHeader>
+    <DialogFooter>
+      <Button variant="outline">Cancel</Button>
+      <Button variant="destructive">Confirm</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
+// Form Dialog
+<Dialog>
+  <DialogTrigger asChild>
+    <Button>Add User</Button>
+  </DialogTrigger>
+  <DialogContent className="sm:max-w-md">
+    <DialogHeader>
+      <DialogTitle>Add New User</DialogTitle>
+      <DialogDescription>
+        Fill in the details to create a new user account.
+      </DialogDescription>
+    </DialogHeader>
+    <div className="grid gap-4 py-4">
+      <div className="grid grid-cols-4 items-center gap-4">
+        <label htmlFor="name" className="text-right text-sm">
+          Name
+        </label>
+        <Input id="name" className="col-span-3" />
+      </div>
+      <div className="grid grid-cols-4 items-center gap-4">
+        <label htmlFor="email" className="text-right text-sm">
+          Email
+        </label>
+        <Input id="email" type="email" className="col-span-3" />
+      </div>
+    </div>
+    <DialogFooter>
+      <Button type="submit">Save changes</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
+// Controlled Dialog
+function ControlledDialogExample() {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>Open Controlled Dialog</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Controlled Dialog</DialogTitle>
+        </DialogHeader>
+        <p>This dialog is controlled by state.</p>
+        <DialogFooter>
+          <Button onClick={() => setOpen(false)}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+*/

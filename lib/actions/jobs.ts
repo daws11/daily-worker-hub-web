@@ -23,6 +23,7 @@ export interface CreateJobInput {
   wageMin: number
   wageMax: number
   workersNeeded: number
+  hoursNeeded: number
   description: string
   requirements: string[]
   area: string
@@ -63,6 +64,9 @@ export async function createJob(input: CreateJobInput): Promise<CreateJobResult>
       return { success: false, error: "Kategori tidak tersedia" }
     }
 
+    // Calculate overtime multiplier based on hours needed
+    const overtimeMultiplier = input.hoursNeeded >= 9 ? 1.5 : 1.0
+
     // Prepare platform_settings with all form data
     const platformSettings = {
       ...(input.platformSettings || {}),
@@ -70,12 +74,13 @@ export async function createJob(input: CreateJobInput): Promise<CreateJobResult>
         wageMin: input.wageMin,
         wageMax: input.wageMax,
         workersNeeded: input.workersNeeded,
+        hoursNeeded: input.hoursNeeded,
         area: input.area,
         positionType: input.positionType,
       },
     }
 
-    // Prepare job data - only using fields that exist in database
+    // Prepare job data - using new fields from matching algorithm
     const jobData = {
       business_id: business.id,
       category_id: category.id,
@@ -87,6 +92,8 @@ export async function createJob(input: CreateJobInput): Promise<CreateJobResult>
       deadline: input.deadline,
       address: input.address,
       status: "open",
+      hours_needed: input.hoursNeeded,
+      overtime_multiplier: overtimeMultiplier,
       platform_settings: platformSettings,
     } as any
 

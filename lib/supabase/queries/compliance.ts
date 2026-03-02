@@ -165,9 +165,26 @@ export async function getComplianceRecords(businessId: string, limit = 100) {
   }
 }
 
+// ============================================================================
+// COMPLIANCE WARNINGS TYPES
+// ============================================================================
+
+// Type for compliance_warnings row
+export interface ComplianceWarningsRow {
+  id: string
+  business_id: string
+  worker_id: string
+  month: string
+  days_worked: number
+  warning_level: 'none' | 'warning' | 'blocked'
+  acknowledged: boolean
+  created_at: string
+  updated_at: string
+}
+
 // Type for compliance status result
 export type ComplianceStatus = 'ok' | 'warning' | 'blocked'
-export type WarningLevel = 'none' | 'approaching' | 'limit'
+export type WarningLevel = 'none' | 'warning' | 'blocked'
 
 export interface ComplianceStatusResult {
   status: ComplianceStatus
@@ -216,11 +233,11 @@ export async function getComplianceStatus(
 
     if (days >= 21) {
       status = 'blocked'
-      warningLevel = 'limit'
+      warningLevel = 'blocked'
       message = `Worker has reached ${days} days this month. PP 35/2021 limit (21 days) reached. Cannot accept more bookings.`
-    } else if (days >= 15) {
+    } else if (days >= 16) {
       status = 'warning'
-      warningLevel = 'approaching'
+      warningLevel = 'warning'
       message = `Warning: Worker has worked ${days} days this month. Approaching PP 35/2021 limit of 21 days.`
     }
 
@@ -330,6 +347,208 @@ export async function getAlternativeWorkers(
     return { data: limitedWorkers, error: null }
   } catch (error) {
     console.error('Unexpected error fetching alternative workers:', error)
+    return { data: null, error }
+  }
+}
+
+// ============================================================================
+// COMPLIANCE WARNINGS QUERIES
+// ============================================================================
+
+/**
+ * Get compliance warnings for a business in a specific month.
+ * Returns warnings with worker details, sorted by warning level and days worked.
+ *
+ * @param businessId - The business ID
+ * @param month - First day of the month (e.g., '2026-02-01')
+ * @returns Compliance warnings with worker details
+ */
+export async function getBusinessComplianceWarnings(businessId: string, month?: string) {
+  try {
+    const targetMonth = month || new Date().toISOString().slice(0, 7) + '-01'
+
+    const { data, error } = await (supabase as any)
+      .from('compliance_warnings')
+      .select(`
+        *,
+        worker:workers!inner(
+          id,
+          full_name,
+          avatar_url,
+          phone
+        )
+      `)
+      .eq('business_id', businessId)
+      .eq('month', targetMonth)
+      .in('warning_level', ['warning', 'blocked']) // Only return actual warnings
+      .order('warning_level', { ascending: false }) // blocked first, then warning
+      .order('days_worked', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching business compliance warnings:', error)
+      return { data: null, error }
+    }
+
+    return { data, error: null }
+  } catch (error) {
+    console.error('Unexpected error fetching business compliance warnings:', error)
+    return { data: null, error }
+  }
+}
+
+/**
+ * Get compliance warnings for a worker in a specific month.
+ * Returns warnings with business details.
+ *
+ * @param workerId - The worker ID
+ * @param month - First day of the month (e.g., '2026-02-01')
+ * @returns Compliance warnings with business details
+ */
+export async function getWorkerComplianceWarnings(workerId: string, month?: string) {
+  try {
+    const targetMonth = month || new Date().toISOString().slice(0, 7) + '-01'
+
+    const { data, error } = await (supabase as any)
+      .from('compliance_warnings')
+      .select(`
+        *,
+        business:businesses!inner(
+          id,
+          name,
+          email
+        )
+      `)
+      .eq('worker_id', workerId)
+      .eq('month', targetMonth)
+      .in('warning_level', ['warning', 'blocked'])
+      .order('warning_level', { ascending: false })
+      .order('days_worked', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching worker compliance warnings:', error)
+      return { data: null, error }
+    }
+
+    return { data, error: null }
+  } catch (error) {
+    console.error('Unexpected error fetching worker compliance warnings:', error)
+    return { data: null, error }
+  }
+}
+
+/**
+ * Get compliance warnings summary for a business.
+ * Returns counts of workers by warning level.
+ *
+ * @param businessId - The business ID
+ * @param month - First day of the month (e.g., '2026-02-01')
+ * @returns Summary with counts and warnings
+ */
+export async function getBusinessComplianceSummary(businessId: string, month?: string) {
+  try {
+    const targetMonth = month || new Date().toISOString().slice(0, 7) + '-01'
+
+    const { data, error } = await (supabase as any)
+      .from('compliance_warnings')
+      .select(`
+        *,
+        worker:workers!inner(
+          id,
+          full_name,
+          avatar_url
+        )
+      `)
+      .eq('business_id', businessId)
+      .eq('month', targetMonth)
+
+    if (error) {
+      console.error('Error fetching business compliance summary:', error)
+      return { data: null, error }
+    }
+
+    const warnings = data || []
+    const summary = {
+      totalWorkers: warnings.length,
+      compliantWorkers: warnings.filter((w: ComplianceWarningsRow) => w.warning_level === 'none').length,
+      warningWorkers: warnings.filter((w: ComplianceWarningsRow) => w.warning_level === 'warning').length,
+      blockedWorkers: warnings.filter((w: ComplianceWarningsRow) => w.warning_level === 'blocked').length,
+      averageDaysWorked: warnings.length > 0
+        ? warnings.reduce((sum: number, w: ComplianceWarningsRow) => sum + w.days_worked, 0) / warnings.length
+        : 0,
+      warnings
+    }
+
+    return { data: summary, error: null }
+  } catch (error) {
+    console.error('Unexpected error fetching business compliance summary:', error)
+    return { data: null, error }
+  }
+}
+
+/**
+ * Acknowledge a compliance warning.
+ * This is used when a business acknowledges they've seen a warning.
+ *
+ * @param warningId - The compliance warning ID
+ * @returns Success status
+ */
+export async function acknowledgeComplianceWarning(warningId: string) {
+  try {
+    const { data, error } = await (supabase as any)
+      .from('compliance_warnings')
+      .update({ acknowledged: true })
+      .eq('id', warningId)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error acknowledging compliance warning:', error)
+      return { data: null, error }
+    }
+
+    return { data, error: null }
+  } catch (error) {
+    console.error('Unexpected error acknowledging compliance warning:', error)
+    return { data: null, error }
+  }
+}
+
+/**
+ * Get all unacknowledged compliance warnings for a business.
+ * Used to show notifications on the dashboard.
+ *
+ * @param businessId - The business ID
+ * @param month - First day of the month (e.g., '2026-02-01')
+ * @returns Unacknowledged warnings
+ */
+export async function getUnacknowledgedWarnings(businessId: string, month?: string) {
+  try {
+    const targetMonth = month || new Date().toISOString().slice(0, 7) + '-01'
+
+    const { data, error } = await (supabase as any)
+      .from('compliance_warnings')
+      .select(`
+        *,
+        worker:workers!inner(
+          id,
+          full_name,
+          avatar_url
+        )
+      `)
+      .eq('business_id', businessId)
+      .eq('month', targetMonth)
+      .eq('acknowledged', false)
+      .in('warning_level', ['warning', 'blocked'])
+      .order('warning_level', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching unacknowledged warnings:', error)
+      return { data: null, error }
+    }
+
+    return { data, error: null }
+  } catch (error) {
+    console.error('Unexpected error fetching unacknowledged warnings:', error)
     return { data: null, error }
   }
 }

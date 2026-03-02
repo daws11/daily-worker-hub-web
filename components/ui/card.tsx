@@ -1,20 +1,42 @@
 import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
-const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "rounded-xl border bg-card text-card-foreground shadow",
-      className
-    )}
-    {...props}
-  />
-))
+const cardVariants = cva(
+  "rounded-xl border text-card-foreground transition-all",
+  {
+    variants: {
+      variant: {
+        default:
+          "bg-card shadow",
+        elevated:
+          "bg-card shadow-lg hover:shadow-xl",
+        ghost:
+          "bg-transparent border-transparent shadow-none",
+        bordered:
+          "bg-background border-2",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+export interface CardProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof cardVariants> {}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, variant, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(cardVariants({ variant, className }))}
+      {...props}
+    />
+  )
+)
 Card.displayName = "Card"
 
 const CardHeader = React.forwardRef<
@@ -35,7 +57,7 @@ const CardTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("font-semibold leading-none tracking-tight", className)}
+    className={cn("font-semibold leading-none tracking-tight text-lg", className)}
     {...props}
   />
 ))
@@ -73,4 +95,53 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, cardVariants }
+
+/*
+// Example Usage:
+
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+
+// Default Card
+<Card>
+  <CardHeader>
+    <CardTitle>Card Title</CardTitle>
+    <CardDescription>Card description text</CardDescription>
+  </CardHeader>
+  <CardContent>
+    <p>Card content goes here.</p>
+  </CardContent>
+</Card>
+
+// Elevated Card
+<Card variant="elevated">
+  <CardHeader>
+    <CardTitle>Elevated Card</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <p>This card has more shadow.</p>
+  </CardContent>
+</Card>
+
+// With Header Variant
+<Card>
+  <CardHeader>
+    <CardTitle>With Actions</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <p>Content with actions in footer</p>
+  </CardContent>
+  <CardFooter>
+    <Button>Cancel</Button>
+    <Button variant="default">Confirm</Button>
+  </CardFooter>
+</Card>
+
+// Bordered Card
+<Card variant="bordered">
+  <CardContent className="pt-6">
+    <p>Strong border variant</p>
+  </CardContent>
+</Card>
+*/

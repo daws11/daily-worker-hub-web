@@ -4,6 +4,7 @@ import { createClient } from "../supabase/server"
 import type { Database } from "../supabase/types"
 import { createNotification } from "./notifications"
 import { sendPushNotification, isNotificationTypeEnabled } from "./push-notifications"
+import { checkComplianceBeforeAccept } from "./compliance"
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"]
 type Job = Database["public"]["Tables"]["jobs"]["Row"]
@@ -23,8 +24,9 @@ export type DuplicateCheckResult = {
 }
 
 /**
- * Worker applies for a job
+ * Worker applies for a job with PP 35/2021 compliance check
  * Creates a new booking with status 'pending'
+ * Checks if worker has already worked 21+ days for this business this month
  */
 export async function applyForJob(jobId: string, workerId: string): Promise<ApplicationResult> {
   try {
@@ -56,6 +58,22 @@ export async function applyForJob(jobId: string, workerId: string): Promise<Appl
 
     if (jobError || !job) {
       return { success: false, error: "Pekerjaan tidak ditemukan" }
+    }
+
+    // Check PP 35/2021 compliance (21-day limit) BEFORE allowing application
+    const complianceCheck = await checkComplianceBeforeAccept(workerId, job.business_id)
+
+    if (!complianceCheck.success) {
+      return { success: false, error: complianceCheck.error || "Gagal mengecek kepatuhan PP 35/2021" }
+    }
+
+    // If worker cannot apply due to compliance (blocked at 21 days)
+    if (!complianceCheck.canAccept || complianceCheck.data?.status === "blocked") {
+      const daysWorked = complianceCheck.data?.daysWorked || 21
+      return {
+        success: false,
+        error: `Anda telah bekerja ${daysWorked} hari bulan ini dengan bisnis ini. PP 35/2021 membatasi pekerja harian maksimal 21 hari/bulan per bisnis. Silakan cari pekerjaan di bisnis lain.`
+      }
     }
 
     // Get job details for notification
@@ -290,6 +308,22 @@ export async function acceptApplication(bookingId: string, businessId: string): 
 
     if (booking.status !== "pending") {
       return { success: false, error: "Hanya lamaran dengan status pending yang bisa diterima" }
+    }
+
+    // Check PP 35/2021 compliance (21-day limit) BEFORE accepting
+    const complianceCheck = await checkComplianceBeforeAccept(booking.worker_id, businessId)
+
+    if (!complianceCheck.success) {
+      return { success: false, error: complianceCheck.error || "Gagal mengecek kepatuhan PP 35/2021" }
+    }
+
+    // If worker cannot be accepted due to compliance (blocked at 21 days)
+    if (!complianceCheck.canAccept || complianceCheck.data?.status === "blocked") {
+      const daysWorked = complianceCheck.data?.daysWorked || 21
+      return {
+        success: false,
+        error: `Pekerja telah bekerja ${daysWorked} hari bulan ini dengan bisnis Anda. PP 35/2021 membatasi pekerja harian maksimal 21 hari/bulan. Tidak dapat menerima pekerja ini bulan ini.`
+      }
     }
 
     // Update the booking status to accepted

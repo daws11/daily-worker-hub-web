@@ -373,40 +373,18 @@ export default function WorkerBookingsPage() {
 
   if (authLoading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        backgroundColor: '#f5f5f5',
-        padding: '1rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <Loader2 style={{ width: '2rem', height: '2rem', color: '#2563eb', animation: 'spin 1s linear infinite' }} />
+      <div className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
       </div>
     )
   }
 
   if (!user) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        backgroundColor: '#f5f5f5',
-        padding: '1rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
-          borderRadius: '0.5rem',
-          padding: '1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem'
-        }}>
-          <AlertCircle style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
-          <p style={{ color: '#991b1b', fontWeight: 500 }}>
+      <div className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-red-600" />
+          <p className="text-red-900 font-medium">
             Error: Tidak dapat memuat informasi pengguna. Silakan refresh halaman.
           </p>
         </div>
@@ -418,117 +396,64 @@ export default function WorkerBookingsPage() {
   const hasBookings = Object.values(groupedBookings).some((group) => group.length > 0)
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f5f5f5',
-      padding: '1rem'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="min-h-screen bg-gray-100 p-4">
+      <div className="max-w-6xl mx-auto">
         {/* Page Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1.5rem'
-        }}>
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+            <h1 className="text-2xl font-bold mb-1">
               Booking Pekerja
             </h1>
-            <p style={{ color: '#666', fontSize: '0.875rem', margin: 0 }}>
+            <p className="text-sm text-gray-600 m-0">
               Kelola booking pekerjaan Anda dan berikan ulasan
             </p>
           </div>
-          <button
+          <Button
             onClick={handleLogout}
             disabled={authLoading}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: authLoading ? '#9ca3af' : '#ef4444',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.375rem',
-              fontWeight: 500,
-              cursor: authLoading ? 'not-allowed' : 'pointer',
-              fontSize: '0.875rem',
-              opacity: authLoading ? 0.6 : 1,
-              transition: 'background-color 0.2s'
-            }}
+            variant="destructive"
+            size="sm"
           >
             {authLoading ? 'Memproses...' : 'Keluar'}
-          </button>
+          </Button>
         </div>
 
         {/* Error State */}
         {error && (
-          <div style={{
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem'
-          }}>
-            <AlertCircle style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
-            <div style={{ flex: 1 }}>
-              <p style={{ color: '#991b1b', fontWeight: 500, marginBottom: '0.25rem' }}>
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-red-600" />
+            <div className="flex-1">
+              <p className="text-red-900 font-medium mb-1">
                 Gagal memuat data
               </p>
-              <p style={{ color: '#b91c1c', fontSize: '0.875rem' }}>{error}</p>
+              <p className="text-red-800 text-sm">{error}</p>
             </div>
-            <button
+            <Button
               onClick={fetchBookingsWithReviews}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}
+              size="sm"
             >
-              <Loader2 style={{ width: '1rem', height: '1rem' }} />
+              <Loader2 className="h-4 w-4 mr-2" />
               Coba Lagi
-            </button>
+            </Button>
           </div>
         )}
 
         {/* Loading State */}
         {isLoading && !error && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0.5rem',
-            padding: '3rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center'
-          }}>
-            <Loader2 style={{ width: '2rem', height: '2rem', color: '#2563eb', margin: '0 auto 1rem', animation: 'spin 1s linear infinite' }} />
-            <p style={{ color: '#666' }}>Memuat data booking...</p>
+          <div className="bg-white rounded-lg p-12 shadow-sm text-center">
+            <Loader2 className="h-8 w-8 text-blue-600 mx-auto mb-4 animate-spin" />
+            <p className="text-gray-600">Memuat data booking...</p>
           </div>
         )}
 
         {/* Empty State */}
         {!isLoading && !error && !hasBookings && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0.5rem',
-            padding: '3rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center',
-            border: '1px dashed #d1d5db'
-          }}>
-            <Building2 style={{ width: '3rem', height: '3rem', color: '#9ca3af', margin: '0 auto 1rem' }} />
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+          <div className="bg-white rounded-lg p-12 shadow-sm text-center border-2 border-dashed border-gray-300">
+            <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">
               Belum Ada Booking
             </h3>
-            <p style={{ color: '#666' }}>
+            <p className="text-gray-600">
               Booking pekerjaan akan muncul di sini setelah Anda melamar pada pekerjaan
             </p>
           </div>
@@ -585,13 +510,6 @@ export default function WorkerBookingsPage() {
             onSuccess={handleReviewSuccess}
           />
         )}
-
-        <style jsx>{`
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
       </div>
     </div>
   )

@@ -36,6 +36,31 @@ export interface WageRate {
 }
 
 /**
+ * Hourly rate by category and region (IDR/Jam)
+ * Based on market data from Indeed, Kitalulus, and UMK standards
+ */
+export interface CategoryRate {
+  category: string
+  denpasar: number
+  gianyar: number
+  badung: number
+  otherBali: number
+}
+
+export const CATEGORY_RATES: CategoryRate[] = [
+  { category: 'Housekeeping', denpasar: 20000, gianyar: 19000, badung: 18500, otherBali: 18000 },
+  { category: 'Waiter', denpasar: 22000, gianyar: 21000, badung: 20500, otherBali: 20000 },
+  { category: 'Cook Helper', denpasar: 21000, gianyar: 20000, badung: 19500, otherBali: 19000 },
+  { category: 'Cook (Line)', denpasar: 25000, gianyar: 24000, badung: 23500, otherBali: 23000 },
+  { category: 'Cook (Head)', denpasar: 35000, gianyar: 34000, badung: 33000, otherBali: 32000 },
+  { category: 'Steward', denpasar: 23000, gianyar: 22000, badung: 21500, otherBali: 21000 },
+  { category: 'Driver', denpasar: 24000, gianyar: 23000, badung: 22500, otherBali: 22000 },
+  { category: 'Bellman', denpasar: 21000, gianyar: 20000, badung: 19500, otherBali: 19000 },
+  { category: 'Front Desk', denpasar: 28000, gianyar: 27000, badung: 26000, otherBali: 26000 },
+  { category: 'Spa/Therapist', denpasar: 30000, gianyar: 29000, badung: 28000, otherBali: 28000 },
+]
+
+/**
  * UMK 2025 Rates by Regency
  * Monthly minimum wages in Indonesian Rupiah (IDR)
  */
@@ -227,4 +252,78 @@ export function getWageDisplayString(rate: WageRate, type: 'hourly' | 'daily' | 
   }[type]
 
   return `${formatRupiah(values.min)} - ${formatRupiah(values.recommended)}`
+}
+
+/**
+ * Get hourly rate by category and region
+ *
+ * @param category - Job category
+ * @param regency - Region name (Denpasar, Gianyar, Badung, or Other)
+ * @returns Hourly rate in IDR
+ */
+export function getHourlyRate(category: string, regency: string): number {
+  const categoryRate = CATEGORY_RATES.find(cr =>
+    cr.category.toLowerCase() === category.toLowerCase()
+  );
+
+  if (!categoryRate) {
+    return 0;
+  }
+
+  const normalizedRegency = regency.toLowerCase();
+  if (normalizedRegency === 'denpasar') {
+    return categoryRate.denpasar;
+  } else if (normalizedRegency === 'gianyar') {
+    return categoryRate.gianyar;
+  } else if (normalizedRegency === 'badung') {
+    return categoryRate.badung;
+  } else {
+    return categoryRate.otherBali;
+  }
+}
+
+/**
+ * Get overtime multiplier based on hours worked
+ *
+ * @param hoursNeeded - Total hours needed (4-12)
+ * @returns Overtime multiplier (1.0 for 4-8 hours, 1.5 for 9-12 hours)
+ */
+export function getOvertimeMultiplier(hoursNeeded: number): number {
+  if (hoursNeeded >= 9) {
+    return 1.5; // Overtime rate for 9+ hours
+  }
+  return 1.0; // Regular rate for 4-8 hours
+}
+
+/**
+ * Get regular and overtime hours breakdown
+ *
+ * @param hoursNeeded - Total hours needed (4-12)
+ * @returns Object with regularHours and overtimeHours
+ */
+export function getHoursBreakdown(hoursNeeded: number): {
+  regularHours: number;
+  overtimeHours: number;
+} {
+  if (hoursNeeded <= 8) {
+    return {
+      regularHours: hoursNeeded,
+      overtimeHours: 0,
+    };
+  } else {
+    return {
+      regularHours: 8,
+      overtimeHours: hoursNeeded - 8,
+    };
+  }
+}
+
+/**
+ * Validate hours needed (must be 4-12)
+ *
+ * @param hours - Hours to validate
+ * @returns True if valid
+ */
+export function isValidHours(hours: number): boolean {
+  return hours >= 4 && hours <= 12 && Number.isInteger(hours);
 }

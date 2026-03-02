@@ -239,21 +239,102 @@ CREATE POLICY "Service role and admins can insert audit logs"
 -- COMMENTS FOR DOCUMENTATION
 -- ============================================================================
 
-COMMENT ON POLICY "Admins can view all avatars" ON storage.objects IS 'Allows admins to view all avatar images for moderation and audit purposes';
-COMMENT ON POLICY "Admins can upload avatars" ON storage.objects IS 'Allows admins to upload avatar images on behalf of users';
-COMMENT ON POLICY "Admins can update avatars" ON storage.objects IS 'Allows admins to modify any avatar image';
-COMMENT ON POLICY "Admins can delete avatars" ON storage.objects IS 'Allows admins to remove inappropriate avatar images';
+-- Add comments with error handling (may fail due to permissions)
+DO $$
+BEGIN
+  -- Storage policies comments
+  PERFORM pg_catalog.pg_extension_config_dump('comment on policy "Admins can view all avatars" on storage.objects', null);
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE NOTICE 'Could not add comment on policy: %', SQLERRM;
+END $$;
 
-COMMENT ON POLICY "Admins can view all documents" ON storage.objects IS 'Allows admins to view all KYC documents for verification';
-COMMENT ON POLICY "Admins can upload documents" ON storage.objects IS 'Allows admins to upload documents for admin operations';
-COMMENT ON POLICY "Admins can update documents" ON storage.objects IS 'Allows admins to modify any documents';
-COMMENT ON POLICY "Admins can delete documents" ON storage.objects IS 'Allows admins to remove inappropriate or fraudulent documents';
+-- Comments are optional, so we wrap them individually
+DO $$
+BEGIN
+  COMMENT ON POLICY "Admins can view all avatars" ON storage.objects IS 'Allows admins to view all avatar images for moderation and audit purposes';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END $$;
 
-COMMENT ON POLICY "Admins can view all images" ON storage.objects IS 'Allows admins to view all user-uploaded images for moderation';
-COMMENT ON POLICY "Admins can upload images" ON storage.objects IS 'Allows admins to upload images for content management';
-COMMENT ON POLICY "Admins can update images" ON storage.objects IS 'Allows admins to modify any images';
-COMMENT ON POLICY "Admins can delete images" ON storage.objects IS 'Allows admins to remove inappropriate images';
+DO $$
+BEGIN
+  COMMENT ON POLICY "Admins can upload avatars" ON storage.objects IS 'Allows admins to upload avatar images on behalf of users';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END $$;
 
+DO $$
+BEGIN
+  COMMENT ON POLICY "Admins can update avatars" ON storage.objects IS 'Allows admins to modify any avatar image';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  COMMENT ON POLICY "Admins can delete avatars" ON storage.objects IS 'Allows admins to remove inappropriate avatar images';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  COMMENT ON POLICY "Admins can view all documents" ON storage.objects IS 'Allows admins to view all KYC documents for verification';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  COMMENT ON POLICY "Admins can upload documents" ON storage.objects IS 'Allows admins to upload documents for admin operations';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  COMMENT ON POLICY "Admins can update documents" ON storage.objects IS 'Allows admins to modify any documents';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  COMMENT ON POLICY "Admins can delete documents" ON storage.objects IS 'Allows admins to remove inappropriate or fraudulent documents';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  COMMENT ON POLICY "Admins can view all images" ON storage.objects IS 'Allows admins to view all user-uploaded images for moderation';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  COMMENT ON POLICY "Admins can upload images" ON storage.objects IS 'Allows admins to upload images for content management';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  COMMENT ON POLICY "Admins can update images" ON storage.objects IS 'Allows admins to modify any images';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  COMMENT ON POLICY "Admins can delete images" ON storage.objects IS 'Allows admins to remove inappropriate images';
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END $$;
+
+-- Table policy comments
 COMMENT ON POLICY "Service role and admins can insert audit logs" ON admin_audit_logs IS 'Allows database triggers (service role) and admin users to create audit log entries';
 
 -- ============================================================================

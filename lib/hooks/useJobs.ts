@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import { getJobs } from '../api/jobs'
 import { calculateDistance } from '../utils/distance'
 import type { JobWithRelations, JobListParams } from '../types/job'
 
@@ -61,16 +60,35 @@ export function useJobs({
     setError(null)
 
     try {
-      // For 'nearest' sort, we don't pass it to API since it requires client-side calculation
-      const sortParam = sort === 'nearest' ? 'newest' : sort
-      const { data, error: apiError } = await getJobs({ filters, sort: sortParam, page, limit })
+      // Build query parameters
+      const params = new URLSearchParams()
+      params.set('limit', limit.toString())
+      params.set('page', page.toString())
+      params.set('sort', sort)
+
+      if (filters) {
+        if (filters.search) params.set('search', filters.search)
+        if (filters.categoryId) params.set('category_id', filters.categoryId)
+        if (filters.area) params.set('area', filters.area)
+        if (filters.wageMin !== undefined) params.set('wage_min', filters.wageMin.toString())
+        if (filters.wageMax !== undefined) params.set('wage_max', filters.wageMax.toString())
+        if (filters.deadlineAfter) params.set('deadline_after', filters.deadlineAfter)
+        if (filters.deadlineBefore) params.set('deadline_before', filters.deadlineBefore)
+      }
+
+      const response = await fetch(`/api/jobs?${params.toString()}`)
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch jobs: ${response.statusText}`)
+      }
+
+      const { data, error: apiError } = await response.json()
 
       if (apiError) {
-        setError(apiError)
-        setJobs([])
-      } else {
-        setJobs(data || [])
+        throw new Error(apiError)
       }
+
+      setJobs(data || [])
     } catch (err) {
       setError(err as Error)
       setJobs([])

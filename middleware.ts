@@ -110,6 +110,7 @@ const publicRoutes = [
   '/forgot-password',
   '/reset-password',
   '/auth/callback',
+  '/worker/jobs', // Job marketplace is public
 ]
 
 /**
@@ -142,11 +143,12 @@ export async function middleware(request: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  )
+  // Check public routes FIRST (higher priority)
   const isPublicRoute = publicRoutes.some((route) =>
     pathname === route || pathname.startsWith(route)
+  )
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    pathname.startsWith(route)
   )
 
   // Redirect unauthenticated users from protected routes to login

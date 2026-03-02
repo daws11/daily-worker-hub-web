@@ -1,0 +1,59 @@
+{
+  "data": [
+    {
+      "id": "026aea83-5845-4e8e-bf7d-5ffa3c777ef1",
+      "title": "Receptionist untuk Resort Ubud",
+      "status": "open",
+      "budget_min": 130000,
+      "budget_max": 160000,
+      "business": "Test Business Villa",
+      "category": "hotel"
+    },
+    {
+      "id": "b1a78e3d-14d9-4184-a350-ad83e2e11b67",
+      "title": "Steward untuk Event Besar",
+      "status": "open",
+      "budget_min": 200000,
+      "budget_max": 250000,
+      "business": "Test Business Villa",
+      "category": "event_company"
+    },
+    {
+      "id": "5f127a62-9d30-4176-9cbe-2668d4b6118f",
+      "title": "Waiter untuk Cafe Populer",
+      "status": "open",
+      "budget_min": 80000,
+      "budget_max": 100000,
+      "business": "Test Business Villa",
+      "category": "restaurant"
+    },
+    {
+      "id": "c538e793-3289-4bda-b8a8-4805a9c31e2a",
+      "title": "Cook untuk Restaurant Lokal",
+      "status": "open",
+      "budget_min": 100000,
+      "budget_max": 130000,
+      "business": "Test Business Villa",
+      "category": "restaurant"
+    },
+    {
+      "id": "f357616e-a625-4a91-91b3-5e2622229dd5",
+      "title": "Team Cleaning untuk Villa Mewah",
+      "status": "open",
+      "budget_min": 120000,
+      "budget_max": 150000,
+      "business": "Test Business Villa",
+      "category": "hotel"
+    },
+    {
+      "id": "965fc226-63ed-447a-9963-9b1f012273dd",
+      "title": "Driver Pribadi Hotel Bintang 5",
+      "status": "open",
+      "budget_min": 150000,
+      "budget_max": 200000,
+      "business": "Test Business Villa",
+      "category": "hotel"
+    }
+  ],
+  "total": 6
+}

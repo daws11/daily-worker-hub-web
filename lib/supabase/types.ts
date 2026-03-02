@@ -67,9 +67,13 @@ export type Database = {
           end_date: string | null
           final_price: number | null
           id: string
+          interview_duration: number | null
+          interview_status: "pending" | "in_progress" | "completed" | "skipped" | "failed" | null
           job_id: string
+          matching_score: number | null
           start_date: string | null
           status: Database["public"]["Enums"]["booking_status"]
+          time_to_hire: number | null
           updated_at: string
           worker_id: string
         }
@@ -82,9 +86,13 @@ export type Database = {
           end_date?: string | null
           final_price?: number | null
           id?: string
+          interview_duration?: number | null
+          interview_status?: "pending" | "in_progress" | "completed" | "skipped" | "failed" | null
           job_id: string
+          matching_score?: number | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
+          time_to_hire?: number | null
           updated_at?: string
           worker_id: string
         }
@@ -97,9 +105,13 @@ export type Database = {
           end_date?: string | null
           final_price?: number | null
           id?: string
+          interview_duration?: number | null
+          interview_status?: "pending" | "in_progress" | "completed" | "skipped" | "failed" | null
           job_id?: string
+          matching_score?: number | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
+          time_to_hire?: number | null
           updated_at?: string
           worker_id?: string
         }
@@ -298,9 +310,11 @@ export type Database = {
           created_at: string
           deadline: string | null
           description: string | null
+          hours_needed: number
           id: string
           lat: number | null
           lng: number | null
+          overtime_multiplier: number
           requirements: string | null
           status: Database["public"]["Enums"]["job_status"]
           title: string
@@ -315,9 +329,11 @@ export type Database = {
           created_at?: string
           deadline?: string | null
           description?: string | null
+          hours_needed?: number
           id?: string
           lat?: number | null
           lng?: number | null
+          overtime_multiplier?: number
           requirements?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           title: string
@@ -332,9 +348,11 @@ export type Database = {
           created_at?: string
           deadline?: string | null
           description?: string | null
+          hours_needed?: number
           id?: string
           lat?: number | null
           lng?: number | null
+          overtime_multiplier?: number
           requirements?: string | null
           status?: Database["public"]["Enums"]["job_status"]
           title?: string
@@ -722,10 +740,14 @@ export type Database = {
           dob: string | null
           full_name: string
           id: string
+          jobs_completed: number
           lat: number | null
           lng: number | null
           location_name: string | null
           phone: string | null
+          rating: number | null
+          punctuality: number | null
+          tier: Database["public"]["Enums"]["worker_tier"]
           updated_at: string
           user_id: string
         }
@@ -737,10 +759,14 @@ export type Database = {
           dob?: string | null
           full_name: string
           id?: string
+          jobs_completed?: number
           lat?: number | null
           lng?: number | null
           location_name?: string | null
           phone?: string | null
+          rating?: number | null
+          punctuality?: number | null
+          tier?: Database["public"]["Enums"]["worker_tier"]
           updated_at?: string
           user_id: string
         }
@@ -752,10 +778,14 @@ export type Database = {
           dob?: string | null
           full_name?: string
           id?: string
+          jobs_completed?: number
           lat?: number | null
           lng?: number | null
           location_name?: string | null
           phone?: string | null
+          rating?: number | null
+          punctuality?: number | null
+          tier?: Database["public"]["Enums"]["worker_tier"]
           updated_at?: string
           user_id?: string
         }
@@ -764,6 +794,134 @@ export type Database = {
             foreignKeyName: "workers_user_id_fkey"
             columns: ["user_id"]
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      worker_availabilities: {
+        Row: {
+          id: string
+          worker_id: string
+          day_of_week: number
+          start_hour: number
+          end_hour: number
+          is_available: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          worker_id: string
+          day_of_week: number
+          start_hour: number
+          end_hour: number
+          is_available?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          worker_id?: string
+          day_of_week?: number
+          start_hour?: number
+          end_hour?: number
+          is_available?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_availabilities_worker_id_fkey"
+            columns: ["worker_id"]
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_sessions: {
+        Row: {
+          id: string
+          booking_id: string
+          business_id: string
+          worker_id: string
+          worker_tier: Database["public"]["Enums"]["worker_tier"]
+          status: "pending" | "in_progress" | "completed" | "skipped" | "failed"
+          type: "none" | "chat" | "chat_and_voice"
+          started_at: string | null
+          completed_at: string | null
+          chat_started_at: string | null
+          chat_completed_at: string | null
+          voice_started_at: string | null
+          voice_completed_at: string | null
+          created_at: string
+          chat_duration: number | null
+          voice_duration: number | null
+          total_duration: number | null
+          messages_sent: number
+          voice_call_initiated: boolean
+          time_to_hire: number | null
+        }
+        Insert: {
+          id?: string
+          booking_id: string
+          business_id: string
+          worker_id: string
+          worker_tier: Database["public"]["Enums"]["worker_tier"]
+          status?: "pending" | "in_progress" | "completed" | "skipped" | "failed"
+          type?: "none" | "chat" | "chat_and_voice"
+          started_at?: string | null
+          completed_at?: string | null
+          chat_started_at?: string | null
+          chat_completed_at?: string | null
+          voice_started_at?: string | null
+          voice_completed_at?: string | null
+          created_at?: string
+          chat_duration?: number | null
+          voice_duration?: number | null
+          total_duration?: number | null
+          messages_sent?: number
+          voice_call_initiated?: boolean
+          time_to_hire?: number | null
+        }
+        Update: {
+          id?: string
+          booking_id?: string
+          business_id?: string
+          worker_id?: string
+          worker_tier?: Database["public"]["Enums"]["worker_tier"]
+          status?: "pending" | "in_progress" | "completed" | "skipped" | "failed"
+          type?: "none" | "chat" | "chat_and_voice"
+          started_at?: string | null
+          completed_at?: string | null
+          chat_started_at?: string | null
+          chat_completed_at?: string | null
+          voice_started_at?: string | null
+          voice_completed_at?: string | null
+          created_at?: string
+          chat_duration?: number | null
+          voice_duration?: number | null
+          total_duration?: number | null
+          messages_sent?: number
+          voice_call_initiated?: boolean
+          time_to_hire?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_sessions_booking_id_fkey"
+            columns: ["booking_id"]
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_sessions_business_id_fkey"
+            columns: ["business_id"]
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_sessions_worker_id_fkey"
+            columns: ["worker_id"]
+            referencedRelation: "workers"
             referencedColumns: ["id"]
           },
         ]
@@ -1584,6 +1742,7 @@ export const Constants = {
       transaction_status: ["pending", "success", "failed"],
       transaction_type: ["payment", "refund"],
       user_role: ["worker", "business"],
+      worker_tier: ["classic", "pro", "elite", "champion"],
     },
   },
   storage: {
@@ -1592,3 +1751,6 @@ export const Constants = {
     },
   },
 } as const
+
+// Convenience type aliases
+export type WorkerTier = Enums<"public", "worker_tier">

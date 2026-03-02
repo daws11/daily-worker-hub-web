@@ -3,12 +3,13 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useAuth } from '@/providers/auth-provider'
 import { useTranslation } from '@/lib/i18n/hooks'
+import { useRouter } from 'next/navigation'
 import { getBusinessJobs } from '@/lib/supabase/queries/jobs'
 import { getJobBookings } from '@/lib/supabase/queries/bookings'
 import type { JobsRow } from '@/lib/supabase/queries/jobs'
 import type { JobBookingWithDetails } from '@/lib/supabase/queries/bookings'
 import { QRCodeGenerator } from '@/components/attendance/qr-code-generator'
-import { Calendar, MapPin, Users, Loader2, AlertCircle, CheckCircle, XCircle, Clock, Building2, QrCode } from 'lucide-react'
+import { Calendar, MapPin, Users, Loader2, AlertCircle, CheckCircle, XCircle, Clock, Building2, QrCode, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface JobWithAttendance extends JobsRow {
@@ -30,6 +31,7 @@ interface JobsData {
 
 export default function BusinessJobsPage() {
   const { user } = useAuth()
+  const router = useRouter()
   const { t, locale } = useTranslation()
   const [jobs, setJobs] = useState<JobsData>({ total: 0, active: 0, completed: 0, jobsList: [] })
   const [loading, setLoading] = useState(true)
@@ -127,13 +129,47 @@ export default function BusinessJobsPage() {
     }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Page Header */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-            {t('business.jobsPageTitle')}
-          </h1>
-          <p style={{ color: '#666', fontSize: '0.875rem' }}>
-            {t('business.jobsPageSubtitle')}
-          </p>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'space-between',
+          marginBottom: '1.5rem',
+          flexWrap: 'wrap',
+          gap: '1rem'
+        }}>
+          <div>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', margin: 0 }}>
+              {t('business.jobsPageTitle')}
+            </h1>
+            <p style={{ color: '#666', fontSize: '0.875rem', margin: 0 }}>
+              {t('business.jobsPageSubtitle')}
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              window.location.href = '/business/jobs/new'
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.625rem 1.25rem',
+              backgroundColor: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: '0.375rem',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'background-color 0.2s',
+              whiteSpace: 'nowrap'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+          >
+            <Plus style={{ width: '1rem', height: '1rem' }} />
+            Create New Job
+          </button>
         </div>
 
         {/* Error State */}
@@ -257,9 +293,33 @@ export default function BusinessJobsPage() {
             <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
               {t('business.noActiveJobs')}
             </h3>
-            <p style={{ color: '#666' }}>
+            <p style={{ color: '#666', marginBottom: '1.5rem' }}>
               {t('business.noActiveJobsDescription')}
             </p>
+            <button
+              onClick={() => {
+                window.location.href = '/business/jobs/new'
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                padding: '0.625rem 1.25rem',
+                backgroundColor: '#2563eb',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                cursor: 'pointer',
+                transition: 'background-color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+            >
+              <Plus style={{ width: '1rem', height: '1rem' }} />
+              Create Your First Job
+            </button>
           </div>
         )}
 

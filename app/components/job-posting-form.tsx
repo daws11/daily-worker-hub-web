@@ -25,6 +25,9 @@ import { WorkersNeededCounter } from "@/app/components/workers-needed-counter"
 import { JobRequirementsSelect, type JobRequirement } from "@/app/components/job-requirements-select"
 import { JobDraftBanner } from "@/app/components/job-draft-banner"
 import { SocialPlatformSelector, type PlatformSelection } from "@/app/components/social-platform-selector"
+import { HourSelection } from "@/components/business/hour-selection"
+import { WageCalculator } from "@/components/business/wage-calculator"
+import { getHourlyRate } from "@/lib/constants/rate-bali"
 
 // Zod schema for job posting form validation
 export const jobPostingFormSchema = z.object({
@@ -71,6 +74,7 @@ export const jobPostingFormSchema = z.object({
   wageMin: z.number().min(1, "Minimum wage must be at least 1"),
   wageMax: z.number().min(1, "Maximum wage must be at least 1"),
   workersNeeded: z.number().min(1, "At least 1 worker is required").max(100, "Maximum 100 workers allowed"),
+  hoursNeeded: z.number().min(4, "Minimum 4 hours required").max(12, "Maximum 12 hours allowed").default(8),
   requirements: z.array(z.string()).min(1, "Please select at least one requirement"),
   description: z.string().min(20, "Description must be at least 20 characters").max(1000, "Description must be at most 1000 characters"),
   socialPlatforms: z.array(z.object({
@@ -172,6 +176,7 @@ export function JobPostingForm({
       wageMin: 0,
       wageMax: 0,
       workersNeeded: 1,
+      hoursNeeded: 8,
       requirements: [],
       description: "",
       socialPlatforms: [],
@@ -427,6 +432,47 @@ export function JobPostingForm({
           )}
         />
 
+        {/* Hours Needed */}
+        <FormField
+          control={form.control}
+          name="hoursNeeded"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Hours Needed</FormLabel>
+              <FormControl>
+                <HourSelection
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={disabled}
+                />
+              </FormControl>
+              <FormDescription>
+                Select how many hours the workers will work (4-12 hours).
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Wage Calculator */}
+        <FormField
+          control={form.control}
+          name="hoursNeeded"
+          render={({ field }) => (
+            <FormItem>
+              <WageCalculator
+                category={getCategoryFromPositionType(positionType || '')}
+                regency={area || 'Denpasar'}
+                hoursNeeded={field.value}
+                onHoursChange={field.onChange}
+                readonly={false}
+                showWorkerBreakdown={true}
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         {/* Workers Needed */}
         <FormField
           control={form.control}
@@ -531,4 +577,45 @@ export function JobPostingForm({
       </form>
     </Form>
   )
+}
+
+/**
+ * Helper function to map position type to category for wage calculation
+ */
+function getCategoryFromPositionType(positionType: string): string {
+  const mapping: Record<string, string> = {
+    'housekeeping': 'Housekeeping',
+    'kitchen_staff': 'Cook Helper',
+    'driver': 'Driver',
+    'server': 'Waiter',
+    'bartender': 'Waiter',
+    'receptionist': 'Front Desk',
+    'concierge': 'Front Desk',
+    'security': 'Steward',
+    'maintenance': 'Steward',
+    'laundry_attendant': 'Housekeeping',
+    'pool_attendant': 'Steward',
+    'spa_staff': 'Spa/Therapist',
+    'event_staff': 'Steward',
+    'gardener': 'Housekeeping',
+    'host_hostess': 'Front Desk',
+    'laundry_staff': 'Housekeeping',
+    'public_area_attendant': 'Housekeeping',
+    'chef': 'Cook (Head)',
+    'sous_chef': 'Cook (Line)',
+    'line_cook': 'Cook (Line)',
+    'dishwasher': 'Steward',
+    'steward': 'Steward',
+    'bellman': 'Bellman',
+    'porter': 'Bellman',
+    'spa_therapist': 'Spa/Therapist',
+    'fitness_instructor': 'Spa/Therapist',
+    'tour_guide': 'Waiter',
+    'technician': 'Steward',
+    'setup_crew': 'Steward',
+    'supervisor': 'Front Desk',
+    'manager': 'Front Desk',
+    'other': 'Housekeeping',
+  }
+  return mapping[positionType] || 'Housekeeping'
 }

@@ -1,13 +1,38 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { useAuth } from "../../providers/auth-provider"
-import { useTranslation } from "@/lib/i18n/hooks"
+import { Card, CardHeader, CardContent } from "../../components/ui/card"
+import { Input } from "../../components/ui/input"
+import { Button } from "../../components/ui/button"
+import { RadioGroup } from "../../components/ui/radio-group"
+import { Separator } from "../../components/ui/separator"
+
+// Simple translation function
+function t(key: string): string {
+  const translations: Record<string, string> = {
+    'auth.registerTitle': 'Daftar Akun',
+    'auth.fullName': 'Nama Lengkap',
+    'auth.email': 'Email',
+    'auth.password': 'Password',
+    'auth.accountType': 'Tipe Akun',
+    'auth.worker': 'Pekerja',
+    'auth.business': 'Bisnis',
+    'auth.register': 'Daftar',
+    'auth.registering': 'Mendaftar...',
+    'auth.or': 'ATAU',
+    'auth.continueWithGoogle': 'Lanjut dengan Google',
+    'auth.hasAccount': 'Sudah punya akun?',
+    'auth.loginHere': 'Masuk sekarang',
+    'auth.emailPlaceholder': 'nama@email.com',
+    'auth.passwordPlaceholder': '•••••••',
+    'auth.fullNamePlaceholder': 'Budi Santoso',
+  }
+  return translations[key] || key
+}
 
 export default function RegisterPage() {
-  const { t } = useTranslation()
-  const router = useRouter()
   const { signUp, signInWithGoogle, isLoading } = useAuth()
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
@@ -24,185 +49,122 @@ export default function RegisterPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#f3f4f6',
-      padding: '1rem'
-    }}>
-      <div style={{
-        width: '100%',
-        maxWidth: '28rem',
-        backgroundColor: 'white',
-        borderRadius: '0.5rem',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-        padding: '2rem'
-      }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', textAlign: 'center', marginBottom: '1.5rem' }}>
-          {t('auth.registerTitle')}
-        </h1>
-        
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-              {t('auth.fullName')}
-            </label>
-            <input
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.5rem 0.75rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                outline: 'none'
-              }}
-              placeholder={t('auth.fullNamePlaceholder')}
-              required
-            />
-          </div>
-          
-          <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-              {t('auth.email')}
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.5rem 0.75rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                outline: 'none'
-              }}
-              placeholder={t('auth.emailPlaceholder')}
-              required
-            />
-          </div>
-          
-          <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-              {t('auth.password')}
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '0.5rem 0.75rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                outline: 'none'
-              }}
-              placeholder={t('auth.passwordPlaceholder')}
-              required
-            />
-          </div>
-          
-          <div>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>
-              {t('auth.accountType')}
-            </label>
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                <input
-                  type="radio"
-                  name="role"
-                  value="worker"
-                  checked={role === "worker"}
-                  onChange={(e) => setRole(e.target.value as "worker" | "business")}
-                  style={{ cursor: 'pointer' }}
-                />
-                <span>{t('auth.worker')}</span>
-              </label>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4">
+      <div className="w-full max-w-md">
+        <Card className="space-y-6">
+          <CardHeader className="pb-4">
+            <h1 className="text-3xl font-bold text-slate-900">
+              {t('auth.registerTitle')}
+            </h1>
+            <p className="text-sm text-slate-600 mt-2">
+              Buat akun baru untuk mulai bekerja
+            </p>
+          </CardHeader>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
-                <input
-                  type="radio"
-                  name="role"
-                  value="business"
-                  checked={role === "business"}
-                  onChange={(e) => setRole(e.target.value as "worker" | "business")}
-                  style={{ cursor: 'pointer' }}
-                />
-                <span>{t('auth.business')}</span>
-              </label>
-            </div>
-          </div>
-          
-          <button
-            type="submit"
-            disabled={isLoading}
-            style={{
-              width: '100%',
-              padding: '0.5rem 1rem',
-              backgroundColor: isLoading ? '#9ca3af' : '#2563eb',
-              color: 'white',
-              borderRadius: '0.375rem',
-              fontWeight: 500,
-              border: 'none',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-            }}
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <Input
+                type="text"
+                label={t('auth.fullName')}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder={t('auth.fullNamePlaceholder')}
+                required
+                autoComplete="name"
+              />
+
+              <Input
+                type="email"
+                label={t('auth.email')}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={t('auth.emailPlaceholder')}
+                required
+                autoComplete="email"
+              />
+
+              <Input
+                type="password"
+                label={t('auth.password')}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t('auth.passwordPlaceholder')}
+                required
+                autoComplete="new-password"
+              />
+
+              <RadioGroup
+                name="role"
+                value={role}
+                onChange={setRole}
+                options={[
+                  {
+                    value: "worker",
+                    label: t('auth.worker'),
+                    icon: (
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    ),
+                  },
+                  {
+                    value: "business",
+                    label: t('auth.business'),
+                    icon: (
+                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    ),
+                  },
+                ]}
+              />
+
+              <Button
+                type="submit"
+                variant="primary"
+                size="lg"
+                isLoading={isLoading}
+                fullWidth
+                className="mt-6"
+              >
+                {isLoading
+                  ? t('auth.registering')
+                  : t('auth.register')
+                }
+              </Button>
+            </form>
+
+            <Separator>{t('auth.or')}</Separator>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              isLoading={isLoading}
+              fullWidth
+              onClick={handleGoogleSignUp}
+              className="hover:bg-slate-50"
+            >
+              <svg className="w-5 h-5 mr-2" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.64 9.20455C17.64 8.56636 17.5827 7.95273 17.4764 7.36364H9V10.845H13.8436C13.635 11.97 13.0009 12.9232 12.0477 13.5614V15.8195H14.9564C16.6582 14.2527 17.64 11.9455 17.64 9.20455Z" fill="#4285F4"/>
+                <path d="M9 18C11.43 18 13.4673 17.1941 14.9564 15.8195L12.0477 13.5614C11.2418 14.1014 10.2109 14.4205 9 14.4205C6.65591 14.4205 4.67182 12.8373 3.96409 10.71H0.957275V13.0418C2.43818 15.9832 5.48182 18 9 18Z" fill="#34A853"/>
+                <path d="M3.96409 10.71C3.78409 10.17 3.68182 9.59318 3.68182 9C3.68182 8.40682 3.78409 7.83 3.96409 7.29V4.95818H0.957275C0.347727 6.17318 0 7.54773 0 9C0 10.4523 0.347727 11.8268 0.957275 13.0418L3.96409 10.71Z" fill="#FBBC05"/>
+                <path d="M9 3.57955C10.3214 3.57955 11.5077 4.03364 12.4405 4.92545L15.0218 2.34409C13.4632 0.891818 11.4259 0 9 0C5.48182 0 2.43818 2.01682 0.957275 4.95818L3.96409 7.29C4.67182 5.16273 6.65591 3.57955 9 3.57955Z" fill="#EA4335"/>
+              </svg>
+              {t('auth.continueWithGoogle')}
+            </Button>
+          </CardContent>
+        </Card>
+
+        <div className="mt-6 text-center text-sm text-slate-600">
+          {t('auth.hasAccount')}{" "}
+          <Link
+            href="/login"
+            className="text-blue-600 hover:text-blue-700 font-medium"
           >
-            {isLoading ? t('auth.registering') : t('auth.register')}
-          </button>
-        </form>
-
-        <div style={{ display: 'flex', alignItems: 'center', margin: '1.5rem 0' }}>
-          <div style={{ flex: 1, height: '1px', backgroundColor: '#d1d5db' }} />
-          <span style={{ padding: '0 0.75rem', fontSize: '0.875rem', color: '#6b7280' }}>ATAU</span>
-          <div style={{ flex: 1, height: '1px', backgroundColor: '#d1d5db' }} />
-        </div>
-
-        <button
-          type="button"
-          onClick={handleGoogleSignUp}
-          disabled={isLoading}
-          style={{
-            width: '100%',
-            padding: '0.5rem 1rem',
-            backgroundColor: 'white',
-            color: '#374151',
-            borderRadius: '0.375rem',
-            fontWeight: 500,
-            border: '1px solid #d1d5db',
-            cursor: isLoading ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            transition: 'background-color 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            if (!isLoading) {
-              e.currentTarget.style.backgroundColor = '#f9fafb'
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'white'
-          }}
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-            <path d="M17.64 9.20455C17.64 8.56636 17.5827 7.95273 17.4764 7.36364H9V10.845H13.8436C13.635 11.97 13.0009 12.9232 12.0477 13.5614V15.8195H14.9564C16.6582 14.2527 17.64 11.9455 17.64 9.20455Z" fill="#4285F4"/>
-            <path d="M9 18C11.43 18 13.4673 17.1941 14.9564 15.8195L12.0477 13.5614C11.2418 14.1014 10.2109 14.4205 9 14.4205C6.65591 14.4205 4.67182 12.8373 3.96409 10.71H0.957275V13.0418C2.43818 15.9832 5.48182 18 9 18Z" fill="#34A853"/>
-            <path d="M3.96409 10.71C3.78409 10.17 3.68182 9.59318 3.68182 9C3.68182 8.40682 3.78409 7.83 3.96409 7.29V4.95818H0.957275C0.347727 6.17318 0 7.54773 0 9C0 10.4523 0.347727 11.8268 0.957275 13.0418L3.96409 10.71Z" fill="#FBBC05"/>
-            <path d="M9 3.57955C10.3214 3.57955 11.5077 4.03364 12.4405 4.92545L15.0218 2.34409C13.4632 0.891818 11.4259 0 9 0C5.48182 0 2.43818 2.01682 0.957275 4.95818L3.96409 7.29C4.67182 5.16273 6.65591 3.57955 9 3.57955Z" fill="#EA4335"/>
-          </svg>
-          {isLoading ? 'Memproses...' : 'Daftar dengan Google'}
-        </button>
-        
-        <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.875rem', color: '#4b5563' }}>
-          {t('auth.hasAccount')}{' '}
-          <a href="/login" style={{ color: '#2563eb', textDecoration: 'none' }}>
             {t('auth.loginHere')}
-          </a>
-        </p>
+          </Link>
+        </div>
       </div>
     </div>
   )

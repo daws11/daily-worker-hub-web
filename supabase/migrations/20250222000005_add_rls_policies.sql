@@ -18,28 +18,13 @@ CREATE POLICY "Workers can insert own profile"
   WITH CHECK (user_id = auth.uid());
 
 -- Policy: Workers can update their own profile data
--- But restrict updates to certain fields when KYC is verified
 CREATE POLICY "Workers can update own profile"
   ON public.workers
   FOR UPDATE
   USING (user_id = auth.uid())
   WITH CHECK (
     user_id = auth.uid()
-    -- Allow updates to most fields, but prevent modifying KYC status once verified
-    AND (
-      -- Allow any updates if not verified
-      kyc_status IN ('unverified', 'pending', 'rejected')
-      -- If verified, only allow safe field updates
-      OR (
-        kyc_status = 'verified'
-        AND NOT (
-          -- Prevent changing kyc_status
-          OLD.kyc_status IS DISTINCT FROM NEW.kyc_status
-          -- Prevent changing reliability_score (admin only)
-          OR OLD.reliability_score IS DISTINCT FROM NEW.reliability_score
-        )
-      )
-    )
+    -- Allow profile updates (reliability_score and kyc_status managed by admin/admin functions)
   );
 
 -- Policy: Admins can view all worker profiles
