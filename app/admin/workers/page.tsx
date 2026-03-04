@@ -43,21 +43,21 @@ export default function WorkersPage({ className, ...props }: WorkersPageProps) {
     setLoading(true)
     setError(null)
 
-    const { data, error: fetchError } = await getWorkersForManagement(
+    const response = await getWorkersForManagement(
       filters,
       pagination.page,
       pagination.limit
     )
 
-    if (fetchError) {
-      setError(fetchError)
+    if (response.error) {
+      setError(response.error)
       setWorkers([])
-    } else if (data) {
-      setWorkers(data.items)
+    } else if (response.data) {
+      setWorkers(response.data.items)
       setPagination((prev) => ({
         ...prev,
-        total: data.total,
-        totalPages: data.totalPages,
+        total: response.data.total,
+        totalPages: response.data.totalPages,
       }))
     }
 

@@ -58,23 +58,18 @@ export default function DisputesPage({ className, ...props }: DisputesPageProps)
     setLoading(true)
     setError(null)
 
-    const { data, error: fetchError } = await getDisputes(
+    const response = await getDisputes(
       filters,
       pagination.page,
       pagination.limit
     )
 
-    if (fetchError) {
-      setError(fetchError)
-      setDisputes([])
-    } else if (data) {
-      setDisputes(data.items)
-      setPagination((prev) => ({
-        ...prev,
-        total: data.total,
-        totalPages: data.totalPages,
-      }))
-    }
+    setDisputes(response.items)
+    setPagination((prev) => ({
+      ...prev,
+      total: response.total,
+      totalPages: response.totalPages,
+    }))
 
     setLoading(false)
   }, [filters, pagination.page, pagination.limit])

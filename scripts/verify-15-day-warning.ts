@@ -373,7 +373,7 @@ async function verify15DayWarning(): Promise<VerificationResult> {
 
     console.log('\n📋 Manual Browser Verification:')
     console.log('To complete the verification, check the UI:')
-    console.log('  1. Navigate to: http://localhost:3000/dashboard/business/jobs')
+    console.log('  1. Navigate to: http://localhost:3000/business/jobs')
     console.log('  2. Find the job and view applicants')
     console.log('  3. Verify a yellow/amber warning banner is displayed')
     console.log('  4. Verify the banner shows "Approaching PP 35/2021 Limit (15/21 days)"')

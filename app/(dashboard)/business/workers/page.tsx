@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect } from 'react'
-import { useAuth } from '@/providers/auth-provider'
+import { useAuth } from '@/app/providers/auth-provider'
 import { getBadges, getWorkersByBadge } from '@/lib/supabase/queries/badges'
 import type { BadgesRow } from '@/lib/supabase/queries/badges'
 import { BadgeFilterSelect } from '@/components/badge/badge-filter-select'

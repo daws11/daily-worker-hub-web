@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useCallback } from "react"
-import { useAuth } from '@/providers/auth-provider'
+import { useAuth } from '@/app/providers/auth-provider'
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase/client"
 import { Loader2, AlertCircle, TrendingUp, TrendingDown, DollarSign, Calendar, CreditCard, Wallet, ArrowUpRight, ArrowDownRight, Clock } from "lucide-react"
@@ -97,33 +97,49 @@ function formatDateTime(dateString: string): string {
 }
 
 async function fetchEarnings(workerId: string): Promise<EarningsEntry[]> {
-  const { data, error } = await supabase
-    .from("earnings")
+  // Use any to bypass complex type inference with nested relations
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result = await (supabase as any)
+    .from("bookings")
     .select(`
       id,
-      booking_id,
-      amount,
-      status,
-      payment_date,
+      total_amount,
+      payment_status,
+      completed_at,
       created_at,
-      booking:bookings(
-        id,
-        job:jobs(
-          title
-        ),
-        business:businesses(
-          name
-        )
-      )
+      jobs!inner (title),
+      businesses!inner (name)
     `)
     .eq("worker_id", workerId)
+    .in("payment_status", ["pending", "processing", "completed", "failed"])
     .order("created_at", { ascending: false })
+
+  const { data, error } = result
 
   if (error) {
     throw error
   }
 
-  return (data as EarningsEntry[]) || []
+  // Transform bookings data to earnings format
+  const transformed = (data || []).map((booking: any) => ({
+    id: booking.id,
+    booking_id: booking.id,
+    amount: booking.total_amount || 0,
+    status: booking.payment_status as "pending" | "processing" | "completed" | "failed",
+    payment_date: booking.completed_at || null,
+    created_at: booking.created_at,
+    booking: {
+      id: booking.id,
+      job: {
+        title: booking.jobs?.title || "Job"
+      },
+      business: {
+        name: booking.businesses?.name || "Business"
+      }
+    }
+  }))
+
+  return transformed
 }
 
 export default function WorkerEarningsPage() {

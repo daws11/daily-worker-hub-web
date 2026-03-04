@@ -25,7 +25,7 @@ interface AvailabilitySlot {
   endHour: number
 }
 
-interface AvailabilitySlotsProps {
+interface AvailabilitySlotProps {
   dayName: string
   dayOfWeek: number
   isAvailable: boolean
@@ -45,7 +45,7 @@ export function AvailabilitySlot({
   onToggle,
   onTimeChange,
   disabled = false,
-}: AvailabilitySlotsProps) {
+}: AvailabilitySlotProps) {
   const [localStart, setLocalStart] = useState(startHour)
   const [localEnd, setLocalEnd] = useState(endHour)
   const [validationError, setValidationError] = useState<string | null>(null)

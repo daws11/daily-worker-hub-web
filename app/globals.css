@@ -3,25 +3,118 @@
 @tailwind utilities;
 
 /*
+ * ============================================================
+ * DAILY WORKER HUB - BALI-INSPIRED COLOR PALETTE
+ * ============================================================
+ *
+ * Color Palette (HSL):
+ *
+ * Primary (Deep Bali Blue): hsl(202 80% 24%)
+ *   - Professional, tenang, dalam
+ *   - Use: Primary buttons, headings, important CTAs
+ *
+ * Secondary (Sunset Coral): hsl(347 77% 50%)
+ *   - Energik, hangat, menarik perhatian
+ *   - Use: Call-to-actions, highlights, urgent badges
+ *
+ * Accent (Sand Gold): hsl(46 65% 52%)
+ *   - Mewah, natural, seperti pasir pantai
+ *   - Use: Stars, ratings, premium features, subtle accents
+ *
+ * Background (Cream White): hsl(48 100% 96%)
+ *   - Lembut, tidak menyilaukan mata
+ *   - Use: Page background, cards, surfaces
+ *
+ * Foreground (Deep Charcoal): hsl(240 6% 10%)
+ *   - Kontras tinggi untuk keterbacaan teks
+ *   - Use: Body text, labels, UI elements
+ *
+ * Semantic Colors:
+ *   - Success: hsl(142 76% 36%)  (Bali jungle green)
+ *   - Error: hsl(0 84% 60%)      (Alert coral)
+ *   - Warning: hsl(38 92% 50%)   (Sunset orange)
+ *   - Info: hsl(202 80% 45%)     (Sky blue)
+ *
+ * ============================================================
+ */
+
+/* Bali-inspired Color Palette - CSS Custom Properties */
+:root {
+  /* Theme Colors (for PWA meta tags) - RGB values */
+  --theme-color-primary: rgb(50, 125, 180);      /* Deep Bali Blue */
+  --theme-color-secondary: rgb(220, 58, 104);    /* Sunset Coral */
+  --theme-color-background: rgb(250, 248, 240);  /* Cream White */
+  --theme-color-surface: rgb(255, 255, 255);     /* Pure White */
+  --theme-color-text: rgb(25, 25, 28);           /* Deep Charcoal */
+  --theme-color-text-secondary: rgb(76, 78, 82); /* Softer text */
+
+  /* Primary Colors (HSL format for Tailwind) */
+  --primary: 202 80% 24%;         /* Deep Bali Blue */
+  --primary-foreground: 0 0% 100%; /* White text on primary */
+
+  /* Secondary Colors */
+  --secondary: 347 77% 50%;       /* Sunset Coral */
+  --secondary-foreground: 0 0% 100%; /* White text on secondary */
+
+  /* Accent Colors */
+  --accent: 46 65% 52%;          /* Sand Gold */
+  --accent-foreground: 0 0% 100%; /* White text on accent */
+
+  /* Background & Surface Colors */
+  --background: 48 100% 96%;      /* Cream White */
+  --foreground: 240 6% 10%;      /* Deep Charcoal (body text) */
+
+  /* Card Colors */
+  --card: 48 100% 96%;           /* Same as background */
+  --card-foreground: 240 6% 10%; /* Deep Charcoal */
+
+  /* Muted Colors */
+  --muted: 48 60% 90%;           /* Lighter cream for muted elements */
+  --muted-foreground: 240 5% 40%; /* Medium gray for muted text */
+
+  /* Input & Border Colors */
+  --input: 48 50% 85%;           /* Light cream border */
+  --border: 48 50% 85%;          /* Same as input for consistency */
+  --ring: 202 80% 24%;           /* Primary color for focus ring */
+
+  /* Popover Colors */
+  --popover: 0 0% 100%;          /* White popover */
+  --popover-foreground: 240 6% 10%; /* Deep Charcoal text */
+
+  /* Destructive/Error Colors */
+  --destructive: 0 84% 60%;      /* Alert coral */
+  --destructive-foreground: 0 0% 100%; /* White text on destructive */
+
+  /* Semantic Colors - Success */
+  --success: 142 76% 36%;        /* Bali jungle green */
+  --success-foreground: 0 0% 100%; /* White text on success */
+
+  /* Semantic Colors - Warning */
+  --warning: 38 92% 50%;         /* Sunset orange */
+  --warning-foreground: 0 0% 100%; /* White text on warning */
+
+  /* Semantic Colors - Error */
+  --error: 0 84% 60%;            /* Alert coral (same as destructive) */
+  --error-foreground: 0 0% 100%; /* White text on error */
+
+  /* Semantic Colors - Info */
+  --info: 202 80% 45%;           /* Sky blue */
+  --info-foreground: 0 0% 100%; /* White text on info */
+
+  /* Border Radius */
+  --radius: 0.5rem;
+}
+
+/*
  * PWA Theme Colors & Meta Tags
  *
  * The following meta tags should be added to your HTML <head>:
- * <meta name="theme-color" content="#4a90d9">
+ * <meta name="theme-color" content="#327db4">
  * <meta name="apple-mobile-web-app-capable" content="yes">
  * <meta name="apple-mobile-web-app-status-bar-style" content="default">
  * <meta name="apple-mobile-web-app-title" content="Daily Worker Hub">
  * <link rel="manifest" href="/manifest.json">
  */
-
-/* PWA Theme Colors - CSS Custom Properties */
-:root {
-  --theme-color-primary: #4a90d9;
-  --theme-color-secondary: #357abd;
-  --theme-color-background: #f5f5f5;
-  --theme-color-surface: #ffffff;
-  --theme-color-text: #333333;
-  --theme-color-text-secondary: #666666;
-}
 
 /* Simple CSS Reset */
 * {
@@ -34,7 +127,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   line-height: 1.6;
   color: #333;
-  background-color: #f5f5f5;
+  background-color: #faf8f0; /* Cream White background */
 }
 
 a {

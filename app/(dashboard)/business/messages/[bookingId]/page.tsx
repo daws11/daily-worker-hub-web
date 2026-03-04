@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { useAuth } from '@/providers/auth-provider'
+import { useAuth } from '@/app/providers/auth-provider'
 import { getBookingMessages, getUnreadCount } from '@/lib/supabase/queries/messages'
 import { getBookingById } from '@/lib/supabase/queries/bookings'
 import { MessageBubble } from '@/components/messaging/message-bubble'

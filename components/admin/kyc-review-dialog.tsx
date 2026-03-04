@@ -59,15 +59,16 @@ export function KycReviewDialog({
     setLoading(true)
     setError(null)
 
-    const { error: verifyError } = await processKYCVerification({
-      kyc_id: kyc.id,
-      action: "approve",
-      admin_id: adminId,
-    })
+    const result = await processKYCVerification(
+      kyc.id,
+      "approve",
+      undefined,
+      adminId
+    )
 
-    if (verifyError) {
-      setError(verifyError)
-      toast.error("Gagal menyetujui KYC: " + verifyError)
+    if (result.error) {
+      setError(result.error)
+      toast.error("Gagal menyetujui KYC: " + result.error)
     } else {
       toast.success("KYC berhasil disetujui")
       onOpenChange(false)
@@ -91,16 +92,16 @@ export function KycReviewDialog({
     setLoading(true)
     setError(null)
 
-    const { error: verifyError } = await processKYCVerification({
-      kyc_id: kyc.id,
-      action: "reject",
-      rejection_reason: rejectionReason,
-      admin_id: adminId,
-    })
+    const result = await processKYCVerification(
+      kyc.id,
+      "reject",
+      rejectionReason,
+      adminId
+    )
 
-    if (verifyError) {
-      setError(verifyError)
-      toast.error("Gagal menolak KYC: " + verifyError)
+    if (result.error) {
+      setError(result.error)
+      toast.error("Gagal menolak KYC: " + result.error)
     } else {
       toast.success("KYC berhasil ditolak")
       onOpenChange(false)

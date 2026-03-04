@@ -444,7 +444,7 @@ async function verifyAlternativeWorkers(): Promise<VerificationResult> {
 
       console.log('\n📋 Manual Browser Verification:')
       console.log('To complete the verification, check the UI:')
-      console.log('  1. Navigate to: http://localhost:3000/dashboard/business/jobs')
+      console.log('  1. Navigate to: http://localhost:3000/business/jobs')
       console.log('  2. Find the job with Blocked Worker applicant')
       console.log('  3. Verify a red blocking banner is displayed')
       console.log('  4. Verify AlternativeWorkersSuggestion appears below the table')

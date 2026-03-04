@@ -66,8 +66,8 @@ export default function AdminDashboardPage() {
           throw new Error("Failed to load metrics")
         }
 
-        if (pendingResult.data) {
-          setPendingCounts(pendingResult.data)
+        if (pendingResult) {
+          setPendingCounts(pendingResult)
         }
 
         if (logsResult) {

@@ -42,14 +42,15 @@ function BusinessCard({ business, className, onUpdate, ...props }: BusinessCardP
     setError(null)
     setSuccessMessage(null)
 
-    const { data, error: verifyError } = await processBusinessVerification({
-      business_id: business.id,
-      action: "approve",
-      admin_id: business.user_id,
-    })
+    const result = await processBusinessVerification(
+      business.id,
+      "approve",
+      undefined,
+      business.user_id
+    )
 
-    if (verifyError) {
-      setError(verifyError)
+    if (result.error) {
+      setError(result.error)
     } else {
       setSuccessMessage("Business approved successfully")
       setTimeout(() => {
@@ -66,15 +67,15 @@ function BusinessCard({ business, className, onUpdate, ...props }: BusinessCardP
     setError(null)
     setSuccessMessage(null)
 
-    const { data, error: verifyError } = await processBusinessVerification({
-      business_id: business.id,
-      action: "reject",
-      reason: rejectionReason,
-      admin_id: business.user_id,
-    })
+    const result = await processBusinessVerification(
+      business.id,
+      "reject",
+      rejectionReason,
+      business.user_id
+    )
 
-    if (verifyError) {
-      setError(verifyError)
+    if (result.error) {
+      setError(result.error)
     } else {
       setSuccessMessage("Business rejected")
       setRejectDialogOpen(false)

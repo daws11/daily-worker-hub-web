@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect } from 'react'
-import { useAuth } from '@/providers/auth-provider'
+import { useAuth } from '@/app/providers/auth-provider'
 import { getUserConversations, getUnreadCount } from '@/lib/supabase/queries/messages'
 import { getBusinessBookings } from '@/lib/supabase/queries/bookings'
 import type { MessageWithRelations } from '@/lib/types/message'

@@ -1,9 +1,16 @@
 import withPWA from "next-pwa";
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const config = {
   reactStrictMode: true,
   pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
-  turbopack: {},
+  turbopack: {
+    root: __dirname,
+  },
 };
 
 export default withPWA({

@@ -80,22 +80,21 @@ export function UserTable({ className, ...props }: UserTableProps) {
     setLoading(true)
     setError(null)
 
-    const { data, error: fetchError } = await getUsers(filters, pagination.page, pagination.limit)
-
-    if (fetchError) {
-      setError(fetchError)
-      setUsers([])
-    } else if (data) {
-      const usersWithInitials: UserWithInitials[] = data.items.map((item) => ({
+    try {
+      const response = await getUsers(filters, pagination.page, pagination.limit)
+      const usersWithInitials: UserWithInitials[] = response.items.map((item) => ({
         ...item,
         initials: getInitials(item.user.full_name),
       }))
       setUsers(usersWithInitials)
       setPagination((prev) => ({
         ...prev,
-        total: data.total,
-        totalPages: data.totalPages,
+        total: response.total,
+        totalPages: response.totalPages,
       }))
+    } catch (fetchError) {
+      setError(fetchError instanceof Error ? fetchError.message : "Failed to fetch users")
+      setUsers([])
     }
 
     setLoading(false)

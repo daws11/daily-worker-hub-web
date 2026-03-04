@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useCallback } from "react"
-import { useAuth } from '@/providers/auth-provider'
+import { useAuth } from '@/app/providers/auth-provider'
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase/client"
 import { ReviewFormDialog } from "@/components/review/review-form-dialog"

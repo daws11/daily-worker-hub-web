@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from '@/providers/auth-provider'
+import { useAuth } from '@/app/providers/auth-provider'
 import { ReviewList } from '@/components/review/review-list'
 import { Star } from 'lucide-react'
 

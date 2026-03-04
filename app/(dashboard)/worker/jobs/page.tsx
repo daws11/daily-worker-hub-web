@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useCallback } from 'react'
-import { useAuth } from '@/providers/auth-provider'
+import { useState, useCallback, useMemo } from 'react'
+import { useAuth } from '@/app/providers/auth-provider'
 import { useTranslation } from '@/lib/i18n/hooks'
 import { JobSearch } from '@/components/job-marketplace/JobSearch'
 import { JobFilters } from '@/components/job-marketplace/JobFilters'
 import { JobSort } from '@/components/job-marketplace/JobSort'
 import { JobListWithHeader } from '@/components/job-marketplace/JobList'
 import { JobDetailDialog } from '@/components/job-marketplace/JobDetailDialog'
+import { ApplyJobModal } from '@/components/booking/apply-job-modal'
 import { CheckInOutButton } from '@/components/attendance/check-in-out-button'
 import { QRCodeScanner } from '@/components/attendance/qr-code-scanner'
 import { useJobs } from '@/lib/hooks/useJobs'
@@ -31,19 +32,30 @@ export default function WorkerJobsPage() {
   // State for job detail dialog
   const [selectedJob, setSelectedJob] = useState<JobWithRelations | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isApplying, setIsApplying] = useState(false)
+
+  // State for apply job modal
+  const [applyJob, setApplyJob] = useState<JobWithRelations | null>(null)
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false)
 
   // State for QR scanner
   const [scannerOpen, setScannerOpen] = useState(false)
   const [scannerMode, setScannerMode] = useState<'check-in' | 'check-out'>('check-in')
   const [selectedBooking, setSelectedBooking] = useState<JobBookingWithDetails | null>(null)
 
+  // Memoize filters to prevent infinite re-renders
+  const jobsFilters = useMemo(() => ({ ...filters, search }), [filters, search])
+
+  // Debug logging
+  console.log('[WorkerJobsPage] Rendering with filters:', jobsFilters, 'sort:', sort)
+
   // Fetch jobs with filters and sorting
   const { jobs, loading, error, refetch } = useJobs({
-    filters: { ...filters, search },
+    filters: jobsFilters,
     sort,
     enabled: true,
   })
+
+  console.log('[WorkerJobsPage] useJobs result:', { jobsCount: jobs?.length, loading, error })
 
   // Fetch worker bookings for attendance
   const { bookings, isLoading: bookingsLoading, refreshBookings } = useBookings({
@@ -81,20 +93,24 @@ export default function WorkerJobsPage() {
     setTimeout(() => setSelectedJob(null), 300)
   }, [])
 
-  // Handle job application
-  const handleApply = useCallback(async (job: JobWithRelations) => {
-    setIsApplying(true)
-    try {
-      // TODO: Implement actual application logic when backend is ready
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      toast.success(t('jobs.applicationSubmitted'))
-      handleDialogClose()
-    } catch (err) {
-      toast.error(t('jobs.applicationFailed'))
-    } finally {
-      setIsApplying(false)
-    }
-  }, [handleDialogClose, t])
+  // Handle job application - open apply modal
+  const handleApply = useCallback((job: JobWithRelations) => {
+    setApplyJob(job)
+    setIsApplyModalOpen(true)
+  }, [])
+
+  // Handle apply modal close
+  const handleApplyModalClose = useCallback(() => {
+    setIsApplyModalOpen(false)
+    // Delay clearing apply job to allow animation to complete
+    setTimeout(() => setApplyJob(null), 300)
+  }, [])
+
+  // Handle successful application
+  const handleApplicationSuccess = useCallback(() => {
+    // Refresh jobs to update applied status
+    refetch()
+  }, [refetch])
 
   // Handle check-in button click
   const handleCheckInClick = useCallback(async (bookingId: string) => {
@@ -396,7 +412,6 @@ export default function WorkerJobsPage() {
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
         onApply={handleApply}
-        isApplying={isApplying}
       />
 
       {/* QR Code Scanner Dialog */}
@@ -409,6 +424,15 @@ export default function WorkerJobsPage() {
           onSuccess={handleScannerSuccess}
         />
       )}
+
+      {/* Apply Job Modal */}
+      <ApplyJobModal
+        job={applyJob}
+        open={isApplyModalOpen}
+        onOpenChange={setIsApplyModalOpen}
+        onSuccess={handleApplicationSuccess}
+        workerId={user?.id}
+      />
     </div>
   )
 }

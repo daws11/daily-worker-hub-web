@@ -190,9 +190,6 @@ export function getNextInterviewStep(session: InterviewSession): string | null {
       return 'Continue chat interview';
     }
     if (config.voiceRequired && !session.voiceCompletedAt) {
-      return if (config.chatRequired && session.chatCompletedAt) {
-        return 'Start voice call';
-      }
       return 'Start voice call';
     }
   }
@@ -425,7 +422,7 @@ export function getInterviewStatusLabel(status: InterviewStatus): string {
  * @returns Human-readable type label
  */
 export function getInterviewTypeLabel(type: InterviewType): string {
-  const labels: Record<InterviewType, string> => {
+  const labels: Record<InterviewType, string> = {
     none: 'Tidak Perlu',
     chat: 'Chat',
     chat_and_voice: 'Chat & Panggilan',

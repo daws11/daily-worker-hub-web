@@ -271,7 +271,7 @@ export async function acceptBooking(bookingId: string, businessId: string): Prom
       typedBooking.worker_id,
       "Booking Diterima",
       `Selamat! ${jobTitle} Anda telah diterima oleh bisnis.`,
-      `/dashboard/worker/jobs`
+      `/worker/jobs`
     )
 
     return { success: true, data: updatedBooking }
@@ -335,7 +335,7 @@ export async function rejectBooking(bookingId: string, businessId: string): Prom
       typedBooking.worker_id,
       "Booking Ditolak",
       `Mohon maaf, ${jobTitle} Anda ditolak oleh bisnis.`,
-      `/dashboard/worker/jobs`
+      `/worker/jobs`
     )
 
     return { success: true, data: updatedBooking }
@@ -433,7 +433,7 @@ export async function checkoutBooking(bookingId: string, workerId: string): Prom
       workerId,
       "Checkout Berhasil",
       `Anda telah menyelesaikan ${jobTitle}. Pembayaran sedang dalam proses review selama 24 jam.`,
-      `/dashboard/worker/jobs`
+      `/worker/jobs`
     )
 
     // Notify business about worker checkout
@@ -442,7 +442,7 @@ export async function checkoutBooking(bookingId: string, workerId: string): Prom
         typedBooking.business_id,
         "Pekerjaan Selesai",
         `Pekerja telah menyelesaikan ${jobTitle}. Silakan review pekerjaan dalam 24 jam.`,
-        `/dashboard/business/jobs`
+        `/business/jobs`
       )
     }
 

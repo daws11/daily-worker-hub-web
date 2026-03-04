@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from 'react'
-import { useAuth } from '@/providers/auth-provider'
+import { useAuth } from '@/app/providers/auth-provider'
 import { useTranslation } from '@/lib/i18n/hooks'
 import { useBookings } from '@/lib/hooks/use-bookings'
 import { useAttendance } from '@/lib/hooks/use-attendance'

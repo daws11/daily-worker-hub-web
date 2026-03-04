@@ -98,7 +98,7 @@ export default function LoginPage() {
               <RadioGroup
                 name="role"
                 value={role}
-                onChange={setRole}
+                onChange={(value: string) => setRole(value as "worker" | "business")}
                 options={[
                   {
                     value: "worker",

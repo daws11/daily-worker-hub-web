@@ -65,23 +65,18 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
     setLoading(true)
     setError(null)
 
-    const { data, error: fetchError } = await getJobsForModeration(
+    const response = await getJobsForModeration(
       filters,
       pagination.page,
       pagination.limit
     )
 
-    if (fetchError) {
-      setError(fetchError)
-      setJobs([])
-    } else if (data) {
-      setJobs(data.items)
-      setPagination((prev) => ({
-        ...prev,
-        total: data.total,
-        totalPages: data.totalPages,
-      }))
-    }
+    setJobs(response.items)
+    setPagination((prev) => ({
+      ...prev,
+      total: response.total,
+      totalPages: response.totalPages,
+    }))
 
     setLoading(false)
   }, [filters, pagination.page, pagination.limit])
@@ -117,17 +112,16 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
     [pagination.totalPages, setPagination]
   )
 
-  const handleModerateJob = async (jobId: string, action: "delete" | "suspend" | "restore") => {
+  const handleModerateJob = async (
+    jobId: string,
+    action: "delete" | "suspend" | "restore"
+  ) => {
     setActionLoading((prev) => ({ ...prev, [jobId]: true }))
     try {
-      const { error } = await moderateJob({
-        job_id: jobId,
-        action,
-        admin_id: "", // Admin ID will be set from session in production
-      })
+      const response = await moderateJob(jobId, action, "", "")
 
-      if (error) {
-        toast.error(error)
+      if (response.error) {
+        toast.error(response.error)
         return
       }
 

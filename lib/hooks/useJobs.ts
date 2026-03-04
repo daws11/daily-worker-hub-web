@@ -51,7 +51,10 @@ export function useJobs({
   }, [])
 
   const fetchJobs = useCallback(async () => {
+    console.log('[useJobs] fetchJobs called', { enabled, filters, sort, page, limit })
+
     if (!enabled) {
+      console.log('[useJobs] Skipping fetch - disabled')
       setLoading(false)
       return
     }
@@ -76,13 +79,16 @@ export function useJobs({
         if (filters.deadlineBefore) params.set('deadline_before', filters.deadlineBefore)
       }
 
-      const response = await fetch(`/api/jobs?${params.toString()}`)
+      const url = `/api/jobs?${params.toString()}`
+      console.log('[useJobs] Fetching:', url)
+      const response = await fetch(url)
 
       if (!response.ok) {
         throw new Error(`Failed to fetch jobs: ${response.statusText}`)
       }
 
       const { data, error: apiError } = await response.json()
+      console.log('[useJobs] Response:', { data: data?.length, apiError })
 
       if (apiError) {
         throw new Error(apiError)
@@ -98,6 +104,7 @@ export function useJobs({
   }, [enabled, filters, sort, page, limit])
 
   useEffect(() => {
+    console.log('[useJobs] useEffect triggered, calling fetchJobs')
     fetchJobs()
   }, [fetchJobs])
 

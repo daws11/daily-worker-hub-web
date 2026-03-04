@@ -6,6 +6,7 @@ import { NotificationSettings, NotificationPreference } from "@/components/notif
 import { getUserNotificationPreferences, updateUserNotificationPreferences } from "@/lib/actions/push-notifications"
 import { TierBadge, TierBadgeDetailed } from "@/components/worker/tier-badge"
 import { AvailabilitySlots } from "@/components/worker/availability-slots"
+import { Button } from "@/components/ui/button"
 import { Settings, Star, Clock, CheckCircle2 } from "lucide-react"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
@@ -84,30 +85,33 @@ export default function WorkerSettingsPage() {
 
         if (!workerError && worker) {
           setWorkerData({
-            tier: worker.tier,
-            jobsCompleted: worker.jobs_completed || 0,
-            rating: worker.rating,
-            punctuality: worker.punctuality,
+            tier: worker.tier as WorkerTier,
+            jobsCompleted: (worker as any).jobs_completed || 0,
+            rating: (worker as any).rating,
+            punctuality: (worker as any).punctuality,
           })
         }
 
         // Fetch worker availability
-        const { data: availability, error: availabilityError } = await supabase
-          .from('worker_availabilities')
-          .select('*')
-          .eq('worker_id', worker!.id)
-          .order('day_of_week')
+        const workerId = (worker as any)?.id
+        if (workerId) {
+          const { data: availability, error: availabilityError } = await supabase
+            .from('worker_availabilities')
+            .select('*')
+            .eq('worker_id', workerId)
+            .order('day_of_week')
 
-        if (!availabilityError && availability && availability.length > 0) {
-          setAvailabilitySlots(
-            availability.map((av: any) => ({
-              dayOfWeek: av.day_of_week,
-              dayName: DAY_NAMES[av.day_of_week],
-              isAvailable: av.is_available,
-              startHour: av.start_hour,
-              endHour: av.end_hour,
-            }))
-          )
+          if (!availabilityError && availability && availability.length > 0) {
+            setAvailabilitySlots(
+              availability.map((av: any) => ({
+                dayOfWeek: av.day_of_week,
+                dayName: DAY_NAMES[av.day_of_week],
+                isAvailable: av.is_available,
+                startHour: av.start_hour,
+                endHour: av.end_hour,
+              }))
+            )
+          }
         }
       } catch (error) {
         console.error("Failed to fetch data:", error)

@@ -22,6 +22,21 @@ export type MessagesListResult = {
   count?: number
 }
 
+export type ConversationResult = {
+  success: boolean
+  error?: string
+  data?: Array<{
+    id: string
+    participant_id: string
+    participant_name: string
+    participant_avatar?: string
+    last_message: string
+    last_message_time: string
+    unread_count: number
+  }>
+  count?: number
+}
+
 /**
  * Send a new message from one user to another
  */
@@ -272,6 +287,81 @@ export async function getBookingMessages(
     return { success: true, data, count: data?.length || 0 }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat mengambil pesan" }
+  }
+}
+
+/**
+ * Get all conversations for a user
+ * Returns a list of unique conversations with last message and unread count
+ */
+export async function getConversations(userId: string): Promise<ConversationResult> {
+  try {
+    const supabase = await createClient()
+
+    // Get all messages where user is sender or receiver
+    const { data: messages, error } = await supabase
+      .from("messages")
+      .select("*")
+      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      return { success: false, error: `Gagal mengambil percakapan: ${error.message}` }
+    }
+
+    if (!messages || messages.length === 0) {
+      return { success: true, data: [], count: 0 }
+    }
+
+    // Group messages by conversation partner
+    const conversationMap = new Map<string, {
+      participant_id: string
+      last_message: Message
+      unread_count: number
+    }>()
+
+    messages.forEach((msg) => {
+      const partnerId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id
+
+      if (!conversationMap.has(partnerId)) {
+        conversationMap.set(partnerId, {
+          participant_id: partnerId,
+          last_message: msg,
+          unread_count: msg.receiver_id === userId && !msg.is_read ? 1 : 0,
+        })
+      } else {
+        const conv = conversationMap.get(partnerId)!
+        // Count unread messages
+        if (msg.receiver_id === userId && !msg.is_read) {
+          conv.unread_count++
+        }
+      }
+    })
+
+    // Fetch participant details (users table)
+    const participantIds = Array.from(conversationMap.keys())
+    const { data: participants } = await supabase
+      .from("users")
+      .select("id, full_name, avatar_url")
+      .in("id", participantIds)
+
+    // Build conversation list with participant info
+    const conversations = Array.from(conversationMap.values()).map((conv) => {
+      const participant = participants?.find(p => p.id === conv.participant_id)
+      return {
+        id: conv.participant_id, // Use participant ID as conversation ID
+        participant_id: conv.participant_id,
+        participant_name: participant?.full_name || "Unknown",
+        participant_avatar: participant?.avatar_url,
+        last_message: conv.last_message.content,
+        last_message_time: conv.last_message.created_at,
+        unread_count: conv.unread_count,
+      }
+    })
+
+    return { success: true, data: conversations, count: conversations.length }
+  } catch (error) {
+    return { success: false, error: "Terjadi kesalahan saat mengambil percakapan" }
   }
 }
 

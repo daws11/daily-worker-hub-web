@@ -19,12 +19,13 @@ import {
 } from '@/lib/actions/bookings'
 
 interface InterviewPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function InterviewPage({ params }: InterviewPageProps) {
+  const { id } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -33,7 +34,7 @@ export default async function InterviewPage({ params }: InterviewPageProps) {
   }
 
   // Get interview session
-  const { data: interviewSession, error: sessionError } = await getInterviewSessionByBooking(params.id)
+  const { data: interviewSession, error: sessionError } = await getInterviewSessionByBooking(id)
 
   if (sessionError || !interviewSession) {
     notFound()

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect } from 'react'
-import { useAuth } from '@/providers/auth-provider'
+import { useAuth } from '@/app/providers/auth-provider'
 import { useAttendance } from '@/lib/hooks/use-attendance'
 import { useTranslation } from '@/lib/i18n/hooks'
 import { QRCodeGenerator } from '@/components/attendance/qr-code-generator'

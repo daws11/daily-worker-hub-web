@@ -77,21 +77,20 @@ export function DisputeResolveDialog({
     setLoading(true)
     setError(null)
 
-    const { error: resolveError } = await resolveDispute(
-      dispute.booking_id,
-      {
-        status: "completed",
-        resolution_notes: resolutionNotes,
-      }
-    )
-
-    if (resolveError) {
-      setError(resolveError)
-      toast.error("Gagal menyelesaikan sengketa: " + resolveError)
-    } else {
+    try {
+      await resolveDispute(
+        dispute.id,
+        "worker_favor",
+        resolutionNotes,
+        undefined,
+        adminId
+      )
       toast.success("Sengketa berhasil diselesaikan")
       onOpenChange(false)
       onUpdate?.()
+    } catch (resolveError) {
+      setError(resolveError instanceof Error ? resolveError.message : "Unknown error")
+      toast.error("Gagal menyelesaikan sengketa: " + (resolveError instanceof Error ? resolveError.message : "Unknown error"))
     }
 
     setLoading(false)
@@ -111,21 +110,20 @@ export function DisputeResolveDialog({
     setLoading(true)
     setError(null)
 
-    const { error: resolveError } = await resolveDispute(
-      dispute.booking_id,
-      {
-        status: "cancelled",
-        resolution_notes: resolutionNotes,
-      }
-    )
-
-    if (resolveError) {
-      setError(resolveError)
-      toast.error("Gagal menyelesaikan sengketa: " + resolveError)
-    } else {
+    try {
+      await resolveDispute(
+        dispute.id,
+        "business_favor",
+        resolutionNotes,
+        undefined,
+        adminId
+      )
       toast.success("Sengketa berhasil dibatalkan")
       onOpenChange(false)
       onUpdate?.()
+    } catch (resolveError) {
+      setError(resolveError instanceof Error ? resolveError.message : "Unknown error")
+      toast.error("Gagal menyelesaikan sengketa: " + (resolveError instanceof Error ? resolveError.message : "Unknown error"))
     }
 
     setLoading(false)
