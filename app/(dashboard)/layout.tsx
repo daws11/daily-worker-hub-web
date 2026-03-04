@@ -26,8 +26,12 @@ export default function DashboardLayout({
 
   // Redirect to login if not authenticated
   React.useEffect(() => {
+    console.log('[LAYOUT] Auth check - isLoading:', isLoading, 'user:', user?.email || 'null')
     if (!isLoading && !user) {
+      console.log('[LAYOUT] ⚠️ REDIRECTING TO LOGIN - no user found!')
       router.push("/login")
+    } else if (!isLoading && user) {
+      console.log('[LAYOUT] ✅ User authenticated, staying on page')
     }
   }, [user, isLoading, router])
 

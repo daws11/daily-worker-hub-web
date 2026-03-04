@@ -11,11 +11,14 @@ const SUPPORTED_LOCALES = ['id', 'en'] as const
 type Locale = (typeof SUPPORTED_LOCALES)[number]
 
 /**
- * Creates a Supabase client for use in middleware
- * Handles cookies properly for Next.js middleware environment
+ * Creates a Supabase client for use in proxy
+ * Handles cookies properly for Next.js proxy environment
+ * 
+ * Using the recommended getAll/setAll pattern from @supabase/ssr v0.8+
  */
-function createMiddlewareClient(request: NextRequest) {
-  const response = NextResponse.next({
+function createProxyClient(request: NextRequest) {
+  // Create initial response
+  let response = NextResponse.next({
     request: { headers: request.headers },
   })
 
@@ -24,16 +27,26 @@ function createMiddlewareClient(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
+        getAll() {
+          return request.cookies.getAll()
         },
-        set(name: string, value: string, options: any) {
-          request.cookies.set({ name, value, ...options })
-          response.cookies.set({ name, value, ...options })
-        },
-        remove(name: string, options: any) {
-          request.cookies.set({ name, value: '', ...options })
-          response.cookies.set({ name, value: '', ...options })
+        setAll(cookiesToSet) {
+          // Update request cookies first
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value)
+          })
+          // Create new response with updated headers
+          response = NextResponse.next({
+            request: { headers: request.headers },
+          })
+          // Set cookies on the new response
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, {
+              ...options,
+              path: '/',
+              sameSite: 'lax',
+            })
+          })
         },
       },
     }
@@ -101,7 +114,7 @@ function getOrSetLocale(request: NextRequest, response: NextResponse): Locale {
 }
 
 /**
- * Routes that don't require authentication
+ * Routes that don't require authentication (public)
  */
 const publicRoutes = [
   '/',
@@ -110,67 +123,65 @@ const publicRoutes = [
   '/forgot-password',
   '/reset-password',
   '/auth/callback',
-  '/worker/jobs', // Job marketplace is public
 ]
 
 /**
- * Routes that require authentication
- */
-const protectedRoutes = [
-  '/worker',      // Protects all /worker/* routes
-  '/business',    // Protects all /business/* routes
-]
-
-/**
- * Middleware to protect routes and handle locale detection
+ * Proxy to protect routes and handle locale detection
  * - Checks for Supabase session and redirects unauthenticated users
  * - Detects and persists language preference via cookies
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // Get the origin for proper URL construction
   const origin = request.nextUrl.origin
 
   // Create Supabase client and get response
-  const { supabase, response } = createMiddlewareClient(request)
+  const { supabase, response } = createProxyClient(request)
 
   // Detect and set locale preference
   getOrSetLocale(request, response)
 
-  // Check if user has a valid session
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
+  // Debug: Log all cookies
+  console.log('[PROXY] Cookies:', request.cookies.getAll().map(c => c.name).join(', '))
 
-  // Check public routes FIRST (higher priority)
+  // Use getUser() instead of getSession() for more reliable auth check
+  // getUser() validates the token with Supabase Auth server
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  
+  console.log('[PROXY] Path:', pathname, '| User:', user ? user.email : 'null')
+
+  // Check if route is public (no auth required)
   const isPublicRoute = publicRoutes.some((route) =>
     pathname === route || pathname.startsWith(route)
   )
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  )
+
+  // Allow public routes to proceed normally
+  if (isPublicRoute) {
+    return response
+  }
+
+  // Protected routes - require authentication
+  const isWorkerRoute = pathname.startsWith('/worker')
+  const isBusinessRoute = pathname.startsWith('/business')
 
   // Redirect unauthenticated users from protected routes to login
-  if (isProtectedRoute && !session) {
+  if (!user && (isWorkerRoute || isBusinessRoute)) {
     const redirectUrl = new URL('/login', origin)
     redirectUrl.searchParams.set('redirect', pathname)
     return NextResponse.redirect(redirectUrl)
   }
 
-  // Redirect authenticated users away from auth pages to dashboard
-  if (isPublicRoute && session) {
-    // Check if trying to access login/register while authenticated
-    if (pathname === '/login' || pathname === '/register') {
-      // Redirect to appropriate dashboard based on user role
-      const userRole = session.user?.user_metadata?.role
-      if (userRole === 'worker') {
-        return NextResponse.redirect(new URL('/worker/jobs', origin))
-      } else if (userRole === 'business') {
-        return NextResponse.redirect(new URL('/business/jobs', origin))
-      }
-      // Default fallback
+  // Redirect authenticated users away from login/register pages to appropriate dashboard
+  if ((pathname === '/login' || pathname === '/register') && user?.user_metadata?.role) {
+    if (user.user_metadata?.role === 'worker') {
       return NextResponse.redirect(new URL('/worker/jobs', origin))
+    } else if (user.user_metadata?.role === 'business') {
+      return NextResponse.redirect(new URL('/business/jobs', origin))
+    } else if (user.user_metadata?.role === 'admin') {
+      return NextResponse.redirect(new URL('/admin', origin))
     }
   }
 
@@ -178,7 +189,7 @@ export async function middleware(request: NextRequest) {
 }
 
 /**
- * Configure which routes the middleware should run on
+ * Configure which routes proxy should run on
  * Matches all routes except static files, images, and API routes
  */
 export const config = {

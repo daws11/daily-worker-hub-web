@@ -27,21 +27,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [userRole, setUserRole] = useState<'worker' | 'business' | 'admin' | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true) // Start with true to prevent premature redirects
   const router = useRouter()
   const { t } = useTranslation()
 
   useEffect(() => {
     // Get initial session
+    console.log('[AUTH] 🔄 Starting session check...')
+    setIsLoading(true)
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[AUTH] 📦 Session loaded:', {
+        hasSession: !!session,
+        userEmail: session?.user?.email || 'null',
+        userId: session?.user?.id?.substring(0, 8) || 'null'
+      })
+      // Update all state in a batch - React will handle this properly
+      const user = session?.user ?? null
       setSession(session)
-      setUser(session?.user ?? null)
+      setUser(user)
+      // Set loading to false after state updates are queued
+      setIsLoading(false)
+      console.log('[AUTH] ✅ Session check complete, isLoading set to false, user:', user?.email || 'null')
     })
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log('[AUTH] 🔐 Auth state changed:', _event, 'user:', session?.user?.email || 'null')
       setSession(session)
       setUser(session?.user ?? null)
     })
@@ -201,13 +214,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('id', data.user.id)
         .single()
 
-      if (userError || !userData) {
+      // Be more defensive - if query fails, default to the role parameter
+      const userRole = (userData as any)?.role || role
+
+      if (userError) {
         console.error('Error fetching user role:', userError)
-        toast.error(t('auth.loginFailedGeneric'))
-        return
+        console.log('[AUTH signIn] Using role from form input:', role)
       }
 
-      const userRole = (userData as any)?.role || 'worker'
+      if (!userData) {
+        console.warn('[AUTH signIn] User not found in public.users, using role:', role)
+      }
       
       // UPDATE user_metadata.role so middleware can access it
       console.log('[AUTH signIn] Updating user_metadata.role to:', userRole)
@@ -221,19 +238,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         console.log('[AUTH signIn] user_metadata.role updated successfully')
       }
+
+      // Refresh session to ensure cookies are properly set
+      const { data: { session: refreshedSession } } = await supabase.auth.refreshSession()
+      console.log('[AUTH signIn] Session refreshed:', !!refreshedSession)
       
       setUserRole(userRole)
+      setSession(refreshedSession || data.session)
+      setUser(refreshedSession?.user ?? data.user)
+      
       toast.success(t('auth.loginSuccess'))
 
       // Redirect based on database role (not form input)
+      // Use a slightly longer delay to ensure cookies are fully persisted
       if (typeof window !== 'undefined') {
-        if (userRole === 'worker') {
-          window.location.href = "/worker/jobs"
-        } else if (userRole === 'business') {
-          window.location.href = "/business/jobs"
-        } else {
-          window.location.href = "/dashboard-admin"
-        }
+        setTimeout(() => {
+          const redirectPath = userRole === 'worker' 
+            ? '/worker/jobs' 
+            : userRole === 'business' 
+              ? '/business/jobs' 
+              : '/admin'
+          console.log('[AUTH signIn] Redirecting to:', redirectPath)
+          window.location.href = redirectPath
+        }, 800) // Increased delay to 800ms for better cookie persistence
       }
     } catch (error) {
       console.error('Sign in error:', error)

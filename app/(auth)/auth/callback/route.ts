@@ -7,27 +7,46 @@ export async function GET(request: NextRequest) {
   const role = searchParams.get('role') || 'worker'
 
   if (token) {
+    let response = NextResponse.next({
+      request: { headers: request.headers },
+    })
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          get(name: string) {
-            return request.cookies.get(name)?.value
+          getAll() {
+            return request.cookies.getAll()
           },
-          set(name: string, value: string, options: any) {
-            request.cookies.set({ name, value, ...options })
-            const response = NextResponse.next()
-            response.cookies.set({ name, value, ...options })
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, ...options }) => {
+              request.cookies.set(name, value)
+            })
+            response = NextResponse.next({
+              request: { headers: request.headers },
+            })
+            cookiesToSet.forEach(({ name, value, ...options }) => {
+              response.cookies.set(name, value, {
+                ...options,
+                path: '/',
+                sameSite: 'lax',
+                httpOnly: false,
+              })
+            })
           },
         },
       }
     )
 
     await supabase.auth.exchangeCodeForSession(token)
+
+    // Redirect to appropriate dashboard
+    const redirectUrl = role === 'worker' ? '/worker/jobs' : '/business/jobs'
+    return NextResponse.redirect(new URL(redirectUrl, request.url))
   }
 
   // Redirect to appropriate dashboard
-  const redirectUrl = role === 'worker' ? '/dashboard-worker-jobs' : '/dashboard-business-jobs'
+  const redirectUrl = role === 'worker' ? '/worker/jobs' : '/business/jobs'
   return NextResponse.redirect(new URL(redirectUrl, request.url))
 }
