@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import { checkWorkerOnboardingStatus } from "@/lib/actions/onboarding"
+import { checkWorkerOnboardingStatus, checkBusinessOnboardingStatus } from "@/lib/actions/onboarding"
 
 export default async function OnboardingPage() {
   const supabase = await createClient()
@@ -42,9 +42,16 @@ export default async function OnboardingPage() {
   }
 
   if (userRole === "business") {
-    // For now, businesses go directly to their dashboard
-    // They may have their own onboarding in the future
-    redirect("/business/jobs")
+    // Check if business already has a profile
+    const { completed } = await checkBusinessOnboardingStatus(user.id)
+    
+    if (completed) {
+      // Already completed onboarding, redirect to dashboard
+      redirect("/business/jobs")
+    }
+    
+    // Redirect to business onboarding
+    redirect("/onboarding/business")
   }
 
   if (userRole === "admin") {

@@ -117,3 +117,114 @@ export async function checkWorkerOnboardingStatus(
     return { completed: false }
   }
 }
+
+// ============================================
+// BUSINESS ONBOARDING
+// ============================================
+
+export interface CompleteBusinessOnboardingData {
+  userId: string
+  name: string
+  phone: string
+  email: string
+  website?: string
+  address: string
+  lat: number
+  lng: number
+  description?: string
+  businessType: string
+}
+
+export async function completeBusinessOnboarding(
+  data: CompleteBusinessOnboardingData
+): Promise<OnboardingResult> {
+  try {
+    const supabase = await createClient()
+
+    // Verify user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    if (authError || !user) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    // Ensure the userId matches the authenticated user
+    if (user.id !== data.userId) {
+      return { success: false, error: "User ID mismatch" }
+    }
+
+    // Check if business profile already exists
+    const { data: existingBusiness, error: checkError } = await supabase
+      .from("businesses")
+      .select("id")
+      .eq("user_id", data.userId)
+      .single()
+
+    if (existingBusiness) {
+      return { success: false, error: "Business profile already exists" }
+    }
+
+    // Create business profile
+    const { error: businessError } = await supabase
+      .from("businesses")
+      .insert({
+        user_id: data.userId,
+        name: data.name,
+        phone: data.phone,
+        email: data.email,
+        website: data.website || null,
+        address: data.address,
+        lat: data.lat,
+        lng: data.lng,
+        description: data.description || null,
+        is_verified: false, // Default to not verified
+      })
+
+    if (businessError) {
+      console.error("Error creating business profile:", businessError)
+      return { success: false, error: "Failed to create business profile" }
+    }
+
+    // Update user record with phone if provided
+    if (data.phone) {
+      const { error: updateUserError } = await supabase
+        .from("users")
+        .update({ phone: data.phone })
+        .eq("id", data.userId)
+
+      if (updateUserError) {
+        console.error("Error updating user phone:", updateUserError)
+        // Don't fail the whole operation for this
+      }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error("Error in completeBusinessOnboarding:", error)
+    return { success: false, error: "An unexpected error occurred" }
+  }
+}
+
+// Check if a business user has completed onboarding
+export async function checkBusinessOnboardingStatus(
+  userId: string
+): Promise<{ completed: boolean; businessId?: string }> {
+  try {
+    const supabase = await createClient()
+    
+    const { data: business, error } = await supabase
+      .from("businesses")
+      .select("id")
+      .eq("user_id", userId)
+      .single()
+
+    if (error || !business) {
+      return { completed: false }
+    }
+
+    return { completed: true, businessId: business.id }
+  } catch (error) {
+    console.error("Error checking business onboarding status:", error)
+    return { completed: false }
+  }
+}

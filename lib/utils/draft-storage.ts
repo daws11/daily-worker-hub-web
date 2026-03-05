@@ -2,24 +2,36 @@
 // Key: 'onboarding_draft'
 
 export interface OnboardingDraft {
-  // Step 1: Personal Info
+  // Step 1: Personal Info (Worker)
   fullName?: string
   phone?: string
   dob?: string
   
-  // Step 2: Location
+  // Step 2: Location (Worker)
   address?: string
   lat?: number
   lng?: number
   
-  // Step 3: Skills & Review
+  // Step 3: Skills & Review (Worker)
   primaryCategory?: string
   experienceLevel?: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert'
   bio?: string
   
+  // Business Onboarding Fields
+  businessName?: string
+  businessType?: 'Hotel/Villa' | 'Restaurant' | 'Event Venue' | 'Spa/Wellness' | 'Other'
+  businessPhone?: string
+  businessEmail?: string
+  website?: string
+  businessAddress?: string
+  businessLat?: number
+  businessLng?: number
+  description?: string
+  
   // Metadata
   currentStep?: number
   savedAt?: string
+  isBusiness?: boolean
 }
 
 const DRAFT_KEY = 'onboarding_draft'
