@@ -5,12 +5,10 @@ import type { Database } from "../supabase/types"
 
 type Wallet = {
   id: string
-  worker_id: string | null
-  business_id: string | null
-  user_id: string | null
+  user_id: string
   balance: number
-  currency: string
-  is_active: boolean
+  pending_balance: number
+  available_balance: number
   created_at: string
   updated_at: string
 }
@@ -57,10 +55,21 @@ export async function getWorkerWallet(workerId: string): Promise<WalletResult> {
   try {
     const supabase = await createClient()
 
+    // First get the worker's user_id
+    const { data: worker, error: workerError } = await supabase
+      .from("workers")
+      .select("user_id")
+      .eq("id", workerId)
+      .single()
+
+    if (workerError || !worker) {
+      return { success: false, error: "Worker tidak ditemukan" }
+    }
+
     const { data, error } = await supabase
-      .from("wallets" as any)
+      .from("wallets")
       .select("*")
-      .eq("worker_id", workerId)
+      .eq("user_id", worker.user_id)
       .maybeSingle()
 
     if (error) {
@@ -70,12 +79,12 @@ export async function getWorkerWallet(workerId: string): Promise<WalletResult> {
     // Create wallet if it doesn't exist
     if (!data) {
       const { data: newWallet, error: createError } = await supabase
-        .from("wallets" as any)
+        .from("wallets")
         .insert({
-          worker_id: workerId,
+          user_id: worker.user_id,
           balance: 0,
-          currency: "IDR",
-          is_active: true,
+          pending_balance: 0,
+          available_balance: 0,
         })
         .select()
         .single()

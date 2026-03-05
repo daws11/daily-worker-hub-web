@@ -319,7 +319,23 @@ export async function confirmBookingCompletion(
 
     // Release funds from pending to available
     const { releaseFundsAction } = await import("./wallets")
-    const releaseResult = await releaseFundsAction(bookingId)
+
+    // Get the worker's user_id for wallet operations
+    const { data: worker } = await supabase
+      .from("workers")
+      .select("user_id")
+      .eq("id", booking.worker_id)
+      .single()
+
+    let releaseResult = { success: false, error: "Worker not found" }
+    if (worker && booking.final_price) {
+      releaseResult = await releaseFundsAction(
+        worker.user_id,
+        booking.final_price,
+        bookingId,
+        "Pembayaran dikonfirmasi oleh bisnis"
+      )
+    }
 
     if (!releaseResult.success) {
       console.error("Gagal melepas dana dari pending:", releaseResult.error)
@@ -410,25 +426,21 @@ export async function processBookingPayment(
 
 /**
  * Add booking review
- * - Creates a review in the reviews table
- * - Supports two-way reviews (business reviews worker, worker reviews business)
+ * - Creates a review in the reviews table (business reviews worker)
  * - Only allowed for completed bookings
+ * - Updates worker's reliability score after review
  *
  * @param bookingId - The booking ID
  * @param rating - Rating (1-5)
  * @param review - Review text
- * @param reviewer - Who is reviewing: 'business' or 'worker'
- * @param reviewerId - The ID of the reviewer (business_id or worker_id)
- * @param wouldRehire - Optional would rehire flag (only for business reviews)
+ * @param businessId - The business ID (for verification)
  * @returns Created review
  */
 export async function addBookingReview(
   bookingId: string,
   rating: number,
   review: string,
-  reviewer: 'business' | 'worker',
-  reviewerId: string,
-  wouldRehire?: boolean
+  businessId: string
 ): Promise<{ success: boolean; error?: string; data?: any }> {
   try {
     const supabase = await createClient()
@@ -448,15 +460,9 @@ export async function addBookingReview(
       return { success: false, error: "Hanya booking yang sudah selesai yang bisa direview" }
     }
 
-    // Verify the reviewer is authorized
-    if (reviewer === "business") {
-      if (booking.business_id !== reviewerId) {
-        return { success: false, error: "Anda tidak berhak mereview booking ini" }
-      }
-    } else if (reviewer === "worker") {
-      if (booking.worker_id !== reviewerId) {
-        return { success: false, error: "Anda tidak berhak mereview booking ini" }
-      }
+    // Verify the business owns this booking
+    if (booking.business_id !== businessId) {
+      return { success: false, error: "Anda tidak berhak mereview booking ini" }
     }
 
     // Check if review already exists
@@ -464,7 +470,6 @@ export async function addBookingReview(
       .from("reviews")
       .select("*")
       .eq("booking_id", bookingId)
-      .eq("reviewer", reviewer)
       .single()
 
     if (existingReview) {
@@ -476,25 +481,15 @@ export async function addBookingReview(
       return { success: false, error: "Rating harus antara 1-5" }
     }
 
-    // Prepare review data
-    const reviewData: any = {
-      booking_id: bookingId,
-      worker_id: booking.worker_id,
-      business_id: booking.business_id,
-      rating,
-      comment: review,
-      reviewer,
-    }
-
-    // Add would_rehire for business reviews
-    if (reviewer === "business" && wouldRehire !== undefined) {
-      reviewData.would_rehire = wouldRehire
-    }
-
     // Create the review
     const { data, error } = await supabase
       .from("reviews")
-      .insert(reviewData)
+      .insert({
+        booking_id: bookingId,
+        worker_id: booking.worker_id,
+        rating,
+        comment: review || "",
+      })
       .select()
       .single()
 
@@ -502,23 +497,39 @@ export async function addBookingReview(
       return { success: false, error: `Gagal membuat review: ${error.message}` }
     }
 
-    // Send notification to the other party
-    if (reviewer === "business") {
-      // Notify worker
+    // Update worker's reliability score
+    const { triggerScoreUpdate } = await import("./reliability-score")
+    const scoreResult = await triggerScoreUpdate(booking.worker_id)
+
+    if (!scoreResult.success) {
+      console.error("Failed to update reliability score:", scoreResult.error)
+    }
+
+    // Send notification to worker
+    const { data: worker } = await supabase
+      .from("workers")
+      .select("user_id")
+      .eq("id", booking.worker_id)
+      .single()
+
+    if (worker) {
       await createNotification(
-        booking.worker_id,
+        worker.user_id,
         "Review Baru dari Bisnis",
         "Bisnis telah memberikan review untuk pekerjaan yang selesai",
         `/worker/bookings/${bookingId}`
       )
-    } else {
-      // Notify business
-      await createNotification(
-        booking.business_id,
-        "Review Baru dari Pekerja",
-        "Pekerja telah memberikan review untuk pekerjaan yang selesai",
-        `/business/bookings/${bookingId}`
-      )
+
+      // Send push notification if enabled
+      const { enabled } = await isNotificationTypeEnabled(worker.user_id, "booking_status")
+      if (enabled) {
+        await sendPushNotification(
+          worker.user_id,
+          "Review Baru",
+          `Anda mendapat rating ${rating}/5 untuk pekerjaan terakhir`,
+          `/worker/bookings/${bookingId}`
+        )
+      }
     }
 
     return { success: true, data }
@@ -530,8 +541,8 @@ export async function addBookingReview(
 
 /**
  * Get booking review status
- * - Checks if both parties have reviewed
- * - Returns the reviews if they exist
+ * - Checks if a review exists for the booking
+ * - Returns the review if it exists
  *
  * @param bookingId - The booking ID
  * @returns Review status
@@ -546,22 +557,17 @@ export async function getBookingReviewStatus(
       .from("reviews")
       .select("*")
       .eq("booking_id", bookingId)
+      .single()
 
-    if (error) {
+    if (error && error.code !== "PGRST116") {
       return { success: false, error: error.message }
     }
-
-    const businessReview = data?.find((r: any) => r.reviewer === "business")
-    const workerReview = data?.find((r: any) => r.reviewer === "worker")
 
     return {
       success: true,
       data: {
-        businessReviewed: !!businessReview,
-        workerReviewed: !!workerReview,
-        businessReview,
-        workerReview,
-        bothReviewed: !!businessReview && !!workerReview,
+        hasReview: !!data,
+        review: data || null,
       }
     }
   } catch (error) {
@@ -579,4 +585,159 @@ export async function getBookingReviewStatus(
  */
 export async function checkoutBooking(bookingId: string, workerId: string): Promise<BookingResult> {
   return checkOutBooking(bookingId, workerId)
+}
+
+/**
+ * Complete a booking (Business finalizes the booking)
+ * - Updates booking status to 'completed'
+ * - Calculates final payment based on actual hours worked
+ * - Triggers payment processing
+ * - Sets review deadline to 24 hours from now
+ *
+ * This is called by the business after work is done to finalize everything.
+ *
+ * @param bookingId - The booking ID
+ * @param businessId - The business ID (for verification)
+ * @param options - Optional parameters (finalPrice, actualHours, notes)
+ * @returns Updated booking
+ */
+export async function completeBooking(
+  bookingId: string,
+  businessId: string,
+  options?: {
+    finalPrice?: number
+    actualHours?: number
+    notes?: string
+  }
+): Promise<BookingResult> {
+  try {
+    const supabase = await createClient()
+
+    // Verify the booking belongs to the business and is in in_progress status
+    const { data: booking, error: fetchError } = await supabase
+      .from("bookings")
+      .select(`
+        *,
+        jobs (
+          id,
+          title,
+          budget_min,
+          budget_max,
+          overtime_multiplier
+        ),
+        workers (
+          id,
+          user_id,
+          full_name
+        )
+      `)
+      .eq("id", bookingId)
+      .eq("business_id", businessId)
+      .single()
+
+    if (fetchError || !booking) {
+      return { success: false, error: "Booking tidak ditemukan" }
+    }
+
+    // Allow completion from 'in_progress' or 'accepted' status
+    if (!['in_progress', 'accepted'].includes(booking.status)) {
+      return { success: false, error: "Hanya booking yang sedang berjalan yang bisa diselesaikan" }
+    }
+
+    // Calculate final price if not provided
+    let finalPrice = options?.finalPrice
+    if (!finalPrice) {
+      const hours = options?.actualHours || booking.actual_hours || 8
+      const hourlyRate = booking.jobs?.budget_max || booking.final_price || 0
+      finalPrice = Math.round(hours * hourlyRate * 100) / 100
+    }
+
+    // Calculate actual hours if not provided
+    let actualHours = options?.actualHours
+    if (!actualHours && booking.check_in_at) {
+      const checkInTime = new Date(booking.check_in_at).getTime()
+      const now = Date.now()
+      actualHours = Math.round(((now - checkInTime) / (1000 * 60 * 60)) * 100) / 100
+    }
+
+    // Calculate review deadline (24 hours from now)
+    const reviewDeadline = new Date()
+    reviewDeadline.setHours(reviewDeadline.getHours() + 24)
+
+    // Update the booking
+    const updateData: any = {
+      status: "completed",
+      final_price: finalPrice,
+      payment_status: "pending_review",
+    }
+
+    if (actualHours) {
+      updateData.actual_hours = actualHours
+    }
+
+    if (!booking.check_in_at) {
+      // If never checked in, set check_in_at to now (for direct completion)
+      updateData.check_in_at = new Date().toISOString()
+    }
+
+    const { data: updatedBooking, error: updateError } = await supabase
+      .from("bookings")
+      .update(updateData)
+      .eq("id", bookingId)
+      .eq("business_id", businessId)
+      .select()
+      .single()
+
+    if (updateError) {
+      return { success: false, error: `Gagal menyelesaikan booking: ${updateError.message}` }
+    }
+
+    // Add pending funds to worker's wallet
+    const { data: workerUser } = await supabase
+      .from("workers")
+      .select("user_id")
+      .eq("id", booking.worker_id)
+      .single()
+
+    if (workerUser && finalPrice) {
+      const walletResult = await addPendingFundsAction(
+        workerUser.user_id,
+        finalPrice,
+        bookingId,
+        options?.notes || `Pembayaran untuk ${booking.jobs?.title || "pekerjaan"}`
+      )
+
+      if (!walletResult.success) {
+        console.error("Gagal menambahkan dana ke dompet worker:", walletResult.error)
+      }
+    }
+
+    // Send notifications
+    const jobTitle = booking.jobs?.title || "pekerjaan"
+
+    // Notify worker about completion
+    if (booking.workers) {
+      await createNotification(
+        (booking.workers as any).user_id,
+        "Pekerjaan Selesai",
+        `${jobTitle} telah diselesaikan. Pembayaran akan diproses dalam 24 jam.`,
+        `/worker/bookings/${bookingId}`
+      )
+
+      const { enabled } = await isNotificationTypeEnabled((booking.workers as any).user_id, "payment")
+      if (enabled) {
+        await sendPushNotification(
+          (booking.workers as any).user_id,
+          "Pekerjaan Selesai",
+          `Pembayaran Rp ${finalPrice?.toLocaleString('id-ID')} sedang diproses`,
+          `/worker/bookings/${bookingId}`
+        )
+      }
+    }
+
+    return { success: true, data: updatedBooking }
+  } catch (error) {
+    console.error("Error in completeBooking:", error)
+    return { success: false, error: "Terjadi kesalahan saat menyelesaikan booking" }
+  }
 }

@@ -118,12 +118,7 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
   ) => {
     setActionLoading((prev) => ({ ...prev, [jobId]: true }))
     try {
-      const response = await moderateJob(jobId, action, "", "")
-
-      if (response.error) {
-        toast.error(response.error)
-        return
-      }
+      await moderateJob(jobId, action, "")
 
       toast.success(action === "delete" ? "Job deleted successfully" : action === "suspend" ? "Job suspended" : "Job restored")
       await fetchJobs()

@@ -89,6 +89,8 @@ export default function WorkerWalletPage() {
         return
       }
 
+      setIsLoadingWorker(true)
+      
       const { data, error } = await supabase
         .from("workers")
         .select("*")
@@ -97,10 +99,12 @@ export default function WorkerWalletPage() {
 
       if (error || !data) {
         toast.error(t('errors.loadFailed'))
+        setIsLoadingWorker(false)
         return
       }
 
       setWorker(data)
+      setIsLoadingWorker(false)
     }
 
     fetchWorker()

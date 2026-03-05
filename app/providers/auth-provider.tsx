@@ -164,19 +164,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      console.log('[AUTH] Registration successful, redirecting to login...')
+      console.log('[AUTH] Registration successful, redirecting to onboarding...')
       console.log('[AUTH] Role:', role)
 
-      toast.success(t('auth.registrationSuccessPleaseLogin'))
+      toast.success(t('auth.registrationSuccess'))
 
-      // 3. Redirect to login page with role parameter for proper routing
+      // 3. Redirect to onboarding page (worker will be redirected to onboarding/worker)
       // Use window.location for more reliable redirect in App Router
       if (typeof window !== 'undefined') {
         console.log('[AUTH] Window is available, preparing redirect...')
         // Use setTimeout to ensure toast can be displayed before redirect
         setTimeout(() => {
-          console.log('[AUTH] Redirecting to:', `/login?role=${role}`)
-          window.location.href = `/login?role=${role}`
+          console.log('[AUTH] Redirecting to:', `/onboarding`)
+          window.location.href = `/onboarding`
         }, 100)
       } else {
         console.error('[AUTH] Window is not available!')
@@ -250,13 +250,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.success(t('auth.loginSuccess'))
 
       // Redirect based on database role (not form input)
+      // Workers go to onboarding (which checks if they have a profile)
       // Use a slightly longer delay to ensure cookies are fully persisted
       if (typeof window !== 'undefined') {
         setTimeout(() => {
-          const redirectPath = userRole === 'worker' 
-            ? '/worker/jobs' 
-            : userRole === 'business' 
-              ? '/business/jobs' 
+          const redirectPath = userRole === 'worker'
+            ? '/onboarding'  // Onboarding page will redirect to /worker/jobs if profile exists
+            : userRole === 'business'
+              ? '/business/jobs'
               : '/admin'
           console.log('[AUTH signIn] Redirecting to:', redirectPath)
           window.location.href = redirectPath

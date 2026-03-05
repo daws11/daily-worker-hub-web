@@ -49,25 +49,25 @@ export default function KycsPage({ className, ...props }: KycsPageProps) {
     setLoading(true)
     setError(null)
 
-    const { data, error: fetchError } = await getKYCVerifications(
-      filters,
-      pagination.page,
-      pagination.limit
-    )
+    try {
+      const { items, total, totalPages } = await getKYCVerifications(
+        filters,
+        pagination.page,
+        pagination.limit
+      )
 
-    if (fetchError) {
-      setError(fetchError)
-      setKycs([])
-    } else if (data) {
-      setKycs(data.items)
+      setKycs(items)
       setPagination((prev) => ({
         ...prev,
-        total: data.total,
-        totalPages: data.totalPages,
+        total,
+        totalPages,
       }))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch KYC verifications")
+      setKycs([])
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }, [filters, pagination.page, pagination.limit])
 
   React.useEffect(() => {

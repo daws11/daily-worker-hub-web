@@ -45,6 +45,8 @@ export default function WorkerBadgesPage() {
         return
       }
 
+      setIsLoadingWorker(true)
+      
       const { data, error } = await supabase
         .from("workers")
         .select("*")
@@ -53,10 +55,12 @@ export default function WorkerBadgesPage() {
 
       if (error || !data) {
         toast.error("Profil worker tidak ditemukan")
+        setIsLoadingWorker(false)
         return
       }
 
       setWorker(data)
+      setIsLoadingWorker(false)
     }
 
     fetchWorker()

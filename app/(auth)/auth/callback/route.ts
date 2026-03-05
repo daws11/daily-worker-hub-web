@@ -41,12 +41,12 @@ export async function GET(request: NextRequest) {
 
     await supabase.auth.exchangeCodeForSession(token)
 
-    // Redirect to appropriate dashboard
-    const redirectUrl = role === 'worker' ? '/worker/jobs' : '/business/jobs'
+    // Redirect workers to onboarding (onboarding page will check if profile exists)
+    const redirectUrl = role === 'worker' ? '/onboarding' : '/business/jobs'
     return NextResponse.redirect(new URL(redirectUrl, request.url))
   }
 
-  // Redirect to appropriate dashboard
-  const redirectUrl = role === 'worker' ? '/worker/jobs' : '/business/jobs'
+  // Redirect workers to onboarding (onboarding page will check if profile exists)
+  const redirectUrl = role === 'worker' ? '/onboarding' : '/business/jobs'
   return NextResponse.redirect(new URL(redirectUrl, request.url))
 }

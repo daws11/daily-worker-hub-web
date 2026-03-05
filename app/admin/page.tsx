@@ -18,8 +18,7 @@ import {
 import { AnalyticsCard } from "@/components/admin/analytics-card"
 import { useAuth } from "@/app/providers/auth-provider"
 import { getPlatformMetrics } from "@/lib/supabase/queries/analytics"
-import { getAdminPendingCounts } from "@/lib/supabase/queries/admin"
-import { getRecentAuditLogs } from "@/lib/supabase/queries/audit-logs"
+import { getAdminPendingCounts, type AdminPendingCounts } from "@/lib/supabase/queries/admin"
 import type { PlatformMetrics } from "@/lib/types/admin"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -30,12 +29,7 @@ export default function AdminDashboardPage() {
   const { user, isLoading: authLoading } = useAuth()
 
   const [metrics, setMetrics] = useState<PlatformMetrics | null>(null)
-  const [pendingCounts, setPendingCounts] = useState<{
-    businessVerifications: number
-    kycVerifications: number
-    reports: number
-    disputes: number
-  } | null>(null)
+  const [pendingCounts, setPendingCounts] = useState<AdminPendingCounts | null>(null)
   const [recentLogs, setRecentLogs] = useState<any[] | null>(null)
   const [isDataLoading, setIsDataLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -108,7 +102,7 @@ export default function AdminDashboardPage() {
   }
 
   const totalPending = pendingCounts
-    ? pendingCounts.businessVerifications + pendingCounts.kycVerifications + pendingCounts.reports + pendingCounts.disputes
+    ? pendingCounts.pendingBusinessVerifications + pendingCounts.pendingKYCVerifications + pendingCounts.pendingJobsForModeration + pendingCounts.openDisputes + pendingCounts.activeComplianceWarnings
     : 0
 
   if (authLoading || isDataLoading) {
@@ -176,8 +170,8 @@ export default function AdminDashboardPage() {
         />
         <AnalyticsCard
           title="Pending Verifications"
-          value={(pendingCounts?.businessVerifications || 0) + (pendingCounts?.kycVerifications || 0)}
-          description={`${pendingCounts?.businessVerifications || 0} business • ${pendingCounts?.kycVerifications || 0} KYC`}
+          value={(pendingCounts?.pendingBusinessVerifications || 0) + (pendingCounts?.pendingKYCVerifications || 0)}
+          description={`${pendingCounts?.pendingBusinessVerifications || 0} business • ${pendingCounts?.pendingKYCVerifications || 0} KYC`}
           icon={<FileCheck className="h-4 w-4" />}
         />
         <AnalyticsCard
@@ -197,7 +191,7 @@ export default function AdminDashboardPage() {
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{pendingCounts?.businessVerifications || 0}</div>
+              <div className="text-2xl font-bold">{pendingCounts?.pendingBusinessVerifications || 0}</div>
               <p className="text-xs text-muted-foreground mt-1">Pending approvals</p>
               <div className="flex items-center text-xs text-muted-foreground mt-2 group-hover:text-foreground">
                 Review <ArrowRight className="ml-1 h-3 w-3" />
@@ -213,7 +207,7 @@ export default function AdminDashboardPage() {
               <UserCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{pendingCounts?.kycVerifications || 0}</div>
+              <div className="text-2xl font-bold">{pendingCounts?.pendingKYCVerifications || 0}</div>
               <p className="text-xs text-muted-foreground mt-1">Pending approvals</p>
               <div className="flex items-center text-xs text-muted-foreground mt-2 group-hover:text-foreground">
                 Review <ArrowRight className="ml-1 h-3 w-3" />
@@ -229,7 +223,7 @@ export default function AdminDashboardPage() {
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{pendingCounts?.disputes || 0}</div>
+              <div className="text-2xl font-bold">{pendingCounts?.openDisputes || 0}</div>
               <p className="text-xs text-muted-foreground mt-1">Requires resolution</p>
               <div className="flex items-center text-xs text-muted-foreground mt-2 group-hover:text-foreground">
                 Resolve <ArrowRight className="ml-1 h-3 w-3" />

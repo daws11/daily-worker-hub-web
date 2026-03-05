@@ -487,9 +487,9 @@ export async function acceptApplicationAndCreateBooking(
     const workerTier = (application.workers as any)?.tier || 'classic'
 
     // Import interview session functions
-    const { createInterviewSession: createInterview } = await import("./bookings")
+    const { createInterviewSession } = await import("./bookings")
 
-    const interviewResult = await createInterview(
+    const interviewResult = await createInterviewSession(
       booking.id,
       businessId,
       application.worker_id,
@@ -498,6 +498,7 @@ export async function acceptApplicationAndCreateBooking(
 
     if (!interviewResult.success) {
       console.error("Failed to create interview session:", interviewResult.error)
+      // Don't fail the booking creation - interview is a secondary process
     }
 
     // Send notification to worker

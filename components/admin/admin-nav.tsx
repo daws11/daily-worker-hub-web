@@ -12,6 +12,7 @@ import {
   Briefcase,
   FileCheck,
   Scale,
+  Shield,
   BarChart3,
   Activity,
   ScrollText,
@@ -74,6 +75,18 @@ const navItems: NavItem[] = [
     description: "Platform analytics",
   },
   {
+    title: "Compliance",
+    href: "/admin/compliance",
+    icon: Shield,
+    description: "PP 35/2021 monitoring",
+  },
+  {
+    title: "Reports",
+    href: "/admin/reports",
+    icon: ScrollText,
+    description: "Export reports",
+  },
+  {
     title: "System Health",
     href: "/admin/health",
     icon: Activity,
@@ -82,7 +95,7 @@ const navItems: NavItem[] = [
   {
     title: "Audit Logs",
     href: "/admin/audit-logs",
-    icon: ScrollText,
+    icon: FileCheck,
     description: "Admin activity logs",
   },
 ]

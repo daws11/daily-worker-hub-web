@@ -59,10 +59,13 @@ export type Database = {
     Tables: {
       bookings: {
         Row: {
+          actual_hours: number | null
           business_id: string
           cancellation_note: string | null
           cancellation_reason_id: string | null
           cancelled_at: string | null
+          check_in_at: string | null
+          check_out_at: string | null
           created_at: string
           end_date: string | null
           final_price: number | null
@@ -71,6 +74,13 @@ export type Database = {
           interview_status: "pending" | "in_progress" | "completed" | "skipped" | "failed" | null
           job_id: string
           matching_score: number | null
+          payment_id: string | null
+          payment_status: "pending" | "processing" | "paid" | "failed" | "refunded" | null
+          rating_by_business: number | null
+          rating_by_worker: number | null
+          review_by_business: string | null
+          review_by_worker: string | null
+          rated_at: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["booking_status"]
           time_to_hire: number | null
@@ -78,10 +88,13 @@ export type Database = {
           worker_id: string
         }
         Insert: {
+          actual_hours?: number | null
           business_id: string
           cancellation_note?: string | null
           cancellation_reason_id?: string | null
           cancelled_at?: string | null
+          check_in_at?: string | null
+          check_out_at?: string | null
           created_at?: string
           end_date?: string | null
           final_price?: number | null
@@ -90,6 +103,13 @@ export type Database = {
           interview_status?: "pending" | "in_progress" | "completed" | "skipped" | "failed" | null
           job_id: string
           matching_score?: number | null
+          payment_id?: string | null
+          payment_status?: "pending" | "processing" | "paid" | "failed" | "refunded" | null
+          rating_by_business?: number | null
+          rating_by_worker?: number | null
+          review_by_business?: string | null
+          review_by_worker?: string | null
+          rated_at?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           time_to_hire?: number | null
@@ -97,10 +117,13 @@ export type Database = {
           worker_id: string
         }
         Update: {
+          actual_hours?: number | null
           business_id?: string
           cancellation_note?: string | null
           cancellation_reason_id?: string | null
           cancelled_at?: string | null
+          check_in_at?: string | null
+          check_out_at?: string | null
           created_at?: string
           end_date?: string | null
           final_price?: number | null
@@ -109,6 +132,13 @@ export type Database = {
           interview_status?: "pending" | "in_progress" | "completed" | "skipped" | "failed" | null
           job_id?: string
           matching_score?: number | null
+          payment_id?: string | null
+          payment_status?: "pending" | "processing" | "paid" | "failed" | "refunded" | null
+          rating_by_business?: number | null
+          rating_by_worker?: number | null
+          review_by_business?: string | null
+          review_by_worker?: string | null
+          rated_at?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           time_to_hire?: number | null

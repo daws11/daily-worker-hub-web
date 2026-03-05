@@ -1,375 +1,271 @@
-# Tier-Based Interview Process - Implementation Summary
+# Admin Dashboard & Compliance Database Implementation Summary
 
 ## Overview
-This document summarizes the implementation of the tier-based interview process for Daily Worker Hub. The system implements a frictionless hiring experience for high-tier workers while maintaining quality vetting for lower-tier workers.
+This implementation adds comprehensive admin analytics, PP 35/2021 compliance monitoring, and reporting capabilities to the Daily Worker Hub platform.
 
-## Files Created
+## Files Created/Modified
 
-### Core Logic
+### 1. Database Migration
+**File:** `supabase/migrations/20260305000000_compliance_enhancements.sql`
 
-#### 1. `lib/algorithms/interview-flow.ts` (New)
-- Main interview flow algorithms
-- Tier-based interview configuration
-- Interview status and progress tracking
-- Duration calculation and formatting
-- Time-to-hire metrics calculation
+**Tables Created:**
+- `compliance_tracking` - Tracks days worked per worker per business per month
+- `compliance_warnings` - Stores warnings when workers approach/exceed 21-day limit
+- `compliance_audit_log` - Audit trail for compliance actions
 
-**Key Functions:**
-- `getInterviewConfig(tier)` - Get interview requirements for each tier
-- `isInterviewRequired(tier)` - Check if interview is required
-- `isVoiceCallRequired(tier)` - Check if voice call is required
-- `isVoiceCallOptional(tier)` - Check if voice call is optional
-- `canInstantDispatch(tier)` - Check if worker qualifies for instant dispatch
-- `createInterviewSession(...)` - Create initial interview session
-- `isInterviewComplete(session)` - Check if interview meets all requirements
-- `getInterviewProgress(session)` - Get progress percentage (0-100)
-- `getChatDurationMinutes(session)` - Get chat duration in minutes
-- `getVoiceDurationMinutes(session)` - Get voice duration in minutes
-- `formatDuration(seconds)` - Format seconds to human-readable string
-- `calculateTimeToHire(jobPostedAt, bookingAcceptedAt)` - Calculate time-to-hire
+**Database Functions:**
+- `calculate_days_worked()` - Calculate days worked by worker/business/month
+- `get_compliance_status_for_worker()` - Get compliance status
+- `update_compliance_tracking()` - Update or create tracking record
+- `create_compliance_warning_if_needed()` - Create warnings automatically
+- `check_booking_compliance()` - Verify booking can be accepted
+- `get_business_compliance_summary()` - Get compliance stats for business
+- `get_all_compliance_warnings_admin()` - Get all warnings for admin dashboard
 
-### UI Components
+**Triggers:**
+- Automatic compliance tracking update when booking status changes
+- Automatic warning creation when limits are approached
+- Automatic audit logging for all compliance actions
 
-#### 2. `components/messaging/interview-chat.tsx` (New)
-Main interview interface component
-- Real-time chat with Supabase Realtime
-- Voice call integration
-- Interview timer display
-- Progress tracking by phase
-- Completion and cancellation controls
-- Instant dispatch badge for high-tier workers
+**RLS Policies:**
+- Businesses can view their own compliance data
+- Workers can view their own compliance data
+- Admins can view all compliance data
 
-**Props:**
-- `interviewSession` - Current interview session data
-- `workerName`, `workerTier`, `workerAvatar` - Worker info
-- `businessName` - Business name
-- `currentUserId`, `isBusiness` - User context
-- `messages` - Message history
-- `onSendMessage` - Send message handler
-- `onStartVoiceCall`, `onEndVoiceCall` - Voice call handlers
-- `onCompleteInterview`, `onCancelInterview` - Interview lifecycle handlers
-- `voiceCallState` - Current voice call state
-- `isMuted`, `isSpeakerOn` - Voice call settings
+### 2. Admin Actions
+**File:** `lib/actions/admin.ts` (NEW)
 
-#### 3. `components/messaging/voice-call-button.tsx` (New)
-Voice call button component
-- Multiple states: idle, calling, incoming, connected, ended
-- Mute and speaker toggle controls
-- Multiple variants: default, icon-only, compact
-- Animations for calling/incoming states
+**Functions Implemented:**
+- `getRevenueMetrics()` - Daily/weekly/monthly revenue data
+- `getWorkerStatistics()` - Worker stats by tier, area, KYC status
+- `getBookingTrends()` - Daily booking trends, status breakdown, category breakdown
+- `getPaymentMetrics()` - Payment success rate, transaction counts, volume
+- `exportBookingsCsv()` - Export bookings to CSV
+- `exportPaymentsCsv()` - Export payments to CSV
+- `exportComplianceCsv()` - Export compliance data to CSV
+- `getComplianceOverview()` - Compliance summary statistics
+- `getComplianceWarningsList()` - Get warnings for admin dashboard
 
-#### 4. `components/messaging/interview-timer.tsx` (New)
-Interview timer component
-- Real-time countdown/up timer
-- Minimum duration requirement display
-- Progress bar for maximum duration
-- Three variants: default, compact, minimal
-- Status-based coloring (completed, in-progress, failed)
+### 3. Enhanced Compliance Actions
+**File:** `lib/actions/compliance.ts` (UPDATED)
 
-#### 5. `components/business/instant-dispatch-badge.tsx` (New)
-Badge for instant dispatch workers
-- Green color scheme with lightning icon
-- Size variants: sm, md, lg
-- Style variants: default, outline
+**New Functions:**
+- `enforceComplianceBeforeBooking()` - Gatekeeper function for booking acceptance
+- `shouldAutoRejectBooking()` - Auto-reject if PP 35/2021 limit exceeded
+- `updateComplianceTracking()` - Manual compliance tracking update
+- `acknowledgeComplianceWarning()` - Mark warning as seen
+- `getAllComplianceWarnings()` - Get all warnings for admin
+- `getBusinessComplianceSummary()` - Get business compliance stats
+- `getBatchComplianceStatus()` - Check compliance for multiple workers
 
-### Type Definitions
+**Compliance Rules (PP 35/2021):**
+- 0-14 days: Compliant (can book)
+- 15-20 days: Warning (can book, show warning)
+- 21+ days: Blocked (auto-reject new bookings)
 
-#### 6. `lib/types/interview.ts` (New)
-Interview-related type definitions
-- `InterviewStatus` - Status enum
-- `InterviewType` - Type enum
-- `VoiceCallState` - Voice call state enum
-- `InterviewConfig` - Configuration interface
-- `InterviewSession` - Session data interface
-- `InterviewMetrics` - Analytics metrics interface
-- `InterviewProgress` - Progress tracking interface
+### 4. Admin Analytics Dashboard
+**File:** `app/admin/analytics/page.tsx` (NEW)
 
-### Database
+**Features:**
+- Revenue metrics (daily/weekly/monthly with totals)
+- Worker statistics (active, new by month, by tier, by KYC status, by area)
+- Booking trends (daily trends, status distribution, category breakdown)
+- Payment metrics (success rate, transaction counts, total volume)
+- Date range filtering (7/30/90 days)
+- Tabbed interface for different analytics views
 
-#### 7. `migrations/add_interview_sessions.sql` (New)
-Database migration script
-- Creates `interview_sessions` table
-- Adds `interview_status`, `interview_duration`, `time_to_hire` columns to `bookings`
-- Creates indexes for common queries
-- Adds function to increment message count
-- Adds comments for documentation
+### 5. Compliance Dashboard
+**File:** `app/admin/compliance/page.tsx` (NEW)
 
-### Server Actions
+**Features:**
+- Compliance overview cards (total workers, compliant, warning, blocked)
+- Detailed statistics (total businesses, businesses with warnings, avg days/worker)
+- Warnings list with filtering and search
+- PP 35/2021 info alert
+- Month selector for historical data
+- Acknowledge warnings functionality
+- Export compliance reports
+- Worker and business details in warnings
+- Status badges (compliant, warning, blocked)
 
-#### 8. `lib/actions/bookings.ts` (Updated)
-Added interview-related server actions:
+### 6. Reports Page
+**File:** `app/admin/reports/page.tsx` (NEW)
 
-**Session Management:**
-- `createInterviewSession(bookingId, businessId, workerId, workerTier)` - Create new session
-- `startInterviewSession(interviewSessionId, userId)` - Start interview
-- `completeInterviewSession(interviewSessionId, userId)` - Complete interview
-- `cancelInterviewSession(interviewSessionId, userId)` - Cancel interview
+**Features:**
+- Bookings report export (CSV)
+- Payments report export (CSV)
+- Compliance report export (CSV)
+- Date range pickers for bookings and payments
+- Month selector for compliance reports
+- Success/error notifications
+- Export information and limits
+- Quick stats (record limits, format, encoding)
 
-**Chat Phase:**
-- `startChatInterview(interviewSessionId, userId)` - Start chat
-- `completeChatInterview(interviewSessionId, userId)` - Complete chat
+### 7. Updated Admin Navigation
+**File:** `components/admin/admin-nav.tsx` (MODIFIED)
 
-**Voice Phase:**
-- `startVoiceCallInterview(interviewSessionId, userId)` - Start voice call
-- `completeVoiceCallInterview(interviewSessionId, userId)` - Complete voice call
+**Changes:**
+- Added "Compliance" link to navigation
+- Added "Reports" link to navigation
+- Updated icon imports (Shield for Compliance)
 
-**Analytics:**
-- `getInterviewSessionByBooking(bookingId)` - Get session by booking
-- `incrementInterviewMessageCount(interviewSessionId)` - Track messages
-- `calculateBookingTimeToHire(bookingId)` - Calculate time-to-hire metric
+### 8. Updated Admin Dashboard
+**File:** `app/admin/page.tsx` (MODIFIED)
 
-**Added Types:**
-- `InterviewSession` - Interview session type
+**Changes:**
+- Added `activeComplianceWarnings` to pending counts
+- Updated total pending calculation to include compliance warnings
+- Added quick action card for Compliance Warnings
+- Added quick action cards for Analytics and Reports
+- Updated icon imports (AlertTriangle)
 
-### UI Components Updated
+### 9. Updated Admin Queries
+**File:** `lib/supabase/queries/admin.ts` (MODIFIED)
 
-#### 9. `components/matching/worker-shortlist.tsx` (Updated)
-Enhanced to show interview information:
-- Added import for `InstantDispatchBadge` and `canInstantDispatch`
-- Display Instant Dispatch badge for Elite/Champion workers
-- Updated action button to show "Instant Book" for high-tier workers
-- Improved interview type display
-
-### Example Page
-
-#### 10. `app/dashboard/business/interview/[id]/page.tsx` (New)
-Example interview page implementation
-- Fetches interview session and messages
-- Displays interview chat interface
-- Handles all interview lifecycle actions
-- Verifies user access to interview
-
-## Documentation
-
-#### 11. `INTERVIEW_FLOW.md` (New)
-Comprehensive documentation of:
-- Interview flow by tier
-- Component descriptions
-- Server action usage
-- Database schema
-- Usage examples
-- Analytics metrics
-- Migration instructions
-- Future enhancement suggestions
-
-#### 12. `IMPLEMENTATION_SUMMARY.md` (This File)
-Summary of all created and updated files
-
-## Interview Flow Summary
-
-### Champion (Tier 4) & Elite (Tier 3)
-- **Instant Dispatch** - No interview required
-- Time-to-hire: <5 minutes
-- Green "Instant Dispatch" badge
-- "Instant Book" button
-
-### Pro (Tier 2)
-- **Chat Only** - 5-10 minutes (minimum 5 min)
-- Optional voice call (3-5 min)
-- Time-to-hire: ~20 minutes
-- Blue chat badge
-
-### Classic (Tier 1)
-- **Chat + Voice** - 10-15 minutes total
-- Required voice call (3-5 min minimum)
-- Time-to-hire: ~25 minutes
-- Purple chat & voice badges
-
-## Database Schema
-
-### `interview_sessions` Table
-Columns:
-- `id` (UUID, primary key)
-- `booking_id` (UUID, foreign key)
-- `business_id` (UUID, foreign key)
-- `worker_id` (UUID, foreign key)
-- `worker_tier` (worker_tier enum)
-- `status` (text: pending, in_progress, completed, skipped, failed)
-- `type` (text: none, chat, chat_and_voice)
-- `started_at`, `completed_at` (timestamptz)
-- `chat_started_at`, `chat_completed_at` (timestamptz)
-- `voice_started_at`, `voice_completed_at` (timestamptz)
-- `chat_duration`, `voice_duration`, `total_duration` (integer, seconds)
-- `messages_sent` (integer)
-- `voice_call_initiated` (boolean)
-- `time_to_hire` (numeric, minutes)
-- `created_at` (timestamptz)
-
-Indexes:
-- `idx_interview_sessions_booking_id`
-- `idx_interview_sessions_business_id`
-- `idx_interview_sessions_worker_id`
-- `idx_interview_sessions_status`
-- `idx_interview_sessions_created_at`
-
-### `bookings` Table (Updated)
-Added columns:
-- `interview_status` (text) - Interview status
-- `interview_duration` (integer) - Duration in seconds
-- `time_to_hire` (numeric) - Time-to-hire in minutes
-
-## Usage Workflow
-
-### 1. Worker Selection
-Business selects worker from shortlist → System checks worker tier
-
-### 2. Interview Session Creation
-```typescript
-await createInterviewSession(bookingId, businessId, workerId, workerTier)
-```
-
-### 3. Based on Tier:
-
-#### For Elite/Champion:
-- Session created with status `skipped`
-- "Instant Book" button available
-- Booking immediately accepted
-
-#### For Pro:
-- Session created with status `pending`
-- Business starts interview → status `in_progress`
-- Chat phase starts automatically on first message
-- After minimum chat duration, optional voice call available
-- Both parties can complete interview when ready
-
-#### For Classic:
-- Session created with status `pending`
-- Business starts interview → status `in_progress`
-- Chat phase starts automatically on first message
-- After minimum chat duration, voice call required
-- Voice call must meet minimum duration
-- Both parties can complete interview when ready
-
-### 4. Interview Completion
-```typescript
-await completeInterviewSession(interviewSessionId, userId)
-```
-- Booking status changes to `accepted`
-- Time-to-hire calculated and stored
-- Notification sent to both parties
+**Changes:**
+- Updated `AdminPendingCounts` interface to include `activeComplianceWarnings`
+- Updated `getAdminPendingCounts()` to query compliance warnings
 
 ## Key Features
 
-### Real-Time Chat
-- Supabase Realtime integration
-- Instant message delivery
-- Message count tracking
-- Read receipts
+### Compliance Enforcement
+1. **Automatic Tracking:** Bookings automatically update compliance tracking when status changes
+2. **Warning System:** Automatic warnings when workers approach (15+ days) or reach (21+ days) the limit
+3. **Auto-Rejection:** Bookings are automatically rejected if worker has already worked 21+ days
+4. **Acknowledgment System:** Businesses can acknowledge they've seen warnings
+5. **Audit Trail:** All compliance actions are logged
 
-### Voice Call Integration
-- Voice call state tracking
-- Duration measurement
-- Mute/speaker controls
-- Call initiation and completion
+### Analytics Dashboard
+1. **Revenue Tracking:** Daily, weekly, and monthly revenue with fees
+2. **Worker Insights:** Active workers, new registrations, tier distribution, geographic distribution
+3. **Booking Analytics:** Trends, status breakdowns, category popularity
+4. **Payment Monitoring:** Success rates, transaction volumes, pending payments
 
-### Progress Tracking
-- Visual progress bar
-- Phase completion indicators
-- Minimum duration requirements
-- Real-time timer
+### Reporting
+1. **CSV Exports:** All reports exported as CSV (UTF-8 encoded)
+2. **Date Range Filtering:** Flexible date selection for bookings and payments
+3. **Monthly Compliance:** Export compliance data by month
+4. **Limit Handling:** Max 10,000 records per export
 
-### Analytics
-- Time-to-hire metrics
-- Duration tracking by phase
-- Message count analysis
-- Tier-based performance comparison
+### User Experience
+1. **Responsive Design:** Works on mobile, tablet, and desktop
+2. **Loading States:** Skeleton screens while data loads
+3. **Error Handling:** Friendly error messages
+4. **Filtering & Search:** Filter warnings, search workers/businesses
+5. **Status Badges:** Visual indicators for compliance status
 
-## Testing Recommendations
+## Database Schema Summary
 
-### Unit Tests
-- `getInterviewConfig()` returns correct config for each tier
-- `isInterviewRequired()` correctly identifies required interviews
-- `isVoiceCallRequired()` correctly identifies required voice calls
-- `isInterviewComplete()` validates all requirements
-- `getInterviewProgress()` calculates correct percentage
-- Duration calculations are accurate
+### compliance_tracking Table
+- `id` - UUID primary key
+- `business_id` - FK to businesses
+- `worker_id` - FK to workers
+- `month` - DATE (YYYY-MM-01)
+- `days_worked` - INTEGER
+- `last_booking_date` - DATE
+- `compliance_status` - 'compliant' | 'warning' | 'blocked'
+- `notes` - TEXT
+- `created_at`, `updated_at` - TIMESTAMPTZ
+- UNIQUE constraint on (business_id, worker_id, month)
 
-### Integration Tests
-- Create interview session → verify database state
-- Start interview → verify status change
-- Send message → verify chat start
-- Start voice call → verify tracking
-- Complete interview → verify booking acceptance
-- Cancel interview → verify status change
+### compliance_warnings Table
+- `id` - UUID primary key
+- `business_id` - FK to businesses
+- `worker_id` - FK to workers
+- `compliance_tracking_id` - FK to compliance_tracking
+- `month` - DATE
+- `days_worked` - INTEGER
+- `warning_level` - 'none' | 'warning' | 'blocked'
+- `warning_type` - 'approaching_limit' | 'limit_reached' | 'limit_exceeded'
+- `message` - TEXT
+- `acknowledged` - BOOLEAN
+- `acknowledged_at` - TIMESTAMPTZ
+- `acknowledged_by` - FK to users
+- `created_at`, `updated_at` - TIMESTAMPTZ
+- UNIQUE constraint on (business_id, worker_id, month)
 
-### E2E Tests
-- Elite/Champion worker → instant dispatch flow
-- Pro worker → chat only flow
-- Classic worker → chat + voice flow
-- Voice call optional vs required
-- Minimum duration enforcement
+### compliance_audit_log Table
+- `id` - UUID primary key
+- `action` - booking_accepted | booking_rejected_compliance | warning_created | warning_acknowledged | limit_reset | manual_override
+- `business_id` - FK to businesses
+- `worker_id` - FK to workers
+- `booking_id` - FK to bookings
+- `month` - DATE
+- `days_before` - INTEGER
+- `days_after` - INTEGER
+- `details` - JSONB
+- `performed_by` - FK to users
+- `created_at` - TIMESTAMPTZ
 
-## Performance Considerations
+## Migration Steps
 
-### Database Indexes
-- Indexes on `booking_id`, `business_id`, `worker_id`, `status`, `created_at`
-- Unique constraint on `booking_id` to prevent duplicate interviews
+To apply these changes:
 
-### Real-time Subscriptions
-- Subscribe to interview session updates
-- Subscribe to new messages for booking
-- Unsubscribe on component unmount
+1. **Run the migration:**
+   ```bash
+   npx supabase db push
+   # or
+   npx supabase db reset  # for fresh start
+   ```
 
-### Optimistic Updates
-- Update UI immediately on user actions
-- Revert on error
+2. **Restart the development server:**
+   ```bash
+   npm run dev
+   ```
 
-### Caching
-- Cache interview session data
-- Invalidate cache on updates
+3. **Access the new features:**
+   - Go to `/admin/analytics` - View analytics dashboard
+   - Go to `/admin/compliance` - View PP 35/2021 compliance
+   - Go to `/admin/reports` - Export reports
 
-## Security Considerations
+## Compliance Workflow
 
-### Access Control
-- Verify user is business or worker in interview
-- Prevent cross-interview access
-- Check ownership before modifications
+### For Businesses
+1. Worker accepts booking → Compliance tracking updated
+2. Worker reaches 15 days → Warning created
+3. Worker reaches 21 days → Blocked, new bookings rejected
+4. Business acknowledges warnings → Warning marked as seen
 
-### Input Validation
-- Validate duration values (non-negative)
-- Validate status transitions
-- Prevent duplicate completions
+### For Admins
+1. View compliance dashboard → See all warnings across platform
+2. Filter by month/time period → Historical compliance data
+3. Acknowledge warnings on behalf of businesses
+4. Export compliance reports → Audit and analysis
 
-### Rate Limiting
-- Limit message send rate
-- Limit voice call initiation
-- Prevent spam
+### For Workers
+1. Cannot see compliance data directly (business data)
+2. Bookings automatically rejected if limit reached
+3. Can work for multiple businesses (21-day limit per business)
+
+## Indonesian Labor Law (PP 35/2021)
+
+This implementation enforces Indonesian government regulation PP 35/2021, which states:
+- Daily workers may work a maximum of 21 days per month per business
+- This is to protect workers and ensure fair employment practices
+- Workers can work for multiple businesses (limit applies per business relationship)
 
 ## Future Enhancements
 
-1. **AI-powered Interview Questions** - Auto-generate questions based on job requirements
-2. **Video Interviews** - Add video call option for certain job types
-3. **Skill Assessment** - Interactive skill tests during interview
-4. **Automated Scheduling** - Schedule interviews based on worker availability
-5. **Interview Scoring** - Rate interview quality for future matching
-6. **Multi-worker Interviews** - Group interviews for hiring multiple workers
-7. **Interview Templates** - Pre-defined questions for different job categories
-8. **Transcription** - Voice call transcription for review
-9. **Interview Analytics Dashboard** - Visual analytics for interview metrics
-10. **Feedback Collection** - Collect feedback from both parties post-interview
+Potential improvements:
+1. Email notifications when warnings are created
+2. In-app notifications for workers approaching limits
+3. Historical compliance reports with trend analysis
+4. Compliance certificates for compliant workers
+5. Business compliance scoring
+6. Automated limit resets at month start
+7. Export to PDF format
+8. Multi-language support for compliance messages
 
-## Migration Instructions
+## Testing Checklist
 
-1. Run the migration script:
-```bash
-psql -U your_user -d your_database -f migrations/add_interview_sessions.sql
-```
-
-2. Regenerate TypeScript types:
-```bash
-npx supabase gen types typescript --linked > lib/supabase/types.ts
-```
-
-3. Test the implementation with sample data
-
-## Support
-
-For questions or issues, refer to:
-- `INTERVIEW_FLOW.md` - Detailed documentation
-- Component inline documentation
-- Function JSDoc comments in `lib/algorithms/interview-flow.ts`
-
----
-
-**Implementation Date:** February 27, 2026
-**Version:** 1.0.0
+- [ ] Migration applies successfully
+- [ ] Compliance tracking updates on booking changes
+- [ ] Warnings created at 15 days
+- [ ] Bookings blocked at 21 days
+- [ ] Analytics dashboard loads correctly
+- [ ] Compliance dashboard shows warnings
+- [ ] Reports export to CSV correctly
+- [ ] Admin navigation shows new links
+- [ ] Dashboard shows compliance warning count
+- [ ] RLS policies work correctly
+- [ ] Audit logs are created

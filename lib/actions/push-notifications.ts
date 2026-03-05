@@ -3,6 +3,7 @@
 
 import { createClient } from "../supabase/server"
 import type { Database } from "../supabase/types"
+import { createNotification } from "./notifications"
 
 type PushSubscription = Database["public"]["Tables"]["push_subscriptions"]["Row"]
 type NotificationPreferences = Database["public"]["Tables"]["user_notification_preferences"]["Row"]
@@ -414,5 +415,191 @@ export async function isNotificationTypeEnabled(
     return { success: true, enabled }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat mengecek preferensi notifikasi" }
+  }
+}
+
+// ============================================
+// PUSH NOTIFICATION TRIGGER HOOKS
+// ============================================
+
+/**
+ * Trigger push notification for new job application
+ */
+export async function triggerApplicationReceivedPush(data: {
+  businessUserId: string
+  workerName: string
+  jobTitle: string
+  applicationId: string
+}): Promise<SendPushNotificationResult> {
+  try {
+    // Check if notification type is enabled
+    const { enabled } = await isNotificationTypeEnabled(data.businessUserId, "new_applications")
+    if (!enabled) {
+      return { success: true } // Silently skip
+    }
+
+    return await sendPushNotification(
+      data.businessUserId,
+      "Lamaran Baru Diterima!",
+      `${data.workerName} melamar untuk ${data.jobTitle}`,
+      `/applications/${data.applicationId}`
+    )
+  } catch (error) {
+    return { success: false, error: "Gagal mengirim push notifikasi" }
+  }
+}
+
+/**
+ * Trigger push notification for application status update
+ */
+export async function triggerApplicationStatusPush(data: {
+  workerUserId: string
+  jobTitle: string
+  businessName: string
+  status: "accepted" | "rejected" | "pending" | "reviewing"
+  applicationId: string
+}): Promise<SendPushNotificationResult> {
+  try {
+    // Check if notification type is enabled
+    const { enabled } = await isNotificationTypeEnabled(data.workerUserId, "booking_status")
+    if (!enabled) {
+      return { success: true }
+    }
+
+    const statusMessages = {
+      accepted: "Lamaran Anda diterima!",
+      rejected: "Lamaran Anda ditolak",
+      pending: "Lamaran sedang diproses",
+      reviewing: "Lamaran sedang ditinjau",
+    }
+
+    return await sendPushNotification(
+      data.workerUserId,
+      `Update Lamaran - ${data.jobTitle}`,
+      `${statusMessages[data.status]} di ${data.businessName}`,
+      `/applications/${data.applicationId}`
+    )
+  } catch (error) {
+    return { success: false, error: "Gagal mengirim push notifikasi" }
+  }
+}
+
+/**
+ * Trigger push notification for booking confirmation
+ */
+export async function triggerBookingConfirmedPush(data: {
+  userId: string
+  userType: "worker" | "business"
+  otherPartyName: string
+  jobTitle: string
+  bookingId: string
+}): Promise<SendPushNotificationResult> {
+  try {
+    // Check if notification type is enabled
+    const { enabled } = await isNotificationTypeEnabled(data.userId, "booking_status")
+    if (!enabled) {
+      return { success: true }
+    }
+
+    const message = data.userType === "worker"
+      ? `Booking Anda dengan ${data.otherPartyName} dikonfirmasi!`
+      : `Booking dengan ${data.otherPartyName} dikonfirmasi!`
+
+    return await sendPushNotification(
+      data.userId,
+      "Booking Dikonfirmasi!",
+      message,
+      `/bookings/${data.bookingId}`
+    )
+  } catch (error) {
+    return { success: false, error: "Gagal mengirim push notifikasi" }
+  }
+}
+
+/**
+ * Trigger push notification for payment completion
+ */
+export async function triggerPaymentCompletedPush(data: {
+  workerUserId: string
+  amount: number
+  businessName: string
+  paymentId: string
+}): Promise<SendPushNotificationResult> {
+  try {
+    // Check if notification type is enabled
+    const { enabled } = await isNotificationTypeEnabled(data.workerUserId, "payment_confirmation")
+    if (!enabled) {
+      return { success: true }
+    }
+
+    const formattedAmount = new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      minimumFractionDigits: 0,
+    }).format(data.amount)
+
+    return await sendPushNotification(
+      data.workerUserId,
+      "Pembayaran Diterima!",
+      `${formattedAmount} dari ${data.businessName}`,
+      `/payments/${data.paymentId}`
+    )
+  } catch (error) {
+    return { success: false, error: "Gagal mengirim push notifikasi" }
+  }
+}
+
+/**
+ * Trigger push notification for job reminder
+ */
+export async function triggerJobReminderPush(data: {
+  workerUserId: string
+  jobTitle: string
+  businessName: string
+  startTime: string
+  bookingId: string
+}): Promise<SendPushNotificationResult> {
+  try {
+    // Check if notification type is enabled
+    const { enabled } = await isNotificationTypeEnabled(data.workerUserId, "shift_reminders")
+    if (!enabled) {
+      return { success: true }
+    }
+
+    return await sendPushNotification(
+      data.workerUserId,
+      "⏰ Pengingat Pekerjaan",
+      `Bekerja di ${data.businessName} besok pukul ${data.startTime}`,
+      `/bookings/${data.bookingId}`
+    )
+  } catch (error) {
+    return { success: false, error: "Gagal mengirim push notifikasi" }
+  }
+}
+
+/**
+ * Trigger push notification for new job matches
+ */
+export async function triggerNewJobMatchPush(data: {
+  workerUserId: string
+  jobTitle: string
+  businessName: string
+  jobId: string
+}): Promise<SendPushNotificationResult> {
+  try {
+    // Check if notification type is enabled
+    const { enabled } = await isNotificationTypeEnabled(data.workerUserId, "new_job_matches")
+    if (!enabled) {
+      return { success: true }
+    }
+
+    return await sendPushNotification(
+      data.workerUserId,
+      "Pekerjaan Baru Cocok Untuk Anda!",
+      `${data.jobTitle} di ${data.businessName}`,
+      `/jobs/${data.jobId}`
+    )
+  } catch (error) {
+    return { success: false, error: "Gagal mengirim push notifikasi" }
   }
 }

@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { supabase } from "@/lib/supabase/client"
 import { ReviewFormDialog } from "@/components/review/review-form-dialog"
 import type { ReviewerType } from "@/lib/schemas/review"
+import { BookingCheckInOutCompact } from "@/components/worker/booking-check-in-out"
 import { Loader2, AlertCircle, Building2, CheckCircle, XCircle, Clock, Star, Calendar, MapPin, DollarSign } from "lucide-react"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -37,6 +38,8 @@ export interface Booking {
   end_date: string
   final_price: number
   created_at: string
+  check_in_at: string | null
+  check_out_at: string | null
   job?: BookingJob
   business?: BookingBusiness
 }
@@ -46,6 +49,8 @@ export interface BookingCardProps {
   onCancel?: (bookingId: string) => void | Promise<void>
   onWriteReview?: (booking: Booking) => void
   hasExistingReview?: boolean
+  onCheckIn?: (bookingId: string, location?: { lat: number; lng: number }) => Promise<void>
+  onCheckOut?: (bookingId: string, data: { actualHours?: number; notes?: string }) => Promise<void>
 }
 
 interface BookingReview {
@@ -116,12 +121,13 @@ function mapBookingStatus(status: Booking["status"]): BookingStatus {
   return status as BookingStatus
 }
 
-function BookingCard({ booking, onCancel, onWriteReview, hasExistingReview }: BookingCardProps) {
+function BookingCard({ booking, onCancel, onWriteReview, hasExistingReview, onCheckIn, onCheckOut }: BookingCardProps) {
   const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false)
   const [isCancelling, setIsCancelling] = React.useState(false)
   const canCancel = booking.status === "pending"
   const displayStatus = mapBookingStatus(booking.status)
   const canWriteReview = booking.status === "completed" && !hasExistingReview && onWriteReview
+  const canCheckInOut = (booking.status === "accepted" || booking.status === "in_progress") && (onCheckIn || onCheckOut)
 
   const handleCancelConfirm = async () => {
     if (!onCancel) return
@@ -192,9 +198,21 @@ function BookingCard({ booking, onCancel, onWriteReview, hasExistingReview }: Bo
         </CardContent>
 
         <CardFooter className="flex justify-between pt-4">
-          <span className="text-xs text-muted-foreground">
-            Booked on {formatDate(booking.created_at)}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              Booked on {formatDate(booking.created_at)}
+            </span>
+            {canCheckInOut && (
+              <BookingCheckInOutCompact
+                bookingId={booking.id}
+                bookingStatus={booking.status}
+                checkInAt={booking.check_in_at}
+                checkOutAt={booking.check_out_at}
+                onCheckIn={onCheckIn}
+                onCheckOut={onCheckOut}
+              />
+            )}
+          </div>
           <div className="flex gap-2">
             {canCancel && onCancel && (
               <Button
@@ -248,6 +266,8 @@ async function fetchBookings(workerId: string): Promise<Booking[]> {
       end_date,
       final_price,
       created_at,
+      check_in_at,
+      check_out_at,
       job:jobs(
         id,
         title,
@@ -371,6 +391,46 @@ export default function WorkerBookingsPage() {
     fetchBookingsWithReviews()
   }
 
+  const handleCheckIn = async (bookingId: string, location?: { lat: number; lng: number }) => {
+    try {
+      const response = await fetch(`/api/bookings/${bookingId}/check-in`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(location || {}),
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Gagal check-in')
+      }
+      
+      toast.success("Check-in berhasil!")
+      await fetchBookingsWithReviews()
+    } catch (error: any) {
+      toast.error(error.message || "Gagal check-in: " + error.message)
+    }
+  }
+
+  const handleCheckOut = async (bookingId: string, data: { actualHours?: number; notes?: string }) => {
+    try {
+      const response = await fetch(`/api/bookings/${bookingId}/check-out`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Gagal check-out')
+      }
+      
+      toast.success("Check-out berhasil!")
+      await fetchBookingsWithReviews()
+    } catch (error: any) {
+      toast.error(error.message || "Gagal check-out: " + error.message)
+    }
+  }
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
@@ -486,6 +546,8 @@ export default function WorkerBookingsPage() {
                             }
                             onWriteReview={booking.status === "completed" && !hasReviewed ? handleWriteReview : undefined}
                             hasExistingReview={hasReviewed}
+                            onCheckIn={handleCheckIn}
+                            onCheckOut={handleCheckOut}
                           />
                         )
                       })}

@@ -3,7 +3,11 @@
 
 import { createClient } from "../supabase/server"
 import type { Database } from "../supabase/types"
-import { createQrisPayment, calculatePaymentFee } from "../utils/xendit"
+import { 
+  createInvoice, 
+  calculateFee,
+  type PaymentProvider 
+} from "../payments"
 import { validateTopUpAmount, calculatePaymentFeeDetails } from "../utils/payment-validator"
 import { PAYMENT_CONSTANTS } from "../types/payment"
 
@@ -79,7 +83,8 @@ export type PayoutRequestResult = {
 export async function initializeQrisPayment(
   businessId: string,
   amount: number,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
+  provider: PaymentProvider = "xendit"
 ): Promise<PaymentResult> {
   try {
     const supabase = await createClient()
@@ -90,8 +95,8 @@ export async function initializeQrisPayment(
       return { success: false, error: validation.error }
     }
 
-    // Calculate payment fee (0.7% + Rp 500 for QRIS)
-    const feeAmount = calculatePaymentFee(amount)
+    // Calculate payment fee using the new gateway interface
+    const feeAmount = calculateFee(amount, "qris")
     const totalAmount = amount + feeAmount
 
     // Check if business exists and has a wallet
@@ -106,7 +111,7 @@ export async function initializeQrisPayment(
     }
 
     // Create payment transaction with pending status
-    const externalId = `payment_${businessId}_${Date.now()}`
+    const externalId = `payment_${businessId}_${Date.now()}_${Math.random().toString(36).substring(7)}`
     const qrisExpiresAt = new Date(
       Date.now() + PAYMENT_CONSTANTS.QRIS_EXPIRY_MINUTES * 60000
     ).toISOString()
@@ -115,7 +120,7 @@ export async function initializeQrisPayment(
       business_id: businessId,
       amount: totalAmount,
       status: "pending",
-      payment_provider: "xendit",
+      payment_provider: provider,
       provider_payment_id: null,
       payment_url: null,
       qris_expires_at: qrisExpiresAt,
@@ -133,21 +138,45 @@ export async function initializeQrisPayment(
       return { success: false, error: `Gagal membuat transaksi: ${transactionError?.message}` }
     }
 
-    // Create QRIS payment with Xendit
+    // Create payment invoice with the gateway
     try {
-      const qrisPayment = await createQrisPayment({
-        external_id: transaction.id,
-        amount: totalAmount,
-        description: `Top-up wallet untuk ${business.name}`,
-        expiry_minutes: PAYMENT_CONSTANTS.QRIS_EXPIRY_MINUTES,
-      })
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}` 
+        : 'http://localhost:3000'
+
+      const invoice = await createInvoice(
+        {
+          externalId: transaction.id,
+          amount: totalAmount,
+          description: `Top-up wallet untuk ${business.name}`,
+          expiryMinutes: PAYMENT_CONSTANTS.QRIS_EXPIRY_MINUTES,
+          paymentMethod: "qris",
+          successRedirectUrl: `${baseUrl}/business/wallet?payment=success`,
+          failureRedirectUrl: `${baseUrl}/business/wallet?payment=failed`,
+          callbackUrl: `${baseUrl}/api/webhooks/${provider}`,
+          metadata: {
+            business_id,
+            business_name: business.name,
+            original_amount: amount,
+            fee_amount: feeAmount,
+          },
+        },
+        provider
+      )
 
       // Update transaction with payment details
       const { error: updateError } = await supabase
         .from("payment_transactions")
         .update({
-          payment_url: qrisPayment.payment_url,
-          provider_payment_id: qrisPayment.id,
+          payment_url: invoice.invoiceUrl,
+          provider_payment_id: invoice.id,
+          metadata: {
+            ...metadata,
+            invoice_id: invoice.id,
+            invoice_url: invoice.invoiceUrl,
+            qr_string: invoice.qrString,
+            token: invoice.token,
+          },
         })
         .eq("id", transaction.id)
 
@@ -158,24 +187,24 @@ export async function initializeQrisPayment(
       return {
         success: true,
         data: {
-          transaction: { ...transaction, payment_url: qrisPayment.payment_url, provider_payment_id: qrisPayment.id },
-          payment_url: qrisPayment.payment_url,
+          transaction: { ...transaction, payment_url: invoice.invoiceUrl, provider_payment_id: invoice.id },
+          payment_url: invoice.invoiceUrl,
           expires_at: qrisExpiresAt,
         },
       }
-    } catch (xenditError) {
-      // If Xendit fails, mark transaction as failed
+    } catch (gatewayError) {
+      // If gateway fails, mark transaction as failed
       await supabase
         .from("payment_transactions")
         .update({
           status: "failed",
-          failure_reason: xenditError instanceof Error ? xenditError.message : "Gagal membuat QRIS payment",
+          failure_reason: gatewayError instanceof Error ? gatewayError.message : "Gagal membuat payment invoice",
         })
         .eq("id", transaction.id)
 
       return {
         success: false,
-        error: `Gagal membuat QRIS payment: ${xenditError instanceof Error ? xenditError.message : "Unknown error"}`,
+        error: `Gagal membuat payment invoice: ${gatewayError instanceof Error ? gatewayError.message : "Unknown error"}`,
       }
     }
   } catch (error) {
@@ -233,11 +262,22 @@ export async function getBusinessWalletBalance(businessId: string): Promise<Wall
 export async function getWorkerWalletBalance(workerId: string): Promise<WalletBalanceResult> {
   try {
     const supabase = await createClient()
+    
+    // First get the worker's user_id
+    const { data: worker, error: workerError } = await supabase
+      .from("workers")
+      .select("user_id")
+      .eq("id", workerId)
+      .single()
+
+    if (workerError || !worker) {
+      return { success: false, error: "Worker tidak ditemukan" }
+    }
 
     const { data: wallet, error } = await supabase
       .from("wallets")
-      .select("balance, currency")
-      .eq("worker_id", workerId)
+      .select("balance")
+      .eq("user_id", worker.user_id)
       .maybeSingle()
 
     if (error) {
@@ -249,23 +289,22 @@ export async function getWorkerWalletBalance(workerId: string): Promise<WalletBa
       const { data: newWallet, error: createError } = await supabase
         .from("wallets")
         .insert({
-          business_id: null,
-          worker_id: workerId,
+          user_id: worker.user_id,
           balance: 0,
-          currency: "IDR",
-          is_active: true,
+          pending_balance: 0,
+          available_balance: 0,
         })
-        .select("balance, currency")
+        .select("balance")
         .single()
 
       if (createError || !newWallet) {
         return { success: false, error: `Gagal membuat wallet: ${createError?.message}` }
       }
-
-      return { success: true, data: { balance: newWallet.balance, currency: newWallet.currency } }
+      
+      return { success: true, data: { balance: newWallet.balance, currency: "IDR" } }
     }
 
-    return { success: true, data: { balance: wallet.balance, currency: wallet.currency } }
+    return { success: true, data: { balance: wallet.balance, currency: "IDR" } }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat mengambil saldo wallet" }
   }
@@ -479,7 +518,7 @@ export async function requestPayout(
  * Calculate payment fee for a given amount
  * Returns fee breakdown including percentage and fixed fee
  */
-export async function calculateTopUpFee(amount: number): Promise<{
+export async function calculateTopUpFee(amount: number, paymentMethod: string = "qris"): Promise<{
   success: boolean
   error?: string
   data?: {
@@ -496,7 +535,19 @@ export async function calculateTopUpFee(amount: number): Promise<{
       return { success: false, error: validation.error }
     }
 
-    const { feeAmount, totalAmount } = calculatePaymentFeeDetails(amount)
+    // Calculate fee using the new gateway interface
+    const feeAmount = calculateFee(amount, paymentMethod)
+    const totalAmount = amount + feeAmount
+
+    // Determine fee percentage based on payment method
+    let feePercentage = 0.007 // Default 0.7% for QRIS
+    if (paymentMethod === "credit_card" || paymentMethod === "card") {
+      feePercentage = 0.029 // 2.9%
+    } else if (paymentMethod === "gopay" || paymentMethod === "shopeepay" || paymentMethod === "dana" || paymentMethod === "ovo") {
+      feePercentage = 0.015 // 1.5%
+    } else if (paymentMethod === "bank_transfer" || paymentMethod === "va") {
+      feePercentage = 0.005 // 0.5%
+    }
 
     return {
       success: true,
@@ -504,7 +555,7 @@ export async function calculateTopUpFee(amount: number): Promise<{
         amount,
         fee_amount: feeAmount,
         total_amount: totalAmount,
-        fee_percentage: 0.007, // 0.7% for QRIS
+        fee_percentage: feePercentage,
       },
     }
   } catch (error) {

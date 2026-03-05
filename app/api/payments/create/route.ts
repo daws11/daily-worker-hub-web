@@ -1,0 +1,302 @@
+/**
+ * Payment Creation API Route
+ * 
+ * Creates a new payment transaction using the specified payment gateway.
+ * Supports both Xendit and Midtrans payment providers.
+ */
+
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { 
+  createInvoice, 
+  calculateFee,
+  isProviderEnabled,
+  type PaymentProvider,
+  type CreateInvoiceInput,
+} from '@/lib/payments'
+import { PAYMENT_CONSTANTS } from '@/lib/types/payment'
+
+/**
+ * POST /api/payments/create
+ * 
+ * Create a new payment transaction
+ * 
+ * Request body:
+ * - business_id: Business ID (required)
+ * - amount: Payment amount in IDR (required)
+ * - provider: Payment provider 'xendit' | 'midtrans' (optional, defaults to 'xendit')
+ * - payment_method: Payment method (optional, e.g., 'qris', 'bank_transfer')
+ * - customer_email: Customer email (optional)
+ * - customer_name: Customer name (optional)
+ * - metadata: Additional metadata (optional)
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const supabase = await createClient()
+
+    // Parse request body
+    const body = await request.json()
+
+    // Validate required fields
+    const { business_id, amount, provider = 'xendit', payment_method, customer_email, customer_name, metadata } = body
+
+    if (!business_id) {
+      return NextResponse.json(
+        { error: 'Business ID is required' },
+        { status: 400 }
+      )
+    }
+
+    if (!amount || typeof amount !== 'number' || amount <= 0) {
+      return NextResponse.json(
+        { error: 'Valid amount is required' },
+        { status: 400 }
+      )
+    }
+
+    // Validate amount limits
+    if (amount < PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT) {
+      return NextResponse.json(
+        { error: `Minimum top-up amount is Rp ${PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT.toLocaleString('id-ID')}` },
+        { status: 400 }
+      )
+    }
+
+    if (amount > PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT) {
+      return NextResponse.json(
+        { error: `Maximum top-up amount is Rp ${PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT.toLocaleString('id-ID')}` },
+        { status: 400 }
+      )
+    }
+
+    // Validate provider
+    const paymentProvider = provider as PaymentProvider
+    if (!isProviderEnabled(paymentProvider)) {
+      return NextResponse.json(
+        { error: `Payment provider '${provider}' is not enabled` },
+        { status: 400 }
+      )
+    }
+
+    // Get business info
+    const { data: business, error: businessError } = await supabase
+      .from('businesses')
+      .select('id, name, user_id')
+      .eq('id', business_id)
+      .single()
+
+    if (businessError || !business) {
+      return NextResponse.json(
+        { error: 'Business not found' },
+        { status: 404 }
+      )
+    }
+
+    // Calculate fee
+    const feeAmount = calculateFee(amount, payment_method)
+    const totalAmount = amount + feeAmount
+
+    // Generate unique transaction ID
+    const transactionId = `payment_${business_id}_${Date.now()}_${Math.random().toString(36).substring(7)}`
+
+    // Create pending transaction in database
+    const { data: transaction, error: txError } = await supabase
+      .from('payment_transactions')
+      .insert({
+        id: transactionId,
+        business_id,
+        amount: totalAmount,
+        status: 'pending',
+        payment_provider: paymentProvider,
+        provider_payment_id: null,
+        payment_url: null,
+        qris_expires_at: new Date(Date.now() + PAYMENT_CONSTANTS.QRIS_EXPIRY_MINUTES * 60000).toISOString(),
+        fee_amount: feeAmount,
+        metadata: metadata || {},
+      })
+      .select()
+      .single()
+
+    if (txError || !transaction) {
+      console.error('[Payment Create] Failed to create transaction:', txError)
+      return NextResponse.json(
+        { error: 'Failed to create payment transaction' },
+        { status: 500 }
+      )
+    }
+
+    // Create invoice with payment gateway
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}` 
+        : 'http://localhost:3000'
+
+      const invoiceInput: CreateInvoiceInput = {
+        externalId: transactionId,
+        amount: totalAmount,
+        description: `Top-up wallet untuk ${business.name}`,
+        customerEmail: customer_email,
+        customerName: customer_name || business.name,
+        expiryMinutes: PAYMENT_CONSTANTS.QRIS_EXPIRY_MINUTES,
+        paymentMethod: payment_method,
+        successRedirectUrl: `${baseUrl}/business/wallet?payment=success`,
+        failureRedirectUrl: `${baseUrl}/business/wallet?payment=failed`,
+        callbackUrl: `${baseUrl}/api/webhooks/${paymentProvider}`,
+        metadata: {
+          business_id,
+          business_name: business.name,
+          original_amount: amount,
+          fee_amount: feeAmount,
+        },
+      }
+
+      const invoice = await createInvoice(invoiceInput, paymentProvider)
+
+      // Update transaction with payment details
+      const { error: updateError } = await supabase
+        .from('payment_transactions')
+        .update({
+          payment_url: invoice.invoiceUrl,
+          provider_payment_id: invoice.id,
+          metadata: {
+            ...metadata,
+            invoice_id: invoice.id,
+            invoice_url: invoice.invoiceUrl,
+            qr_string: invoice.qrString,
+            token: invoice.token,
+            va_number: invoice.vaNumber,
+          },
+        })
+        .eq('id', transactionId)
+
+      if (updateError) {
+        console.error('[Payment Create] Failed to update transaction:', updateError)
+        // Don't fail - payment URL is still valid
+      }
+
+      // Return success response
+      return NextResponse.json({
+        success: true,
+        data: {
+          transaction: {
+            id: transactionId,
+            amount: totalAmount,
+            original_amount: amount,
+            fee_amount: feeAmount,
+            status: 'pending',
+            provider: paymentProvider,
+            created_at: transaction.created_at,
+            expires_at: transaction.qris_expires_at,
+          },
+          payment: {
+            id: invoice.id,
+            invoice_url: invoice.invoiceUrl,
+            qr_string: invoice.qrString,
+            token: invoice.token,
+            va_number: invoice.vaNumber,
+            bill_key: invoice.billKey,
+            biller_code: invoice.billerCode,
+          },
+        },
+      })
+
+    } catch (invoiceError) {
+      // Mark transaction as failed
+      await supabase
+        .from('payment_transactions')
+        .update({
+          status: 'failed',
+          failure_reason: invoiceError instanceof Error ? invoiceError.message : 'Failed to create invoice',
+        })
+        .eq('id', transactionId)
+
+      console.error('[Payment Create] Failed to create invoice:', invoiceError)
+      
+      return NextResponse.json(
+        { 
+          error: 'Failed to create payment invoice',
+          details: invoiceError instanceof Error ? invoiceError.message : 'Unknown error',
+        },
+        { status: 500 }
+      )
+    }
+
+  } catch (error) {
+    console.error('[Payment Create] Error:', error)
+    return NextResponse.json(
+      { 
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * GET /api/payments/create
+ * 
+ * Get payment creation info and fee calculation
+ * 
+ * Query params:
+ * - amount: Payment amount (required)
+ * - provider: Payment provider (optional)
+ * - payment_method: Payment method (optional)
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const amount = parseInt(searchParams.get('amount') || '0')
+    const provider = (searchParams.get('provider') || 'xendit') as PaymentProvider
+    const paymentMethod = searchParams.get('payment_method') || undefined
+
+    if (!amount || amount <= 0) {
+      return NextResponse.json(
+        { error: 'Valid amount is required' },
+        { status: 400 }
+      )
+    }
+
+    // Validate amount limits
+    if (amount < PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT) {
+      return NextResponse.json({
+        valid: false,
+        error: `Minimum top-up amount is Rp ${PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT.toLocaleString('id-ID')}`,
+        min_amount: PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT,
+      })
+    }
+
+    if (amount > PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT) {
+      return NextResponse.json({
+        valid: false,
+        error: `Maximum top-up amount is Rp ${PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT.toLocaleString('id-ID')}`,
+        max_amount: PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT,
+      })
+    }
+
+    // Calculate fee
+    const feeAmount = calculateFee(amount, paymentMethod)
+    const totalAmount = amount + feeAmount
+
+    return NextResponse.json({
+      valid: true,
+      data: {
+        amount,
+        fee_amount: feeAmount,
+        total_amount: totalAmount,
+        provider,
+        payment_method: paymentMethod,
+        min_amount: PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT,
+        max_amount: PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT,
+        expiry_minutes: PAYMENT_CONSTANTS.QRIS_EXPIRY_MINUTES,
+      },
+    })
+
+  } catch (error) {
+    console.error('[Payment Create] Error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}

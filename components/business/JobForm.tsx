@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/providers/auth-provider'
 import { useTranslation } from '@/lib/i18n/hooks'
 import { useRouter } from 'next/navigation'
@@ -48,6 +48,7 @@ export default function JobForm() {
   const router = useRouter()
 
   const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [categories, setCategories] = useState<Category[]>([])
   const [business, setBusiness] = useState<BusinessProfile | null>(null)
@@ -66,34 +67,42 @@ export default function JobForm() {
   })
 
   // Fetch categories and business profile on mount
-  useState(() => {
+  useEffect(() => {
     async function fetchData() {
       try {
+        setInitialLoading(true)
+
         // Fetch categories
-        const { data: cats } = await fetch('/api/categories').then(r => r.json())
-        if (cats?.data) {
-          setCategories(cats.data)
+        const catsRes = await fetch('/api/categories')
+        const catsData = await catsRes.json()
+        console.log('Categories response:', catsData)
+        if (catsData?.data) {
+          setCategories(catsData.data)
         }
 
         // Fetch business profile
-        const { data: biz } = await fetch('/api/business/profile').then(r => r.json())
-        if (biz?.data) {
-          setBusiness(biz.data)
+        const bizRes = await fetch('/api/business/profile')
+        const bizData = await bizRes.json()
+        console.log('Business response:', bizData)
+        if (bizData?.data) {
+          setBusiness(bizData.data)
           // Pre-fill address if available
-          if (biz.data.address) {
+          if (bizData.data.address) {
             setFormData(prev => ({
               ...prev,
-              address: biz.data.address || ''
+              address: bizData.data.address || ''
             }))
           }
         }
       } catch (err) {
         console.error('Error fetching initial data:', err)
+      } finally {
+        setInitialLoading(false)
       }
     }
 
     fetchData()
-  })
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
@@ -315,28 +324,55 @@ export default function JobForm() {
             }}>
               Category *
             </label>
-            <select
-              name="category_id"
-              value={formData.category_id}
-              onChange={handleChange}
-              required
-              disabled={loading}
-              style={{
-                width: '100%',
+            {initialLoading ? (
+              <div style={{
                 padding: '0.625rem',
                 border: '1px solid #d1d5db',
                 borderRadius: '0.375rem',
                 fontSize: '0.875rem',
-                backgroundColor: 'white'
-              }}
-            >
-              <option value="">Select a category</option>
-              {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
+                color: '#6b7280',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                <Loader2 style={{ width: '1rem', height: '1rem', animation: 'spin 1s linear infinite' }} />
+                Loading categories...
+              </div>
+            ) : categories.length === 0 ? (
+              <div style={{
+                padding: '0.625rem',
+                border: '1px solid #fecaca',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem',
+                color: '#dc2626',
+                backgroundColor: '#fef2f2'
+              }}>
+                No categories available. Please contact admin.
+              </div>
+            ) : (
+              <select
+                name="category_id"
+                value={formData.category_id}
+                onChange={handleChange}
+                required
+                disabled={loading}
+                style={{
+                  width: '100%',
+                  padding: '0.625rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '0.375rem',
+                  fontSize: '0.875rem',
+                  backgroundColor: 'white'
+                }}
+              >
+                <option value="">Select a category</option>
+                {categories.map(cat => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Description */}
