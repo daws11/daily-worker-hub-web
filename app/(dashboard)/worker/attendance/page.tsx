@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useAuth } from '@/app/providers/auth-provider'
 import { useTranslation } from '@/lib/i18n/hooks'
 import { useBookings } from '@/lib/hooks/use-bookings'
@@ -9,6 +9,7 @@ import { useGeolocation } from '@/lib/hooks/use-geolocation'
 import { CheckInOutButton } from '@/components/attendance/check-in-out-button'
 import { AttendanceHistory } from '@/components/attendance/attendance-history'
 import { QRCodeScanner } from '@/components/attendance/qr-code-scanner'
+import { getWorkerProfile } from '@/lib/db/worker-profile'
 import { toast } from 'sonner'
 import { Calendar, Clock, MapPin, Loader2, AlertCircle } from 'lucide-react'
 import type { JobBookingWithDetails } from '@/lib/supabase/queries/bookings'
@@ -19,17 +20,31 @@ export default function WorkerAttendancePage() {
   const [scannerOpen, setScannerOpen] = useState(false)
   const [scannerMode, setScannerMode] = useState<'check-in' | 'check-out'>('check-in')
   const [selectedBooking, setSelectedBooking] = useState<JobBookingWithDetails | null>(null)
+  const [workerId, setWorkerId] = useState<string | null>(null)
 
-  // Fetch worker bookings (today's schedule)
+  // Fetch worker profile to get worker.id (not auth.users.id)
+  useEffect(() => {
+    async function fetchWorkerProfile() {
+      if (user?.id) {
+        const { data, error } = await getWorkerProfile(user.id)
+        if (data && !error) {
+          setWorkerId(data.id)
+        }
+      }
+    }
+    fetchWorkerProfile()
+  }, [user?.id])
+
+  // Fetch worker bookings (today's schedule) - use worker.id, not user.id
   const { bookings, isLoading: bookingsLoading, error: bookingsError, refreshBookings } = useBookings({
-    workerId: user?.id,
-    autoFetch: true,
+    workerId: workerId, // Use worker.id from workers table
+    autoFetch: !!workerId, // Only fetch when workerId is available
   })
 
-  // Fetch attendance history and stats
+  // Fetch attendance history and stats - use worker.id, not user.id
   const { workerHistory, attendanceStats, isLoading: attendanceLoading, workerCheckIn, workerCheckOut } = useAttendance({
-    workerId: user?.id,
-    autoFetch: true,
+    workerId: workerId, // Use worker.id from workers table
+    autoFetch: !!workerId, // Only fetch when workerId is available
   })
 
   // GPS location capture
@@ -52,15 +67,16 @@ export default function WorkerAttendancePage() {
     setSelectedBooking(booking)
     setScannerMode('check-in')
 
-    // Try to get GPS location first
+    // Try to get GPS location
     const position = await getCurrentPosition()
-    if (position) {
-      // We have location, proceed with check-in
-      await workerCheckIn(bookingId, position.lat, position.lng)
-      await refreshBookings()
-    } else {
-      // No location available, open QR scanner
-      setScannerOpen(true)
+    
+    // Proceed with check-in even if GPS not available (lat/lng will be null)
+    await workerCheckIn(bookingId, position?.lat, position?.lng)
+    await refreshBookings()
+    
+    // Show toast if GPS was not available
+    if (!position) {
+      toast.info(t('attendance.gpsNotAvailable'))
     }
   }, [bookings, getCurrentPosition, workerCheckIn, refreshBookings])
 
@@ -72,15 +88,16 @@ export default function WorkerAttendancePage() {
     setSelectedBooking(booking)
     setScannerMode('check-out')
 
-    // Try to get GPS location first
+    // Try to get GPS location
     const position = await getCurrentPosition()
-    if (position) {
-      // We have location, proceed with check-out
-      await workerCheckOut(bookingId, position.lat, position.lng)
-      await refreshBookings()
-    } else {
-      // No location available, open QR scanner
-      setScannerOpen(true)
+    
+    // Proceed with check-out even if GPS not available (lat/lng will be null)
+    await workerCheckOut(bookingId, position?.lat, position?.lng)
+    await refreshBookings()
+    
+    // Show toast if GPS was not available
+    if (!position) {
+      toast.info(t('attendance.gpsNotAvailable'))
     }
   }, [bookings, getCurrentPosition, workerCheckOut, refreshBookings])
 

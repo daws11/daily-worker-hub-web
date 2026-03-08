@@ -1,0 +1,25 @@
+{
+  "cookies": [
+    {
+      "name": "user-locale",
+      "value": "en",
+      "domain": "localhost",
+      "path": "/",
+      "expires": 1804439389.487898,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:3000",
+      "localStorage": [
+        {
+          "name": "user-locale-preference",
+          "value": "en"
+        }
+      ]
+    }
+  ]
+}

@@ -65,8 +65,7 @@ export async function completeWorkerOnboarding(
         bio: data.bio || null,
         tier: "classic", // Default tier
         jobs_completed: 0,
-        rating: null,
-        punctuality: null,
+        // Note: rating and punctuality are calculated values, not columns
       })
 
     if (workerError) {

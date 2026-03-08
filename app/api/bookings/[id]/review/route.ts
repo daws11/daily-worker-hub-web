@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getServerSession } from '@/lib/auth/get-server-session'
 import {
   addBookingReview,
+  addWorkerReview,
   getBookingReviewStatus,
 } from '@/lib/actions/bookings-completion'
 
@@ -133,26 +134,70 @@ export async function POST(
 
     const supabase = await createClient()
 
-    // Verify user is a business
-    const { data: business } = await supabase
-      .from('businesses')
-      .select('id')
-      .eq('user_id', session.user.id)
+    // Get user role
+    const { data: user } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', session.user.id)
       .single()
 
-    if (!business) {
+    if (!user) {
       return NextResponse.json(
-        { error: 'Unauthorized - Only businesses can submit reviews' },
-        { status: 403 }
+        { error: 'User not found' },
+        { status: 404 }
       )
     }
 
-    const result = await addBookingReview(
-      bookingId,
-      body.rating,
-      body.review || '',
-      business.id
-    )
+    let result
+
+    if (user.role === 'business') {
+      // Business reviewing worker
+      const { data: business } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .single()
+
+      if (!business) {
+        return NextResponse.json(
+          { error: 'Unauthorized - Business profile not found' },
+          { status: 403 }
+        )
+      }
+
+      result = await addBookingReview(
+        bookingId,
+        body.rating,
+        body.review || '',
+        business.id
+      )
+    } else if (user.role === 'worker') {
+      // Worker reviewing business
+      const { data: worker } = await supabase
+        .from('workers')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .single()
+
+      if (!worker) {
+        return NextResponse.json(
+          { error: 'Unauthorized - Worker profile not found' },
+          { status: 403 }
+        )
+      }
+
+      result = await addWorkerReview(
+        bookingId,
+        body.rating,
+        body.review || '',
+        worker.id
+      )
+    } else {
+      return NextResponse.json(
+        { error: 'Unauthorized - Invalid user role' },
+        { status: 403 }
+      )
+    }
 
     if (!result.success) {
       return NextResponse.json(

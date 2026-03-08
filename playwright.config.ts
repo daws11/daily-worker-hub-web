@@ -6,6 +6,8 @@ export default defineConfig({
   fullyParallel: false,
   retries: 1,
   use: {
+    // Base URL for tests
+    baseURL: 'http://localhost:3000',
     // Use xvfb for virtual display in containerized environment
     launchOptions: {
       args: ['--no-sandbox'],

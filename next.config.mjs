@@ -8,6 +8,10 @@ const __dirname = dirname(__filename);
 const config = {
   reactStrictMode: true,
   pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
+  allowedDevOrigins: [
+    'frisky-unformalistic-isabell.ngrok-free.dev',
+    '.ngrok-free.dev',
+  ],
   turbopack: {
     root: __dirname,
   },

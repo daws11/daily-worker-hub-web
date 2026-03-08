@@ -540,6 +540,136 @@ export async function addBookingReview(
 }
 
 /**
+ * Worker reviews a business
+ * - Creates a review from worker to business
+ * - Only allowed for completed bookings
+ * - Updates business average rating
+ *
+ * @param bookingId - The booking ID
+ * @param rating - Rating (1-5)
+ * @param review - Review text
+ * @param workerId - The worker ID (for verification)
+ * @returns Created review
+ */
+export async function addWorkerReview(
+  bookingId: string,
+  rating: number,
+  review: string,
+  workerId: string
+): Promise<{ success: boolean; error?: string; data?: any }> {
+  try {
+    const supabase = await createClient()
+
+    // Verify the booking exists and is completed
+    const { data: booking, error: fetchError } = await supabase
+      .from("bookings")
+      .select(`
+        *,
+        businesses (
+          id,
+          user_id,
+          name
+        )
+      `)
+      .eq("id", bookingId)
+      .single()
+
+    if (fetchError || !booking) {
+      return { success: false, error: "Booking tidak ditemukan" }
+    }
+
+    if (booking.status !== "completed") {
+      return { success: false, error: "Hanya booking yang sudah selesai yang bisa direview" }
+    }
+
+    // Verify the worker owns this booking
+    if (booking.worker_id !== workerId) {
+      return { success: false, error: "Anda tidak berhak mereview booking ini" }
+    }
+
+    // Check if worker already reviewed this booking
+    const { data: existingReview } = await supabase
+      .from("reviews")
+      .select("*")
+      .eq("booking_id", bookingId)
+      .eq("reviewer_type", "worker")
+      .single()
+
+    if (existingReview) {
+      return { success: false, error: "Anda sudah mereview booking ini" }
+    }
+
+    // Validate rating
+    if (rating < 1 || rating > 5) {
+      return { success: false, error: "Rating harus antara 1-5" }
+    }
+
+    // Create the review (worker reviewing business)
+    const { data, error } = await supabase
+      .from("reviews")
+      .insert({
+        booking_id: bookingId,
+        worker_id: workerId,
+        business_id: booking.business_id,
+        rating,
+        comment: review || "",
+        reviewer_type: "worker",
+      })
+      .select()
+      .single()
+
+    if (error) {
+      return { success: false, error: `Gagal membuat review: ${error.message}` }
+    }
+
+    // Update business average rating
+    const { data: businessReviews } = await supabase
+      .from("reviews")
+      .select("rating")
+      .eq("business_id", booking.business_id)
+      .eq("reviewer_type", "worker")
+
+    if (businessReviews && businessReviews.length > 0) {
+      const avgRating = businessReviews.reduce((sum, r) => sum + r.rating, 0) / businessReviews.length
+      
+      await supabase
+        .from("businesses")
+        .update({ 
+          rating: Math.round(avgRating * 10) / 10,
+          total_reviews: businessReviews.length
+        })
+        .eq("id", booking.business_id)
+    }
+
+    // Send notification to business
+    if (booking.businesses) {
+      await createNotification(
+        (booking.businesses as any).user_id,
+        "Review Baru dari Pekerja",
+        `Pekerja memberikan rating ${rating}/5 untuk pekerjaan Anda`,
+        `/business/bookings/${bookingId}`
+      )
+
+      // Send push notification if enabled
+      const { enabled } = await isNotificationTypeEnabled((booking.businesses as any).user_id, "booking_status")
+      if (enabled) {
+        await sendPushNotification(
+          (booking.businesses as any).user_id,
+          "Review Baru",
+          `Pekerja memberikan rating ${rating}/5`,
+          `/business/bookings/${bookingId}`
+        )
+      }
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error("Error in addWorkerReview:", error)
+    return { success: false, error: "Terjadi kesalahan saat membuat review" }
+  }
+}
+
+/**
  * Get booking review status
  * - Checks if a review exists for the booking
  * - Returns the review if it exists
