@@ -1,81 +1,59 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
+"use client"
 
+import * as React from "react"
+import { Input as InputPrimitive } from "@base-ui/react/input"
 import { cn } from "@/lib/utils"
 
-const inputVariants = cva(
-  "flex w-full rounded-md border transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-  {
-    variants: {
-      size: {
-        default: "h-10 px-3 py-2 text-sm",
-        sm: "h-9 px-3 text-xs",
-        lg: "h-11 px-4 text-base",
-      },
-      variant: {
-        default: "border-input bg-background shadow-sm",
-        filled: "border-transparent bg-muted shadow-sm focus:bg-background",
-        underlined: "border-t-0 border-x-0 border-b-2 bg-transparent rounded-none px-0 focus:ring-0 focus:border-ring",
-      },
-    },
-    defaultVariants: {
-      size: "default",
-      variant: "default",
-    },
-  }
-)
+export interface InputProps extends React.ComponentProps<"input"> {
+  /** Label text for the input */
+  label?: string
+  /** Error message to display */
+  error?: string
+  /** Helper text below the input */
+  helperText?: string
+}
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement>,
-    VariantProps<typeof inputVariants> {}
-
-const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, size, variant, ...props }, ref) => {
-    return (
-      <input
+function Input({ 
+  className, 
+  type, 
+  label, 
+  error, 
+  helperText,
+  id,
+  ...props 
+}: InputProps) {
+  const inputId = id || React.useId()
+  
+  return (
+    <div className="space-y-1.5">
+      {label && (
+        <label 
+          htmlFor={inputId}
+          className="text-sm font-medium text-foreground"
+        >
+          {label}
+        </label>
+      )}
+      <InputPrimitive
         type={type}
-        className={cn(inputVariants({ size, variant, className }))}
-        ref={ref}
+        id={inputId}
+        data-slot="input"
+        className={cn(
+          "h-10 w-full min-w-0 rounded-lg border border-input bg-transparent px-3 py-2 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+          error && "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20",
+          className
+        )}
+        aria-invalid={!!error}
         {...props}
       />
-    )
-  }
-)
-Input.displayName = "Input"
+      {error && (
+        <p className="text-sm text-destructive">{error}</p>
+      )}
+      {helperText && !error && (
+        <p className="text-sm text-muted-foreground">{helperText}</p>
+      )}
+    </div>
+  )
+}
 
-export { Input, inputVariants }
-
-/*
-// Example Usage:
-
-import { Input } from "@/components/ui/input"
-
-// Different Types
-<Input type="text" placeholder="Text input" />
-<Input type="email" placeholder="Email address" />
-<Input type="password" placeholder="Password" />
-<Input type="number" placeholder="Number" />
-<Input type="tel" placeholder="Phone number" />
-
-// Sizes
-<Input size="sm" placeholder="Small input" />
-<Input size="default" placeholder="Default input" />
-<Input size="lg" placeholder="Large input" />
-
-// Variants
-<Input variant="default" placeholder="Default variant" />
-<Input variant="filled" placeholder="Filled variant" />
-<Input variant="underlined" placeholder="Underlined variant" />
-
-// With Icons
-<div className="relative">
-  <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-  <Input className="pl-9" placeholder="Search..." />
-</div>
-
-// Disabled
-<Input disabled placeholder="Disabled input" />
-
-// With Error State
-<Input className="border-destructive focus-visible:ring-destructive" placeholder="Error state" />
-*/
+export { Input }

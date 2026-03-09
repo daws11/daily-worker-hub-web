@@ -3,11 +3,11 @@
 import Link from "next/link"
 import { useState } from "react"
 import { useAuth } from "../../providers/auth-provider"
-import { Card, CardHeader, CardContent } from "../../components/ui/card"
-import { Input } from "../../components/ui/input"
-import { Button } from "../../components/ui/button"
-import { RadioGroup } from "../../components/ui/radio-group"
-import { Separator } from "../../components/ui/separator"
+import { Card, CardHeader, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { RadioGroup } from "@/components/ui/radio-group"
+import { Separator } from "@/components/ui/separator"
 
 // Simple translation function
 function t(key: string): string {
@@ -49,19 +49,19 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4">
-      <div className="w-full max-w-md">
-        <Card className="space-y-6">
-          <CardHeader className="pb-4">
-            <h1 className="text-3xl font-bold text-slate-900">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md space-y-6">
+        <Card className="border border-border">
+          <CardHeader className="space-y-1 pb-4">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
               {t('auth.registerTitle')}
             </h1>
-            <p className="text-sm text-slate-600 mt-2">
+            <p className="text-sm text-muted-foreground">
               Buat akun baru untuk mulai bekerja
             </p>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="space-y-5">
             <form onSubmit={handleSubmit} className="space-y-5">
               <Input
                 type="text"
@@ -96,14 +96,14 @@ export default function RegisterPage() {
               <RadioGroup
                 name="role"
                 value={role}
-                onChange={(value: string) => setRole(value as "worker" | "business")}
+                onValueChange={(value: string) => setRole(value as "worker" | "business")}
                 options={[
                   {
                     value: "worker",
                     label: t('auth.worker'),
                     icon: (
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     ),
                   },
@@ -111,8 +111,8 @@ export default function RegisterPage() {
                     value: "business",
                     label: t('auth.business'),
                     icon: (
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
                     ),
                   },
@@ -121,11 +121,10 @@ export default function RegisterPage() {
 
               <Button
                 type="submit"
-                variant="primary"
+                variant="default"
                 size="lg"
                 isLoading={isLoading}
                 fullWidth
-                className="mt-6"
               >
                 {isLoading
                   ? t('auth.registering')
@@ -143,7 +142,6 @@ export default function RegisterPage() {
               isLoading={isLoading}
               fullWidth
               onClick={handleGoogleSignUp}
-              className="hover:bg-slate-50"
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
                 <path d="M17.64 9.20455C17.64 8.56636 17.5827 7.95273 17.4764 7.36364H9V10.845H13.8436C13.635 11.97 13.0009 12.9232 12.0477 13.5614V15.8195H14.9564C16.6582 14.2527 17.64 11.9455 17.64 9.20455Z" fill="#4285F4"/>
@@ -156,15 +154,15 @@ export default function RegisterPage() {
           </CardContent>
         </Card>
 
-        <div className="mt-6 text-center text-sm text-slate-600">
+        <p className="text-center text-sm text-muted-foreground">
           {t('auth.hasAccount')}{" "}
           <Link
             href="/login"
-            className="text-blue-600 hover:text-blue-700 font-medium"
+            className="text-foreground hover:underline font-medium"
           >
             {t('auth.loginHere')}
           </Link>
-        </div>
+        </p>
       </div>
     </div>
   )

@@ -5,10 +5,15 @@ import { useAuth } from '@/app/providers/auth-provider'
 import { getUserConversations, getUnreadCount } from '@/lib/supabase/queries/messages'
 import { getBusinessBookings } from '@/lib/supabase/queries/bookings'
 import type { MessageWithRelations } from '@/lib/types/message'
-import type { JobBookingWithDetails } from '@/lib/supabase/queries/bookings'
-import { MessageCircle, Loader2, AlertCircle, Clock, User, Calendar, Building2, MapPin } from 'lucide-react'
+import { MessageCircle, Loader2, AlertCircle, User, Calendar, Building2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { EmptyState } from '@/components/ui/empty-state'
 
 interface ConversationWithDetails extends MessageWithRelations {
   bookingDetails?: {
@@ -157,324 +162,163 @@ export default function BusinessMessagesPage() {
   }, [fetchConversations])
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f5f5f5',
-      padding: '1rem'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Page Header */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-            Pesan
-          </h1>
-          <p style={{ color: '#666', fontSize: '0.875rem' }}>
-            Kelola komunikasi dengan pekerja untuk setiap booking
-          </p>
-        </div>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Pesan</h1>
+        <p className="text-muted-foreground">
+          Kelola komunikasi dengan pekerja untuk setiap booking
+        </p>
+      </div>
 
-        {/* Error State */}
-        {error && (
-          <div style={{
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem'
-          }}>
-            <AlertCircle style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
-            <div style={{ flex: 1 }}>
-              <p style={{ color: '#991b1b', fontWeight: 500, marginBottom: '0.25rem' }}>
-                Gagal memuat data
-              </p>
-              <p style={{ color: '#b91c1c', fontSize: '0.875rem' }}>{error}</p>
-            </div>
-            <button
-              onClick={fetchConversations}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}
-            >
-              <Loader2 style={{ width: '1rem', height: '1rem' }} />
+      {/* Error State */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Gagal memuat data</AlertTitle>
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <Button variant="outline" size="sm" onClick={fetchConversations}>
+              <RefreshCw className="mr-2 h-4 w-4" />
               Coba Lagi
-            </button>
-          </div>
-        )}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
-        {/* Loading State */}
-        {loading && !error && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0.5rem',
-            padding: '3rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center'
-          }}>
-            <Loader2 style={{ width: '2rem', height: '2rem', color: '#2563eb', margin: '0 auto 1rem', animation: 'spin 1s linear infinite' }} />
-            <p style={{ color: '#666' }}>Memuat pesan...</p>
-          </div>
-        )}
+      {/* Loading State */}
+      {loading && !error && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+            <p className="text-muted-foreground">Memuat pesan...</p>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Stats Cards */}
-        {!loading && !error && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-            gap: '1rem',
-            marginBottom: '1.5rem'
-          }}>
-            <div style={{
-              padding: '1rem',
-              border: '1px solid #e5e7eb',
-              borderRadius: '0.375rem',
-              backgroundColor: 'white'
-            }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                Total Percakapan
-              </h3>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#2563eb' }}>
-                {conversations.total ?? 0}
-              </p>
-            </div>
+      {/* Stats Cards */}
+      {!loading && !error && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Total Percakapan</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-primary">{conversations.total ?? 0}</div>
+            </CardContent>
+          </Card>
 
-            <div style={{
-              padding: '1rem',
-              border: '1px solid #e5e7eb',
-              borderRadius: '0.375rem',
-              backgroundColor: 'white'
-            }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-                Belum Dibaca
-              </h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#ef4444' }}>
-                  {conversations.unread ?? 0}
-                </p>
-                {conversations.unread > 0 && (
-                  <span style={{
-                    padding: '0.25rem 0.5rem',
-                    backgroundColor: '#ef4444',
-                    color: 'white',
-                    borderRadius: '0.25rem',
-                    fontSize: '0.75rem',
-                    fontWeight: 500
-                  }}>
-                    Baru
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Belum Dibaca</CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center gap-2">
+              <div className="text-3xl font-bold text-destructive">{conversations.unread ?? 0}</div>
+              {conversations.unread > 0 && (
+                <Badge variant="destructive">Baru</Badge>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-        {/* Empty State */}
-        {!loading && !error && conversations.conversationsList?.length === 0 && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0.5rem',
-            padding: '3rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center',
-            border: '1px dashed #d1d5db'
-          }}>
-            <MessageCircle style={{ width: '3rem', height: '3rem', color: '#9ca3af', margin: '0 auto 1rem' }} />
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              Belum Ada Percakapan
-            </h3>
-            <p style={{ color: '#666' }}>
-              Pesan akan muncul di sini setelah Anda memiliki booking aktif dengan pekerja
-            </p>
-          </div>
-        )}
+      {/* Empty State */}
+      {!loading && !error && conversations.conversationsList?.length === 0 && (
+        <EmptyState
+          icon={<MessageCircle className="h-12 w-12" />}
+          title="Belum Ada Percakapan"
+          description="Pesan akan muncul di sini setelah Anda memiliki booking aktif dengan pekerja"
+        />
+      )}
 
-        {/* Conversations List */}
-        {!loading && !error && conversations.conversationsList && conversations.conversationsList.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {conversations.conversationsList.map((conversation) => {
-              const otherUser = getOtherUser(conversation)
-              const isUnread = !conversation.is_read && conversation.receiver_id === user?.id
+      {/* Conversations List */}
+      {!loading && !error && conversations.conversationsList && conversations.conversationsList.length > 0 && (
+        <div className="space-y-3">
+          {conversations.conversationsList.map((conversation) => {
+            const otherUser = getOtherUser(conversation)
+            const isUnread = !conversation.is_read && conversation.receiver_id === user?.id
 
-              return (
-                <Link
-                  key={conversation.id}
-                  href={`/business/messages/${conversation.booking_id}`}
-                  style={{ textDecoration: 'none', color: 'inherit' }}
-                >
-                  <div
-                    style={{
-                      backgroundColor: 'white',
-                      borderRadius: '0.5rem',
-                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                      padding: '1rem 1.5rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      border: isUnread ? '2px solid #3b82f6' : '1px solid #e5e7eb',
-                      position: 'relative'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)'
-                      e.currentTarget.style.transform = 'translateY(-2px)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-                      e.currentTarget.style.transform = 'translateY(0)'
-                    }}
-                  >
-                    {/* Unread Indicator */}
-                    {isUnread && (
-                      <div style={{
-                        position: 'absolute',
-                        top: '1rem',
-                        right: '1rem',
-                        width: '0.5rem',
-                        height: '0.5rem',
-                        borderRadius: '50%',
-                        backgroundColor: '#3b82f6'
-                      }} />
-                    )}
-
-                    <div style={{ display: 'flex', gap: '1rem' }}>
+            return (
+              <Link
+                key={conversation.id}
+                href={`/business/messages/${conversation.booking_id}`}
+                className="block"
+              >
+                <Card className={`transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer ${
+                  isUnread ? 'border-primary border-2' : ''
+                }`}>
+                  <CardContent className="p-4">
+                    <div className="flex gap-4">
                       {/* Avatar */}
-                      <div style={{
-                        width: '3rem',
-                        height: '3rem',
-                        borderRadius: '50%',
-                        backgroundColor: '#e5e7eb',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        overflow: 'hidden',
-                        flexShrink: 0
-                      }}>
-                        {otherUser.avatar_url ? (
-                          <img
-                            src={otherUser.avatar_url}
-                            alt={otherUser.full_name}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
-                        ) : (
-                          <User style={{ width: '1.5rem', height: '1.5rem', color: '#666' }} />
-                        )}
-                      </div>
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={otherUser.avatar_url} alt={otherUser.full_name} />
+                        <AvatarFallback>
+                          {otherUser.full_name?.charAt(0)?.toUpperCase() || <User className="h-6 w-6" />}
+                        </AvatarFallback>
+                      </Avatar>
 
                       {/* Content */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="flex-1 min-w-0">
                         {/* Header: Name + Time */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                          <h3 style={{
-                            fontSize: '1rem',
-                            fontWeight: isUnread ? 600 : 500,
-                            margin: 0,
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }}>
-                            {otherUser.full_name}
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className={`font-medium truncate ${isUnread ? 'font-semibold' : ''}`}>
+                              {otherUser.full_name}
+                            </h3>
                             {otherUser.role === 'worker' && (
-                              <span style={{
-                                marginLeft: '0.5rem',
-                                fontSize: '0.75rem',
-                                color: '#666',
-                                fontWeight: 400
-                              }}>
-                                (Pekerja)
-                              </span>
+                              <span className="text-xs text-muted-foreground">(Pekerja)</span>
                             )}
-                          </h3>
-                          <span style={{ fontSize: '0.75rem', color: '#9ca3af', flexShrink: 0, marginLeft: '0.5rem' }}>
-                            {formatDate(conversation.created_at)}
-                          </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {isUnread && (
+                              <div className="h-2 w-2 rounded-full bg-primary" />
+                            )}
+                            <span className="text-xs text-muted-foreground whitespace-nowrap">
+                              {formatDate(conversation.created_at)}
+                            </span>
+                          </div>
                         </div>
 
                         {/* Job Title */}
                         {conversation.bookingDetails?.job && (
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            fontSize: '0.875rem',
-                            color: '#666',
-                            marginBottom: '0.5rem'
-                          }}>
-                            <Building2 style={{ width: '0.875rem', height: '0.875rem' }} />
-                            <span style={{ fontWeight: 500 }}>
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-1">
+                            <Building2 className="h-3.5 w-3.5" />
+                            <span className="font-medium">
                               {conversation.bookingDetails.job.title}
                             </span>
                           </div>
                         )}
 
                         {/* Last Message */}
-                        <p style={{
-                          fontSize: '0.875rem',
-                          color: isUnread ? '#1f2937' : '#6b7280',
-                          margin: 0,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          fontWeight: isUnread ? 500 : 400
-                        }}>
+                        <p className={`text-sm truncate ${
+                          isUnread ? 'text-foreground font-medium' : 'text-muted-foreground'
+                        }`}>
                           {conversation.content}
                         </p>
 
                         {/* Footer: Status + Unread Count */}
-                        <div style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          marginTop: '0.5rem',
-                          fontSize: '0.75rem',
-                          color: '#9ca3af'
-                        }}>
+                        <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
                           {conversation.bookingDetails && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <Calendar style={{ width: '0.875rem', height: '0.875rem' }} />
-                              <span>
-                                Status: {conversation.bookingDetails.status}
-                              </span>
+                            <div className="flex items-center gap-1.5">
+                              <Calendar className="h-3.5 w-3.5" />
+                              <span>Status: {conversation.bookingDetails.status}</span>
                             </div>
                           )}
                           {conversation.unreadCount && conversation.unreadCount > 0 && (
-                            <div style={{
-                              padding: '0.125rem 0.5rem',
-                              backgroundColor: '#ef4444',
-                              color: 'white',
-                              borderRadius: '0.25rem',
-                              fontSize: '0.75rem',
-                              fontWeight: 500
-                            }}>
+                            <Badge variant="destructive" className="ml-auto">
                               {conversation.unreadCount} baru
-                            </div>
+                            </Badge>
                           )}
                         </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
-      <style jsx>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+                  </CardContent>
+                </Card>
+              </Link>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

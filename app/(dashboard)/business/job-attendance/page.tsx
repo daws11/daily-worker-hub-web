@@ -9,8 +9,15 @@ import { getBusinessJobs } from '@/lib/supabase/queries/jobs'
 import { getJobBookings } from '@/lib/supabase/queries/bookings'
 import type { JobsRow } from '@/lib/supabase/queries/jobs'
 import type { JobBookingWithDetails } from '@/lib/supabase/queries/bookings'
-import { Calendar, Clock, MapPin, Users, Loader2, AlertCircle, CheckCircle, XCircle, Building2 } from 'lucide-react'
+import { MapPin, Loader2, AlertCircle, CheckCircle, XCircle, Building2, Users, Clock } from 'lucide-react'
 import { toast } from 'sonner'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Badge } from '@/components/ui/badge'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { EmptyState } from '@/components/ui/empty-state'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 interface JobWithAttendance extends JobsRow {
   bookings?: JobBookingWithDetails[]
@@ -28,7 +35,6 @@ export default function BusinessJobAttendancePage() {
   const [jobs, setJobs] = useState<JobWithAttendance[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null)
 
   // Fetch business jobs with attendance data
   const fetchJobsWithAttendance = useCallback(async () => {
@@ -78,15 +84,6 @@ export default function BusinessJobAttendancePage() {
     fetchJobsWithAttendance()
   }, [fetchJobsWithAttendance])
 
-  // Format date based on current locale
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    })
-  }
-
   // Format time based on current locale
   const formatTime = (dateString: string | null) => {
     if (!dateString) return '-'
@@ -102,324 +99,183 @@ export default function BusinessJobAttendancePage() {
   }, [fetchJobsWithAttendance])
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f5f5f5',
-      padding: '1rem'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Page Header */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-            {t('jobAttendance.title')}
-          </h1>
-          <p style={{ color: '#666', fontSize: '0.875rem' }}>
-            {t('jobAttendance.subtitle')}
-          </p>
-        </div>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">{t('jobAttendance.title')}</h1>
+        <p className="text-muted-foreground">
+          {t('jobAttendance.subtitle')}
+        </p>
+      </div>
 
-        {/* Error State */}
-        {error && (
-          <div style={{
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem'
-          }}>
-            <AlertCircle style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
-            <div>
-              <p style={{ color: '#991b1b', fontWeight: 500, marginBottom: '0.25rem' }}>
-                {t('errors.loadFailed')}
-              </p>
-              <p style={{ color: '#b91c1c', fontSize: '0.875rem' }}>{error}</p>
-            </div>
-            <button
-              onClick={fetchJobsWithAttendance}
-              style={{
-                marginLeft: 'auto',
-                padding: '0.5rem 1rem',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}
-            >
-              <Loader2 style={{ width: '1rem', height: '1rem' }} />
+      {/* Error State */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>{t('errors.loadFailed')}</AlertTitle>
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <Button variant="outline" size="sm" onClick={fetchJobsWithAttendance}>
+              <Loader2 className="mr-2 h-4 w-4" />
               {t('common.tryAgain')}
-            </button>
-          </div>
-        )}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
-        {/* Loading State */}
-        {loading && !error && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0.5rem',
-            padding: '3rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center'
-          }}>
-            <Loader2 style={{ width: '2rem', height: '2rem', color: '#2563eb', margin: '0 auto 1rem', animation: 'spin 1s linear infinite' }} />
-            <p style={{ color: '#666' }}>{t('jobAttendance.loading')}</p>
-          </div>
-        )}
+      {/* Loading State */}
+      {loading && !error && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+            <p className="text-muted-foreground">{t('jobAttendance.loading')}</p>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Empty State */}
-        {!loading && !error && jobs.length === 0 && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0.5rem',
-            padding: '3rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center',
-            border: '1px dashed #d1d5db'
-          }}>
-            <Building2 style={{ width: '3rem', height: '3rem', color: '#9ca3af', margin: '0 auto 1rem' }} />
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
-              {t('jobAttendance.noActiveJobs')}
-            </h3>
-            <p style={{ color: '#666', marginBottom: '1.5rem' }}>
-              {t('jobAttendance.noActiveJobsDesc')}
-            </p>
-          </div>
-        )}
+      {/* Empty State */}
+      {!loading && !error && jobs.length === 0 && (
+        <EmptyState
+          icon={<Building2 className="h-12 w-12" />}
+          title={t('jobAttendance.noActiveJobs')}
+          description={t('jobAttendance.noActiveJobsDesc')}
+        />
+      )}
 
-        {/* Jobs List */}
-        {!loading && !error && jobs.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {jobs.map((job) => (
-              <div
-                key={job.id}
-                style={{
-                  backgroundColor: 'white',
-                  borderRadius: '0.5rem',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                  overflow: 'hidden'
-                }}
-              >
-                {/* Job Header */}
-                <div style={{
-                  padding: '1rem 1.5rem',
-                  borderBottom: '1px solid #e5e7eb',
-                  backgroundColor: '#f9fafb'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.25rem' }}>
-                        {job.title}
-                      </h3>
-                      {job.address && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666', fontSize: '0.875rem' }}>
-                          <MapPin style={{ width: '1rem', height: '1rem' }} />
-                          <span>{job.address}</span>
-                        </div>
-                      )}
-                    </div>
-                    {job.stats && (
-                      <div style={{ display: 'flex', gap: '1rem' }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#2563eb' }}>
-                            {job.stats.total}
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: '#666' }}>{t('common.total')}</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#10b981' }}>
-                            {job.stats.checkedIn}
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: '#666' }}>{t('attendance.checkIn')}</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#6b7280' }}>
-                            {job.stats.checkedOut}
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: '#666' }}>{t('attendance.checkOut')}</div>
-                        </div>
+      {/* Jobs List */}
+      {!loading && !error && jobs.length > 0 && (
+        <div className="space-y-6">
+          {jobs.map((job) => (
+            <Card key={job.id} className="overflow-hidden">
+              {/* Job Header */}
+              <CardHeader className="bg-muted/50 border-b">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">{job.title}</CardTitle>
+                    {job.address && (
+                      <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
+                        <MapPin className="h-4 w-4" />
+                        <span>{job.address}</span>
                       </div>
                     )}
                   </div>
+                  {job.stats && (
+                    <div className="flex gap-4 text-center">
+                      <div>
+                        <div className="text-2xl font-bold text-primary">{job.stats.total}</div>
+                        <div className="text-xs text-muted-foreground">{t('common.total')}</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold text-green-600">{job.stats.checkedIn}</div>
+                        <div className="text-xs text-muted-foreground">{t('attendance.checkIn')}</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold text-muted-foreground">{job.stats.checkedOut}</div>
+                        <div className="text-xs text-muted-foreground">{t('attendance.checkOut')}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+
+              <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x">
+                {/* QR Code Section */}
+                <div className="p-6">
+                  <QRCodeGenerator
+                    jobId={job.id}
+                    jobTitle={job.title}
+                    businessName={user?.user_metadata?.full_name || 'Business'}
+                    address={job.address || undefined}
+                    startDate={job.deadline || undefined}
+                    existingQRCode={job.qr_code || undefined}
+                    onRefresh={handleQRRefresh}
+                  />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0' }}>
-                  {/* QR Code Section */}
-                  <div style={{ padding: '1.5rem', borderRight: '1px solid #e5e7eb' }}>
-                    <QRCodeGenerator
-                      jobId={job.id}
-                      jobTitle={job.title}
-                      businessName={user?.user_metadata?.full_name || 'Business'}
-                      address={job.address || undefined}
-                      startDate={job.deadline || undefined}
-                      existingQRCode={job.qr_code || undefined}
-                      onRefresh={handleQRRefresh}
-                    />
+                {/* Workers List Section */}
+                <div className="p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Users className="h-5 w-5 text-muted-foreground" />
+                    <h4 className="font-semibold">{t('jobAttendance.workerList')}</h4>
                   </div>
 
-                  {/* Workers List Section */}
-                  <div style={{ padding: '1.5rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                      <Users style={{ width: '1.25rem', height: '1.25rem', color: '#666' }} />
-                      <h4 style={{ fontSize: '1rem', fontWeight: 600 }}>{t('jobAttendance.workerList')}</h4>
+                  {!job.bookings || job.bookings.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                      <Users className="h-8 w-8 mb-2" />
+                      <p className="text-sm">{t('jobAttendance.noWorkers')}</p>
                     </div>
-
-                    {!job.bookings || job.bookings.length === 0 ? (
-                      <div style={{
-                        padding: '2rem',
-                        textAlign: 'center',
-                        color: '#9ca3af',
-                        border: '1px dashed #d1d5db',
-                        borderRadius: '0.375rem'
-                      }}>
-                        <Users style={{ width: '2rem', height: '2rem', margin: '0 auto 0.5rem' }} />
-                        <p style={{ fontSize: '0.875rem' }}>{t('jobAttendance.noWorkers')}</p>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '350px', overflowY: 'auto' }}>
+                  ) : (
+                    <ScrollArea className="h-[350px] pr-4">
+                      <div className="space-y-3">
                         {job.bookings.map((booking) => (
                           <div
                             key={booking.id}
-                            style={{
-                              padding: '0.75rem',
-                              border: '1px solid #e5e7eb',
-                              borderRadius: '0.375rem',
-                              backgroundColor: '#fafafa'
-                            }}
+                            className="p-3 border rounded-lg bg-muted/30"
                           >
                             {/* Worker Name */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                              <div style={{
-                                width: '2rem',
-                                height: '2rem',
-                                borderRadius: '50%',
-                                backgroundColor: '#e5e7eb',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                overflow: 'hidden'
-                              }}>
-                                {booking.worker?.avatar_url ? (
-                                  <img
-                                    src={booking.worker.avatar_url}
-                                    alt={booking.worker.full_name}
-                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                  />
-                                ) : (
-                                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#666' }}>
-                                    {booking.worker?.full_name?.charAt(0) || '?'}
-                                  </span>
-                                )}
-                              </div>
-                              <div style={{ flex: 1 }}>
-                                <p style={{ fontWeight: 500, fontSize: '0.875rem', margin: 0 }}>
+                            <div className="flex items-center gap-3 mb-2">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={booking.worker?.avatar_url} alt={booking.worker?.full_name} />
+                                <AvatarFallback className="text-xs">
+                                  {booking.worker?.full_name?.charAt(0) || '?'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm truncate">
                                   {booking.worker?.full_name || t('jobAttendance.worker')}
                                 </p>
-                                <p style={{ fontSize: '0.75rem', color: '#666', margin: 0 }}>
+                                <p className="text-xs text-muted-foreground truncate">
                                   {booking.worker?.phone || ''}
                                 </p>
                               </div>
                               {booking.check_out_at ? (
-                                <div style={{
-                                  padding: '0.25rem 0.5rem',
-                                  backgroundColor: '#dcfce7',
-                                  color: '#166534',
-                                  borderRadius: '0.25rem',
-                                  fontSize: '0.75rem',
-                                  fontWeight: 500,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '0.25rem'
-                                }}>
-                                  <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />
+                                <Badge variant="default" className="bg-green-600">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
                                   {t('attendance.completed')}
-                                </div>
+                                </Badge>
                               ) : booking.check_in_at ? (
-                                <div style={{
-                                  padding: '0.25rem 0.5rem',
-                                  backgroundColor: '#dbeafe',
-                                  color: '#1e40af',
-                                  borderRadius: '0.25rem',
-                                  fontSize: '0.75rem',
-                                  fontWeight: 500,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '0.25rem'
-                                }}>
-                                  <Clock style={{ width: '0.875rem', height: '0.875rem' }} />
+                                <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                                  <Clock className="h-3 w-3 mr-1" />
                                   {t('attendance.working')}
-                                </div>
+                                </Badge>
                               ) : (
-                                <div style={{
-                                  padding: '0.25rem 0.5rem',
-                                  backgroundColor: '#f3f4f6',
-                                  color: '#6b7280',
-                                  borderRadius: '0.25rem',
-                                  fontSize: '0.75rem',
-                                  fontWeight: 500,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '0.25rem'
-                                }}>
-                                  <XCircle style={{ width: '0.875rem', height: '0.875rem' }} />
+                                <Badge variant="outline" className="text-muted-foreground">
+                                  <XCircle className="h-3 w-3 mr-1" />
                                   {t('attendance.notYet')}
-                                </div>
+                                </Badge>
                               )}
                             </div>
 
                             {/* Attendance Times */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.75rem' }}>
+                            <div className="grid grid-cols-2 gap-2 text-xs">
                               <div>
-                                <span style={{ color: '#666' }}>{t('attendance.checkIn')}: </span>
-                                <span style={{ fontWeight: 500 }}>{formatTime(booking.check_in_at)}</span>
+                                <span className="text-muted-foreground">{t('attendance.checkIn')}: </span>
+                                <span className="font-medium">{formatTime(booking.check_in_at)}</span>
                               </div>
                               <div>
-                                <span style={{ color: '#666' }}>{t('attendance.checkOut')}: </span>
-                                <span style={{ fontWeight: 500 }}>{formatTime(booking.check_out_at)}</span>
+                                <span className="text-muted-foreground">{t('attendance.checkOut')}: </span>
+                                <span className="font-medium">{formatTime(booking.check_out_at)}</span>
                               </div>
                             </div>
 
                             {/* Location Verification */}
                             {booking.check_in_lat && booking.check_in_lng && (
-                              <div style={{
-                                marginTop: '0.5rem',
-                                paddingTop: '0.5rem',
-                                borderTop: '1px solid #e5e7eb',
-                                fontSize: '0.75rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.25rem',
-                                color: '#10b981'
-                              }}>
-                                <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />
+                              <div className="mt-2 pt-2 border-t flex items-center gap-1 text-xs text-green-600">
+                                <CheckCircle className="h-3.5 w-3.5" />
                                 <span>{t('business.locationVerified')}</span>
                               </div>
                             )}
                           </div>
                         ))}
                       </div>
-                    )}
-                  </div>
+                    </ScrollArea>
+                  )}
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <style jsx>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

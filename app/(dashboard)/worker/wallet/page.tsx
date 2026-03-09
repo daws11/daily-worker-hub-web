@@ -361,7 +361,7 @@ export default function WorkerWalletPage() {
 
   if (isLoadingWorker) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex items-center justify-center py-12">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">{t('common.loading')}</p>
@@ -373,8 +373,7 @@ export default function WorkerWalletPage() {
   const hasBankAccounts = bankAccounts.length > 0
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] p-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold">{t('wallet.title')}</h1>
@@ -630,7 +629,6 @@ export default function WorkerWalletPage() {
             )}
           </CardContent>
         </Card>
-      </div>
     </div>
   )
 }

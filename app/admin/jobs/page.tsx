@@ -203,7 +203,7 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Total Jobs</CardDescription>
-            <CardTitle className="text-2xl text-[#2563eb]">{stats.total}</CardTitle>
+            <CardTitle className="text-2xl text-primary">{stats.total}</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
@@ -216,7 +216,7 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Open Jobs</CardDescription>
-            <CardTitle className="text-2xl text-[#10b981]">{stats.open}</CardTitle>
+            <CardTitle className="text-2xl text-green-600">{stats.open}</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <span>Accepting applicants</span>
@@ -226,7 +226,7 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>In Progress</CardDescription>
-            <CardTitle className="text-2xl text-[#f59e0b]">{stats.inProgress}</CardTitle>
+            <CardTitle className="text-2xl text-amber-600">{stats.inProgress}</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <span>Active jobs</span>
@@ -236,7 +236,7 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Completed</CardDescription>
-            <CardTitle className="text-2xl text-[#8b5cf6]">{stats.completed}</CardTitle>
+            <CardTitle className="text-2xl text-purple-600">{stats.completed}</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <span>Finished jobs</span>
@@ -246,7 +246,7 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Reported</CardDescription>
-            <CardTitle className="text-2xl text-[#ef4444]">{stats.reported}</CardTitle>
+            <CardTitle className="text-2xl text-red-600">{stats.reported}</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
@@ -395,7 +395,7 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
                             </Button>
                           ) : (
                             <AlertDialog>
-                              <AlertDialogTrigger asChild>
+                              <AlertDialogTrigger>
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -428,7 +428,7 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
                             </AlertDialog>
                           )}
                           <AlertDialog>
-                            <AlertDialogTrigger asChild>
+                            <AlertDialogTrigger>
                               <Button
                                 variant="destructive"
                                 size="sm"

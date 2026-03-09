@@ -215,40 +215,18 @@ export default function BusinessBookingsPage() {
 
   if (authLoading) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        backgroundColor: '#f5f5f5',
-        padding: '1rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <Loader2 style={{ width: '2rem', height: '2rem', color: '#2563eb', animation: 'spin 1s linear infinite' }} />
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
   }
 
   if (!user) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        backgroundColor: '#f5f5f5',
-        padding: '1rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{
-          backgroundColor: '#fef2f2',
-          border: '1px solid #fecaca',
-          borderRadius: '0.5rem',
-          padding: '1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem'
-        }}>
-          <AlertCircle style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
-          <p style={{ color: '#991b1b', fontWeight: 500 }}>
+      <div className="flex items-center justify-center py-12">
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-destructive" />
+          <p className="text-destructive font-medium">
             Error: Tidak dapat memuat informasi pengguna. Silakan refresh halaman.
           </p>
         </div>
@@ -260,12 +238,7 @@ export default function BusinessBookingsPage() {
   const hasBookings = Object.values(groupedBookings).some((group) => group.length > 0)
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f5f5f5',
-      padding: '1rem'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="space-y-6 max-w-7xl mx-auto">
         {/* Page Header */}
         <div style={{
           display: 'flex',
@@ -581,13 +554,12 @@ export default function BusinessBookingsPage() {
           />
         )}
 
-        <style jsx>{`
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }

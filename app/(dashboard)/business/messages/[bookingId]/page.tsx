@@ -1,23 +1,29 @@
 "use client"
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useAuth } from '@/app/providers/auth-provider'
-import { getBookingMessages, getUnreadCount } from '@/lib/supabase/queries/messages'
+import { getBookingMessages } from '@/lib/supabase/queries/messages'
 import { getBookingById } from '@/lib/supabase/queries/bookings'
-import { MessageBubble } from '@/components/messaging/message-bubble'
-import { MessageInput } from '@/components/messaging/message-input'
 import { sendMessage } from '@/lib/actions/messages'
-import { Loader2, AlertCircle, ArrowLeft, MessageCircle } from 'lucide-react'
+import { Loader2, AlertCircle, ArrowLeft, MessageCircle, Send } from 'lucide-react'
 import { toast } from 'sonner'
 import { useRealtimeMessages } from '@/lib/hooks/use-realtime-messages'
 import type { MessageWithRelations } from '@/lib/types/message'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 export default function BusinessBookingMessagePage() {
   const params = useParams()
   const router = useRouter()
   const { user } = useAuth()
   const bookingId = params.bookingId as string
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const [messages, setMessages] = useState<MessageWithRelations[]>([])
   const [loading, setLoading] = useState(true)
@@ -57,6 +63,13 @@ export default function BusinessBookingMessagePage() {
       }
 
       setMessages(messagesData || [])
+      
+      // Scroll to bottom after messages load
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+        }
+      }, 100)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Gagal memuat pesan'
       setError(message)
@@ -89,7 +102,7 @@ export default function BusinessBookingMessagePage() {
 
   // Send message
   const handleSendMessage = async (content: string) => {
-    if (!receiverInfo || !user?.id) return
+    if (!receiverInfo || !user?.id || !content.trim()) return
 
     setSending(true)
     try {
@@ -101,7 +114,18 @@ export default function BusinessBookingMessagePage() {
 
       // Refresh messages after sending
       await fetchMessages()
-      toast.success('Pesan terkirim')
+      
+      // Clear input
+      if (inputRef.current) {
+        inputRef.current.value = ''
+      }
+      
+      // Scroll to bottom
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+        }
+      }, 100)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Gagal mengirim pesan'
       toast.error(message)
@@ -110,7 +134,7 @@ export default function BusinessBookingMessagePage() {
     }
   }
 
-  // Format date to Indonesian locale
+  // Format time
   const formatTime = (dateString: string) => {
     return new Date(dateString).toLocaleTimeString('id-ID', {
       hour: '2-digit',
@@ -119,250 +143,137 @@ export default function BusinessBookingMessagePage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f5f5f5',
-      padding: '1rem'
-    }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-        {/* Header */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <button
-            onClick={() => router.back()}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.5rem 1rem',
-              backgroundColor: 'white',
-              border: '1px solid #e5e7eb',
-              borderRadius: '0.375rem',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              cursor: 'pointer',
-              marginBottom: '1rem'
-            }}
-          >
-            <ArrowLeft style={{ width: '1rem', height: '1rem' }} />
-            Kembali
-          </button>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-                Pesan
-              </h1>
-              <p style={{ color: '#666', fontSize: '0.875rem' }}>
-                {receiverInfo ? `Percakapan dengan ${receiverInfo.name}` : 'Memuat...'}
-              </p>
-            </div>
-
-            {/* Connection Status */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{
-                width: '0.5rem',
-                height: '0.5rem',
-                borderRadius: '50%',
-                backgroundColor: isConnected ? '#10b981' : '#f59e0b'
-              }} />
-              <span style={{ fontSize: '0.75rem', color: '#666' }}>
-                {isConnected ? 'Terhubung' : 'Menghubungkan...'}
-              </span>
-            </div>
-          </div>
+    <div className="space-y-4 max-w-3xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="outline" size="sm" onClick={() => router.back()}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Kembali
+        </Button>
+        
+        <div className="flex-1">
+          <h1 className="text-xl font-bold">Pesan</h1>
+          <p className="text-sm text-muted-foreground">
+            {receiverInfo ? `Percakapan dengan ${receiverInfo.name}` : 'Memuat...'}
+          </p>
         </div>
 
-        {/* Error State */}
-        {error && (
-          <div style={{
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem'
-          }}>
-            <AlertCircle style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
-            <div style={{ flex: 1 }}>
-              <p style={{ color: '#991b1b', fontWeight: 500, marginBottom: '0.25rem' }}>
-                Gagal memuat pesan
-              </p>
-              <p style={{ color: '#b91c1c', fontSize: '0.875rem' }}>{error}</p>
-            </div>
-            <button
-              onClick={fetchMessages}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}
-            >
-              <Loader2 style={{ width: '1rem', height: '1rem' }} />
+        {/* Connection Status */}
+        <Badge variant={isConnected ? "default" : "secondary"} className="gap-1.5">
+          <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-yellow-500'}`} />
+          {isConnected ? 'Terhubung' : 'Menghubungkan...'}
+        </Badge>
+      </div>
+
+      {/* Error State */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Gagal memuat pesan</AlertTitle>
+          <AlertDescription className="flex items-center justify-between">
+            <span>{error}</span>
+            <Button variant="outline" size="sm" onClick={fetchMessages}>
+              <Loader2 className="mr-2 h-4 w-4" />
               Coba Lagi
-            </button>
-          </div>
-        )}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
-        {/* Loading State */}
-        {loading && !error && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0.5rem',
-            padding: '3rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center'
-          }}>
-            <Loader2 style={{ width: '2rem', height: '2rem', color: '#2563eb', margin: '0 auto 1rem', animation: 'spin 1s linear infinite' }} />
-            <p style={{ color: '#666' }}>Memuat pesan...</p>
-          </div>
-        )}
+      {/* Loading State */}
+      {loading && !error && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+            <p className="text-muted-foreground">Memuat pesan...</p>
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Messages Area */}
-        {!loading && !error && (
-          <>
-            {/* Messages List */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '0.5rem',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-              marginBottom: '1rem',
-              minHeight: '400px',
-              maxHeight: '600px',
-              overflowY: 'auto',
-              padding: '1.5rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '1rem'
-            }}>
-              {messages.length === 0 ? (
-                <div style={{
-                  textAlign: 'center',
-                  padding: '3rem',
-                  color: '#666'
-                }}>
-                  <MessageCircle style={{ width: '3rem', height: '3rem', color: '#9ca3af', margin: '0 auto 1rem' }} />
-                  <p>Belum ada pesan</p>
-                  <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                    Mulai percakapan dengan {receiverInfo?.name || 'pekerja'}
-                  </p>
-                </div>
-              ) : (
-                messages.map((message) => {
-                  const isSent = message.sender_id === user?.id
-                  return (
-                    <div
-                      key={message.id}
-                      style={{
-                        display: 'flex',
-                        justifyContent: isSent ? 'flex-end' : 'flex-start',
-                        marginBottom: '0.5rem'
-                      }}
-                    >
-                      <div style={{
-                        maxWidth: '70%',
-                        padding: '0.75rem 1rem',
-                        borderRadius: '0.5rem',
-                        backgroundColor: isSent ? '#2563eb' : '#f3f4f6',
-                        color: isSent ? 'white' : '#1f2937'
-                      }}>
-                        <p style={{ margin: 0, fontSize: '0.875rem' }}>
-                          {message.content}
-                        </p>
-                        <p style={{
-                          margin: '0.25rem 0 0 0',
-                          fontSize: '0.75rem',
-                          opacity: 0.7,
-                          textAlign: 'right'
-                        }}>
-                          {formatTime(message.created_at)}
-                        </p>
-                      </div>
-                    </div>
-                  )
-                })
-              )}
-            </div>
+      {/* Messages Area */}
+      {!loading && !error && (
+        <>
+          {/* Messages List */}
+          <Card>
+            <ScrollArea className="h-[500px]" ref={scrollRef}>
+              <CardContent className="p-4">
+                {messages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                    <MessageCircle className="h-12 w-12 mb-4 opacity-50" />
+                    <p className="font-medium">Belum ada pesan</p>
+                    <p className="text-sm mt-1">
+                      Mulai percakapan dengan {receiverInfo?.name || 'pekerja'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {messages.map((message) => {
+                      const isSent = message.sender_id === user?.id
+                      return (
+                        <div
+                          key={message.id}
+                          className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                            isSent 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'bg-muted'
+                          }`}>
+                            <p className="text-sm">{message.content}</p>
+                            <p className={`text-xs mt-1 text-right ${
+                              isSent ? 'text-primary-foreground/70' : 'text-muted-foreground'
+                            }`}>
+                              {formatTime(message.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </ScrollArea>
+          </Card>
 
-            {/* Message Input */}
-            <div style={{
-              backgroundColor: 'white',
-              borderRadius: '0.5rem',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-              padding: '1rem'
-            }}>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <input
-                  type="text"
+          {/* Message Input */}
+          <Card>
+            <CardContent className="p-4">
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  if (inputRef.current?.value.trim()) {
+                    handleSendMessage(inputRef.current.value.trim())
+                  }
+                }}
+                className="flex gap-2"
+              >
+                <Input
+                  ref={inputRef}
                   placeholder="Ketik pesan..."
                   disabled={sending || !isConnected}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault()
-                      const target = e.target as HTMLInputElement
-                      if (target.value.trim()) {
-                        handleSendMessage(target.value.trim())
-                        target.value = ''
-                      }
-                    }
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '0.75rem 1rem',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '0.375rem',
-                    fontSize: '0.875rem',
-                    outline: 'none'
-                  }}
+                  className="flex-1"
                 />
-                <button
-                  onClick={() => {
-                    const input = document.querySelector('input[type="text"]') as HTMLInputElement
-                    if (input?.value.trim()) {
-                      handleSendMessage(input.value.trim())
-                      input.value = ''
-                    }
-                  }}
+                <Button 
+                  type="submit" 
                   disabled={sending || !isConnected}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: sending || !isConnected ? '#9ca3af' : '#2563eb',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '0.375rem',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    cursor: sending || !isConnected ? 'not-allowed' : 'pointer'
-                  }}
+                  size="icon"
                 >
-                  {sending ? 'Mengirim...' : 'Kirim'}
-                </button>
-              </div>
+                  {sending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </form>
               {!isConnected && (
-                <p style={{ fontSize: '0.75rem', color: '#f59e0b', marginTop: '0.5rem' }}>
+                <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-2">
                   Menunggu koneksi...
                 </p>
               )}
-            </div>
-          </>
-        )}
-      </div>
-
-      <style jsx>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
   )
 }

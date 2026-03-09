@@ -122,12 +122,7 @@ export default function BusinessJobsPage() {
   }, [fetchJobsWithAttendance])
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f5f5f5',
-      padding: '1rem'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="space-y-6 max-w-7xl mx-auto">
         {/* Page Header */}
         <div style={{ 
           display: 'flex', 
@@ -538,8 +533,6 @@ export default function BusinessJobsPage() {
             ))}
           </div>
         )}
-      </div>
-
       {/* QR Code Dialogs */}
       {jobs.jobsList?.map((job) => (
         <dialog

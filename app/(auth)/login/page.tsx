@@ -4,11 +4,11 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "../../providers/auth-provider"
-import { Card, CardHeader, CardContent } from "../../components/ui/card"
-import { Input } from "../../components/ui/input"
-import { Button } from "../../components/ui/button"
-import { RadioGroup } from "../../components/ui/radio-group"
-import { Separator } from "../../components/ui/separator"
+import { Card, CardHeader, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { RadioGroup } from "@/components/ui/radio-group"
+import { Separator } from "@/components/ui/separator"
 
 // Simple translation function (placeholder for now)
 function t(key: string, fallback?: string): string {
@@ -52,19 +52,19 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 p-4">
-      <div className="w-full max-w-md">
-        <Card className="space-y-6">
-          <CardHeader className="pb-4">
-            <h1 className="text-3xl font-bold text-slate-900">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+      <div className="w-full max-w-md space-y-6">
+        <Card className="border border-border">
+          <CardHeader className="space-y-1 pb-4">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
               {t('auth.loginTitle')}
             </h1>
-            <p className="text-sm text-slate-600 mt-2">
+            <p className="text-sm text-muted-foreground">
               Masuk kembali ke akun Anda
             </p>
           </CardHeader>
 
-          <CardContent>
+          <CardContent className="space-y-5">
             <form onSubmit={handleSubmit} className="space-y-5">
               <Input
                 type="email"
@@ -89,7 +89,7 @@ export default function LoginPage() {
               <div className="flex justify-end">
                 <Link
                   href="/forgot-password"
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
                 >
                   {t('auth.forgotPassword')}
                 </Link>
@@ -98,14 +98,14 @@ export default function LoginPage() {
               <RadioGroup
                 name="role"
                 value={role}
-                onChange={(value: string) => setRole(value as "worker" | "business")}
+                onValueChange={(value: string) => setRole(value as "worker" | "business")}
                 options={[
                   {
                     value: "worker",
                     label: t('auth.worker'),
                     icon: (
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     ),
                   },
@@ -113,8 +113,8 @@ export default function LoginPage() {
                     value: "business",
                     label: t('auth.business'),
                     icon: (
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      <svg className="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
                     ),
                   },
@@ -123,11 +123,10 @@ export default function LoginPage() {
 
               <Button
                 type="submit"
-                variant="primary"
+                variant="default"
                 size="lg"
                 isLoading={isLoading}
                 fullWidth
-                className="mt-6"
               >
                 {isLoading
                   ? t('auth.loggingIn')
@@ -138,15 +137,15 @@ export default function LoginPage() {
           </CardContent>
         </Card>
 
-        <div className="mt-6 text-center text-sm text-slate-600">
+        <p className="text-center text-sm text-muted-foreground">
           {t('auth.noAccount')}{" "}
           <Link
             href="/register"
-            className="text-blue-600 hover:text-blue-700 font-medium"
+            className="text-foreground hover:underline font-medium"
           >
             {t('auth.registerHere')}
           </Link>
-        </div>
+        </p>
       </div>
     </div>
   )

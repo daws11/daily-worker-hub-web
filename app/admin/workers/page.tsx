@@ -49,16 +49,16 @@ export default function WorkersPage({ className, ...props }: WorkersPageProps) {
       pagination.limit
     )
 
-    if (response.error) {
-      setError(response.error)
-      setWorkers([])
-    } else if (response.data) {
-      setWorkers(response.data.items)
+    if (response) {
+      setWorkers(response.items || [])
       setPagination((prev) => ({
         ...prev,
-        total: response.data.total,
-        totalPages: response.data.totalPages,
+        total: response.total || 0,
+        totalPages: response.totalPages || 1,
       }))
+    } else {
+      setWorkers([])
+      setError("Failed to load workers")
     }
 
     setLoading(false)

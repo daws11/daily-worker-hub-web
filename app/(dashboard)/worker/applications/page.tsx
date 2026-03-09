@@ -205,18 +205,18 @@ export default function WorkerApplicationsPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-center gap-3">
-          <AlertCircle className="h-5 w-5 text-red-600" />
-          <p className="text-red-900 font-medium">
+      <div className="flex items-center justify-center py-12">
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-destructive" />
+          <p className="text-destructive font-medium">
             Error: Tidak dapat memuat informasi pengguna. Silakan refresh halaman.
           </p>
         </div>
@@ -241,8 +241,7 @@ export default function WorkerApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="flex justify-between items-center mb-6">
           <div>
@@ -346,7 +345,6 @@ export default function WorkerApplicationsPage() {
             ))}
           </div>
         )}
-      </div>
     </div>
   )
 }

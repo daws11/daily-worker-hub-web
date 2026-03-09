@@ -230,8 +230,7 @@ export default function WorkerJobsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 p-4 md:p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
         {/* Page Header */}
         <div className="space-y-1">
           <div className="flex items-center gap-2">
@@ -404,8 +403,6 @@ export default function WorkerJobsPage() {
             />
           </div>
         </div>
-      </div>
-
       {/* Job Detail Dialog */}
       <JobDetailDialog
         job={selectedJob}

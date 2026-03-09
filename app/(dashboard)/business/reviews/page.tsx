@@ -8,12 +8,7 @@ export default function BusinessReviewsPage() {
   const { user, isLoading: authLoading } = useAuth()
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f5f5f5',
-      padding: '1rem'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="space-y-6 max-w-7xl mx-auto">
         {/* Page Header */}
         <div style={{ marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>

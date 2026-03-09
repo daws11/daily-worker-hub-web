@@ -204,12 +204,7 @@ export default function BusinessWorkersPage() {
   }, [fetchBadges, fetchWorkers])
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f5f5f5',
-      padding: '1rem'
-    }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <div className="space-y-6 max-w-7xl mx-auto">
         {/* Page Header */}
         <div style={{ marginBottom: '1.5rem' }}>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>

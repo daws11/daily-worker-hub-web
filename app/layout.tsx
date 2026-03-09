@@ -4,7 +4,8 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from './providers/auth-provider'
 import { I18nProvider } from './providers/i18n-provider'
-import { Toaster } from '../components/ui/sonner'
+import { Toaster } from '@/components/ui/sonner'
+import { ThemeProvider } from '@/components/providers/theme-provider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -31,14 +32,21 @@ export default async function RootLayout({
   const locale = await getLocale()
 
   return (
-    <html lang={locale} dir="ltr">
+    <html lang={locale} dir="ltr" suppressHydrationWarning>
       <body className={inter.className}>
-        <I18nProvider>
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </I18nProvider>
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <I18nProvider>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </I18nProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )
