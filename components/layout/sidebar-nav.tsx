@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   CalendarCheck,
+  Calendar,
   Briefcase,
   Star,
   BadgeCheck,

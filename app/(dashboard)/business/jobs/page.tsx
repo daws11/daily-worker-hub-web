@@ -217,7 +217,7 @@ export default function BusinessJobsPage() {
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
             textAlign: 'center'
           }}>
-            <Loader2 style={{ width: '2rem', height: '2rem', color: '#2563eb', margin: '0 auto 1rem', animation: 'spin 1s linear infinite' }} />
+            <Loader2 className="animate-spin" style={{ width: '2rem', height: '2rem', color: '#2563eb', margin: '0 auto 1rem' }} />
             <p style={{ color: '#666' }}>{t('business.loadingJobs')}</p>
           </div>
         )}
@@ -581,15 +581,6 @@ export default function BusinessJobsPage() {
         </dialog>
       ))}
 
-      <style jsx>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        dialog::backdrop {
-          background: rgba(0, 0, 0, 0.5);
-        }
-      `}</style>
     </div>
   )
 }

@@ -314,3 +314,8 @@ button:active:not(:disabled) {
 html {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+/* Dialog backdrop styling */
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}

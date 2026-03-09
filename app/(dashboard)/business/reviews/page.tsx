@@ -31,15 +31,17 @@ export default function BusinessReviewsPage() {
         }}>
           {authLoading ? (
             <div style={{ textAlign: 'center', padding: '3rem 0' }}>
-              <div style={{
-                display: 'inline-block',
-                width: '2.5rem',
-                height: '2.5rem',
-                border: '3px solid #e5e7eb',
-                borderTopColor: '#2563eb',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite'
-              }} />
+              <div
+                className="animate-spin"
+                style={{
+                  display: 'inline-block',
+                  width: '2.5rem',
+                  height: '2.5rem',
+                  border: '3px solid #e5e7eb',
+                  borderTopColor: '#2563eb',
+                  borderRadius: '50%'
+                }}
+              />
               <p style={{ color: '#666', marginTop: '1rem' }}>Memuat informasi pengguna...</p>
             </div>
           ) : user ? (
@@ -61,14 +63,6 @@ export default function BusinessReviewsPage() {
             </div>
           )}
         </div>
-      </div>
-
-      <style jsx>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }
