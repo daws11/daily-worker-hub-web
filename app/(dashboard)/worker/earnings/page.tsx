@@ -43,10 +43,10 @@ const statusGroupLabels: Record<keyof EarningsStatusGroup, string> = {
 }
 
 const statusColors: Record<keyof EarningsStatusGroup, string> = {
-  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  processing: "bg-blue-100 text-blue-800 border-blue-200",
-  completed: "bg-green-100 text-green-800 border-green-200",
-  failed: "bg-red-100 text-red-800 border-red-200",
+  pending: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20",
+  processing: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
+  completed: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
+  failed: "bg-destructive/10 text-destructive border-destructive/50",
 }
 
 function groupEarningsByStatus(earnings: EarningsEntry[]): EarningsStatusGroup {
@@ -196,18 +196,18 @@ export default function WorkerEarningsPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
       </div>
     )
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-center gap-3">
-          <AlertCircle className="h-5 w-5 text-red-600" />
-          <p className="text-red-900 font-medium">
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-6 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-destructive" />
+          <p className="text-destructive font-medium">
             Error: Tidak dapat memuat informasi pengguna. Silakan refresh halaman.
           </p>
         </div>
@@ -216,7 +216,7 @@ export default function WorkerEarningsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Page Header */}
         <div className="flex justify-between items-center">
@@ -224,7 +224,7 @@ export default function WorkerEarningsPage() {
             <h1 className="text-2xl font-bold mb-1">
               Penghasilan
             </h1>
-            <p className="text-sm text-gray-600 m-0">
+            <p className="text-sm text-muted-foreground m-0">
               Pantau penghasilan dan riwayat pembayaran Anda
             </p>
           </div>
@@ -240,13 +240,13 @@ export default function WorkerEarningsPage() {
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-red-600" />
+          <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-destructive" />
             <div className="flex-1">
-              <p className="text-red-900 font-medium mb-1">
+              <p className="text-destructive font-medium mb-1">
                 Gagal memuat data
               </p>
-              <p className="text-red-800 text-sm">{error}</p>
+              <p className="text-destructive text-sm">{error}</p>
             </div>
             <Button
               onClick={fetchEarningsData}
@@ -279,14 +279,14 @@ export default function WorkerEarningsPage() {
           {/* Pending Earnings */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Menunggu Pembayaran
               </CardTitle>
-              <Clock className="h-4 w-4 text-gray-600" />
+              <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">{formatPrice(pendingEarnings)}</div>
-              <p className="text-xs text-gray-600 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {pendingPayments} pembayaran dalam proses
               </p>
             </CardContent>
@@ -295,14 +295,14 @@ export default function WorkerEarningsPage() {
           {/* Completed Payments */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Pembayaran Selesai
               </CardTitle>
-              <CreditCard className="h-4 w-4 text-gray-600" />
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">{completedPayments}</div>
-              <p className="text-xs text-gray-600 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Transaksi berhasil
               </p>
             </CardContent>
@@ -311,14 +311,14 @@ export default function WorkerEarningsPage() {
           {/* Total Earnings Count */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Transaksi
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-gray-600" />
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">{earnings.length}</div>
-              <p className="text-xs text-gray-600 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Semua transaksi
               </p>
             </CardContent>
@@ -330,7 +330,7 @@ export default function WorkerEarningsPage() {
           <Card>
             <CardContent className="py-12 flex flex-col items-center justify-center text-center">
               <Loader2 className="h-8 w-8 text-blue-600 mb-4 animate-spin" />
-              <p className="text-gray-600">Memuat data penghasilan...</p>
+              <p className="text-muted-foreground">Memuat data penghasilan...</p>
             </CardContent>
           </Card>
         )}
@@ -339,11 +339,11 @@ export default function WorkerEarningsPage() {
         {!isLoading && !error && !hasEarnings && (
           <Card>
             <CardContent className="py-12 flex flex-col items-center justify-center text-center border-2 border-dashed border-gray-300">
-              <DollarSign className="h-12 w-12 text-gray-400 mb-4" />
+              <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">
                 Belum Ada Penghasilan
               </h3>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Penghasilan akan muncul di sini setelah Anda menyelesaikan pekerjaan
               </p>
             </CardContent>
@@ -364,13 +364,13 @@ export default function WorkerEarningsPage() {
                 {recentPayments.map((entry) => (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
+                    className="flex items-center justify-between p-3 bg-muted rounded-lg border"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">
                         {entry.booking?.job?.title || "Unknown Job"}
                       </p>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-muted-foreground">
                         {entry.booking?.business?.name || "Unknown Business"} • {formatDateTime(entry.payment_date || entry.created_at)}
                       </p>
                     </div>
@@ -379,7 +379,7 @@ export default function WorkerEarningsPage() {
                         <p className="font-semibold text-green-600 text-sm">
                           +{formatPrice(entry.amount)}
                         </p>
-                        <Badge className="bg-green-100 text-green-800 hover:bg-green-200 border-green-200 text-xs">
+                        <Badge className="bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-500/20 border-green-200 text-xs">
                           Selesai
                         </Badge>
                       </div>
@@ -419,15 +419,15 @@ export default function WorkerEarningsPage() {
                         {groupEarnings.map((entry) => (
                           <div
                             key={entry.id}
-                            className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors"
+                            className="flex items-center justify-between p-4 bg-muted rounded-lg border hover:bg-background transition-colors"
                           >
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start gap-3">
                                 <div className={`p-2 rounded-lg ${
-                                  status === 'completed' ? 'bg-green-100' :
-                                  status === 'processing' ? 'bg-blue-100' :
-                                  status === 'pending' ? 'bg-yellow-100' :
-                                  'bg-red-100'
+                                  status === 'completed' ? 'bg-green-500/10' :
+                                  status === 'processing' ? 'bg-primary/10' :
+                                  status === 'pending' ? 'bg-yellow-500/10' :
+                                  'bg-destructive/10'
                                 }`}>
                                   {status === 'completed' ? (
                                     <CreditCard className="h-4 w-4 text-green-600" />
@@ -443,10 +443,10 @@ export default function WorkerEarningsPage() {
                                   <p className="font-medium text-sm mb-1">
                                     {entry.booking?.job?.title || "Unknown Job"}
                                   </p>
-                                  <p className="text-xs text-gray-600 mb-1">
+                                  <p className="text-xs text-muted-foreground mb-1">
                                     {entry.booking?.business?.name || "Unknown Business"}
                                   </p>
-                                  <p className="text-xs text-gray-500">
+                                  <p className="text-xs text-muted-foreground">
                                     {formatDateTime(entry.created_at)}
                                   </p>
                                 </div>
@@ -462,7 +462,7 @@ export default function WorkerEarningsPage() {
                                 {formatPrice(entry.amount)}
                               </p>
                               {entry.payment_date && (
-                                <p className="text-xs text-gray-500 mt-1">
+                                <p className="text-xs text-muted-foreground mt-1">
                                   Dibayar: {formatDate(entry.payment_date)}
                                 </p>
                               )}

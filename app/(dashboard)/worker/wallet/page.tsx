@@ -319,7 +319,7 @@ export default function WorkerWalletPage() {
           variant: "default" as const,
           label: t('common.completed'),
           icon: CheckCircle2,
-          className: "bg-green-100 text-green-800 hover:bg-green-100",
+          className: "bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-100",
         }
       case "pending":
         return {
@@ -333,7 +333,7 @@ export default function WorkerWalletPage() {
           variant: "secondary" as const,
           label: t('common.processing'),
           icon: Clock,
-          className: "bg-blue-100 text-blue-800 hover:bg-blue-100",
+          className: "bg-blue-500/10 text-blue-700 dark:text-blue-400 hover:bg-blue-100",
         }
       case "failed":
         return {
@@ -347,7 +347,7 @@ export default function WorkerWalletPage() {
           variant: "outline" as const,
           label: t('common.cancelled'),
           icon: XCircle,
-          className: "bg-gray-100 text-gray-800 hover:bg-gray-100",
+          className: "bg-background text-gray-800 hover:bg-background",
         }
       default:
         return {
@@ -377,7 +377,7 @@ export default function WorkerWalletPage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold">{t('wallet.title')}</h1>
-          <p className="text-[#666]">
+          <p className="text-muted-foreground">
             {t('wallet.transactionHistory')}
           </p>
         </div>

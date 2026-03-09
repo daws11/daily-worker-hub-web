@@ -101,6 +101,54 @@ const businessNavItems: NavItem[] = [
   },
 ]
 
+const workerNavItems: NavItem[] = [
+  {
+    title: "Jobs",
+    href: "/worker/jobs",
+    icon: Briefcase,
+  },
+  {
+    title: "My Applications",
+    href: "/worker/applications",
+    icon: Briefcase,
+  },
+  {
+    title: "My Bookings",
+    href: "/worker/bookings",
+    icon: CalendarCheck,
+  },
+  {
+    title: "Attendance",
+    href: "/worker/attendance",
+    icon: Calendar,
+  },
+  {
+    title: "Badges",
+    href: "/worker/badges",
+    icon: BadgeCheck,
+  },
+  {
+    title: "Wallet",
+    href: "/worker/wallet",
+    icon: Wallet,
+  },
+  {
+    title: "Earnings",
+    href: "/worker/earnings",
+    icon: Wallet,
+  },
+  {
+    title: "Messages",
+    href: "/worker/messages",
+    icon: MessageSquare,
+  },
+  {
+    title: "Settings",
+    href: "/worker/settings",
+    icon: Settings,
+  },
+]
+
 interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
   items?: NavItem[]
   className?: string
@@ -231,4 +279,4 @@ export function MobileSidebarNav({
   )
 }
 
-export { businessNavItems, type NavItem }
+export { businessNavItems, workerNavItems, type NavItem }

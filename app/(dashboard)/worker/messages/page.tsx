@@ -100,7 +100,7 @@ export default function WorkerMessagesPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
       </div>
     )
@@ -108,7 +108,7 @@ export default function WorkerMessagesPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-center gap-3">
           <AlertCircle className="h-5 w-5 text-red-600" />
           <p className="text-red-900 font-medium">
@@ -120,7 +120,7 @@ export default function WorkerMessagesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Page Header */}
         <div className="flex justify-between items-center">
@@ -128,7 +128,7 @@ export default function WorkerMessagesPage() {
             <h1 className="text-2xl font-bold mb-1">
               Pesan
             </h1>
-            <p className="text-sm text-gray-600 m-0">
+            <p className="text-sm text-muted-foreground m-0">
               Komunikasi dengan bisnis dan tim
             </p>
           </div>
@@ -175,10 +175,10 @@ export default function WorkerMessagesPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Pesan Belum Dibaca
               </CardTitle>
-              <Bell className="h-4 w-4 text-gray-600" />
+              <Bell className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-red-600">{totalUnread}</div>
@@ -187,10 +187,10 @@ export default function WorkerMessagesPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Pesan Hari Ini
               </CardTitle>
-              <Send className="h-4 w-4 text-gray-600" />
+              <Send className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
@@ -205,7 +205,7 @@ export default function WorkerMessagesPage() {
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Cari percakapan..."
             value={searchQuery}
@@ -219,7 +219,7 @@ export default function WorkerMessagesPage() {
           <Card>
             <CardContent className="py-12 flex flex-col items-center justify-center text-center">
               <Loader2 className="h-8 w-8 text-blue-600 mb-4 animate-spin" />
-              <p className="text-gray-600">Memuat pesan...</p>
+              <p className="text-muted-foreground">Memuat pesan...</p>
             </CardContent>
           </Card>
         )}
@@ -228,11 +228,11 @@ export default function WorkerMessagesPage() {
         {!isLoading && !error && conversations.length === 0 && (
           <Card>
             <CardContent className="py-12 flex flex-col items-center justify-center text-center border-2 border-dashed border-gray-300">
-              <MessageSquare className="h-12 w-12 text-gray-400 mb-4" />
+              <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">
                 Belum Ada Pesan
               </h3>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 Percakapan dengan bisnis akan muncul di sini
               </p>
             </CardContent>
@@ -253,8 +253,8 @@ export default function WorkerMessagesPage() {
                 {filteredConversations.map((conversation) => (
                   <div
                     key={conversation.id}
-                    className={`flex items-center gap-4 p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                      selectedConversation === conversation.id ? 'bg-blue-50' : ''
+                    className={`flex items-center gap-4 p-4 hover:bg-muted cursor-pointer transition-colors ${
+                      selectedConversation === conversation.id ? 'bg-accent' : ''
                     }`}
                     onClick={() => setSelectedConversation(conversation.id)}
                   >
@@ -270,17 +270,17 @@ export default function WorkerMessagesPage() {
                         <p className="font-medium text-sm truncate">
                           {conversation.participant_name}
                         </p>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-muted-foreground">
                           {formatTime(conversation.last_message_time)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 truncate">
+                      <p className="text-sm text-muted-foreground truncate">
                         {conversation.last_message}
                       </p>
                     </div>
 
                     {conversation.unread_count > 0 && (
-                      <Badge className="bg-red-500 text-white hover:bg-red-600">
+                      <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                         {conversation.unread_count}
                       </Badge>
                     )}
@@ -295,8 +295,8 @@ export default function WorkerMessagesPage() {
         {!isLoading && !error && searchQuery && filteredConversations.length === 0 && conversations.length > 0 && (
           <Card>
             <CardContent className="py-8 flex flex-col items-center justify-center text-center">
-              <Search className="h-8 w-8 text-gray-400 mb-3" />
-              <p className="text-gray-600">
+              <Search className="h-8 w-8 text-muted-foreground mb-3" />
+              <p className="text-muted-foreground">
                 Tidak ada percakapan yang cocok dengan "{searchQuery}"
               </p>
             </CardContent>

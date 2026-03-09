@@ -213,12 +213,12 @@ export default function WorkerBadgesPage() {
   }))
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] p-4">
+    <div className="min-h-screen bg-muted p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Badge Saya</h1>
-          <p className="text-[#666]">
+          <p className="text-muted-foreground">
             Kelola dan tampilkan keahlian Anda melalui badge
           </p>
         </div>

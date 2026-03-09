@@ -61,7 +61,7 @@ const statusVariants: Record<ApplicationStatus, { className: string; label: stri
     label: "Rejected"
   },
   withdrawn: {
-    className: "border-transparent bg-gray-500/10 text-gray-700 dark:text-gray-400 hover:bg-gray-500/20",
+    className: "border-transparent bg-muted text-muted-foreground hover:bg-muted/80",
     label: "Withdrawn"
   },
 }
@@ -248,7 +248,7 @@ export default function WorkerApplicationsPage() {
             <h1 className="text-2xl font-bold mb-1">
               Lamaran Pekerjaan
             </h1>
-            <p className="text-sm text-gray-600 m-0">
+            <p className="text-sm text-muted-foreground m-0">
               Lihat status lamaran pekerjaan Anda
             </p>
           </div>
@@ -264,13 +264,13 @@ export default function WorkerApplicationsPage() {
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-red-600" />
+          <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-4 mb-4 flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-destructive" />
             <div className="flex-1">
-              <p className="text-red-900 font-medium mb-1">
+              <p className="text-destructive font-medium mb-1">
                 Gagal memuat data
               </p>
-              <p className="text-red-800 text-sm">{error}</p>
+              <p className="text-destructive text-sm">{error}</p>
             </div>
             <Button
               onClick={fetchApplications}
@@ -284,9 +284,9 @@ export default function WorkerApplicationsPage() {
 
         {/* Loading State */}
         {isLoading && !error && (
-          <div className="bg-white rounded-lg p-12 shadow-sm text-center">
-            <Loader2 className="h-8 w-8 text-blue-600 mx-auto mb-4 animate-spin" />
-            <p className="text-gray-600">Memuat data lamaran...</p>
+          <div className="bg-card rounded-lg p-12 shadow-sm text-center">
+            <Loader2 className="h-8 w-8 text-primary mx-auto mb-4 animate-spin" />
+            <p className="text-muted-foreground">Memuat data lamaran...</p>
           </div>
         )}
 
@@ -320,13 +320,13 @@ export default function WorkerApplicationsPage() {
 
         {/* Empty State */}
         {!isLoading && !error && displayApplications.length === 0 && (
-          <div className="bg-white rounded-lg p-12 shadow-sm text-center border-2 border-dashed border-gray-300">
-            <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <div className="bg-card rounded-lg p-12 shadow-sm text-center border-2 border-dashed border-border">
+            <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">
               {activeTab === "all" ? "Belum Ada Lamaran" : `Tidak Ada Lamaran ${statusGroupLabels[activeTab as keyof StatusGroup]}`}
             </h3>
-            <p className="text-gray-600">
-              {activeTab === "all" 
+            <p className="text-muted-foreground">
+              {activeTab === "all"
                 ? "Lamaran pekerjaan akan muncul di sini setelah Anda mengirimkan lamaran"
                 : "Tidak ada lamaran dengan status ini"
               }

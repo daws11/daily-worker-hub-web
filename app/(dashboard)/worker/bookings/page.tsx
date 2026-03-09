@@ -463,7 +463,7 @@ export default function WorkerBookingsPage() {
             <h1 className="text-2xl font-bold mb-1">
               Booking Pekerja
             </h1>
-            <p className="text-sm text-gray-600 m-0">
+            <p className="text-sm text-muted-foreground m-0">
               Kelola booking pekerjaan Anda dan berikan ulasan
             </p>
           </div>
@@ -480,12 +480,12 @@ export default function WorkerBookingsPage() {
         {/* Error State */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-red-600" />
+            <AlertCircle className="h-5 w-5 text-destructive" />
             <div className="flex-1">
-              <p className="text-red-900 font-medium mb-1">
+              <p className="text-destructive font-medium mb-1">
                 Gagal memuat data
               </p>
-              <p className="text-red-800 text-sm">{error}</p>
+              <p className="text-destructive text-sm">{error}</p>
             </div>
             <Button
               onClick={fetchBookingsWithReviews}
@@ -499,20 +499,20 @@ export default function WorkerBookingsPage() {
 
         {/* Loading State */}
         {isLoading && !error && (
-          <div className="bg-white rounded-lg p-12 shadow-sm text-center">
+          <div className="bg-card rounded-lg p-12 shadow-sm text-center">
             <Loader2 className="h-8 w-8 text-blue-600 mx-auto mb-4 animate-spin" />
-            <p className="text-gray-600">Memuat data booking...</p>
+            <p className="text-muted-foreground">Memuat data booking...</p>
           </div>
         )}
 
         {/* Empty State */}
         {!isLoading && !error && !hasBookings && (
-          <div className="bg-white rounded-lg p-12 shadow-sm text-center border-2 border-dashed border-gray-300">
-            <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <div className="bg-card rounded-lg p-12 shadow-sm text-center border-2 border-dashed border-gray-300">
+            <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">
               Belum Ada Booking
             </h3>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               Booking pekerjaan akan muncul di sini setelah Anda melamar pada pekerjaan
             </p>
           </div>
