@@ -75,13 +75,15 @@ export type Database = {
           job_id: string
           matching_score: number | null
           payment_id: string | null
-          payment_status: "pending" | "processing" | "paid" | "failed" | "refunded" | null
+          payment_status: "pending" | "processing" | "paid" | "failed" | "refunded" | "pending_review" | null
           rating_by_business: number | null
           rating_by_worker: number | null
           review_by_business: string | null
           review_by_worker: string | null
+          review_deadline: string | null
           rated_at: string | null
           start_date: string | null
+          total_amount: number | null
           status: Database["public"]["Enums"]["booking_status"]
           time_to_hire: number | null
           updated_at: string
@@ -104,13 +106,15 @@ export type Database = {
           job_id: string
           matching_score?: number | null
           payment_id?: string | null
-          payment_status?: "pending" | "processing" | "paid" | "failed" | "refunded" | null
+          payment_status?: "pending" | "processing" | "paid" | "failed" | "refunded" | "pending_review" | null
           rating_by_business?: number | null
           rating_by_worker?: number | null
           review_by_business?: string | null
           review_by_worker?: string | null
+          review_deadline?: string | null
           rated_at?: string | null
           start_date?: string | null
+          total_amount?: number | null
           status?: Database["public"]["Enums"]["booking_status"]
           time_to_hire?: number | null
           updated_at?: string
@@ -133,13 +137,15 @@ export type Database = {
           job_id?: string
           matching_score?: number | null
           payment_id?: string | null
-          payment_status?: "pending" | "processing" | "paid" | "failed" | "refunded" | null
+          payment_status?: "pending" | "processing" | "paid" | "failed" | "refunded" | "pending_review" | null
           rating_by_business?: number | null
           rating_by_worker?: number | null
           review_by_business?: string | null
           review_by_worker?: string | null
+          review_deadline?: string | null
           rated_at?: string | null
           start_date?: string | null
+          total_amount?: number | null
           status?: Database["public"]["Enums"]["booking_status"]
           time_to_hire?: number | null
           updated_at?: string
@@ -764,6 +770,7 @@ export type Database = {
       workers: {
         Row: {
           address: string | null
+          area: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string
@@ -771,6 +778,7 @@ export type Database = {
           full_name: string
           id: string
           jobs_completed: number
+          kyc_status: "pending" | "in_review" | "approved" | "rejected" | null
           lat: number | null
           lng: number | null
           location_name: string | null
@@ -783,6 +791,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          area?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -790,6 +799,7 @@ export type Database = {
           full_name: string
           id?: string
           jobs_completed?: number
+          kyc_status?: "pending" | "in_review" | "approved" | "rejected" | null
           lat?: number | null
           lng?: number | null
           location_name?: string | null
@@ -802,6 +812,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          area?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -809,6 +820,7 @@ export type Database = {
           full_name?: string
           id?: string
           jobs_completed?: number
+          kyc_status?: "pending" | "in_review" | "approved" | "rejected" | null
           lat?: number | null
           lng?: number | null
           location_name?: string | null
@@ -956,6 +968,293 @@ export type Database = {
           },
         ]
       }
+      job_applications: {
+        Row: {
+          id: string
+          job_id: string
+          worker_id: string
+          business_id: string
+          status: "pending" | "reviewed" | "accepted" | "rejected" | "withdrawn"
+          cover_letter: string | null
+          proposed_rate: number | null
+          availability_date: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+        }
+        Insert: {
+          id?: string
+          job_id: string
+          worker_id: string
+          business_id: string
+          status?: "pending" | "reviewed" | "accepted" | "rejected" | "withdrawn"
+          cover_letter?: string | null
+          proposed_rate?: number | null
+          availability_date?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Update: {
+          id?: string
+          job_id?: string
+          worker_id?: string
+          business_id?: string
+          status?: "pending" | "reviewed" | "accepted" | "rejected" | "withdrawn"
+          cover_letter?: string | null
+          proposed_rate?: number | null
+          availability_date?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_applications_worker_id_fkey"
+            columns: ["worker_id"]
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_applications_business_id_fkey"
+            columns: ["business_id"]
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_transactions: {
+        Row: {
+          id: string
+          business_id: string
+          booking_id: string | null
+          amount: number
+          fee_amount: number
+          status: "pending" | "processing" | "paid" | "failed" | "refunded"
+          payment_provider: "xendit" | "midtrans"
+          provider_payment_id: string | null
+          payment_url: string | null
+          qris_expires_at: string | null
+          paid_at: string | null
+          failure_reason: string | null
+          metadata: Record<string, unknown>
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          business_id: string
+          booking_id?: string | null
+          amount: number
+          fee_amount?: number
+          status?: "pending" | "processing" | "paid" | "failed" | "refunded"
+          payment_provider: "xendit" | "midtrans"
+          provider_payment_id?: string | null
+          payment_url?: string | null
+          qris_expires_at?: string | null
+          paid_at?: string | null
+          failure_reason?: string | null
+          metadata?: Record<string, unknown>
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          business_id?: string
+          booking_id?: string | null
+          amount?: number
+          fee_amount?: number
+          status?: "pending" | "processing" | "paid" | "failed" | "refunded"
+          payment_provider?: "xendit" | "midtrans"
+          provider_payment_id?: string | null
+          payment_url?: string | null
+          qris_expires_at?: string | null
+          paid_at?: string | null
+          failure_reason?: string | null
+          metadata?: Record<string, unknown>
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_business_id_fkey"
+            columns: ["business_id"]
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kyc_verifications: {
+        Row: {
+          id: string
+          worker_id: string
+          status: "pending" | "in_review" | "approved" | "rejected"
+          document_type: string
+          document_url: string
+          selfie_url: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          worker_id: string
+          status?: "pending" | "in_review" | "approved" | "rejected"
+          document_type: string
+          document_url: string
+          selfie_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          worker_id?: string
+          status?: "pending" | "in_review" | "approved" | "rejected"
+          document_type?: string
+          document_url?: string
+          selfie_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kyc_verifications_worker_id_fkey"
+            columns: ["worker_id"]
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      disputes: {
+        Row: {
+          id: string
+          booking_id: string
+          opened_by: string
+          status: "open" | "in_progress" | "resolved" | "closed"
+          reason: string
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          booking_id: string
+          opened_by: string
+          status?: "open" | "in_progress" | "resolved" | "closed"
+          reason: string
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          booking_id?: string
+          opened_by?: string
+          status?: "open" | "in_progress" | "resolved" | "closed"
+          reason?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_booking_id_fkey"
+            columns: ["booking_id"]
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_audit_logs: {
+        Row: {
+          id: string
+          admin_id: string
+          action: string
+          resource_type: string
+          resource_id: string | null
+          details: Record<string, unknown>
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          admin_id: string
+          action: string
+          resource_type: string
+          resource_id?: string | null
+          details?: Record<string, unknown>
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          admin_id?: string
+          action?: string
+          resource_type?: string
+          resource_id?: string | null
+          details?: Record<string, unknown>
+          created_at?: string
+        }
+        Relationships: []
+      }
+      admin_users: {
+        Row: {
+          id: string
+          user_id: string
+          role: "super_admin" | "admin" | "moderator"
+          permissions: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          role?: "super_admin" | "admin" | "moderator"
+          permissions?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          role?: "super_admin" | "admin" | "moderator"
+          permissions?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_users_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -981,12 +1280,13 @@ export type Database = {
         | "transportation"
         | "schedule_conflict"
         | "other"
-      job_status: "open" | "in_progress" | "completed" | "cancelled"
+      job_status: "open" | "in_progress" | "completed" | "cancelled" | "draft"
       report_status: "pending" | "reviewing" | "resolved" | "dismissed"
       report_type: "user" | "job" | "business" | "booking"
-      transaction_status: "pending" | "success" | "failed"
+      transaction_status: "pending" | "processing" | "paid" | "failed" | "refunded"
       transaction_type: "payment" | "refund"
       user_role: "worker" | "business"
+      worker_tier: "classic" | "pro" | "elite" | "champion"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1783,4 +2083,4 @@ export const Constants = {
 } as const
 
 // Convenience type aliases
-export type WorkerTier = Enums<"public", "worker_tier">
+export type WorkerTier = Enums<"worker_tier">

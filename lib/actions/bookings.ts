@@ -8,6 +8,9 @@ import { createInterviewSession as createInterviewSessionUtil } from "../algorit
 type Booking = Database["public"]["Tables"]["bookings"]["Row"]
 type Job = Database["public"]["Tables"]["jobs"]["Row"]
 
+// Database row type for interview_sessions
+type InterviewSessionRow = Database["public"]["Tables"]["interview_sessions"]["Row"]
+
 /**
  * Interview session type (stored in a separate table or as JSON in booking)
  */
@@ -32,6 +35,34 @@ export type InterviewSession = {
   voiceCallInitiated: boolean
   timeToHire: number | null
   createdAt: string
+}
+
+/**
+ * Transform database snake_case row to camelCase InterviewSession
+ */
+function transformInterviewSession(row: InterviewSessionRow): InterviewSession {
+  return {
+    id: row.id,
+    bookingId: row.booking_id,
+    businessId: row.business_id,
+    workerId: row.worker_id,
+    workerTier: row.worker_tier,
+    status: row.status,
+    type: row.type,
+    startedAt: row.started_at,
+    completedAt: row.completed_at,
+    chatStartedAt: row.chat_started_at,
+    chatCompletedAt: row.chat_completed_at,
+    voiceStartedAt: row.voice_started_at,
+    voiceCompletedAt: row.voice_completed_at,
+    chatDuration: row.chat_duration,
+    voiceDuration: row.voice_duration,
+    totalDuration: row.total_duration,
+    messagesSent: row.messages_sent,
+    voiceCallInitiated: row.voice_call_initiated,
+    timeToHire: row.time_to_hire,
+    createdAt: row.created_at,
+  }
 }
 
 // Types for bookings with joined data
@@ -82,10 +113,8 @@ type BookingWithJobAndWorker = Booking & {
 }
 
 // Type for updating a booking
-type BookingUpdate = Partial<Pick<Booking, 'status' | 'start_date' | 'end_date' | 'final_price' | 'cancellation_note' | 'cancelled_at' | 'cancellation_reason_id'>> & {
-  checkout_time?: string
-  payment_status?: string
-  review_deadline?: string
+type BookingUpdate = Partial<Database["public"]["Tables"]["bookings"]["Update"]> & {
+  check_out_at?: string
 }
 
 export type CheckoutResult = {
@@ -391,7 +420,7 @@ export async function checkoutBooking(bookingId: string, workerId: string): Prom
     // Update the booking
     const bookingUpdate: BookingUpdate = {
       status: "completed",
-      checkout_time: new Date().toISOString(),
+      check_out_at: new Date().toISOString(),
       payment_status: "pending_review",
       review_deadline: reviewDeadline.toISOString(),
     }
@@ -684,7 +713,6 @@ export async function createInterviewSession(
         messages_sent: session.messagesSent,
         voice_call_initiated: session.voiceCallInitiated,
         time_to_hire: session.timeToHire,
-        created_at: session.createdAt,
       })
       .select()
       .single()
@@ -693,7 +721,7 @@ export async function createInterviewSession(
       return { success: false, error: `Gagal membuat interview session: ${error.message}` }
     }
 
-    return { success: true, data: data as InterviewSession }
+    return { success: true, data: transformInterviewSession(data) }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat membuat interview session" }
   }
@@ -740,7 +768,7 @@ export async function startInterviewSession(
       return { success: false, error: `Gagal memulai interview: ${error.message}` }
     }
 
-    return { success: true, data: data as InterviewSession }
+    return { success: true, data: transformInterviewSession(data) }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat memulai interview" }
   }
@@ -786,7 +814,7 @@ export async function startChatInterview(
       return { success: false, error: `Gagal memulai chat: ${error.message}` }
     }
 
-    return { success: true, data: data as InterviewSession }
+    return { success: true, data: transformInterviewSession(data) }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat memulai chat" }
   }
@@ -841,7 +869,7 @@ export async function completeChatInterview(
       return { success: false, error: `Gagal menyelesaikan chat: ${error.message}` }
     }
 
-    return { success: true, data: data as InterviewSession }
+    return { success: true, data: transformInterviewSession(data) }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat menyelesaikan chat" }
   }
@@ -888,7 +916,7 @@ export async function startVoiceCallInterview(
       return { success: false, error: `Gagal memulai voice call: ${error.message}` }
     }
 
-    return { success: true, data: data as InterviewSession }
+    return { success: true, data: transformInterviewSession(data) }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat memulai voice call" }
   }
@@ -943,7 +971,7 @@ export async function completeVoiceCallInterview(
       return { success: false, error: `Gagal menyelesaikan voice call: ${error.message}` }
     }
 
-    return { success: true, data: data as InterviewSession }
+    return { success: true, data: transformInterviewSession(data) }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat menyelesaikan voice call" }
   }
@@ -1007,7 +1035,7 @@ export async function completeInterviewSession(
       console.error("Gagal mengupdate status booking:", bookingError)
     }
 
-    return { success: true, data: data as InterviewSession }
+    return { success: true, data: transformInterviewSession(data) }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat menyelesaikan interview" }
   }
@@ -1064,7 +1092,7 @@ export async function cancelInterviewSession(
       console.error("Gagal mengupdate status booking:", bookingError)
     }
 
-    return { success: true, data: data as InterviewSession }
+    return { success: true, data: transformInterviewSession(data) }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat membatalkan interview" }
   }
@@ -1089,7 +1117,31 @@ export async function getInterviewSessionByBooking(
       return { success: false, error: error.message, data: null }
     }
 
-    return { success: true, data: data as InterviewSession, error: null }
+    // Transform snake_case into camelCase
+    const session: InterviewSession = {
+      id: data.id,
+      bookingId: data.booking_id,
+      businessId: data.business_id,
+      workerId: data.worker_id,
+      workerTier: data.worker_tier,
+      status: data.status,
+      type: data.type,
+      startedAt: data.started_at,
+      completedAt: data.completed_at,
+      chatStartedAt: data.chat_started_at,
+      chatCompletedAt: data.chat_completed_at,
+      voiceStartedAt: data.voice_started_at,
+      voiceCompletedAt: data.voice_completed_at,
+      chatDuration: data.chat_duration,
+      voiceDuration: data.voice_duration,
+      totalDuration: data.total_duration,
+      messagesSent: data.messages_sent,
+      voiceCallInitiated: data.voice_call_initiated,
+      timeToHire: data.time_to_hire ? parseFloat(String(data.time_to_hire)) : null,
+      createdAt: data.created_at
+    }
+
+    return { success: true, data: session, error: null }
   } catch (error) {
     return { success: false, error: "Gagal mengambil interview session", data: null }
   }
