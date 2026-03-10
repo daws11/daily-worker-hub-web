@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       paidAt: payload.settlement_time,
       paymentMethod: payload.payment_type,
       paymentChannel: payload.va_numbers?.[0]?.bank || payload.payment_type,
-      rawData: payload,
+      rawData: payload as unknown as Record<string, unknown>,
     }
 
     // Process the webhook

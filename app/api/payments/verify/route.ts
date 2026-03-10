@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
         }
 
         // If payment is now successful, credit the wallet
-        if (paymentStatus.status === 'paid' && transaction.status !== 'paid') {
+        if (paymentStatus.status === 'success' && transaction.status !== 'success') {
           await creditWallet(
             supabase,
             transaction.business_id,
