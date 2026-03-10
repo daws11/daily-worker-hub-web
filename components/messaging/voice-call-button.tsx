@@ -13,7 +13,7 @@ import {
   VolumeX,
 } from "lucide-react"
 
-export interface VoiceCallButtonProps extends React.ComponentProps<typeof Button> {
+export interface VoiceCallButtonProps extends Omit<React.ComponentProps<typeof Button>, 'variant'> {
   callState?: "idle" | "calling" | "incoming" | "connected" | "ended"
   isMuted?: boolean
   isSpeakerOn?: boolean
@@ -71,25 +71,25 @@ const VoiceCallButton = React.forwardRef<HTMLButtonElement, VoiceCallButtonProps
     }
 
     // Get button variant based on call state
-    const getButtonVariant = () => {
+    const getButtonVariant = (): "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" => {
       if (callState === "connected") {
-        return "destructive" as const
+        return "destructive"
       }
       if (callState === "calling") {
-        return "secondary" as const
+        return "secondary"
       }
       if (callState === "incoming") {
-        return "default" as const
+        return "default"
       }
-      return props.variant || "default"
+      return "default"
     }
 
     // Handle button click
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
       if (callState === "connected") {
         onEndCall?.()
       } else if (props.onClick) {
-        props.onClick(e)
+        props.onClick(e as React.MouseEvent<HTMLButtonElement>)
       }
     }
 

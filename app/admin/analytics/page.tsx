@@ -332,27 +332,27 @@ export default function AdminAnalyticsPage() {
                     <>
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-2">
-                          <Badge className="bg-amber-700">Platinum</Badge>
+                          <Badge className="bg-amber-700">Champion</Badge>
                         </span>
-                        <span className="font-medium">{workerStats.byTier.platinum}</span>
+                        <span className="font-medium">{workerStats.byTier.champion}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-2">
-                          <Badge className="bg-yellow-500">Gold</Badge>
+                          <Badge className="bg-yellow-500">Elite</Badge>
                         </span>
-                        <span className="font-medium">{workerStats.byTier.gold}</span>
+                        <span className="font-medium">{workerStats.byTier.elite}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-2">
-                          <Badge className="bg-gray-400">Silver</Badge>
+                          <Badge className="bg-gray-400">Pro</Badge>
                         </span>
-                        <span className="font-medium">{workerStats.byTier.silver}</span>
+                        <span className="font-medium">{workerStats.byTier.pro}</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-2">
-                          <Badge className="bg-amber-700">Bronze</Badge>
+                          <Badge className="bg-amber-700">Classic</Badge>
                         </span>
-                        <span className="font-medium">{workerStats.byTier.bronze}</span>
+                        <span className="font-medium">{workerStats.byTier.classic}</span>
                       </div>
                     </>
                   )}

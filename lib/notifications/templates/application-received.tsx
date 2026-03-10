@@ -1,6 +1,6 @@
 import * as React from "react"
 
-interface ApplicationReceivedProps {
+export interface ApplicationReceivedProps {
   businessName: string
   workerName: string
   jobTitle: string

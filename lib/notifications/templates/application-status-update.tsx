@@ -1,6 +1,6 @@
 import * as React from "react"
 
-interface ApplicationStatusUpdateProps {
+export interface ApplicationStatusUpdateProps {
   workerName: string
   jobTitle: string
   businessName: string

@@ -13,8 +13,14 @@ import {
   getHourlyRate,
   getOvertimeMultiplier,
   getHoursBreakdown,
-  formatRupiah,
+  formatRupiah as formatRupiahFn,
 } from '@/lib/constants/rate-bali';
+
+// Re-export formatRupiah for external use
+export { formatRupiahFn as formatRupiah } from '@/lib/constants/rate-bali';
+
+// Re-export from utils for consistency
+export { formatRupiah } from '@/lib/utils';
 
 /**
  * Wage calculation result

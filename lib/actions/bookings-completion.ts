@@ -11,7 +11,7 @@ import { addPendingFundsAction } from "./wallets"
 // ============================================================================
 
 type Booking = Database["public"]["Tables"]["bookings"]["Row"]
-type BookingUpdate = Partial<Pick<Booking, 'status' | 'check_in_at' | 'checkout_time' | 'actual_hours' | 'final_price' | 'payment_status' | 'payment_id'>>
+type BookingUpdate = Partial<Database["public"]["Tables"]["bookings"]["Update"]>
 
 export type BookingResult = {
   success: boolean
@@ -183,17 +183,15 @@ export async function checkOutBooking(
     // Update the booking
     const bookingUpdate: BookingUpdate = {
       status: "completed",
-      checkout_time: new Date().toISOString(),
+      check_out_at: new Date().toISOString(),
       actual_hours: hours,
       payment_status: "pending_review",
+      review_deadline: reviewDeadline.toISOString(),
     }
 
     const { data: updatedBooking, error: updateError } = await supabase
       .from("bookings")
-      .update({
-        ...bookingUpdate,
-        review_deadline: reviewDeadline.toISOString(),
-      })
+      .update(bookingUpdate)
       .eq("id", bookingId)
       .eq("worker_id", workerId)
       .select()
@@ -302,11 +300,11 @@ export async function confirmBookingCompletion(
       return { success: false, error: "Booking belum selesai" }
     }
 
-    // Update payment status
+    // Update payment status to paid
     const { data: updatedBooking, error: updateError } = await supabase
       .from("bookings")
       .update({
-        payment_status: "available",
+        payment_status: "paid",
       })
       .eq("id", bookingId)
       .eq("business_id", businessId)
@@ -404,7 +402,7 @@ export async function processBookingPayment(
       .from("bookings")
       .update({
         payment_id: paymentId,
-        payment_status: "released",
+        payment_status: "paid",
       })
       .eq("id", bookingId)
       .select()

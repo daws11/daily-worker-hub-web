@@ -1,8 +1,9 @@
 "use server"
 
 import { createClient } from "../supabase/server"
-import type { Database } from "../supabase/types"
+import type { Database, Tables } from "../supabase/types"
 
+// Custom types for wallet tables not in generated types
 type Wallet = {
   id: string
   user_id: string
@@ -18,7 +19,7 @@ type WalletTransaction = {
   wallet_id: string
   amount: number
   type: 'hold' | 'release' | 'earn' | 'payout' | 'refund'
-  status: 'pending_review' | 'available' | 'released' | 'disputed' | 'cancelled'
+  status: 'pending_review' | 'paid' | 'refunded' | 'disputed' | 'cancelled'
   booking_id: string | null
   description: string | null
   created_at: string

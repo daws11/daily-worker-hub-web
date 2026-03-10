@@ -9,7 +9,7 @@ export default function WorkerLayout({
   return (
     <DashboardLayout
       sidebarItems={workerNavItems}
-      headerProps={{ subtitle: "Worker Hub" }}
+      headerProps={{ showBreadcrumbs: true }}
     >
       {children}
     </DashboardLayout>

@@ -1,6 +1,6 @@
 import * as React from "react"
 
-interface JobReminderProps {
+export interface JobReminderProps {
   workerName: string
   jobTitle: string
   businessName: string

@@ -18,20 +18,7 @@ import { Wallet, Loader2, Plus, ArrowUpRight, Clock, CheckCircle2, XCircle, Aler
 
 type BusinessesRow = Database["public"]["Tables"]["businesses"]["Row"]
 
-type PaymentTransaction = {
-  id: string
-  business_id: string
-  amount: number
-  fee_amount: number
-  type: 'credit' | 'debit' | 'pending' | 'released'
-  status: 'success' | 'pending' | 'failed' | 'expired'
-  payment_provider: string
-  provider_payment_id: string | null
-  payment_url: string | null
-  qris_expires_at: string | null
-  metadata: Record<string, any> | null
-  created_at: string
-}
+type PaymentTransaction = Database["public"]["Tables"]["payment_transactions"]["Row"]
 
 type WalletBalance = {
   balance: number
@@ -215,10 +202,10 @@ export default function BusinessWalletPage() {
   // Get status badge variant and icon
   const getStatusInfo = (status: PaymentTransaction["status"]) => {
     switch (status) {
-      case "success":
+      case "paid":
         return {
           variant: "default" as const,
-          label: t('common.success'),
+          label: t('common.paid'),
           icon: CheckCircle2,
           className: "bg-green-100 text-green-800 hover:bg-green-100",
         }
@@ -229,6 +216,13 @@ export default function BusinessWalletPage() {
           icon: Clock,
           className: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
         }
+      case "processing":
+        return {
+          variant: "secondary" as const,
+          label: locale === 'id' ? 'Diproses' : 'Processing',
+          icon: Clock,
+          className: "bg-blue-100 text-blue-800 hover:bg-blue-100",
+        }
       case "failed":
         return {
           variant: "destructive" as const,
@@ -236,10 +230,10 @@ export default function BusinessWalletPage() {
           icon: XCircle,
           className: "bg-red-100 text-red-800 hover:bg-red-100",
         }
-      case "expired":
+      case "refunded":
         return {
           variant: "outline" as const,
-          label: locale === 'id' ? 'Kadaluarsa' : 'Expired',
+          label: locale === 'id' ? 'Dikembalikan' : 'Refunded',
           icon: AlertCircle,
           className: "bg-gray-100 text-gray-800 hover:bg-gray-100",
         }

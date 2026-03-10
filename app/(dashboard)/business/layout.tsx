@@ -1,4 +1,5 @@
 import { DashboardLayout } from "@/components/layout"
+import { businessNavItems } from "@/components/layout/sidebar-nav"
 
 export default function BusinessLayout({
   children,
@@ -6,7 +7,7 @@ export default function BusinessLayout({
   children: React.ReactNode
 }) {
   return (
-    <DashboardLayout>
+    <DashboardLayout sidebarItems={businessNavItems}>
       {children}
     </DashboardLayout>
   )

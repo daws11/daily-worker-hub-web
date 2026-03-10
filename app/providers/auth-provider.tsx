@@ -146,7 +146,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // 3. Create wallet for the user (if worker or business)
-      console.log('[AUTH signUp] Step 3: Creating wallet...')
+      // NOTE: wallets table not currently implemented in schema
+      // TODO: Implement wallet functionality when table is added
+      console.log('[AUTH signUp] Step 3: Wallet creation skipped (table not implemented)')
+      /*
       if (role === 'worker' || role === 'business') {
         const { error: walletError } = await supabase
           .from('wallets')
@@ -157,6 +160,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           })
 
         console.log('[AUTH signUp] Wallet insert response:', { error: !!walletError })
+      }
+      */
 
         if (walletError) {
           // Log the error but don't block registration

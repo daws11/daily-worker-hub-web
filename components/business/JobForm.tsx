@@ -308,7 +308,7 @@ export default function JobForm() {
                 border: '1px solid #d1d5db',
                 borderRadius: '0.375rem',
                 fontSize: '0.875rem',
-                disabled: loading ? { backgroundColor: '#f3f4f6' } : {}
+                backgroundColor: loading ? '#f3f4f6' : undefined
               }}
             />
           </div>
@@ -645,8 +645,8 @@ export default function JobForm() {
                 borderRadius: '0.375rem',
                 fontSize: '0.875rem',
                 fontWeight: 500,
-                cursor: 'pointer',
-                disabled: loading ? { opacity: 0.5, cursor: 'not-allowed' } : {}
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.5 : 1
               }}
             >
               Cancel
@@ -665,8 +665,8 @@ export default function JobForm() {
                 borderRadius: '0.375rem',
                 fontSize: '0.875rem',
                 fontWeight: 500,
-                cursor: 'pointer',
-                disabled: loading ? { opacity: 0.5, cursor: 'not-allowed' } : {}
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.5 : 1
               }}
             >
               {loading ? (

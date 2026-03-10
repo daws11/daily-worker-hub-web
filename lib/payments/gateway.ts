@@ -7,6 +7,9 @@
 
 import type { PaymentProvider } from '../types/payment'
 
+// Re-export PaymentProvider for convenience
+export type { PaymentProvider } from '../types/payment'
+
 /**
  * Payment status enum
  */

@@ -102,10 +102,10 @@ export async function POST(request: Request) {
         )
 
         if (releaseResult.success) {
-          // Update booking payment status
+          // Update booking payment status to paid
           await supabase
             .from('bookings')
-            .update({ payment_status: 'available' })
+            .update({ payment_status: 'paid' })
             .eq('id', booking.id)
 
           // Notify worker

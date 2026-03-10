@@ -1,6 +1,6 @@
 import * as React from "react"
 
-interface BookingConfirmedProps {
+export interface BookingConfirmedProps {
   recipientName: string
   recipientType: "worker" | "business"
   jobTitle: string

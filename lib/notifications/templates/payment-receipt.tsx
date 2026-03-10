@@ -1,6 +1,6 @@
 import * as React from "react"
 
-interface PaymentReceiptProps {
+export interface PaymentReceiptProps {
   workerName: string
   businessName: string
   jobTitle: string

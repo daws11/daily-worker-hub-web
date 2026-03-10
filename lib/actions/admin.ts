@@ -38,10 +38,10 @@ export interface WorkerStatistics {
   active: number
   newThisMonth: number
   byTier: {
-    bronze: number
-    silver: number
-    gold: number
-    platinum: number
+    classic: number
+    pro: number
+    elite: number
+    champion: number
   }
   byArea: {
     area: string
@@ -97,7 +97,7 @@ export async function getRevenueMetrics(
     // Get daily revenue from bookings
     const { data: bookings, error: bookingsError } = await supabase
       .from("bookings")
-      .select("created_at, total_amount, platform_fee, status")
+      .select("created_at, total_amount, status")
       .gte("created_at", start)
       .lte("created_at", end + "T23:59:59")
       .in("status", ["completed", "in_progress"])
@@ -113,7 +113,8 @@ export async function getRevenueMetrics(
       const date = booking.created_at.split("T")[0]
       const existing = dailyMap.get(date) || { revenue: 0, fees: 0, bookings: 0 }
       existing.revenue += Number(booking.total_amount) || 0
-      existing.fees += Number(booking.platform_fee) || 0
+      // Platform fees not currently tracked in bookings table
+      existing.fees += 0
       existing.bookings += 1
       dailyMap.set(date, existing)
     })
@@ -223,10 +224,10 @@ export async function getWorkerStatistics(): Promise<{ data: WorkerStatistics | 
       .select("tier")
 
     const byTier = {
-      bronze: tierData?.filter((w) => w.tier === "bronze").length || 0,
-      silver: tierData?.filter((w) => w.tier === "silver").length || 0,
-      gold: tierData?.filter((w) => w.tier === "gold").length || 0,
-      platinum: tierData?.filter((w) => w.tier === "platinum").length || 0,
+      classic: tierData?.filter((w) => w.tier === ("classic" as Database["public"]["Enums"]["worker_tier"])).length || 0,
+      pro: tierData?.filter((w) => w.tier === ("pro" as Database["public"]["Enums"]["worker_tier"])).length || 0,
+      elite: tierData?.filter((w) => w.tier === ("elite" as Database["public"]["Enums"]["worker_tier"])).length || 0,
+      champion: tierData?.filter((w) => w.tier === ("champion" as Database["public"]["Enums"]["worker_tier"])).length || 0,
     }
 
     // Get workers by area
@@ -253,9 +254,9 @@ export async function getWorkerStatistics(): Promise<{ data: WorkerStatistics | 
       .select("kyc_status")
 
     const byKycStatus = {
-      verified: kycData?.filter((w) => w.kyc_status === "verified").length || 0,
-      pending: kycData?.filter((w) => w.kyc_status === "pending").length || 0,
-      unverified: kycData?.filter((w) => !w.kyc_status || w.kyc_status === "unverified").length || 0,
+      verified: kycData?.filter((w) => w.kyc_status === "approved").length || 0,
+      pending: kycData?.filter((w) => w.kyc_status === "pending" || w.kyc_status === "in_review").length || 0,
+      unverified: kycData?.filter((w) => !w.kyc_status || w.kyc_status === "rejected").length || 0,
     }
 
     return {
@@ -383,7 +384,7 @@ export async function getPaymentMetrics(): Promise<{ data: PaymentMetrics | null
       }
 
       const total = bookings?.length || 0
-      const successful = bookings?.filter((b) => b.payment_status === "paid" || b.payment_status === "released").length || 0
+      const successful = bookings?.filter((b) => b.payment_status === "paid" || b.payment_status === "refunded").length || 0
       const failed = bookings?.filter((b) => b.payment_status === "failed").length || 0
       const pending = bookings?.filter((b) => b.payment_status === "pending" || b.payment_status === "pending_review").length || 0
       const volume = bookings?.reduce((sum, b) => sum + (Number(b.total_amount) || 0), 0) || 0
@@ -402,7 +403,7 @@ export async function getPaymentMetrics(): Promise<{ data: PaymentMetrics | null
     }
 
     const total = transactions?.length || 0
-    const successful = transactions?.filter((t) => t.status === "completed" || t.status === "success").length || 0
+    const successful = transactions?.filter((t) => t.status === "completed" || t.status === "paid").length || 0
     const failed = transactions?.filter((t) => t.status === "failed").length || 0
     const pending = transactions?.filter((t) => t.status === "pending").length || 0
     const volume = transactions?.reduce((sum, t) => sum + (Number(t.amount) || 0), 0) || 0

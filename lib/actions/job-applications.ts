@@ -133,8 +133,8 @@ export async function createJobApplication(
       business_id: job.business_id,
       status: 'pending',
       cover_letter: options?.coverLetter || null,
-      proposed_wage: options?.proposedWage || null,
-      availability_json: options?.availability || [],
+      proposed_rate: options?.proposedWage || null,
+      availability_date: options?.availability?.[0] || null,
     }
 
     const { data, error } = await supabase
@@ -203,7 +203,6 @@ export async function getApplicationsByJob(
           avatar_url,
           tier,
           rating,
-          reliability_score,
           jobs_completed
         )
       `)

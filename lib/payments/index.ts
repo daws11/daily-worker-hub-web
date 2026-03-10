@@ -32,6 +32,7 @@ export type {
   WebhookPayload,
   PaymentGateway,
   GatewayConfig,
+  PaymentProvider,
 } from './gateway'
 
 // Re-export utility functions

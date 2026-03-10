@@ -51,9 +51,16 @@ export default async function InterviewPage({ params }: InterviewPageProps) {
   // Get business and worker info
   const { data: business } = await supabase
     .from('businesses')
-    .select('id, name, avatar_url, user_id')
+    .select('id, name, user_id')
     .eq('id', interviewSession.businessId)
     .single()
+
+  // Get business avatar from users table
+  const { data: businessUser } = business ? await supabase
+    .from('users')
+    .select('avatar_url')
+    .eq('id', business.user_id)
+    .single() : { data: null }
 
   const { data: worker } = await supabase
     .from('workers')
@@ -78,30 +85,9 @@ export default async function InterviewPage({ params }: InterviewPageProps) {
         </div>
 
         <InterviewChat
-          interviewSession={{
-            id: interviewSession.id,
-            bookingId: interviewSession.booking_id,
-            businessId: interviewSession.business_id,
-            workerId: interviewSession.worker_id,
-            workerTier: interviewSession.worker_tier,
-            status: interviewSession.status as any,
-            type: interviewSession.type as any,
-            startedAt: interviewSession.started_at,
-            completedAt: interviewSession.completed_at,
-            chatStartedAt: interviewSession.chat_started_at,
-            chatCompletedAt: interviewSession.chat_completed_at,
-            voiceStartedAt: interviewSession.voice_started_at,
-            voiceCompletedAt: interviewSession.voice_completed_at,
-            chatDuration: interviewSession.chat_duration,
-            voiceDuration: interviewSession.voice_duration,
-            totalDuration: interviewSession.total_duration,
-            messagesSent: interviewSession.messages_sent,
-            voiceCallInitiated: interviewSession.voice_call_initiated,
-            timeToHire: interviewSession.time_to_hire ? parseFloat(interviewSession.time_to_hire.toString()) : null,
-            createdAt: interviewSession.created_at,
-          }}
+          interviewSession={interviewSession}
           workerName={worker.full_name}
-          workerTier={interviewSession.worker_tier}
+          workerTier={interviewSession.workerTier}
           workerAvatar={worker.avatar_url}
           businessName={business.name}
           currentUserId={user.id}

@@ -151,22 +151,22 @@ export async function getBadgeProgress(workerId: string): Promise<BadgeProgressR
 
       // Calculate progress based on badge category
       switch (badge.category) {
-        case "skills":
+        case "skill":
           requiredCount = 10
           currentCount = completedJobs
           progress = Math.min((currentCount / requiredCount) * 100, 100)
           break
-        case "experience":
+        case "certification":
           requiredCount = 20
           currentCount = completedJobs
           progress = Math.min((currentCount / requiredCount) * 100, 100)
           break
-        case "quality":
+        case "specialization":
           requiredCount = 4.5
           currentCount = avgRating
           progress = Math.min((currentCount / requiredCount) * 100, 100)
           break
-        case "reliability":
+        case "training":
           requiredCount = 15
           currentCount = completedJobs
           progress = Math.min((currentCount / requiredCount) * 100, 100)

@@ -108,11 +108,13 @@ export async function generateWorkerShortlist(
     }
 
     // Calculate matching scores for each worker
+    // Use type assertion to handle Supabase query result typing
+    const workersList = workers as any[];
     const workersWithScores: WorkerWithScore[] = await Promise.all(
-      workers
-        .filter(worker => !excludeWorkerIds.includes(worker.id))
-        .map(async worker => {
-          const workerSkills = worker.worker_skills?.map(ws => ws.skill_id) || [];
+      workersList
+        .filter((worker: any) => !excludeWorkerIds.includes(worker.id))
+        .map(async (worker: any) => {
+          const workerSkills = worker.worker_skills?.map((ws: any) => ws.skill_id) || [];
 
           // Check actual worker availability
           const isAvailable = await isWorkerAvailable(
@@ -232,9 +234,11 @@ export async function generateWorkerShortlistFromIds(
     }
 
     // Calculate matching scores
+    // Use type assertion to handle Supabase query result typing
+    const workersList = workers as any[];
     const workersWithScores = await Promise.all(
-      workers.map(async worker => {
-        const workerSkills = worker.worker_skills?.map(ws => ws.skill_id) || [];
+      workersList.map(async (worker: any) => {
+        const workerSkills = worker.worker_skills?.map((ws: any) => ws.skill_id) || [];
 
         // Check actual worker availability
         const isAvailable = await isWorkerAvailable(

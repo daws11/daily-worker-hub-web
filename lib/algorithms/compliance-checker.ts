@@ -6,7 +6,12 @@
  * determine warning levels, and suggest alternative workers.
  */
 
-import { getComplianceStatus, getAlternativeWorkers, type ComplianceStatusResult, type WarningLevel } from '@/lib/supabase/queries/compliance'
+import { 
+  getComplianceStatus as getComplianceStatusFromDB, 
+  getAlternativeWorkers as getAlternativeWorkersFromDB, 
+  type ComplianceStatusResult, 
+  type WarningLevel 
+} from '@/lib/supabase/queries/compliance'
 
 // ============================================================================
 // Types
@@ -79,15 +84,15 @@ export async function checkCompliance(
 ): Promise<ComplianceCheckResult> {
   try {
     // Get compliance status from database
-    const { data: complianceData, error } = await getComplianceStatus(
+    const result = await getComplianceStatusFromDB(
       workerId,
       businessId,
       month
     )
 
-    if (error || !complianceData) {
+    if (result.error || !result.data) {
       // On error, default to safe state (allow booking)
-      console.error('Error checking compliance:', error)
+      console.error('Error checking compliance:', result.error)
       return {
         canBook: true,
         status: 'ok',
@@ -99,7 +104,7 @@ export async function checkCompliance(
       }
     }
 
-    const daysWorked = complianceData.daysWorked
+    const daysWorked = result.data.daysWorked
     const daysRemaining = Math.max(0, MAX_DAYS_PER_MONTH - daysWorked)
 
     // Determine compliance status and warning level
@@ -218,7 +223,7 @@ export async function getCompliantAlternativeWorkers(
 ): Promise<AlternativeWorker[]> {
   try {
     // Get all alternative workers from database
-    const { data: workers, error } = await getAlternativeWorkers(businessId, month, limit + excludeWorkerIds.length)
+    const { data: workers, error } = await getAlternativeWorkersFromDB(businessId, month, limit + excludeWorkerIds.length)
 
     if (error || !workers) {
       console.error('Error fetching alternative workers:', error)

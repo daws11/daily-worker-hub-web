@@ -164,7 +164,7 @@ export function JobPostingForm({
   const [selectedSocialPlatforms, setSelectedSocialPlatforms] = React.useState<PlatformSelection[]>([])
 
   const form = useForm<JobPostingFormValues>({
-    resolver: zodResolver(jobPostingFormSchema),
+    resolver: zodResolver(jobPostingFormSchema) as any,
     defaultValues: {
       title: "",
       positionType: undefined,
@@ -244,7 +244,7 @@ export function JobPostingForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className={cn("space-y-6", className)}>
+      <form onSubmit={form.handleSubmit(handleSubmit as any)} className={cn("space-y-6", className)}>
         {/* Draft Banner */}
         {draftTimestamp !== undefined && (
           <JobDraftBanner
@@ -256,7 +256,7 @@ export function JobPostingForm({
 
         {/* Title */}
         <FormField
-          control={form.control}
+          control={form.control as any}
           name="title"
           render={({ field }) => (
             <FormItem>
@@ -278,7 +278,7 @@ export function JobPostingForm({
 
         {/* Position Type */}
         <FormField
-          control={form.control}
+          control={form.control as any}
           name="positionType"
           render={({ field }) => (
             <FormItem>
@@ -302,7 +302,7 @@ export function JobPostingForm({
         {/* Date and Time */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <FormField
-            control={form.control}
+            control={form.control as any}
             name="date"
             render={({ field }) => (
               <FormItem>
@@ -324,7 +324,7 @@ export function JobPostingForm({
           />
 
           <FormField
-            control={form.control}
+            control={form.control as any}
             name="startTime"
             render={({ field }) => (
               <FormItem>
@@ -342,7 +342,7 @@ export function JobPostingForm({
           />
 
           <FormField
-            control={form.control}
+            control={form.control as any}
             name="endTime"
             render={({ field }) => (
               <FormItem>
@@ -362,7 +362,7 @@ export function JobPostingForm({
 
         {/* Area */}
         <FormField
-          control={form.control}
+          control={form.control as any}
           name="area"
           render={({ field }) => (
             <FormItem>
@@ -385,7 +385,7 @@ export function JobPostingForm({
 
         {/* Address */}
         <FormField
-          control={form.control}
+          control={form.control as any}
           name="address"
           render={({ field }) => (
             <FormItem>
@@ -407,7 +407,7 @@ export function JobPostingForm({
 
         {/* Wage Rate */}
         <FormField
-          control={form.control}
+          control={form.control as any}
           name="wageMin"
           render={({ field }) => (
             <FormItem>
@@ -434,7 +434,7 @@ export function JobPostingForm({
 
         {/* Hours Needed */}
         <FormField
-          control={form.control}
+          control={form.control as any}
           name="hoursNeeded"
           render={({ field }) => (
             <FormItem>
@@ -456,7 +456,7 @@ export function JobPostingForm({
 
         {/* Wage Calculator */}
         <FormField
-          control={form.control}
+          control={form.control as any}
           name="hoursNeeded"
           render={({ field }) => (
             <FormItem>
@@ -475,7 +475,7 @@ export function JobPostingForm({
 
         {/* Workers Needed */}
         <FormField
-          control={form.control}
+          control={form.control as any}
           name="workersNeeded"
           render={({ field }) => (
             <FormItem>
@@ -500,7 +500,7 @@ export function JobPostingForm({
 
         {/* Requirements */}
         <FormField
-          control={form.control}
+          control={form.control as any}
           name="requirements"
           render={({ field }) => (
             <FormItem>
@@ -523,7 +523,7 @@ export function JobPostingForm({
 
         {/* Description */}
         <FormField
-          control={form.control}
+          control={form.control as any}
           name="description"
           render={({ field }) => (
             <FormItem>

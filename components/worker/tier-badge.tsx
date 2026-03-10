@@ -17,6 +17,16 @@ interface TierBadgeProps {
   variant?: 'default' | 'minimal' | 'detailed';
 }
 
+interface TierConfig {
+  icon: typeof Crown;
+  gradient: string;
+  bgGradient: string;
+  textColor: string;
+  bgColor: string;
+  borderColor: string;
+  label: string;
+}
+
 const tierConfig = {
   champion: {
     icon: Crown,
@@ -54,7 +64,7 @@ const tierConfig = {
     borderColor: 'border-gray-400',
     label: 'Classic',
   },
-};
+} as const satisfies Record<WorkerTier, TierConfig>;
 
 export function TierBadge({
   tier,
@@ -63,7 +73,7 @@ export function TierBadge({
   size = 'md',
   variant = 'default',
 }: TierBadgeProps) {
-  const config = tierConfig[tier];
+  const config = tierConfig[tier] as TierConfig;
   const Icon = config.icon;
   const bonus = getTierBonus(tier);
 
@@ -184,7 +194,7 @@ export function TierBadgeDetailed({
   rating,
   punctuality,
 }: TierBadgeDetailedProps) {
-  const config = tierConfig[tier];
+  const config = tierConfig[tier] as TierConfig;
   const Icon = config.icon;
 
   return (
