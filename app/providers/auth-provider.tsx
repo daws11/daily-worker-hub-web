@@ -160,14 +160,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           })
 
         console.log('[AUTH signUp] Wallet insert response:', { error: !!walletError })
-      }
-      */
 
         if (walletError) {
           // Log the error but don't block registration
           console.error('[AUTH signUp] Wallet creation error (non-blocking):', walletError)
         }
       }
+      */
 
       console.log('[AUTH] Registration successful, redirecting to onboarding...')
       console.log('[AUTH] Role:', role)
