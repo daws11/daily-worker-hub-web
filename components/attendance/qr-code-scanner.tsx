@@ -220,7 +220,7 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
         <DialogContent
           ref={ref}
           className={cn("sm:max-w-md", className)}
-          onPointerDownOutside={(e) => e.preventDefault()}
+          onPointerDownOutside={(e: Event) => e.preventDefault()}
           onEscapeKeyDown={(e) => {
             if (processing) e.preventDefault()
           }}

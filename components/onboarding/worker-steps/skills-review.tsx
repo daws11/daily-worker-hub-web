@@ -91,9 +91,10 @@ export function SkillsReview({
     onChange({ primaryCategory, experienceLevel, bio })
   }, [primaryCategory, experienceLevel, bio, termsAccepted, onValidChange, onChange])
 
-  const handleTermsChange = (checked: boolean) => {
-    setTermsAccepted(checked)
-    onTermsChange(checked)
+  const handleTermsChange = (checked: boolean | "indeterminate") => {
+    const isChecked = checked === true
+    setTermsAccepted(isChecked)
+    onTermsChange(isChecked)
   }
 
   // Format date for display
