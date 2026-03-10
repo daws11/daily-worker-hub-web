@@ -27,6 +27,23 @@ function getInitials(name: string): string {
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
 }
 
+function mapKycStatus(
+  status: "pending" | "in_review" | "approved" | "rejected" | null
+): "unverified" | "pending" | "verified" | "rejected" {
+  switch (status) {
+    case "approved":
+      return "verified"
+    case "in_review":
+    case "pending":
+      return "pending"
+    case "rejected":
+      return "rejected"
+    case null:
+    default:
+      return "unverified"
+  }
+}
+
 function WorkerCard({ worker, className, ...props }: WorkerCardProps) {
   const formatDate = React.useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -55,7 +72,7 @@ function WorkerCard({ worker, className, ...props }: WorkerCardProps) {
               </CardDescription>
             </div>
           </div>
-          <KycStatusBadge status={worker.kyc_status} />
+          <KycStatusBadge status={mapKycStatus(worker.kyc_status)} />
         </div>
       </CardHeader>
 

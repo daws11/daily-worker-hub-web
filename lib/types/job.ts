@@ -6,7 +6,7 @@ type SkillRow = Database['public']['Tables']['skills']['Row']
 type BusinessRow = Database['public']['Tables']['businesses']['Row']
 type UserRow = Database['public']['Tables']['users']['Row']
 
-export type JobStatus = 'open' | 'in_progress' | 'completed' | 'cancelled'
+export type JobStatus = 'draft' | 'open' | 'in_progress' | 'completed' | 'cancelled'
 
 export type JobSortOption = 'newest' | 'oldest' | 'highest_wage' | 'lowest_wage' | 'nearest'
 

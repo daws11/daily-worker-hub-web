@@ -32,7 +32,7 @@ import {
 // TYPES
 // ============================================================================
 
-type ApplicationStatus = 'pending' | 'shortlisted' | 'accepted' | 'rejected' | 'withdrawn'
+type ApplicationStatus = 'pending' | 'reviewed' | 'accepted' | 'rejected' | 'withdrawn'
 
 interface WorkerInfo {
   id: string
@@ -96,7 +96,7 @@ function formatTimeAgo(dateString: string): string {
 
 const statusConfig: Record<ApplicationStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   pending: { label: "Menunggu", variant: "secondary" },
-  shortlisted: { label: "Dipilih", variant: "default" },
+  reviewed: { label: "Dipilih", variant: "default" },
   accepted: { label: "Diterima", variant: "default" },
   rejected: { label: "Ditolak", variant: "destructive" },
   withdrawn: { label: "Ditarik", variant: "outline" },
@@ -119,7 +119,7 @@ export function ApplicantCard({
   const worker = application.workers
   const config = statusConfig[application.status]
 
-  const canTakeAction = application.status === 'pending' || application.status === 'shortlisted'
+  const canTakeAction = application.status === 'pending' || application.status === 'reviewed'
 
   return (
     <>

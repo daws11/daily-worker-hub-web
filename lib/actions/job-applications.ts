@@ -341,7 +341,7 @@ export async function updateApplicationStatus(
 
     if (worker && job) {
       const statusMessages: Record<string, { title: string; body: string }> = {
-        'shortlisted': {
+        'reviewed': {
           title: "Lamaran Ditinjau",
           body: `Lamaran Anda untuk ${job.title} sedang ditinjau`
         },

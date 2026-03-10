@@ -158,13 +158,13 @@ export default function BusinessBookingsPage() {
       const bookings = (bookingsData as Booking[]) || []
 
       // Fetch existing reviews for completed bookings
-      const completedBookingIds = bookings
+      const completedBookingIds: string[] = bookings
         .filter((b) => b.status === "completed")
         .map((b) => b.id)
 
       if (completedBookingIds.length > 0) {
-        const { data: reviewsData } = await supabase
-          .from("reviews")
+        const reviewsTable = supabase.from("reviews") as any
+        const { data: reviewsData } = await reviewsTable
           .select("id, booking_id, rating, comment, would_rehire")
           .in("booking_id", completedBookingIds)
           .eq("reviewer", "business")

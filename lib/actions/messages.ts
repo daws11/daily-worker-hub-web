@@ -3,6 +3,7 @@
 import { createClient } from "../supabase/server"
 import type { Database } from "../supabase/types"
 import { createNotification } from "./notifications"
+import type { MessageWithRelations } from "../types/message"
 
 type Message = Database["public"]["Tables"]["messages"]["Row"]
 
@@ -16,6 +17,13 @@ export type MessageResult = {
 }
 
 export type MessagesListResult = {
+  success: boolean
+  error?: string
+  data?: MessageWithRelations[]
+  count?: number
+}
+
+export type RawMessagesListResult = {
   success: boolean
   error?: string
   data?: Message[]
@@ -195,7 +203,7 @@ export async function getMessages(
   try {
     const supabase = await createClient()
 
-    const { data, error } = await supabase
+    const { data: messages, error } = await supabase
       .from("messages")
       .select("*")
       .or(`and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`)
@@ -206,7 +214,43 @@ export async function getMessages(
       return { success: false, error: `Gagal mengambil pesan: ${error.message}` }
     }
 
-    return { success: true, data, count: data?.length || 0 }
+    if (!messages || messages.length === 0) {
+      return { success: true, data: [], count: 0 }
+    }
+
+    // Get unique user IDs from messages
+    const userIds = new Set<string>()
+    messages.forEach(msg => {
+      userIds.add(msg.sender_id)
+      userIds.add(msg.receiver_id)
+    })
+
+    // Fetch user data for all users involved
+    const { data: users } = await supabase
+      .from("users")
+      .select("id, full_name, avatar_url, role")
+      .in("id", Array.from(userIds))
+
+    const userMap = new Map(users?.map(u => [u.id, u]) || [])
+
+    // Enrich messages with user data
+    const enrichedMessages = messages.map(msg => ({
+      ...msg,
+      sender: userMap.get(msg.sender_id) || {
+        id: msg.sender_id,
+        full_name: "Unknown",
+        avatar_url: null,
+        role: "worker" as const,
+      },
+      receiver: userMap.get(msg.receiver_id) || {
+        id: msg.receiver_id,
+        full_name: "Unknown",
+        avatar_url: null,
+        role: "worker" as const,
+      },
+    }))
+
+    return { success: true, data: enrichedMessages, count: enrichedMessages.length }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat mengambil pesan" }
   }
@@ -222,7 +266,7 @@ export async function getUserMessages(
   try {
     const supabase = await createClient()
 
-    const { data, error } = await supabase
+    const { data: messages, error } = await supabase
       .from("messages")
       .select("*")
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
@@ -233,7 +277,43 @@ export async function getUserMessages(
       return { success: false, error: `Gagal mengambil pesan: ${error.message}` }
     }
 
-    return { success: true, data, count: data?.length || 0 }
+    if (!messages || messages.length === 0) {
+      return { success: true, data: [], count: 0 }
+    }
+
+    // Get unique user IDs from messages
+    const userIds = new Set<string>()
+    messages.forEach(msg => {
+      userIds.add(msg.sender_id)
+      userIds.add(msg.receiver_id)
+    })
+
+    // Fetch user data for all users involved
+    const { data: users } = await supabase
+      .from("users")
+      .select("id, full_name, avatar_url, role")
+      .in("id", Array.from(userIds))
+
+    const userMap = new Map(users?.map(u => [u.id, u]) || [])
+
+    // Enrich messages with user data
+    const enrichedMessages = messages.map(msg => ({
+      ...msg,
+      sender: userMap.get(msg.sender_id) || {
+        id: msg.sender_id,
+        full_name: "Unknown",
+        avatar_url: null,
+        role: "worker" as const,
+      },
+      receiver: userMap.get(msg.receiver_id) || {
+        id: msg.receiver_id,
+        full_name: "Unknown",
+        avatar_url: null,
+        role: "worker" as const,
+      },
+    }))
+
+    return { success: true, data: enrichedMessages, count: enrichedMessages.length }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat mengambil pesan" }
   }
@@ -246,7 +326,7 @@ export async function getUnreadMessages(userId: string): Promise<MessagesListRes
   try {
     const supabase = await createClient()
 
-    const { data, error } = await supabase
+    const { data: messages, error } = await supabase
       .from("messages")
       .select("*")
       .eq("receiver_id", userId)
@@ -257,7 +337,43 @@ export async function getUnreadMessages(userId: string): Promise<MessagesListRes
       return { success: false, error: `Gagal mengambil pesan: ${error.message}` }
     }
 
-    return { success: true, data, count: data?.length || 0 }
+    if (!messages || messages.length === 0) {
+      return { success: true, data: [], count: 0 }
+    }
+
+    // Get unique user IDs from messages
+    const userIds = new Set<string>()
+    messages.forEach(msg => {
+      userIds.add(msg.sender_id)
+      userIds.add(msg.receiver_id)
+    })
+
+    // Fetch user data for all users involved
+    const { data: users } = await supabase
+      .from("users")
+      .select("id, full_name, avatar_url, role")
+      .in("id", Array.from(userIds))
+
+    const userMap = new Map(users?.map(u => [u.id, u]) || [])
+
+    // Enrich messages with user data
+    const enrichedMessages = messages.map(msg => ({
+      ...msg,
+      sender: userMap.get(msg.sender_id) || {
+        id: msg.sender_id,
+        full_name: "Unknown",
+        avatar_url: null,
+        role: "worker" as const,
+      },
+      receiver: userMap.get(msg.receiver_id) || {
+        id: msg.receiver_id,
+        full_name: "Unknown",
+        avatar_url: null,
+        role: "worker" as const,
+      },
+    }))
+
+    return { success: true, data: enrichedMessages, count: enrichedMessages.length }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat mengambil pesan" }
   }
@@ -273,7 +389,7 @@ export async function getBookingMessages(
   try {
     const supabase = await createClient()
 
-    const { data, error } = await supabase
+    const { data: messages, error } = await supabase
       .from("messages")
       .select("*")
       .eq("booking_id", bookingId)
@@ -284,7 +400,43 @@ export async function getBookingMessages(
       return { success: false, error: `Gagal mengambil pesan: ${error.message}` }
     }
 
-    return { success: true, data, count: data?.length || 0 }
+    if (!messages || messages.length === 0) {
+      return { success: true, data: [], count: 0 }
+    }
+
+    // Get unique user IDs from messages
+    const userIds = new Set<string>()
+    messages.forEach(msg => {
+      userIds.add(msg.sender_id)
+      userIds.add(msg.receiver_id)
+    })
+
+    // Fetch user data for all users involved
+    const { data: users } = await supabase
+      .from("users")
+      .select("id, full_name, avatar_url, role")
+      .in("id", Array.from(userIds))
+
+    const userMap = new Map(users?.map(u => [u.id, u]) || [])
+
+    // Enrich messages with user data
+    const enrichedMessages = messages.map(msg => ({
+      ...msg,
+      sender: userMap.get(msg.sender_id) || {
+        id: msg.sender_id,
+        full_name: "Unknown",
+        avatar_url: null,
+        role: "worker" as const,
+      },
+      receiver: userMap.get(msg.receiver_id) || {
+        id: msg.receiver_id,
+        full_name: "Unknown",
+        avatar_url: null,
+        role: "worker" as const,
+      },
+    }))
+
+    return { success: true, data: enrichedMessages, count: enrichedMessages.length }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat mengambil pesan" }
   }

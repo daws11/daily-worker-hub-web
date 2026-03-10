@@ -68,7 +68,7 @@ export async function getWorkerWallet(workerId: string): Promise<WalletResult> {
     }
 
     const { data, error } = await supabase
-      .from("wallets")
+      .from("wallets" as any)
       .select("*")
       .eq("user_id", worker.user_id)
       .maybeSingle()
@@ -80,7 +80,7 @@ export async function getWorkerWallet(workerId: string): Promise<WalletResult> {
     // Create wallet if it doesn't exist
     if (!data) {
       const { data: newWallet, error: createError } = await supabase
-        .from("wallets")
+        .from("wallets" as any)
         .insert({
           user_id: worker.user_id,
           balance: 0,
@@ -94,10 +94,10 @@ export async function getWorkerWallet(workerId: string): Promise<WalletResult> {
         return { success: false, error: `Gagal membuat dompet: ${createError.message}` }
       }
 
-      return { success: true, data: newWallet }
+      return { success: true, data: newWallet as unknown as Wallet }
     }
 
-    return { success: true, data }
+    return { success: true, data: data as unknown as Wallet }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat mengambil data dompet" }
   }
@@ -146,7 +146,7 @@ export async function getTransactions(
       return { success: false, error: `Gagal mengambil transaksi: ${error.message}` }
     }
 
-    return { success: true, data: data || [], count: count || 0 }
+    return { success: true, data: (data || []) as unknown as WalletTransaction[], count: count || 0 }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat mengambil transaksi" }
   }
@@ -176,8 +176,10 @@ export async function requestWithdrawal(
       return { success: false, error: "Dompet tidak ditemukan" }
     }
 
+    const walletData = wallet as unknown as Wallet
+
     // Check if sufficient balance
-    if (wallet.balance < data.amount) {
+    if (walletData.balance < data.amount) {
       return { success: false, error: "Saldo tidak mencukupi" }
     }
 
@@ -208,21 +210,23 @@ export async function requestWithdrawal(
       return { success: false, error: `Gagal membuat permintaan penarikan: ${payoutError.message}` }
     }
 
+    const payoutData = payoutRequest as unknown as { id: string; created_at: string }
+
     // Deduct balance from wallet
     const { error: updateError } = await supabase
       .from("wallets" as any)
       .update({
-        balance: wallet.balance - data.amount,
+        balance: walletData.balance - data.amount,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", wallet.id)
+      .eq("id", walletData.id)
 
     if (updateError) {
       // Rollback payout request
       await supabase
         .from("payout_requests" as any)
         .delete()
-        .eq("id", payoutRequest.id)
+        .eq("id", payoutData.id)
 
       return { success: false, error: `Gagal mengupdate saldo: ${updateError.message}` }
     }
@@ -231,7 +235,7 @@ export async function requestWithdrawal(
     await supabase
       .from("wallet_transactions" as any)
       .insert({
-        wallet_id: wallet.id,
+        wallet_id: walletData.id,
         amount: data.amount,
         type: "payout",
         status: "pending_review",
@@ -241,10 +245,10 @@ export async function requestWithdrawal(
     return {
       success: true,
       data: {
-        id: payoutRequest.id,
+        id: payoutData.id,
         amount: netAmount,
         status: "pending",
-        created_at: payoutRequest.created_at,
+        created_at: payoutData.created_at,
       },
     }
   } catch (error) {

@@ -32,10 +32,10 @@ interface SkillsReviewProps {
 }
 
 const EXPERIENCE_LEVELS = [
-  { value: 'Beginner', label: 'Beginner', description: 'Less than 1 year' },
-  { value: 'Intermediate', label: 'Intermediate', description: '1-3 years' },
-  { value: 'Advanced', label: 'Advanced', description: '3-5 years' },
-  { value: 'Expert', label: 'Expert', description: '5+ years' },
+  { value: 'Beginner' as const, label: 'Beginner', description: 'Less than 1 year' },
+  { value: 'Intermediate' as const, label: 'Intermediate', description: '1-3 years' },
+  { value: 'Advanced' as const, label: 'Advanced', description: '3-5 years' },
+  { value: 'Expert' as const, label: 'Expert', description: '5+ years' },
 ]
 
 export function SkillsReview({
@@ -49,7 +49,7 @@ export function SkillsReview({
   const [categories, setCategories] = useState<Category[]>([])
   const [categoriesLoading, setCategoriesLoading] = useState(true)
   const [primaryCategory, setPrimaryCategory] = useState(value.primaryCategory || "")
-  const [experienceLevel, setExperienceLevel] = useState(value.experienceLevel || "")
+  const [experienceLevel, setExperienceLevel] = useState<"" | "Beginner" | "Intermediate" | "Advanced" | "Expert">(value.experienceLevel || "")
   const [bio, setBio] = useState(value.bio || "")
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -88,7 +88,11 @@ export function SkillsReview({
     onValidChange(isValid)
 
     // Notify parent of changes
-    onChange({ primaryCategory, experienceLevel, bio })
+    onChange({
+      primaryCategory,
+      experienceLevel: (experienceLevel || undefined) as "Beginner" | "Intermediate" | "Advanced" | "Expert" | undefined,
+      bio
+    })
   }, [primaryCategory, experienceLevel, bio, termsAccepted, onValidChange, onChange])
 
   const handleTermsChange = (checked: boolean | "indeterminate") => {

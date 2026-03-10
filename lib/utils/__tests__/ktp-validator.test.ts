@@ -12,11 +12,13 @@ import { validateKTP, extractKTPInfo } from '../ktp-validator'
 
 // Helper to construct KTP: PP RR DD MM YY SSSS
 // Where: Province(2) + Regency(2) + District(2) + Day(2) + Month(2) + Year(2) + Seq(4)
-const makeKTP = (prov: string, reg: string, dist: string, day: string, month: string, year: string, seq: string = '0001') =>
-  prov + reg + dist + day + month + year + seq
+const makeKTP = (...args: [string, string, string, string, string, string, string?]): string => {
+  const [prov, reg, dist, day, month, year, seq = '0001'] = args
+  return prov + reg + dist + day + month + year + seq
+}
 
 // Denpasar: Province 51, Regency 71, District 01
-const DENPASAR = ['51', '71', '01']
+const DENPASAR: [string, string, string] = ['51', '71', '01']
 
 describe('KTP Validator', () => {
   describe('validateKTP - Format Validation', () => {

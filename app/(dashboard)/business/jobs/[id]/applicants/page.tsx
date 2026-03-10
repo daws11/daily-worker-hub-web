@@ -30,7 +30,7 @@ import { getApplicationsByJob, updateApplicationStatus, acceptApplicationAndCrea
 // TYPES
 // ============================================================================
 
-type ApplicationStatus = 'pending' | 'shortlisted' | 'accepted' | 'rejected' | 'withdrawn'
+type ApplicationStatus = 'pending' | 'reviewed' | 'accepted' | 'rejected' | 'withdrawn'
 
 interface JobInfo {
   id: string
@@ -198,7 +198,7 @@ export default function BusinessApplicantsPage() {
 
   const handleStatusUpdate = async (
     applicationId: string, 
-    newStatus: 'shortlisted' | 'accepted' | 'rejected'
+    newStatus: 'reviewed' | 'accepted' | 'rejected'
   ) => {
     if (!user?.id) return
 
@@ -256,7 +256,7 @@ export default function BusinessApplicantsPage() {
   const stats = React.useMemo(() => ({
     total: applications.length,
     pending: applications.filter(a => a.status === "pending").length,
-    shortlisted: applications.filter(a => a.status === "shortlisted").length,
+    shortlisted: applications.filter(a => a.status === "reviewed").length,
     accepted: applications.filter(a => a.status === "accepted").length,
     rejected: applications.filter(a => a.status === "rejected").length,
   }), [applications])
@@ -435,7 +435,7 @@ export default function BusinessApplicantsPage() {
                 application={application}
                 budgetMin={job?.budget_min || 0}
                 budgetMax={job?.budget_max || 0}
-                onShortlist={() => handleStatusUpdate(application.id, 'shortlisted')}
+                onShortlist={() => handleStatusUpdate(application.id, 'reviewed')}
                 onAccept={() => handleStatusUpdate(application.id, 'accepted')}
                 onReject={() => handleStatusUpdate(application.id, 'rejected')}
                 isProcessing={processingId === application.id}

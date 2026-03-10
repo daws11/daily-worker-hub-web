@@ -160,7 +160,7 @@ export async function PATCH(
     }
 
     // Business actions: shortlist, accept, reject
-    if (body.status && ['shortlisted', 'accepted', 'rejected'].includes(body.status)) {
+    if (body.status && ['reviewed', 'accepted', 'rejected'].includes(body.status)) {
       if (user.role !== 'business') {
         return NextResponse.json(
           { error: 'Only businesses can update application status' },
@@ -202,7 +202,7 @@ export async function PATCH(
       // Otherwise just update status
       const result = await updateApplicationStatus(
         id,
-        body.status as 'shortlisted' | 'accepted' | 'rejected',
+        body.status as 'reviewed' | 'accepted' | 'rejected',
         business.id
       )
 

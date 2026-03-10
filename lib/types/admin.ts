@@ -398,7 +398,6 @@ export interface WorkerManagementItem extends WorkerRow {
   bookingCount?: number
   reviewCount?: number
   averageRating?: number
-  kyc_status?: 'pending' | 'verified' | 'rejected'
   experience_years?: number | null
   reliability_score?: number
 }

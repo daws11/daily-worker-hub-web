@@ -89,7 +89,10 @@ const VoiceCallButton = React.forwardRef<HTMLButtonElement, VoiceCallButtonProps
       if (callState === "connected") {
         onEndCall?.()
       } else if (props.onClick) {
-        props.onClick(e)
+        // BaseUI events need preventBaseUIHandler method
+        const baseUIEvent = e as typeof e & { preventBaseUIHandler: () => void; baseUIHandlerPrevented?: boolean }
+        baseUIEvent.preventBaseUIHandler = () => {}
+        props.onClick(baseUIEvent)
       }
     }
 

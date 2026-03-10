@@ -586,8 +586,8 @@ export async function addWorkerReview(
     }
 
     // Check if worker already reviewed this booking
-    const { data: existingReview } = await supabase
-      .from("reviews")
+    const reviewsTable = supabase.from("reviews") as any
+    const { data: existingReview } = await reviewsTable
       .select("*")
       .eq("booking_id", bookingId)
       .eq("reviewer_type", "worker")
@@ -621,8 +621,8 @@ export async function addWorkerReview(
     }
 
     // Update business average rating
-    const { data: businessReviews } = await supabase
-      .from("reviews")
+    const reviewsTable2 = supabase.from("reviews") as any
+    const { data: businessReviews } = await reviewsTable2
       .select("rating")
       .eq("business_id", booking.business_id)
       .eq("reviewer_type", "worker")
