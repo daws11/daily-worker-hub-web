@@ -1156,7 +1156,7 @@ export async function incrementInterviewMessageCount(
   try {
     const supabase = await createClient()
 
-    const { error } = await supabase.rpc('increment_interview_messages', {
+    const { error } = await (supabase as any).rpc('increment_interview_messages', {
       session_id: interviewSessionId
     })
 

@@ -325,7 +325,7 @@ export async function confirmBookingCompletion(
       .eq("id", booking.worker_id)
       .single()
 
-    let releaseResult = { success: false, error: "Worker not found" }
+    let releaseResult: { success: boolean; error?: string } = { success: false, error: "Worker not found" }
     if (worker && booking.final_price) {
       releaseResult = await releaseFundsAction(
         worker.user_id,
@@ -348,7 +348,7 @@ export async function confirmBookingCompletion(
         "/worker/wallet"
       )
 
-      const { enabled } = await isNotificationTypeEnabled((booking.workers as any).user_id, "payment")
+      const { enabled } = await isNotificationTypeEnabled((booking.workers as any).user_id, "payment_confirmation")
       if (enabled) {
         await sendPushNotification(
           (booking.workers as any).user_id,
@@ -630,13 +630,9 @@ export async function addWorkerReview(
     if (businessReviews && businessReviews.length > 0) {
       const avgRating = businessReviews.reduce((sum, r) => sum + r.rating, 0) / businessReviews.length
       
-      await supabase
-        .from("businesses")
-        .update({ 
-          rating: Math.round(avgRating * 10) / 10,
-          total_reviews: businessReviews.length
-        })
-        .eq("id", booking.business_id)
+      // Note: rating and total_reviews would need to be added to businesses table schema
+      // For now, we just calculate but don't store
+      console.log(`Business ${booking.business_id} average rating: ${Math.round(avgRating * 10) / 10} from ${businessReviews.length} reviews`)
     }
 
     // Send notification to business
@@ -852,7 +848,7 @@ export async function completeBooking(
         `/worker/bookings/${bookingId}`
       )
 
-      const { enabled } = await isNotificationTypeEnabled((booking.workers as any).user_id, "payment")
+      const { enabled } = await isNotificationTypeEnabled((booking.workers as any).user_id, "payment_confirmation")
       if (enabled) {
         await sendPushNotification(
           (booking.workers as any).user_id,

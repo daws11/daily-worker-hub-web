@@ -259,7 +259,7 @@ export async function getApplicationsByWorker(
       .order("applied_at", { ascending: false })
 
     if (status) {
-      query = query.eq("status", status)
+      query = query.eq("status", status as Database["public"]["Tables"]["job_applications"]["Row"]["status"])
     }
 
     const { data, error } = await query
@@ -275,17 +275,17 @@ export async function getApplicationsByWorker(
 }
 
 /**
- * Update application status (shortlist, accept, reject)
+ * Update application status (review, accept, reject)
  * This is the main function for business actions on applications
  *
  * @param applicationId - The application ID
- * @param status - New status: shortlisted, accepted, rejected
+ * @param status - New status: reviewed, accepted, rejected
  * @param businessId - The business ID (for verification)
  * @returns Updated application
  */
 export async function updateApplicationStatus(
   applicationId: string,
-  status: 'shortlisted' | 'accepted' | 'rejected',
+  status: 'reviewed' | 'accepted' | 'rejected',
   businessId: string
 ): Promise<ApplicationResult> {
   try {
@@ -305,8 +305,8 @@ export async function updateApplicationStatus(
 
     // Validate status transition
     const validTransitions: Record<string, string[]> = {
-      'pending': ['shortlisted', 'accepted', 'rejected'],
-      'shortlisted': ['accepted', 'rejected'],
+      'pending': ['reviewed', 'accepted', 'rejected'],
+      'reviewed': ['accepted', 'rejected'],
     }
 
     if (!validTransitions[application.status]?.includes(status)) {

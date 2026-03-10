@@ -13,14 +13,11 @@ import {
   getHourlyRate,
   getOvertimeMultiplier,
   getHoursBreakdown,
-  formatRupiah as formatRupiahFn,
+  formatRupiah,
 } from '@/lib/constants/rate-bali';
 
 // Re-export formatRupiah for external use
-export { formatRupiahFn as formatRupiah } from '@/lib/constants/rate-bali';
-
-// Re-export from utils for consistency
-export { formatRupiah } from '@/lib/utils';
+export { formatRupiah } from '@/lib/constants/rate-bali';
 
 /**
  * Wage calculation result
@@ -111,7 +108,11 @@ export function getWageBreakdown(calculation: WageCalculation): {
     highlighted?: boolean;
   }>;
 } {
-  const items = [
+  const items: Array<{
+    label: string;
+    value: string;
+    highlighted?: boolean;
+  }> = [
     {
       label: 'Hourly Rate',
       value: formatRupiah(calculation.hourlyRate) + '/jam',

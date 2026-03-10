@@ -75,7 +75,7 @@ export async function getAllBadges(category?: string): Promise<BadgeResult> {
       .order("name", { ascending: true })
 
     if (category) {
-      query = query.eq("category", category)
+      query = query.eq("category", category as Database["public"]["Enums"]["badge_category"])
     }
 
     const { data, error, count } = await query

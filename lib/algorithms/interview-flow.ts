@@ -322,7 +322,7 @@ export function meetsVoiceDurationRequirement(session: InterviewSession): boolea
     return true; // No voice required
   }
 
-  if (!config.voiceCompletedAt || !config.voiceStartedAt) {
+  if (!session.voiceCompletedAt || !session.voiceStartedAt) {
     return false; // Voice not completed
   }
 
