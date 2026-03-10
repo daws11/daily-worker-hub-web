@@ -22,11 +22,11 @@ function DropdownMenuTrigger({
 }: MenuPrimitive.Trigger.Props & { asChild?: boolean; className?: string }) {
   if (asChild && React.isValidElement(children)) {
     return React.cloneElement(children, {
-      ...children.props,
+      ...(children.props as React.HTMLAttributes<HTMLElement>),
       ...props,
-      className: cn(className, children.props.className),
+      className: cn(className, (children.props as React.HTMLAttributes<HTMLElement>).className),
       "data-slot": "dropdown-menu-trigger",
-    } as any)
+    } as React.HTMLAttributes<HTMLElement>)
   }
   return (
     <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" className={className} {...props}>

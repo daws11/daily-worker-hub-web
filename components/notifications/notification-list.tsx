@@ -131,7 +131,7 @@ export function NotificationList({
               Notifikasi
             </CardTitle>
             {unreadCount > 0 && (
-              <Badge variant="status" status="info">
+              <Badge variant="secondary">
                 {unreadCount} belum dibaca
               </Badge>
             )}

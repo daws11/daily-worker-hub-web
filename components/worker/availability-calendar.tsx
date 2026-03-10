@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar as CalendarIcon, Clock, Check, ChevronLeft, ChevronRight } from "lucide-react"
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay } from "date-fns"
 import { DAY_NAMES } from "@/lib/algorithms/availability-checker"
+import { cn } from "@/lib/utils"
 
 interface AvailabilityCalendarProps {
   selectedDate: Date | undefined

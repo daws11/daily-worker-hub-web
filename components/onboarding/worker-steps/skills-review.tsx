@@ -163,7 +163,7 @@ export function SkillsReview({
               <button
                 key={level.value}
                 type="button"
-                onClick={() => setExperienceLevel(level.value as any)}
+                onClick={() => setExperienceLevel(level.value)}
                 className={`flex flex-col items-start p-3 rounded-lg border transition-all text-left ${
                   experienceLevel === level.value
                     ? 'border-primary bg-primary/5 ring-1 ring-primary'
