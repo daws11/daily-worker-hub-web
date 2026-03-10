@@ -46,7 +46,7 @@ export default async function InterviewPage({ params }: InterviewPageProps) {
   }
 
   // Get messages
-  const { data: messages } = await getBookingMessages(params.id, 100)
+  const { data: messages } = await getBookingMessages(id, 100)
 
   // Get business and worker info
   const { data: business } = await supabase
@@ -93,9 +93,9 @@ export default async function InterviewPage({ params }: InterviewPageProps) {
           currentUserId={user.id}
           isBusiness={isBusiness}
           messages={messages || []}
-          onSendMessage={async (receiverId, content, bookingId) => {
+          onSendMessage={async (receiverId, content) => {
             'use server'
-            await sendMessage(user.id, receiverId, content, bookingId)
+            await sendMessage(user.id, receiverId, content, id)
           }}
           onStartVoiceCall={async () => {
             'use server'

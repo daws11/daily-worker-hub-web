@@ -50,7 +50,7 @@ export default function PublicJobsPage() {
       backgroundColor: '#f5f5f5',
       padding: '1rem'
     }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto', spaceY: '1.5rem' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Page Header */}
         <div style={{
           display: 'flex',
@@ -150,7 +150,6 @@ export default function PublicJobsPage() {
                     value={search}
                     onSearchChange={handleSearchChange}
                     placeholder="Search jobs..."
-                    style={{ width: '100%' }}
                   />
                 </div>
                 <div style={{ flexShrink: 0 }}>

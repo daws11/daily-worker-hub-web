@@ -18,7 +18,7 @@ interface Notification {
 
 type FilterType = "all" | "unread" | "read"
 
-interface NotificationListProps {
+export interface NotificationListProps {
   initialNotifications?: Notification[]
   onFetchNotifications?: (filter?: FilterType) => Promise<Notification[]>
   onMarkAsRead?: (notificationId: string) => Promise<void>

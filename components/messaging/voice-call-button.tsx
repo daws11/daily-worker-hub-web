@@ -85,7 +85,7 @@ const VoiceCallButton = React.forwardRef<HTMLButtonElement, VoiceCallButtonProps
     }
 
     // Handle button click
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       if (callState === "connected") {
         onEndCall?.()
       } else if (props.onClick) {

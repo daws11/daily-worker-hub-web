@@ -16,7 +16,7 @@ interface Notification {
   created_at: string
 }
 
-interface NotificationBellProps {
+export interface NotificationBellProps {
   initialCount?: number
   className?: string
   onFetchNotifications?: () => Promise<Notification[]>

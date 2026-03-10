@@ -30,7 +30,6 @@ export async function GET(
     const supabase = await createClient()
 
     // Get application with related data
-    // @ts-expect-error - Supabase query type instantiation is too deep
     const { data: application, error } = await supabase
       .from('job_applications')
       .select(`

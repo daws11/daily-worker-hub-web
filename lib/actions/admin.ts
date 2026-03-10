@@ -403,7 +403,7 @@ export async function getPaymentMetrics(): Promise<{ data: PaymentMetrics | null
     }
 
     const total = transactions?.length || 0
-    const successful = transactions?.filter((t) => t.status === "success").length || 0
+    const successful = transactions?.filter((t) => t.status === ("success" as any)).length || 0
     const failed = transactions?.filter((t) => t.status === "failed").length || 0
     const pending = transactions?.filter((t) => t.status === "pending").length || 0
     const volume = transactions?.reduce((sum, t) => sum + (Number(t.amount) || 0), 0) || 0
