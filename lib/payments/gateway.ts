@@ -138,6 +138,97 @@ export interface WebhookPayload {
 }
 
 /**
+ * Disbursement status enum
+ */
+export type DisbursementStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+
+/**
+ * Bank details for disbursement
+ */
+export interface BankDetails {
+  /** Bank code (e.g., BCA, BRI, MANDIRI, BNI) */
+  bankCode: string
+  /** Bank account number */
+  accountNumber: string
+  /** Bank account holder name */
+  accountHolderName: string
+}
+
+/**
+ * Input for creating a disbursement (withdrawal)
+ */
+export interface DisbursementInput {
+  /** Unique identifier for the disbursement (e.g., payout request ID) */
+  externalId: string
+  /** Disbursement amount in IDR */
+  amount: number
+  /** Bank details for the recipient */
+  bankDetails: BankDetails
+  /** Description for the disbursement */
+  description?: string
+  /** Email notification for the recipient */
+  emailTo?: string
+  /** Webhook callback URL */
+  callbackUrl?: string
+  /** Additional metadata */
+  metadata?: Record<string, unknown>
+}
+
+/**
+ * Response from disbursement operations
+ */
+export interface DisbursementResponse {
+  /** Gateway disbursement ID */
+  id: string
+  /** External ID provided in request */
+  externalId: string
+  /** Payment provider name */
+  provider: PaymentProvider
+  /** Disbursement amount */
+  amount: number
+  /** Current disbursement status */
+  status: DisbursementStatus
+  /** Bank code */
+  bankCode: string
+  /** Bank account number */
+  accountNumber: string
+  /** Account holder name */
+  accountHolderName: string
+  /** Estimated arrival time */
+  estimatedArrival?: string
+  /** Disbursement creation timestamp */
+  createdAt: string
+  /** Disbursement completion timestamp */
+  completedAt?: string
+  /** Failure reason if failed */
+  failureReason?: string
+  /** Fee charged for disbursement */
+  fee?: number
+}
+
+/**
+ * Webhook payload for disbursement callbacks
+ */
+export interface DisbursementWebhookPayload {
+  /** Gateway disbursement ID */
+  id: string
+  /** External ID / Payout Request ID */
+  externalId: string
+  /** Payment provider name */
+  provider: PaymentProvider
+  /** Disbursement amount */
+  amount: number
+  /** Current disbursement status */
+  status: DisbursementStatus
+  /** Disbursement completion timestamp */
+  completedAt?: string
+  /** Failure reason if failed */
+  failureReason?: string
+  /** Raw webhook data from provider */
+  rawData: Record<string, unknown>
+}
+
+/**
  * Payment Gateway Interface
  * 
  * All payment gateways must implement this interface to be used
@@ -195,6 +286,22 @@ export interface PaymentGateway {
    * @returns True if credentials are valid
    */
   validateCredentials(): Promise<boolean>
+
+  /**
+   * Create a disbursement (withdrawal to bank account)
+   * 
+   * @param input - Disbursement creation parameters
+   * @returns Disbursement response with status and details
+   */
+  createDisbursement(input: DisbursementInput): Promise<DisbursementResponse>
+
+  /**
+   * Get disbursement status by disbursement ID
+   * 
+   * @param disbursementId - Gateway disbursement ID
+   * @returns Disbursement status response
+   */
+  getDisbursementStatus(disbursementId: string): Promise<DisbursementResponse>
 }
 
 /**

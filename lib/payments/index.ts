@@ -33,6 +33,12 @@ export type {
   PaymentGateway,
   GatewayConfig,
   PaymentProvider,
+  // Disbursement types
+  DisbursementStatus,
+  BankDetails,
+  DisbursementInput,
+  DisbursementResponse,
+  DisbursementWebhookPayload,
 } from './gateway'
 
 // Re-export utility functions
@@ -200,6 +206,36 @@ export function verifyWebhookSignature(
 export async function validateCredentials(provider: PaymentProvider): Promise<boolean> {
   const gateway = getPaymentGateway(provider)
   return gateway.validateCredentials()
+}
+
+/**
+ * Create a disbursement (withdrawal) using the default payment gateway
+ * 
+ * @param input - Disbursement creation parameters
+ * @param provider - Optional provider override
+ * @returns Disbursement response
+ */
+export async function createDisbursement(
+  input: import('./gateway').DisbursementInput,
+  provider?: PaymentProvider
+): Promise<import('./gateway').DisbursementResponse> {
+  const gateway = getPaymentGateway(provider)
+  return gateway.createDisbursement(input)
+}
+
+/**
+ * Get disbursement status
+ * 
+ * @param disbursementId - Disbursement ID from the gateway
+ * @param provider - Optional provider override
+ * @returns Disbursement status response
+ */
+export async function getDisbursementStatus(
+  disbursementId: string,
+  provider?: PaymentProvider
+): Promise<import('./gateway').DisbursementResponse> {
+  const gateway = getPaymentGateway(provider)
+  return gateway.getDisbursementStatus(disbursementId)
 }
 
 /**

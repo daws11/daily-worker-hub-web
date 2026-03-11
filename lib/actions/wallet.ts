@@ -2,6 +2,8 @@
 
 import { createClient } from "../supabase/server"
 import type { Database, Tables } from "../supabase/types"
+import { xenditGateway } from "@/lib/payments"
+import { PAYMENT_CONSTANTS } from "@/lib/types/payment"
 
 // Custom types for wallet tables not in generated types
 type Wallet = {
@@ -154,6 +156,14 @@ export async function getTransactions(
 
 /**
  * Request a withdrawal from wallet
+ * 
+ * This function handles the complete withdrawal flow:
+ * 1. Validates worker balance
+ * 2. Validates bank account
+ * 3. Creates payout request record
+ * 4. Deducts balance from wallet (hold)
+ * 5. Creates Xendit disbursement
+ * 6. Returns transaction ID
  */
 export async function requestWithdrawal(
   workerId: string,
@@ -165,14 +175,29 @@ export async function requestWithdrawal(
   try {
     const supabase = await createClient()
 
+    // Get worker info
+    const { data: worker, error: workerError } = await supabase
+      .from("workers")
+      .select("id, user_id, full_name")
+      .eq("id", workerId)
+      .single()
+
+    if (workerError || !worker) {
+      return { success: false, error: "Worker tidak ditemukan" }
+    }
+
     // Get worker's wallet
     const { data: wallet, error: walletError } = await supabase
       .from("wallets" as any)
       .select("*")
       .eq("worker_id", workerId)
-      .single()
+      .maybeSingle()
 
-    if (walletError || !wallet) {
+    if (walletError) {
+      return { success: false, error: `Gagal mengambil data dompet: ${walletError.message}` }
+    }
+
+    if (!wallet) {
       return { success: false, error: "Dompet tidak ditemukan" }
     }
 
@@ -180,19 +205,58 @@ export async function requestWithdrawal(
 
     // Check if sufficient balance
     if (walletData.balance < data.amount) {
-      return { success: false, error: "Saldo tidak mencukupi" }
+      return { 
+        success: false, 
+        error: `Saldo tidak mencukupi. Saldo tersedia: Rp ${walletData.balance.toLocaleString('id-ID')}` 
+      }
     }
 
     // Check minimum withdrawal amount
-    if (data.amount < 100000) {
-      return { success: false, error: "Minimal penarikan adalah Rp 100.000" }
+    if (data.amount < PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT) {
+      return { 
+        success: false, 
+        error: `Minimal penarikan adalah Rp ${PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT.toLocaleString('id-ID')}` 
+      }
     }
 
-    // Calculate fee (1% or Rp 5.000, whichever is higher)
-    const feeAmount = Math.max(data.amount * 0.01, 5000)
+    // Check maximum withdrawal amount
+    if (data.amount > PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT) {
+      return { 
+        success: false, 
+        error: `Maksimal penarikan adalah Rp ${PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT.toLocaleString('id-ID')}` 
+      }
+    }
+
+    // Get bank account details
+    const { data: bankAccount, error: bankError } = await supabase
+      .from("bank_accounts")
+      .select("*")
+      .eq("id", data.bankAccountId)
+      .eq("worker_id", workerId)
+      .single()
+
+    if (bankError || !bankAccount) {
+      return { success: false, error: "Rekening bank tidak ditemukan" }
+    }
+
+    const bankAccountData = bankAccount as { 
+      id: string
+      bank_code: string
+      bank_account_number: string
+      bank_account_name: string 
+    }
+
+    // Calculate fee (1% or minimum Rp 5,000)
+    const feeAmount = Math.max(
+      data.amount * PAYMENT_CONSTANTS.DEFAULT_PAYOUT_FEE_PERCENTAGE, 
+      5000
+    )
     const netAmount = data.amount - feeAmount
 
-    // Create payout request
+    // Generate external ID for disbursement
+    const externalId = `payout-${workerId}-${Date.now()}`
+
+    // Create payout request record (pending)
     const { data: payoutRequest, error: payoutError } = await supabase
       .from("payout_requests" as any)
       .insert({
@@ -200,8 +264,15 @@ export async function requestWithdrawal(
         amount: data.amount,
         fee_amount: feeAmount,
         net_amount: netAmount,
-        bank_account_id: data.bankAccountId,
+        bank_code: bankAccountData.bank_code,
+        bank_account_number: bankAccountData.bank_account_number,
+        bank_account_name: bankAccountData.bank_account_name,
         status: "pending",
+        payment_provider: "xendit",
+        metadata: {
+          external_id: externalId,
+          bank_account_id: data.bankAccountId,
+        },
       })
       .select()
       .single()
@@ -210,9 +281,12 @@ export async function requestWithdrawal(
       return { success: false, error: `Gagal membuat permintaan penarikan: ${payoutError.message}` }
     }
 
-    const payoutData = payoutRequest as unknown as { id: string; created_at: string }
+    const payoutData = payoutRequest as unknown as { 
+      id: string
+      created_at: string 
+    }
 
-    // Deduct balance from wallet
+    // Deduct balance from wallet (hold until completed)
     const { error: updateError } = await supabase
       .from("wallets" as any)
       .update({
@@ -231,7 +305,7 @@ export async function requestWithdrawal(
       return { success: false, error: `Gagal mengupdate saldo: ${updateError.message}` }
     }
 
-    // Create transaction record
+    // Create hold transaction record
     await supabase
       .from("wallet_transactions" as any)
       .insert({
@@ -239,17 +313,92 @@ export async function requestWithdrawal(
         amount: data.amount,
         type: "payout",
         status: "pending_review",
-        description: `Permintaan penarikan ke rekening bank`,
+        description: `Penarikan ke ${bankAccountData.bank_code} - ${bankAccountData.bank_account_number}`,
+        reference_id: payoutData.id,
       })
 
-    return {
-      success: true,
-      data: {
-        id: payoutData.id,
+    // Create disbursement via Xendit
+    try {
+      const webhookUrl = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/webhooks/xendit/disbursement`
+      
+      const disbursement = await xenditGateway.createDisbursement({
+        externalId: externalId,
         amount: netAmount,
-        status: "pending",
-        created_at: payoutData.created_at,
-      },
+        bankDetails: {
+          bankCode: bankAccountData.bank_code,
+          accountNumber: bankAccountData.bank_account_number,
+          accountHolderName: bankAccountData.bank_account_name,
+        },
+        description: `Penarikan worker - ${worker.full_name}`,
+        callbackUrl: webhookUrl || undefined,
+        metadata: {
+          payout_request_id: payoutData.id,
+          worker_id: workerId,
+          fee_amount: feeAmount,
+        },
+      })
+
+      // Update payout request with provider ID
+      await supabase
+        .from("payout_requests" as any)
+        .update({
+          provider_payout_id: disbursement.id,
+          status: "processing",
+          provider_response: disbursement,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", payoutData.id)
+
+      // Update transaction status
+      await supabase
+        .from("wallet_transactions" as any)
+        .update({ status: "paid" })
+        .eq("reference_id", payoutData.id)
+
+      return {
+        success: true,
+        data: {
+          id: payoutData.id,
+          amount: netAmount,
+          status: "processing",
+          created_at: payoutData.created_at,
+        },
+      }
+
+    } catch (disbursementError) {
+      console.error("[requestWithdrawal] Disbursement failed:", disbursementError)
+
+      // Refund wallet balance
+      await supabase
+        .from("wallets" as any)
+        .update({
+          balance: walletData.balance,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", walletData.id)
+
+      // Update payout request as failed
+      await supabase
+        .from("payout_requests" as any)
+        .update({
+          status: "failed",
+          failure_reason: disbursementError instanceof Error 
+            ? disbursementError.message 
+            : "Disbursement failed",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", payoutData.id)
+
+      // Update transaction status
+      await supabase
+        .from("wallet_transactions" as any)
+        .update({ status: "refunded" })
+        .eq("reference_id", payoutData.id)
+
+      return { 
+        success: false, 
+        error: `Gagal memproses penarikan: ${disbursementError instanceof Error ? disbursementError.message : 'Unknown error'}` 
+      }
     }
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat memproses penarikan" }

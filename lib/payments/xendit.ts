@@ -10,7 +10,7 @@
  * @see https://developers.xendit.co/
  */
 
-import type { PaymentGateway, CreateInvoiceInput, InvoiceResponse, PaymentStatusResponse } from './gateway'
+import type { PaymentGateway, CreateInvoiceInput, InvoiceResponse, PaymentStatusResponse, DisbursementInput, DisbursementResponse } from './gateway'
 
 // Xendit API Configuration
 const XENDIT_API_URL = process.env.XENDIT_API_URL || 'https://api.xendit.co'
@@ -166,6 +166,43 @@ interface XenditQRISResponse {
   qr_string: string
   expires_at: string
   created: string
+}
+
+/**
+ * Xendit Disbursement response
+ */
+interface XenditDisbursementResponse {
+  id: string
+  external_id: string
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+  amount: number
+  bank_code: string
+  account_holder_name: string
+  disbursement_description?: string
+  email_to?: string
+  created: string
+  updated?: string
+  completed_at?: string
+  failure_reason?: string
+  is_instant?: boolean
+  estimated_arrival_time?: string
+}
+
+/**
+ * Xendit Disbursement status response
+ */
+interface XenditDisbursementStatusResponse {
+  id: string
+  external_id: string
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED'
+  amount: number
+  bank_code: string
+  account_holder_name: string
+  created: string
+  updated?: string
+  completed_at?: string
+  failure_reason?: string
+  estimated_arrival_time?: string
 }
 
 /**
@@ -385,6 +422,99 @@ export class XenditGateway implements PaymentGateway {
     } catch {
       return false
     }
+  }
+
+  /**
+   * Create a disbursement (withdrawal to bank account)
+   */
+  async createDisbursement(input: DisbursementInput): Promise<DisbursementResponse> {
+    try {
+      const disbursementData = {
+        external_id: input.externalId,
+        amount: input.amount,
+        bank_code: input.bankDetails.bankCode.toUpperCase(),
+        account_holder_name: input.bankDetails.accountHolderName,
+        account_number: input.bankDetails.accountNumber,
+        description: input.description || `Withdrawal - ${input.externalId}`,
+        email_to: input.emailTo,
+        callback_url: input.callbackUrl,
+        metadata: input.metadata,
+      }
+
+      const response = await xenditRequest<XenditDisbursementResponse>(
+        '/v2/disbursements',
+        {
+          method: 'POST',
+          body: JSON.stringify(disbursementData),
+        }
+      )
+
+      return {
+        id: response.id,
+        externalId: response.external_id,
+        provider: 'xendit',
+        amount: response.amount,
+        status: this.mapDisbursementStatus(response.status),
+        bankCode: response.bank_code,
+        accountNumber: disbursementData.account_number,
+        accountHolderName: response.account_holder_name,
+        estimatedArrival: response.estimated_arrival_time,
+        createdAt: response.created,
+        completedAt: response.completed_at,
+        failureReason: response.failure_reason,
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to create Xendit disbursement: ${error.message}`)
+      }
+      throw new Error('Failed to create Xendit disbursement: Unknown error')
+    }
+  }
+
+  /**
+   * Get disbursement status by ID
+   */
+  async getDisbursementStatus(disbursementId: string): Promise<DisbursementResponse> {
+    try {
+      const response = await xenditRequest<XenditDisbursementStatusResponse>(
+        `/v2/disbursements/${disbursementId}`
+      )
+
+      return {
+        id: response.id,
+        externalId: response.external_id,
+        provider: 'xendit',
+        amount: response.amount,
+        status: this.mapDisbursementStatus(response.status),
+        bankCode: response.bank_code,
+        accountNumber: '', // Not returned in status response
+        accountHolderName: response.account_holder_name,
+        estimatedArrival: response.estimated_arrival_time,
+        createdAt: response.created,
+        completedAt: response.completed_at,
+        failureReason: response.failure_reason,
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`Failed to get disbursement status: ${error.message}`)
+      }
+      throw new Error('Failed to get disbursement status: Unknown error')
+    }
+  }
+
+  /**
+   * Map Xendit disbursement status to internal status
+   */
+  private mapDisbursementStatus(status: string): 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' {
+    const statusMap: Record<string, 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'> = {
+      'PENDING': 'pending',
+      'PROCESSING': 'processing',
+      'COMPLETED': 'completed',
+      'FAILED': 'failed',
+      'CANCELLED': 'cancelled',
+    }
+
+    return statusMap[status] || 'pending'
   }
 
   /**
