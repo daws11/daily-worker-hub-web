@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Menu,
   X,
+  CalendarDays,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -122,6 +123,11 @@ const workerNavItems: NavItem[] = [
     title: "Attendance",
     href: "/worker/attendance",
     icon: Calendar,
+  },
+  {
+    title: "Availability",
+    href: "/worker/availability",
+    icon: CalendarDays,
   },
   {
     title: "Badges",

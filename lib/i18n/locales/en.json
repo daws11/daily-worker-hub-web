@@ -496,7 +496,9 @@
     "insufficientFunds": "Insufficient funds",
     "paymentFailed": "Payment failed",
     "checkInFailed": "Failed to process check-in/out. Please try again.",
-    "applicationFailed": "Failed to submit application. Please try again."
+    "applicationFailed": "Failed to submit application. Please try again.",
+    "validationFailed": "Validation failed. Please check your inputs.",
+    "failedToLoadData": "Failed to load data. Please try again."
   },
   "business": {
     "postJob": "Post a Job",
@@ -648,6 +650,29 @@
     "events": "Events",
     "other": "Other",
     "management": "Management"
+  },
+  "availability": {
+    "title": "Availability",
+    "subtitle": "Set your weekly availability to get matched with jobs",
+    "availableDays": "Available Days",
+    "of7Days": "of 7 days",
+    "weeklyHours": "Weekly Hours",
+    "hoursPerWeek": "hours/week",
+    "minBlock": "Block Duration",
+    "hoursPerDay": "hours per day",
+    "weeklySchedule": "Weekly Schedule",
+    "scheduleDescription": "Toggle availability for each day and set your preferred working hours",
+    "calendarPreview": "Calendar Preview",
+    "calendarDescription": "Preview your availability on the calendar",
+    "hours": "hours",
+    "savedAt": "Saved at",
+    "unsavedChanges": "You have unsaved changes",
+    "allChangesSaved": "All changes saved",
+    "tips": "Tips for setting availability",
+    "tip1": "Each availability block must be between {min} and {max} hours",
+    "tip2": "Set realistic hours you can commit to for better job matches",
+    "tip3": "Businesses can see your availability when shortlisting workers",
+    "noJobsMessage": "No jobs scheduled for today. Check back later!"
   },
   "landing": {
     "title": "Daily Worker Hub",

@@ -496,7 +496,9 @@
     "insufficientFunds": "Dana tidak mencukupi",
     "paymentFailed": "Pembayaran gagal",
     "checkInFailed": "Gagal memproses check-in/out. Silakan coba lagi.",
-    "applicationFailed": "Gagal mengirim lamaran. Silakan coba lagi."
+    "applicationFailed": "Gagal mengirim lamaran. Silakan coba lagi.",
+    "validationFailed": "Validasi gagal. Silakan periksa input Anda.",
+    "failedToLoadData": "Gagal memuat data. Silakan coba lagi."
   },
   "business": {
     "postJob": "Pasang Lowongan",
@@ -648,6 +650,29 @@
     "events": "Acara",
     "other": "Lainnya",
     "management": "Manajemen"
+  },
+  "availability": {
+    "title": "Ketersediaan",
+    "subtitle": "Atur ketersediaan mingguan Anda untuk mendapatkan pekerjaan yang cocok",
+    "availableDays": "Hari Tersedia",
+    "of7Days": "dari 7 hari",
+    "weeklyHours": "Jam Mingguan",
+    "hoursPerWeek": "jam/minggu",
+    "minBlock": "Durasi Blok",
+    "hoursPerDay": "jam per hari",
+    "weeklySchedule": "Jadwal Mingguan",
+    "scheduleDescription": "Aktifkan ketersediaan untuk setiap hari dan atur jam kerja pilihan Anda",
+    "calendarPreview": "Pratinjau Kalender",
+    "calendarDescription": "Pratinjau ketersediaan Anda di kalender",
+    "hours": "jam",
+    "savedAt": "Disimpan pada",
+    "unsavedChanges": "Ada perubahan yang belum disimpan",
+    "allChangesSaved": "Semua perubahan telah disimpan",
+    "tips": "Tips mengatur ketersediaan",
+    "tip1": "Setiap blok ketersediaan harus antara {min} dan {max} jam",
+    "tip2": "Atur jam realistis yang dapat Anda komit untuk kecocokan pekerjaan yang lebih baik",
+    "tip3": "Pelaku usaha dapat melihat ketersediaan Anda saat mencari pekerja",
+    "noJobsMessage": "Tidak ada pekerjaan terjadwal hari ini. Cek lagi nanti!"
   },
   "landing": {
     "title": "Daily Worker Hub",

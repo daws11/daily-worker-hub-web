@@ -123,6 +123,7 @@ const publicRoutes = [
   '/forgot-password',
   '/reset-password',
   '/auth/callback',
+  '/onboarding',  // Allow onboarding flow for authenticated users
 ]
 
 /**

@@ -13,17 +13,18 @@ export default async function OnboardingPage() {
     redirect("/login")
   }
 
-  // Get user role
+  // Get user role - try database first, fallback to user_metadata
   const { data: userData } = await supabase
     .from("users")
     .select("role")
     .eq("id", user.id)
     .single()
 
-  const userRole = (userData as any)?.role
+  // Fallback to user_metadata.role if database query fails
+  const userRole = (userData as any)?.role || user.user_metadata?.role
 
   if (!userRole) {
-    // No role found, redirect to login
+    // No role found in database or metadata, redirect to login
     redirect("/login")
   }
 

@@ -219,7 +219,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       // Be more defensive - if query fails, default to the role parameter
-      const userRole = (userData as any)?.role || role
+      let userRole = (userData as any)?.role || role
 
       if (userError) {
         console.error('Error fetching user role:', userError)
@@ -227,7 +227,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (!userData) {
-        console.warn('[AUTH signIn] User not found in public.users, using role:', role)
+        console.warn('[AUTH signIn] User not found in public.users, creating record...')
+        
+        // Auto-create missing user record in public.users
+        const { error: createError } = await (supabase
+          .from('users') as any)
+          .insert({
+            id: data.user.id,
+            email: data.user.email!,
+            full_name: data.user.user_metadata?.full_name || data.user.email!.split('@')[0],
+            role: role,
+            phone: '',
+            avatar_url: '',
+          })
+        
+        if (createError) {
+          console.error('[AUTH signIn] Failed to create user record:', createError)
+        } else {
+          console.log('[AUTH signIn] User record created successfully')
+          userRole = role
+        }
       }
       
       // UPDATE user_metadata.role so middleware can access it

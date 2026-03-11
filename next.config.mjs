@@ -15,6 +15,20 @@ const config = {
   turbopack: {
     root: __dirname,
   },
+  async redirects() {
+    return [
+      {
+        source: '/business/applicants',
+        destination: '/business/workers',
+        permanent: true, // 301 redirect for SEO
+      },
+      {
+        source: '/business/attendance',
+        destination: '/business/job-attendance',
+        permanent: true, // 301 redirect for SEO
+      },
+    ];
+  },
 };
 
 export default withPWA({
