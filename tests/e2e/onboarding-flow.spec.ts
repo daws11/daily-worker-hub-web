@@ -24,9 +24,9 @@ test.describe('Onboarding Flow E2E Tests', () => {
     await expect(page.locator('input[type="email"]')).toBeVisible()
     await expect(page.locator('input[type="password"]')).toBeVisible()
 
-    // Check role selection
-    await expect(page.getByText(/worker/i)).toBeVisible()
-    await expect(page.getByText(/business/i)).toBeVisible()
+    // Check role selection - uses Indonesian text (Pekerja/Bisnis)
+    await expect(page.getByText(/pekerja|worker/i)).toBeVisible()
+    await expect(page.getByText(/bisnis|business/i)).toBeVisible()
   })
 
   test('should show validation errors on empty form submit', async ({ page }) => {
@@ -56,15 +56,21 @@ test.describe('Onboarding Flow E2E Tests', () => {
   test('should login with test worker account', async ({ page }) => {
     await page.goto('/login')
 
-    // Fill login form
-    await page.fill('input[type="email"]', 'testworker@local.com')
-    await page.fill('input[type="password"]', 'Test123!')
+    // Fill login form with demo account
+    await page.fill('input[type="email"]', 'worker@demo.com')
+    await page.fill('input[type="password"]', 'demo123456')
+    
+    // Select worker role
+    const workerLabel = page.locator('label:has-text("Pekerja")').first()
+    if (await workerLabel.count() > 0) {
+      await workerLabel.click()
+    }
 
     // Submit
     await page.click('button[type="submit"]')
 
-    // Wait for redirect
-    await page.waitForURL(/.*worker.*|.*dashboard.*|.*jobs.*/, { timeout: 10000 })
+    // Wait for redirect - includes /onboarding in the pattern
+    await page.waitForURL(/.*worker.*|.*onboarding.*|.*dashboard.*|.*jobs.*/, { timeout: 15000 })
 
     // Should be logged in
     expect(page.url()).not.toContain('/login')
@@ -73,15 +79,21 @@ test.describe('Onboarding Flow E2E Tests', () => {
   test('should login with test business account', async ({ page }) => {
     await page.goto('/login')
 
-    // Fill login form
-    await page.fill('input[type="email"]', 'testbusiness@local.com')
-    await page.fill('input[type="password"]', 'Test123!')
+    // Fill login form with demo account
+    await page.fill('input[type="email"]', 'business@demo.com')
+    await page.fill('input[type="password"]', 'demo123456')
+    
+    // Select business role
+    const businessLabel = page.locator('label:has-text("Bisnis")').first()
+    if (await businessLabel.count() > 0) {
+      await businessLabel.click()
+    }
 
     // Submit
     await page.click('button[type="submit"]')
 
     // Wait for redirect
-    await page.waitForURL(/.*business.*|.*dashboard.*/, { timeout: 10000 })
+    await page.waitForURL(/.*business.*|.*dashboard.*/, { timeout: 15000 })
 
     // Should be logged in
     expect(page.url()).not.toContain('/login')

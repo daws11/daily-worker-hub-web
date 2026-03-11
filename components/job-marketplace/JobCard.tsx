@@ -33,6 +33,7 @@ export function JobCard({ job, onClick, className }: JobCardProps) {
 
   return (
     <Card
+      data-testid={`job-card-${job.id}`}
       className={cn(
         'cursor-pointer transition-all hover:shadow-lg hover:border-primary/50',
         onClick && 'group',
