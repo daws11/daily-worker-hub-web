@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
 import { Loader2, QrCode, Wallet, CreditCard, Smartphone, Landmark } from "lucide-react"
+import { initializeQrisPayment } from '@/lib/actions/payments'
 
 import {
   Dialog,
@@ -162,43 +163,30 @@ export function PaymentModal({
 
     setIsSubmitting(true)
     try {
-      const response = await fetch("/api/payments/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          business_id: businessId,
-          amount: values.amount,
-          provider: selectedPaymentMethod.provider,
+      const result = await initializeQrisPayment(
+        businessId,
+        values.amount,
+        {
+          payment_method_name: selectedPaymentMethod.name,
           payment_method: selectedPaymentMethod.supportedMethods[0],
-          metadata: {
-            payment_method_name: selectedPaymentMethod.name,
-          },
-        }),
-      })
+        },
+        selectedPaymentMethod.provider as PaymentProvider
+      )
 
-      const data = await response.json()
-
-      if (response.ok && data.success) {
+      if (result.success && result.data) {
         toast.success("Payment invoice created successfully!")
 
         // Redirect to payment URL if available
-        if (data.data.payment.invoice_url) {
-          window.open(data.data.payment.invoice_url, "_blank")
-        }
-
-        // Show QR code if available
-        if (data.data.payment.qr_string) {
-          toast.success("Scan the QR code to complete payment")
+        if (result.data.payment_url) {
+          window.open(result.data.payment_url, "_blank")
         }
 
         form.reset()
         setFeeCalculation(null)
         onOpenChange(false)
-        onSuccess?.(data.data.transaction.id)
+        onSuccess?.(result.data.transaction.id)
       } else {
-        toast.error(data.error || "Failed to create payment. Please try again.")
+        toast.error(result.error || "Failed to create payment. Please try again.")
       }
     } catch (error) {
       console.error("Error creating payment:", error)

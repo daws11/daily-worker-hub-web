@@ -118,7 +118,7 @@ async function processDisbursementWebhook(payload: {
 
   try {
     // Find the payout request by external ID in metadata
-    const { data: payoutRequests, error: searchError } = await supabase
+    const { data: payoutRequests, error: searchError } = await (supabase as any)
       .from('payout_requests')
       .select('*')
       .eq('payment_provider', 'xendit')
@@ -161,7 +161,7 @@ async function processDisbursementWebhook(payload: {
     }
 
     // Update payout request status
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from('payout_requests')
       .update(updateData)
       .eq('id', payoutRequest.id)
@@ -200,7 +200,7 @@ async function finalizeSuccessfulPayout(
 ): Promise<void> {
   try {
     // Update wallet transaction status
-    await supabase
+    await (supabase as any)
       .from('wallet_transactions')
       .update({ status: 'paid' })
       .eq('reference_id', payoutRequest.id)
@@ -221,7 +221,7 @@ async function refundFailedPayout(
 ): Promise<void> {
   try {
     // Get worker's wallet
-    const { data: wallet, error: walletError } = await supabase
+    const { data: wallet, error: walletError } = await (supabase as any)
       .from('wallets')
       .select('*')
       .eq('worker_id', payoutRequest.worker_id)
@@ -233,7 +233,7 @@ async function refundFailedPayout(
     }
 
     // Refund the full amount (including fee)
-    const { error: refundError } = await supabase
+    const { error: refundError } = await (supabase as any)
       .from('wallets')
       .update({
         balance: wallet.balance + payoutRequest.amount,
@@ -247,7 +247,7 @@ async function refundFailedPayout(
     }
 
     // Create refund transaction record
-    await supabase
+    await (supabase as any)
       .from('wallet_transactions')
       .insert({
         wallet_id: wallet.id,
@@ -259,7 +259,7 @@ async function refundFailedPayout(
       })
 
     // Update original transaction as refunded
-    await supabase
+    await (supabase as any)
       .from('wallet_transactions')
       .update({ status: 'refunded' })
       .eq('reference_id', payoutRequest.id)

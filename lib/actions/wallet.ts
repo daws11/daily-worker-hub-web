@@ -228,7 +228,7 @@ export async function requestWithdrawal(
     }
 
     // Get bank account details
-    const { data: bankAccount, error: bankError } = await supabase
+    const { data: bankAccount, error: bankError } = await (supabase as any)
       .from("bank_accounts")
       .select("*")
       .eq("id", data.bankAccountId)

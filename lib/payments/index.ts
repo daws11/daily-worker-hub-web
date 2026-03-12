@@ -77,9 +77,10 @@ function initializeGateways(): PaymentGatewayFactory {
   }
 
   // Register Midtrans gateway if credentials are available
-  if (process.env.MIDTRANS_SERVER_KEY) {
-    factory.registerGateway(midtransGateway)
-  }
+  // Note: Midtrans does not support disbursements, only use for payments
+  // if (process.env.MIDTRANS_SERVER_KEY) {
+  //   factory.registerGateway(midtransGateway)
+  // }
 
   return factory
 }

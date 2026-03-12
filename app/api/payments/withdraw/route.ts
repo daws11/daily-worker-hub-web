@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get worker's wallet
-    const { data: wallet, error: walletError } = await supabase
+    const { data: wallet, error: walletError } = await (supabase as any)
       .from('wallets')
       .select('*')
       .eq('worker_id', workerId)
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get bank account details
-    const { data: bankAccount, error: bankError } = await supabase
+    const { data: bankAccount, error: bankError } = await (supabase as any)
       .from('bank_accounts')
       .select('*')
       .eq('id', bankAccountId)
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     const externalId = `payout-${workerId}-${Date.now()}`
 
     // Create payout request record (pending)
-    const { data: payoutRequest, error: payoutError } = await supabase
+    const { data: payoutRequest, error: payoutError } = await (supabase as any)
       .from('payout_requests')
       .insert({
         worker_id: workerId,
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Deduct balance from wallet (hold until completed)
-    const { error: updateWalletError } = await supabase
+    const { error: updateWalletError } = await (supabase as any)
       .from('wallets')
       .update({
         balance: wallet.balance - amount,
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
       console.error('[Withdraw] Error updating wallet balance:', updateWalletError)
       
       // Rollback payout request
-      await supabase
+      await (supabase as any)
         .from('payout_requests')
         .delete()
         .eq('id', payoutRequest.id)
@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create hold transaction record
-    await supabase
+    await (supabase as any)
       .from('wallet_transactions')
       .insert({
         wallet_id: wallet.id,
@@ -217,7 +217,7 @@ export async function POST(request: NextRequest) {
       })
 
       // Update payout request with provider ID
-      await supabase
+      await (supabase as any)
         .from('payout_requests')
         .update({
           provider_payout_id: disbursement.id,
@@ -228,7 +228,7 @@ export async function POST(request: NextRequest) {
         .eq('id', payoutRequest.id)
 
       // Update transaction status
-      await supabase
+      await (supabase as any)
         .from('wallet_transactions')
         .update({ status: 'paid' })
         .eq('reference_id', payoutRequest.id)
@@ -254,7 +254,7 @@ export async function POST(request: NextRequest) {
       console.error('[Withdraw] Disbursement failed:', disbursementError)
 
       // Refund wallet balance
-      await supabase
+      await (supabase as any)
         .from('wallets')
         .update({
           balance: wallet.balance,
@@ -263,7 +263,7 @@ export async function POST(request: NextRequest) {
         .eq('id', wallet.id)
 
       // Update payout request as failed
-      await supabase
+      await (supabase as any)
         .from('payout_requests')
         .update({
           status: 'failed',
@@ -273,7 +273,7 @@ export async function POST(request: NextRequest) {
         .eq('id', payoutRequest.id)
 
       // Update transaction status
-      await supabase
+      await (supabase as any)
         .from('wallet_transactions')
         .update({ status: 'refunded' })
         .eq('reference_id', payoutRequest.id)

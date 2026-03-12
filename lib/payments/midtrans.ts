@@ -11,7 +11,7 @@
  */
 
 import crypto from 'crypto'
-import type { PaymentGateway, CreateInvoiceInput, InvoiceResponse, PaymentStatusResponse } from './gateway'
+import type { PaymentGateway, CreateInvoiceInput, InvoiceResponse, PaymentStatusResponse, DisbursementInput, DisbursementResponse } from './gateway'
 
 // Midtrans API Configuration
 const MIDTRANS_API_URL = process.env.MIDTRANS_API_URL || 'https://api.midtrans.com/v2'
@@ -500,6 +500,22 @@ export class MidtransGateway implements PaymentGateway {
       // Other errors mean credentials are valid but order doesn't exist
       return true
     }
+  }
+
+  /**
+   * Create a disbursement (withdrawal to bank account)
+   * Note: Midtrans does not support disbursements. Use Xendit for withdrawals.
+   */
+  async createDisbursement(input: DisbursementInput): Promise<DisbursementResponse> {
+    throw new Error('Midtrans does not support disbursements. Use Xendit for withdrawals.')
+  }
+
+  /**
+   * Get disbursement status
+   * Note: Midtrans does not support disbursements. Use Xendit for withdrawals.
+   */
+  async getDisbursementStatus(disbursementId: string): Promise<DisbursementResponse> {
+    throw new Error('Midtrans does not support disbursements. Use Xendit for withdrawals.')
   }
 
   /**

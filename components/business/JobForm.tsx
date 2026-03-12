@@ -14,6 +14,9 @@ import {
   DollarSign,
   AlertCircle
 } from 'lucide-react'
+import { getCategories } from '@/lib/actions/categories'
+import { getBusinessProfile } from '@/lib/actions/business'
+import { createJob } from '@/lib/actions/jobs'
 
 interface JobFormData {
   title: string
@@ -72,26 +75,26 @@ export default function JobForm() {
       try {
         setInitialLoading(true)
 
-        // Fetch categories
-        const catsRes = await fetch('/api/categories')
-        const catsData = await catsRes.json()
-        console.log('Categories response:', catsData)
-        if (catsData?.data) {
-          setCategories(catsData.data)
+        // Fetch categories using server action
+        const catsResult = await getCategories()
+        console.log('Categories response:', catsResult)
+        if (catsResult.success && catsResult.data) {
+          setCategories(catsResult.data)
         }
 
-        // Fetch business profile
-        const bizRes = await fetch('/api/business/profile')
-        const bizData = await bizRes.json()
-        console.log('Business response:', bizData)
-        if (bizData?.data) {
-          setBusiness(bizData.data)
-          // Pre-fill address if available
-          if (bizData.data.address) {
-            setFormData(prev => ({
-              ...prev,
-              address: bizData.data.address || ''
-            }))
+        // Fetch business profile using server action
+        if (user?.id) {
+          const bizResult = await getBusinessProfile(user.id)
+          console.log('Business response:', bizResult)
+          if (bizResult.success && bizResult.data) {
+            setBusiness(bizResult.data)
+            // Pre-fill address if available
+            if (bizResult.data.address) {
+              setFormData(prev => ({
+                ...prev,
+                address: bizResult.data.address || ''
+              }))
+            }
           }
         }
       } catch (err) {
@@ -102,7 +105,7 @@ export default function JobForm() {
     }
 
     fetchData()
-  }, [])
+  }, [user?.id])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
@@ -177,38 +180,32 @@ export default function JobForm() {
     setLoading(true)
 
     try {
-      const response = await fetch('/api/jobs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          business_id: business.id,
-          category_id: formData.category_id,
-          title: formData.title.trim(),
-          description: formData.description.trim(),
-          requirements: formData.requirements.trim(),
-          budget_min: parseFloat(formData.budget_min),
-          budget_max: parseFloat(formData.budget_max),
-          hours_needed: parseInt(formData.hours_needed),
-          address: formData.address.trim(),
-          deadline: formData.deadline || null,
-          is_urgent: formData.is_urgent,
-          overtime_multiplier: 1.0
-        })
+      const result = await createJob({
+        businessId: user?.id || '',
+        title: formData.title.trim(),
+        positionType: 'full-time', // default
+        deadline: formData.deadline || '',
+        address: formData.address.trim(),
+        budgetMin: parseFloat(formData.budget_min),
+        budgetMax: parseFloat(formData.budget_max),
+        wageMin: parseFloat(formData.budget_min),
+        wageMax: parseFloat(formData.budget_max),
+        workersNeeded: 1,
+        hoursNeeded: parseInt(formData.hours_needed),
+        description: formData.description.trim(),
+        requirements: formData.requirements.split('\n').filter(r => r.trim()),
+        area: formData.address.trim(),
       })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || 'Failed to create job')
+      if (result.success) {
+        toast.success('Job created successfully!')
+        // Redirect to jobs list
+        router.push('/business/jobs')
+      } else {
+        const message = result.error || 'Failed to create job'
+        setError(message)
+        toast.error(message)
       }
-
-      const { data } = await response.json()
-
-      toast.success('Job created successfully!')
-
-      // Redirect to jobs list
-      router.push('/business/jobs')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to create job'
       setError(message)
