@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { 
   User, 
   Star, 
@@ -12,7 +13,8 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  Loader2
+  Loader2,
+  Video
 } from "lucide-react"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -66,6 +68,7 @@ interface ApplicantCardProps {
   onAccept?: () => void
   onReject?: () => void
   isProcessing?: boolean
+  bookingId?: string | null
 }
 
 // ============================================================================
@@ -114,7 +117,9 @@ export function ApplicantCard({
   onAccept,
   onReject,
   isProcessing = false,
+  bookingId,
 }: ApplicantCardProps) {
+  const router = useRouter()
   const [showDetails, setShowDetails] = React.useState(false)
   const worker = application.workers
   const config = statusConfig[application.status]
@@ -290,7 +295,20 @@ export function ApplicantCard({
           )}
 
           {application.status === 'accepted' && (
-            <Badge className="bg-green-600">Diterima</Badge>
+            <div className="flex gap-2">
+              <Badge className="bg-green-600">Diterima</Badge>
+              {bookingId && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => router.push(`/dashboard/business/interview/${bookingId}`)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Video className="h-4 w-4 mr-1" />
+                  Interview
+                </Button>
+              )}
+            </div>
           )}
 
           {application.status === 'rejected' && (
@@ -443,6 +461,22 @@ export function ApplicantCard({
                   Tolak
                 </Button>
               )}
+            </div>
+          )}
+
+          {/* Interview Button for Accepted Applications */}
+          {application.status === 'accepted' && bookingId && (
+            <div className="flex justify-end gap-2 pt-4 border-t">
+              <Button
+                onClick={() => {
+                  setShowDetails(false)
+                  router.push(`/dashboard/business/interview/${bookingId}`)
+                }}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Video className="h-4 w-4 mr-2" />
+                Mulai Interview
+              </Button>
             </div>
           )}
         </DialogContent>

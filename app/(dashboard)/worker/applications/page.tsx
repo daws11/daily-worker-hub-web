@@ -4,11 +4,13 @@ import * as React from "react"
 import { useAuth } from '@/app/providers/auth-provider'
 import { toast } from "sonner"
 import { getApplicationsByWorker } from "@/lib/actions/job-applications"
-import { Loader2, AlertCircle, Building2, Briefcase, Calendar } from "lucide-react"
+import { Loader2, AlertCircle, Building2, Briefcase, Calendar, Video } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
+import { supabase } from "@/lib/supabase/client"
 
 export type ApplicationStatus = "pending" | "shortlisted" | "accepted" | "rejected" | "withdrawn"
 
@@ -30,6 +32,11 @@ export interface ApplicationBusiness {
   email: string
 }
 
+export interface ApplicationBooking {
+  id: string
+  application_id: string
+}
+
 export interface Application {
   id: string
   job_id: string
@@ -41,6 +48,7 @@ export interface Application {
   proposed_wage?: number
   jobs?: ApplicationJob
   businesses?: ApplicationBusiness
+  booking?: ApplicationBooking
 }
 
 const statusVariants: Record<ApplicationStatus, { className: string; label: string }> = {
@@ -160,6 +168,19 @@ function ApplicationCard({ application }: { application: Application }) {
           <Calendar className="h-3 w-3" />
           <span>Applied on {formatDate(application.applied_at)}</span>
         </div>
+
+        {/* Join Interview Button - Only for accepted applications with booking */}
+        {application.status === 'accepted' && application.booking && (
+          <div className="pt-3 border-t">
+            <Link
+              href={`/dashboard/business/interview/${application.booking.id}`}
+              className="inline-flex items-center gap-2 w-full justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              <Video className="h-4 w-4" />
+              Gabung Interview
+            </Link>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
@@ -185,7 +206,35 @@ export default function WorkerApplicationsPage() {
         throw new Error(result.error || "Failed to fetch applications")
       }
 
-      setApplications(result.data || [])
+      const applicationsData = result.data || []
+
+      // Fetch booking data for accepted applications
+      const acceptedApplicationIds = applicationsData
+        .filter((app: any) => app.status === 'accepted')
+        .map((app: any) => app.id)
+
+      if (acceptedApplicationIds.length > 0) {
+        const { data: bookingsData } = await supabase
+          .from("bookings")
+          .select("id, application_id")
+          .in("application_id", acceptedApplicationIds)
+
+        // Create a map of application_id -> booking
+        const bookingMap = new Map<string, { id: string }>()
+        bookingsData?.forEach((booking: any) => {
+          bookingMap.set(booking.application_id, { id: booking.id })
+        })
+
+        // Merge booking data into applications
+        const applicationsWithBookings = applicationsData.map((app: any) => ({
+          ...app,
+          booking: bookingMap.get(app.id)
+        }))
+
+        setApplications(applicationsWithBookings)
+      } else {
+        setApplications(applicationsData)
+      }
     } catch (err: any) {
       const message = err.message || "Gagal memuat data lamaran"
       setError(message)

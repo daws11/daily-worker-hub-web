@@ -4,6 +4,7 @@ import * as React from "react"
 import { useAuth } from '@/app/providers/auth-provider'
 import { useParams, useRouter } from 'next/navigation'
 import { toast } from "sonner"
+import Link from "next/link"
 import { 
   Loader2, 
   AlertCircle, 
@@ -11,7 +12,9 @@ import {
   ArrowLeft,
   Briefcase,
   Building2,
-  Filter
+  Filter,
+  Video,
+  ExternalLink
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -121,6 +124,7 @@ export default function BusinessApplicantsPage() {
   const [error, setError] = React.useState<string | null>(null)
   const [statusFilter, setStatusFilter] = React.useState<string>("all")
   const [processingId, setProcessingId] = React.useState<string | null>(null)
+  const [bookingIds, setBookingIds] = React.useState<Record<string, string>>({})
 
   const fetchData = React.useCallback(async () => {
     if (!user?.id || !jobId) return
@@ -175,7 +179,30 @@ export default function BusinessApplicantsPage() {
         throw new Error(result.error || "Gagal memuat data pelamar")
       }
 
-      setApplications(result.data || [])
+      const apps = result.data || []
+      setApplications(apps)
+
+      // Fetch booking IDs for accepted applications
+      const acceptedAppIds = apps
+        .filter((app: any) => app.status === 'accepted')
+        .map((app: any) => app.id)
+
+      if (acceptedAppIds.length > 0) {
+        const { data: bookings } = await supabase
+          .from("bookings")
+          .select("id, application_id")
+          .in("application_id", acceptedAppIds)
+
+        if (bookings && bookings.length > 0) {
+          const bookingMap: Record<string, string> = {}
+          bookings.forEach((b: any) => {
+            if (b.application_id) {
+              bookingMap[b.application_id] = b.id
+            }
+          })
+          setBookingIds(bookingMap)
+        }
+      }
     } catch (err: any) {
       const message = err.message || "Gagal memuat data"
       setError(message)
@@ -231,11 +258,33 @@ export default function BusinessApplicantsPage() {
         return
       }
 
-      toast.success(
-        newStatus === 'accepted' 
-          ? "Pelamar diterima dan booking dibuat!" 
-          : `Status lamaran diubah ke ${newStatus}`
-      )
+      // Store booking ID if accepted
+      if (newStatus === 'accepted' && result.data?.booking?.id) {
+        const bookingId = result.data.booking.id
+        setBookingIds(prev => ({ ...prev, [applicationId]: bookingId }))
+        
+        // Show toast with interview link
+        toast.success(
+          <div className="flex items-center gap-2">
+            <span>Pelamar diterima! Booking dibuat.</span>
+            <Link 
+              href={`/dashboard/business/interview/${bookingId}`}
+              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 underline font-medium"
+            >
+              <Video className="h-4 w-4" />
+              Mulai Interview
+              <ExternalLink className="h-3 w-3" />
+            </Link>
+          </div>,
+          { duration: 8000 }
+        )
+      } else {
+        toast.success(
+          newStatus === 'accepted' 
+            ? "Pelamar diterima dan booking dibuat!" 
+            : `Status lamaran diubah ke ${newStatus}`
+        )
+      }
       
       // Refresh data
       fetchData()
@@ -439,6 +488,7 @@ export default function BusinessApplicantsPage() {
                 onAccept={() => handleStatusUpdate(application.id, 'accepted')}
                 onReject={() => handleStatusUpdate(application.id, 'rejected')}
                 isProcessing={processingId === application.id}
+                bookingId={application.status === 'accepted' ? bookingIds[application.id] : null}
               />
             ))}
           </div>

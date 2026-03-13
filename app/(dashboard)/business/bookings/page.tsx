@@ -7,7 +7,10 @@ import { toast } from "sonner"
 import { supabase } from "@/lib/supabase/client"
 import { ReviewFormDialog } from "@/components/review/review-form-dialog"
 import type { ReviewerType } from "@/lib/schemas/review"
-import { Loader2, AlertCircle, Building2, CheckCircle, XCircle, Clock, Star } from "lucide-react"
+import { Loader2, AlertCircle, Building2, CheckCircle, XCircle, Clock, Star, Video, ExternalLink } from "lucide-react"
+import Link from "next/link"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 
 interface BookingWorker {
   id: string
@@ -41,6 +44,13 @@ interface BookingReview {
   rating: number
   comment: string | null
   would_rehire: boolean | null
+}
+
+interface InterviewSession {
+  id: string
+  booking_id: string
+  status: 'pending' | 'in_progress' | 'completed' | 'skipped' | 'failed'
+  type: 'none' | 'chat' | 'chat_and_voice'
 }
 
 type BookingStatusGroup = {
@@ -115,6 +125,7 @@ export default function BusinessBookingsPage() {
   const [isLoading, setIsLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
   const [bookingReviews, setBookingReviews] = React.useState<Map<string, BookingReview>>(new Map())
+  const [interviewSessions, setInterviewSessions] = React.useState<Map<string, InterviewSession>>(new Map())
   const [reviewDialogOpen, setReviewDialogOpen] = React.useState(false)
   const [selectedBooking, setSelectedBooking] = React.useState<Booking | null>(null)
 
@@ -180,6 +191,27 @@ export default function BusinessBookingsPage() {
         })
 
         setBookingReviews(reviewsMap)
+      }
+
+      // Fetch interview sessions for all bookings
+      const allBookingIds: string[] = bookings.map((b) => b.id)
+      if (allBookingIds.length > 0) {
+        const { data: sessionsData } = await supabase
+          .from("interview_sessions")
+          .select("id, booking_id, status, type")
+          .in("booking_id", allBookingIds)
+
+        const sessionsMap = new Map<string, InterviewSession>()
+        sessionsData?.forEach((session: any) => {
+          sessionsMap.set(session.booking_id, {
+            id: session.id,
+            booking_id: session.booking_id,
+            status: session.status,
+            type: session.type,
+          })
+        })
+
+        setInterviewSessions(sessionsMap)
       }
 
       setBookings(bookings)
@@ -366,6 +398,8 @@ export default function BusinessBookingsPage() {
                       {groupBookings.map((booking) => {
                         const existingReview = bookingReviews.get(booking.id)
                         const hasReviewed = !!existingReview
+                        const interviewSession = interviewSessions.get(booking.id)
+                        const showInterviewLink = interviewSession && ['pending', 'accepted', 'in_progress'].includes(booking.status)
 
                         return (
                           <div
@@ -527,6 +561,70 @@ export default function BusinessBookingsPage() {
                                     Tulis Ulasan
                                   </button>
                                 )}
+                              </div>
+                            )}
+
+                            {/* Interview Section - For active bookings with interview sessions */}
+                            {showInterviewLink && (
+                              <div style={{
+                                padding: '0.75rem 1rem',
+                                borderTop: '1px solid #e5e7eb',
+                                backgroundColor: '#f9fafb',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '0.75rem'
+                              }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <Video style={{ width: '1rem', height: '1rem', color: '#7c3aed' }} />
+                                  <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#666' }}>
+                                    Interview:
+                                  </span>
+                                  <Badge 
+                                    variant="outline" 
+                                    className={
+                                      interviewSession.status === 'in_progress' 
+                                        ? 'bg-green-500/10 text-green-700 border-green-200' 
+                                        : interviewSession.status === 'completed'
+                                        ? 'bg-blue-500/10 text-blue-700 border-blue-200'
+                                        : interviewSession.status === 'skipped'
+                                        ? 'bg-gray-500/10 text-gray-600 border-gray-200'
+                                        : 'bg-yellow-500/10 text-yellow-700 border-yellow-200'
+                                    }
+                                  >
+                                    {interviewSession.status === 'in_progress' ? 'Berlangsung' :
+                                     interviewSession.status === 'completed' ? 'Selesai' :
+                                     interviewSession.status === 'skipped' ? 'Dilewati' : 'Menunggu'}
+                                  </Badge>
+                                </div>
+                                <Link
+                                  href={`/dashboard/business/interview/${booking.id}`}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.375rem',
+                                    padding: '0.375rem 0.75rem',
+                                    backgroundColor: interviewSession.status === 'in_progress' ? '#16a34a' : '#7c3aed',
+                                    color: 'white',
+                                    borderRadius: '0.375rem',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 500,
+                                    textDecoration: 'none',
+                                    transition: 'background-color 0.2s'
+                                  }}
+                                >
+                                  {interviewSession.status === 'in_progress' ? (
+                                    <>
+                                      <Video style={{ width: '0.875rem', height: '0.875rem' }} />
+                                      Gabung Interview
+                                    </>
+                                  ) : (
+                                    <>
+                                      <ExternalLink style={{ width: '0.875rem', height: '0.875rem' }} />
+                                      Lihat Interview
+                                    </>
+                                  )}
+                                </Link>
                               </div>
                             )}
                           </div>
