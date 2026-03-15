@@ -189,7 +189,7 @@ export function SiteHeader({
           </Button>
 
           {/* Theme Toggle */}
-          <ThemeToggle />
+          <ThemeToggle variant="button" />
 
           {/* User Menu */}
           <DropdownMenu>
