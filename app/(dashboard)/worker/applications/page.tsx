@@ -209,20 +209,29 @@ export default function WorkerApplicationsPage() {
       const applicationsData = result.data || []
 
       // Fetch booking data for accepted applications
-      const acceptedApplicationIds = applicationsData
+      // Match bookings to applications via job_id and worker_id
+      const acceptedJobs = applicationsData
         .filter((app: any) => app.status === 'accepted')
-        .map((app: any) => app.id)
+        .map((app: any) => ({ jobId: app.job_id, workerId: app.worker_id, appId: app.id }))
 
-      if (acceptedApplicationIds.length > 0) {
+      if (acceptedJobs.length > 0) {
+        // Get all bookings for these job+worker combinations
+        const jobIds = [...new Set(acceptedJobs.map(j => j.jobId))]
+        
         const { data: bookingsData } = await supabase
           .from("bookings")
-          .select("id, application_id")
-          .in("application_id", acceptedApplicationIds)
+          .select("id, job_id, worker_id")
+          .in("job_id", jobIds)
 
-        // Create a map of application_id -> booking
+        // Create a map of application_id -> booking (matched by job_id + worker_id)
         const bookingMap = new Map<string, { id: string }>()
-        bookingsData?.forEach((booking: any) => {
-          bookingMap.set(booking.application_id, { id: booking.id })
+        bookingsData?.forEach((booking) => {
+          const matchingApp = acceptedJobs.find(
+            app => app.jobId === booking.job_id && app.workerId === booking.worker_id
+          )
+          if (matchingApp && booking?.id) {
+            bookingMap.set(matchingApp.appId, { id: booking.id })
+          }
         })
 
         // Merge booking data into applications
