@@ -272,35 +272,19 @@ export default function BusinessBookingsPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
         {/* Page Header */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '1.5rem'
-        }}>
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>
+            <h1 className="text-2xl font-bold mb-1">
               Booking Bisnis
             </h1>
-            <p style={{ color: '#666', fontSize: '0.875rem', margin: 0 }}>
+            <p className="text-muted-foreground text-sm m-0">
               Kelola booking pekerja dan berikan ulasan
             </p>
           </div>
           <button
             onClick={handleLogout}
             disabled={authLoading}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: authLoading ? '#9ca3af' : '#ef4444',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.375rem',
-              fontWeight: 500,
-              cursor: authLoading ? 'not-allowed' : 'pointer',
-              fontSize: '0.875rem',
-              opacity: authLoading ? 0.6 : 1,
-              transition: 'background-color 0.2s'
-            }}
+            className="px-4 py-2 bg-destructive text-primary-foreground border-none rounded-md font-medium text-sm cursor-not-allowed opacity-60 transition-colors disabled:cursor-not-allowed"
           >
             {authLoading ? 'Memproses...' : 'Keluar'}
           </button>
@@ -308,40 +292,19 @@ export default function BusinessBookingsPage() {
 
         {/* Error State */}
         {error && (
-          <div style={{
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem'
-          }}>
-            <AlertCircle style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
-            <div style={{ flex: 1 }}>
-              <p style={{ color: '#991b1b', fontWeight: 500, marginBottom: '0.25rem' }}>
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-4 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-destructive" />
+            <div className="flex-1">
+              <p className="text-destructive font-medium mb-1">
                 Gagal memuat data
               </p>
-              <p style={{ color: '#b91c1c', fontSize: '0.875rem' }}>{error}</p>
+              <p className="text-destructive text-sm">{error}</p>
             </div>
             <button
               onClick={fetchBookingsWithReviews}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}
+              className="px-4 py-2 bg-destructive text-primary-foreground border-none rounded-md text-sm font-medium cursor-pointer flex items-center gap-2"
             >
-              <Loader2 style={{ width: '1rem', height: '1rem' }} />
+              <Loader2 className="w-4 h-4" />
               Coba Lagi
             </button>
           </div>
@@ -349,33 +312,20 @@ export default function BusinessBookingsPage() {
 
         {/* Loading State */}
         {isLoading && !error && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0.5rem',
-            padding: '3rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center'
-          }}>
-            <Loader2 className="animate-spin" style={{ width: '2rem', height: '2rem', color: '#2563eb', margin: '0 auto 1rem' }} />
-            <p style={{ color: '#666' }}>Memuat data booking...</p>
+          <div className="bg-card dark:bg-card rounded-lg p-12 shadow-sm text-center">
+            <Loader2 className="animate-spin w-8 h-8 text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Memuat data booking...</p>
           </div>
         )}
 
         {/* Empty State */}
         {!isLoading && !error && !hasBookings && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0.5rem',
-            padding: '3rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center',
-            border: '1px dashed #d1d5db'
-          }}>
-            <Building2 style={{ width: '3rem', height: '3rem', color: '#9ca3af', margin: '0 auto 1rem' }} />
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+          <div className="bg-card dark:bg-card rounded-lg p-12 shadow-sm text-center border border-dashed border-border">
+            <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">
               Belum Ada Booking
             </h3>
-            <p style={{ color: '#666' }}>
+            <p className="text-muted-foreground">
               Booking pekerja akan muncul di sini setelah pekerja melamar pada pekerjaan Anda
             </p>
           </div>
@@ -383,18 +333,18 @@ export default function BusinessBookingsPage() {
 
         {/* Bookings List */}
         {!isLoading && !error && hasBookings && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div className="flex flex-col gap-8">
             {(Object.keys(groupedBookings) as Array<keyof BookingStatusGroup>).map(
               (status) => {
                 const groupBookings = groupedBookings[status]
                 if (groupBookings.length === 0) return null
 
                 return (
-                  <div key={status} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: 600 }}>
+                  <div key={status} className="flex flex-col gap-4">
+                    <h2 className="text-xl font-semibold">
                       {statusGroupLabels[status]} ({groupBookings.length})
                     </h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1rem' }}>
+                    <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-4">
                       {groupBookings.map((booking) => {
                         const existingReview = bookingReviews.get(booking.id)
                         const hasReviewed = !!existingReview
@@ -404,94 +354,44 @@ export default function BusinessBookingsPage() {
                         return (
                           <div
                             key={booking.id}
-                            style={{
-                              backgroundColor: 'white',
-                              borderRadius: '0.5rem',
-                              border: '1px solid #e5e7eb',
-                              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                              overflow: 'hidden'
-                            }}
+                            className="bg-card dark:bg-card rounded-lg border border-border shadow-sm overflow-hidden"
                           >
                             {/* Worker Info Header */}
-                            <div style={{
-                              padding: '1rem 1rem 0.75rem',
-                              borderBottom: '1px solid #e5e7eb',
-                              backgroundColor: '#f9fafb'
-                            }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                <div style={{
-                                  width: '2.5rem',
-                                  height: '2.5rem',
-                                  borderRadius: '50%',
-                                  backgroundColor: '#e5e7eb',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  overflow: 'hidden',
-                                  flexShrink: 0
-                                }}>
+                            <div className="px-4 pt-4 pb-3 border-b border-border bg-muted/30">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
                                   {booking.worker?.avatar_url ? (
                                     <img
                                       src={booking.worker.avatar_url}
                                       alt={booking.worker.full_name}
-                                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                      className="w-full h-full object-cover"
                                     />
                                   ) : (
-                                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: '#666' }}>
+                                    <span className="text-sm font-semibold text-muted-foreground">
                                       {getInitials(booking.worker?.full_name || '?')}
                                     </span>
                                   )}
                                 </div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <p style={{ fontWeight: 600, fontSize: '0.9rem', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-sm m-0 whitespace-nowrap overflow-hidden text-ellipsis">
                                     {booking.worker?.full_name || 'Pekerja'}
                                   </p>
-                                  <p style={{ fontSize: '0.75rem', color: '#666', margin: 0 }}>
+                                  <p className="text-xs text-muted-foreground m-0">
                                     {booking.worker?.phone || ''}
                                   </p>
                                 </div>
                                 {booking.status === 'completed' ? (
-                                  <div style={{
-                                    padding: '0.25rem 0.5rem',
-                                    backgroundColor: '#dcfce7',
-                                    color: '#166534',
-                                    borderRadius: '0.25rem',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 500,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.25rem',
-                                    flexShrink: 0
-                                  }}>
-                                    <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />
+                                  <div className="px-2 py-1 bg-green-500/10 text-green-700 dark:text-green-400 rounded text-xs font-medium flex items-center gap-1 flex-shrink-0">
+                                    <CheckCircle className="w-3.5 h-3.5" />
                                     Selesai
                                   </div>
                                 ) : booking.status === 'accepted' || booking.status === 'in_progress' ? (
-                                  <div style={{
-                                    padding: '0.25rem 0.5rem',
-                                    backgroundColor: '#dbeafe',
-                                    color: '#1e40af',
-                                    borderRadius: '0.25rem',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 500,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.25rem',
-                                    flexShrink: 0
-                                  }}>
-                                    <Clock style={{ width: '0.875rem', height: '0.875rem' }} />
+                                  <div className="px-2 py-1 bg-blue-500/10 text-blue-700 dark:text-blue-400 rounded text-xs font-medium flex items-center gap-1 flex-shrink-0">
+                                    <Clock className="w-3.5 h-3.5" />
                                     {booking.status === 'accepted' ? 'Diterima' : 'Bekerja'}
                                   </div>
                                 ) : (
-                                  <div style={{
-                                    padding: '0.25rem 0.5rem',
-                                    backgroundColor: '#f3f4f6',
-                                    color: '#6b7280',
-                                    borderRadius: '0.25rem',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 500,
-                                    flexShrink: 0
-                                  }}>
+                                  <div className="px-2 py-1 bg-muted text-muted-foreground rounded text-xs font-medium flex-shrink-0">
                                     {booking.status === 'pending' ? 'Menunggu' : booking.status}
                                   </div>
                                 )}
@@ -499,63 +399,41 @@ export default function BusinessBookingsPage() {
                             </div>
 
                             {/* Job Details */}
-                            <div style={{ padding: '1rem' }}>
-                              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+                            <div className="p-4">
+                              <h3 className="text-base font-semibold mb-2">
                                 {booking.job?.title || 'Unknown Job'}
                               </h3>
 
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.8rem', color: '#666' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                  <span style={{ fontWeight: 500 }}>Tanggal:</span>
+                              <div className="flex flex-col gap-2 text-xs text-muted-foreground">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">Tanggal:</span>
                                   <span>{formatDate(booking.start_date)}</span>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                  <span style={{ fontWeight: 500 }}>Waktu:</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">Waktu:</span>
                                   <span>{formatTime(booking.start_date)} - {formatTime(booking.end_date)}</span>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                  <span style={{ fontWeight: 500 }}>Gaji:</span>
-                                  <span style={{ fontWeight: 600, color: '#2563eb' }}>{formatPrice(booking.final_price)}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">Gaji:</span>
+                                  <span className="font-semibold text-primary">{formatPrice(booking.final_price)}</span>
                                 </div>
                               </div>
                             </div>
 
                             {/* Review Section - Only for completed bookings */}
                             {booking.status === 'completed' && (
-                              <div style={{
-                                padding: '0.75rem 1rem',
-                                borderTop: '1px solid #e5e7eb',
-                                backgroundColor: '#f9fafb',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between'
-                              }}>
+                              <div className="px-4 py-3 border-t border-border bg-muted/30 flex items-center justify-between">
                                 {hasReviewed ? (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                  <div className="flex items-center gap-2">
                                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                    <span style={{ fontSize: '0.875rem', color: '#666' }}>
+                                    <span className="text-sm text-muted-foreground">
                                       Ulasan diberikan ({existingReview.rating}/5)
                                     </span>
                                   </div>
                                 ) : (
                                   <button
                                     onClick={() => handleWriteReview(booking)}
-                                    style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '0.5rem',
-                                      padding: '0.5rem 1rem',
-                                      backgroundColor: '#2563eb',
-                                      color: 'white',
-                                      border: 'none',
-                                      borderRadius: '0.375rem',
-                                      fontSize: '0.875rem',
-                                      fontWeight: 500,
-                                      cursor: 'pointer',
-                                      transition: 'background-color 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
-                                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground border-none rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-primary/90"
                                   >
                                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                                     Tulis Ulasan
@@ -566,30 +444,22 @@ export default function BusinessBookingsPage() {
 
                             {/* Interview Section - For active bookings with interview sessions */}
                             {showInterviewLink && (
-                              <div style={{
-                                padding: '0.75rem 1rem',
-                                borderTop: '1px solid #e5e7eb',
-                                backgroundColor: '#f9fafb',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                gap: '0.75rem'
-                              }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                  <Video style={{ width: '1rem', height: '1rem', color: '#7c3aed' }} />
-                                  <span style={{ fontSize: '0.75rem', fontWeight: 500, color: '#666' }}>
+                              <div className="px-4 py-3 border-t border-border bg-muted/30 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2">
+                                  <Video className="w-4 h-4 text-violet-500" />
+                                  <span className="text-xs font-medium text-muted-foreground">
                                     Interview:
                                   </span>
                                   <Badge 
                                     variant="outline" 
                                     className={
                                       interviewSession.status === 'in_progress' 
-                                        ? 'bg-green-500/10 text-green-700 border-green-200' 
+                                        ? 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-200' 
                                         : interviewSession.status === 'completed'
-                                        ? 'bg-blue-500/10 text-blue-700 border-blue-200'
+                                        ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200'
                                         : interviewSession.status === 'skipped'
-                                        ? 'bg-gray-500/10 text-gray-600 border-gray-200'
-                                        : 'bg-yellow-500/10 text-yellow-700 border-yellow-200'
+                                        ? 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-200'
+                                        : 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200'
                                     }
                                   >
                                     {interviewSession.status === 'in_progress' ? 'Berlangsung' :
@@ -599,28 +469,16 @@ export default function BusinessBookingsPage() {
                                 </div>
                                 <Link
                                   href={`/dashboard/business/interview/${booking.id}`}
-                                  style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.375rem',
-                                    padding: '0.375rem 0.75rem',
-                                    backgroundColor: interviewSession.status === 'in_progress' ? '#16a34a' : '#7c3aed',
-                                    color: 'white',
-                                    borderRadius: '0.375rem',
-                                    fontSize: '0.75rem',
-                                    fontWeight: 500,
-                                    textDecoration: 'none',
-                                    transition: 'background-color 0.2s'
-                                  }}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-primary-foreground rounded-md text-xs font-medium no-underline transition-colors"
                                 >
                                   {interviewSession.status === 'in_progress' ? (
                                     <>
-                                      <Video style={{ width: '0.875rem', height: '0.875rem' }} />
+                                      <Video className="w-3.5 h-3.5" />
                                       Gabung Interview
                                     </>
                                   ) : (
                                     <>
-                                      <ExternalLink style={{ width: '0.875rem', height: '0.875rem' }} />
+                                      <ExternalLink className="w-3.5 h-3.5" />
                                       Lihat Interview
                                     </>
                                   )}

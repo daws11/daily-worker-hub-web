@@ -216,55 +216,27 @@ export default function JobForm() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f5f5f5',
-      padding: '1rem'
-    }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <div className="min-h-screen bg-muted/30 dark:bg-background p-4">
+      <div className="max-w-[800px] mx-auto">
         {/* Header */}
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '1rem',
-          marginBottom: '1.5rem'
-        }}>
+        <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => router.back()}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.5rem 1rem',
-              backgroundColor: 'white',
-              border: '1px solid #d1d5db',
-              borderRadius: '0.375rem',
-              cursor: 'pointer',
-              fontSize: '0.875rem'
-            }}
+            className="flex items-center gap-2 px-4 py-2 bg-card dark:bg-card border border-border rounded-md cursor-pointer text-sm"
           >
-            <ArrowLeft style={{ width: '1rem', height: '1rem' }} />
+            <ArrowLeft className="w-4 h-4" />
             Back
           </button>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>
+          <h1 className="text-2xl font-bold m-0">
             Create New Job
           </h1>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div style={{
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            marginBottom: '1.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem'
-          }}>
-            <AlertCircle style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
-            <p style={{ color: '#991b1b', margin: 0, fontSize: '0.875rem' }}>
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-destructive" />
+            <p className="text-destructive m-0 text-sm">
               {error}
             </p>
           </div>
@@ -273,22 +245,11 @@ export default function JobForm() {
         {/* Form */}
         <form
           onSubmit={handleSubmit}
-          style={{
-            backgroundColor: 'white',
-            borderRadius: '0.5rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            padding: '1.5rem'
-          }}
+          className="bg-card dark:bg-card rounded-lg shadow-sm p-6"
         >
           {/* Title */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2 text-foreground">
               Job Title *
             </label>
             <input
@@ -299,51 +260,22 @@ export default function JobForm() {
               placeholder="e.g., Driver for Hotel Event"
               required
               disabled={loading}
-              style={{
-                width: '100%',
-                padding: '0.625rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                backgroundColor: loading ? '#f3f4f6' : undefined
-              }}
+              className="w-full p-2.5 border border-border rounded-md text-sm bg-background dark:bg-background disabled:bg-muted"
             />
           </div>
 
           {/* Category */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2 text-foreground">
               Category *
             </label>
             {initialLoading ? (
-              <div style={{
-                padding: '0.625rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                color: '#6b7280',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}>
-                <Loader2 style={{ width: '1rem', height: '1rem', animation: 'spin 1s linear infinite' }} />
+              <div className="p-2.5 border border-border rounded-md text-sm text-muted-foreground flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
                 Loading categories...
               </div>
             ) : categories.length === 0 ? (
-              <div style={{
-                padding: '0.625rem',
-                border: '1px solid #fecaca',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                color: '#dc2626',
-                backgroundColor: '#fef2f2'
-              }}>
+              <div className="p-2.5 border border-destructive/20 rounded-md text-sm text-destructive bg-destructive/10">
                 No categories available. Please contact admin.
               </div>
             ) : (
@@ -353,14 +285,7 @@ export default function JobForm() {
                 onChange={handleChange}
                 required
                 disabled={loading}
-                style={{
-                  width: '100%',
-                  padding: '0.625rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.375rem',
-                  fontSize: '0.875rem',
-                  backgroundColor: 'white'
-                }}
+                className="w-full p-2.5 border border-border rounded-md text-sm bg-card dark:bg-card"
               >
                 <option value="">Select a category</option>
                 {categories.map(cat => (
@@ -373,14 +298,8 @@ export default function JobForm() {
           </div>
 
           {/* Description */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2 text-foreground">
               Description *
             </label>
             <textarea
@@ -391,26 +310,13 @@ export default function JobForm() {
               required
               disabled={loading}
               rows={5}
-              style={{
-                width: '100%',
-                padding: '0.625rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                resize: 'vertical'
-              }}
+              className="w-full p-2.5 border border-border rounded-md text-sm resize-y bg-background dark:bg-background disabled:bg-muted"
             />
           </div>
 
           {/* Requirements */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2 text-foreground">
               Requirements
             </label>
             <textarea
@@ -420,34 +326,16 @@ export default function JobForm() {
               placeholder="List any specific skills or experience required..."
               disabled={loading}
               rows={3}
-              style={{
-                width: '100%',
-                padding: '0.625rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                resize: 'vertical'
-              }}
+              className="w-full p-2.5 border border-border rounded-md text-sm resize-y bg-background dark:bg-background disabled:bg-muted"
             />
           </div>
 
           {/* Budget Range */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '1rem',
-            marginBottom: '1.5rem'
-          }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             <div>
-              <label style={{
-                display: 'block',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                marginBottom: '0.5rem',
-                color: '#374151'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <DollarSign style={{ width: '1rem', height: '1rem' }} />
+              <label className="block text-sm font-medium mb-2 text-foreground">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
                   Min Budget (IDR) *
                 </div>
               </label>
@@ -460,26 +348,14 @@ export default function JobForm() {
                 required
                 disabled={loading}
                 min="0"
-                style={{
-                  width: '100%',
-                  padding: '0.625rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.375rem',
-                  fontSize: '0.875rem'
-                }}
+                className="w-full p-2.5 border border-border rounded-md text-sm bg-background dark:bg-background disabled:bg-muted"
               />
             </div>
 
             <div>
-              <label style={{
-                display: 'block',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                marginBottom: '0.5rem',
-                color: '#374151'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <DollarSign style={{ width: '1rem', height: '1rem' }} />
+              <label className="block text-sm font-medium mb-2 text-foreground">
+                <div className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
                   Max Budget (IDR) *
                 </div>
               </label>
@@ -492,28 +368,16 @@ export default function JobForm() {
                 required
                 disabled={loading}
                 min="0"
-                style={{
-                  width: '100%',
-                  padding: '0.625rem',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.375rem',
-                  fontSize: '0.875rem'
-                }}
+                className="w-full p-2.5 border border-border rounded-md text-sm bg-background dark:bg-background disabled:bg-muted"
               />
             </div>
           </div>
 
           {/* Hours Needed */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Clock style={{ width: '1rem', height: '1rem' }} />
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2 text-foreground">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4" />
                 Hours Needed (4-12 hours)
               </div>
             </label>
@@ -526,30 +390,18 @@ export default function JobForm() {
               disabled={loading}
               min="4"
               max="12"
-              style={{
-                width: '100%',
-                padding: '0.625rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem'
-              }}
+              className="w-full p-2.5 border border-border rounded-md text-sm bg-background dark:bg-background disabled:bg-muted"
             />
-            <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+            <p className="text-xs text-muted-foreground mt-1">
               Minimum 4 hours, maximum 12 hours
             </p>
           </div>
 
           {/* Address */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <MapPin style={{ width: '1rem', height: '1rem' }} />
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2 text-foreground">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-4 h-4" />
                 Job Address *
               </div>
             </label>
@@ -561,26 +413,13 @@ export default function JobForm() {
               required
               disabled={loading}
               rows={2}
-              style={{
-                width: '100%',
-                padding: '0.625rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                resize: 'vertical'
-              }}
+              className="w-full p-2.5 border border-border rounded-md text-sm resize-y bg-background dark:bg-background disabled:bg-muted"
             />
           </div>
 
           {/* Deadline */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              marginBottom: '0.5rem',
-              color: '#374151'
-            }}>
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2 text-foreground">
               Deadline (Optional)
             </label>
             <input
@@ -589,91 +428,50 @@ export default function JobForm() {
               value={formData.deadline}
               onChange={handleChange}
               disabled={loading}
-              style={{
-                width: '100%',
-                padding: '0.625rem',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem'
-              }}
+              className="w-full p-2.5 border border-border rounded-md text-sm bg-background dark:bg-background disabled:bg-muted"
             />
           </div>
 
           {/* Is Urgent */}
-          <div style={{ marginBottom: '2rem' }}>
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              cursor: 'pointer'
-            }}>
+          <div className="mb-8">
+            <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
                 name="is_urgent"
                 checked={formData.is_urgent}
                 onChange={handleChange}
                 disabled={loading}
-                style={{
-                  width: '1.125rem',
-                  height: '1.125rem',
-                  cursor: 'pointer'
-                }}
+                className="w-4.5 h-4.5 cursor-pointer"
               />
-              <span style={{ fontSize: '0.875rem', color: '#374151' }}>
+              <span className="text-sm text-foreground">
                 Mark this job as urgent
               </span>
             </label>
           </div>
 
           {/* Submit Button */}
-          <div style={{
-            display: 'flex',
-            gap: '1rem',
-            justifyContent: 'flex-end'
-          }}>
+          <div className="flex gap-4 justify-end">
             <button
               type="button"
               onClick={() => router.back()}
               disabled={loading}
-              style={{
-                padding: '0.625rem 1.25rem',
-                backgroundColor: 'white',
-                border: '1px solid #d1d5db',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.5 : 1
-              }}
+              className="px-5 py-2.5 bg-card dark:bg-card border border-border rounded-md text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.625rem 1.25rem',
-                backgroundColor: '#2563eb',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: loading ? 'not-allowed' : 'pointer',
-                opacity: loading ? 0.5 : 1
-              }}
+              className="flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground border-none rounded-md text-sm font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
-                  <Loader2 style={{ width: '1rem', height: '1rem', animation: 'spin 1s linear infinite' }} />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Creating...
                 </>
               ) : (
                 <>
-                  <Save style={{ width: '1rem', height: '1rem' }} />
+                  <Save className="w-4 h-4" />
                   Create Job
                 </>
               )}
@@ -681,13 +479,6 @@ export default function JobForm() {
           </div>
         </form>
       </div>
-
-      <style jsx>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }
