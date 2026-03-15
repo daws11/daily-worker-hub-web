@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Pagination } from "@/components/ui/pagination"
 import { supabase } from "@/lib/supabase/client"
 import type { Database } from "@/lib/supabase/types"
 import { getWorkerWalletBalance, requestPayout } from "@/lib/actions/payments"
@@ -80,6 +81,8 @@ export default function WorkerWalletPage() {
     net_amount: number
     bank_name: string
   } | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   // Fetch worker profile
   useEffect(() => {
@@ -310,6 +313,17 @@ export default function WorkerWalletPage() {
     }
     return bankNames[bankCode]?.[locale] || bankCode
   }
+
+  // Calculate paginated payouts
+  const totalPages = Math.ceil(payouts.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedPayouts = payouts.slice(startIndex, endIndex)
+
+  // Reset to page 1 when items per page changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [itemsPerPage])
 
   // Get status badge variant and icon
   const getStatusInfo = (status: PayoutRequest["status"]) => {
@@ -585,7 +599,7 @@ export default function WorkerWalletPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {payouts.map((payout) => {
+                    {paginatedPayouts.map((payout) => {
                       const statusInfo = getStatusInfo(payout.status)
                       const StatusIcon = statusInfo.icon
                       const bankName = payout.bank_accounts
@@ -626,6 +640,17 @@ export default function WorkerWalletPage() {
                   </TableBody>
                 </Table>
               </div>
+            )}
+            {!isLoadingPayouts && payouts.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                itemsPerPage={itemsPerPage}
+                onItemsPerPageChange={setItemsPerPage}
+                totalItems={payouts.length}
+                locale={locale}
+              />
             )}
           </CardContent>
         </Card>

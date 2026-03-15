@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Pagination } from "@/components/ui/pagination"
 import { supabase } from "@/lib/supabase/client"
 import type { Database } from "@/lib/supabase/types"
 import { getBusinessWalletBalance, getBusinessPaymentHistory, initializeQrisPayment, calculateTopUpFee } from "@/lib/actions/payments"
@@ -38,6 +39,8 @@ export default function BusinessWalletPage() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false)
   const [topUpAmount, setTopUpAmount] = useState<string>("")
   const [feeBreakdown, setFeeBreakdown] = useState<{ amount: number; fee_amount: number; total_amount: number } | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   // Fetch business profile
   useEffect(() => {
@@ -198,6 +201,17 @@ export default function BusinessWalletPage() {
       minute: "2-digit",
     })
   }
+
+  // Calculate paginated transactions
+  const totalPages = Math.ceil(transactions.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const endIndex = startIndex + itemsPerPage
+  const paginatedTransactions = transactions.slice(startIndex, endIndex)
+
+  // Reset to page 1 when items per page changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [itemsPerPage])
 
   // Get status badge variant and icon
   const getStatusInfo = (status: PaymentTransaction["status"]) => {
@@ -425,7 +439,7 @@ export default function BusinessWalletPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {transactions.map((transaction) => {
+                    {paginatedTransactions.map((transaction) => {
                       const statusInfo = getStatusInfo(transaction.status)
                       const StatusIcon = statusInfo.icon
 
@@ -455,6 +469,17 @@ export default function BusinessWalletPage() {
                   </TableBody>
                 </Table>
               </div>
+            )}
+            {!isLoadingTransactions && transactions.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                itemsPerPage={itemsPerPage}
+                onItemsPerPageChange={setItemsPerPage}
+                totalItems={transactions.length}
+                locale={locale}
+              />
             )}
           </CardContent>
         </Card>
