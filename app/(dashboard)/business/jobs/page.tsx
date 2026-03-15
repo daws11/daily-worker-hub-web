@@ -124,19 +124,12 @@ export default function BusinessJobsPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
         {/* Page Header */}
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'space-between',
-          marginBottom: '1.5rem',
-          flexWrap: 'wrap',
-          gap: '1rem'
-        }}>
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', margin: 0 }}>
+            <h1 className="text-2xl font-bold">
               {t('business.jobsPageTitle')}
             </h1>
-            <p style={{ color: '#666', fontSize: '0.875rem', margin: 0 }}>
+            <p className="text-sm text-muted-foreground mt-1">
               {t('business.jobsPageSubtitle')}
             </p>
           </div>
@@ -144,65 +137,28 @@ export default function BusinessJobsPage() {
             onClick={() => {
               window.location.href = '/business/jobs/new'
             }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              padding: '0.625rem 1.25rem',
-              backgroundColor: '#2563eb',
-              color: 'white',
-              border: 'none',
-              borderRadius: '0.375rem',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'background-color 0.2s',
-              whiteSpace: 'nowrap'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+            className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white border-none rounded-md text-sm font-medium cursor-pointer transition-colors whitespace-nowrap hover:bg-primary/90"
           >
-            <Plus style={{ width: '1rem', height: '1rem' }} />
+            <Plus className="w-4 h-4" />
             Create New Job
           </button>
         </div>
 
         {/* Error State */}
         {error && (
-          <div style={{
-            backgroundColor: '#fef2f2',
-            border: '1px solid #fecaca',
-            borderRadius: '0.5rem',
-            padding: '1rem',
-            marginBottom: '1rem',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem'
-          }}>
-            <AlertCircle style={{ width: '1.25rem', height: '1.25rem', color: '#dc2626' }} />
-            <div style={{ flex: 1 }}>
-              <p style={{ color: '#991b1b', fontWeight: 500, marginBottom: '0.25rem' }}>
+          <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 rounded-lg p-4 mb-4 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
+            <div className="flex-1">
+              <p className="text-red-800 dark:text-red-200 font-medium mb-1">
                 {t('errors.loadFailed')}
               </p>
-              <p style={{ color: '#b91c1c', fontSize: '0.875rem' }}>{error}</p>
+              <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
             </div>
             <button
               onClick={fetchJobsWithAttendance}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}
+              className="px-4 py-2 bg-red-600 text-white border-none rounded-md text-sm font-medium cursor-pointer flex items-center gap-2 hover:bg-red-700"
             >
-              <Loader2 style={{ width: '1rem', height: '1rem' }} />
+              <Loader2 className="w-4 h-4" />
               {t('common.tryAgain')}
             </button>
           </div>
@@ -210,64 +166,38 @@ export default function BusinessJobsPage() {
 
         {/* Loading State */}
         {loading && !error && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0.5rem',
-            padding: '3rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center'
-          }}>
-            <Loader2 className="animate-spin" style={{ width: '2rem', height: '2rem', color: '#2563eb', margin: '0 auto 1rem' }} />
-            <p style={{ color: '#666' }}>{t('business.loadingJobs')}</p>
+          <div className="bg-card rounded-lg p-12 shadow-sm text-center">
+            <Loader2 className="animate-spin w-8 h-8 text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">{t('business.loadingJobs')}</p>
           </div>
         )}
 
         {/* Stats Cards */}
         {!loading && !error && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-            gap: '1rem',
-            marginBottom: '1.5rem'
-          }}>
-            <div style={{
-              padding: '1rem',
-              border: '1px solid #e5e7eb',
-              borderRadius: '0.375rem',
-              backgroundColor: 'white'
-            }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <div className="p-4 border border-border rounded-md bg-card">
+              <h3 className="text-base font-semibold mb-2">
                 {t('business.totalJobs')}
               </h3>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#2563eb' }}>
+              <p className="text-3xl font-bold text-primary">
                 {jobs.total ?? 0}
               </p>
             </div>
 
-            <div style={{
-              padding: '1rem',
-              border: '1px solid #e5e7eb',
-              borderRadius: '0.375rem',
-              backgroundColor: 'white'
-            }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+            <div className="p-4 border border-border rounded-md bg-card">
+              <h3 className="text-base font-semibold mb-2">
                 {t('business.activeJobs')}
               </h3>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#10b981' }}>
+              <p className="text-3xl font-bold text-green-600 dark:text-green-400">
                 {jobs.active ?? 0}
               </p>
             </div>
 
-            <div style={{
-              padding: '1rem',
-              border: '1px solid #e5e7eb',
-              borderRadius: '0.375rem',
-              backgroundColor: 'white'
-            }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+            <div className="p-4 border border-border rounded-md bg-card">
+              <h3 className="text-base font-semibold mb-2">
                 {t('common.completed')}
               </h3>
-              <p style={{ fontSize: '2rem', fontWeight: 'bold', color: '#6b7280' }}>
+              <p className="text-3xl font-bold text-muted-foreground">
                 {jobs.completed ?? 0}
               </p>
             </div>
@@ -276,43 +206,21 @@ export default function BusinessJobsPage() {
 
         {/* Empty State */}
         {!loading && !error && jobs.jobsList?.length === 0 && (
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '0.5rem',
-            padding: '3rem',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            textAlign: 'center',
-            border: '1px dashed #d1d5db'
-          }}>
-            <Building2 style={{ width: '3rem', height: '3rem', color: '#9ca3af', margin: '0 auto 1rem' }} />
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.5rem' }}>
+          <div className="bg-card rounded-lg p-12 shadow-sm text-center border border-dashed border-border">
+            <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">
               {t('business.noActiveJobs')}
             </h3>
-            <p style={{ color: '#666', marginBottom: '1.5rem' }}>
+            <p className="text-muted-foreground mb-6">
               {t('business.noActiveJobsDescription')}
             </p>
             <button
               onClick={() => {
                 window.location.href = '/business/jobs/new'
               }}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.625rem 1.25rem',
-                backgroundColor: '#2563eb',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0.375rem',
-                fontSize: '0.875rem',
-                fontWeight: 500,
-                cursor: 'pointer',
-                transition: 'background-color 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white border-none rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-primary/90"
             >
-              <Plus style={{ width: '1rem', height: '1rem' }} />
+              <Plus className="w-4 h-4" />
               Create Your First Job
             </button>
           </div>
@@ -320,31 +228,22 @@ export default function BusinessJobsPage() {
 
         {/* Active Jobs List */}
         {!loading && !error && jobs.jobsList && jobs.jobsList.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div className="flex flex-col gap-6">
             {jobs.jobsList.map((job) => (
               <div
                 key={job.id}
-                style={{
-                  backgroundColor: 'white',
-                  borderRadius: '0.5rem',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                  overflow: 'hidden'
-                }}
+                className="bg-card rounded-lg shadow-sm overflow-hidden"
               >
                 {/* Job Header */}
-                <div style={{
-                  padding: '1rem 1.5rem',
-                  borderBottom: '1px solid #e5e7eb',
-                  backgroundColor: '#f9fafb'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '0.25rem' }}>
+                <div className="p-4 px-6 border-b border-border bg-muted/50">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold mb-1">
                         {job.title}
                       </h3>
                       {job.address && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666', fontSize: '0.875rem' }}>
-                          <MapPin style={{ width: '1rem', height: '1rem' }} />
+                        <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                          <MapPin className="w-4 h-4" />
                           <span>{job.address}</span>
                         </div>
                       )}
@@ -355,39 +254,24 @@ export default function BusinessJobsPage() {
                         const dialog = document.getElementById(`qr-dialog-${job.id}`) as HTMLDialogElement
                         dialog?.showModal()
                       }}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.5rem 1rem',
-                        backgroundColor: '#2563eb',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '0.375rem',
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                        transition: 'background-color 0.2s'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1d4ed8'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                      className="flex items-center gap-2 px-4 py-2 bg-primary text-white border-none rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-primary/90"
                     >
-                      <QrCode style={{ width: '1rem', height: '1rem' }} />
+                      <QrCode className="w-4 h-4" />
                       {t('business.qrCodeButton')}
                     </button>
                   </div>
                   {job.stats && job.stats.total > 0 && (
-                    <div style={{ display: 'flex', gap: '1.5rem', marginTop: '0.75rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
-                        <Users style={{ width: '1rem', height: '1rem' }} />
+                    <div className="flex gap-6 mt-3">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Users className="w-4 h-4" />
                         <span>{job.stats.total} {t('attendance.workers')}</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#10b981' }}>
-                        <CheckCircle style={{ width: '1rem', height: '1rem' }} />
+                      <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                        <CheckCircle className="w-4 h-4" />
                         <span>{job.stats.checkedIn} {t('attendance.checkIn')}</span>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>
-                        <XCircle style={{ width: '1rem', height: '1rem' }} />
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <XCircle className="w-4 h-4" />
                         <span>{job.stats.checkedOut} {t('attendance.checkOut')}</span>
                       </div>
                     </div>
@@ -396,131 +280,74 @@ export default function BusinessJobsPage() {
 
                 {/* Workers List */}
                 {job.bookings && job.bookings.length > 0 && (
-                  <div style={{ padding: '1.5rem' }}>
-                    <h4 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <Users style={{ width: '1.25rem', height: '1.25rem', color: '#666' }} />
+                  <div className="p-6">
+                    <h4 className="text-base font-semibold mb-4 flex items-center gap-2">
+                      <Users className="w-5 h-5 text-muted-foreground" />
                       {t('attendance.workerList')}
                     </h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                       {job.bookings.map((booking) => (
                         <div
                           key={booking.id}
-                          style={{
-                            padding: '1rem',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '0.375rem',
-                            backgroundColor: '#fafafa'
-                          }}
+                          className="p-4 border border-border rounded-md bg-muted/30"
                         >
                           {/* Worker Info */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                            <div style={{
-                              width: '2.5rem',
-                              height: '2.5rem',
-                              borderRadius: '50%',
-                              backgroundColor: '#e5e7eb',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              overflow: 'hidden',
-                              flexShrink: 0
-                            }}>
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
                               {booking.worker?.avatar_url ? (
                                 <img
                                   src={booking.worker.avatar_url}
                                   alt={booking.worker.full_name}
-                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                  className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <span style={{ fontSize: '1rem', fontWeight: 600, color: '#666' }}>
+                                <span className="text-base font-semibold text-muted-foreground">
                                   {booking.worker?.full_name?.charAt(0) || '?'}
                                 </span>
                               )}
                             </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ fontWeight: 500, fontSize: '0.875rem', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">
                                 {booking.worker?.full_name || t('attendance.worker')}
                               </p>
-                              <p style={{ fontSize: '0.75rem', color: '#666', margin: 0 }}>
+                              <p className="text-xs text-muted-foreground">
                                 {booking.worker?.phone || ''}
                               </p>
                             </div>
                             {booking.check_out_at ? (
-                              <div style={{
-                                padding: '0.25rem 0.5rem',
-                                backgroundColor: '#dcfce7',
-                                color: '#166534',
-                                borderRadius: '0.25rem',
-                                fontSize: '0.75rem',
-                                fontWeight: 500,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.25rem',
-                                flexShrink: 0
-                              }}>
-                                <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />
+                              <div className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded text-xs font-medium flex items-center gap-1 shrink-0">
+                                <CheckCircle className="w-3.5 h-3.5" />
                                 {t('common.completed')}
                               </div>
                             ) : booking.check_in_at ? (
-                              <div style={{
-                                padding: '0.25rem 0.5rem',
-                                backgroundColor: '#dbeafe',
-                                color: '#1e40af',
-                                borderRadius: '0.25rem',
-                                fontSize: '0.75rem',
-                                fontWeight: 500,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.25rem',
-                                flexShrink: 0
-                              }}>
-                                <Clock style={{ width: '0.875rem', height: '0.875rem' }} />
+                              <div className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded text-xs font-medium flex items-center gap-1 shrink-0">
+                                <Clock className="w-3.5 h-3.5" />
                                 {t('attendance.working')}
                               </div>
                             ) : (
-                              <div style={{
-                                padding: '0.25rem 0.5rem',
-                                backgroundColor: '#f3f4f6',
-                                color: '#6b7280',
-                                borderRadius: '0.25rem',
-                                fontSize: '0.75rem',
-                                fontWeight: 500,
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.25rem',
-                                flexShrink: 0
-                              }}>
-                                <XCircle style={{ width: '0.875rem', height: '0.875rem' }} />
+                              <div className="px-2 py-1 bg-muted text-muted-foreground rounded text-xs font-medium flex items-center gap-1 shrink-0">
+                                <XCircle className="w-3.5 h-3.5" />
                                 {t('attendance.notYet')}
                               </div>
                             )}
                           </div>
 
                           {/* Attendance Times */}
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.75rem', paddingTop: '0.5rem', borderTop: '1px solid #e5e7eb' }}>
+                          <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-border">
                             <div>
-                              <span style={{ color: '#666' }}>{t('bookings.checkInAt')} </span>
-                              <span style={{ fontWeight: 500 }}>{formatTime(booking.check_in_at)}</span>
+                              <span className="text-muted-foreground">{t('bookings.checkInAt')} </span>
+                              <span className="font-medium">{formatTime(booking.check_in_at)}</span>
                             </div>
                             <div>
-                              <span style={{ color: '#666' }}>{t('bookings.checkOutAt')} </span>
-                              <span style={{ fontWeight: 500 }}>{formatTime(booking.check_out_at)}</span>
+                              <span className="text-muted-foreground">{t('bookings.checkOutAt')} </span>
+                              <span className="font-medium">{formatTime(booking.check_out_at)}</span>
                             </div>
                           </div>
 
                           {/* Location Verification */}
                           {booking.check_in_lat && booking.check_in_lng && (
-                            <div style={{
-                              marginTop: '0.5rem',
-                              paddingTop: '0.5rem',
-                              borderTop: '1px solid #e5e7eb',
-                              fontSize: '0.75rem',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.25rem',
-                              color: '#10b981'
-                            }}>
-                              <CheckCircle style={{ width: '0.875rem', height: '0.875rem' }} />
+                            <div className="mt-2 pt-2 border-t border-border text-xs flex items-center gap-1 text-green-600 dark:text-green-400">
+                              <CheckCircle className="w-3.5 h-3.5" />
                               <span>{t('business.locationVerified')}</span>
                             </div>
                           )}
@@ -538,16 +365,9 @@ export default function BusinessJobsPage() {
         <dialog
           key={`qr-dialog-${job.id}`}
           id={`qr-dialog-${job.id}`}
-          style={{
-            border: 'none',
-            borderRadius: '0.5rem',
-            padding: 0,
-            maxWidth: '500px',
-            width: '90%',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)'
-          }}
+          className="border-none rounded-lg p-0 max-w-[500px] w-[90%] shadow-xl backdrop:bg-black/50"
         >
-          <div style={{ padding: '0' }}>
+          <div className="p-0">
             <QRCodeGenerator
               jobId={job.id}
               jobTitle={job.title}
@@ -557,22 +377,13 @@ export default function BusinessJobsPage() {
               existingQRCode={job.qr_code || undefined}
               onRefresh={handleQRRefresh}
             />
-            <div style={{ padding: '1rem', borderTop: '1px solid #e5e7eb', display: 'flex', justifyContent: 'flex-end' }}>
+            <div className="p-4 border-t border-border flex justify-end">
               <button
                 onClick={() => {
                   const dialog = document.getElementById(`qr-dialog-${job.id}`) as HTMLDialogElement
                   dialog?.close()
                 }}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#f3f4f6',
-                  color: '#374151',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '0.375rem',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  cursor: 'pointer'
-                }}
+                className="px-4 py-2 bg-muted text-foreground border border-border rounded-md text-sm font-medium cursor-pointer hover:bg-muted/80"
               >
                 {t('common.close')}
               </button>
