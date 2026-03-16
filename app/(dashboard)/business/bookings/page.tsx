@@ -216,7 +216,7 @@ export default function BusinessBookingsPage() {
 
       setBookings(bookings)
     } catch (err: any) {
-      const message = err.message || "Gagal memuat data booking"
+      const message = err.message || "Gagal memuat data booking / Failed to load booking data"
       setError(message)
       toast.error(message)
     } finally {

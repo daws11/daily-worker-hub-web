@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { AlertCircle } from "lucide-react"
+import { toast } from "sonner"
 
 import {
   Dialog,
@@ -120,6 +121,7 @@ function EmergencyCancellationDialog({
       )
 
       if (result.success) {
+        toast.success("Booking berhasil dibatalkan / Booking cancelled successfully")
         handleOpenChange(false)
         onSuccess?.()
       } else {

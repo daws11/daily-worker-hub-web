@@ -275,9 +275,9 @@ export function BookingCheckInOut({
       }
 
       await onCheckIn(bookingId, location)
-      toast.success("Check-in berhasil!")
+      toast.success("Check-in berhasil / Check-in successful")
     } catch (error: any) {
-      toast.error(error.message || "Gagal check-in")
+      toast.error(error.message || "Gagal check-in / Check-in failed")
     } finally {
       setIsLoading(false)
     }
@@ -290,10 +290,10 @@ export function BookingCheckInOut({
     setIsLoading(true)
     try {
       await onCheckOut(bookingId, data)
-      toast.success("Check-out berhasil!")
+      toast.success("Check-out berhasil / Check-out successful")
       setShowCheckOutDialog(false)
     } catch (error: any) {
-      toast.error(error.message || "Gagal check-out")
+      toast.error(error.message || "Gagal check-out / Check-out failed")
     } finally {
       setIsLoading(false)
     }
@@ -479,9 +479,9 @@ export function BookingCheckInOutCompact({
     setIsLoading(true)
     try {
       await onCheckIn(bookingId)
-      toast.success("Check-in berhasil!")
+      toast.success("Check-in berhasil / Check-in successful")
     } catch (error: any) {
-      toast.error(error.message || "Gagal check-in")
+      toast.error(error.message || "Gagal check-in / Check-in failed")
     } finally {
       setIsLoading(false)
     }
@@ -492,10 +492,10 @@ export function BookingCheckInOutCompact({
     setIsLoading(true)
     try {
       await onCheckOut(bookingId, data)
-      toast.success("Check-out berhasil!")
+      toast.success("Check-out berhasil / Check-out successful")
       setShowCheckOutDialog(false)
     } catch (error: any) {
-      toast.error(error.message || "Gagal check-out")
+      toast.error(error.message || "Gagal check-out / Check-out failed")
     } finally {
       setIsLoading(false)
     }

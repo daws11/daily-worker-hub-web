@@ -354,7 +354,7 @@ export default function WorkerBookingsPage() {
 
       setBookings(bookingsData)
     } catch (err: any) {
-      const message = err.message || "Gagal memuat data booking"
+      const message = err.message || "Gagal memuat data booking / Failed to load booking data"
       setError(message)
       toast.error(message)
     } finally {
@@ -373,10 +373,10 @@ export default function WorkerBookingsPage() {
   const handleCancel = async (bookingId: string) => {
     try {
       await cancelBooking(bookingId)
-      toast.success("Booking berhasil dibatalkan")
+      toast.success("Booking berhasil dibatalkan / Booking cancelled successfully")
       await fetchBookingsWithReviews()
     } catch (error: any) {
-      toast.error("Gagal membatalkan booking: " + error.message)
+      toast.error("Gagal membatalkan booking / Failed to cancel booking: " + error.message)
     }
   }
 
@@ -398,16 +398,16 @@ export default function WorkerBookingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(location || {}),
       })
-      
+
       if (!response.ok) {
         const error = await response.json()
         throw new Error(error.error || 'Gagal check-in')
       }
-      
-      toast.success("Check-in berhasil!")
+
+      toast.success("Check-in berhasil / Check-in successful")
       await fetchBookingsWithReviews()
     } catch (error: any) {
-      toast.error(error.message || "Gagal check-in: " + error.message)
+      toast.error("Gagal check-in / Check-in failed: " + error.message)
     }
   }
 
@@ -418,16 +418,16 @@ export default function WorkerBookingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       })
-      
+
       if (!response.ok) {
         const error = await response.json()
         throw new Error(error.error || 'Gagal check-out')
       }
-      
-      toast.success("Check-out berhasil!")
+
+      toast.success("Check-out berhasil / Check-out successful")
       await fetchBookingsWithReviews()
     } catch (error: any) {
-      toast.error(error.message || "Gagal check-out: " + error.message)
+      toast.error("Gagal check-out / Check-out failed: " + error.message)
     }
   }
 

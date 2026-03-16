@@ -240,7 +240,7 @@ export default function BusinessApplicantsPage() {
         .single()
 
       if (!business) {
-        toast.error("Data bisnis tidak ditemukan")
+        toast.error("Data bisnis tidak ditemukan / Business data not found")
         return
       }
 
@@ -254,7 +254,7 @@ export default function BusinessApplicantsPage() {
       }
 
       if (!result.success) {
-        toast.error(result.error || "Gagal mengupdate status")
+        toast.error(result.error || "Gagal mengupdate status / Failed to update status")
         return
       }
 
@@ -262,12 +262,12 @@ export default function BusinessApplicantsPage() {
       if (newStatus === 'accepted' && result.data?.booking?.id) {
         const bookingId = result.data.booking.id
         setBookingIds(prev => ({ ...prev, [applicationId]: bookingId }))
-        
+
         // Show toast with interview link
         toast.success(
           <div className="flex items-center gap-2">
-            <span>Pelamar diterima! Booking dibuat.</span>
-            <Link 
+            <span>Pelamar diterima! Booking dibuat. / Applicant accepted! Booking created.</span>
+            <Link
               href={`/dashboard/business/interview/${bookingId}`}
               className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 underline font-medium"
             >
@@ -280,16 +280,16 @@ export default function BusinessApplicantsPage() {
         )
       } else {
         toast.success(
-          newStatus === 'accepted' 
-            ? "Pelamar diterima dan booking dibuat!" 
-            : `Status lamaran diubah ke ${newStatus}`
+          newStatus === 'accepted'
+            ? "Pelamar diterima dan booking dibuat! / Applicant accepted and booking created!"
+            : `Status lamaran diubah ke ${newStatus} / Application status changed to ${newStatus}`
         )
       }
       
       // Refresh data
       fetchData()
     } catch (err: any) {
-      toast.error(err.message || "Terjadi kesalahan")
+      toast.error(err.message || "Terjadi kesalahan / An error occurred")
     } finally {
       setProcessingId(null)
     }

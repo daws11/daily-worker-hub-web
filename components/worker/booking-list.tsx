@@ -85,7 +85,7 @@ function BookingList({ workerId }: BookingListProps) {
       const data = await fetchBookings(workerId)
       setBookings(data)
     } catch (error: any) {
-      toast.error("Gagal memuat booking: " + error.message)
+      toast.error("Gagal memuat booking / Failed to load bookings: " + error.message)
     } finally {
       setIsLoading(false)
     }
