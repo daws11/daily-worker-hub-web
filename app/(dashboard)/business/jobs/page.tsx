@@ -4,11 +4,20 @@ import { useState, useCallback, useEffect } from 'react'
 import { useAuth } from '@/app/providers/auth-provider'
 import { useTranslation } from '@/lib/i18n/hooks'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { getBusinessJobs } from '@/lib/supabase/queries/jobs'
 import { getJobBookings } from '@/lib/supabase/queries/bookings'
 import type { JobsRow } from '@/lib/supabase/queries/jobs'
 import type { JobBookingWithDetails } from '@/lib/supabase/queries/bookings'
-import { QRCodeGenerator } from '@/components/attendance/qr-code-generator'
+import dynamic from 'next/dynamic'
+
+const QRCodeGenerator = dynamic(
+  () => import('@/components/attendance/qr-code-generator').then(mod => ({ default: mod.QRCodeGenerator })),
+  { 
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>,
+    ssr: false 
+  }
+)
 import { Calendar, MapPin, Users, Loader2, AlertCircle, CheckCircle, XCircle, Clock, Building2, QrCode, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -293,12 +302,14 @@ export default function BusinessJobsPage() {
                         >
                           {/* Worker Info */}
                           <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 relative">
                               {booking.worker?.avatar_url ? (
-                                <img
+                                <Image
                                   src={booking.worker.avatar_url}
                                   alt={booking.worker.full_name}
-                                  className="w-full h-full object-cover"
+                                  fill
+                                  className="object-cover"
+                                  sizes="40px"
                                 />
                               ) : (
                                 <span className="text-base font-semibold text-muted-foreground">

@@ -10,7 +10,15 @@ import { JobListWithHeader } from '@/components/job-marketplace/JobList'
 import { JobDetailDialog } from '@/components/job-marketplace/JobDetailDialog'
 import { ApplyJobModal } from '@/components/booking/apply-job-modal'
 import { CheckInOutButton } from '@/components/attendance/check-in-out-button'
-import { QRCodeScanner } from '@/components/attendance/qr-code-scanner'
+import dynamic from 'next/dynamic'
+
+const QRCodeScanner = dynamic(
+  () => import('@/components/attendance/qr-code-scanner').then(mod => ({ default: mod.QRCodeScanner })),
+  { 
+    loading: () => <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>,
+    ssr: false 
+  }
+)
 import { useJobs } from '@/lib/hooks/useJobs'
 import { useBookings } from '@/lib/hooks/use-bookings'
 import { useAttendance } from '@/lib/hooks/use-attendance'
