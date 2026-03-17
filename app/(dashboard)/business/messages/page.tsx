@@ -165,8 +165,8 @@ export default function BusinessMessagesPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Pesan</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Pesan</h1>
+        <p className="text-muted-foreground text-sm">
           Kelola komunikasi dengan pekerja untuk setiap booking
         </p>
       </div>
@@ -198,7 +198,7 @@ export default function BusinessMessagesPage() {
 
       {/* Stats Cards */}
       {!loading && !error && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">Total Percakapan</CardTitle>
@@ -244,13 +244,13 @@ export default function BusinessMessagesPage() {
                 href={`/business/messages/${conversation.booking_id}`}
                 className="block"
               >
-                <Card className={`transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer ${
+                <Card className={`transition-all hover:shadow-md hover:-translate-y-0.5 cursor-pointer min-h-[60px] touch-manipulation ${
                   isUnread ? 'border-primary border-2' : ''
                 }`}>
-                  <CardContent className="p-4">
-                    <div className="flex gap-4">
+                  <CardContent className="p-3 sm:p-4">
+                    <div className="flex gap-3 sm:gap-4">
                       {/* Avatar */}
-                      <Avatar className="h-12 w-12">
+                      <Avatar className="h-10 w-10 sm:h-12 sm:w-12 shrink-0">
                         <AvatarImage src={otherUser.avatar_url} alt={otherUser.full_name} />
                         <AvatarFallback>
                           {otherUser.full_name?.charAt(0)?.toUpperCase() || <User className="h-6 w-6" />}

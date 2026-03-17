@@ -159,10 +159,10 @@ export function SiteHeader({
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           {/* Search (optional) */}
           {showSearch && (
-            <Button variant="ghost" size="icon" className="hidden md:flex">
+            <Button variant="ghost" size="icon" className="hidden md:flex h-11 w-11">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-5 w-5"
@@ -182,19 +182,21 @@ export function SiteHeader({
           )}
 
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
+          <Button variant="ghost" size="icon" className="relative h-11 w-11 touch-manipulation">
             <Bell className="h-5 w-5" />
             <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
             <span className="sr-only">Notifications</span>
           </Button>
 
           {/* Theme Toggle */}
-          <ThemeToggle variant="button" />
+          <div className="touch-manipulation">
+            <ThemeToggle variant="button" />
+          </div>
 
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+              <Button variant="ghost" className="relative h-11 w-11 rounded-full touch-manipulation">
                 <Avatar className="h-9 w-9">
                   <AvatarImage 
                     src={user?.user_metadata?.avatar_url as string | undefined} 

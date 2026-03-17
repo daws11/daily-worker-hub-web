@@ -123,9 +123,9 @@ export default function WorkerMessagesPage() {
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Page Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <div>
-            <h1 className="text-2xl font-bold mb-1">
+            <h1 className="text-xl sm:text-2xl font-bold mb-1">
               Pesan
             </h1>
             <p className="text-sm text-muted-foreground m-0">
@@ -137,6 +137,7 @@ export default function WorkerMessagesPage() {
             disabled={authLoading}
             variant="destructive"
             size="sm"
+            className="min-h-[44px] touch-manipulation"
           >
             {authLoading ? 'Memproses...' : 'Keluar'}
           </Button>
@@ -160,7 +161,7 @@ export default function WorkerMessagesPage() {
         )}
 
         {/* Statistics Cards */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
           <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-blue-100">
@@ -253,12 +254,12 @@ export default function WorkerMessagesPage() {
                 {filteredConversations.map((conversation) => (
                   <div
                     key={conversation.id}
-                    className={`flex items-center gap-4 p-4 hover:bg-muted cursor-pointer transition-colors ${
+                    className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 hover:bg-muted cursor-pointer transition-colors min-h-[60px] touch-manipulation ${
                       selectedConversation === conversation.id ? 'bg-accent' : ''
                     }`}
                     onClick={() => setSelectedConversation(conversation.id)}
                   >
-                    <Avatar className="h-12 w-12">
+                    <Avatar className="h-10 w-10 sm:h-12 sm:w-12 shrink-0">
                       <AvatarImage src={conversation.participant_avatar} />
                       <AvatarFallback className="bg-blue-100 text-blue-600 font-semibold">
                         {conversation.participant_name.charAt(0)}
@@ -270,7 +271,7 @@ export default function WorkerMessagesPage() {
                         <p className="font-medium text-sm truncate">
                           {conversation.participant_name}
                         </p>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
                           {formatTime(conversation.last_message_time)}
                         </span>
                       </div>
@@ -280,7 +281,7 @@ export default function WorkerMessagesPage() {
                     </div>
 
                     {conversation.unread_count > 0 && (
-                      <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      <Badge className="bg-destructive text-destructive-foreground hover:bg-destructive/90 shrink-0">
                         {conversation.unread_count}
                       </Badge>
                     )}

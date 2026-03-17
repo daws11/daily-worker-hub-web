@@ -234,8 +234,8 @@ export default function WorkerJobsPage() {
         {/* Page Header */}
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <Briefcase className="h-6 w-6 text-muted-foreground" />
-            <h1 className="text-2xl font-bold">{t('jobs.jobMarketplace')}</h1>
+            <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
+            <h1 className="text-xl sm:text-2xl font-bold">{t('jobs.jobMarketplace')}</h1>
           </div>
           <p className="text-sm text-muted-foreground">
             {t('jobs.subtitle')}
@@ -266,7 +266,7 @@ export default function WorkerJobsPage() {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {activeBookings.map((booking) => (
                   <div
                     key={booking.id}
@@ -357,16 +357,16 @@ export default function WorkerJobsPage() {
         {/* Main Content */}
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
           {/* Sidebar - Filters */}
-          <aside className="lg:col-span-1">
+          <aside className="lg:col-span-1 order-2 lg:order-1">
             <JobFilters
               filters={filters}
               onFiltersChange={handleFiltersChange}
-              className="sticky top-6"
+              className="lg:sticky lg:top-6"
             />
           </aside>
 
           {/* Main Column - Search, Sort, and Job List */}
-          <div className="lg:col-span-1 space-y-4">
+          <div className="lg:col-span-1 space-y-4 order-1 lg:order-2">
             {/* Search and Sort Bar */}
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex-1">

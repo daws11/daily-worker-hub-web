@@ -272,9 +272,9 @@ export default function BusinessBookingsPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
         {/* Page Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
           <div>
-            <h1 className="text-2xl font-bold mb-1">
+            <h1 className="text-xl sm:text-2xl font-bold mb-1">
               Booking Bisnis
             </h1>
             <p className="text-muted-foreground text-sm m-0">
@@ -284,7 +284,7 @@ export default function BusinessBookingsPage() {
           <button
             onClick={handleLogout}
             disabled={authLoading}
-            className="px-4 py-2 bg-destructive text-primary-foreground border-none rounded-md font-medium text-sm cursor-not-allowed opacity-60 transition-colors disabled:cursor-not-allowed"
+            className="px-4 py-2.5 bg-destructive text-primary-foreground border-none rounded-md font-medium text-sm cursor-not-allowed opacity-60 transition-colors disabled:cursor-not-allowed min-h-[44px] touch-manipulation"
           >
             {authLoading ? 'Memproses...' : 'Keluar'}
           </button>
@@ -302,7 +302,7 @@ export default function BusinessBookingsPage() {
             </div>
             <button
               onClick={fetchBookingsWithReviews}
-              className="px-4 py-2 bg-destructive text-primary-foreground border-none rounded-md text-sm font-medium cursor-pointer flex items-center gap-2"
+              className="px-4 py-2.5 bg-destructive text-primary-foreground border-none rounded-md text-sm font-medium cursor-pointer flex items-center gap-2 min-h-[44px] touch-manipulation"
             >
               <Loader2 className="w-4 h-4" />
               Coba Lagi
@@ -344,7 +344,7 @@ export default function BusinessBookingsPage() {
                     <h2 className="text-xl font-semibold">
                       {statusGroupLabels[status]} ({groupBookings.length})
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(350px,1fr))] gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
                       {groupBookings.map((booking) => {
                         const existingReview = bookingReviews.get(booking.id)
                         const hasReviewed = !!existingReview
@@ -433,7 +433,7 @@ export default function BusinessBookingsPage() {
                                 ) : (
                                   <button
                                     onClick={() => handleWriteReview(booking)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground border-none rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-primary/90"
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-primary text-primary-foreground border-none rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-primary/90 min-h-[44px] touch-manipulation"
                                   >
                                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                                     Tulis Ulasan
@@ -469,7 +469,7 @@ export default function BusinessBookingsPage() {
                                 </div>
                                 <Link
                                   href={`/dashboard/business/interview/${booking.id}`}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-primary-foreground rounded-md text-xs font-medium no-underline transition-colors"
+                                  className="flex items-center gap-1.5 px-3 py-2 bg-green-600 text-primary-foreground rounded-md text-xs font-medium no-underline transition-colors min-h-[44px] touch-manipulation"
                                 >
                                   {interviewSession.status === 'in_progress' ? (
                                     <>

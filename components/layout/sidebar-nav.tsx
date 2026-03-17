@@ -176,7 +176,7 @@ function NavItemComponent({ item, collapsed }: { item: NavItem; collapsed?: bool
         <CollapsibleTrigger asChild>
           <button
             className={cn(
-              "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors min-h-[44px] touch-manipulation",
               isActive
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
@@ -211,7 +211,7 @@ function NavItemComponent({ item, collapsed }: { item: NavItem; collapsed?: bool
     <Link
       href={item.href}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors relative",
+        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors relative min-h-[44px] touch-manipulation",
         isActive
           ? "bg-primary/10 text-primary"
           : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
@@ -269,16 +269,20 @@ export function MobileSidebarNav({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="md:hidden h-11 w-11 shrink-0 touch-manipulation"
+        >
           <Menu className="h-5 w-5" />
           <span className="sr-only">Toggle menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="w-72 p-0">
+      <SheetContent side="left" className="w-[280px] sm:w-72 p-0">
         <SheetHeader className="border-b px-4 py-3">
           <SheetTitle className="text-left">Navigation</SheetTitle>
         </SheetHeader>
-        <div className={cn("h-[calc(100vh-4rem)]", className)}>
+        <div className={cn("h-[calc(100vh-4rem)] overflow-y-auto", className)}>
           <SidebarContent items={items} />
         </div>
       </SheetContent>
