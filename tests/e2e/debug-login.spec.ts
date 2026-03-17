@@ -30,8 +30,8 @@ test('Debug: Login with network/console capture', async ({ page }) => {
   await page.waitForLoadState('networkidle')
   
   // Fill form
-  await page.fill('input[type="email"]', WORKER_EMAIL)
-  await page.fill('input[type="password"]', WORKER_PASSWORD)
+  await page.locator('input[type="email"]').fill(WORKER_EMAIL)
+  await page.locator('input[type="password"]').fill(WORKER_PASSWORD)
   
   // Check radio group state BEFORE clicking
   const radiosBefore = await page.locator('input[type="radio"]').all()

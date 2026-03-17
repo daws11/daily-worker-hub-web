@@ -17,8 +17,9 @@ test.describe('QR Scanner & Check-out Screenshots', () => {
     
     // ===== LOGIN =====
     await page.goto('/login')
-    await page.fill('input[type="email"]', WORKER_EMAIL)
-    await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(WORKER_EMAIL)
+    await page.locator('input[type="password"]').fill(PASSWORD)
     
     // Select worker role
     const workerBtn = page.getByRole('button', { name: /pekerja|worker/i })
@@ -131,8 +132,9 @@ test.describe('QR Scanner & Check-out Screenshots', () => {
     
     // ===== LOGIN =====
     await page.goto('/login')
-    await page.fill('input[type="email"]', BUSINESS_EMAIL)
-    await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(BUSINESS_EMAIL)
+    await page.locator('input[type="password"]').fill(PASSWORD)
     
     const businessBtn = page.getByRole('button', { name: /bisnis|business/i })
     if (await businessBtn.count() > 0) {

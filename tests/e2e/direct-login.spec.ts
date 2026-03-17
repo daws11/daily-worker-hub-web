@@ -26,8 +26,8 @@ test.describe('Direct Login & Attendance Screenshots', () => {
     await page.screenshot({ path: 'test-results/direct-login/01-worker-login.png', fullPage: true })
     
     // Fill login form
-    await page.fill('input[type="email"]', WORKER_EMAIL)
-    await page.fill('input[type="password"]', WORKER_PASSWORD)
+    await page.locator('input[type="email"]').fill(WORKER_EMAIL)
+    await page.locator('input[type="password"]').fill(WORKER_PASSWORD)
     
     // Select worker role if needed
     const workerBtn = page.getByRole('button', { name: /pekerja|worker/i })
@@ -82,8 +82,8 @@ test.describe('Direct Login & Attendance Screenshots', () => {
     await page.screenshot({ path: 'test-results/direct-login/05-business-login.png', fullPage: true })
     
     // Fill login form
-    await page.fill('input[type="email"]', BUSINESS_EMAIL)
-    await page.fill('input[type="password"]', BUSINESS_PASSWORD)
+    await page.locator('input[type="email"]').fill(BUSINESS_EMAIL)
+    await page.locator('input[type="password"]').fill(BUSINESS_PASSWORD)
     
     // Select business role if needed
     const businessBtn = page.getByRole('button', { name: /bisnis|business/i })
@@ -132,8 +132,9 @@ test.describe('Direct Login & Attendance Screenshots', () => {
     console.log('\n=== WORKER FLOW ===')
     
     await page.goto('/login')
-    await page.fill('input[type="email"]', WORKER_EMAIL)
-    await page.fill('input[type="password"]', WORKER_PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(WORKER_EMAIL)
+    await page.locator('input[type="password"]').fill(WORKER_PASSWORD)
     
     const workerBtn = page.getByRole('button', { name: /pekerja|worker/i })
     if (await workerBtn.count() > 0) {
@@ -155,8 +156,9 @@ test.describe('Direct Login & Attendance Screenshots', () => {
     console.log('\n=== BUSINESS FLOW ===')
     
     await page.goto('/login')
-    await page.fill('input[type="email"]', BUSINESS_EMAIL)
-    await page.fill('input[type="password"]', BUSINESS_PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(BUSINESS_EMAIL)
+    await page.locator('input[type="password"]').fill(BUSINESS_PASSWORD)
     
     const businessBtn = page.getByRole('button', { name: /bisnis|business/i })
     if (await businessBtn.count() > 0) {

@@ -23,8 +23,9 @@ test.describe('QR Scanner & Check-out', () => {
       console.log(`\nTrying: ${cred.email}`)
       
       await page.goto('/login')
-      await page.fill('input[type="email"]', cred.email)
-      await page.fill('input[type="password"]', cred.password)
+    await page.waitForLoadState('networkidle')
+      await page.locator('input[type="email"]').fill(cred.email)
+      await page.locator('input[type="password"]').fill(cred.password)
       await page.locator('form button[type="submit"]').click({ force: true })
       await page.waitForTimeout(5000)
       

@@ -4,6 +4,7 @@ test.describe('Onboarding Flow E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
     // Go to homepage
     await page.goto('/')
+    await page.waitForLoadState('networkidle')
   })
 
   test('should display landing page', async ({ page }) => {
@@ -13,12 +14,13 @@ test.describe('Onboarding Flow E2E Tests', () => {
 
   test('should navigate to register page', async ({ page }) => {
     // Click register link
-    await page.click('text=Register')
+    await page.locator('text=Register').click()
     await expect(page).toHaveURL(/.*register/)
   })
 
   test('should display registration form', async ({ page }) => {
     await page.goto('/register')
+    await page.waitForLoadState('networkidle')
 
     // Check form elements exist
     await expect(page.locator('input[type="email"]')).toBeVisible()
@@ -31,9 +33,10 @@ test.describe('Onboarding Flow E2E Tests', () => {
 
   test('should show validation errors on empty form submit', async ({ page }) => {
     await page.goto('/register')
+    await page.waitForLoadState('networkidle')
 
     // Submit empty form
-    await page.click('button[type="submit"]')
+    await page.locator('button[type="submit"]').click()
 
     // Should show validation errors
     await page.waitForTimeout(1000)
@@ -43,11 +46,13 @@ test.describe('Onboarding Flow E2E Tests', () => {
 
   test('should navigate to login page', async ({ page }) => {
     await page.goto('/login')
+    await page.waitForLoadState('networkidle')
     await expect(page).toHaveURL(/.*login/)
   })
 
   test('should display login form', async ({ page }) => {
     await page.goto('/login')
+    await page.waitForLoadState('networkidle')
 
     await expect(page.locator('input[type="email"]')).toBeVisible()
     await expect(page.locator('input[type="password"]')).toBeVisible()
@@ -55,10 +60,11 @@ test.describe('Onboarding Flow E2E Tests', () => {
 
   test('should login with test worker account', async ({ page }) => {
     await page.goto('/login')
+    await page.waitForLoadState('networkidle')
 
     // Fill login form with demo account
-    await page.fill('input[type="email"]', 'worker@demo.com')
-    await page.fill('input[type="password"]', 'demo123456')
+    await page.locator('input[type="email"]').fill('worker@demo.com')
+    await page.locator('input[type="password"]').fill('demo123456')
     
     // Select worker role
     const workerLabel = page.locator('label:has-text("Pekerja")').first()
@@ -67,7 +73,7 @@ test.describe('Onboarding Flow E2E Tests', () => {
     }
 
     // Submit
-    await page.click('button[type="submit"]')
+    await page.locator('button[type="submit"]').click()
 
     // Wait for redirect - includes /onboarding in the pattern
     await page.waitForURL(/.*worker.*|.*onboarding.*|.*dashboard.*|.*jobs.*/, { timeout: 15000 })
@@ -78,10 +84,11 @@ test.describe('Onboarding Flow E2E Tests', () => {
 
   test('should login with test business account', async ({ page }) => {
     await page.goto('/login')
+    await page.waitForLoadState('networkidle')
 
     // Fill login form with demo account
-    await page.fill('input[type="email"]', 'business@demo.com')
-    await page.fill('input[type="password"]', 'demo123456')
+    await page.locator('input[type="email"]').fill('business@demo.com')
+    await page.locator('input[type="password"]').fill('demo123456')
     
     // Select business role
     const businessLabel = page.locator('label:has-text("Bisnis")').first()
@@ -90,7 +97,7 @@ test.describe('Onboarding Flow E2E Tests', () => {
     }
 
     // Submit
-    await page.click('button[type="submit"]')
+    await page.locator('button[type="submit"]').click()
 
     // Wait for redirect
     await page.waitForURL(/.*business.*|.*dashboard.*/, { timeout: 15000 })
@@ -101,6 +108,7 @@ test.describe('Onboarding Flow E2E Tests', () => {
 
   test('CSS should load correctly on register page', async ({ page }) => {
     await page.goto('/register')
+    await page.waitForLoadState('networkidle')
 
     // Check that Tailwind CSS is applied
     const body = page.locator('body')
@@ -119,6 +127,7 @@ test.describe('Onboarding Flow E2E Tests', () => {
 
   test('CSS should load correctly on login page', async ({ page }) => {
     await page.goto('/login')
+    await page.waitForLoadState('networkidle')
 
     // Take screenshot
     await page.screenshot({ path: 'test-results/onboarding-login.png', fullPage: true })

@@ -26,8 +26,9 @@ test.describe('Full Attendance Flow with Active Booking', () => {
     console.log('\n=== BUSINESS: Creating Job ===')
     
     await page.goto('/login')
-    await page.fill('input[type="email"]', BUSINESS_EMAIL)
-    await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(BUSINESS_EMAIL)
+    await page.locator('input[type="password"]').fill(PASSWORD)
     
     const businessBtn = page.getByRole('button', { name: /bisnis|business/i })
     if (await businessBtn.count() > 0) {
@@ -93,8 +94,9 @@ test.describe('Full Attendance Flow with Active Booking', () => {
     console.log('\n=== WORKER: Viewing Job ===')
     
     await page.goto('/login')
-    await page.fill('input[type="email"]', WORKER_EMAIL)
-    await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(WORKER_EMAIL)
+    await page.locator('input[type="password"]').fill(PASSWORD)
     await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
@@ -148,8 +150,9 @@ test.describe('Full Attendance Flow with Active Booking', () => {
     
     // Login as worker
     await page.goto('/login')
-    await page.fill('input[type="email"]', WORKER_EMAIL)
-    await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(WORKER_EMAIL)
+    await page.locator('input[type="password"]').fill(PASSWORD)
     await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
@@ -218,8 +221,9 @@ test.describe('Full Attendance Flow with Active Booking', () => {
     
     // Login as worker
     await page.goto('/login')
-    await page.fill('input[type="email"]', WORKER_EMAIL)
-    await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(WORKER_EMAIL)
+    await page.locator('input[type="password"]').fill(PASSWORD)
     await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
@@ -262,8 +266,9 @@ test.describe('Full Attendance Flow with Active Booking', () => {
     
     // Login as worker
     await page.goto('/login')
-    await page.fill('input[type="email"]', WORKER_EMAIL)
-    await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(WORKER_EMAIL)
+    await page.locator('input[type="password"]').fill(PASSWORD)
     await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
@@ -306,8 +311,9 @@ test.describe('Full Attendance Flow with Active Booking', () => {
     
     // Login as business
     await page.goto('/login')
-    await page.fill('input[type="email"]', BUSINESS_EMAIL)
-    await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(BUSINESS_EMAIL)
+    await page.locator('input[type="password"]').fill(PASSWORD)
     
     const businessBtn = page.getByRole('button', { name: /bisnis|business/i })
     if (await businessBtn.count() > 0) {

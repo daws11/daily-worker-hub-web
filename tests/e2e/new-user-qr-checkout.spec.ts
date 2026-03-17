@@ -17,9 +17,9 @@ test.describe('Create User & Capture Features', () => {
     await page.waitForLoadState('networkidle')
     
     // Fill form
-    await page.fill('input[type="email"]', TEST_EMAIL)
-    await page.fill('input[type="password"]', TEST_PASSWORD)
-    await page.fill('input[type="text"]', 'Test Attendance User')
+    await page.locator('input[type="email"]').fill(TEST_EMAIL)
+    await page.locator('input[type="password"]').fill(TEST_PASSWORD)
+    await page.locator('input[type="text"]').fill('Test Attendance User')
     
     // Submit
     await page.locator('form button[type="submit"]').click({ force: true })
@@ -130,8 +130,9 @@ test.describe('Create User & Capture Features', () => {
     
     // Login with new user
     await page.goto('/login')
-    await page.fill('input[type="email"]', TEST_EMAIL)
-    await page.fill('input[type="password"]', TEST_PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(TEST_EMAIL)
+    await page.locator('input[type="password"]').fill(TEST_PASSWORD)
     await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     

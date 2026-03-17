@@ -16,8 +16,9 @@ test('Attendance buttons should appear for worker with booking', async ({ page }
   
   // Login
   await page.goto('/login')
-  await page.fill('input[type="email"]', WORKER_EMAIL)
-  await page.fill('input[type="password"]', WORKER_PASSWORD)
+    await page.waitForLoadState('networkidle')
+  await page.locator('input[type="email"]').fill(WORKER_EMAIL)
+  await page.locator('input[type="password"]').fill(WORKER_PASSWORD)
   
   // Select worker role
   const workerLabel = page.locator('label:has-text("Pekerja")').first()

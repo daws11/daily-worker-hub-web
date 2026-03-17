@@ -12,8 +12,9 @@ test('Attendance - Check for Check-in Button', async ({ page }) => {
   
   // Login
   await page.goto('/login')
-  await page.fill('input[type="email"]', WORKER_EMAIL)
-  await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+  await page.locator('input[type="email"]').fill(WORKER_EMAIL)
+  await page.locator('input[type="password"]').fill(PASSWORD)
   await page.locator('form button[type="submit"]').click({ force: true })
   await page.waitForTimeout(8000)
   

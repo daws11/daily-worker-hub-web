@@ -26,8 +26,9 @@ test.describe('Detailed Attendance Features', () => {
     
     // Login as worker
     await page.goto('/login')
-    await page.fill('input[type="email"]', WORKER_EMAIL)
-    await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(WORKER_EMAIL)
+    await page.locator('input[type="password"]').fill(PASSWORD)
     
     // Select worker role
     const workerLabel = page.locator('label:has-text("Pekerja")').first()
@@ -85,8 +86,9 @@ test.describe('Detailed Attendance Features', () => {
     
     // Login as worker
     await page.goto('/login')
-    await page.fill('input[type="email"]', WORKER_EMAIL)
-    await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(WORKER_EMAIL)
+    await page.locator('input[type="password"]').fill(PASSWORD)
     
     const workerLabel = page.locator('label:has-text("Pekerja")').first()
     if (await workerLabel.count() > 0) {
@@ -121,8 +123,9 @@ test.describe('Detailed Attendance Features', () => {
     
     // Login as worker
     await page.goto('/login')
-    await page.fill('input[type="email"]', WORKER_EMAIL)
-    await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(WORKER_EMAIL)
+    await page.locator('input[type="password"]').fill(PASSWORD)
     
     const workerLabel = page.locator('label:has-text("Pekerja")').first()
     if (await workerLabel.count() > 0) {
@@ -155,8 +158,9 @@ test.describe('Detailed Attendance Features', () => {
     
     // Login as business
     await page.goto('/login')
-    await page.fill('input[type="email"]', BUSINESS_EMAIL)
-    await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(BUSINESS_EMAIL)
+    await page.locator('input[type="password"]').fill(PASSWORD)
     
     const businessLabel = page.locator('label:has-text("Bisnis")').first()
     if (await businessLabel.count() > 0) {
@@ -188,8 +192,9 @@ test.describe('Detailed Attendance Features', () => {
     
     // Login as business
     await page.goto('/login')
-    await page.fill('input[type="email"]', BUSINESS_EMAIL)
-    await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+    await page.locator('input[type="email"]').fill(BUSINESS_EMAIL)
+    await page.locator('input[type="password"]').fill(PASSWORD)
     
     const businessLabel = page.locator('label:has-text("Bisnis")').first()
     if (await businessLabel.count() > 0) {

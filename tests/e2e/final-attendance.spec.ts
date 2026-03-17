@@ -17,8 +17,9 @@ test('Full Attendance Flow with Check-in/Check-out', async ({ page }) => {
   console.log('📍 STEP 1: Worker check-in...')
   
   await page.goto('/login')
-  await page.fill('input[type="email"]', WORKER_EMAIL)
-  await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+  await page.locator('input[type="email"]').fill(WORKER_EMAIL)
+  await page.locator('input[type="password"]').fill(PASSWORD)
   await page.locator('form button[type="submit"]').click({ force: true })
   await page.waitForTimeout(8000)
   
@@ -101,8 +102,9 @@ test('Full Attendance Flow with Check-in/Check-out', async ({ page }) => {
   console.log('\n🏢 STEP 4: Business QR Code...')
   
   await page.goto('/login')
-  await page.fill('input[type="email"]', BUSINESS_EMAIL)
-  await page.fill('input[type="password"]', PASSWORD)
+    await page.waitForLoadState('networkidle')
+  await page.locator('input[type="email"]').fill(BUSINESS_EMAIL)
+  await page.locator('input[type="password"]').fill(PASSWORD)
   
   const businessBtn = page.getByRole('button', { name: /bisnis|business/i })
   if (await businessBtn.count() > 0) {

@@ -31,8 +31,8 @@ test('Debug: Full console capture', async ({ page }) => {
   await page.waitForLoadState('networkidle')
   
   // Fill form
-  await page.fill('input[type="email"]', WORKER_EMAIL)
-  await page.fill('input[type="password"]', WORKER_PASSWORD)
+  await page.locator('input[type="email"]').fill(WORKER_EMAIL)
+  await page.locator('input[type="password"]').fill(WORKER_PASSWORD)
   
   // Select worker
   const workerLabel = page.locator('label:has-text("Pekerja")').first()
