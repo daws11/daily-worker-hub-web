@@ -41,7 +41,7 @@ import { useGeolocation } from '@/lib/hooks/use-geolocation'
 import { JobWithRelations, JobFilters as JobFiltersType, JobSortOption } from '@/lib/types/job'
 import type { JobBookingWithDetails } from '@/lib/supabase/queries/bookings'
 import { toast } from 'sonner'
-import { Briefcase, Loader2, Calendar, Clock, MapPin, CheckCircle } from 'lucide-react'
+import { Briefcase, Calendar, Clock, MapPin, CheckCircle } from 'lucide-react'
 
 export default function WorkerJobsPage() {
   const { user } = useAuth()

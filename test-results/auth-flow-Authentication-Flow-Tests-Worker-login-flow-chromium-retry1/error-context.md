@@ -51,9 +51,10 @@
               - img "next" [ref=e49]
           - img
         - generic [ref=e51]:
-          - generic [ref=e52]:
+          - link "Next.js 16.1.6 (stale) Turbopack" [ref=e52] [cursor=pointer]:
+            - /url: https://nextjs.org/docs/messages/version-staleness
             - img [ref=e53]
-            - generic "Latest available version is detected (16.1.6)." [ref=e55]: Next.js 16.1.6
+            - generic "There is a newer version (16.1.7) available, upgrade recommended!" [ref=e55]: Next.js 16.1.6 (stale)
             - generic [ref=e56]: Turbopack
           - img
       - dialog "Build Error" [ref=e58]:
