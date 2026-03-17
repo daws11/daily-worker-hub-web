@@ -1,0 +1,66 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e5]
+      - heading "Job Marketplace" [level=1] [ref=e8]
+    - generic [ref=e9]:
+      - complementary [ref=e10]:
+        - generic [ref=e12]:
+          - generic [ref=e15]:
+            - img [ref=e16]
+            - text: Filters
+          - generic [ref=e18]:
+            - generic [ref=e19]:
+              - generic [ref=e20]: Position Type
+              - combobox "Position Type" [ref=e21] [cursor=pointer]:
+                - generic [ref=e22]: all
+                - img: ▼
+              - textbox [ref=e23]: all
+            - generic [ref=e24]:
+              - generic [ref=e25]: Area / Location
+              - textbox "Area / Location" [ref=e27]:
+                - /placeholder: e.g. Kuta, Seminyak
+            - generic [ref=e28]:
+              - generic [ref=e29]: Wage Range (IDR)
+              - generic [ref=e30]:
+                - spinbutton [ref=e33]
+                - generic [ref=e34]: to
+                - spinbutton [ref=e37]
+            - generic [ref=e38]:
+              - generic [ref=e39]: Deadline
+              - generic [ref=e40]:
+                - generic [ref=e41]:
+                  - generic [ref=e42]: From
+                  - textbox "From" [ref=e44]
+                - generic [ref=e45]:
+                  - generic [ref=e46]: Deadline
+                  - textbox "Deadline" [ref=e48]
+      - generic [ref=e49]:
+        - generic [ref=e50]:
+          - generic [ref=e53]:
+            - img
+            - textbox "Search jobs..." [ref=e55]
+          - generic [ref=e57]:
+            - img [ref=e58]
+            - combobox [ref=e61] [cursor=pointer]:
+              - generic [ref=e62]: newest
+              - img: ▼
+            - textbox [ref=e63]: newest
+        - generic [ref=e64]:
+          - generic [ref=e65]:
+            - generic [ref=e66]:
+              - img [ref=e67]
+              - heading "Available Jobs" [level=2] [ref=e70]
+            - paragraph [ref=e71]: Browse all jobs
+          - generic [ref=e73]:
+            - img [ref=e75]
+            - heading "No jobs available" [level=3] [ref=e80]
+            - paragraph [ref=e81]: Check back later
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e87] [cursor=pointer]:
+    - img [ref=e88]
+  - alert [ref=e91]
+```
