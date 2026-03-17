@@ -7,16 +7,31 @@ import { JobSearch } from '@/components/job-marketplace/JobSearch'
 import { JobFilters } from '@/components/job-marketplace/JobFilters'
 import { JobSort } from '@/components/job-marketplace/JobSort'
 import { JobListWithHeader } from '@/components/job-marketplace/JobList'
-import { JobDetailDialog } from '@/components/job-marketplace/JobDetailDialog'
-import { ApplyJobModal } from '@/components/booking/apply-job-modal'
 import { CheckInOutButton } from '@/components/attendance/check-in-out-button'
 import dynamic from 'next/dynamic'
+import { Loader2 } from 'lucide-react'
+
+const JobDetailDialog = dynamic(
+  () => import('@/components/job-marketplace/JobDetailDialog').then(mod => ({ default: mod.JobDetailDialog })),
+  {
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>,
+    ssr: false
+  }
+)
+
+const ApplyJobModal = dynamic(
+  () => import('@/components/booking/apply-job-modal').then(mod => ({ default: mod.ApplyJobModal })),
+  {
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>,
+    ssr: false
+  }
+)
 
 const QRCodeScanner = dynamic(
   () => import('@/components/attendance/qr-code-scanner').then(mod => ({ default: mod.QRCodeScanner })),
-  { 
-    loading: () => <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>,
-    ssr: false 
+  {
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>,
+    ssr: false
   }
 )
 import { useJobs } from '@/lib/hooks/useJobs'

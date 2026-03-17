@@ -5,7 +5,7 @@ import { useCallback } from "react"
 import { useAuth } from '@/app/providers/auth-provider'
 import { toast } from "sonner"
 import { supabase } from "@/lib/supabase/client"
-import { ReviewFormDialog } from "@/components/review/review-form-dialog"
+import dynamic from 'next/dynamic'
 import type { ReviewerType } from "@/lib/schemas/review"
 import { BookingCheckInOutCompact } from "@/components/worker/booking-check-in-out"
 import { Loader2, AlertCircle, Building2, CheckCircle, XCircle, Clock, Star, Calendar, MapPin, DollarSign } from "lucide-react"
@@ -15,6 +15,14 @@ import { Badge } from "@/components/ui/badge"
 import { BookingStatusBadge, type BookingStatus } from "@/components/worker/booking-status-badge"
 import { CancelBookingDialog } from "@/components/worker/cancel-booking-dialog"
 import { ReliabilityScore } from "@/components/worker/reliability-score"
+
+const ReviewFormDialog = dynamic(
+  () => import('@/components/review/review-form-dialog').then(mod => ({ default: mod.ReviewFormDialog })),
+  {
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>,
+    ssr: false
+  }
+)
 
 export interface BookingJob {
   id: string
