@@ -2,9 +2,9 @@
 
 import * as React from "react"
 import { useAuth } from "@/app/providers/auth-provider"
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
+import dynamic from 'next/dynamic'
+import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2 } from "lucide-react"
 
-import { KycReviewDialog } from "@/components/admin/kyc-review-dialog"
 import { getKYCVerifications } from "@/lib/supabase/queries/admin"
 import type { KYCVerificationFilters, KYCVerificationItem, PaginatedAdminResponse } from "@/lib/types/admin"
 
@@ -18,6 +18,14 @@ import {
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+
+const KycReviewDialog = dynamic(
+  () => import('@/components/admin/kyc-review-dialog').then(mod => ({ default: mod.KycReviewDialog })),
+  {
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>,
+    ssr: false
+  }
+)
 
 interface KycsPageProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string

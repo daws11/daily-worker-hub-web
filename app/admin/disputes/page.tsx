@@ -2,9 +2,9 @@
 
 import * as React from "react"
 import { useAuth } from "@/app/providers/auth-provider"
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, AlertTriangle } from "lucide-react"
+import dynamic from 'next/dynamic'
+import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, AlertTriangle, Loader2 } from "lucide-react"
 
-import { DisputeResolveDialog } from "@/components/admin/dispute-resolve-dialog"
 import { getDisputes } from "@/lib/supabase/queries/admin"
 import type { DisputeFilters, DisputeItem, PaginatedAdminResponse } from "@/lib/types/admin"
 
@@ -27,6 +27,14 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+
+const DisputeResolveDialog = dynamic(
+  () => import('@/components/admin/dispute-resolve-dialog').then(mod => ({ default: mod.DisputeResolveDialog })),
+  {
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>,
+    ssr: false
+  }
+)
 
 interface DisputesPageProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string

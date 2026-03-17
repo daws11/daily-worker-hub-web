@@ -13,11 +13,18 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { BookingStatusBadge, type BookingStatus } from "@/components/worker/booking-status-badge"
-import { CancelBookingDialog } from "@/components/worker/cancel-booking-dialog"
 import { ReliabilityScore } from "@/components/worker/reliability-score"
 
 const ReviewFormDialog = dynamic(
   () => import('@/components/review/review-form-dialog').then(mod => ({ default: mod.ReviewFormDialog })),
+  {
+    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>,
+    ssr: false
+  }
+)
+
+const CancelBookingDialog = dynamic(
+  () => import('@/components/worker/cancel-booking-dialog').then(mod => ({ default: mod.CancelBookingDialog })),
   {
     loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>,
     ssr: false
