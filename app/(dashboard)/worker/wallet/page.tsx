@@ -478,7 +478,7 @@ export default function WorkerWalletPage() {
                       {bankAccounts.map((account) => (
                         <option key={account.id} value={account.id}>
                           {getBankName(account.bank_code)} - {account.bank_account_number} ({account.bank_account_name})
-                          {account.is_default && (locale === 'id' ? " - Utama" : " - Primary")}
+                          {account.is_primary && (locale === 'id' ? " - Utama" : " - Primary")}
                         </option>
                       ))}
                     </select>
