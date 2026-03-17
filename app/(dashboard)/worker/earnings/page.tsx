@@ -104,14 +104,15 @@ async function fetchEarnings(workerId: string): Promise<EarningsEntry[]> {
     .select(`
       id,
       total_amount,
+      final_price,
       payment_status,
-      completed_at,
+      check_out_at,
       created_at,
       jobs!inner (title),
       businesses!inner (name)
     `)
     .eq("worker_id", workerId)
-    .in("payment_status", ["pending", "processing", "completed", "failed"])
+    .in("payment_status", ["pending", "processing", "paid", "failed"])
     .order("created_at", { ascending: false })
 
   const { data, error } = result
@@ -124,9 +125,9 @@ async function fetchEarnings(workerId: string): Promise<EarningsEntry[]> {
   const transformed = (data || []).map((booking: any) => ({
     id: booking.id,
     booking_id: booking.id,
-    amount: booking.total_amount || 0,
-    status: booking.payment_status as "pending" | "processing" | "completed" | "failed",
-    payment_date: booking.completed_at || null,
+    amount: booking.total_amount || booking.final_price || 0,
+    status: (booking.payment_status === 'paid' ? 'completed' : booking.payment_status) as "pending" | "processing" | "completed" | "failed",
+    payment_date: booking.check_out_at || null,
     created_at: booking.created_at,
     booking: {
       id: booking.id,

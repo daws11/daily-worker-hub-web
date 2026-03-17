@@ -24,12 +24,16 @@ type PayoutRequest = {
   worker_id: string
   amount: number
   status: 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
-  bank_account_id: string | null
+  bank_account_id?: string | null
   fee_amount: number
-  total_amount: number
-  rejection_reason: string | null
+  net_amount: number
+  failure_reason?: string | null
   created_at: string
   updated_at: string
+  // Direct bank fields from payout_requests table
+  bank_code?: string
+  account_number?: string
+  account_holder_name?: string
 }
 
 type BankAccount = {
@@ -38,7 +42,7 @@ type BankAccount = {
   bank_code: string
   bank_account_number: string
   bank_account_name: string
-  is_default: boolean
+  is_primary: boolean
   created_at: string
 }
 
@@ -48,15 +52,10 @@ type WalletBalance = {
 }
 
 type PayoutWithBankAccount = PayoutRequest & {
-  bank_accounts?: {
-    bank_code: string
-    bank_account_number: string
-    bank_account_name: string
-  } | null
-  // Allow direct access to bank fields when bank_accounts is not joined
+  // Allow direct access to bank fields from payout_requests table
   bank_code?: string
-  bank_account_number?: string
-  bank_account_name?: string
+  account_number?: string
+  account_holder_name?: string
   // Additional fields
   net_amount?: number
 }
@@ -146,7 +145,7 @@ export default function WorkerWalletPage() {
           .from("bank_accounts" as any)
           .select("*")
           .eq("worker_id", worker.id)
-          .order("is_default", { ascending: false })
+          .order("is_primary", { ascending: false })
 
         if (error) {
           toast.error(t('wallet.withdrawRequestFailed'))
@@ -157,7 +156,7 @@ export default function WorkerWalletPage() {
         setBankAccounts(bankAccountsData || [])
 
         // Set primary account as default
-        const primaryAccount = bankAccountsData?.find(acc => acc.is_default)
+        const primaryAccount = bankAccountsData?.find(acc => acc.is_primary)
         if (primaryAccount) {
           setSelectedBankAccountId(primaryAccount.id)
         }
@@ -176,16 +175,10 @@ export default function WorkerWalletPage() {
 
       setIsLoadingPayouts(true)
       try {
+        // payout_requests stores bank details directly (no join needed)
         const { data, error } = await supabase
           .from("payout_requests" as any)
-          .select(`
-            *,
-            bank_accounts (
-              bank_code,
-              bank_account_number,
-              bank_account_name
-            )
-          `)
+          .select("*")
           .eq("worker_id", worker.id)
           .order("created_at", { ascending: false })
 
@@ -602,9 +595,8 @@ export default function WorkerWalletPage() {
                     {paginatedPayouts.map((payout) => {
                       const statusInfo = getStatusInfo(payout.status)
                       const StatusIcon = statusInfo.icon
-                      const bankName = payout.bank_accounts
-                        ? getBankName(payout.bank_accounts.bank_code)
-                        : getBankName(payout.bank_code || '')
+                      // payout_requests stores bank details directly
+                      const bankName = getBankName(payout.bank_code || '')
 
                       return (
                         <TableRow key={payout.id}>
@@ -624,7 +616,7 @@ export default function WorkerWalletPage() {
                             <div className="text-sm">
                               <div className="font-medium">{bankName}</div>
                               <div className="text-xs text-muted-foreground">
-                                {payout.bank_accounts?.bank_account_number || payout.bank_account_number}
+                                {payout.account_number}
                               </div>
                             </div>
                           </TableCell>
