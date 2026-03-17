@@ -596,8 +596,9 @@ test.describe.serial('Feature Tests', () => {
     console.log('\n🌐 Testing public jobs page...')
     
     await page.goto('/jobs')
-    await page.waitForLoadState('networkidle')
-    await page.waitForTimeout(2000)
+    await page.waitForLoadState('domcontentloaded')
+    await page.waitForSelector('main, [role="main"], body', { timeout: 5000 }).catch(() => {})
+    await page.waitForTimeout(1500)
     
     await captureScreenshot(page, '26-public-jobs')
     

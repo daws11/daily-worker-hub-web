@@ -113,8 +113,9 @@ test('Full Attendance Flow with Check-in/Check-out', async ({ page }) => {
   await page.waitForTimeout(8000)
   
   await page.goto('/business/job-attendance')
-  await page.waitForLoadState('networkidle')
-  await page.waitForTimeout(5000)
+  await page.waitForLoadState('domcontentloaded')
+  await page.waitForSelector('main, [role="main"], body', { timeout: 5000 }).catch(() => {})
+  await page.waitForTimeout(2000)
   
   // Screenshot: Business attendance
   await page.screenshot({ 

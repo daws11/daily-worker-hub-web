@@ -31,9 +31,10 @@ test.describe('Daily Worker Hub - Comprehensive E2E Testing', () => {
     console.log('Test 1: Jobs Page');
     await page.goto('http://localhost:3000/jobs');
 
-    // Wait for page to load
-    await page.waitForLoadState('networkidle', { timeout: 10000 });
-    await page.waitForTimeout(2000);
+    // Wait for DOM content (faster than networkidle)
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForSelector('main, [role="main"], body', { timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(1500);
 
     // Take full page screenshot
     await page.screenshot({

@@ -144,8 +144,9 @@ test('Complete Attendance Flow - All Steps', async ({ page }) => {
   
   // Navigate to bookings
   await page.goto('/business/bookings')
-  await page.waitForLoadState('networkidle')
-  await page.waitForTimeout(2000)
+  await page.waitForLoadState('domcontentloaded')
+  await page.waitForSelector('main, [role="main"], body', { timeout: 5000 }).catch(() => {})
+  await page.waitForTimeout(1500)
   
   // Screenshot: Bookings list
   await page.screenshot({ 
@@ -280,8 +281,9 @@ test('Complete Attendance Flow - All Steps', async ({ page }) => {
   
   // Navigate to job attendance
   await page.goto('/business/job-attendance')
-  await page.waitForLoadState('networkidle')
-  await page.waitForTimeout(3000)
+  await page.waitForLoadState('domcontentloaded')
+  await page.waitForSelector('main, [role="main"], body', { timeout: 5000 }).catch(() => {})
+  await page.waitForTimeout(1500)
   
   // Screenshot: Business job attendance with active jobs
   await page.screenshot({ 

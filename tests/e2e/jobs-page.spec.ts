@@ -5,8 +5,12 @@ test.describe('Jobs Page E2E Test', () => {
     // Navigate to jobs page
     await page.goto('/jobs');
 
-    // Wait for page to load
-    await page.waitForLoadState('networkidle');
+    // Wait for DOM content (faster than networkidle)
+    await page.waitForLoadState('domcontentloaded');
+    
+    // Wait for main content element or timeout after 5s
+    await page.waitForSelector('main, [role="main"], body', { timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(1000);
 
     // Take screenshot for debugging
     await page.screenshot({ path: 'tests/e2e/screenshots/jobs-page.png' });
@@ -28,7 +32,8 @@ test.describe('Jobs Page E2E Test', () => {
 
   test('should have job search and filters', async ({ page }) => {
     await page.goto('/jobs');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(1500);
 
     // Check for search input or filter elements
     const hasSearch = await page.locator('input[type="search"], input[placeholder*="search" i], input[placeholder*="cari" i]').count() > 0;

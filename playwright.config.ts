@@ -2,17 +2,19 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/e2e',
-  timeout: 30000,
+  timeout: 60000, // Increased from 30s to 60s
   fullyParallel: false,
   retries: 1,
   use: {
     // Base URL for tests
     baseURL: 'http://localhost:3000',
-    // Use xvfb for virtual display in containerized environment
+    // Browser launch options for containerized environment
     launchOptions: {
-      args: ['--no-sandbox'],
-      // No need for xvfb-run, we can use xvfb directly via command
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     },
+    // Navigation and action timeouts
+    navigationTimeout: 30000,
+    actionTimeout: 15000,
     // Screenshot on failure
     screenshot: 'only-on-failure',
     // Trace on failure

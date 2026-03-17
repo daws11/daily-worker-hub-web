@@ -1,0 +1,41 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - heading "Masuk" [level=1] [ref=e6]
+        - paragraph [ref=e7]: Masuk kembali ke akun Anda
+      - generic [ref=e9]:
+        - generic [ref=e10]:
+          - text: Email
+          - textbox "Email" [ref=e11]:
+            - /placeholder: nama@email.com
+        - generic [ref=e12]:
+          - text: Password
+          - textbox "Password" [ref=e13]:
+            - /placeholder: •••••••
+        - link "Lupa password?" [ref=e15] [cursor=pointer]:
+          - /url: /forgot-password
+        - radiogroup [ref=e17]:
+          - generic [ref=e18] [cursor=pointer]:
+            - radio [checked] [ref=e19]
+            - radio [checked] [ref=e22]
+            - img [ref=e24]
+            - generic [ref=e26]: Pekerja
+          - generic [ref=e27] [cursor=pointer]:
+            - radio [ref=e28]
+            - radio [ref=e29]
+            - img [ref=e31]
+            - generic [ref=e33]: Bisnis
+        - button "Masuk" [ref=e34] [cursor=pointer]
+    - paragraph [ref=e35]:
+      - text: Belum punya akun?
+      - link "Daftar sekarang" [ref=e36] [cursor=pointer]:
+        - /url: /register
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e42] [cursor=pointer]:
+    - img [ref=e43]
+  - alert [ref=e46]
+```
