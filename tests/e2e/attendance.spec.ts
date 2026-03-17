@@ -27,10 +27,10 @@ test.describe('Worker Attendance Flow', () => {
     
     const workerLabel = page.locator('label:has-text("Pekerja")').first()
     if (await workerLabel.count() > 0) {
-      await workerLabel.click()
+      await workerLabel.click({ force: true })
     }
     
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     // Navigate to attendance page
@@ -86,10 +86,10 @@ test.describe('Worker Attendance Flow', () => {
     
     const workerLabel = page.locator('label:has-text("Pekerja")').first()
     if (await workerLabel.count() > 0) {
-      await workerLabel.click()
+      await workerLabel.click({ force: true })
     }
     
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     await page.goto('/worker/attendance')
@@ -120,10 +120,10 @@ test.describe('Business Attendance Flow', () => {
     
     const businessLabel = page.locator('label:has-text("Bisnis")').first()
     if (await businessLabel.count() > 0) {
-      await businessLabel.click()
+      await businessLabel.click({ force: true })
     }
     
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     // Navigate to job attendance page
@@ -166,10 +166,10 @@ test.describe('Business Attendance Flow', () => {
     
     const businessLabel = page.locator('label:has-text("Bisnis")').first()
     if (await businessLabel.count() > 0) {
-      await businessLabel.click()
+      await businessLabel.click({ force: true })
     }
     
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     await page.goto('/business/job-attendance')

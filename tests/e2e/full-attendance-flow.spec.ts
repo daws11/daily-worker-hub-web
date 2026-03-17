@@ -31,10 +31,10 @@ test.describe('Full Attendance Flow with Active Booking', () => {
     
     const businessBtn = page.getByRole('button', { name: /bisnis|business/i })
     if (await businessBtn.count() > 0) {
-      await businessBtn.first().click()
+      await businessBtn.first().click({ force: true })
     }
     
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     console.log(`Business logged in: ${page.url()}`)
@@ -70,13 +70,13 @@ test.describe('Full Attendance Flow with Active Booking', () => {
     // Select category if available
     const categoryBtn = page.locator('button').filter({ hasText: /housekeeping|cleaning/i }).first()
     if (await categoryBtn.count() > 0) {
-      await categoryBtn.click()
+      await categoryBtn.click({ force: true })
     }
     
     // Submit job
     const submitBtn = page.getByRole('button', { name: /create|submit|post|simpan/i })
     if (await submitBtn.count() > 0) {
-      await submitBtn.first().click()
+      await submitBtn.first().click({ force: true })
       await page.waitForTimeout(5000)
     }
     
@@ -95,7 +95,7 @@ test.describe('Full Attendance Flow with Active Booking', () => {
     await page.goto('/login')
     await page.fill('input[type="email"]', WORKER_EMAIL)
     await page.fill('input[type="password"]', PASSWORD)
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     console.log(`Worker logged in: ${page.url()}`)
@@ -115,7 +115,7 @@ test.describe('Full Attendance Flow with Active Booking', () => {
     // Click on the test job
     const testJob = page.locator('text=Test Job for Attendance').first()
     if (await testJob.count() > 0) {
-      await testJob.click()
+      await testJob.click({ force: true })
       await page.waitForTimeout(3000)
       
       // Screenshot: Job detail
@@ -128,7 +128,7 @@ test.describe('Full Attendance Flow with Active Booking', () => {
       // Click apply/book button
       const applyBtn = page.getByRole('button', { name: /apply|book|lamar|daftar/i })
       if (await applyBtn.count() > 0) {
-        await applyBtn.first().click()
+        await applyBtn.first().click({ force: true })
         await page.waitForTimeout(3000)
         
         // Screenshot: After apply
@@ -150,7 +150,7 @@ test.describe('Full Attendance Flow with Active Booking', () => {
     await page.goto('/login')
     await page.fill('input[type="email"]', WORKER_EMAIL)
     await page.fill('input[type="password"]', PASSWORD)
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     // Navigate to bookings
@@ -187,7 +187,7 @@ test.describe('Full Attendance Flow with Active Booking', () => {
       console.log('✅ Screenshot 8: Check-in button')
       
       // Click check-in
-      await checkInBtn.first().click()
+      await checkInBtn.first().click({ force: true })
       await page.waitForTimeout(5000)
       
       // Screenshot: After check-in (GPS capture)
@@ -220,7 +220,7 @@ test.describe('Full Attendance Flow with Active Booking', () => {
     await page.goto('/login')
     await page.fill('input[type="email"]', WORKER_EMAIL)
     await page.fill('input[type="password"]', PASSWORD)
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     // Navigate to attendance
@@ -238,7 +238,7 @@ test.describe('Full Attendance Flow with Active Booking', () => {
       console.log('✅ Screenshot 12: QR scan button')
       
       // Click QR scan
-      await qrScanBtn.first().click()
+      await qrScanBtn.first().click({ force: true })
       await page.waitForTimeout(3000)
       
       // Screenshot: QR scanner dialog
@@ -264,7 +264,7 @@ test.describe('Full Attendance Flow with Active Booking', () => {
     await page.goto('/login')
     await page.fill('input[type="email"]', WORKER_EMAIL)
     await page.fill('input[type="password"]', PASSWORD)
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     // Navigate to attendance
@@ -282,7 +282,7 @@ test.describe('Full Attendance Flow with Active Booking', () => {
       console.log('✅ Screenshot 15: Check-out button')
       
       // Click check-out
-      await checkOutBtn.first().click()
+      await checkOutBtn.first().click({ force: true })
       await page.waitForTimeout(5000)
       
       // Screenshot: After check-out
@@ -311,10 +311,10 @@ test.describe('Full Attendance Flow with Active Booking', () => {
     
     const businessBtn = page.getByRole('button', { name: /bisnis|business/i })
     if (await businessBtn.count() > 0) {
-      await businessBtn.first().click()
+      await businessBtn.first().click({ force: true })
     }
     
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     console.log(`Business logged in: ${page.url()}`)

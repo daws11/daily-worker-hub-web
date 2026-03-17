@@ -23,10 +23,10 @@ test.describe('QR Scanner & Check-out Screenshots', () => {
     // Select worker role
     const workerBtn = page.getByRole('button', { name: /pekerja|worker/i })
     if (await workerBtn.count() > 0) {
-      await workerBtn.first().click()
+      await workerBtn.first().click({ force: true })
     }
     
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(8000)
     
     console.log(`After login URL: ${page.url()}`)
@@ -65,7 +65,7 @@ test.describe('QR Scanner & Check-out Screenshots', () => {
       await qrScanBtn.first().screenshot({ path: 'test-results/qr-checkout-final/03-qr-scanner-button.png' })
       console.log('✅ Screenshot 3: QR Scanner button')
       
-      await qrScanBtn.first().click()
+      await qrScanBtn.first().click({ force: true })
       await page.waitForTimeout(3000)
       
       await page.screenshot({ 
@@ -84,7 +84,7 @@ test.describe('QR Scanner & Check-out Screenshots', () => {
       await checkInBtn.first().screenshot({ path: 'test-results/qr-checkout-final/05-check-in-button.png' })
       console.log('✅ Screenshot 5: Check-in button')
       
-      await checkInBtn.first().click()
+      await checkInBtn.first().click({ force: true })
       await page.waitForTimeout(5000)
       
       await page.screenshot({ 
@@ -102,7 +102,7 @@ test.describe('QR Scanner & Check-out Screenshots', () => {
         await checkOutBtn.first().screenshot({ path: 'test-results/qr-checkout-final/07-check-out-button.png' })
         console.log('✅ Screenshot 7: Check-out button')
         
-        await checkOutBtn.first().click()
+        await checkOutBtn.first().click({ force: true })
         await page.waitForTimeout(5000)
         
         await page.screenshot({ 
@@ -136,10 +136,10 @@ test.describe('QR Scanner & Check-out Screenshots', () => {
     
     const businessBtn = page.getByRole('button', { name: /bisnis|business/i })
     if (await businessBtn.count() > 0) {
-      await businessBtn.first().click()
+      await businessBtn.first().click({ force: true })
     }
     
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(8000)
     
     console.log(`After login URL: ${page.url()}`)

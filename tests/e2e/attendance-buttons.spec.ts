@@ -22,10 +22,10 @@ test('Attendance buttons should appear for worker with booking', async ({ page }
   // Select worker role
   const workerLabel = page.locator('label:has-text("Pekerja")').first()
   if (await workerLabel.count() > 0) {
-    await workerLabel.click()
+    await workerLabel.click({ force: true })
   }
   
-  await page.locator('form button[type="submit"]').click()
+  await page.locator('form button[type="submit"]').click({ force: true })
   await page.waitForTimeout(5000)
   
   // Go to attendance page

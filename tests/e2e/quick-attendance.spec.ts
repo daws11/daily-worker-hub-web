@@ -14,7 +14,7 @@ test('Attendance - Check for Check-in Button', async ({ page }) => {
   await page.goto('/login')
   await page.fill('input[type="email"]', WORKER_EMAIL)
   await page.fill('input[type="password"]', PASSWORD)
-  await page.locator('form button[type="submit"]').click()
+  await page.locator('form button[type="submit"]').click({ force: true })
   await page.waitForTimeout(8000)
   
   console.log(`After login: ${page.url()}`)

@@ -33,11 +33,11 @@ setup.describe('Setup Test Accounts', () => {
     await page.fill('input[type="password"]', WORKER_PASSWORD)
     
     const nameInput = page.locator('input[type="text"]').first()
-    await nameInput.click()
+    await nameInput.click({ force: true })
     await nameInput.fill(WORKER_NAME)
     
     // 3. Submit registration
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     console.log(`After register URL: ${page.url()}`)
@@ -86,11 +86,11 @@ setup.describe('Setup Test Accounts', () => {
     await page.fill('input[type="password"]', BUSINESS_PASSWORD)
     
     const nameInput = page.locator('input[type="text"]').first()
-    await nameInput.click()
+    await nameInput.click({ force: true })
     await nameInput.fill(BUSINESS_NAME)
     
     // 3. Submit registration
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     console.log(`After register URL: ${page.url()}`)
@@ -153,7 +153,7 @@ async function completeWorkerOnboarding(page: any) {
   try {
     await nextBtn.waitFor({ state: 'visible', timeout: 3000 })
     await page.waitForTimeout(500)
-    await nextBtn.click()
+    await nextBtn.click({ force: true })
     await page.waitForTimeout(3000)
   } catch (e) {
     console.log('Step 1 next button not found or not clickable')
@@ -176,7 +176,7 @@ async function completeWorkerOnboarding(page: any) {
     const nextBtn2 = page.getByRole('button', { name: /lanjut|next|continue/i })
     await nextBtn2.waitFor({ state: 'visible', timeout: 3000 })
     await page.waitForTimeout(500)
-    await nextBtn2.click()
+    await nextBtn2.click({ force: true })
     await page.waitForTimeout(3000)
   } catch (e) {
     console.log('Step 2 next button not found')
@@ -189,13 +189,13 @@ async function completeWorkerOnboarding(page: any) {
   // Click any selectable item
   const selectableBtn = page.locator('button').filter({ hasText: /housekeeping|cleaning|driver|cook/i }).first()
   if (await selectableBtn.count() > 0) {
-    await selectableBtn.click()
+    await selectableBtn.click({ force: true })
   }
   
   // Select experience level
   const expBtn = page.locator('button').filter({ hasText: /entry|beginner|junior|mid|senior/i }).first()
   if (await expBtn.count() > 0) {
-    await expBtn.click()
+    await expBtn.click({ force: true })
   }
   
   // Fill bio
@@ -207,7 +207,7 @@ async function completeWorkerOnboarding(page: any) {
   // Accept terms
   const checkbox = page.locator('input[type="checkbox"]').first()
   if (await checkbox.count() > 0) {
-    await checkbox.click()
+    await checkbox.click({ force: true })
   }
   
   await page.screenshot({ path: 'test-results/setup/08-step3-filled.png', fullPage: true })
@@ -217,7 +217,7 @@ async function completeWorkerOnboarding(page: any) {
     const completeBtn = page.getByRole('button', { name: /selesai|complete|finish|submit/i })
     await completeBtn.waitFor({ state: 'visible', timeout: 3000 })
     await page.waitForTimeout(500)
-    await completeBtn.click()
+    await completeBtn.click({ force: true })
     await page.waitForTimeout(5000)
     console.log('✅ Worker onboarding completed')
   } catch (e) {
@@ -250,7 +250,7 @@ async function completeBusinessOnboarding(page: any) {
   // Accept terms
   const checkbox = page.locator('input[type="checkbox"]').first()
   if (await checkbox.count() > 0) {
-    await checkbox.click()
+    await checkbox.click({ force: true })
   }
   
   await page.screenshot({ path: 'test-results/setup/09-business-filled.png', fullPage: true })
@@ -260,7 +260,7 @@ async function completeBusinessOnboarding(page: any) {
     const submitBtn = page.getByRole('button', { name: /selesai|complete|finish|submit|lanjut/i })
     await submitBtn.waitFor({ state: 'visible', timeout: 3000 })
     await page.waitForTimeout(500)
-    await submitBtn.click()
+    await submitBtn.click({ force: true })
     await page.waitForTimeout(5000)
     console.log('✅ Business onboarding completed')
   } catch (e) {

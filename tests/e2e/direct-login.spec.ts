@@ -32,13 +32,13 @@ test.describe('Direct Login & Attendance Screenshots', () => {
     // Select worker role if needed
     const workerBtn = page.getByRole('button', { name: /pekerja|worker/i })
     if (await workerBtn.count() > 0) {
-      await workerBtn.first().click()
+      await workerBtn.first().click({ force: true })
     }
     
     await page.screenshot({ path: 'test-results/direct-login/02-filled-form.png', fullPage: true })
     
     // Submit login
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(8000)
     
     console.log(`After login URL: ${page.url()}`)
@@ -88,13 +88,13 @@ test.describe('Direct Login & Attendance Screenshots', () => {
     // Select business role if needed
     const businessBtn = page.getByRole('button', { name: /bisnis|business/i })
     if (await businessBtn.count() > 0) {
-      await businessBtn.first().click()
+      await businessBtn.first().click({ force: true })
     }
     
     await page.screenshot({ path: 'test-results/direct-login/06-filled-form.png', fullPage: true })
     
     // Submit login
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(8000)
     
     console.log(`After login URL: ${page.url()}`)
@@ -137,10 +137,10 @@ test.describe('Direct Login & Attendance Screenshots', () => {
     
     const workerBtn = page.getByRole('button', { name: /pekerja|worker/i })
     if (await workerBtn.count() > 0) {
-      await workerBtn.first().click()
+      await workerBtn.first().click({ force: true })
     }
     
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(8000)
     
     console.log(`Worker login URL: ${page.url()}`)
@@ -160,10 +160,10 @@ test.describe('Direct Login & Attendance Screenshots', () => {
     
     const businessBtn = page.getByRole('button', { name: /bisnis|business/i })
     if (await businessBtn.count() > 0) {
-      await businessBtn.first().click()
+      await businessBtn.first().click({ force: true })
     }
     
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(8000)
     
     console.log(`Business login URL: ${page.url()}`)

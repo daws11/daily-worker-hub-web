@@ -1,7 +1,7 @@
 # Page snapshot
 
 ```yaml
-- generic [active] [ref=e1]:
+- generic [ref=e1]:
   - generic [ref=e3]:
     - generic [ref=e4]:
       - generic [ref=e5]:
@@ -35,7 +35,83 @@
       - link "Daftar sekarang" [ref=e36] [cursor=pointer]:
         - /url: /register
   - region "Notifications alt+T"
-  - button "Open Next.js Dev Tools" [ref=e42] [cursor=pointer]:
-    - img [ref=e43]
-  - alert [ref=e46]
+  - generic [active]:
+    - generic [ref=e39]:
+      - generic [ref=e40]:
+        - generic [ref=e41]:
+          - navigation [ref=e42]:
+            - button "previous" [disabled] [ref=e43]:
+              - img "previous" [ref=e44]
+            - generic [ref=e46]:
+              - generic [ref=e47]: 1/
+              - text: "1"
+            - button "next" [disabled] [ref=e48]:
+              - img "next" [ref=e49]
+          - img
+        - generic [ref=e51]:
+          - generic [ref=e52]:
+            - img [ref=e53]
+            - generic "Latest available version is detected (16.1.6)." [ref=e55]: Next.js 16.1.6
+            - generic [ref=e56]: Turbopack
+          - img
+      - dialog "Build Error" [ref=e58]:
+        - generic [ref=e61]:
+          - generic [ref=e62]:
+            - generic [ref=e63]:
+              - generic [ref=e65]: Build Error
+              - generic [ref=e66]:
+                - button "Copy Error Info" [ref=e67] [cursor=pointer]:
+                  - img [ref=e68]
+                - button "No related documentation found" [disabled] [ref=e70]:
+                  - img [ref=e71]
+                - button "Attach Node.js inspector" [ref=e73] [cursor=pointer]:
+                  - img [ref=e74]
+            - generic [ref=e83]: Ecmascript file had an error
+          - generic [ref=e85]:
+            - generic [ref=e87]:
+              - img [ref=e89]
+              - generic [ref=e92]: ./app/(dashboard)/worker/jobs/page.tsx (44:21)
+              - button "Open in editor" [ref=e93] [cursor=pointer]:
+                - img [ref=e95]
+            - generic [ref=e98]:
+              - generic [ref=e99]: Ecmascript file had an error
+              - generic [ref=e100]: 42 |
+              - text: import
+              - generic [ref=e101]: "type {"
+              - text: JobBookingWithDetails
+              - generic [ref=e102]: "}"
+              - text: from '@/lib/supabase/queries/bookings'
+              - generic [ref=e103]: 43 |
+              - text: import
+              - generic [ref=e104]: "{ toast }"
+              - text: from 'sonner' >
+              - generic [ref=e105]: 44 |
+              - text: import
+              - generic [ref=e106]: "{"
+              - text: Briefcase, Loader2, Calendar, Clock, MapPin, CheckCircle
+              - generic [ref=e107]: "}"
+              - text: from 'lucide-react'
+              - generic [ref=e108]: "|"
+              - text: ^^^^^^^
+              - generic [ref=e109]: 45 |
+              - generic [ref=e110]: 46 |
+              - text: export default function WorkerJobsPage
+              - generic [ref=e111]: "() {"
+              - generic [ref=e112]: 47 |
+              - text: const
+              - generic [ref=e113]: "{ user }"
+              - text: =
+              - generic [ref=e114]: useAuth()
+              - generic [ref=e115]: "the name `Loader2` is defined multiple times Import traces: Client Component Browser: ./app/(dashboard)/worker/jobs/page.tsx [Client Component Browser] ./app/(dashboard)/worker/jobs/page.tsx [Server Component] Client Component SSR: ./app/(dashboard)/worker/jobs/page.tsx [Client Component SSR] ./app/(dashboard)/worker/jobs/page.tsx [Server Component]"
+        - generic [ref=e116]: "1"
+        - generic [ref=e117]: "2"
+    - generic [ref=e122] [cursor=pointer]:
+      - button "Open Next.js Dev Tools" [ref=e123]:
+        - img [ref=e124]
+      - button "Open issues overlay" [ref=e128]:
+        - generic [ref=e129]:
+          - generic [ref=e130]: "0"
+          - generic [ref=e131]: "1"
+        - generic [ref=e132]: Issue
+  - alert [ref=e133]
 ```

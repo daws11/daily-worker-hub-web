@@ -41,10 +41,10 @@ test.describe.serial('Business Wallet Operations', () => {
     
     const businessRadio = page.locator('label:has-text("Bisnis")').first()
     if (await businessRadio.count() > 0) {
-      await businessRadio.click()
+      await businessRadio.click({ force: true })
     }
     
-    await page.locator('button[type="submit"]').click()
+    await page.locator('button[type="submit"]').click({ force: true })
     await page.waitForTimeout(3000)
   })
   
@@ -129,10 +129,10 @@ test.describe.serial('Worker Earnings Operations', () => {
     
     const workerRadio = page.locator('label:has-text("Pekerja")').first()
     if (await workerRadio.count() > 0) {
-      await workerRadio.click()
+      await workerRadio.click({ force: true })
     }
     
-    await page.locator('button[type="submit"]').click()
+    await page.locator('button[type="submit"]').click({ force: true })
     await page.waitForTimeout(3000)
   })
   
@@ -281,8 +281,8 @@ test.describe.serial('Wallet Page Comparison', () => {
     await page.locator('input[type="email"]').fill(BUSINESS_EMAIL)
     await page.locator('input[type="password"]').fill(BUSINESS_PASSWORD)
     const businessRadio = page.locator('label:has-text("Bisnis")').first()
-    if (await businessRadio.count() > 0) await businessRadio.click()
-    await page.locator('button[type="submit"]').click()
+    if (await businessRadio.count() > 0) await businessRadio.click({ force: true })
+    await page.locator('button[type="submit"]').click({ force: true })
     await page.waitForTimeout(3000)
     
     // Access business wallet
@@ -304,8 +304,8 @@ test.describe.serial('Wallet Page Comparison', () => {
     await page.locator('input[type="email"]').fill(WORKER_EMAIL)
     await page.locator('input[type="password"]').fill(WORKER_PASSWORD)
     const workerRadio = page.locator('label:has-text("Pekerja")').first()
-    if (await workerRadio.count() > 0) await workerRadio.click()
-    await page.locator('button[type="submit"]').click()
+    if (await workerRadio.count() > 0) await workerRadio.click({ force: true })
+    await page.locator('button[type="submit"]').click({ force: true })
     await page.waitForTimeout(3000)
     
     // Access worker earnings

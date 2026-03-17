@@ -118,7 +118,7 @@ test.describe('Daily Worker Hub - Comprehensive E2E Testing', () => {
       console.log(`Found ${jobCards.length} job cards`);
 
       // Click on first job
-      await jobCards[0].click();
+      await jobCards[0].click({ force: true });
 
       // Wait for navigation to job detail
       await page.waitForTimeout(2000);

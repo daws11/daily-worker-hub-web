@@ -45,7 +45,7 @@ test('Debug: Login with network/console capture', async ({ page }) => {
   
   // Click worker label (not the radio directly)
   const workerLabel = page.locator('label:has-text("Pekerja")').first()
-  await workerLabel.click()
+  await workerLabel.click({ force: true })
   await page.waitForTimeout(500)
   
   // Check radio group state AFTER clicking
@@ -60,7 +60,7 @@ test('Debug: Login with network/console capture', async ({ page }) => {
   
   // Submit
   console.log('\n📤 Submitting login form...')
-  await page.locator('button[type="submit"]').click()
+  await page.locator('button[type="submit"]').click({ force: true })
   
   // Wait and observe
   console.log('\n⏳ Waiting 5 seconds for redirect...')

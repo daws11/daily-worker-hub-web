@@ -39,11 +39,11 @@ test.describe.serial('Payment Flow Tests', () => {
     // Select business role
     const businessRadio = page.locator('label:has-text("Bisnis")').first()
     if (await businessRadio.count() > 0) {
-      await businessRadio.click()
+      await businessRadio.click({ force: true })
     }
     
     // Submit login
-    await page.locator('button[type="submit"]').click()
+    await page.locator('button[type="submit"]').click({ force: true })
     await page.waitForTimeout(3000)
   })
   

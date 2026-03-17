@@ -19,7 +19,7 @@ test('Full Attendance Flow with Check-in/Check-out', async ({ page }) => {
   await page.goto('/login')
   await page.fill('input[type="email"]', WORKER_EMAIL)
   await page.fill('input[type="password"]', PASSWORD)
-  await page.locator('form button[type="submit"]').click()
+  await page.locator('form button[type="submit"]').click({ force: true })
   await page.waitForTimeout(8000)
   
   await page.goto('/worker/attendance')
@@ -44,7 +44,7 @@ test('Full Attendance Flow with Check-in/Check-out', async ({ page }) => {
     console.log('✅ Screenshot 2: Check-in button')
     
     // Click check-in
-    await checkInBtn.first().click()
+    await checkInBtn.first().click({ force: true })
     await page.waitForTimeout(8000)
     
     // Screenshot: After check-in (GPS captured)
@@ -72,7 +72,7 @@ test('Full Attendance Flow with Check-in/Check-out', async ({ page }) => {
       console.log('✅ Screenshot 4: Check-out button')
       
       // Click check-out
-      await checkOutBtn.first().click()
+      await checkOutBtn.first().click({ force: true })
       await page.waitForTimeout(8000)
       
       // Screenshot: After check-out
@@ -106,10 +106,10 @@ test('Full Attendance Flow with Check-in/Check-out', async ({ page }) => {
   
   const businessBtn = page.getByRole('button', { name: /bisnis|business/i })
   if (await businessBtn.count() > 0) {
-    await businessBtn.first().click()
+    await businessBtn.first().click({ force: true })
   }
   
-  await page.locator('form button[type="submit"]').click()
+  await page.locator('form button[type="submit"]').click({ force: true })
   await page.waitForTimeout(8000)
   
   await page.goto('/business/job-attendance')

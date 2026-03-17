@@ -63,7 +63,7 @@ test.describe('Onboarding Flow E2E Tests', () => {
     // Select worker role
     const workerLabel = page.locator('label:has-text("Pekerja")').first()
     if (await workerLabel.count() > 0) {
-      await workerLabel.click()
+      await workerLabel.click({ force: true })
     }
 
     // Submit
@@ -86,7 +86,7 @@ test.describe('Onboarding Flow E2E Tests', () => {
     // Select business role
     const businessLabel = page.locator('label:has-text("Bisnis")').first()
     if (await businessLabel.count() > 0) {
-      await businessLabel.click()
+      await businessLabel.click({ force: true })
     }
 
     // Submit

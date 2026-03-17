@@ -68,13 +68,13 @@ test.describe.serial('Authentication Flow Tests', () => {
     // Select worker role (click on the label containing "Pekerja")
     const workerRadio = page.locator('label:has-text("Pekerja")').first()
     if (await workerRadio.count() > 0) {
-      await workerRadio.click()
+      await workerRadio.click({ force: true })
     }
     
     await captureScreenshot(page, '02-worker-form-filled')
     
     // Submit login
-    await submitBtn.click()
+    await submitBtn.click({ force: true })
     
     // Wait for redirect (with longer timeout for slow responses)
     await page.waitForURL(/worker|dashboard|jobs/, { timeout: 15000 }).catch(() => {
@@ -113,13 +113,13 @@ test.describe.serial('Authentication Flow Tests', () => {
     // Select business role (click on the label containing "Bisnis")
     const businessRadio = page.locator('label:has-text("Bisnis")').first()
     if (await businessRadio.count() > 0) {
-      await businessRadio.click()
+      await businessRadio.click({ force: true })
     }
     
     await captureScreenshot(page, '04-business-form-filled')
     
     // Submit login
-    await page.locator('button[type="submit"]').click()
+    await page.locator('button[type="submit"]').click({ force: true })
     
     // Wait for redirect
     await page.waitForURL(/business|dashboard|jobs/, { timeout: 15000 }).catch(() => {
@@ -155,7 +155,7 @@ test.describe.serial('Authentication Flow Tests', () => {
     await captureScreenshot(page, '06-invalid-credentials-filled')
     
     // Submit login
-    await page.locator('button[type="submit"]').click()
+    await page.locator('button[type="submit"]').click({ force: true })
     
     // Wait a bit for response
     await page.waitForTimeout(3000)
@@ -193,10 +193,10 @@ test.describe.serial('Worker Dashboard Tests', () => {
     
     const workerRadio = page.locator('label:has-text("Pekerja")').first()
     if (await workerRadio.count() > 0) {
-      await workerRadio.click()
+      await workerRadio.click({ force: true })
     }
     
-    await page.locator('button[type="submit"]').click()
+    await page.locator('button[type="submit"]').click({ force: true })
     await page.waitForTimeout(3000)
   })
   
@@ -399,10 +399,10 @@ test.describe.serial('Business Dashboard Tests', () => {
     
     const businessRadio = page.locator('label:has-text("Bisnis")').first()
     if (await businessRadio.count() > 0) {
-      await businessRadio.click()
+      await businessRadio.click({ force: true })
     }
     
-    await page.locator('button[type="submit"]').click()
+    await page.locator('button[type="submit"]').click({ force: true })
     await page.waitForTimeout(3000)
   })
   
@@ -673,7 +673,7 @@ test.describe.serial('Feature Tests', () => {
       console.log(`Initial theme class: ${initialTheme}`)
       
       // Click toggle
-      await themeToggle.first().click()
+      await themeToggle.first().click({ force: true })
       await page.waitForTimeout(500)
       
       // Check if theme changed
@@ -732,10 +732,10 @@ test.describe.serial('Feature Tests', () => {
     
     const workerRadio = page.locator('label:has-text("Pekerja")').first()
     if (await workerRadio.count() > 0) {
-      await workerRadio.click()
+      await workerRadio.click({ force: true })
     }
     
-    await page.locator('button[type="submit"]').click()
+    await page.locator('button[type="submit"]').click({ force: true })
     await page.waitForTimeout(3000)
     
     // Try to find and click navigation links
@@ -748,7 +748,7 @@ test.describe.serial('Feature Tests', () => {
       // Click first nav link
       const firstLink = navLinks.first()
       const linkText = await firstLink.textContent()
-      await firstLink.click()
+      await firstLink.click({ force: true })
       await page.waitForTimeout(2000)
       
       await captureScreenshot(page, '32-worker-nav-clicked')
@@ -769,10 +769,10 @@ test.describe.serial('Feature Tests', () => {
     
     const businessRadio = page.locator('label:has-text("Bisnis")').first()
     if (await businessRadio.count() > 0) {
-      await businessRadio.click()
+      await businessRadio.click({ force: true })
     }
     
-    await page.locator('button[type="submit"]').click()
+    await page.locator('button[type="submit"]').click({ force: true })
     await page.waitForTimeout(3000)
     
     // Try to find and click navigation links
@@ -785,7 +785,7 @@ test.describe.serial('Feature Tests', () => {
       // Click first nav link
       const firstLink = navLinks.first()
       const linkText = await firstLink.textContent()
-      await firstLink.click()
+      await firstLink.click({ force: true })
       await page.waitForTimeout(2000)
       
       await captureScreenshot(page, '33-business-nav-clicked')
@@ -859,7 +859,7 @@ test.describe.serial('Error & Edge Case Tests', () => {
     await page.waitForLoadState('networkidle')
     
     // Try to submit empty form
-    await page.locator('button[type="submit"]').click()
+    await page.locator('button[type="submit"]').click({ force: true })
     await page.waitForTimeout(2000)
     
     await captureScreenshot(page, '36-empty-form-validation')

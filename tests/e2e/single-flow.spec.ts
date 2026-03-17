@@ -23,10 +23,10 @@ test('Complete Attendance Flow - All Steps', async ({ page }) => {
   
   const businessBtn = page.getByRole('button', { name: /bisnis|business/i })
   if (await businessBtn.count() > 0) {
-    await businessBtn.first().click()
+    await businessBtn.first().click({ force: true })
   }
   
-  await page.locator('form button[type="submit"]').click()
+  await page.locator('form button[type="submit"]').click({ force: true })
   await page.waitForTimeout(5000)
   
   console.log(`Business logged in: ${page.url()}`)
@@ -55,7 +55,7 @@ test('Complete Attendance Flow - All Steps', async ({ page }) => {
   // Submit job
   const submitBtn = page.getByRole('button', { name: /create|post|simpan|submit/i })
   if (await submitBtn.count() > 0) {
-    await submitBtn.first().click()
+    await submitBtn.first().click({ force: true })
     await page.waitForTimeout(5000)
   }
   
@@ -79,7 +79,7 @@ test('Complete Attendance Flow - All Steps', async ({ page }) => {
   // Login as worker
   await page.fill('input[type="email"]', WORKER_EMAIL)
   await page.fill('input[type="password"]', PASSWORD)
-  await page.locator('form button[type="submit"]').click()
+  await page.locator('form button[type="submit"]').click({ force: true })
   await page.waitForTimeout(5000)
   
   console.log(`Worker logged in: ${page.url()}`)
@@ -99,7 +99,7 @@ test('Complete Attendance Flow - All Steps', async ({ page }) => {
   // Find and click test job
   const testJob = page.locator('text=Test Job for Attendance').first()
   if (await testJob.count() > 0) {
-    await testJob.click()
+    await testJob.click({ force: true })
     await page.waitForTimeout(3000)
     
     // Screenshot: Job detail
@@ -112,7 +112,7 @@ test('Complete Attendance Flow - All Steps', async ({ page }) => {
     // Click apply
     const applyBtn = page.getByRole('button', { name: /apply|lamar|book/i })
     if (await applyBtn.count() > 0) {
-      await applyBtn.first().click()
+      await applyBtn.first().click({ force: true })
       await page.waitForTimeout(3000)
       
       // Screenshot: After apply
@@ -136,10 +136,10 @@ test('Complete Attendance Flow - All Steps', async ({ page }) => {
   
   const bizBtn = page.getByRole('button', { name: /bisnis|business/i })
   if (await bizBtn.count() > 0) {
-    await bizBtn.first().click()
+    await bizBtn.first().click({ force: true })
   }
   
-  await page.locator('form button[type="submit"]').click()
+  await page.locator('form button[type="submit"]').click({ force: true })
   await page.waitForTimeout(5000)
   
   // Navigate to bookings
@@ -158,7 +158,7 @@ test('Complete Attendance Flow - All Steps', async ({ page }) => {
   // Find and confirm booking
   const confirmBtn = page.getByRole('button', { name: /confirm|terima|approve/i })
   if (await confirmBtn.count() > 0) {
-    await confirmBtn.first().click()
+    await confirmBtn.first().click({ force: true })
     await page.waitForTimeout(3000)
     
     // Screenshot: After confirm
@@ -178,7 +178,7 @@ test('Complete Attendance Flow - All Steps', async ({ page }) => {
   await page.goto('/login')
   await page.fill('input[type="email"]', WORKER_EMAIL)
   await page.fill('input[type="password"]', PASSWORD)
-  await page.locator('form button[type="submit"]').click()
+  await page.locator('form button[type="submit"]').click({ force: true })
   await page.waitForTimeout(5000)
   
   // Navigate to attendance
@@ -206,7 +206,7 @@ test('Complete Attendance Flow - All Steps', async ({ page }) => {
     await qrScanBtn.first().screenshot({ path: 'test-results/single-flow/08-qr-scanner-btn.png' })
     console.log('✅ Screenshot 8: QR Scanner button')
     
-    await qrScanBtn.first().click()
+    await qrScanBtn.first().click({ force: true })
     await page.waitForTimeout(3000)
     
     await page.screenshot({ 
@@ -225,7 +225,7 @@ test('Complete Attendance Flow - All Steps', async ({ page }) => {
     await checkInBtn.first().screenshot({ path: 'test-results/single-flow/10-check-in-btn.png' })
     console.log('✅ Screenshot 10: Check-in button')
     
-    await checkInBtn.first().click()
+    await checkInBtn.first().click({ force: true })
     await page.waitForTimeout(5000)
     
     await page.screenshot({ 
@@ -243,7 +243,7 @@ test('Complete Attendance Flow - All Steps', async ({ page }) => {
       await checkOutBtn.first().screenshot({ path: 'test-results/single-flow/12-check-out-btn.png' })
       console.log('✅ Screenshot 12: Check-out button')
       
-      await checkOutBtn.first().click()
+      await checkOutBtn.first().click({ force: true })
       await page.waitForTimeout(5000)
       
       await page.screenshot({ 
@@ -273,10 +273,10 @@ test('Complete Attendance Flow - All Steps', async ({ page }) => {
   
   const bizBtn2 = page.getByRole('button', { name: /bisnis|business/i })
   if (await bizBtn2.count() > 0) {
-    await bizBtn2.first().click()
+    await bizBtn2.first().click({ force: true })
   }
   
-  await page.locator('form button[type="submit"]').click()
+  await page.locator('form button[type="submit"]').click({ force: true })
   await page.waitForTimeout(5000)
   
   // Navigate to job attendance

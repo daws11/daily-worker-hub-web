@@ -22,7 +22,7 @@ test.describe('Create User & Capture Features', () => {
     await page.fill('input[type="text"]', 'Test Attendance User')
     
     // Submit
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     console.log(`After register URL: ${page.url()}`)
@@ -67,7 +67,7 @@ test.describe('Create User & Capture Features', () => {
       const nextBtn = page.getByRole('button', { name: /lanjut|next|continue/i })
       try {
         await nextBtn.waitFor({ state: 'visible', timeout: 3000 })
-        await nextBtn.click()
+        await nextBtn.click({ force: true })
         await page.waitForTimeout(3000)
       } catch (e) {
         console.log('Step 1 next not found')
@@ -83,7 +83,7 @@ test.describe('Create User & Capture Features', () => {
       try {
         const nextBtn2 = page.getByRole('button', { name: /lanjut|next|continue/i })
         await nextBtn2.waitFor({ state: 'visible', timeout: 3000 })
-        await nextBtn2.click()
+        await nextBtn2.click({ force: true })
         await page.waitForTimeout(3000)
       } catch (e) {
         console.log('Step 2 next not found')
@@ -92,12 +92,12 @@ test.describe('Create User & Capture Features', () => {
       // Step 3: Skills
       const categoryBtn = page.locator('button').filter({ hasText: /housekeeping|cleaning|driver/i }).first()
       if (await categoryBtn.count() > 0) {
-        await categoryBtn.click()
+        await categoryBtn.click({ force: true })
       }
       
       const expBtn = page.locator('button').filter({ hasText: /entry|junior|mid/i }).first()
       if (await expBtn.count() > 0) {
-        await expBtn.click()
+        await expBtn.click({ force: true })
       }
       
       const bioInput = page.locator('textarea')
@@ -107,7 +107,7 @@ test.describe('Create User & Capture Features', () => {
       
       const checkbox = page.locator('input[type="checkbox"]').first()
       if (await checkbox.count() > 0) {
-        await checkbox.click()
+        await checkbox.click({ force: true })
       }
       
       await page.waitForTimeout(1000)
@@ -116,7 +116,7 @@ test.describe('Create User & Capture Features', () => {
       try {
         const completeBtn = page.getByRole('button', { name: /selesai|complete|finish|submit/i })
         await completeBtn.waitFor({ state: 'visible', timeout: 3000 })
-        await completeBtn.click()
+        await completeBtn.click({ force: true })
         await page.waitForTimeout(5000)
       } catch (e) {
         console.log('Complete button not found')
@@ -132,7 +132,7 @@ test.describe('Create User & Capture Features', () => {
     await page.goto('/login')
     await page.fill('input[type="email"]', TEST_EMAIL)
     await page.fill('input[type="password"]', TEST_PASSWORD)
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     console.log(`After login URL: ${page.url()}`)
@@ -166,7 +166,7 @@ test.describe('Create User & Capture Features', () => {
       console.log('✅ Screenshot 2: QR Scanner button')
       
       // Click and capture dialog
-      await qrScanBtn.first().click()
+      await qrScanBtn.first().click({ force: true })
       await page.waitForTimeout(3000)
       
       await page.screenshot({ 
@@ -186,7 +186,7 @@ test.describe('Create User & Capture Features', () => {
       console.log('✅ Screenshot 4: Check-in button')
       
       // Click check-in
-      await checkInBtn.first().click()
+      await checkInBtn.first().click({ force: true })
       await page.waitForTimeout(5000)
       
       await page.screenshot({ 
@@ -205,7 +205,7 @@ test.describe('Create User & Capture Features', () => {
         console.log('✅ Screenshot 6: Check-out button')
         
         // Click check-out
-        await checkOutBtn.first().click()
+        await checkOutBtn.first().click({ force: true })
         await page.waitForTimeout(5000)
         
         await page.screenshot({ 

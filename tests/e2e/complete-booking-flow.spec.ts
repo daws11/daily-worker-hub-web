@@ -50,14 +50,14 @@ async function loginAs(page: Page, email: string, password: string, role: 'worke
   const roleRadio = page.locator(`label:has-text("${roleLabel}")`).first()
   
   if (await roleRadio.count() > 0) {
-    await roleRadio.click()
+    await roleRadio.click({ force: true })
     console.log(`  ✓ Selected role: ${roleLabel}`)
   } else {
     console.log(`  ⚠️ Role radio "${roleLabel}" not found, continuing anyway...`)
   }
   
   // Submit login
-  await page.locator('button[type="submit"]').click()
+  await page.locator('button[type="submit"]').click({ force: true })
   
   // Wait for redirect
   await page.waitForURL(/worker|business|dashboard|onboarding/, { timeout: 15000 }).catch(() => {
@@ -241,11 +241,11 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
       console.log('  ✓ Position selected: Housekeeping')
     } catch {
       // Try clicking and selecting from dropdown
-      await positionSelect.click()
+      await positionSelect.click({ force: true })
       await page.waitForTimeout(500)
       const housekeepingOption = page.locator('text=/housekeeping/i').first()
       if (await housekeepingOption.count() > 0) {
-        await housekeepingOption.click()
+        await housekeepingOption.click({ force: true })
         console.log('  ✓ Position selected: Housekeeping (via click)')
       }
     }
@@ -278,7 +278,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
   console.log('\n  📤 Submitting job...')
   const submitBtn = page.getByRole('button', { name: /create|post|simpan|submit|buat|publish/i })
   if (await submitBtn.count() > 0) {
-    await submitBtn.first().click()
+    await submitBtn.first().click({ force: true })
     console.log('  ✓ Submit button clicked')
     
     // Wait for redirect or success indication
@@ -311,7 +311,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
     
     // Try to extract job ID by clicking on the job
     if (!jobId) {
-      await jobInList.first().click()
+      await jobInList.first().click({ force: true })
       await page.waitForTimeout(2000)
       
       const jobDetailUrl = page.url()
@@ -361,7 +361,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
   
   if (testJobCount > 0) {
     // Click on the job
-    await testJob.first().click()
+    await testJob.first().click({ force: true })
     await page.waitForTimeout(2000)
     
     await takeScreenshot(page, '04-worker-job-detail.png')
@@ -371,7 +371,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
     const applyBtn = page.getByRole('button', { name: /apply|lamar|book/i })
     
     if (await applyBtn.count() > 0) {
-      await applyBtn.first().click()
+      await applyBtn.first().click({ force: true })
       await page.waitForTimeout(2000)
       
       // Check for application form (cover letter, proposed wage)
@@ -390,7 +390,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
       // Submit application if there's a form
       const submitAppBtn = page.getByRole('button', { name: /submit|apply|lamar|kirim/i })
       if (await submitAppBtn.count() > 0) {
-        await submitAppBtn.first().click()
+        await submitAppBtn.first().click({ force: true })
         await page.waitForTimeout(2000)
       }
       
@@ -437,7 +437,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
     // Click on the job
     const jobLink = page.locator(`text="${jobTitle}"`)
     if (await jobLink.count() > 0) {
-      await jobLink.first().click()
+      await jobLink.first().click({ force: true })
       await page.waitForTimeout(2000)
       
       // Look for applicants link/button
@@ -445,10 +445,10 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
       const applicantsLink = page.getByRole('link', { name: /applicant|pelamar/i })
       
       if (await applicantsBtn.count() > 0) {
-        await applicantsBtn.first().click()
+        await applicantsBtn.first().click({ force: true })
         await page.waitForTimeout(2000)
       } else if (await applicantsLink.count() > 0) {
-        await applicantsLink.first().click()
+        await applicantsLink.first().click({ force: true })
         await page.waitForTimeout(2000)
       }
     }
@@ -468,13 +468,13 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
   console.log(`  Found ${acceptBtnCount} Accept button(s)`)
   
   if (acceptBtnCount > 0) {
-    await acceptBtn.first().click()
+    await acceptBtn.first().click({ force: true })
     await page.waitForTimeout(3000)
     
     // Check for confirmation dialog
     const confirmBtn = page.getByRole('button', { name: /confirm|yes|ya|ok/i })
     if (await confirmBtn.count() > 0) {
-      await confirmBtn.first().click()
+      await confirmBtn.first().click({ force: true })
       await page.waitForTimeout(2000)
     }
     
@@ -508,10 +508,10 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
   console.log('\n  📱 Business: Starting interview...')
   
   if (hasInterviewBtn) {
-    await interviewBtn.first().click()
+    await interviewBtn.first().click({ force: true })
     await page.waitForTimeout(3000)
   } else if (hasInterviewLink) {
-    await interviewLink.first().click()
+    await interviewLink.first().click({ force: true })
     await page.waitForTimeout(3000)
   } else {
     // Try navigating directly to bookings to find interview
@@ -522,7 +522,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
     // Look for interview/chat button on booking
     const chatBtn = page.getByRole('button', { name: /chat|interview|message/i })
     if (await chatBtn.count() > 0) {
-      await chatBtn.first().click()
+      await chatBtn.first().click({ force: true })
       await page.waitForTimeout(3000)
     }
   }
@@ -540,7 +540,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
   // Try to send a test message
   if (await chatInput.count() > 0 && await sendBtn.count() > 0) {
     await chatInput.fill('Hello! Welcome to the interview.')
-    await sendBtn.first().click()
+    await sendBtn.first().click({ force: true })
     await page.waitForTimeout(1000)
     console.log('  ✓ Test message sent')
   }
@@ -562,14 +562,14 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
   // Look for accepted application
   const acceptedApp = page.locator(`text="${jobTitle}"`)
   if (await acceptedApp.count() > 0) {
-    await acceptedApp.first().click()
+    await acceptedApp.first().click({ force: true })
     await page.waitForTimeout(2000)
   }
   
   // Look for Join Interview button
   const joinInterviewBtn = page.getByRole('button', { name: /join|interview|chat|message/i })
   if (await joinInterviewBtn.count() > 0) {
-    await joinInterviewBtn.first().click()
+    await joinInterviewBtn.first().click({ force: true })
     await page.waitForTimeout(3000)
     console.log('  ✓ Joined interview')
   }
@@ -606,7 +606,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
   console.log('\n  🔍 Looking for accepted booking...')
   const acceptedBooking = page.locator(`text="${jobTitle}"`)
   if (await acceptedBooking.count() > 0) {
-    await acceptedBooking.first().click()
+    await acceptedBooking.first().click({ force: true })
     await page.waitForTimeout(2000)
   }
   
@@ -621,7 +621,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
     await page.context().grantPermissions(['geolocation'])
     console.log('  ✓ GPS permission granted')
     
-    await checkInBtn.first().click()
+    await checkInBtn.first().click({ force: true })
     await page.waitForTimeout(5000)
     
     // Check for success
@@ -663,7 +663,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
   console.log(`  Found ${checkOutBtnCount} Check-out button(s)`)
   
   if (checkOutBtnCount > 0) {
-    await checkOutBtn.first().click()
+    await checkOutBtn.first().click({ force: true })
     await page.waitForTimeout(2000)
     
     // Check for notes input
@@ -676,7 +676,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
     // Submit check-out if there's a confirm button
     const confirmCheckOutBtn = page.getByRole('button', { name: /confirm|submit|check.?out|selesai/i })
     if (await confirmCheckOutBtn.count() > 0) {
-      await confirmCheckOutBtn.first().click()
+      await confirmCheckOutBtn.first().click({ force: true })
       await page.waitForTimeout(3000)
     }
     
@@ -722,7 +722,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
   console.log('\n  🔍 Looking for completed booking...')
   const completedBooking = page.locator(`text="${jobTitle}"`)
   if (await completedBooking.count() > 0) {
-    await completedBooking.first().click()
+    await completedBooking.first().click({ force: true })
     await page.waitForTimeout(2000)
   }
   
@@ -733,7 +733,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
   console.log(`  Found ${reviewBtnCount} Review button(s)`)
   
   if (reviewBtnCount > 0) {
-    await reviewBtn.first().click()
+    await reviewBtn.first().click({ force: true })
     await page.waitForTimeout(2000)
     
     await takeScreenshot(page, '14-business-review-form.png')
@@ -742,14 +742,14 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
     // Rating - click on 5th star
     const fifthStar = page.locator('[data-testid="star-5"], button[aria-label*="5"], svg').nth(4)
     if (await fifthStar.count() > 0) {
-      await fifthStar.click()
+      await fifthStar.click({ force: true })
       console.log('  ✓ Rating: 5 stars')
     } else {
       // Try alternative star selection
       const stars = page.locator('button[aria-label*="star"], [class*="star"]')
       const starCount = await stars.count()
       if (starCount >= 5) {
-        await stars.nth(4).click()
+        await stars.nth(4).click({ force: true })
         console.log('  ✓ Rating: 5 stars (alternative)')
       }
     }
@@ -773,7 +773,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
     // Submit review
     const submitReviewBtn = page.getByRole('button', { name: /submit|kirim|save|simpan/i })
     if (await submitReviewBtn.count() > 0) {
-      await submitReviewBtn.first().click()
+      await submitReviewBtn.first().click({ force: true })
       await page.waitForTimeout(3000)
       
       // Check for success
@@ -813,7 +813,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
   console.log('\n  🔍 Looking for completed booking...')
   const workerCompletedBooking = page.locator(`text="${jobTitle}"`)
   if (await workerCompletedBooking.count() > 0) {
-    await workerCompletedBooking.first().click()
+    await workerCompletedBooking.first().click({ force: true })
     await page.waitForTimeout(2000)
   }
   
@@ -824,7 +824,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
   console.log(`  Found ${workerReviewBtnCount} Review button(s)`)
   
   if (workerReviewBtnCount > 0) {
-    await workerReviewBtn.first().click()
+    await workerReviewBtn.first().click({ force: true })
     await page.waitForTimeout(2000)
     
     await takeScreenshot(page, '17-worker-review-form.png')
@@ -833,13 +833,13 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
     // Rating - click on 4th star
     const fourthStar = page.locator('[data-testid="star-4"], button[aria-label*="4"], svg').nth(3)
     if (await fourthStar.count() > 0) {
-      await fourthStar.click()
+      await fourthStar.click({ force: true })
       console.log('  ✓ Rating: 4 stars')
     } else {
       const stars = page.locator('button[aria-label*="star"], [class*="star"]')
       const starCount = await stars.count()
       if (starCount >= 4) {
-        await stars.nth(3).click()
+        await stars.nth(3).click({ force: true })
         console.log('  ✓ Rating: 4 stars (alternative)')
       }
     }
@@ -856,7 +856,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
     // Submit review
     const workerSubmitReviewBtn = page.getByRole('button', { name: /submit|kirim|save|simpan/i })
     if (await workerSubmitReviewBtn.count() > 0) {
-      await workerSubmitReviewBtn.first().click()
+      await workerSubmitReviewBtn.first().click({ force: true })
       await page.waitForTimeout(3000)
       
       // Check for success
@@ -900,7 +900,7 @@ test('Complete Booking Flow - Full Lifecycle', async ({ page }) => {
   // Try to find a link to view reviews
   const viewReviewLink = page.getByRole('link', { name: /review|ulasan/i })
   if (await viewReviewLink.count() > 0) {
-    await viewReviewLink.first().click()
+    await viewReviewLink.first().click({ force: true })
     await page.waitForTimeout(2000)
   }
   

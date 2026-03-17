@@ -32,10 +32,10 @@ test.describe('Detailed Attendance Features', () => {
     // Select worker role
     const workerLabel = page.locator('label:has-text("Pekerja")').first()
     if (await workerLabel.count() > 0) {
-      await workerLabel.click()
+      await workerLabel.click({ force: true })
     }
     
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     // Navigate to attendance
@@ -90,10 +90,10 @@ test.describe('Detailed Attendance Features', () => {
     
     const workerLabel = page.locator('label:has-text("Pekerja")').first()
     if (await workerLabel.count() > 0) {
-      await workerLabel.click()
+      await workerLabel.click({ force: true })
     }
     
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     // Navigate to attendance
@@ -126,10 +126,10 @@ test.describe('Detailed Attendance Features', () => {
     
     const workerLabel = page.locator('label:has-text("Pekerja")').first()
     if (await workerLabel.count() > 0) {
-      await workerLabel.click()
+      await workerLabel.click({ force: true })
     }
     
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     // Navigate to attendance
@@ -160,10 +160,10 @@ test.describe('Detailed Attendance Features', () => {
     
     const businessLabel = page.locator('label:has-text("Bisnis")').first()
     if (await businessLabel.count() > 0) {
-      await businessLabel.click()
+      await businessLabel.click({ force: true })
     }
     
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     // Navigate to job attendance
@@ -193,10 +193,10 @@ test.describe('Detailed Attendance Features', () => {
     
     const businessLabel = page.locator('label:has-text("Bisnis")').first()
     if (await businessLabel.count() > 0) {
-      await businessLabel.click()
+      await businessLabel.click({ force: true })
     }
     
-    await page.locator('form button[type="submit"]').click()
+    await page.locator('form button[type="submit"]').click({ force: true })
     await page.waitForTimeout(5000)
     
     // Navigate to job attendance

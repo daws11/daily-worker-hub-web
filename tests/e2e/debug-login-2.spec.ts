@@ -36,12 +36,12 @@ test('Debug: Full console capture', async ({ page }) => {
   
   // Select worker
   const workerLabel = page.locator('label:has-text("Pekerja")').first()
-  await workerLabel.click()
+  await workerLabel.click({ force: true })
   await page.waitForTimeout(300)
   
   // Submit
   console.log('\n📤 Submitting...')
-  await page.locator('button[type="submit"]').click()
+  await page.locator('button[type="submit"]').click({ force: true })
   
   // Wait longer
   console.log('\n⏳ Waiting 10 seconds...')

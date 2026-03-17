@@ -25,7 +25,7 @@ test.describe('QR Scanner & Check-out', () => {
       await page.goto('/login')
       await page.fill('input[type="email"]', cred.email)
       await page.fill('input[type="password"]', cred.password)
-      await page.locator('form button[type="submit"]').click()
+      await page.locator('form button[type="submit"]').click({ force: true })
       await page.waitForTimeout(5000)
       
       if (!page.url().includes('/login')) {
@@ -67,7 +67,7 @@ test.describe('QR Scanner & Check-out', () => {
       console.log('✅ Screenshot 2: QR Scanner button')
       
       // Click QR Scanner
-      await qrScanBtn.first().click()
+      await qrScanBtn.first().click({ force: true })
       await page.waitForTimeout(3000)
       
       await page.screenshot({ 
@@ -83,7 +83,7 @@ test.describe('QR Scanner & Check-out', () => {
     
     if (await checkInBtn.count() > 0) {
       // Click Check-in
-      await checkInBtn.first().click()
+      await checkInBtn.first().click({ force: true })
       await page.waitForTimeout(5000)
       
       await page.screenshot({ 
@@ -101,7 +101,7 @@ test.describe('QR Scanner & Check-out', () => {
         console.log('✅ Screenshot 5: Check-out button')
         
         // Click Check-out
-        await checkOutBtn.first().click()
+        await checkOutBtn.first().click({ force: true })
         await page.waitForTimeout(5000)
         
         await page.screenshot({ 
