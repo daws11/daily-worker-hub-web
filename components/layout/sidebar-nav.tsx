@@ -21,6 +21,7 @@ import {
   Menu,
   X,
   CalendarDays,
+  Trophy,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -133,6 +134,11 @@ const workerNavItems: NavItem[] = [
     title: "Badges",
     href: "/worker/badges",
     icon: BadgeCheck,
+  },
+  {
+    title: "Achievements",
+    href: "/worker/achievements",
+    icon: Trophy,
   },
   {
     title: "Wallet",
