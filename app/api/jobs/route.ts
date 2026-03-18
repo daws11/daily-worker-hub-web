@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
+import { parseRequest } from '@/lib/validations'
+import { createJobSchema } from '@/lib/validations/job'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321'
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
@@ -120,23 +122,19 @@ export async function POST(request: Request) {
 
     const body = await request.json()
 
-    // Validate required fields
-    const requiredFields = ['business_id', 'category_id', 'title', 'description', 'budget_min', 'budget_max', 'hours_needed', 'address']
-    const missingFields = requiredFields.filter(field => !body[field])
-
-    if (missingFields.length > 0) {
-      routeLogger.warn('Missing required fields', { requestId, missingFields })
-      logger.requestError(request, new Error(`Missing fields: ${missingFields.join(', ')}`), 400, startTime, { requestId })
-      
-      return NextResponse.json(
-        { error: `Missing required fields: ${missingFields.join(', ')}` },
-        { status: 400 }
-      )
+    // Validate request body with Zod schema
+    const parseResult = await parseRequest(request, createJobSchema)
+    
+    if (!parseResult.success) {
+      routeLogger.warn('Validation failed', { requestId, errors: parseResult.error })
+      return parseResult.error
     }
+
+    const validatedData = parseResult.data
 
     // Verify business belongs to user (requires server-side verification)
     // This would need proper auth verification - for now skip or implement properly
-    const url = `${SUPABASE_URL}/rest/v1/businesses?id=eq.${body.business_id}&select=id,user_id`
+    const url = `${SUPABASE_URL}/rest/v1/businesses?id=eq.${validatedData.business_id}&select=id,user_id`
 
     const businessResponse = await fetch(url, {
       headers: {
@@ -148,7 +146,7 @@ export async function POST(request: Request) {
 
     if (!businessResponse.ok) {
       const errorText = await businessResponse.text()
-      routeLogger.error('Failed to verify business', new Error(errorText), { requestId, businessId: body.business_id })
+      routeLogger.error('Failed to verify business', new Error(errorText), { requestId, businessId: validatedData.business_id })
       logger.requestError(request, new Error('Failed to verify business'), 500, startTime, { requestId })
       
       return NextResponse.json(
@@ -159,7 +157,7 @@ export async function POST(request: Request) {
 
     const businessData = await businessResponse.json()
     if (!businessData || businessData.length === 0) {
-      routeLogger.warn('Business not found', { requestId, businessId: body.business_id })
+      routeLogger.warn('Business not found', { requestId, businessId: validatedData.business_id })
       logger.requestError(request, new Error('Business not found'), 404, startTime, { requestId })
       
       return NextResponse.json(
@@ -171,20 +169,20 @@ export async function POST(request: Request) {
     // Create job
     const createUrl = `${SUPABASE_URL}/rest/v1/jobs`
     const createBody = {
-      business_id: body.business_id,
-      category_id: body.category_id,
-      title: body.title,
-      description: body.description,
-      requirements: body.requirements || '',
-      budget_min: body.budget_min,
-      budget_max: body.budget_max,
-      hours_needed: body.hours_needed,
-      address: body.address,
-      lat: body.lat || null,
-      lng: body.lng || null,
-      deadline: body.deadline || null,
-      is_urgent: body.is_urgent || false,
-      overtime_multiplier: body.overtime_multiplier || 1.0,
+      business_id: validatedData.business_id,
+      category_id: validatedData.category_id,
+      title: validatedData.title,
+      description: validatedData.description,
+      requirements: validatedData.requirements || '',
+      budget_min: validatedData.budget_min,
+      budget_max: validatedData.budget_max,
+      hours_needed: validatedData.hours_needed,
+      address: validatedData.address,
+      lat: validatedData.lat || null,
+      lng: validatedData.lng || null,
+      deadline: validatedData.deadline || null,
+      is_urgent: validatedData.is_urgent || false,
+      overtime_multiplier: validatedData.overtime_multiplier || 1.0,
       status: 'open'
     }
 
@@ -201,7 +199,7 @@ export async function POST(request: Request) {
 
     if (!createResponse.ok) {
       const errorText = await createResponse.text()
-      routeLogger.error('Error creating job', new Error(errorText), { requestId, businessId: body.business_id })
+      routeLogger.error('Error creating job', new Error(errorText), { requestId, businessId: validatedData.business_id })
       logger.requestError(request, new Error(`Failed to create job: ${errorText}`), 500, startTime, { requestId })
       
       return NextResponse.json(
@@ -212,7 +210,7 @@ export async function POST(request: Request) {
 
     const job = await createResponse.json()
 
-    routeLogger.info('Job created successfully', { requestId, jobId: job?.[0]?.id, businessId: body.business_id })
+    routeLogger.info('Job created successfully', { requestId, jobId: job?.[0]?.id, businessId: validatedData.business_id })
     logger.requestSuccess(request, { status: 201 }, startTime, { requestId, jobId: job?.[0]?.id })
 
     return NextResponse.json({

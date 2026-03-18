@@ -12,14 +12,30 @@ import { createClient } from '@/lib/supabase/server'
 import { xenditGateway } from '@/lib/payments'
 import { PAYMENT_CONSTANTS } from '@/lib/types/payment'
 import { logger } from '@/lib/logger'
+import { parseRequest } from '@/lib/validations'
+import { z } from 'zod'
 
 const routeLogger = logger.createApiLogger('payments/withdraw')
 
-interface WithdrawalRequest {
-  workerId: string
-  amount: number
-  bankAccountId: string
-}
+// Simple withdrawal request schema for this specific endpoint
+const withdrawalRequestSchema = z.object({
+  workerId: z
+    .string()
+    .min(1, 'Worker ID wajib diisi')
+    .uuid('Worker ID tidak valid'),
+  
+  amount: z
+    .number({
+      invalid_type_error: 'Jumlah withdrawal harus berupa angka',
+    })
+    .min(PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT, `Withdrawal minimal Rp ${PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT.toLocaleString('id-ID')}`)
+    .max(PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT, `Withdrawal maksimal Rp ${PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT.toLocaleString('id-ID')}`),
+  
+  bankAccountId: z
+    .string()
+    .min(1, 'Bank Account ID wajib diisi')
+    .uuid('Bank Account ID tidak valid'),
+})
 
 /**
  * POST /api/payments/withdraw
@@ -37,9 +53,15 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
     
-    // Parse request body
-    const body: WithdrawalRequest = await request.json()
-    const { workerId, amount, bankAccountId } = body
+    // Validate request body with Zod schema
+    const parseResult = await parseRequest(request, withdrawalRequestSchema)
+    
+    if (!parseResult.success) {
+      routeLogger.warn('Validation failed', { requestId, errors: parseResult.error })
+      return parseResult.error
+    }
+
+    const { workerId, amount, bankAccountId } = parseResult.data
 
     // Audit log for all withdrawal requests
     logger.audit('withdrawal_request', {
@@ -48,38 +70,6 @@ export async function POST(request: NextRequest) {
       amount,
       bankAccountId,
     })
-
-    // Validate required fields
-    if (!workerId || !amount || !bankAccountId) {
-      routeLogger.warn('Missing required fields', { requestId })
-      logger.requestError(request, new Error('Missing required fields: workerId, amount, bankAccountId'), 400, startTime, { requestId })
-      
-      return NextResponse.json(
-        { error: 'Missing required fields: workerId, amount, bankAccountId' },
-        { status: 400 }
-      )
-    }
-
-    // Validate amount
-    if (amount < PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT) {
-      routeLogger.warn('Amount below minimum', { requestId, amount, minAmount: PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT })
-      logger.requestError(request, new Error(`Minimum withdrawal amount is Rp ${PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT}`), 400, startTime, { requestId })
-      
-      return NextResponse.json(
-        { error: `Minimum withdrawal amount is Rp ${PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT.toLocaleString('id-ID')}` },
-        { status: 400 }
-      )
-    }
-
-    if (amount > PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT) {
-      routeLogger.warn('Amount above maximum', { requestId, amount, maxAmount: PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT })
-      logger.requestError(request, new Error(`Maximum withdrawal amount is Rp ${PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT}`), 400, startTime, { requestId })
-      
-      return NextResponse.json(
-        { error: `Maximum withdrawal amount is Rp ${PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT.toLocaleString('id-ID')}` },
-        { status: 400 }
-      )
-    }
 
     // Get worker info
     const { data: worker, error: workerError } = await supabase

@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getServerSession } from '@/lib/auth/get-server-session'
 import { logger } from '@/lib/logger'
 import { checkOutBooking } from '@/lib/actions/bookings-completion'
+import { validateData } from '@/lib/validations'
+import { checkOutSchema } from '@/lib/validations/booking'
 
 const routeLogger = logger.createApiLogger('bookings/[id]/check-out')
 
@@ -32,6 +34,29 @@ export async function POST(
 
     const { id: bookingId } = await params
     const body = await request.json().catch(() => ({}))
+
+    // Validate request body
+    const validationResult = validateData(
+      {
+        booking_id: bookingId,
+        worker_id: '', // Will be replaced with actual worker ID
+        ...body,
+      },
+      checkOutSchema
+    )
+
+    if (!validationResult.success) {
+      routeLogger.warn('Validation failed', { 
+        requestId, 
+        errors: validationResult.error 
+      })
+      logger.requestError(request, new Error(validationResult.error.error), 400, startTime, { requestId })
+      
+      return NextResponse.json(
+        validationResult.error,
+        { status: 400 }
+      )
+    }
 
     const supabase = await createClient()
 

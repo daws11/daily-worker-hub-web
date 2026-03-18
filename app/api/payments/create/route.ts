@@ -16,6 +16,8 @@ import {
 } from '@/lib/payments'
 import { PAYMENT_CONSTANTS } from '@/lib/types/payment'
 import { logger } from '@/lib/logger'
+import { parseRequest } from '@/lib/validations'
+import { createPaymentSchema } from '@/lib/validations/payment'
 
 const routeLogger = logger.createApiLogger('payments/create')
 
@@ -39,11 +41,23 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()
 
-    // Parse request body
-    const body = await request.json()
+    // Validate request body with Zod schema
+    const parseResult = await parseRequest(request, createPaymentSchema)
+    
+    if (!parseResult.success) {
+      routeLogger.warn('Validation failed', { requestId, errors: parseResult.error })
+      return parseResult.error
+    }
 
-    // Validate required fields
-    const { business_id, amount, provider = 'xendit', payment_method, customer_email, customer_name, metadata } = body
+    const { 
+      business_id, 
+      amount, 
+      provider = 'xendit', 
+      payment_method, 
+      customer_email, 
+      customer_name, 
+      metadata 
+    } = parseResult.data
 
     // Audit log for all payment creation requests
     logger.audit('payment_create_request', {
@@ -53,47 +67,6 @@ export async function POST(request: NextRequest) {
       provider,
       paymentMethod: payment_method,
     })
-
-    if (!business_id) {
-      routeLogger.warn('Missing business_id', { requestId })
-      logger.requestError(request, new Error('Business ID is required'), 400, startTime, { requestId })
-      
-      return NextResponse.json(
-        { error: 'Business ID is required' },
-        { status: 400 }
-      )
-    }
-
-    if (!amount || typeof amount !== 'number' || amount <= 0) {
-      routeLogger.warn('Invalid amount', { requestId, amount })
-      logger.requestError(request, new Error('Valid amount is required'), 400, startTime, { requestId })
-      
-      return NextResponse.json(
-        { error: 'Valid amount is required' },
-        { status: 400 }
-      )
-    }
-
-    // Validate amount limits
-    if (amount < PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT) {
-      routeLogger.warn('Amount below minimum', { requestId, amount, minAmount: PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT })
-      logger.requestError(request, new Error(`Minimum top-up amount is Rp ${PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT}`), 400, startTime, { requestId })
-      
-      return NextResponse.json(
-        { error: `Minimum top-up amount is Rp ${PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT.toLocaleString('id-ID')}` },
-        { status: 400 }
-      )
-    }
-
-    if (amount > PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT) {
-      routeLogger.warn('Amount above maximum', { requestId, amount, maxAmount: PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT })
-      logger.requestError(request, new Error(`Maximum top-up amount is Rp ${PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT}`), 400, startTime, { requestId })
-      
-      return NextResponse.json(
-        { error: `Maximum top-up amount is Rp ${PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT.toLocaleString('id-ID')}` },
-        { status: 400 }
-      )
-    }
 
     // Validate provider
     const paymentProvider = provider as PaymentProvider

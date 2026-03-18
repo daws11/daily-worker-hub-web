@@ -7,8 +7,27 @@ import {
   addWorkerReview,
   getBookingReviewStatus,
 } from '@/lib/actions/bookings-completion'
+import { validateData } from '@/lib/validations'
+import { z } from 'zod'
 
 const routeLogger = logger.createApiLogger('bookings/[id]/review')
+
+// Simple review submission schema for this endpoint
+const reviewSubmissionSchema = z.object({
+  rating: z
+    .number({
+      invalid_type_error: 'Rating harus berupa angka',
+    })
+    .int('Rating harus berupa angka bulat')
+    .min(1, 'Rating minimal 1')
+    .max(5, 'Rating maksimal 5'),
+  
+  review: z
+    .string()
+    .max(1000, 'Review maksimal 1000 karakter')
+    .optional()
+    .or(z.literal('')),
+})
 
 type Params = {
   params: Promise<{ id: string }>
@@ -157,16 +176,24 @@ export async function POST(
     const { id: bookingId } = await params
     const body = await request.json()
 
-    // Validate required fields
-    if (!body.rating || body.rating < 1 || body.rating > 5) {
-      routeLogger.warn('Invalid rating', { requestId, bookingId, rating: body.rating })
-      logger.requestError(request, new Error('Rating must be between 1 and 5'), 400, startTime, { requestId })
+    // Validate request body with Zod schema
+    const validationResult = validateData(body, reviewSubmissionSchema)
+    
+    if (!validationResult.success) {
+      routeLogger.warn('Validation failed', { 
+        requestId, 
+        bookingId, 
+        errors: validationResult.error 
+      })
+      logger.requestError(request, new Error(validationResult.error.error), 400, startTime, { requestId })
       
       return NextResponse.json(
-        { error: 'Rating must be between 1 and 5' },
+        validationResult.error,
         { status: 400 }
       )
     }
+
+    const { rating, review } = validationResult.data
 
     const supabase = await createClient()
 
@@ -209,15 +236,15 @@ export async function POST(
 
       result = await addBookingReview(
         bookingId,
-        body.rating,
-        body.review || '',
+        rating,
+        review || '',
         business.id
       )
       
       routeLogger.info('Business review submitted', { 
         requestId, 
         bookingId, 
-        rating: body.rating, 
+        rating, 
         businessId: business.id,
         userId: session.user.id 
       })
@@ -241,15 +268,15 @@ export async function POST(
 
       result = await addWorkerReview(
         bookingId,
-        body.rating,
-        body.review || '',
+        rating,
+        review || '',
         worker.id
       )
       
       routeLogger.info('Worker review submitted', { 
         requestId, 
         bookingId, 
-        rating: body.rating, 
+        rating, 
         workerId: worker.id,
         userId: session.user.id 
       })
