@@ -32,6 +32,10 @@ logs/
 memory/
 supabase/
 
+# Backups
+backups/
+scripts/backup-config.env
+
 # Auto Claude data directory
 .auto-claude/
 node_modules/
