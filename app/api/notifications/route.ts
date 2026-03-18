@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { logger } from '@/lib/logger'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321'
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
+const routeLogger = logger.createApiLogger('notifications')
 
 /**
  * GET /api/notifications
@@ -13,6 +16,8 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
  * - offset: number (default: 0)
  */
 export async function GET(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'notifications' })
+  
   try {
     const supabase = await createClient()
     
@@ -20,6 +25,9 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
+      routeLogger.warn('Unauthorized access attempt', { requestId })
+      logger.requestError(request, new Error('Tidak terautentikasi'), 401, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Tidak terautentikasi' },
         { status: 401 }
@@ -51,7 +59,9 @@ export async function GET(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Supabase API error:', response.status, errorText)
+      routeLogger.error('Supabase API error', new Error(errorText), { requestId, status: response.status, userId: user.id })
+      logger.requestError(request, new Error(`Supabase error: ${errorText}`), response.status, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Gagal mengambil notifikasi' },
         { status: response.status }
@@ -82,13 +92,18 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    routeLogger.info('Notifications fetched successfully', { requestId, count: notifications?.length || 0, unreadCount, userId: user.id })
+    logger.requestSuccess(request, { status: 200 }, startTime, { requestId, userId: user.id })
+
     return NextResponse.json({
       data: notifications,
       unreadCount,
       total: notifications?.length || 0
     })
   } catch (error) {
-    console.error('Error in GET /api/notifications:', error)
+    routeLogger.error('Unexpected error in GET /api/notifications', error, { requestId })
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Terjadi kesalahan server', details: (error as Error).message },
       { status: 500 }
@@ -101,6 +116,8 @@ export async function GET(request: NextRequest) {
  * Mark all notifications as read for the authenticated user
  */
 export async function PATCH(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'notifications' })
+  
   try {
     const supabase = await createClient()
     
@@ -108,6 +125,9 @@ export async function PATCH(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
+      routeLogger.warn('Unauthorized access attempt', { requestId })
+      logger.requestError(request, new Error('Tidak terautentikasi'), 401, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Tidak terautentikasi' },
         { status: 401 }
@@ -131,7 +151,9 @@ export async function PATCH(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Supabase API error:', response.status, errorText)
+      routeLogger.error('Supabase API error', new Error(errorText), { requestId, status: response.status, userId: user.id })
+      logger.requestError(request, new Error(`Supabase error: ${errorText}`), response.status, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Gagal menandai notifikasi' },
         { status: response.status }
@@ -140,13 +162,18 @@ export async function PATCH(request: NextRequest) {
 
     const updatedNotifications = await response.json()
 
+    routeLogger.info('All notifications marked as read', { requestId, count: updatedNotifications?.length || 0, userId: user.id })
+    logger.requestSuccess(request, { status: 200 }, startTime, { requestId, userId: user.id })
+
     return NextResponse.json({
       success: true,
       message: 'Semua notifikasi telah ditandai sebagai dibaca',
       count: updatedNotifications?.length || 0
     })
   } catch (error) {
-    console.error('Error in PATCH /api/notifications:', error)
+    routeLogger.error('Unexpected error in PATCH /api/notifications', error, { requestId })
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Terjadi kesalahan server', details: (error as Error).message },
       { status: 500 }

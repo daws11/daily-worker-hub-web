@@ -15,6 +15,9 @@ import {
   type CreateInvoiceInput,
 } from '@/lib/payments'
 import { PAYMENT_CONSTANTS } from '@/lib/types/payment'
+import { logger } from '@/lib/logger'
+
+const routeLogger = logger.createApiLogger('payments/create')
 
 /**
  * POST /api/payments/create
@@ -31,6 +34,8 @@ import { PAYMENT_CONSTANTS } from '@/lib/types/payment'
  * - metadata: Additional metadata (optional)
  */
 export async function POST(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'payments/create' })
+  
   try {
     const supabase = await createClient()
 
@@ -40,7 +45,19 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     const { business_id, amount, provider = 'xendit', payment_method, customer_email, customer_name, metadata } = body
 
+    // Audit log for all payment creation requests
+    logger.audit('payment_create_request', {
+      requestId,
+      businessId: business_id,
+      amount,
+      provider,
+      paymentMethod: payment_method,
+    })
+
     if (!business_id) {
+      routeLogger.warn('Missing business_id', { requestId })
+      logger.requestError(request, new Error('Business ID is required'), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Business ID is required' },
         { status: 400 }
@@ -48,6 +65,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (!amount || typeof amount !== 'number' || amount <= 0) {
+      routeLogger.warn('Invalid amount', { requestId, amount })
+      logger.requestError(request, new Error('Valid amount is required'), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Valid amount is required' },
         { status: 400 }
@@ -56,6 +76,9 @@ export async function POST(request: NextRequest) {
 
     // Validate amount limits
     if (amount < PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT) {
+      routeLogger.warn('Amount below minimum', { requestId, amount, minAmount: PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT })
+      logger.requestError(request, new Error(`Minimum top-up amount is Rp ${PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT}`), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: `Minimum top-up amount is Rp ${PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT.toLocaleString('id-ID')}` },
         { status: 400 }
@@ -63,6 +86,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (amount > PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT) {
+      routeLogger.warn('Amount above maximum', { requestId, amount, maxAmount: PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT })
+      logger.requestError(request, new Error(`Maximum top-up amount is Rp ${PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT}`), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: `Maximum top-up amount is Rp ${PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT.toLocaleString('id-ID')}` },
         { status: 400 }
@@ -72,6 +98,9 @@ export async function POST(request: NextRequest) {
     // Validate provider
     const paymentProvider = provider as PaymentProvider
     if (!isProviderEnabled(paymentProvider)) {
+      routeLogger.warn('Payment provider not enabled', { requestId, provider })
+      logger.requestError(request, new Error(`Payment provider '${provider}' is not enabled`), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: `Payment provider '${provider}' is not enabled` },
         { status: 400 }
@@ -86,6 +115,9 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (businessError || !business) {
+      routeLogger.error('Business not found', businessError || new Error('Not found'), { requestId, businessId: business_id })
+      logger.requestError(request, new Error('Business not found'), 404, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Business not found' },
         { status: 404 }
@@ -98,6 +130,8 @@ export async function POST(request: NextRequest) {
 
     // Generate unique transaction ID
     const transactionId = `payment_${business_id}_${Date.now()}_${Math.random().toString(36).substring(7)}`
+
+    routeLogger.info('Creating payment transaction', { requestId, transactionId, businessId: business_id, amount: totalAmount, provider })
 
     // Create pending transaction in database
     const { data: transaction, error: txError } = await supabase
@@ -118,12 +152,24 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (txError || !transaction) {
-      console.error('[Payment Create] Failed to create transaction:', txError)
+      routeLogger.error('Failed to create transaction', txError || new Error('Unknown error'), { requestId, businessId: business_id })
+      logger.requestError(request, new Error('Failed to create payment transaction'), 500, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Failed to create payment transaction' },
         { status: 500 }
       )
     }
+
+    // Audit log for transaction creation
+    logger.audit('payment_transaction_created', {
+      requestId,
+      transactionId,
+      businessId: business_id,
+      amount: totalAmount,
+      feeAmount,
+      provider,
+    })
 
     // Create invoice with payment gateway
     try {
@@ -170,9 +216,21 @@ export async function POST(request: NextRequest) {
         .eq('id', transactionId)
 
       if (updateError) {
-        console.error('[Payment Create] Failed to update transaction:', updateError)
+        routeLogger.warn('Failed to update transaction with payment details', { requestId, transactionId, error: updateError.message })
         // Don't fail - payment URL is still valid
       }
+
+      routeLogger.info('Payment invoice created successfully', { requestId, transactionId, invoiceId: invoice.id, provider })
+      logger.requestSuccess(request, { status: 200 }, startTime, { requestId, transactionId })
+
+      // Audit log for successful invoice creation
+      logger.audit('payment_invoice_created', {
+        requestId,
+        transactionId,
+        invoiceId: invoice.id,
+        provider,
+        amount: totalAmount,
+      })
 
       // Return success response
       return NextResponse.json({
@@ -210,7 +268,17 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', transactionId)
 
-      console.error('[Payment Create] Failed to create invoice:', invoiceError)
+      routeLogger.error('Failed to create invoice', invoiceError, { requestId, transactionId, provider })
+      
+      // Audit log for failed invoice creation
+      logger.audit('payment_invoice_failed', {
+        requestId,
+        transactionId,
+        provider,
+        error: invoiceError instanceof Error ? invoiceError.message : 'Unknown error',
+      })
+      
+      logger.requestError(request, invoiceError, 500, startTime, { requestId, transactionId })
       
       return NextResponse.json(
         { 
@@ -222,7 +290,9 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('[Payment Create] Error:', error)
+    routeLogger.error('Unexpected error in POST /api/payments/create', error, { requestId: (request as any).requestId })
+    logger.requestError(request, error, 500, startTime, {})
+    
     return NextResponse.json(
       { 
         error: 'Internal server error',
@@ -244,6 +314,8 @@ export async function POST(request: NextRequest) {
  * - payment_method: Payment method (optional)
  */
 export async function GET(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'payments/create' })
+  
   try {
     const { searchParams } = new URL(request.url)
     const amount = parseInt(searchParams.get('amount') || '0')
@@ -251,6 +323,9 @@ export async function GET(request: NextRequest) {
     const paymentMethod = searchParams.get('payment_method') || undefined
 
     if (!amount || amount <= 0) {
+      routeLogger.warn('Invalid amount in GET request', { requestId, amount })
+      logger.requestError(request, new Error('Valid amount is required'), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Valid amount is required' },
         { status: 400 }
@@ -259,6 +334,8 @@ export async function GET(request: NextRequest) {
 
     // Validate amount limits
     if (amount < PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT) {
+      routeLogger.info('Amount validation: below minimum', { requestId, amount, minAmount: PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT })
+      
       return NextResponse.json({
         valid: false,
         error: `Minimum top-up amount is Rp ${PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT.toLocaleString('id-ID')}`,
@@ -267,6 +344,8 @@ export async function GET(request: NextRequest) {
     }
 
     if (amount > PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT) {
+      routeLogger.info('Amount validation: above maximum', { requestId, amount, maxAmount: PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT })
+      
       return NextResponse.json({
         valid: false,
         error: `Maximum top-up amount is Rp ${PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT.toLocaleString('id-ID')}`,
@@ -277,6 +356,9 @@ export async function GET(request: NextRequest) {
     // Calculate fee
     const feeAmount = calculateFee(amount, paymentMethod)
     const totalAmount = amount + feeAmount
+
+    routeLogger.info('Payment fee calculated', { requestId, amount, feeAmount, totalAmount, provider })
+    logger.requestSuccess(request, { status: 200 }, startTime, { requestId })
 
     return NextResponse.json({
       valid: true,
@@ -293,7 +375,9 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('[Payment Create] Error:', error)
+    routeLogger.error('Unexpected error in GET /api/payments/create', error, { requestId })
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

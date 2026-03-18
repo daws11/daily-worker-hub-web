@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getServerSession } from '@/lib/auth/get-server-session'
+import { logger } from '@/lib/logger'
 import {
   addBookingReview,
   addWorkerReview,
   getBookingReviewStatus,
 } from '@/lib/actions/bookings-completion'
+
+const routeLogger = logger.createApiLogger('bookings/[id]/review')
 
 type Params = {
   params: Promise<{ id: string }>
@@ -16,10 +19,15 @@ export async function GET(
   request: Request,
   { params }: Params
 ) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'bookings/[id]/review' })
+  
   try {
     const session = await getServerSession()
 
     if (!session?.user?.id) {
+      routeLogger.warn('Unauthorized access attempt', { requestId })
+      logger.requestError(request, new Error('Unauthorized'), 401, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -38,6 +46,9 @@ export async function GET(
       .single()
 
     if (!booking) {
+      routeLogger.warn('Booking not found', { requestId, bookingId })
+      logger.requestError(request, new Error('Booking not found'), 404, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Booking not found' },
         { status: 404 }
@@ -52,6 +63,9 @@ export async function GET(
       .single()
 
     if (!user) {
+      routeLogger.warn('User not found', { requestId, userId: session.user.id })
+      logger.requestError(request, new Error('User not found'), 404, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -67,6 +81,9 @@ export async function GET(
         .single()
 
       if (!business || business.id !== booking.business_id) {
+        routeLogger.warn('Unauthorized business access', { requestId, bookingId })
+        logger.requestError(request, new Error('Unauthorized'), 403, startTime, { requestId })
+        
         return NextResponse.json(
           { error: 'Unauthorized' },
           { status: 403 }
@@ -80,6 +97,9 @@ export async function GET(
         .single()
 
       if (!worker || worker.id !== booking.worker_id) {
+        routeLogger.warn('Unauthorized worker access', { requestId, bookingId })
+        logger.requestError(request, new Error('Unauthorized'), 403, startTime, { requestId })
+        
         return NextResponse.json(
           { error: 'Unauthorized' },
           { status: 403 }
@@ -90,15 +110,23 @@ export async function GET(
     const result = await getBookingReviewStatus(bookingId)
 
     if (!result.success) {
+      routeLogger.error('Failed to get review status', new Error(result.error), { requestId, bookingId })
+      logger.requestError(request, new Error(result.error), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: result.error },
         { status: 400 }
       )
     }
 
+    routeLogger.info('Review status fetched', { requestId, bookingId, userId: session.user.id })
+    logger.requestSuccess(request, { status: 200 }, startTime, { requestId, userId: session.user.id })
+
     return NextResponse.json({ data: result.data })
   } catch (error) {
-    console.error('Error in GET /api/bookings/[id]/review:', error)
+    routeLogger.error('Unexpected error in GET /api/bookings/[id]/review', error, { requestId })
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -111,10 +139,15 @@ export async function POST(
   request: Request,
   { params }: Params
 ) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'bookings/[id]/review' })
+  
   try {
     const session = await getServerSession()
 
     if (!session?.user?.id) {
+      routeLogger.warn('Unauthorized access attempt', { requestId })
+      logger.requestError(request, new Error('Unauthorized'), 401, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -126,6 +159,9 @@ export async function POST(
 
     // Validate required fields
     if (!body.rating || body.rating < 1 || body.rating > 5) {
+      routeLogger.warn('Invalid rating', { requestId, bookingId, rating: body.rating })
+      logger.requestError(request, new Error('Rating must be between 1 and 5'), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Rating must be between 1 and 5' },
         { status: 400 }
@@ -142,6 +178,9 @@ export async function POST(
       .single()
 
     if (!user) {
+      routeLogger.warn('User not found', { requestId, userId: session.user.id })
+      logger.requestError(request, new Error('User not found'), 404, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -159,6 +198,9 @@ export async function POST(
         .single()
 
       if (!business) {
+        routeLogger.warn('Business profile not found', { requestId, userId: session.user.id })
+        logger.requestError(request, new Error('Unauthorized - Business profile not found'), 403, startTime, { requestId })
+        
         return NextResponse.json(
           { error: 'Unauthorized - Business profile not found' },
           { status: 403 }
@@ -171,6 +213,14 @@ export async function POST(
         body.review || '',
         business.id
       )
+      
+      routeLogger.info('Business review submitted', { 
+        requestId, 
+        bookingId, 
+        rating: body.rating, 
+        businessId: business.id,
+        userId: session.user.id 
+      })
     } else if (user.role === 'worker') {
       // Worker reviewing business
       const { data: worker } = await supabase
@@ -180,6 +230,9 @@ export async function POST(
         .single()
 
       if (!worker) {
+        routeLogger.warn('Worker profile not found', { requestId, userId: session.user.id })
+        logger.requestError(request, new Error('Unauthorized - Worker profile not found'), 403, startTime, { requestId })
+        
         return NextResponse.json(
           { error: 'Unauthorized - Worker profile not found' },
           { status: 403 }
@@ -192,7 +245,18 @@ export async function POST(
         body.review || '',
         worker.id
       )
+      
+      routeLogger.info('Worker review submitted', { 
+        requestId, 
+        bookingId, 
+        rating: body.rating, 
+        workerId: worker.id,
+        userId: session.user.id 
+      })
     } else {
+      routeLogger.warn('Invalid user role for review', { requestId, userRole: user.role })
+      logger.requestError(request, new Error('Unauthorized - Invalid user role'), 403, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Unauthorized - Invalid user role' },
         { status: 403 }
@@ -200,18 +264,25 @@ export async function POST(
     }
 
     if (!result.success) {
+      routeLogger.error('Failed to submit review', new Error(result.error), { requestId, bookingId })
+      logger.requestError(request, new Error(result.error), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: result.error },
         { status: 400 }
       )
     }
 
+    logger.requestSuccess(request, { status: 201 }, startTime, { requestId, userId: session.user.id })
+
     return NextResponse.json({
       data: result.data,
       message: 'Review submitted successfully'
     }, { status: 201 })
   } catch (error) {
-    console.error('Error in POST /api/bookings/[id]/review:', error)
+    routeLogger.error('Unexpected error in POST /api/bookings/[id]/review', error, { requestId })
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

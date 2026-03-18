@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { logger } from '@/lib/logger'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321'
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
+const routeLogger = logger.createApiLogger('notifications/settings')
 
 /**
  * GET /api/notifications/settings
  * Get notification preferences for the authenticated user
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'notifications/settings' })
+  
   try {
     const supabase = await createClient()
     
@@ -16,6 +21,9 @@ export async function GET() {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
+      routeLogger.warn('Unauthorized access attempt', { requestId })
+      logger.requestError(request, new Error('Tidak terautentikasi'), 401, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Tidak terautentikasi' },
         { status: 401 }
@@ -36,7 +44,9 @@ export async function GET() {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Supabase API error:', response.status, errorText)
+      routeLogger.error('Supabase API error', new Error(errorText), { requestId, status: response.status, userId: user.id })
+      logger.requestError(request, new Error(`Supabase error: ${errorText}`), response.status, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Gagal mengambil preferensi notifikasi' },
         { status: response.status }
@@ -71,15 +81,21 @@ export async function GET() {
 
       if (createResponse.ok) {
         preferences = await createResponse.json()
+        routeLogger.info('Default notification preferences created', { requestId, userId: user.id })
       }
     }
+
+    routeLogger.info('Notification preferences fetched', { requestId, userId: user.id })
+    logger.requestSuccess(request, { status: 200 }, startTime, { requestId, userId: user.id })
 
     return NextResponse.json({
       success: true,
       data: preferences?.[0] || preferences
     })
   } catch (error) {
-    console.error('Error in GET /api/notifications/settings:', error)
+    routeLogger.error('Unexpected error in GET /api/notifications/settings', error, { requestId })
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Terjadi kesalahan server', details: (error as Error).message },
       { status: 500 }
@@ -92,6 +108,8 @@ export async function GET() {
  * Update notification preferences for the authenticated user
  */
 export async function POST(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'notifications/settings' })
+  
   try {
     const supabase = await createClient()
     
@@ -99,6 +117,9 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
     if (authError || !user) {
+      routeLogger.warn('Unauthorized access attempt', { requestId })
+      logger.requestError(request, new Error('Tidak terautentikasi'), 401, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Tidak terautentikasi' },
         { status: 401 }
@@ -125,6 +146,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (Object.keys(updateData).length === 0) {
+      routeLogger.warn('No valid data to update', { requestId, userId: user.id })
+      logger.requestError(request, new Error('Tidak ada data yang valid untuk diperbarui'), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Tidak ada data yang valid untuk diperbarui' },
         { status: 400 }
@@ -183,7 +207,9 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Supabase API error:', response.status, errorText)
+      routeLogger.error('Supabase API error', new Error(errorText), { requestId, status: response.status, userId: user.id })
+      logger.requestError(request, new Error(`Supabase error: ${errorText}`), response.status, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Gagal memperbarui preferensi notifikasi' },
         { status: response.status }
@@ -192,13 +218,18 @@ export async function POST(request: NextRequest) {
 
     const updatedPreferences = await response.json()
 
+    routeLogger.info('Notification preferences updated', { requestId, updatedFields: Object.keys(updateData), userId: user.id })
+    logger.requestSuccess(request, { status: 200 }, startTime, { requestId, userId: user.id })
+
     return NextResponse.json({
       success: true,
       message: 'Preferensi notifikasi berhasil diperbarui',
       data: updatedPreferences?.[0] || updatedPreferences
     })
   } catch (error) {
-    console.error('Error in POST /api/notifications/settings:', error)
+    routeLogger.error('Unexpected error in POST /api/notifications/settings', error, { requestId })
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Terjadi kesalahan server', details: (error as Error).message },
       { status: 500 }

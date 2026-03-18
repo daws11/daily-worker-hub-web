@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server'
+import { logger } from '@/lib/logger'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321'
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
+const routeLogger = logger.createApiLogger('jobs')
+
 // GET /api/jobs - Get jobs (public)
 export async function GET(request: Request) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'jobs' })
+  
   try {
     const { searchParams } = new URL(request.url)
 
@@ -65,7 +70,12 @@ export async function GET(request: Request) {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Supabase API error:', response.status, errorText)
+      routeLogger.error('Supabase API error', new Error(errorText), {
+        status: response.status,
+        requestId,
+      })
+      logger.requestError(request, new Error(`Supabase error: ${errorText}`), response.status, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Failed to fetch jobs from database' },
         { status: response.status }
@@ -74,9 +84,14 @@ export async function GET(request: Request) {
 
     const data = await response.json()
 
+    logger.requestSuccess(request, { status: 200 }, startTime, { requestId, resultCount: data?.length || 0 })
+    routeLogger.info('Jobs fetched successfully', { requestId, count: data?.length || 0 })
+
     return NextResponse.json({ data, total: data?.length || 0 })
   } catch (error) {
-    console.error('Error in GET /api/jobs:', error)
+    routeLogger.error('Unexpected error in GET /api/jobs', error, { requestId })
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Internal server error', details: (error as Error).message },
       { status: 500 }
@@ -86,12 +101,17 @@ export async function GET(request: Request) {
 
 // POST /api/jobs - Create a new job
 export async function POST(request: Request) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'jobs' })
+  
   try {
     const { searchParams } = new URL(request.url)
 
     // Verify authentication
     const authHeader = request.headers.get('authorization')
     if (!authHeader) {
+      routeLogger.warn('Missing authorization header', { requestId })
+      logger.requestError(request, new Error('Unauthorized - No authentication token'), 401, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Unauthorized - No authentication token' },
         { status: 401 }
@@ -105,6 +125,9 @@ export async function POST(request: Request) {
     const missingFields = requiredFields.filter(field => !body[field])
 
     if (missingFields.length > 0) {
+      routeLogger.warn('Missing required fields', { requestId, missingFields })
+      logger.requestError(request, new Error(`Missing fields: ${missingFields.join(', ')}`), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: `Missing required fields: ${missingFields.join(', ')}` },
         { status: 400 }
@@ -124,6 +147,10 @@ export async function POST(request: Request) {
     })
 
     if (!businessResponse.ok) {
+      const errorText = await businessResponse.text()
+      routeLogger.error('Failed to verify business', new Error(errorText), { requestId, businessId: body.business_id })
+      logger.requestError(request, new Error('Failed to verify business'), 500, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Failed to verify business' },
         { status: 500 }
@@ -132,6 +159,9 @@ export async function POST(request: Request) {
 
     const businessData = await businessResponse.json()
     if (!businessData || businessData.length === 0) {
+      routeLogger.warn('Business not found', { requestId, businessId: body.business_id })
+      logger.requestError(request, new Error('Business not found'), 404, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Business not found' },
         { status: 404 }
@@ -171,7 +201,9 @@ export async function POST(request: Request) {
 
     if (!createResponse.ok) {
       const errorText = await createResponse.text()
-      console.error('Error creating job:', errorText)
+      routeLogger.error('Error creating job', new Error(errorText), { requestId, businessId: body.business_id })
+      logger.requestError(request, new Error(`Failed to create job: ${errorText}`), 500, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Failed to create job', details: errorText },
         { status: 500 }
@@ -180,13 +212,18 @@ export async function POST(request: Request) {
 
     const job = await createResponse.json()
 
+    routeLogger.info('Job created successfully', { requestId, jobId: job?.[0]?.id, businessId: body.business_id })
+    logger.requestSuccess(request, { status: 201 }, startTime, { requestId, jobId: job?.[0]?.id })
+
     return NextResponse.json({
       data: job,
       message: 'Job created successfully'
     }, { status: 201 })
 
   } catch (error) {
-    console.error('Error in POST /api/jobs:', error)
+    routeLogger.error('Unexpected error in POST /api/jobs', error, { requestId })
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Internal server error', details: (error as Error).message },
       { status: 500 }

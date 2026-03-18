@@ -8,6 +8,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { verifyPayment, getPaymentStatus, type PaymentProvider } from '@/lib/payments'
+import { logger } from '@/lib/logger'
+
+const routeLogger = logger.createApiLogger('payments/verify')
 
 /**
  * GET /api/payments/verify
@@ -19,6 +22,8 @@ import { verifyPayment, getPaymentStatus, type PaymentProvider } from '@/lib/pay
  * - provider: Payment provider 'xendit' | 'midtrans' (required)
  */
 export async function GET(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'payments/verify' })
+  
   try {
     const supabase = await createClient()
 
@@ -26,7 +31,17 @@ export async function GET(request: NextRequest) {
     const transactionId = searchParams.get('transaction_id')
     const provider = searchParams.get('provider') as PaymentProvider
 
+    // Audit log for all verification requests
+    logger.audit('payment_verify_request', {
+      requestId,
+      transactionId,
+      provider,
+    })
+
     if (!transactionId) {
+      routeLogger.warn('Missing transaction_id', { requestId })
+      logger.requestError(request, new Error('Transaction ID is required'), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Transaction ID is required' },
         { status: 400 }
@@ -34,6 +49,9 @@ export async function GET(request: NextRequest) {
     }
 
     if (!provider || !['xendit', 'midtrans'].includes(provider)) {
+      routeLogger.warn('Invalid provider', { requestId, provider })
+      logger.requestError(request, new Error('Valid payment provider is required'), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Valid payment provider is required (xendit or midtrans)' },
         { status: 400 }
@@ -48,6 +66,9 @@ export async function GET(request: NextRequest) {
       .single()
 
     if (txError || !transaction) {
+      routeLogger.warn('Transaction not found', { requestId, transactionId, provider })
+      logger.requestError(request, new Error('Transaction not found'), 404, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Transaction not found' },
         { status: 404 }
@@ -56,6 +77,9 @@ export async function GET(request: NextRequest) {
 
     // If transaction is already in a final state, return from database
     if (['success', 'failed', 'expired', 'cancelled'].includes(transaction.status)) {
+      routeLogger.info('Returning transaction status from database', { requestId, transactionId, status: transaction.status })
+      logger.requestSuccess(request, { status: 200 }, startTime, { requestId, transactionId })
+      
       return NextResponse.json({
         success: true,
         data: {
@@ -111,8 +135,17 @@ export async function GET(request: NextRequest) {
           .eq('id', transactionId)
 
         if (updateError) {
-          console.error('[Payment Verify] Failed to update transaction:', updateError)
+          routeLogger.warn('Failed to update transaction status', { requestId, transactionId, error: updateError.message })
         }
+
+        // Audit log for status change
+        logger.audit('payment_status_changed', {
+          requestId,
+          transactionId,
+          oldStatus: transaction.status,
+          newStatus: paymentStatus.status,
+          provider,
+        })
 
         // If payment is now successful, credit the wallet
         if (paymentStatus.status === 'success' && transaction.status !== ('success' as any)) {
@@ -124,6 +157,9 @@ export async function GET(request: NextRequest) {
           )
         }
       }
+
+      routeLogger.info('Payment verified successfully', { requestId, transactionId, status: paymentStatus.status, source: 'gateway' })
+      logger.requestSuccess(request, { status: 200 }, startTime, { requestId, transactionId })
 
       return NextResponse.json({
         success: true,
@@ -144,7 +180,7 @@ export async function GET(request: NextRequest) {
       })
 
     } catch (gatewayError) {
-      console.error('[Payment Verify] Gateway error:', gatewayError)
+      routeLogger.error('Gateway verification failed', gatewayError, { requestId, transactionId, provider })
       
       // Return database status if gateway fails
       return NextResponse.json({
@@ -165,7 +201,9 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('[Payment Verify] Error:', error)
+    routeLogger.error('Unexpected error in GET /api/payments/verify', error, { requestId })
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { 
         error: 'Internal server error',
@@ -185,11 +223,22 @@ export async function GET(request: NextRequest) {
  * - transactions: Array of { transaction_id, provider }
  */
 export async function POST(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'payments/verify' })
+  
   try {
     const body = await request.json()
     const { transactions } = body
 
+    // Audit log for batch verification
+    logger.audit('payment_batch_verify_request', {
+      requestId,
+      transactionCount: transactions?.length || 0,
+    })
+
     if (!Array.isArray(transactions) || transactions.length === 0) {
+      routeLogger.warn('No transactions provided for batch verification', { requestId })
+      logger.requestError(request, new Error('Transactions array is required'), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Transactions array is required' },
         { status: 400 }
@@ -198,6 +247,9 @@ export async function POST(request: NextRequest) {
 
     // Limit batch size
     if (transactions.length > 50) {
+      routeLogger.warn('Batch size exceeds limit', { requestId, count: transactions.length })
+      logger.requestError(request, new Error('Maximum 50 transactions per batch'), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Maximum 50 transactions per batch' },
         { status: 400 }
@@ -227,6 +279,7 @@ export async function POST(request: NextRequest) {
           data: paymentStatus,
         })
       } catch (error) {
+        routeLogger.error('Failed to verify transaction in batch', error, { requestId, transaction_id, provider })
         results.push({
           transaction_id,
           success: false,
@@ -235,16 +288,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const successful = results.filter(r => r.success).length
+    const failed = results.filter(r => !r.success).length
+
+    routeLogger.info('Batch verification completed', { requestId, total: transactions.length, successful, failed })
+    logger.requestSuccess(request, { status: 200 }, startTime, { requestId, successful, failed })
+
     return NextResponse.json({
       success: true,
       results,
       total: transactions.length,
-      successful: results.filter(r => r.success).length,
-      failed: results.filter(r => !r.success).length,
+      successful,
+      failed,
     })
 
   } catch (error) {
-    console.error('[Payment Verify] Batch error:', error)
+    routeLogger.error('Unexpected error in POST /api/payments/verify', error, { requestId })
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -270,7 +331,7 @@ async function creditWallet(
       .maybeSingle()
 
     if (walletError) {
-      console.error('[Payment Verify] Failed to get wallet:', walletError)
+      logger.error('Failed to get wallet for credit', walletError, { businessId, transactionId })
       return
     }
 
@@ -288,7 +349,7 @@ async function creditWallet(
         .single()
 
       if (createError) {
-        console.error('[Payment Verify] Failed to create wallet:', createError)
+        logger.error('Failed to create wallet for credit', createError, { businessId, transactionId })
         return
       }
 
@@ -309,15 +370,17 @@ async function creditWallet(
       .eq('id', wallet.id)
 
     if (updateError) {
-      console.error('[Payment Verify] Failed to update wallet balance:', updateError)
+      logger.error('Failed to update wallet balance', updateError, { walletId: wallet.id, transactionId })
       return
     }
 
     // Record transaction
     await recordWalletTransaction(supabase, wallet.id, amount, transactionId, 'top_up')
 
+    logger.info('Wallet credited successfully', { businessId, amount, transactionId })
+
   } catch (error) {
-    console.error('[Payment Verify] Credit wallet error:', error)
+    logger.error('Credit wallet error', error, { businessId, transactionId })
   }
 }
 
@@ -343,6 +406,6 @@ async function recordWalletTransaction(
         created_at: new Date().toISOString(),
       })
   } catch (error) {
-    console.error('[Payment Verify] Failed to record wallet transaction:', error)
+    logger.warn('Failed to record wallet transaction', { walletId, referenceId, error: error instanceof Error ? error.message : 'Unknown error' })
   }
 }

@@ -1,18 +1,26 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getServerSession } from '@/lib/auth/get-server-session'
+import { logger } from '@/lib/logger'
 import {
   createJobApplication,
   getApplicationsByJob,
   getApplicationsByWorker,
 } from '@/lib/actions/job-applications'
 
+const routeLogger = logger.createApiLogger('applications')
+
 // GET /api/applications - Get applications (for worker or business)
 export async function GET(request: Request) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'applications' })
+  
   try {
     const session = await getServerSession()
 
     if (!session?.user?.id) {
+      routeLogger.warn('Unauthorized access attempt', { requestId })
+      logger.requestError(request, new Error('Unauthorized'), 401, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -35,6 +43,9 @@ export async function GET(request: Request) {
       .single()
 
     if (!user) {
+      routeLogger.warn('User not found', { requestId, userId: session.user.id })
+      logger.requestError(request, new Error('User not found'), 404, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
@@ -52,6 +63,9 @@ export async function GET(request: Request) {
         .single()
 
       if (!business) {
+        routeLogger.warn('Business not found or unauthorized', { requestId, businessId })
+        logger.requestError(request, new Error('Unauthorized - Business not found'), 403, startTime, { requestId })
+        
         return NextResponse.json(
           { error: 'Unauthorized - Business not found' },
           { status: 403 }
@@ -61,11 +75,17 @@ export async function GET(request: Request) {
       const result = await getApplicationsByJob(jobId, businessId)
 
       if (!result.success) {
+        routeLogger.error('Failed to get applications by job', new Error(result.error), { requestId, jobId, businessId })
+        logger.requestError(request, new Error(result.error), 400, startTime, { requestId })
+        
         return NextResponse.json(
           { error: result.error },
           { status: 400 }
         )
       }
+
+      routeLogger.info('Applications fetched for business', { requestId, jobId, businessId, count: result.data?.length || 0 })
+      logger.requestSuccess(request, { status: 200 }, startTime, { requestId, userId: session.user.id })
 
       return NextResponse.json({ data: result.data })
     }
@@ -81,6 +101,9 @@ export async function GET(request: Request) {
         .single()
 
       if (!worker) {
+        routeLogger.warn('Worker not found or unauthorized', { requestId, workerId })
+        logger.requestError(request, new Error('Unauthorized - Worker not found'), 403, startTime, { requestId })
+        
         return NextResponse.json(
           { error: 'Unauthorized - Worker not found' },
           { status: 403 }
@@ -90,21 +113,32 @@ export async function GET(request: Request) {
       const result = await getApplicationsByWorker(workerId, status)
 
       if (!result.success) {
+        routeLogger.error('Failed to get applications by worker', new Error(result.error), { requestId, workerId })
+        logger.requestError(request, new Error(result.error), 400, startTime, { requestId })
+        
         return NextResponse.json(
           { error: result.error },
           { status: 400 }
         )
       }
 
+      routeLogger.info('Applications fetched for worker', { requestId, workerId, count: result.data?.length || 0 })
+      logger.requestSuccess(request, { status: 200 }, startTime, { requestId, userId: session.user.id })
+
       return NextResponse.json({ data: result.data })
     }
 
+    routeLogger.warn('Missing required parameters', { requestId })
+    logger.requestError(request, new Error('Missing required parameters'), 400, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Missing required parameters' },
       { status: 400 }
     )
   } catch (error) {
-    console.error('Error in GET /api/applications:', error)
+    routeLogger.error('Unexpected error in GET /api/applications', error, { requestId })
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -114,10 +148,15 @@ export async function GET(request: Request) {
 
 // POST /api/applications - Create a new job application
 export async function POST(request: Request) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'applications' })
+  
   try {
     const session = await getServerSession()
 
     if (!session?.user?.id) {
+      routeLogger.warn('Unauthorized access attempt', { requestId })
+      logger.requestError(request, new Error('Unauthorized'), 401, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -128,6 +167,9 @@ export async function POST(request: Request) {
 
     // Validate required fields
     if (!body.job_id || !body.worker_id) {
+      routeLogger.warn('Missing required fields', { requestId })
+      logger.requestError(request, new Error('Missing required fields: job_id, worker_id'), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Missing required fields: job_id, worker_id' },
         { status: 400 }
@@ -145,6 +187,9 @@ export async function POST(request: Request) {
       .single()
 
     if (!worker) {
+      routeLogger.warn('Worker not found or unauthorized', { requestId, workerId: body.worker_id })
+      logger.requestError(request, new Error('Unauthorized - Worker not found'), 403, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Unauthorized - Worker not found' },
         { status: 403 }
@@ -162,18 +207,26 @@ export async function POST(request: Request) {
     )
 
     if (!result.success) {
+      routeLogger.error('Failed to create application', new Error(result.error), { requestId, jobId: body.job_id, workerId: body.worker_id })
+      logger.requestError(request, new Error(result.error), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: result.error },
         { status: 400 }
       )
     }
 
+    routeLogger.info('Application created successfully', { requestId, applicationId: result.data?.id, jobId: body.job_id, userId: session.user.id })
+    logger.requestSuccess(request, { status: 201 }, startTime, { requestId, userId: session.user.id })
+
     return NextResponse.json({
       data: result.data,
       message: 'Application submitted successfully'
     }, { status: 201 })
   } catch (error) {
-    console.error('Error in POST /api/applications:', error)
+    routeLogger.error('Unexpected error in POST /api/applications', error, { requestId })
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
