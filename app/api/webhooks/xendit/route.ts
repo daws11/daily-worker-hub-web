@@ -8,6 +8,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { xenditGateway, type WebhookPayload } from '@/lib/payments'
+import { logger } from '@/lib/logger'
+
+const routeLogger = logger.createApiLogger('webhooks/xendit')
 
 /**
  * POST /api/webhooks/xendit
@@ -27,28 +30,50 @@ import { xenditGateway, type WebhookPayload } from '@/lib/payments'
  * - payment_channel: Payment channel used
  */
 export async function POST(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'webhooks/xendit' })
+  
   try {
     // Get callback token from header
     const callbackToken = request.headers.get('X-Callback-Token')
 
-    // Verify webhook signature
-    if (!xenditGateway.verifyWebhookSignature(callbackToken)) {
-      console.error('[Xendit Webhook] Invalid callback token')
-      return NextResponse.json(
-        { error: 'Invalid callback token' },
-        { status: 401 }
-      )
-    }
-
     // Parse webhook payload
     const payload = await request.json()
     
-    console.log('[Xendit Webhook] Received callback:', {
+    // Audit log for all incoming webhook requests
+    logger.audit('xendit_webhook_received', {
+      requestId,
       id: payload.id,
       external_id: payload.external_id,
       status: payload.status,
       amount: payload.amount,
     })
+    
+    routeLogger.info('Received Xendit webhook callback', {
+      requestId,
+      id: payload.id,
+      external_id: payload.external_id,
+      status: payload.status,
+      amount: payload.amount,
+    })
+
+    // Verify webhook signature
+    if (!xenditGateway.verifyWebhookSignature(callbackToken)) {
+      routeLogger.warn('Invalid callback token', { requestId })
+      
+      // Audit log for invalid token
+      logger.audit('xendit_webhook_invalid_token', {
+        requestId,
+        orderId: payload.external_id,
+        reason: 'Invalid callback token',
+      })
+      
+      logger.requestError(request, new Error('Invalid callback token'), 401, startTime, { requestId })
+      
+      return NextResponse.json(
+        { error: 'Invalid callback token' },
+        { status: 401 }
+      )
+    }
 
     // Extract relevant data
     const {
@@ -82,14 +107,34 @@ export async function POST(request: NextRequest) {
     const result = await processWebhook(webhookPayload, failureReason)
 
     if (!result.success) {
-      console.error('[Xendit Webhook] Processing failed:', result.error)
+      routeLogger.error('Webhook processing failed', new Error(result.error), { requestId, transactionId })
+      
+      // Audit log for processing failure
+      logger.audit('xendit_webhook_processing_failed', {
+        requestId,
+        transactionId,
+        error: result.error,
+      })
+      
+      logger.requestError(request, new Error(result.error), 500, startTime, { requestId })
+      
       return NextResponse.json(
         { error: result.error },
         { status: 500 }
       )
     }
 
-    console.log('[Xendit Webhook] Processed successfully:', {
+    routeLogger.info('Xendit webhook processed successfully', {
+      requestId,
+      transactionId,
+      status: internalStatus,
+    })
+    
+    logger.requestSuccess(request, { status: 200 }, startTime, { requestId })
+
+    // Audit log for successful processing
+    logger.audit('xendit_webhook_processed', {
+      requestId,
       transactionId,
       status: internalStatus,
     })
@@ -100,7 +145,16 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('[Xendit Webhook] Error:', error)
+    routeLogger.error('Unexpected error in Xendit webhook', error, { requestId })
+    
+    // Audit log for unexpected error
+    logger.audit('xendit_webhook_error', {
+      requestId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    })
+    
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -126,13 +180,13 @@ async function processWebhook(
       .single()
 
     if (txError || !transaction) {
-      console.error('[Xendit Webhook] Transaction not found:', payload.externalId)
+      routeLogger.warn('Transaction not found', { transactionId: payload.externalId })
       return { success: false, error: 'Transaction not found' }
     }
 
     // Skip if already processed
     if (transaction.status === payload.status) {
-      console.log('[Xendit Webhook] Transaction already processed:', payload.externalId)
+      routeLogger.info('Transaction already processed', { transactionId: payload.externalId })
       return { success: true }
     }
 
@@ -165,9 +219,15 @@ async function processWebhook(
       .eq('id', transaction.id)
 
     if (updateError) {
-      console.error('[Xendit Webhook] Failed to update transaction:', updateError)
+      routeLogger.error('Failed to update transaction', updateError, { transactionId: payload.externalId })
       return { success: false, error: 'Failed to update transaction' }
     }
+
+    routeLogger.info('Transaction status updated', { 
+      transactionId: payload.externalId, 
+      oldStatus: transaction.status,
+      newStatus: payload.status 
+    })
 
     // If payment is successful, credit the wallet
     if (payload.status === 'success') {
@@ -179,7 +239,7 @@ async function processWebhook(
       )
 
       if (!creditResult.success) {
-        console.error('[Xendit Webhook] Failed to credit wallet:', creditResult.error)
+        routeLogger.error('Failed to credit wallet', new Error(creditResult.error), { transactionId: payload.externalId })
         return { success: false, error: 'Failed to credit wallet' }
       }
     }
@@ -187,7 +247,7 @@ async function processWebhook(
     return { success: true }
 
   } catch (error) {
-    console.error('[Xendit Webhook] Processing error:', error)
+    routeLogger.error('Webhook processing error', error, {})
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
@@ -236,6 +296,7 @@ async function creditWallet(
       // Record transaction
       await recordWalletTransaction(supabase, newWallet.id, amount, transactionId, 'top_up')
       
+      routeLogger.info('Wallet created and credited', { businessId, amount, transactionId })
       return { success: true }
     }
 
@@ -257,10 +318,11 @@ async function creditWallet(
     // Record transaction
     await recordWalletTransaction(supabase, wallet.id, amount, transactionId, 'top_up')
 
+    routeLogger.info('Wallet credited successfully', { businessId, amount, transactionId })
     return { success: true }
 
   } catch (error) {
-    console.error('[Xendit Webhook] Credit wallet error:', error)
+    routeLogger.error('Credit wallet error', error, { businessId, transactionId })
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
@@ -291,7 +353,7 @@ async function recordWalletTransaction(
       })
   } catch (error) {
     // Log but don't fail - transaction is already complete
-    console.error('[Xendit Webhook] Failed to record wallet transaction:', error)
+    routeLogger.warn('Failed to record wallet transaction', { walletId, referenceId, type })
   }
 }
 
@@ -316,7 +378,12 @@ function mapXenditStatus(status: string): 'pending' | 'success' | 'failed' | 'ex
  * 
  * Health check endpoint
  */
-export async function GET() {
+export async function GET(request: Request) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'webhooks/xendit' })
+  
+  routeLogger.info('Health check for Xendit webhook', { requestId })
+  logger.requestSuccess(request, { status: 200 }, startTime, { requestId })
+  
   return NextResponse.json({
     status: 'ok',
     provider: 'xendit',

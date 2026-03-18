@@ -11,6 +11,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { xenditGateway } from '@/lib/payments'
 import { PAYMENT_CONSTANTS } from '@/lib/types/payment'
+import { logger } from '@/lib/logger'
+
+const routeLogger = logger.createApiLogger('payments/withdraw')
 
 interface WithdrawalRequest {
   workerId: string
@@ -29,6 +32,8 @@ interface WithdrawalRequest {
  * - bankAccountId: Bank account ID to withdraw to
  */
 export async function POST(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'payments/withdraw' })
+  
   try {
     const supabase = await createClient()
     
@@ -36,8 +41,19 @@ export async function POST(request: NextRequest) {
     const body: WithdrawalRequest = await request.json()
     const { workerId, amount, bankAccountId } = body
 
+    // Audit log for all withdrawal requests
+    logger.audit('withdrawal_request', {
+      requestId,
+      workerId,
+      amount,
+      bankAccountId,
+    })
+
     // Validate required fields
     if (!workerId || !amount || !bankAccountId) {
+      routeLogger.warn('Missing required fields', { requestId })
+      logger.requestError(request, new Error('Missing required fields: workerId, amount, bankAccountId'), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Missing required fields: workerId, amount, bankAccountId' },
         { status: 400 }
@@ -46,6 +62,9 @@ export async function POST(request: NextRequest) {
 
     // Validate amount
     if (amount < PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT) {
+      routeLogger.warn('Amount below minimum', { requestId, amount, minAmount: PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT })
+      logger.requestError(request, new Error(`Minimum withdrawal amount is Rp ${PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT}`), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: `Minimum withdrawal amount is Rp ${PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT.toLocaleString('id-ID')}` },
         { status: 400 }
@@ -53,6 +72,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (amount > PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT) {
+      routeLogger.warn('Amount above maximum', { requestId, amount, maxAmount: PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT })
+      logger.requestError(request, new Error(`Maximum withdrawal amount is Rp ${PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT}`), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { error: `Maximum withdrawal amount is Rp ${PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT.toLocaleString('id-ID')}` },
         { status: 400 }
@@ -67,6 +89,9 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (workerError || !worker) {
+      routeLogger.error('Worker not found', workerError || new Error('Not found'), { requestId, workerId })
+      logger.requestError(request, new Error('Worker not found'), 404, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Worker not found' },
         { status: 404 }
@@ -81,7 +106,9 @@ export async function POST(request: NextRequest) {
       .maybeSingle()
 
     if (walletError) {
-      console.error('[Withdraw] Error fetching wallet:', walletError)
+      routeLogger.error('Error fetching wallet', walletError, { requestId, workerId })
+      logger.requestError(request, new Error('Failed to fetch wallet'), 500, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Failed to fetch wallet' },
         { status: 500 }
@@ -89,6 +116,9 @@ export async function POST(request: NextRequest) {
     }
 
     if (!wallet) {
+      routeLogger.warn('Wallet not found', { requestId, workerId })
+      logger.requestError(request, new Error('Wallet not found'), 404, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Wallet not found' },
         { status: 404 }
@@ -97,6 +127,9 @@ export async function POST(request: NextRequest) {
 
     // Check available balance
     if (wallet.balance < amount) {
+      routeLogger.warn('Insufficient balance', { requestId, workerId, availableBalance: wallet.balance, requestedAmount: amount })
+      logger.requestError(request, new Error('Insufficient balance'), 400, startTime, { requestId })
+      
       return NextResponse.json(
         { 
           error: 'Insufficient balance',
@@ -116,6 +149,9 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (bankError || !bankAccount) {
+      routeLogger.error('Bank account not found', bankError || new Error('Not found'), { requestId, bankAccountId, workerId })
+      logger.requestError(request, new Error('Bank account not found or does not belong to worker'), 404, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Bank account not found or does not belong to worker' },
         { status: 404 }
@@ -128,6 +164,8 @@ export async function POST(request: NextRequest) {
 
     // Generate external ID for disbursement
     const externalId = `payout-${workerId}-${Date.now()}`
+
+    routeLogger.info('Creating withdrawal request', { requestId, workerId, amount, netAmount, bankAccountId })
 
     // Create payout request record (pending)
     const { data: payoutRequest, error: payoutError } = await (supabase as any)
@@ -151,12 +189,25 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (payoutError || !payoutRequest) {
-      console.error('[Withdraw] Error creating payout request:', payoutError)
+      routeLogger.error('Error creating payout request', payoutError || new Error('Unknown error'), { requestId, workerId })
+      logger.requestError(request, new Error('Failed to create payout request'), 500, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Failed to create payout request' },
         { status: 500 }
       )
     }
+
+    // Audit log for payout request creation
+    logger.audit('payout_request_created', {
+      requestId,
+      payoutRequestId: payoutRequest.id,
+      workerId,
+      amount,
+      feeAmount,
+      netAmount,
+      externalId,
+    })
 
     // Deduct balance from wallet (hold until completed)
     const { error: updateWalletError } = await (supabase as any)
@@ -168,7 +219,7 @@ export async function POST(request: NextRequest) {
       .eq('id', wallet.id)
 
     if (updateWalletError) {
-      console.error('[Withdraw] Error updating wallet balance:', updateWalletError)
+      routeLogger.error('Error updating wallet balance', updateWalletError, { requestId, walletId: wallet.id })
       
       // Rollback payout request
       await (supabase as any)
@@ -176,6 +227,8 @@ export async function POST(request: NextRequest) {
         .delete()
         .eq('id', payoutRequest.id)
 
+      logger.requestError(request, new Error('Failed to update wallet balance'), 500, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Failed to update wallet balance' },
         { status: 500 }
@@ -193,6 +246,8 @@ export async function POST(request: NextRequest) {
         description: `Withdrawal to ${bankAccount.bank_code} - ${bankAccount.bank_account_number}`,
         reference_id: payoutRequest.id,
       })
+
+    routeLogger.info('Wallet balance held for payout', { requestId, walletId: wallet.id, amount, payoutRequestId: payoutRequest.id })
 
     // Create disbursement via Xendit
     try {
@@ -233,6 +288,18 @@ export async function POST(request: NextRequest) {
         .update({ status: 'paid' })
         .eq('reference_id', payoutRequest.id)
 
+      routeLogger.info('Disbursement created successfully', { requestId, payoutRequestId: payoutRequest.id, disbursementId: disbursement.id })
+      logger.requestSuccess(request, { status: 200 }, startTime, { requestId, payoutRequestId: payoutRequest.id })
+
+      // Audit log for successful disbursement creation
+      logger.audit('disbursement_created', {
+        requestId,
+        payoutRequestId: payoutRequest.id,
+        disbursementId: disbursement.id,
+        workerId,
+        netAmount,
+      })
+
       return NextResponse.json({
         success: true,
         data: {
@@ -251,8 +318,8 @@ export async function POST(request: NextRequest) {
       })
 
     } catch (disbursementError) {
-      console.error('[Withdraw] Disbursement failed:', disbursementError)
-
+      routeLogger.error('Disbursement failed', disbursementError, { requestId, payoutRequestId: payoutRequest.id })
+      
       // Refund wallet balance
       await (supabase as any)
         .from('wallets')
@@ -278,6 +345,17 @@ export async function POST(request: NextRequest) {
         .update({ status: 'refunded' })
         .eq('reference_id', payoutRequest.id)
 
+      // Audit log for failed disbursement
+      logger.audit('disbursement_failed', {
+        requestId,
+        payoutRequestId: payoutRequest.id,
+        workerId,
+        amount,
+        error: disbursementError instanceof Error ? disbursementError.message : 'Unknown error',
+      })
+      
+      logger.requestError(request, disbursementError, 500, startTime, { requestId, payoutRequestId: payoutRequest.id })
+      
       return NextResponse.json(
         { 
           error: 'Failed to process withdrawal',
@@ -288,7 +366,9 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('[Withdraw] Unexpected error:', error)
+    routeLogger.error('Unexpected error in POST /api/payments/withdraw', error, { requestId })
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -301,7 +381,12 @@ export async function POST(request: NextRequest) {
  * 
  * Health check endpoint
  */
-export async function GET() {
+export async function GET(request: Request) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'payments/withdraw' })
+  
+  routeLogger.info('Health check for withdraw endpoint', { requestId })
+  logger.requestSuccess(request, { status: 200 }, startTime, { requestId })
+  
   return NextResponse.json({
     status: 'ok',
     endpoint: 'withdraw',

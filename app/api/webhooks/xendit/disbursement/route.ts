@@ -8,6 +8,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { xenditGateway } from '@/lib/payments'
+import { logger } from '@/lib/logger'
+
+const routeLogger = logger.createApiLogger('webhooks/xendit/disbursement')
 
 /**
  * POST /api/webhooks/xendit/disbursement
@@ -28,28 +31,50 @@ import { xenditGateway } from '@/lib/payments'
  * - failure_reason: Failure reason (if failed)
  */
 export async function POST(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'webhooks/xendit/disbursement' })
+  
   try {
     // Get callback token from header
     const callbackToken = request.headers.get('X-Callback-Token')
 
-    // Verify webhook signature
-    if (!xenditGateway.verifyWebhookSignature(callbackToken)) {
-      console.error('[Disbursement Webhook] Invalid callback token')
-      return NextResponse.json(
-        { error: 'Invalid callback token' },
-        { status: 401 }
-      )
-    }
-
     // Parse webhook payload
     const payload = await request.json()
     
-    console.log('[Disbursement Webhook] Received callback:', {
+    // Audit log for all incoming disbursement webhook requests
+    logger.audit('xendit_disbursement_webhook_received', {
+      requestId,
       id: payload.id,
       external_id: payload.external_id,
       status: payload.status,
       amount: payload.amount,
     })
+    
+    routeLogger.info('Received Xendit disbursement callback', {
+      requestId,
+      id: payload.id,
+      external_id: payload.external_id,
+      status: payload.status,
+      amount: payload.amount,
+    })
+
+    // Verify webhook signature
+    if (!xenditGateway.verifyWebhookSignature(callbackToken)) {
+      routeLogger.warn('Invalid callback token', { requestId })
+      
+      // Audit log for invalid token
+      logger.audit('xendit_disbursement_webhook_invalid_token', {
+        requestId,
+        externalId: payload.external_id,
+        reason: 'Invalid callback token',
+      })
+      
+      logger.requestError(request, new Error('Invalid callback token'), 401, startTime, { requestId })
+      
+      return NextResponse.json(
+        { error: 'Invalid callback token' },
+        { status: 401 }
+      )
+    }
 
     // Extract relevant data
     const {
@@ -76,14 +101,34 @@ export async function POST(request: NextRequest) {
     })
 
     if (!result.success) {
-      console.error('[Disbursement Webhook] Processing failed:', result.error)
+      routeLogger.error('Disbursement webhook processing failed', new Error(result.error), { requestId, externalId })
+      
+      // Audit log for processing failure
+      logger.audit('xendit_disbursement_webhook_processing_failed', {
+        requestId,
+        externalId,
+        error: result.error,
+      })
+      
+      logger.requestError(request, new Error(result.error), 500, startTime, { requestId })
+      
       return NextResponse.json(
         { error: result.error },
         { status: 500 }
       )
     }
 
-    console.log('[Disbursement Webhook] Processed successfully:', {
+    routeLogger.info('Disbursement webhook processed successfully', {
+      requestId,
+      externalId,
+      status: internalStatus,
+    })
+    
+    logger.requestSuccess(request, { status: 200 }, startTime, { requestId })
+
+    // Audit log for successful processing
+    logger.audit('xendit_disbursement_webhook_processed', {
+      requestId,
       externalId,
       status: internalStatus,
     })
@@ -94,7 +139,16 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('[Disbursement Webhook] Error:', error)
+    routeLogger.error('Unexpected error in disbursement webhook', error, { requestId })
+    
+    // Audit log for unexpected error
+    logger.audit('xendit_disbursement_webhook_error', {
+      requestId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    })
+    
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -126,12 +180,12 @@ async function processDisbursementWebhook(payload: {
       .limit(1)
 
     if (searchError) {
-      console.error('[Disbursement Webhook] Search error:', searchError)
+      routeLogger.error('Search error for payout request', searchError, { externalId: payload.externalId })
       return { success: false, error: 'Failed to search payout request' }
     }
 
     if (!payoutRequests || payoutRequests.length === 0) {
-      console.error('[Disbursement Webhook] Payout request not found:', payload.externalId)
+      routeLogger.warn('Payout request not found', { externalId: payload.externalId })
       return { success: false, error: 'Payout request not found' }
     }
 
@@ -139,7 +193,7 @@ async function processDisbursementWebhook(payload: {
 
     // Skip if already completed or failed
     if (payoutRequest.status === 'completed' || payoutRequest.status === 'failed') {
-      console.log('[Disbursement Webhook] Payout already processed:', payload.externalId)
+      routeLogger.info('Payout already processed', { payoutRequestId: payoutRequest.id, externalId: payload.externalId })
       return { success: true }
     }
 
@@ -167,23 +221,37 @@ async function processDisbursementWebhook(payload: {
       .eq('id', payoutRequest.id)
 
     if (updateError) {
-      console.error('[Disbursement Webhook] Failed to update payout request:', updateError)
+      routeLogger.error('Failed to update payout request', updateError, { payoutRequestId: payoutRequest.id })
       return { success: false, error: 'Failed to update payout request' }
     }
 
+    routeLogger.info('Payout request status updated', { 
+      payoutRequestId: payoutRequest.id, 
+      externalId: payload.externalId,
+      newStatus: payload.status 
+    })
+
     // Handle status-specific actions
     if (payload.status === 'completed') {
-      // Finalize the transaction
+      // Finalize
       await finalizeSuccessfulPayout(supabase, payoutRequest)
     } else if (payload.status === 'failed' || payload.status === 'cancelled') {
-      // Refund the wallet balance
+      // Refund
       await refundFailedPayout(supabase, payoutRequest, payload.failureReason)
     }
+
+    // Audit log for status change
+    logger.audit('payout_status_changed', {
+      externalId: payload.externalId,
+      payoutRequestId: payoutRequest.id,
+      newStatus: payload.status,
+      amount: payload.amount,
+    })
 
     return { success: true }
 
   } catch (error) {
-    console.error('[Disbursement Webhook] Processing error:', error)
+    routeLogger.error('Disbursement webhook processing error', error, {})
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
@@ -205,9 +273,16 @@ async function finalizeSuccessfulPayout(
       .update({ status: 'paid' })
       .eq('reference_id', payoutRequest.id)
 
-    console.log('[Disbursement Webhook] Payout finalized:', payoutRequest.id)
+    // Audit log for successful finalization
+    logger.audit('payout_finalized', {
+      payoutRequestId: payoutRequest.id,
+      workerId: payoutRequest.worker_id,
+      amount: payoutRequest.amount,
+    })
+
+    routeLogger.info('Payout finalized successfully', { payoutRequestId: payoutRequest.id })
   } catch (error) {
-    console.error('[Disbursement Webhook] Error finalizing payout:', error)
+    routeLogger.error('Error finalizing payout', error, { payoutRequestId: payoutRequest.id })
   }
 }
 
@@ -228,11 +303,11 @@ async function refundFailedPayout(
       .single()
 
     if (walletError || !wallet) {
-      console.error('[Disbursement Webhook] Wallet not found for refund')
+      routeLogger.error('Wallet not found for refund', walletError || new Error('Not found'), { payoutRequestId: payoutRequest.id })
       return
     }
 
-    // Refund the full amount (including fee)
+    // Refund full amount (including fee)
     const { error: refundError } = await (supabase as any)
       .from('wallets')
       .update({
@@ -242,7 +317,7 @@ async function refundFailedPayout(
       .eq('id', wallet.id)
 
     if (refundError) {
-      console.error('[Disbursement Webhook] Failed to refund wallet:', refundError)
+      routeLogger.error('Failed to refund wallet', refundError, { walletId: wallet.id, payoutRequestId: payoutRequest.id })
       return
     }
 
@@ -265,9 +340,21 @@ async function refundFailedPayout(
       .eq('reference_id', payoutRequest.id)
       .eq('type', 'payout')
 
-    console.log('[Disbursement Webhook] Payout refunded:', payoutRequest.id)
+    // Audit log for refund
+    logger.audit('payout_refunded', {
+      payoutRequestId: payoutRequest.id,
+      workerId: payoutRequest.worker_id,
+      amount: payoutRequest.amount,
+      reason: failureReason,
+    })
+
+    routeLogger.info('Payout refunded successfully', { 
+      payoutRequestId: payoutRequest.id, 
+      workerId: payoutRequest.worker_id,
+      amount: payoutRequest.amount 
+    })
   } catch (error) {
-    console.error('[Disbursement Webhook] Error refunding payout:', error)
+    routeLogger.error('Error refunding payout', error, { payoutRequestId: payoutRequest.id })
   }
 }
 
@@ -291,7 +378,12 @@ function mapDisbursementStatus(status: string): 'pending' | 'processing' | 'comp
  * 
  * Health check endpoint
  */
-export async function GET() {
+export async function GET(request: Request) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'webhooks/xendit/disbursement' })
+  
+  routeLogger.info('Health check for Xendit disbursement webhook', { requestId })
+  logger.requestSuccess(request, { status: 200 }, startTime, { requestId })
+  
   return NextResponse.json({
     status: 'ok',
     provider: 'xendit',

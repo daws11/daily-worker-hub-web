@@ -8,6 +8,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { midtransGateway, type WebhookPayload } from '@/lib/payments'
+import { logger } from '@/lib/logger'
+
+const routeLogger = logger.createApiLogger('webhooks/midtrans')
 
 /**
  * Midtrans webhook notification payload
@@ -53,11 +56,24 @@ interface MidtransNotification {
  * - signature_key: SHA-512 signature for verification
  */
 export async function POST(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'webhooks/midtrans' })
+  
   try {
     // Parse webhook payload
     const payload: MidtransNotification = await request.json()
     
-    console.log('[Midtrans Webhook] Received notification:', {
+    // Audit log for all incoming webhook requests
+    logger.audit('midtrans_webhook_received', {
+      requestId,
+      transactionId: payload.transaction_id,
+      orderId: payload.order_id,
+      status: payload.transaction_status,
+      fraudStatus: payload.fraud_status,
+      grossAmount: payload.gross_amount,
+    })
+    
+    routeLogger.info('Received Midtrans webhook notification', {
+      requestId,
       transaction_id: payload.transaction_id,
       order_id: payload.order_id,
       transaction_status: payload.transaction_status,
@@ -74,7 +90,17 @@ export async function POST(request: NextRequest) {
     )
 
     if (!isValidSignature) {
-      console.error('[Midtrans Webhook] Invalid signature')
+      routeLogger.warn('Invalid webhook signature', { requestId, transactionId: payload.transaction_id })
+      
+      // Audit log for invalid signature
+      logger.audit('midtrans_webhook_invalid_signature', {
+        requestId,
+        orderId: payload.order_id,
+        reason: 'Invalid signature',
+      })
+      
+      logger.requestError(request, new Error('Invalid signature'), 401, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Invalid signature' },
         { status: 401 }
@@ -104,14 +130,34 @@ export async function POST(request: NextRequest) {
     const result = await processWebhook(webhookPayload, payload)
 
     if (!result.success) {
-      console.error('[Midtrans Webhook] Processing failed:', result.error)
+      routeLogger.error('Webhook processing failed', new Error(result.error), { requestId, orderId: payload.order_id })
+      
+      // Audit log for processing failure
+      logger.audit('midtrans_webhook_processing_failed', {
+        requestId,
+        orderId: payload.order_id,
+        error: result.error,
+      })
+      
+      logger.requestError(request, new Error(result.error), 500, startTime, { requestId })
+      
       return NextResponse.json(
         { error: result.error },
         { status: 500 }
       )
     }
 
-    console.log('[Midtrans Webhook] Processed successfully:', {
+    routeLogger.info('Midtrans webhook processed successfully', {
+      requestId,
+      orderId: payload.order_id,
+      status: internalStatus,
+    })
+    
+    logger.requestSuccess(request, { status: 200 }, startTime, { requestId })
+
+    // Audit log for successful processing
+    logger.audit('midtrans_webhook_processed', {
+      requestId,
       orderId: payload.order_id,
       status: internalStatus,
     })
@@ -122,7 +168,16 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('[Midtrans Webhook] Error:', error)
+    routeLogger.error('Unexpected error in Midtrans webhook', error, { requestId })
+    
+    // Audit log for unexpected error
+    logger.audit('midtrans_webhook_error', {
+      requestId,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    })
+    
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -148,19 +203,19 @@ async function processWebhook(
       .single()
 
     if (txError || !transaction) {
-      console.error('[Midtrans Webhook] Transaction not found:', payload.externalId)
+      routeLogger.warn('Transaction not found', { transactionId: payload.externalId })
       return { success: false, error: 'Transaction not found' }
     }
 
     // Skip if already processed to this status
     if (transaction.status === payload.status) {
-      console.log('[Midtrans Webhook] Transaction already processed:', payload.externalId)
+      routeLogger.info('Transaction already processed', { transactionId: payload.externalId })
       return { success: true }
     }
 
     // For fraud challenge, we may want to handle differently
     if (rawPayload.fraud_status === 'challenge') {
-      console.log('[Midtrans Webhook] Transaction in challenge status:', payload.externalId)
+      routeLogger.info('Transaction in challenge status', { transactionId: payload.externalId })
       // Could implement manual review notification here
     }
 
@@ -197,9 +252,15 @@ async function processWebhook(
       .eq('id', transaction.id)
 
     if (updateError) {
-      console.error('[Midtrans Webhook] Failed to update transaction:', updateError)
+      routeLogger.error('Failed to update transaction', updateError, { transactionId: payload.externalId })
       return { success: false, error: 'Failed to update transaction' }
     }
+
+    routeLogger.info('Transaction status updated', { 
+      transactionId: payload.externalId, 
+      oldStatus: transaction.status,
+      newStatus: payload.status 
+    })
 
     // If payment is successful, credit the wallet
     if (payload.status === 'success') {
@@ -211,7 +272,7 @@ async function processWebhook(
       )
 
       if (!creditResult.success) {
-        console.error('[Midtrans Webhook] Failed to credit wallet:', creditResult.error)
+        routeLogger.error('Failed to credit wallet', new Error(creditResult.error), { transactionId: payload.externalId })
         return { success: false, error: 'Failed to credit wallet' }
       }
     }
@@ -219,7 +280,7 @@ async function processWebhook(
     return { success: true }
 
   } catch (error) {
-    console.error('[Midtrans Webhook] Processing error:', error)
+    routeLogger.error('Webhook processing error', error, {})
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
@@ -268,6 +329,7 @@ async function creditWallet(
       // Record transaction
       await recordWalletTransaction(supabase, newWallet.id, amount, transactionId, 'top_up')
       
+      routeLogger.info('Wallet created and credited', { businessId, amount, transactionId })
       return { success: true }
     }
 
@@ -289,10 +351,11 @@ async function creditWallet(
     // Record transaction
     await recordWalletTransaction(supabase, wallet.id, amount, transactionId, 'top_up')
 
+    routeLogger.info('Wallet credited successfully', { businessId, amount, transactionId })
     return { success: true }
 
   } catch (error) {
-    console.error('[Midtrans Webhook] Credit wallet error:', error)
+    routeLogger.error('Credit wallet error', error, { businessId, transactionId })
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
@@ -323,7 +386,7 @@ async function recordWalletTransaction(
       })
   } catch (error) {
     // Log but don't fail - transaction is already complete
-    console.error('[Midtrans Webhook] Failed to record wallet transaction:', error)
+    routeLogger.warn('Failed to record wallet transaction', { walletId, referenceId, type })
   }
 }
 
@@ -382,7 +445,12 @@ function getFailureReason(payload: MidtransNotification): string {
  * 
  * Health check endpoint
  */
-export async function GET() {
+export async function GET(request: Request) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'webhooks/midtrans' })
+  
+  routeLogger.info('Health check for Midtrans webhook', { requestId })
+  logger.requestSuccess(request, { status: 200 }, startTime, { requestId })
+  
   return NextResponse.json({
     status: 'ok',
     provider: 'midtrans',

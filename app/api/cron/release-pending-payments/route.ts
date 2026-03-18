@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { releaseFundsAction } from '@/lib/actions/wallets'
 import { createNotification } from '@/lib/actions/notifications'
+import { logger } from '@/lib/logger'
+
+const routeLogger = logger.createApiLogger('cron/release-pending-payments')
 
 /**
  * Cron endpoint to auto-release pending payments after review period
@@ -20,17 +23,30 @@ import { createNotification } from '@/lib/actions/notifications'
  * Action: Release funds to worker's available balance
  */
 export async function POST(request: Request) {
+  const { startTime, requestId } = logger.requestStart(request, { route: 'cron/release-pending-payments' })
+  
   try {
     // Verify cron secret for security
     const authHeader = request.headers.get('authorization')
     const cronSecret = process.env.CRON_SECRET
     
     if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+      routeLogger.warn('Unauthorized cron access attempt', { requestId })
+      logger.requestError(request, new Error('Unauthorized'), 401, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
+
+    routeLogger.info('Starting auto-release cron job', { requestId })
+
+    // Audit log for cron job start
+    logger.audit('cron_job_started', {
+      requestId,
+      jobName: 'release_pending_payments',
+    })
 
     const supabase = await createClient()
 
@@ -58,7 +74,9 @@ export async function POST(request: Request) {
       .limit(100) // Process in batches
 
     if (fetchError) {
-      console.error('Error fetching bookings for auto-release:', fetchError)
+      routeLogger.error('Error fetching bookings for auto-release', fetchError, { requestId })
+      logger.requestError(request, new Error('Failed to fetch bookings'), 500, startTime, { requestId })
+      
       return NextResponse.json(
         { error: 'Failed to fetch bookings' },
         { status: 500 }
@@ -66,12 +84,17 @@ export async function POST(request: Request) {
     }
 
     if (!bookings || bookings.length === 0) {
+      routeLogger.info('No bookings to release', { requestId })
+      logger.requestSuccess(request, { status: 200 }, startTime, { requestId })
+      
       return NextResponse.json({
         success: true,
         message: 'No bookings to release',
         released: 0
       })
     }
+
+    routeLogger.info(`Found ${bookings.length} bookings for auto-release`, { requestId, count: bookings.length })
 
     let releasedCount = 0
     let failedCount = 0
@@ -122,6 +145,16 @@ export async function POST(request: Request) {
             status: 'released',
             amount: booking.final_price
           })
+
+          // Audit log for each successful release
+          logger.audit('payment_auto_released', {
+            requestId,
+            bookingId: booking.id,
+            workerId: worker.id,
+            amount: booking.final_price,
+          })
+
+          routeLogger.info('Payment released for booking', { requestId, bookingId: booking.id, workerId: worker.id, amount: booking.final_price })
         } else {
           failedCount++
           results.push({
@@ -129,6 +162,8 @@ export async function POST(request: Request) {
             status: 'failed',
             error: releaseResult.error
           })
+
+          routeLogger.error('Failed to release payment for booking', new Error(releaseResult.error), { requestId, bookingId: booking.id })
         }
       } catch (error) {
         failedCount++
@@ -137,8 +172,21 @@ export async function POST(request: Request) {
           status: 'error',
           error: error instanceof Error ? error.message : 'Unknown error'
         })
+
+        routeLogger.error('Error processing booking for auto-release', error, { requestId, bookingId: booking.id })
       }
     }
+
+    // Audit log for cron job completion
+    logger.audit('cron_job_completed', {
+      requestId,
+      jobName: 'release_pending_payments',
+      releasedCount,
+      failedCount,
+    })
+
+    routeLogger.info('Auto-release cron job completed', { requestId, total: bookings.length, releasedCount, failedCount })
+    logger.requestSuccess(request, { status: 200 }, startTime, { requestId, releasedCount, failedCount })
 
     return NextResponse.json({
       success: true,
@@ -148,7 +196,17 @@ export async function POST(request: Request) {
       results
     })
   } catch (error) {
-    console.error('Error in auto-release cron:', error)
+    routeLogger.error('Unexpected error in auto-release cron', error, { requestId })
+    
+    // Audit log for cron job failure
+    logger.audit('cron_job_failed', {
+      requestId,
+      jobName: 'release_pending_payments',
+      error: error instanceof Error ? error.message : 'Unknown error',
+    })
+    
+    logger.requestError(request, error, 500, startTime, { requestId })
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
