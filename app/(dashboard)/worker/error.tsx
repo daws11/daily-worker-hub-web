@@ -1,16 +1,33 @@
-"use client"
+"use client";
 
-import { AlertTriangle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { useEffect } from "react";
+import { AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { captureException } from "@/lib/sentry";
 
 export default function Error({
   error,
   reset,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: Error & { digest?: string };
+  reset: () => void;
 }) {
+  useEffect(() => {
+    // Report error to Sentry with additional context
+    captureException(error, {
+      tags: {
+        section: "worker",
+        errorDigest: error.digest,
+      },
+      extra: {
+        errorDigest: error.digest,
+        message: error.message,
+        stack: error.stack,
+      },
+    });
+  }, [error]);
+
   return (
     <div className="flex items-center justify-center min-h-[400px] p-6">
       <Card className="max-w-md w-full">
@@ -26,5 +43,5 @@ export default function Error({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
