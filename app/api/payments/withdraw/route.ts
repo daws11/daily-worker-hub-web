@@ -5,6 +5,8 @@
  * 
  * Creates a withdrawal request for a worker to receive their earnings
  * via bank transfer through Xendit Disbursement API.
+ * 
+ * Rate limited: 10 requests per minute (payment endpoints)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -13,6 +15,7 @@ import { xenditGateway } from '@/lib/payments'
 import { PAYMENT_CONSTANTS } from '@/lib/types/payment'
 import { logger } from '@/lib/logger'
 import { parseRequest } from '@/lib/validations'
+import { withRateLimit } from '@/lib/rate-limit'
 import { z } from 'zod'
 
 const routeLogger = logger.createApiLogger('payments/withdraw')
@@ -47,7 +50,7 @@ const withdrawalRequestSchema = z.object({
  * - amount: Withdrawal amount in IDR
  * - bankAccountId: Bank account ID to withdraw to
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'payments/withdraw' })
   
   try {
@@ -371,7 +374,7 @@ export async function POST(request: NextRequest) {
  * 
  * Health check endpoint
  */
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'payments/withdraw' })
   
   routeLogger.info('Health check for withdraw endpoint', { requestId })
@@ -383,3 +386,7 @@ export async function GET(request: Request) {
     timestamp: new Date().toISOString(),
   })
 }
+
+// Export handlers with rate limiting
+export const POST = withRateLimit(handlePOST, { type: 'payment', userBased: true })
+export const GET = withRateLimit(handleGET, { type: 'api-public', userBased: false })

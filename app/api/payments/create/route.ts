@@ -3,6 +3,8 @@
  * 
  * Creates a new payment transaction using the specified payment gateway.
  * Supports both Xendit and Midtrans payment providers.
+ * 
+ * Rate limited: 10 requests per minute (payment endpoints)
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -18,6 +20,7 @@ import { PAYMENT_CONSTANTS } from '@/lib/types/payment'
 import { logger } from '@/lib/logger'
 import { parseRequest } from '@/lib/validations'
 import { createPaymentSchema } from '@/lib/validations/payment'
+import { withRateLimit } from '@/lib/rate-limit'
 
 const routeLogger = logger.createApiLogger('payments/create')
 
@@ -35,7 +38,7 @@ const routeLogger = logger.createApiLogger('payments/create')
  * - customer_name: Customer name (optional)
  * - metadata: Additional metadata (optional)
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'payments/create' })
   
   try {
@@ -286,7 +289,7 @@ export async function POST(request: NextRequest) {
  * - provider: Payment provider (optional)
  * - payment_method: Payment method (optional)
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'payments/create' })
   
   try {
@@ -357,3 +360,7 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+// Export handlers with rate limiting
+export const POST = withRateLimit(handlePOST, { type: 'payment', userBased: true })
+export const GET = withRateLimit(handleGET, { type: 'api-public', userBased: false })

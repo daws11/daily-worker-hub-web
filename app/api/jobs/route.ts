@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 import { parseRequest } from '@/lib/validations'
 import { createJobSchema } from '@/lib/validations/job'
+import { withRateLimitForMethod } from '@/lib/rate-limit'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321'
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
@@ -9,7 +10,7 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 const routeLogger = logger.createApiLogger('jobs')
 
 // GET /api/jobs - Get jobs (public)
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'jobs' })
   
   try {
@@ -102,7 +103,7 @@ export async function GET(request: Request) {
 }
 
 // POST /api/jobs - Create a new job
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'jobs' })
   
   try {
@@ -228,3 +229,8 @@ export async function POST(request: Request) {
     )
   }
 }
+
+// Export handlers with rate limiting
+// GET is public (30 req/min), POST is authenticated (100 req/min)
+export const GET = withRateLimitForMethod(handleGET as any, { type: 'api-public', userBased: false }, ['GET'])
+export const POST = withRateLimitForMethod(handlePOST as any, { type: 'api-authenticated', userBased: true }, ['POST'])

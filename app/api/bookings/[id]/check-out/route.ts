@@ -5,6 +5,7 @@ import { logger } from '@/lib/logger'
 import { checkOutBooking } from '@/lib/actions/bookings-completion'
 import { validateData } from '@/lib/validations'
 import { checkOutSchema } from '@/lib/validations/booking'
+import { withRateLimit } from '@/lib/rate-limit'
 
 const routeLogger = logger.createApiLogger('bookings/[id]/check-out')
 
@@ -13,7 +14,7 @@ type Params = {
 }
 
 // POST /api/bookings/[id]/check-out - Worker checks out from a booking
-export async function POST(
+async function handlePOST(
   request: Request,
   { params }: Params
 ) {
@@ -117,3 +118,6 @@ export async function POST(
     )
   }
 }
+
+// Export handler with rate limiting
+export const POST = withRateLimit(handlePOST as any, { type: 'api-authenticated', userBased: true })

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getServerSession } from '@/lib/auth/get-server-session'
 import { logger } from '@/lib/logger'
 import { checkInBooking } from '@/lib/actions/bookings-completion'
+import { withRateLimit } from '@/lib/rate-limit'
 
 const routeLogger = logger.createApiLogger('bookings/[id]/check-in')
 
@@ -11,7 +12,7 @@ type Params = {
 }
 
 // POST /api/bookings/[id]/check-in - Worker checks in to a booking
-export async function POST(
+async function handlePOST(
   request: Request,
   { params }: Params
 ) {
@@ -80,3 +81,6 @@ export async function POST(
     )
   }
 }
+
+// Export handler with rate limiting
+export const POST = withRateLimit(handlePOST as any, { type: 'api-authenticated', userBased: true })
