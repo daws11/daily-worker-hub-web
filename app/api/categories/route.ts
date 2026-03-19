@@ -8,8 +8,12 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/logger'
+import { cache, LRUCache, CACHE_TTL } from '@/lib/cache'
 
 const routeLogger = logger.createApiLogger('categories')
+
+// Cache key for categories list
+const CATEGORIES_CACHE_KEY = LRUCache.createKey('categories', 'all')
 
 /**
  * @openapi
@@ -55,6 +59,28 @@ export async function GET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'categories' })
   
   try {
+    // Check for cache bypass
+    const { searchParams } = new URL(request.url)
+    const bypassCache = searchParams.get('nocache') === 'true'
+
+    // Try cache first (unless bypassed)
+    if (!bypassCache) {
+      const cached = cache.get(CATEGORIES_CACHE_KEY)
+      if (cached !== null) {
+        logger.requestSuccess(request, { status: 200 }, startTime, { 
+          requestId, 
+          count: (cached as { data: unknown[] })?.data?.length || 0,
+          cached: true 
+        })
+        routeLogger.info('Categories served from cache', { requestId })
+        
+        const response = NextResponse.json(cached)
+        response.headers.set('X-Cache', 'HIT')
+        return response
+      }
+    }
+
+    // Fetch from database
     const supabase = await createClient()
 
     const { data: categories, error } = await supabase
@@ -72,10 +98,17 @@ export async function GET(request: Request) {
       )
     }
 
+    const result = { data: categories }
+
+    // Cache the result (1 hour TTL)
+    cache.set(CATEGORIES_CACHE_KEY, result, CACHE_TTL.CATEGORIES)
+
     routeLogger.info('Categories fetched successfully', { requestId, count: categories?.length || 0 })
     logger.requestSuccess(request, { status: 200 }, startTime, { requestId, count: categories?.length || 0 })
 
-    return NextResponse.json({ data: categories })
+    const response = NextResponse.json(result)
+    response.headers.set('X-Cache', 'MISS')
+    return response
   } catch (error) {
     routeLogger.error('Unexpected error in GET /api/categories', error, { requestId })
     logger.requestError(request, error, 500, startTime, { requestId })

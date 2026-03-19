@@ -10,6 +10,7 @@ import { logger } from '@/lib/logger'
 import { parseRequest } from '@/lib/validations'
 import { createJobSchema } from '@/lib/validations/job'
 import { withRateLimitForMethod } from '@/lib/rate-limit'
+import { cache, LRUCache, CACHE_TTL, invalidateJobCache } from '@/lib/cache'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321'
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
@@ -93,6 +94,39 @@ async function handleGET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
 
+    // Check for cache bypass
+    const bypassCache = searchParams.get('nocache') === 'true'
+    
+    // Generate cache key from query params
+    const cacheKey = LRUCache.createKey(
+      'jobs',
+      'list',
+      searchParams.get('category_id') || 'all',
+      searchParams.get('search') || 'none',
+      searchParams.get('wage_min') || '0',
+      searchParams.get('wage_max') || 'max',
+      searchParams.get('sort') || 'newest',
+      searchParams.get('page') || '1',
+      searchParams.get('limit') || '20'
+    )
+
+    // Try cache first (unless bypassed)
+    if (!bypassCache) {
+      const cached = cache.get(cacheKey)
+      if (cached !== null) {
+        logger.requestSuccess(request, { status: 200 }, startTime, { 
+          requestId, 
+          resultCount: (cached as { data: unknown[] })?.data?.length || 0,
+          cached: true 
+        })
+        routeLogger.info('Jobs served from cache', { requestId, cacheKey })
+        
+        const response = NextResponse.json(cached)
+        response.headers.set('X-Cache', 'HIT')
+        return response
+      }
+    }
+
     // Build query
     const filters: string[] = []
 
@@ -163,11 +197,17 @@ async function handleGET(request: Request) {
     }
 
     const data = await response.json()
+    const result = { data, total: data?.length || 0 }
+
+    // Cache the result
+    cache.set(cacheKey, result, CACHE_TTL.JOBS)
 
     logger.requestSuccess(request, { status: 200 }, startTime, { requestId, resultCount: data?.length || 0 })
     routeLogger.info('Jobs fetched successfully', { requestId, count: data?.length || 0 })
 
-    return NextResponse.json({ data, total: data?.length || 0 })
+    const jsonResponse = NextResponse.json(result)
+    jsonResponse.headers.set('X-Cache', 'MISS')
+    return jsonResponse
   } catch (error) {
     routeLogger.error('Unexpected error in GET /api/jobs', error, { requestId })
     logger.requestError(request, error, 500, startTime, { requestId })
@@ -327,7 +367,14 @@ async function handlePOST(request: Request) {
 
     const job = await createResponse.json()
 
-    routeLogger.info('Job created successfully', { requestId, jobId: job?.[0]?.id, businessId: validatedData.business_id })
+    // Invalidate job listings cache since a new job was created
+    const invalidated = invalidateJobCache()
+    routeLogger.info('Job created successfully, cache invalidated', { 
+      requestId, 
+      jobId: job?.[0]?.id, 
+      businessId: validatedData.business_id,
+      cacheKeysCleared: invalidated 
+    })
     logger.requestSuccess(request, { status: 201 }, startTime, { requestId, jobId: job?.[0]?.id })
 
     return NextResponse.json({
