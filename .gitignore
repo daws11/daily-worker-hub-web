@@ -12,7 +12,6 @@ yarn-error.log*
 # Logs
 logs/
 *.log
-*.sql
 *.db
 
 # IDE
@@ -30,7 +29,16 @@ logs/
 
 # Memory & Supabase
 memory/
-supabase/
+.supabase/
+# Allow migrations to be tracked
+!supabase/migrations/
+supabase/migrations/*.md
+supabase/migrations/*.disabled
+supabase/.branches/
+supabase/.temp/
+supabase/snippets/
+supabase/functions/
+supabase/config.toml
 
 # Backups
 backups/
