@@ -1,3 +1,10 @@
+/**
+ * Notifications API Routes
+ * 
+ * Endpoints for managing user notifications in the Daily Worker Hub platform.
+ * Users can view, filter, and mark notifications as read.
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { logger } from '@/lib/logger'
@@ -8,12 +15,52 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 const routeLogger = logger.createApiLogger('notifications')
 
 /**
- * GET /api/notifications
- * Get notifications for the authenticated user
- * Query params:
- * - filter: 'all' | 'unread' | 'read' (default: 'all')
- * - limit: number (default: 50)
- * - offset: number (default: 0)
+ * @openapi
+ * /api/notifications:
+ *   get:
+ *     tags:
+ *       - Notifications
+ *     summary: Get user notifications
+ *     description: Retrieve notifications for the authenticated user with optional filtering
+ *     parameters:
+ *       - name: filter
+ *         in: query
+ *         description: Filter notifications by read status
+ *         schema:
+ *           type: string
+ *           enum: [all, unread, read]
+ *           default: all
+ *       - name: limit
+ *         in: query
+ *         description: Maximum number of notifications to return
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *       - name: offset
+ *         in: query
+ *         description: Number of notifications to skip
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *     responses:
+ *       200:
+ *         description: List of notifications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotificationListResponse'
+ *       401:
+ *         description: Not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 export async function GET(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'notifications' })
@@ -112,8 +159,40 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * PATCH /api/notifications
- * Mark all notifications as read for the authenticated user
+ * @openapi
+ * /api/notifications:
+ *   patch:
+ *     tags:
+ *       - Notifications
+ *     summary: Mark all notifications as read
+ *     description: Mark all unread notifications as read for the authenticated user
+ *     responses:
+ *       200:
+ *         description: All notifications marked as read
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 count:
+ *                   type: integer
+ *                   description: Number of notifications marked as read
+ *       401:
+ *         description: Not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 export async function PATCH(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'notifications' })

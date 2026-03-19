@@ -25,18 +25,44 @@ import { withRateLimit } from '@/lib/rate-limit'
 const routeLogger = logger.createApiLogger('payments/create')
 
 /**
- * POST /api/payments/create
- * 
- * Create a new payment transaction
- * 
- * Request body:
- * - business_id: Business ID (required)
- * - amount: Payment amount in IDR (required)
- * - provider: Payment provider 'xendit' | 'midtrans' (optional, defaults to 'xendit')
- * - payment_method: Payment method (optional, e.g., 'qris', 'bank_transfer')
- * - customer_email: Customer email (optional)
- * - customer_name: Customer name (optional)
- * - metadata: Additional metadata (optional)
+ * @openapi
+ * /api/payments/create:
+ *   post:
+ *     tags:
+ *       - Payments
+ *     summary: Create a payment transaction
+ *     description: Create a new top-up payment transaction for a business wallet using the specified payment provider
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PaymentCreate'
+ *     responses:
+ *       200:
+ *         description: Payment transaction created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PaymentCreateResponse'
+ *       400:
+ *         description: Validation error or invalid provider
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Business not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Failed to create payment transaction
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 async function handlePOST(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'payments/create' })
@@ -280,14 +306,66 @@ async function handlePOST(request: NextRequest) {
 }
 
 /**
- * GET /api/payments/create
- * 
- * Get payment creation info and fee calculation
- * 
- * Query params:
- * - amount: Payment amount (required)
- * - provider: Payment provider (optional)
- * - payment_method: Payment method (optional)
+ * @openapi
+ * /api/payments/create:
+ *   get:
+ *     tags:
+ *       - Payments
+ *     summary: Calculate payment fees
+ *     description: Calculate fees for a potential payment transaction. Public endpoint for fee preview.
+ *     security: []
+ *     parameters:
+ *       - name: amount
+ *         in: query
+ *         required: true
+ *         description: Payment amount in IDR
+ *         schema:
+ *           type: number
+ *           minimum: 50000
+ *           maximum: 10000000
+ *       - name: provider
+ *         in: query
+ *         description: Payment provider
+ *         schema:
+ *           type: string
+ *           enum: [xendit, midtrans]
+ *           default: xendit
+ *       - name: payment_method
+ *         in: query
+ *         description: Payment method (e.g., qris, bank_transfer)
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Fee calculation result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 valid:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     amount:
+ *                       type: number
+ *                     fee_amount:
+ *                       type: number
+ *                     total_amount:
+ *                       type: number
+ *                     provider:
+ *                       type: string
+ *                     min_amount:
+ *                       type: number
+ *                     max_amount:
+ *                       type: number
+ *       400:
+ *         description: Invalid amount
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 async function handleGET(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'payments/create' })

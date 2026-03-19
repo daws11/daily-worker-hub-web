@@ -41,14 +41,44 @@ const withdrawalRequestSchema = z.object({
 })
 
 /**
- * POST /api/payments/withdraw
- * 
- * Create a withdrawal request
- * 
- * Request body:
- * - workerId: Worker ID
- * - amount: Withdrawal amount in IDR
- * - bankAccountId: Bank account ID to withdraw to
+ * @openapi
+ * /api/payments/withdraw:
+ *   post:
+ *     tags:
+ *       - Payments
+ *     summary: Create a withdrawal request
+ *     description: Create a withdrawal request for a worker to receive their earnings via bank transfer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/WithdrawRequest'
+ *     responses:
+ *       200:
+ *         description: Withdrawal request created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/WithdrawResponse'
+ *       400:
+ *         description: Validation error or insufficient balance
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Worker, wallet, or bank account not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Failed to process withdrawal
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 async function handlePOST(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'payments/withdraw' })
@@ -370,9 +400,29 @@ async function handlePOST(request: NextRequest) {
 }
 
 /**
- * GET /api/payments/withdraw
- * 
- * Health check endpoint
+ * @openapi
+ * /api/payments/withdraw:
+ *   get:
+ *     tags:
+ *       - Payments
+ *     summary: Health check for withdraw endpoint
+ *     description: Returns the status of the withdrawal endpoint
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Endpoint status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                 endpoint:
+ *                   type: string
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
  */
 async function handleGET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'payments/withdraw' })

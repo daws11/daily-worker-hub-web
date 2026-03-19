@@ -1,12 +1,50 @@
+/**
+ * Worker Public Profile API Route
+ * 
+ * Returns public worker profile data for the marketplace.
+ * Only includes public-safe information (no email, phone, address).
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { BADGE_DEFINITIONS, BadgeWithProgress } from '@/lib/badges'
 
 /**
- * GET /api/workers/[id]/public
- * 
- * Returns public worker profile data for the marketplace.
- * Only includes public-safe information (no email, phone, address).
+ * @openapi
+ * /api/workers/{id}/public:
+ *   get:
+ *     tags:
+ *       - Workers
+ *     summary: Get public worker profile
+ *     description: Retrieve public profile information for a worker. Public endpoint - no authentication required. Only returns safe, public information.
+ *     security: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: Worker ID
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Public worker profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/WorkerPublic'
+ *       404:
+ *         description: Worker not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Failed to fetch worker profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
 export async function GET(
   request: NextRequest,

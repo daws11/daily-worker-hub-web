@@ -1,3 +1,10 @@
+/**
+ * Booking Check-In API Route
+ * 
+ * Handles worker check-in to a booking.
+ * Workers use this endpoint to mark their arrival at a job.
+ */
+
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getServerSession } from '@/lib/auth/get-server-session'
@@ -11,7 +18,59 @@ type Params = {
   params: Promise<{ id: string }>
 }
 
-// POST /api/bookings/[id]/check-in - Worker checks in to a booking
+/**
+ * @openapi
+ * /api/bookings/{id}/check-in:
+ *   post:
+ *     tags:
+ *       - Bookings
+ *     summary: Check in to a booking
+ *     description: Worker checks in to a booking to mark their arrival at the job location
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: Booking ID
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Check-in successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/Booking'
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Forbidden - Worker not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       400:
+ *         description: Check-in failed (e.g., already checked in)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 async function handlePOST(
   request: Request,
   { params }: Params

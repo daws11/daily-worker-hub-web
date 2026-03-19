@@ -1,3 +1,10 @@
+/**
+ * Job Applications API Routes
+ * 
+ * Endpoints for managing job applications in the Daily Worker Hub platform.
+ * Workers can apply to jobs and businesses can view applicants.
+ */
+
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { getServerSession } from '@/lib/auth/get-server-session'
@@ -10,7 +17,76 @@ import {
 
 const routeLogger = logger.createApiLogger('applications')
 
-// GET /api/applications - Get applications (for worker or business)
+/**
+ * @openapi
+ * /api/applications:
+ *   get:
+ *     tags:
+ *       - Applications
+ *     summary: Get job applications
+ *     description: Retrieve job applications. Businesses can view applicants for their jobs, workers can view their own applications.
+ *     parameters:
+ *       - name: job_id
+ *         in: query
+ *         description: Filter by job ID (for businesses)
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - name: worker_id
+ *         in: query
+ *         description: Filter by worker ID (for workers viewing their applications)
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - name: business_id
+ *         in: query
+ *         description: Business ID (required when using job_id)
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - name: status
+ *         in: query
+ *         description: Filter by application status
+ *         schema:
+ *           type: string
+ *           enum: [pending, accepted, rejected]
+ *     responses:
+ *       200:
+ *         description: List of applications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Forbidden - Not authorized to view these applications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       400:
+ *         description: Missing required parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 export async function GET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'applications' })
   
@@ -146,7 +222,78 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/applications - Create a new job application
+/**
+ * @openapi
+ * /api/applications:
+ *   post:
+ *     tags:
+ *       - Applications
+ *     summary: Create a job application
+ *     description: Submit an application for a job posting. Workers only.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - job_id
+ *               - worker_id
+ *             properties:
+ *               job_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: Job ID to apply for
+ *               worker_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: Worker ID making the application
+ *               cover_letter:
+ *                 type: string
+ *                 description: Optional cover letter
+ *               proposed_wage:
+ *                 type: number
+ *                 description: Optional proposed wage
+ *               availability:
+ *                 type: string
+ *                 description: Optional availability notes
+ *     responses:
+ *       201:
+ *         description: Application created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: object
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       403:
+ *         description: Forbidden - Worker not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       400:
+ *         description: Validation error or application failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 export async function POST(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'applications' })
   

@@ -1,3 +1,10 @@
+/**
+ * Jobs API Routes
+ * 
+ * Endpoints for managing job postings in the Daily Worker Hub platform.
+ * Businesses can create jobs, and workers can browse and apply to them.
+ */
+
 import { NextResponse } from 'next/server'
 import { logger } from '@/lib/logger'
 import { parseRequest } from '@/lib/validations'
@@ -9,7 +16,77 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
 const routeLogger = logger.createApiLogger('jobs')
 
-// GET /api/jobs - Get jobs (public)
+/**
+ * @openapi
+ * /api/jobs:
+ *   get:
+ *     tags:
+ *       - Jobs
+ *     summary: List all jobs
+ *     description: Retrieve a paginated list of job postings with optional filtering and sorting. Public endpoint - no authentication required.
+ *     security: []
+ *     parameters:
+ *       - name: category_id
+ *         in: query
+ *         description: Filter by category ID
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *       - name: search
+ *         in: query
+ *         description: Search term for job title
+ *         schema:
+ *           type: string
+ *       - name: wage_min
+ *         in: query
+ *         description: Minimum wage filter
+ *         schema:
+ *           type: number
+ *       - name: wage_max
+ *         in: query
+ *         description: Maximum wage filter
+ *         schema:
+ *           type: number
+ *       - name: sort
+ *         in: query
+ *         description: Sort order
+ *         schema:
+ *           type: string
+ *           enum: [newest, oldest, highest_wage, lowest_wage]
+ *           default: newest
+ *       - name: page
+ *         in: query
+ *         description: Page number
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - name: limit
+ *         in: query
+ *         description: Items per page
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: List of jobs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Job'
+ *                 total:
+ *                   type: integer
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 async function handleGET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'jobs' })
   
@@ -102,7 +179,46 @@ async function handleGET(request: Request) {
   }
 }
 
-// POST /api/jobs - Create a new job
+/**
+ * @openapi
+ * /api/jobs:
+ *   post:
+ *     tags:
+ *       - Jobs
+ *     summary: Create a new job
+ *     description: Create a new job posting. Requires business authentication.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/JobCreate'
+ *     responses:
+ *       201:
+ *         description: Job created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/JobResponse'
+ *       401:
+ *         description: Unauthorized - No authentication token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: Business not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 async function handlePOST(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, { route: 'jobs' })
   
