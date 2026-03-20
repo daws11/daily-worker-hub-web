@@ -40,7 +40,7 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    let query = supabase
+    let query = (supabase as any)
       .from('user_fcm_tokens')
       .delete()
       .eq('user_id', user.id)
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { data: tokens, error } = await supabase
+    const { data: tokens, error } = await (supabase as any)
       .from('user_fcm_tokens')
       .select('id, device_type, device_id, device_name, is_active, last_used_at, created_at')
       .eq('user_id', user.id)

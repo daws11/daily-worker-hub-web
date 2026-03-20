@@ -144,20 +144,27 @@ export function addBreadcrumb(
 }
 
 /**
- * Start a new transaction for performance monitoring
+ * Start a new span for performance monitoring
  *
  * Use this to measure the duration of important operations.
+ * Note: startTransaction was removed in newer Sentry SDKs.
+ * Use startSpan for performance instrumentation.
  *
- * @param name - Name of the transaction
+ * @param name - Name of the span
  * @param op - Operation type (e.g., 'http.server', 'db.query')
  *
  * @example
- * const transaction = startTransaction('process-payment', 'payment');
- * // ... do work ...
- * transaction.finish();
+ * const result = await startSpan('process-payment', 'payment', async () => {
+ *   // ... do work ...
+ *   return result;
+ * });
  */
-export function startTransaction(name: string, op: string) {
-  return Sentry.startTransaction({ name, op });
+export async function startSpan<T>(
+  name: string,
+  op: string,
+  callback: () => T | Promise<T>
+): Promise<T> {
+  return Sentry.startSpan({ name, op }, callback);
 }
 
 /**

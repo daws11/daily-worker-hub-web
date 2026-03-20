@@ -29,7 +29,7 @@ const withdrawalRequestSchema = z.object({
   
   amount: z
     .number({
-      invalid_type_error: 'Jumlah withdrawal harus berupa angka',
+      error: 'Jumlah withdrawal harus berupa angka',
     })
     .min(PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT, `Withdrawal minimal Rp ${PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT.toLocaleString('id-ID')}`)
     .max(PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT, `Withdrawal maksimal Rp ${PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT.toLocaleString('id-ID')}`),
@@ -90,8 +90,8 @@ async function handlePOST(request: NextRequest) {
     const parseResult = await parseRequest(request, withdrawalRequestSchema)
     
     if (!parseResult.success) {
-      routeLogger.warn('Validation failed', { requestId, errors: parseResult.error })
-      return parseResult.error
+      routeLogger.warn('Validation failed', { requestId })
+      return (parseResult as unknown as { error: NextResponse }).error
     }
 
     const { workerId, amount, bankAccountId } = parseResult.data

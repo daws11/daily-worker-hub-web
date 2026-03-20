@@ -47,14 +47,15 @@ async function handlePOST(
     )
 
     if (!validationResult.success) {
-      routeLogger.warn('Validation failed', { 
-        requestId, 
-        errors: validationResult.error 
+      const validationError = validationResult as unknown as { error: { error: string; details: Array<{ field: string; message: string; code: string }> } }
+      routeLogger.warn('Validation failed', {
+        requestId,
+        errors: validationError.error.details
       })
-      logger.requestError(request, new Error(validationResult.error.error), 400, startTime, { requestId })
+      logger.requestError(request, new Error(validationError.error.error), 400, startTime, { requestId })
       
       return NextResponse.json(
-        validationResult.error,
+        validationError.error,
         { status: 400 }
       )
     }

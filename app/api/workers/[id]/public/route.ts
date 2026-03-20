@@ -45,7 +45,7 @@ async function fetchWorkerProfile(workerId: string) {
   }
 
   // Fetch worker skills
-  const { data: workerSkills } = await supabase
+  const { data: workerSkills } = await (supabase as any)
     .from('worker_skills')
     .select(`
       skill_id,
@@ -135,7 +135,7 @@ async function fetchWorkerProfile(workerId: string) {
   }
 
   // Fetch achievement badges
-  const { data: achievementBadges } = await supabase
+  const { data: achievementBadges } = await (supabase as any)
     .from('worker_achievements')
     .select('badge_type, earned_at')
     .eq('worker_id', workerId)

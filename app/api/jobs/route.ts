@@ -283,8 +283,8 @@ async function handlePOST(request: Request) {
     const parseResult = await parseRequest(request, createJobSchema)
     
     if (!parseResult.success) {
-      routeLogger.warn('Validation failed', { requestId, errors: parseResult.error })
-      return parseResult.error
+      routeLogger.warn('Validation failed', { requestId })
+      return (parseResult as unknown as { error: NextResponse }).error
     }
 
     const validatedData = parseResult.data

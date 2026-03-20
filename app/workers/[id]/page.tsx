@@ -63,11 +63,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         : [{ url: '/default-worker-avatar.png', alt: worker.fullName }],
       type: 'profile',
       locale: 'en_US',
-      siteName: 'Daily Worker Hub',
-      profile: {
-        firstName: worker.fullName.split(' ')[0],
-        lastName: worker.fullName.split(' ').slice(1).join(' ')
-      }
+      siteName: 'Daily Worker Hub'
     },
     twitter: {
       card: 'summary_large_image',

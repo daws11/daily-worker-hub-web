@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { data: preferences, error } = await supabase
+    const { data: preferences, error } = await (supabase as any)
       .from('notification_preferences')
       .select('*')
       .eq('user_id', user.id)
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Create default preferences
-      const { data: newPrefs, error: createError } = await supabase
+      const { data: newPrefs, error: createError } = await (supabase as any)
         .from('notification_preferences')
         .insert(defaultPreferences)
         .select()
@@ -168,7 +168,7 @@ export async function PUT(request: NextRequest) {
     })
 
     // Check if preferences exist
-    const { data: existing } = await supabase
+    const { data: existing } = await (supabase as any)
       .from('notification_preferences')
       .select('*')
       .eq('user_id', user.id)
@@ -178,7 +178,7 @@ export async function PUT(request: NextRequest) {
 
     if (existing) {
       // Update existing preferences
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('notification_preferences')
         .update(updateData)
         .eq('user_id', user.id)
@@ -196,7 +196,7 @@ export async function PUT(request: NextRequest) {
       result = data
     } else {
       // Create new preferences
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('notification_preferences')
         .insert({ user_id: user.id, ...updateData })
         .select()

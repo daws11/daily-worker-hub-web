@@ -235,7 +235,7 @@ export async function PATCH(
           )
         }
 
-        routeLogger.info('Application accepted and booking created', { requestId, applicationId: id, bookingId: result.data?.id, userId: session.user.id })
+        routeLogger.info('Application accepted and booking created', { requestId, applicationId: id, bookingId: result.data?.booking.id, userId: session.user.id })
         logger.requestSuccess(request, { status: 200 }, startTime, { requestId, userId: session.user.id })
 
         return NextResponse.json({

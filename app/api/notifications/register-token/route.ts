@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if token already exists
-    const { data: existingToken } = await supabase
+    const { data: existingToken } = await (supabase as any)
       .from('user_fcm_tokens')
       .select('*')
       .eq('user_id', user.id)
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
 
     if (existingToken) {
       // Update existing token
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_fcm_tokens')
         .update({
           is_active: true,
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new token
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('user_fcm_tokens')
       .insert({
         user_id: user.id,
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create default notification preferences if not exists
-    const { error: prefError } = await supabase
+    const { error: prefError } = await (supabase as any)
       .from('notification_preferences')
       .upsert({ user_id: user.id }, { onConflict: 'user_id' })
 

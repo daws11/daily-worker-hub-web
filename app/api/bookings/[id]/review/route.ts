@@ -16,7 +16,7 @@ const routeLogger = logger.createApiLogger('bookings/[id]/review')
 const reviewSubmissionSchema = z.object({
   rating: z
     .number({
-      invalid_type_error: 'Rating harus berupa angka',
+      error: 'Rating harus berupa angka',
     })
     .int('Rating harus berupa angka bulat')
     .min(1, 'Rating minimal 1')
@@ -180,15 +180,16 @@ export async function POST(
     const validationResult = validateData(body, reviewSubmissionSchema)
     
     if (!validationResult.success) {
-      routeLogger.warn('Validation failed', { 
-        requestId, 
-        bookingId, 
-        errors: validationResult.error 
+      const validationError = validationResult as unknown as { error: { error: string; details: Array<{ field: string; message: string; code: string }> } }
+      routeLogger.warn('Validation failed', {
+        requestId,
+        bookingId,
+        errors: validationError.error.details
       })
-      logger.requestError(request, new Error(validationResult.error.error), 400, startTime, { requestId })
-      
+      logger.requestError(request, new Error(validationError.error.error), 400, startTime, { requestId })
+
       return NextResponse.json(
-        validationResult.error,
+        validationError.error,
         { status: 400 }
       )
     }

@@ -70,8 +70,9 @@ interface RequestRecord {
 /**
  * In-memory store for rate limit tracking
  * Key format: `${identifier}:${type}`
+ * Exported for admin metrics access
  */
-const rateLimitStore = new Map<string, RequestRecord>()
+export const rateLimitStore = new Map<string, RequestRecord>()
 
 /**
  * Clean up expired entries periodically (every 5 minutes)

@@ -86,7 +86,7 @@ export function WorkerBadgesDisplay({
         <div className={cn("flex flex-wrap gap-2 items-center", className)}>
           {displayBadges.map((item, index) => (
             <Tooltip key={`${item.type}-${index}`}>
-              <TooltipTrigger asChild>
+              <TooltipTrigger>
                 <div className="flex items-center justify-center">
                   {item.type === 'certification' ? (
                     <CertificationBadgeIcon 
@@ -137,7 +137,7 @@ export function WorkerBadgesDisplay({
         <div className="flex flex-wrap gap-3">
           {displayBadges.map((item, index) => (
             <Tooltip key={`${item.type}-${index}`}>
-              <TooltipTrigger asChild>
+              <TooltipTrigger>
                 <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-full bg-muted/50 hover:bg-muted transition-colors cursor-default">
                   {item.type === 'certification' ? (
                     <CertificationBadgeIcon 

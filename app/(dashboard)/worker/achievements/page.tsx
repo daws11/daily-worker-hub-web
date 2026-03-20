@@ -23,10 +23,12 @@ import {
 } from "@/lib/badges"
 import { 
   AchievementBadgeGrid, 
-  AchievementBadgeMiniGrid,
-  AchievementBadgeProgress 
+  AchievementBadgeMiniGrid
 } from "@/components/worker/achievement-badge-grid"
-import { BadgeProgressList } from "@/components/worker/achievement-badge-progress"
+import { 
+  AchievementBadgeProgress,
+  BadgeProgressList 
+} from "@/components/worker/achievement-badge-progress"
 
 type WorkersRow = Database["public"]["Tables"]["workers"]["Row"]
 
