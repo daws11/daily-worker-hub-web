@@ -12,7 +12,7 @@ import { z } from 'zod'
 export const bookingStatusEnum = z.enum(
   ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show'],
   {
-    errorMap: () => ({ message: 'Status booking tidak valid' }),
+    message: 'Status booking tidak valid',
   }
 )
 
@@ -57,14 +57,14 @@ export const createBookingSchema = z.object({
   
   hourly_rate: z
     .number({
-      invalid_type_error: 'Rate per jam harus berupa angka',
+      message: 'Rate per jam harus berupa angka',
     })
     .min(10000, 'Rate per jam minimal Rp 10.000')
     .max(1000000, 'Rate per jam maksimal Rp 1.000.000'),
   
   hours_worked: z
     .number({
-      invalid_type_error: 'Jam kerja harus berupa angka',
+      message: 'Jam kerja harus berupa angka',
     })
     .min(1, 'Jam kerja minimal 1 jam')
     .max(24, 'Jam kerja maksimal 24 jam')
@@ -192,7 +192,7 @@ export const checkOutSchema = z.object({
   
   hours_worked: z
     .number({
-      invalid_type_error: 'Jam kerja harus berupa angka',
+      message: 'Jam kerja harus berupa angka',
     })
     .min(0.5, 'Jam kerja minimal 0.5 jam')
     .max(24, 'Jam kerja maksimal 24 jam')
@@ -251,7 +251,7 @@ export const cancelBookingSchema = z.object({
   
   cancelled_by: z
     .enum(['worker', 'business', 'system'], {
-      errorMap: () => ({ message: 'Pembatal tidak valid' }),
+      message: 'Pembatal tidak valid',
     }),
 })
 
@@ -295,7 +295,7 @@ export const bookingSearchSchema = z.object({
   
   sort: z
     .enum(['newest', 'oldest', 'date_asc', 'date_desc'], {
-      errorMap: () => ({ message: 'Sort tidak valid' }),
+      message: 'Sort tidak valid',
     })
     .optional(),
   
@@ -330,7 +330,7 @@ export const completeBookingSchema = z.object({
   
   actual_hours_worked: z
     .number({
-      invalid_type_error: 'Jam kerja aktual harus berupa angka',
+      message: 'Jam kerja aktual harus berupa angka',
     })
     .min(0.5, 'Jam kerja minimal 0.5 jam')
     .max(24, 'Jam kerja maksimal 24 jam')
@@ -347,7 +347,7 @@ export const completeBookingSchema = z.object({
   
   total_amount: z
     .number({
-      invalid_type_error: 'Total amount harus berupa angka',
+      message: 'Total amount harus berupa angka',
     })
     .min(0, 'Total amount tidak boleh negatif')
     .optional(),

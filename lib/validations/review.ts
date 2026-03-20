@@ -10,7 +10,7 @@ import { z } from 'zod'
  * Review type enum
  */
 export const reviewTypeEnum = z.enum(['worker_to_business', 'business_to_worker'], {
-  errorMap: () => ({ message: 'Tipe review tidak valid' }),
+  message: 'Tipe review tidak valid',
 })
 
 /**

@@ -82,7 +82,7 @@ export class NotificationService {
       const results = await Promise.all(
         tokens.map(async ({ token }) => {
           try {
-            const fcmMessage = this.buildFcmMessage(token, payload)
+            const fcmMessage = this.buildFcmMessage(token, payload) as any
             const response = await messaging.send(fcmMessage)
             return { success: true, messageId: response, token }
           } catch (error: any) {

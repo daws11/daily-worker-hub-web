@@ -10,7 +10,7 @@ import { z } from 'zod'
  * Payment provider enum
  */
 export const paymentProviderEnum = z.enum(['xendit', 'midtrans'], {
-  errorMap: () => ({ message: 'Payment provider tidak valid' }),
+  message: 'Payment provider tidak valid',
 })
 
 /**
@@ -19,7 +19,7 @@ export const paymentProviderEnum = z.enum(['xendit', 'midtrans'], {
 export const paymentStatusEnum = z.enum(
   ['pending', 'paid', 'failed', 'expired', 'cancelled', 'refunded'],
   {
-    errorMap: () => ({ message: 'Status pembayaran tidak valid' }),
+    message: 'Status pembayaran tidak valid',
   }
 )
 
@@ -29,7 +29,7 @@ export const paymentStatusEnum = z.enum(
 export const paymentMethodEnum = z.enum(
   ['qris', 'bank_transfer', 'va', 'ewallet', 'credit_card', 'retail'],
   {
-    errorMap: () => ({ message: 'Metode pembayaran tidak valid' }),
+    message: 'Metode pembayaran tidak valid',
   }
 )
 
@@ -44,7 +44,7 @@ export const createPaymentSchema = z.object({
   
   amount: z
     .number({
-      invalid_type_error: 'Jumlah pembayaran harus berupa angka',
+      message: 'Jumlah pembayaran harus berupa angka',
     })
     .min(50000, 'Top-up minimal Rp 50.000')
     .max(100000000, 'Top-up maksimal Rp 100.000.000'),
@@ -112,7 +112,7 @@ export const createWithdrawalSchema = z.object({
   
   amount: z
     .number({
-      invalid_type_error: 'Jumlah withdrawal harus berupa angka',
+      message: 'Jumlah withdrawal harus berupa angka',
     })
     .min(50000, 'Withdrawal minimal Rp 50.000')
     .max(50000000, 'Withdrawal maksimal Rp 50.000.000'),
@@ -301,7 +301,7 @@ export const refundPaymentSchema = z.object({
   
   amount: z
     .number({
-      invalid_type_error: 'Jumlah refund harus berupa angka',
+      message: 'Jumlah refund harus berupa angka',
     })
     .min(1, 'Refund minimal Rp 1')
     .optional(),

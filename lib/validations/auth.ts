@@ -75,7 +75,7 @@ export const registerSchema = z.object({
   
   role: z
     .enum(['worker', 'business'], {
-      errorMap: () => ({ message: 'Role harus worker atau business' }),
+      message: 'Role harus worker atau business',
     }),
   
   // Optional fields
@@ -86,7 +86,7 @@ export const registerSchema = z.object({
   
   business_type: z
     .enum(['hotel', 'villa', 'restaurant', 'event_company', 'other'], {
-      errorMap: () => ({ message: 'Tipe bisnis tidak valid' }),
+      message: 'Tipe bisnis tidak valid',
     })
     .optional(),
   

@@ -544,7 +544,7 @@ export async function fetchWorkerStats(workerId: string): Promise<WorkerStats | 
     // Get job applications count
     const { count: totalApplications, error: applicationsError } = await supabase
       .from('applications')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('worker_id', workerId)
 
     // Calculate first week jobs

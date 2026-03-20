@@ -1255,6 +1255,174 @@ export type Database = {
           },
         ]
       }
+      applications: {
+        Row: {
+          id: string
+          job_id: string
+          worker_id: string
+          status: string
+          message: string | null
+          proposed_rate: number | null
+          availability_date: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          job_id: string
+          worker_id: string
+          status?: string
+          message?: string | null
+          proposed_rate?: number | null
+          availability_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          job_id?: string
+          worker_id?: string
+          status?: string
+          message?: string | null
+          proposed_rate?: number | null
+          availability_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      worker_achievements: {
+        Row: {
+          id: string
+          worker_id: string
+          badge_type: string
+          earned_at: string
+          metadata: Record<string, unknown> | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          worker_id: string
+          badge_type: string
+          earned_at: string
+          metadata?: Record<string, unknown> | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          worker_id?: string
+          badge_type?: string
+          earned_at?: string
+          metadata?: Record<string, unknown> | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      worker_badge_progress: {
+        Row: {
+          id: string
+          worker_id: string
+          badge_type: string
+          current_value: number
+          target_value: number
+          last_updated: string
+        }
+        Insert: {
+          id?: string
+          worker_id: string
+          badge_type: string
+          current_value: number
+          target_value: number
+          last_updated?: string
+        }
+        Update: {
+          id?: string
+          worker_id?: string
+          badge_type?: string
+          current_value?: number
+          target_value?: number
+          last_updated?: string
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          id: string
+          user_id: string
+          push_enabled: boolean
+          booking_notifications: boolean
+          reminder_notifications: boolean
+          payment_notifications: boolean
+          message_notifications: boolean
+          review_notifications: boolean
+          quiet_hours_enabled: boolean
+          quiet_hours_start: string | null
+          quiet_hours_end: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          push_enabled?: boolean
+          booking_notifications?: boolean
+          reminder_notifications?: boolean
+          payment_notifications?: boolean
+          message_notifications?: boolean
+          review_notifications?: boolean
+          quiet_hours_enabled?: boolean
+          quiet_hours_start?: string | null
+          quiet_hours_end?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          push_enabled?: boolean
+          booking_notifications?: boolean
+          reminder_notifications?: boolean
+          payment_notifications?: boolean
+          message_notifications?: boolean
+          review_notifications?: boolean
+          quiet_hours_enabled?: boolean
+          quiet_hours_start?: string | null
+          quiet_hours_end?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_fcm_tokens: {
+        Row: {
+          id: string
+          user_id: string
+          token: string
+          device_type: string | null
+          is_active: boolean
+          last_used_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          token: string
+          device_type?: string | null
+          is_active?: boolean
+          last_used_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          token?: string
+          device_type?: string | null
+          is_active?: boolean
+          last_used_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

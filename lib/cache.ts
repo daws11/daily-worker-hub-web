@@ -227,8 +227,8 @@ export function invalidateWorkerCache(workerId?: string): number {
   
   if (workerId) {
     // Invalidate specific worker
-    deleted += cache.del(LRUCache.createKey('workers', workerId, 'public'))
-    deleted += cache.del(LRUCache.createKey('workers', workerId, 'badges'))
+    if (cache.del(LRUCache.createKey('workers', workerId, 'public'))) deleted++
+    if (cache.del(LRUCache.createKey('workers', workerId, 'badges'))) deleted++
     deleted += cache.delPattern(`workers:${workerId}:*`)
   }
   
@@ -244,8 +244,8 @@ export function invalidateWorkerCache(workerId?: string): number {
 export function invalidateUserCache(userId: string): number {
   let deleted = 0
   
-  deleted += cache.del(LRUCache.createKey('sessions', userId))
-  deleted += cache.del(LRUCache.createKey('sessions', userId, 'auth'))
+  if (cache.del(LRUCache.createKey('sessions', userId))) deleted++
+  if (cache.del(LRUCache.createKey('sessions', userId, 'auth'))) deleted++
   
   return deleted
 }

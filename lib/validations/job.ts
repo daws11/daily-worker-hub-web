@@ -12,7 +12,7 @@ import { z } from 'zod'
 export const jobStatusEnum = z.enum(
   ['draft', 'open', 'in_progress', 'completed', 'cancelled'],
   {
-    errorMap: () => ({ message: 'Status job tidak valid' }),
+    message: 'Status job tidak valid',
   }
 )
 
@@ -50,21 +50,21 @@ export const createJobSchema = z.object({
   
   budget_min: z
     .number({
-      invalid_type_error: 'Budget minimum harus berupa angka',
+      message: 'Budget minimum harus berupa angka',
     })
     .min(10000, 'Budget minimum minimal Rp 10.000')
     .max(100000000, 'Budget maksimal Rp 100.000.000'),
   
   budget_max: z
     .number({
-      invalid_type_error: 'Budget maksimum harus berupa angka',
+      message: 'Budget maksimum harus berupa angka',
     })
     .min(10000, 'Budget maksimum minimal Rp 10.000')
     .max(100000000, 'Budget maksimal Rp 100.000.000'),
   
   hours_needed: z
     .number({
-      invalid_type_error: 'Jam kerja harus berupa angka',
+      message: 'Jam kerja harus berupa angka',
     })
     .min(1, 'Jam kerja minimal 1 jam')
     .max(24, 'Jam kerja maksimal 24 jam per hari')
@@ -111,7 +111,7 @@ export const createJobSchema = z.object({
   
   overtime_multiplier: z
     .number({
-      invalid_type_error: 'Overtime multiplier harus berupa angka',
+      message: 'Overtime multiplier harus berupa angka',
     })
     .min(1, 'Overtime multiplier minimal 1.0')
     .max(3, 'Overtime multiplier maksimal 3.0')
@@ -119,7 +119,7 @@ export const createJobSchema = z.object({
   
   workers_needed: z
     .number({
-      invalid_type_error: 'Jumlah worker harus berupa angka',
+      message: 'Jumlah worker harus berupa angka',
     })
     .int('Jumlah worker harus berupa angka bulat')
     .min(1, 'Minimal 1 worker')
@@ -245,7 +245,7 @@ export const jobSearchSchema = z.object({
   
   sort: z
     .enum(['newest', 'oldest', 'highest_wage', 'lowest_wage', 'deadline'], {
-      errorMap: () => ({ message: 'Sort tidak valid' }),
+      message: 'Sort tidak valid',
     })
     .optional(),
   
@@ -291,7 +291,7 @@ export const jobApplicationSchema = z.object({
   
   proposed_rate: z
     .number({
-      invalid_type_error: 'Rate yang diajukan harus berupa angka',
+      message: 'Rate yang diajukan harus berupa angka',
     })
     .min(10000, 'Rate minimal Rp 10.000')
     .max(100000000, 'Rate maksimal Rp 100.000.000')
@@ -311,7 +311,7 @@ export type JobApplicationInput = z.infer<typeof jobApplicationSchema>
 export const updateApplicationSchema = z.object({
   status: z
     .enum(['pending', 'accepted', 'rejected', 'withdrawn'], {
-      errorMap: () => ({ message: 'Status aplikasi tidak valid' }),
+      message: 'Status aplikasi tidak valid',
     }),
   
   message: z
