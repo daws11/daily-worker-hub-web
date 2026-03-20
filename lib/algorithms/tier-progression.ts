@@ -4,9 +4,9 @@
  * Handles automatic tier updates based on worker performance metrics
  */
 
-import { WorkerTier } from '@/lib/supabase/types';
-import { classifyWorkerTier } from './tier-classifier';
-import { supabase } from '@/lib/supabase/client';
+import { WorkerTier } from "@/lib/supabase/types";
+import { classifyWorkerTier } from "./tier-classifier";
+import { supabase } from "@/lib/supabase/client";
 
 /**
  * Worker performance metrics for tier calculation
@@ -28,33 +28,33 @@ export interface WorkerMetrics {
  */
 export async function updateWorkerTier(
   workerId: string,
-  metrics: WorkerMetrics
+  metrics: WorkerMetrics,
 ): Promise<WorkerTier | null> {
   try {
     // Calculate the new tier
     const newTier = classifyWorkerTier(
       metrics.jobsCompleted,
       metrics.rating,
-      metrics.punctuality
+      metrics.punctuality,
     );
 
     // Update the worker's tier in the database
     const { error } = await supabase
-      .from('workers')
+      .from("workers")
       .update({
         tier: newTier,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', workerId);
+      .eq("id", workerId);
 
     if (error) {
-      console.error('Error updating worker tier:', error);
+      console.error("Error updating worker tier:", error);
       return null;
     }
 
     return newTier;
   } catch (error) {
-    console.error('Error in updateWorkerTier:', error);
+    console.error("Error in updateWorkerTier:", error);
     return null;
   }
 }
@@ -67,9 +67,7 @@ export async function updateWorkerTier(
 export async function recalculateAllWorkerTiers(): Promise<number> {
   try {
     // Fetch all workers with their metrics
-    const { data: workers, error } = await supabase
-      .from('workers')
-      .select(`
+    const { data: workers, error } = await supabase.from("workers").select(`
         id,
         jobs_completed,
         rating,
@@ -78,7 +76,7 @@ export async function recalculateAllWorkerTiers(): Promise<number> {
       `);
 
     if (error) {
-      console.error('Error fetching workers:', error);
+      console.error("Error fetching workers:", error);
       return 0;
     }
 
@@ -89,18 +87,18 @@ export async function recalculateAllWorkerTiers(): Promise<number> {
       const newTier = classifyWorkerTier(
         worker.jobs_completed || 0,
         worker.rating,
-        worker.punctuality
+        worker.punctuality,
       );
 
       // Only update if tier changed
       if (newTier !== worker.tier) {
         const { error: updateError } = await supabase
-          .from('workers')
+          .from("workers")
           .update({
             tier: newTier,
             updated_at: new Date().toISOString(),
           })
-          .eq('id', worker.id);
+          .eq("id", worker.id);
 
         if (!updateError) {
           updatedCount++;
@@ -110,7 +108,7 @@ export async function recalculateAllWorkerTiers(): Promise<number> {
 
     return updatedCount;
   } catch (error) {
-    console.error('Error in recalculateAllWorkerTiers:', error);
+    console.error("Error in recalculateAllWorkerTiers:", error);
     return 0;
   }
 }
@@ -121,9 +119,7 @@ export async function recalculateAllWorkerTiers(): Promise<number> {
  * @param workerId - Worker ID
  * @returns Progress information to next tier
  */
-export async function getTierProgress(
-  workerId: string
-): Promise<{
+export async function getTierProgress(workerId: string): Promise<{
   currentTier: WorkerTier;
   nextTier: WorkerTier | null;
   progressPercentage: number;
@@ -136,42 +132,44 @@ export async function getTierProgress(
   try {
     // Fetch worker metrics
     const { data: worker, error } = await supabase
-      .from('workers')
-      .select(`
+      .from("workers")
+      .select(
+        `
         tier,
         jobs_completed,
         rating,
         punctuality
-      `)
-      .eq('id', workerId)
+      `,
+      )
+      .eq("id", workerId)
       .single();
 
     if (error || !worker) {
-      console.error('Error fetching worker:', error);
+      console.error("Error fetching worker:", error);
       return null;
     }
 
     const tierProgression = [
       {
-        tier: 'classic' as WorkerTier,
+        tier: "classic" as WorkerTier,
         jobsRequired: 0,
         ratingRequired: 0,
         punctualityRequired: 0,
       },
       {
-        tier: 'pro' as WorkerTier,
+        tier: "pro" as WorkerTier,
         jobsRequired: 20,
         ratingRequired: 4.0,
         punctualityRequired: 90,
       },
       {
-        tier: 'elite' as WorkerTier,
+        tier: "elite" as WorkerTier,
         jobsRequired: 100,
         ratingRequired: 4.6,
         punctualityRequired: 95,
       },
       {
-        tier: 'champion' as WorkerTier,
+        tier: "champion" as WorkerTier,
         jobsRequired: 300,
         ratingRequired: 4.8,
         punctualityRequired: 98,
@@ -179,11 +177,14 @@ export async function getTierProgress(
     ];
 
     // Find current and next tier
-    const currentIndex = tierProgression.findIndex(t => t.tier === worker.tier);
+    const currentIndex = tierProgression.findIndex(
+      (t) => t.tier === worker.tier,
+    );
     const currentTier = tierProgression[currentIndex];
-    const nextTier = currentIndex < tierProgression.length - 1
-      ? tierProgression[currentIndex + 1]
-      : null;
+    const nextTier =
+      currentIndex < tierProgression.length - 1
+        ? tierProgression[currentIndex + 1]
+        : null;
 
     if (!currentTier) {
       return null;
@@ -194,7 +195,7 @@ export async function getTierProgress(
     if (nextTier) {
       const jobProgress = Math.min(
         ((worker.jobs_completed || 0) / nextTier.jobsRequired) * 100,
-        100
+        100,
       );
       progressPercentage = jobProgress;
     }
@@ -219,7 +220,7 @@ export async function getTierProgress(
       },
     };
   } catch (error) {
-    console.error('Error in getTierProgress:', error);
+    console.error("Error in getTierProgress:", error);
     return null;
   }
 }
@@ -230,17 +231,19 @@ export async function getTierProgress(
  * @param workerId - Worker ID
  * @returns Updated tier or null if update failed
  */
-export async function incrementJobsCompleted(workerId: string): Promise<WorkerTier | null> {
+export async function incrementJobsCompleted(
+  workerId: string,
+): Promise<WorkerTier | null> {
   try {
     // Fetch current jobs_completed
     const { data: currentData, error: fetchError } = await supabase
-      .from('workers')
-      .select('jobs_completed')
-      .eq('id', workerId)
+      .from("workers")
+      .select("jobs_completed")
+      .eq("id", workerId)
       .single();
 
     if (fetchError) {
-      console.error('Error fetching current jobs count:', fetchError);
+      console.error("Error fetching current jobs count:", fetchError);
       return null;
     }
 
@@ -248,23 +251,25 @@ export async function incrementJobsCompleted(workerId: string): Promise<WorkerTi
 
     // Update jobs_completed counter
     const { data: worker, error: updateError } = await supabase
-      .from('workers')
+      .from("workers")
       .update({
         jobs_completed: newJobsCount,
         updated_at: new Date().toISOString(),
       })
-      .select(`
+      .select(
+        `
         id,
         jobs_completed,
         rating,
         punctuality,
         tier
-      `)
-      .eq('id', workerId)
+      `,
+      )
+      .eq("id", workerId)
       .single();
 
     if (updateError || !worker) {
-      console.error('Error incrementing jobs completed:', updateError);
+      console.error("Error incrementing jobs completed:", updateError);
       return null;
     }
 
@@ -277,7 +282,7 @@ export async function incrementJobsCompleted(workerId: string): Promise<WorkerTi
       cancellationRate: null,
     });
   } catch (error) {
-    console.error('Error in incrementJobsCompleted:', error);
+    console.error("Error in incrementJobsCompleted:", error);
     return null;
   }
 }

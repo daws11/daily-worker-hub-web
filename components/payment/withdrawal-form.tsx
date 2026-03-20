@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
-import { useRouter } from "next/navigation"
-import { Loader2, Landmark, AlertCircle } from "lucide-react"
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useRouter } from "next/navigation";
+import { Loader2, Landmark, AlertCircle } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -17,35 +17,35 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
+} from "@/components/ui/form";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { cn } from "@/lib/utils"
-import { requestPayout, getWorkerWalletBalance } from "@/lib/actions/payments"
-import { PAYMENT_CONSTANTS } from "@/lib/types/payment"
-import type { Database } from "@/lib/supabase/types"
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { requestPayout, getWorkerWalletBalance } from "@/lib/actions/payments";
+import { PAYMENT_CONSTANTS } from "@/lib/types/payment";
+import type { Database } from "@/lib/supabase/types";
 
 type BankAccount = {
-  id: string
-  worker_id: string
-  bank_code: string
-  bank_account_number: string
-  bank_account_name: string
-  is_default: boolean
-  created_at: string
-}
+  id: string;
+  worker_id: string;
+  bank_code: string;
+  bank_account_number: string;
+  bank_account_name: string;
+  is_default: boolean;
+  created_at: string;
+};
 
 // Zod schema for withdrawal form validation
 export const withdrawalFormSchema = z.object({
@@ -53,9 +53,9 @@ export const withdrawalFormSchema = z.object({
     message: `Minimal penarikan Rp ${PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT.toLocaleString("id-ID")}`,
   }),
   bank_account_id: z.string().optional(),
-})
+});
 
-export type WithdrawalFormValues = z.infer<typeof withdrawalFormSchema>
+export type WithdrawalFormValues = z.infer<typeof withdrawalFormSchema>;
 
 // Format currency to IDR
 const formatCurrency = (amount: number): string => {
@@ -64,27 +64,30 @@ const formatCurrency = (amount: number): string => {
     currency: "IDR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount)
-}
+  }).format(amount);
+};
 
 // Calculate payout fee (1% by default, free for first weekly withdrawal)
-const calculatePayoutFee = (amount: number, hasFreeWeeklyPayout: boolean): number => {
-  if (hasFreeWeeklyPayout) return 0
-  return Math.max(Math.floor(amount * 0.01), 0)
-}
+const calculatePayoutFee = (
+  amount: number,
+  hasFreeWeeklyPayout: boolean,
+): number => {
+  if (hasFreeWeeklyPayout) return 0;
+  return Math.max(Math.floor(amount * 0.01), 0);
+};
 
 // Quick amount presets
-const PRESET_AMOUNTS = [100000, 200000, 500000, 1000000, 2000000]
+const PRESET_AMOUNTS = [100000, 200000, 500000, 1000000, 2000000];
 
 export interface WithdrawalFormProps {
-  workerId: string
-  bankAccounts: BankAccount[]
-  currentBalance?: number
-  hasFreeWeeklyPayout?: boolean
-  onSubmitSuccess?: () => void
-  isLoading?: boolean
-  disabled?: boolean
-  className?: string
+  workerId: string;
+  bankAccounts: BankAccount[];
+  currentBalance?: number;
+  hasFreeWeeklyPayout?: boolean;
+  onSubmitSuccess?: () => void;
+  isLoading?: boolean;
+  disabled?: boolean;
+  className?: string;
 }
 
 export function WithdrawalForm({
@@ -97,13 +100,14 @@ export function WithdrawalForm({
   disabled = false,
   className,
 }: WithdrawalFormProps) {
-  const router = useRouter()
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   // Determine primary bank account
-  const primaryAccount = bankAccounts.find((acc) => acc.is_default) || bankAccounts[0]
-  const selectedBankAccount = primaryAccount
+  const primaryAccount =
+    bankAccounts.find((acc) => acc.is_default) || bankAccounts[0];
+  const selectedBankAccount = primaryAccount;
 
   const form = useForm<WithdrawalFormValues>({
     resolver: zodResolver(withdrawalFormSchema),
@@ -111,51 +115,51 @@ export function WithdrawalForm({
       amount: 0,
       bank_account_id: selectedBankAccount?.id,
     },
-  })
+  });
 
-  const watchedAmount = form.watch("amount")
+  const watchedAmount = form.watch("amount");
 
   const handleSubmit = async (values: WithdrawalFormValues) => {
-    setError(null)
-    setIsSubmitting(true)
+    setError(null);
+    setIsSubmitting(true);
 
     try {
       const result = await requestPayout(
         workerId,
         values.amount,
-        values.bank_account_id
-      )
+        values.bank_account_id,
+      );
 
       if (result.success) {
-        form.reset()
-        onSubmitSuccess?.()
-        router.refresh()
+        form.reset();
+        onSubmitSuccess?.();
+        router.refresh();
       } else {
-        setError(result.error || "Gagal memproses penarikan")
+        setError(result.error || "Gagal memproses penarikan");
       }
     } catch {
-      setError("Terjadi kesalahan saat memproses penarikan")
+      setError("Terjadi kesalahan saat memproses penarikan");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handlePresetAmount = (amount: number) => {
-    form.setValue("amount", amount, { shouldValidate: true })
-  }
+    form.setValue("amount", amount, { shouldValidate: true });
+  };
 
   const handleReset = () => {
-    form.reset()
-    setError(null)
-  }
+    form.reset();
+    setError(null);
+  };
 
   // Calculate fee
-  const feeAmount = calculatePayoutFee(watchedAmount, hasFreeWeeklyPayout)
-  const netAmount = watchedAmount - feeAmount
-  const remainingBalance = currentBalance - watchedAmount
+  const feeAmount = calculatePayoutFee(watchedAmount, hasFreeWeeklyPayout);
+  const netAmount = watchedAmount - feeAmount;
+  const remainingBalance = currentBalance - watchedAmount;
 
   // Check if amount exceeds balance
-  const exceedsBalance = watchedAmount > currentBalance
+  const exceedsBalance = watchedAmount > currentBalance;
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -170,28 +174,44 @@ export function WithdrawalForm({
             <CardContent>
               <div className="space-y-2">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm text-muted-foreground">Saldo saat ini:</span>
-                  <span className="text-2xl font-semibold">{formatCurrency(currentBalance)}</span>
+                  <span className="text-sm text-muted-foreground">
+                    Saldo saat ini:
+                  </span>
+                  <span className="text-2xl font-semibold">
+                    {formatCurrency(currentBalance)}
+                  </span>
                 </div>
                 {watchedAmount > 0 && (
                   <>
                     <div className="flex items-baseline justify-between text-sm">
-                      <span className="text-muted-foreground">Jumlah penarikan:</span>
-                      <span className="font-medium">-{formatCurrency(watchedAmount)}</span>
+                      <span className="text-muted-foreground">
+                        Jumlah penarikan:
+                      </span>
+                      <span className="font-medium">
+                        -{formatCurrency(watchedAmount)}
+                      </span>
                     </div>
                     {!hasFreeWeeklyPayout && feeAmount > 0 && (
                       <div className="flex items-baseline justify-between text-sm">
-                        <span className="text-muted-foreground">Biaya admin (1%):</span>
-                        <span className="font-medium text-destructive">-{formatCurrency(feeAmount)}</span>
+                        <span className="text-muted-foreground">
+                          Biaya admin (1%):
+                        </span>
+                        <span className="font-medium text-destructive">
+                          -{formatCurrency(feeAmount)}
+                        </span>
                       </div>
                     )}
                     <div className="my-2 border-t border-dashed" />
                     <div className="flex items-baseline justify-between text-sm">
                       <span className="font-medium">Sisa saldo:</span>
-                      <span className={cn(
-                        "font-semibold",
-                        remainingBalance < 0 ? "text-destructive" : "text-primary"
-                      )}>
+                      <span
+                        className={cn(
+                          "font-semibold",
+                          remainingBalance < 0
+                            ? "text-destructive"
+                            : "text-primary",
+                        )}
+                      >
                         {formatCurrency(Math.max(0, remainingBalance))}
                       </span>
                     </div>
@@ -219,7 +239,8 @@ export function WithdrawalForm({
                   <div className="space-y-1 text-sm">
                     <p className="font-medium">Rekening Tujuan</p>
                     <p className="text-muted-foreground">
-                      {selectedBankAccount.bank_code} - {selectedBankAccount.bank_account_number}
+                      {selectedBankAccount.bank_code} -{" "}
+                      {selectedBankAccount.bank_account_number}
                     </p>
                     <p className="text-muted-foreground">
                       a.n {selectedBankAccount.bank_account_name}
@@ -246,8 +267,8 @@ export function WithdrawalForm({
                     step={1000}
                     {...field}
                     onChange={(e) => {
-                      const value = parseFloat(e.target.value)
-                      field.onChange(isNaN(value) ? 0 : value)
+                      const value = parseFloat(e.target.value);
+                      field.onChange(isNaN(value) ? 0 : value);
                     }}
                   />
                 </FormControl>
@@ -311,8 +332,9 @@ export function WithdrawalForm({
                 <div className="space-y-1 text-sm">
                   <p className="font-medium">Tentang Penarikan</p>
                   <p className="text-muted-foreground">
-                    Dana akan ditransfer ke rekening bank Anda dalam 1-2 hari kerja.
-                    Penarikan pertama setiap minggu gratis, penarikan berikutnya dikenakan biaya 1%.
+                    Dana akan ditransfer ke rekening bank Anda dalam 1-2 hari
+                    kerja. Penarikan pertama setiap minggu gratis, penarikan
+                    berikutnya dikenakan biaya 1%.
                   </p>
                   {!hasFreeWeeklyPayout && watchedAmount > 0 && (
                     <p className="text-muted-foreground">
@@ -364,5 +386,5 @@ export function WithdrawalForm({
         </form>
       </Form>
     </div>
-  )
+  );
 }

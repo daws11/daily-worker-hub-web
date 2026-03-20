@@ -1,18 +1,27 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Building2, MapPin, Phone, Mail, Globe, Check, X, FileText } from "lucide-react"
+import * as React from "react";
+import {
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
+  Globe,
+  Check,
+  X,
+  FileText,
+} from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { VerificationBadge } from "@/components/business/verification-badge"
-import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils";
+import { VerificationBadge } from "@/components/business/verification-badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -20,82 +29,89 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import type { BusinessVerificationItem } from "@/lib/types/admin"
-import { processBusinessVerification } from "@/lib/supabase/queries/admin"
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import type { BusinessVerificationItem } from "@/lib/types/admin";
+import { processBusinessVerification } from "@/lib/supabase/queries/admin";
 
 interface BusinessCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  business: BusinessVerificationItem
-  onUpdate?: () => void
+  business: BusinessVerificationItem;
+  onUpdate?: () => void;
 }
 
-function BusinessCard({ business, className, onUpdate, ...props }: BusinessCardProps) {
-  const [loading, setLoading] = React.useState(false)
-  const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false)
-  const [rejectionReason, setRejectionReason] = React.useState("")
-  const [error, setError] = React.useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = React.useState<string | null>(null)
+function BusinessCard({
+  business,
+  className,
+  onUpdate,
+  ...props
+}: BusinessCardProps) {
+  const [loading, setLoading] = React.useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = React.useState(false);
+  const [rejectionReason, setRejectionReason] = React.useState("");
+  const [error, setError] = React.useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = React.useState<string | null>(
+    null,
+  );
 
   const handleApprove = async () => {
-    setLoading(true)
-    setError(null)
-    setSuccessMessage(null)
+    setLoading(true);
+    setError(null);
+    setSuccessMessage(null);
 
     const result = await processBusinessVerification(
       business.id,
       "approve",
       undefined,
-      business.user_id
-    )
+      business.user_id,
+    );
 
     if (result.error) {
-      setError(result.error)
+      setError(result.error);
     } else {
-      setSuccessMessage("Business approved successfully")
+      setSuccessMessage("Business approved successfully");
       setTimeout(() => {
-        setSuccessMessage(null)
-        onUpdate?.()
-      }, 1500)
+        setSuccessMessage(null);
+        onUpdate?.();
+      }, 1500);
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   const handleReject = async () => {
-    setLoading(true)
-    setError(null)
-    setSuccessMessage(null)
+    setLoading(true);
+    setError(null);
+    setSuccessMessage(null);
 
     const result = await processBusinessVerification(
       business.id,
       "reject",
       rejectionReason,
-      business.user_id
-    )
+      business.user_id,
+    );
 
     if (result.error) {
-      setError(result.error)
+      setError(result.error);
     } else {
-      setSuccessMessage("Business rejected")
-      setRejectDialogOpen(false)
-      setRejectionReason("")
+      setSuccessMessage("Business rejected");
+      setRejectDialogOpen(false);
+      setRejectionReason("");
       setTimeout(() => {
-        setSuccessMessage(null)
-        onUpdate?.()
-      }, 1500)
+        setSuccessMessage(null);
+        onUpdate?.();
+      }, 1500);
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   const formatDate = React.useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    })
-  }, [])
+    });
+  }, []);
 
   const getBusinessTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
@@ -104,9 +120,9 @@ function BusinessCard({ business, className, onUpdate, ...props }: BusinessCardP
       restaurant: "Restoran",
       event_company: "Event Organizer",
       other: "Lainnya",
-    }
-    return labels[type] || type
-  }
+    };
+    return labels[type] || type;
+  };
 
   return (
     <>
@@ -192,7 +208,9 @@ function BusinessCard({ business, className, onUpdate, ...props }: BusinessCardP
           <div className="pt-2 border-t space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Pemilik:</span>
-              <span className="font-medium">{business.user?.full_name || "-"}</span>
+              <span className="font-medium">
+                {business.user?.full_name || "-"}
+              </span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Email pemilik:</span>
@@ -200,7 +218,9 @@ function BusinessCard({ business, className, onUpdate, ...props }: BusinessCardP
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Didaftarkan:</span>
-              <span className="font-medium">{formatDate(business.created_at)}</span>
+              <span className="font-medium">
+                {formatDate(business.created_at)}
+              </span>
             </div>
             {business.verification_status === "pending" && (
               <div className="flex items-center justify-between text-sm">
@@ -253,7 +273,8 @@ function BusinessCard({ business, className, onUpdate, ...props }: BusinessCardP
           <DialogHeader>
             <DialogTitle>Tolak Verifikasi Bisnis</DialogTitle>
             <DialogDescription>
-              Sertakan alasan penolakan untuk membantu pemilik bisnis memperbaiki permohonan mereka.
+              Sertakan alasan penolakan untuk membantu pemilik bisnis
+              memperbaiki permohonan mereka.
             </DialogDescription>
           </DialogHeader>
           <Textarea
@@ -266,8 +287,8 @@ function BusinessCard({ business, className, onUpdate, ...props }: BusinessCardP
             <Button
               variant="outline"
               onClick={() => {
-                setRejectDialogOpen(false)
-                setRejectionReason("")
+                setRejectDialogOpen(false);
+                setRejectionReason("");
               }}
               disabled={loading}
             >
@@ -284,7 +305,7 @@ function BusinessCard({ business, className, onUpdate, ...props }: BusinessCardP
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }
 
-export { BusinessCard }
+export { BusinessCard };

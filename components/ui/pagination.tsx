@@ -1,25 +1,25 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export interface PaginationProps {
   /** Current page number (1-indexed) */
-  currentPage: number
+  currentPage: number;
   /** Total number of pages */
-  totalPages: number
+  totalPages: number;
   /** Callback when page changes */
-  onPageChange: (page: number) => void
+  onPageChange: (page: number) => void;
   /** Number of items per page */
-  itemsPerPage: number
+  itemsPerPage: number;
   /** Callback when items per page changes */
-  onItemsPerPageChange: (itemsPerPage: number) => void
+  onItemsPerPageChange: (itemsPerPage: number) => void;
   /** Total number of items */
-  totalItems: number
+  totalItems: number;
   /** Available items per page options */
-  itemsPerPageOptions?: number[]
+  itemsPerPageOptions?: number[];
   /** Current locale for translations */
-  locale?: 'id' | 'en'
+  locale?: "id" | "en";
 }
 
 export function Pagination({
@@ -30,76 +30,79 @@ export function Pagination({
   onItemsPerPageChange,
   totalItems,
   itemsPerPageOptions = [5, 10, 20, 50],
-  locale = 'en',
+  locale = "en",
 }: PaginationProps) {
   // Calculate display range
-  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems)
+  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   // Generate page numbers to display
   const getPageNumbers = () => {
-    const pages: (number | 'ellipsis')[] = []
-    const showEllipsisStart = currentPage > 3
-    const showEllipsisEnd = currentPage < totalPages - 2
+    const pages: (number | "ellipsis")[] = [];
+    const showEllipsisStart = currentPage > 3;
+    const showEllipsisEnd = currentPage < totalPages - 2;
 
     if (totalPages <= 7) {
       // Show all pages if total is small
       for (let i = 1; i <= totalPages; i++) {
-        pages.push(i)
+        pages.push(i);
       }
     } else {
       // Always show first page
-      pages.push(1)
+      pages.push(1);
 
       if (showEllipsisStart) {
-        pages.push('ellipsis')
+        pages.push("ellipsis");
       }
 
       // Show pages around current page
-      const start = Math.max(2, currentPage - 1)
-      const end = Math.min(totalPages - 1, currentPage + 1)
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
 
       for (let i = start; i <= end; i++) {
-        pages.push(i)
+        pages.push(i);
       }
 
       if (showEllipsisEnd) {
-        pages.push('ellipsis')
+        pages.push("ellipsis");
       }
 
       // Always show last page
       if (totalPages > 1) {
-        pages.push(totalPages)
+        pages.push(totalPages);
       }
     }
 
-    return pages
-  }
+    return pages;
+  };
 
   const translations = {
-    showing: locale === 'id' ? 'Menampilkan' : 'Showing',
-    of: locale === 'id' ? 'dari' : 'of',
-    transactions: locale === 'id' ? 'transaksi' : 'transactions',
-    perPage: locale === 'id' ? 'Per halaman:' : 'Per page:',
-    previous: locale === 'id' ? 'Sebelumnya' : 'Previous',
-    next: locale === 'id' ? 'Selanjutnya' : 'Next',
-  }
+    showing: locale === "id" ? "Menampilkan" : "Showing",
+    of: locale === "id" ? "dari" : "of",
+    transactions: locale === "id" ? "transaksi" : "transactions",
+    perPage: locale === "id" ? "Per halaman:" : "Per page:",
+    previous: locale === "id" ? "Sebelumnya" : "Previous",
+    next: locale === "id" ? "Selanjutnya" : "Next",
+  };
 
   if (totalPages <= 1 && totalItems <= itemsPerPage) {
-    return null
+    return null;
   }
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 pt-4 border-t">
       {/* Items info */}
       <div className="text-sm text-muted-foreground">
-        {translations.showing} {startItem}-{endItem} {translations.of} {totalItems} {translations.transactions}
+        {translations.showing} {startItem}-{endItem} {translations.of}{" "}
+        {totalItems} {translations.transactions}
       </div>
 
       <div className="flex flex-col sm:flex-row items-center gap-4">
         {/* Items per page selector */}
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">{translations.perPage}</span>
+          <span className="text-sm text-muted-foreground">
+            {translations.perPage}
+          </span>
           <select
             value={itemsPerPage}
             onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
@@ -128,7 +131,7 @@ export function Pagination({
 
           {/* Page numbers */}
           {getPageNumbers().map((page, index) => {
-            if (page === 'ellipsis') {
+            if (page === "ellipsis") {
               return (
                 <span
                   key={`ellipsis-${index}`}
@@ -136,7 +139,7 @@ export function Pagination({
                 >
                   ...
                 </span>
-              )
+              );
             }
 
             return (
@@ -149,7 +152,7 @@ export function Pagination({
               >
                 {page}
               </Button>
-            )
+            );
           })}
 
           {/* Next button */}
@@ -165,5 +168,5 @@ export function Pagination({
         </div>
       </div>
     </div>
-  )
+  );
 }

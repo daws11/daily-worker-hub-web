@@ -4,17 +4,17 @@
  * Displays real-time wage calculation with breakdown
  */
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { HourSelection } from './hour-selection';
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { HourSelection } from "./hour-selection";
 import {
   calculateWage,
   getWageBreakdown,
   formatRupiah,
-} from '@/lib/algorithms/wage-calculator';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Info } from 'lucide-react';
+} from "@/lib/algorithms/wage-calculator";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Info } from "lucide-react";
 
 interface WageCalculatorProps {
   category: string;
@@ -38,7 +38,7 @@ export function WageCalculator({
   showWorkerBreakdown = false,
 }: WageCalculatorProps) {
   const [calculation, setCalculation] = useState(() =>
-    calculateWage(category, regency, hoursNeeded)
+    calculateWage(category, regency, hoursNeeded),
   );
 
   useEffect(() => {
@@ -58,10 +58,7 @@ export function WageCalculator({
       <CardContent className="space-y-4">
         {/* Hour Selection */}
         {!readonly && (
-          <HourSelection
-            value={hoursNeeded}
-            onChange={onHoursChange}
-          />
+          <HourSelection value={hoursNeeded} onChange={onHoursChange} />
         )}
 
         {/* Current Hours Display (Readonly Mode) */}
@@ -70,7 +67,7 @@ export function WageCalculator({
             <span className="text-sm text-muted-foreground">
               Jam Dibutuhkan
             </span>
-            <Badge variant={hoursNeeded >= 9 ? 'destructive' : 'default'}>
+            <Badge variant={hoursNeeded >= 9 ? "destructive" : "default"}>
               {hoursNeeded} jam
               {hoursNeeded > 8 && ` (${hoursNeeded - 8}h OT)`}
             </Badge>
@@ -102,7 +99,8 @@ export function WageCalculator({
           {calculation.overtimeHours > 0 && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
-                Overtime ({calculation.overtimeHours}h @ {calculation.overtimeMultiplier}x)
+                Overtime ({calculation.overtimeHours}h @{" "}
+                {calculation.overtimeMultiplier}x)
               </span>
               <span className="font-medium text-orange-600">
                 {formatRupiah(calculation.overtimeWage)}
@@ -199,7 +197,7 @@ export function WageCalculatorCompact({
         <span className="text-muted-foreground">
           {hoursNeeded}h × {formatRupiah(calculation.hourlyRate)}/jam
         </span>
-        <Badge variant={hoursNeeded >= 9 ? 'destructive' : 'secondary'}>
+        <Badge variant={hoursNeeded >= 9 ? "destructive" : "secondary"}>
           {hoursNeeded > 8 && `${hoursNeeded - 8}h OT`}
         </Badge>
       </div>

@@ -5,11 +5,7 @@
         "name": "next"
       }
     ],
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "jsx": "react-jsx",
     "incremental": true,
     "target": "ES2017",
@@ -39,9 +35,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "scripts",
-    "supabase/functions"
-  ]
+  "exclude": ["node_modules", "scripts", "supabase/functions"]
 }

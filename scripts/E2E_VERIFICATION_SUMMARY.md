@@ -7,6 +7,7 @@
 ## Overview
 
 This document summarizes the end-to-end verification tests for the payment gateway integration, covering:
+
 - Business top-up flow via QRIS
 - Worker withdrawal flow via bank transfer
 - Error handling verification for failed payments and payouts
@@ -18,16 +19,19 @@ This document summarizes the end-to-end verification tests for the payment gatew
 ### Changes Made
 
 #### 1. Fixed Payment Webhook Wallet Lookup
+
 **File:** `supabase/functions/payment-webhook/index.ts`
 
 **Problem:** The payment webhook was trying to look up a wallet using `wallet_id` field that doesn't exist in the `payment_transactions` table. The table only has `business_id`.
 
 **Solution:** Modified the webhook to:
+
 1. Removed `wallet_id` from the select query
 2. Changed wallet lookup to use `business_id` instead
 3. Get the wallet by querying `wallets` table where `business_id = transaction.business_id`
 
 #### 2. Fixed Minimum Top-Up Amount
+
 **File:** `app/app/(dashboard)/business/wallet/page.tsx`
 
 **Problem:** The minimum top-up amount was set to Rp 50.000 instead of Rp 500.000 as specified in the requirements.
@@ -37,10 +41,12 @@ This document summarizes the end-to-end verification tests for the payment gatew
 #### 3. Created E2E Test Scripts
 
 **Files:**
+
 - `scripts/test-e2e-business-topup.ts` - TypeScript version with detailed output
 - `scripts/test-e2e-business-topup.sh` - Bash script version for direct execution
 
 **Test Coverage:**
+
 1. ✅ Verify business exists
 2. ✅ Get or create business wallet
 3. ✅ Validate top-up amount (>= Rp 500.000)
@@ -51,6 +57,7 @@ This document summarizes the end-to-end verification tests for the payment gatew
 8. ✅ Verify wallet balance is updated correctly
 
 **Usage:**
+
 ```bash
 # Using the shell script (recommended)
 ./scripts/test-e2e-business-topup.sh <business_id> [amount]
@@ -66,10 +73,12 @@ npm run test:e2e:business-topup <business_id> [amount]
 ### E2E Test Scripts Created
 
 **Files:**
+
 - `scripts/test-e2e-worker-withdrawal.ts` - TypeScript version with detailed output
 - `scripts/test-e2e-worker-withdrawal.sh` - Bash script version for direct execution
 
 **Test Coverage:**
+
 1. ✅ Verify worker exists
 2. ✅ Get or create worker wallet (with optional balance seeding)
 3. ✅ Verify bank account exists and belongs to worker
@@ -82,6 +91,7 @@ npm run test:e2e:business-topup <business_id> [amount]
 10. ✅ Verify wallet balance after withdrawal
 
 **Usage:**
+
 ```bash
 # Using the shell script (recommended)
 ./scripts/test-e2e-worker-withdrawal.sh <worker_id> <bank_account_id> [amount] [seed_balance]
@@ -91,6 +101,7 @@ npm run test:e2e:worker-withdrawal <worker_id> <bank_account_id> [amount] [seed_
 ```
 
 **Example:**
+
 ```bash
 ./scripts/test-e2e-worker-withdrawal.sh 123e4567-e89b-12d3-a456-426614174000 987fcdeb-51a2-22d3-a456-426614174000 100000
 ```
@@ -204,10 +215,12 @@ The E2E test verifies the following flow:
 ### E2E Test Scripts Created
 
 **Files:**
+
 - `scripts/test-e2e-error-handling.ts` - TypeScript version with detailed output
 - `scripts/test-e2e-error-handling.sh` - Bash script version for direct execution
 
 **Test Coverage:**
+
 1. ✅ QRIS payment with amount below minimum (Rp 500.000) - validation error
 2. ✅ Withdrawal with amount below minimum (Rp 100.000) - validation error
 3. ✅ Withdrawal with insufficient wallet balance - error message
@@ -215,6 +228,7 @@ The E2E test verifies the following flow:
 5. ✅ Failed payout webhook from Xendit - payout status updated to failed, wallet refunded
 
 **Usage:**
+
 ```bash
 # Using the shell script (recommended)
 ./scripts/test-e2e-error-handling.sh <business_id> <worker_id> <bank_account_id>
@@ -228,22 +242,26 @@ npm run test:e2e:error-handling <business_id> <worker_id> <bank_account_id>
 The E2E test verifies the following error scenarios:
 
 **Test 1: Payment Below Minimum Amount**
+
 - Verifies validation rejects top-up amounts below Rp 500.000
 - Confirms validation schema in `lib/utils/payment-validator.ts` correctly enforces minimum
 - Validates error message format (Indonesian)
 
 **Test 2: Withdrawal Below Minimum Amount**
+
 - Verifies validation rejects withdrawal amounts below Rp 100.000
 - Confirms validation schema in `lib/utils/payment-validator.ts` correctly enforces minimum
 - Validates error message: "Minimal penarikan adalah Rp 100.000"
 
 **Test 3: Insufficient Wallet Balance**
+
 - Gets worker's current wallet balance
 - Attempts withdrawal amount exceeding available balance
 - Confirms validation detects insufficient balance
 - Validates error message: "Saldo tidak mencukupi"
 
 **Test 4: Failed Payment Webhook**
+
 - Creates pending payment transaction
 - Gets initial business wallet balance
 - Simulates failed payment webhook from Xendit
@@ -252,6 +270,7 @@ The E2E test verifies the following error scenarios:
 - **Critical:** Confirms wallet balance is NOT affected
 
 **Test 5: Failed Payout Webhook with Wallet Refund**
+
 - Gets or creates worker wallet with sufficient balance
 - Creates pending payout request
 - Debits worker wallet (simulating processing)

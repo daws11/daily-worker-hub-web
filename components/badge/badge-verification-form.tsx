@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
-import { FileText, AlertCircle, Award, Upload } from "lucide-react"
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { FileText, AlertCircle, Award, Upload } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -15,37 +15,37 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+} from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import {
   badgeVerificationRequestSchema,
   type BadgeVerificationRequestInput,
-} from "@/lib/schemas/badge"
-import { uploadBadgeVerificationDocument } from "@/lib/supabase/storage"
-import { requestBadge } from "@/lib/supabase/queries/badges"
-import type { Badge } from "@/lib/types/badge"
+} from "@/lib/schemas/badge";
+import { uploadBadgeVerificationDocument } from "@/lib/supabase/storage";
+import { requestBadge } from "@/lib/supabase/queries/badges";
+import type { Badge } from "@/lib/types/badge";
 
 interface BadgeVerificationFormProps {
-  workerId: string
-  availableBadges: Badge[]
-  onSuccess?: () => void
+  workerId: string;
+  availableBadges: Badge[];
+  onSuccess?: () => void;
 }
 
 export function BadgeVerificationForm({
@@ -53,14 +53,16 @@ export function BadgeVerificationForm({
   availableBadges,
   onSuccess,
 }: BadgeVerificationFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [hasSubmitted, setHasSubmitted] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [documentFile, setDocumentFile] = useState<File | null>(null)
-  const [documentFileName, setDocumentFileName] = useState<string | undefined>()
-  const [documentError, setDocumentError] = useState<string | null>(null)
-  const [isUploadingDocument, setIsUploadingDocument] = useState(false)
-  const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [documentFileName, setDocumentFileName] = useState<
+    string | undefined
+  >();
+  const [documentError, setDocumentError] = useState<string | null>(null);
+  const [isUploadingDocument, setIsUploadingDocument] = useState(false);
+  const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
 
   const form = useForm<BadgeVerificationRequestInput>({
     resolver: zodResolver(badgeVerificationRequestSchema),
@@ -70,153 +72,170 @@ export function BadgeVerificationForm({
       verification_document_url: "",
       notes: "",
     },
-  })
+  });
 
   const {
     formState: { errors, isValid },
-  } = form
+  } = form;
 
   // Focus on first error field when form is submitted with errors
   useEffect(() => {
     if (hasSubmitted && Object.keys(errors).length > 0) {
-      const firstErrorField = Object.keys(errors)[0] as keyof BadgeVerificationRequestInput
+      const firstErrorField = Object.keys(
+        errors,
+      )[0] as keyof BadgeVerificationRequestInput;
       const fieldElement = document.querySelector(
-        `[name="${firstErrorField}"]`
-      ) as HTMLElement
-      fieldElement?.focus()
+        `[name="${firstErrorField}"]`,
+      ) as HTMLElement;
+      fieldElement?.focus();
     }
-  }, [hasSubmitted, errors])
+  }, [hasSubmitted, errors]);
 
   const handleDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     // Clear previous error
-    setDocumentError(null)
+    setDocumentError(null);
 
     // Validate file type
-    const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"]
+    const allowedTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/jpg",
+    ];
     if (!allowedTypes.includes(file.type)) {
-      const errorMsg = "File harus berupa PDF atau gambar (JPEG, PNG)"
-      setDocumentError(errorMsg)
-      toast.error(errorMsg)
-      return
+      const errorMsg = "File harus berupa PDF atau gambar (JPEG, PNG)";
+      setDocumentError(errorMsg);
+      toast.error(errorMsg);
+      return;
     }
 
     // Validate file size (max 10MB)
-    const MAX_SIZE = 10 * 1024 * 1024
+    const MAX_SIZE = 10 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      const errorMsg = "Ukuran file maksimal 10MB"
-      setDocumentError(errorMsg)
-      toast.error(errorMsg)
-      return
+      const errorMsg = "Ukuran file maksimal 10MB";
+      setDocumentError(errorMsg);
+      toast.error(errorMsg);
+      return;
     }
 
-    setDocumentFile(file)
-    setDocumentFileName(file.name)
-    toast.success("Dokumen berhasil dipilih")
-  }
+    setDocumentFile(file);
+    setDocumentFileName(file.name);
+    toast.success("Dokumen berhasil dipilih");
+  };
 
   const handleBadgeChange = (badgeId: string) => {
-    const badge = availableBadges.find((b) => b.id === badgeId)
-    setSelectedBadge(badge || null)
-    form.setValue("badge_id", badgeId)
-  }
+    const badge = availableBadges.find((b) => b.id === badgeId);
+    setSelectedBadge(badge || null);
+    form.setValue("badge_id", badgeId);
+  };
 
   const handleSubmit = async (data: BadgeVerificationRequestInput) => {
-    setHasSubmitted(true)
-    setSubmitError(null)
+    setHasSubmitted(true);
+    setSubmitError(null);
 
     // Sanitize data - convert empty strings to undefined
     const sanitizedData: BadgeVerificationRequestInput = {
       badge_id: data.badge_id,
       verification_document_url: data.verification_document_url?.trim() || "",
       notes: data.notes?.trim() || undefined,
-    }
+    };
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
-      let documentUrl = sanitizedData.verification_document_url
+      let documentUrl = sanitizedData.verification_document_url;
 
       // Upload verification document if a file was selected
       if (documentFile) {
-        setIsUploadingDocument(true)
+        setIsUploadingDocument(true);
         try {
           const uploadResult = await uploadBadgeVerificationDocument(
             workerId,
             sanitizedData.badge_id,
-            documentFile
-          )
+            documentFile,
+          );
 
           if (uploadResult.error) {
-            setDocumentError(uploadResult.error)
-            toast.error(`Gagal upload dokumen: ${uploadResult.error}`)
-            setIsUploadingDocument(false)
-            setIsSubmitting(false)
-            return
+            setDocumentError(uploadResult.error);
+            toast.error(`Gagal upload dokumen: ${uploadResult.error}`);
+            setIsUploadingDocument(false);
+            setIsSubmitting(false);
+            return;
           }
 
-          documentUrl = uploadResult.url
-          setIsUploadingDocument(false)
+          documentUrl = uploadResult.url;
+          setIsUploadingDocument(false);
         } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : "Gagal upload dokumen"
-          setDocumentError(errorMsg)
-          toast.error(errorMsg)
-          setIsUploadingDocument(false)
-          setIsSubmitting(false)
-          return
+          const errorMsg =
+            error instanceof Error ? error.message : "Gagal upload dokumen";
+          setDocumentError(errorMsg);
+          toast.error(errorMsg);
+          setIsUploadingDocument(false);
+          setIsSubmitting(false);
+          return;
         }
       }
 
       // Request the badge
       try {
-        await requestBadge(workerId, sanitizedData.badge_id)
+        await requestBadge(workerId, sanitizedData.badge_id);
 
-        toast.success("Permintaan badge berhasil dikirim")
-        form.reset()
-        setDocumentFile(null)
-        setDocumentFileName(undefined)
-        setSelectedBadge(null)
-        setHasSubmitted(false)
+        toast.success("Permintaan badge berhasil dikirim");
+        form.reset();
+        setDocumentFile(null);
+        setDocumentFileName(undefined);
+        setSelectedBadge(null);
+        setHasSubmitted(false);
 
         if (onSuccess) {
-          onSuccess()
+          onSuccess();
         }
       } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : "Gagal mengirim permintaan badge"
-        setSubmitError(errorMsg)
-        toast.error(errorMsg)
-        setIsSubmitting(false)
-        return
+        const errorMsg =
+          error instanceof Error
+            ? error.message
+            : "Gagal mengirim permintaan badge";
+        setSubmitError(errorMsg);
+        toast.error(errorMsg);
+        setIsSubmitting(false);
+        return;
       }
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Terjadi kesalahan tak terduga"
-      setSubmitError(errorMsg)
-      toast.error(errorMsg)
+      const errorMsg =
+        error instanceof Error
+          ? error.message
+          : "Terjadi kesalahan tak terduga";
+      setSubmitError(errorMsg);
+      toast.error(errorMsg);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   // Filter out badges the worker might already have (you can extend this logic)
-  const filteredBadges = availableBadges
+  const filteredBadges = availableBadges;
 
   // Group badges by category for better UX
-  const badgesByCategory = filteredBadges.reduce((acc, badge) => {
-    if (!acc[badge.category]) {
-      acc[badge.category] = []
-    }
-    acc[badge.category].push(badge)
-    return acc
-  }, {} as Record<string, Badge[]>)
+  const badgesByCategory = filteredBadges.reduce(
+    (acc, badge) => {
+      if (!acc[badge.category]) {
+        acc[badge.category] = [];
+      }
+      acc[badge.category].push(badge);
+      return acc;
+    },
+    {} as Record<string, Badge[]>,
+  );
 
   const categoryLabels: Record<string, string> = {
     skill: "Keahlian",
     training: "Pelatihan",
     certification: "Sertifikasi",
     specialization: "Spesialisasi",
-  }
+  };
 
   return (
     <Card>
@@ -290,29 +309,32 @@ export function BadgeVerificationForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.entries(badgesByCategory).map(([category, badges]) => (
-                        <div key={category}>
-                          <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
-                            {categoryLabels[category] || category}
+                      {Object.entries(badgesByCategory).map(
+                        ([category, badges]) => (
+                          <div key={category}>
+                            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                              {categoryLabels[category] || category}
+                            </div>
+                            {badges.map((badge) => (
+                              <SelectItem key={badge.id} value={badge.id}>
+                                <div className="flex items-center gap-2">
+                                  <span>{badge.name}</span>
+                                  {badge.is_certified && (
+                                    <span className="text-xs text-muted-foreground">
+                                      (Certified)
+                                    </span>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            ))}
                           </div>
-                          {badges.map((badge) => (
-                            <SelectItem key={badge.id} value={badge.id}>
-                              <div className="flex items-center gap-2">
-                                <span>{badge.name}</span>
-                                {badge.is_certified && (
-                                  <span className="text-xs text-muted-foreground">
-                                    (Certified)
-                                  </span>
-                                )}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </div>
-                      ))}
+                        ),
+                      )}
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    Pilih badge yang sesuai dengan keahlian atau sertifikasi yang Anda miliki
+                    Pilih badge yang sesuai dengan keahlian atau sertifikasi
+                    yang Anda miliki
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -346,9 +368,9 @@ export function BadgeVerificationForm({
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      setDocumentFile(null)
-                      setDocumentFileName(undefined)
-                      setDocumentError(null)
+                      setDocumentFile(null);
+                      setDocumentFileName(undefined);
+                      setDocumentError(null);
                     }}
                     disabled={isSubmitting || isUploadingDocument}
                   >
@@ -371,7 +393,9 @@ export function BadgeVerificationForm({
               )}
               <p className="text-xs text-muted-foreground">
                 Format: PDF, JPG, PNG. Maksimal 10MB.
-                {selectedBadge?.is_certified ? " Wajib untuk badge certified." : " Opsional."}
+                {selectedBadge?.is_certified
+                  ? " Wajib untuk badge certified."
+                  : " Opsional."}
               </p>
             </div>
 
@@ -392,7 +416,8 @@ export function BadgeVerificationForm({
                     />
                   </FormControl>
                   <FormDescription>
-                    Jelaskan pengalaman atau kualifikasi Anda terkait badge ini (opsional, max 1000 karakter)
+                    Jelaskan pengalaman atau kualifikasi Anda terkait badge ini
+                    (opsional, max 1000 karakter)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -405,13 +430,13 @@ export function BadgeVerificationForm({
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  form.reset()
-                  setHasSubmitted(false)
-                  setSubmitError(null)
-                  setDocumentError(null)
-                  setDocumentFile(null)
-                  setDocumentFileName(undefined)
-                  setSelectedBadge(null)
+                  form.reset();
+                  setHasSubmitted(false);
+                  setSubmitError(null);
+                  setDocumentError(null);
+                  setDocumentFile(null);
+                  setDocumentFileName(undefined);
+                  setSelectedBadge(null);
                 }}
                 disabled={isSubmitting}
               >
@@ -430,5 +455,5 @@ export function BadgeVerificationForm({
         </Form>
       </CardContent>
     </Card>
-  )
+  );
 }

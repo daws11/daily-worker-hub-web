@@ -5,11 +5,11 @@
  * with a slider and quick option buttons
  */
 
-import { useState, useEffect } from 'react';
-import { Slider } from '@/components/ui/slider';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { useState, useEffect } from "react";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 interface HourSelectionProps {
   value: number;
@@ -74,8 +74,8 @@ export function HourSelection({
         <div className="flex items-center gap-2">
           <span
             className={cn(
-              'text-2xl font-bold',
-              overtimeInfo.hasOvertime ? 'text-orange-600' : 'text-blue-600'
+              "text-2xl font-bold",
+              overtimeInfo.hasOvertime ? "text-orange-600" : "text-blue-600",
             )}
           >
             {internalValue} jam
@@ -98,8 +98,8 @@ export function HourSelection({
         step={1}
         disabled={disabled}
         className={cn(
-          'py-2',
-          overtimeInfo.hasOvertime && '[&_[role=slider]]:bg-orange-500'
+          "py-2",
+          overtimeInfo.hasOvertime && "[&_[role=slider]]:bg-orange-500",
         )}
       />
 
@@ -113,19 +113,19 @@ export function HourSelection({
       {/* Quick Options */}
       {showQuickOptions && (
         <div className="flex gap-2 flex-wrap">
-          {QUICK_OPTIONS.map(hours => (
+          {QUICK_OPTIONS.map((hours) => (
             <Button
               key={hours}
               type="button"
-              variant={internalValue === hours ? 'default' : 'outline'}
+              variant={internalValue === hours ? "default" : "outline"}
               size="sm"
               onClick={() => handleQuickOptionClick(hours)}
               disabled={disabled}
               className={cn(
-                'flex-1 min-w-[60px]',
+                "flex-1 min-w-[60px]",
                 internalValue === hours &&
                   hours >= 9 &&
-                  'bg-orange-600 hover:bg-orange-700'
+                  "bg-orange-600 hover:bg-orange-700",
               )}
             >
               {hours}h
@@ -137,10 +137,10 @@ export function HourSelection({
       {/* Info Box */}
       <div
         className={cn(
-          'rounded-lg p-3 text-sm',
+          "rounded-lg p-3 text-sm",
           overtimeInfo.hasOvertime
-            ? 'bg-orange-50 border border-orange-200 text-orange-900'
-            : 'bg-blue-50 border border-blue-200 text-blue-900'
+            ? "bg-orange-50 border border-orange-200 text-orange-900"
+            : "bg-blue-50 border border-blue-200 text-blue-900",
         )}
       >
         <div className="font-medium mb-1">
@@ -152,12 +152,11 @@ export function HourSelection({
         </div>
         {overtimeInfo.hasOvertime ? (
           <p className="text-xs">
-            {overtimeInfo.overtimeHours} jam lembur dengan tarif {overtimeInfo.multiplier}x
+            {overtimeInfo.overtimeHours} jam lembur dengan tarif{" "}
+            {overtimeInfo.multiplier}x
           </p>
         ) : (
-          <p className="text-xs">
-            Minimum 4 jam, maksimum 12 jam per hari
-          </p>
+          <p className="text-xs">Minimum 4 jam, maksimum 12 jam per hari</p>
         )}
       </div>
 
@@ -175,7 +174,9 @@ export function HourSelection({
               <div className="text-orange-700 font-medium">
                 {internalValue - 8} jam
               </div>
-              <div className="text-orange-600">Lembur ({overtimeInfo.multiplier}x)</div>
+              <div className="text-orange-600">
+                Lembur ({overtimeInfo.multiplier}x)
+              </div>
             </div>
           )}
         </div>
@@ -203,11 +204,11 @@ export function HourSelectionCompact({
     <div className="space-y-2">
       <Label className="text-sm font-medium">Jam Dibutuhkan: {value}h</Label>
       <div className="flex gap-2">
-        {QUICK_OPTIONS.map(hours => (
+        {QUICK_OPTIONS.map((hours) => (
           <Button
             key={hours}
             type="button"
-            variant={value === hours ? 'default' : 'outline'}
+            variant={value === hours ? "default" : "outline"}
             size="sm"
             onClick={() => handleQuickOptionClick(hours)}
             disabled={disabled}

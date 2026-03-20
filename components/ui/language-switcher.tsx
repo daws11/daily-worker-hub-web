@@ -1,8 +1,14 @@
-"use client"
+"use client";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useTranslation } from "@/lib/i18n/hooks"
-import { LANGUAGES } from "@/lib/constants/languages"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useTranslation } from "@/lib/i18n/hooks";
+import { LANGUAGES } from "@/lib/constants/languages";
 
 /**
  * LanguageSwitcher Component
@@ -27,23 +33,29 @@ import { LANGUAGES } from "@/lib/constants/languages"
  * ```
  */
 export function LanguageSwitcher() {
-  const { locale, setLocale } = useTranslation()
+  const { locale, setLocale } = useTranslation();
 
-  const currentLanguage = LANGUAGES.find(lang => lang.value === locale)
+  const currentLanguage = LANGUAGES.find((lang) => lang.value === locale);
 
   const handleValueChange = (value: string) => {
-    setLocale(value as typeof locale)
-  }
+    setLocale(value as typeof locale);
+  };
 
   return (
     <Select value={locale} onValueChange={handleValueChange}>
       <SelectTrigger className="w-[140px]" aria-label="Select language">
         <SelectValue>
           <span className="flex items-center gap-2">
-            <span className="text-lg" role="img" aria-label={currentLanguage?.label}>
+            <span
+              className="text-lg"
+              role="img"
+              aria-label={currentLanguage?.label}
+            >
               {currentLanguage?.flag}
             </span>
-            <span className="hidden sm:inline">{currentLanguage?.nativeName}</span>
+            <span className="hidden sm:inline">
+              {currentLanguage?.nativeName}
+            </span>
           </span>
         </SelectValue>
       </SelectTrigger>
@@ -60,5 +72,5 @@ export function LanguageSwitcher() {
         ))}
       </SelectContent>
     </Select>
-  )
+  );
 }

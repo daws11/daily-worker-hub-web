@@ -1,15 +1,15 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from "@supabase/ssr";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const token = searchParams.get('token')
-  const role = searchParams.get('role') || 'worker'
+  const { searchParams } = new URL(request.url);
+  const token = searchParams.get("token");
+  const role = searchParams.get("role") || "worker";
 
   if (token) {
     let response = NextResponse.next({
       request: { headers: request.headers },
-    })
+    });
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -17,36 +17,36 @@ export async function GET(request: NextRequest) {
       {
         cookies: {
           getAll() {
-            return request.cookies.getAll()
+            return request.cookies.getAll();
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, ...options }) => {
-              request.cookies.set(name, value)
-            })
+              request.cookies.set(name, value);
+            });
             response = NextResponse.next({
               request: { headers: request.headers },
-            })
+            });
             cookiesToSet.forEach(({ name, value, ...options }) => {
               response.cookies.set(name, value, {
                 ...options,
-                path: '/',
-                sameSite: 'lax',
+                path: "/",
+                sameSite: "lax",
                 httpOnly: false,
-              })
-            })
+              });
+            });
           },
         },
-      }
-    )
+      },
+    );
 
-    await supabase.auth.exchangeCodeForSession(token)
+    await supabase.auth.exchangeCodeForSession(token);
 
     // Redirect workers to onboarding (onboarding page will check if profile exists)
-    const redirectUrl = role === 'worker' ? '/onboarding' : '/business/jobs'
-    return NextResponse.redirect(new URL(redirectUrl, request.url))
+    const redirectUrl = role === "worker" ? "/onboarding" : "/business/jobs";
+    return NextResponse.redirect(new URL(redirectUrl, request.url));
   }
 
   // Redirect workers to onboarding (onboarding page will check if profile exists)
-  const redirectUrl = role === 'worker' ? '/onboarding' : '/business/jobs'
-  return NextResponse.redirect(new URL(redirectUrl, request.url))
+  const redirectUrl = role === "worker" ? "/onboarding" : "/business/jobs";
+  return NextResponse.redirect(new URL(redirectUrl, request.url));
 }

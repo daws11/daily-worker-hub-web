@@ -1,130 +1,155 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
-import { useAuth } from "@/app/providers/auth-provider"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { supabase } from "@/lib/supabase/client"
-import type { Database } from "@/lib/supabase/types"
-import { BarChart3, Loader2, TrendingUp, Eye, MessageCircle, Share2, CheckCircle2, XCircle, Clock, AlertCircle, ExternalLink } from "lucide-react"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useAuth } from "@/app/providers/auth-provider";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { supabase } from "@/lib/supabase/client";
+import type { Database } from "@/lib/supabase/types";
+import {
+  BarChart3,
+  Loader2,
+  TrendingUp,
+  Eye,
+  MessageCircle,
+  Share2,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  AlertCircle,
+  ExternalLink,
+} from "lucide-react";
 
-type BusinessesRow = Database["public"]["Tables"]["businesses"]["Row"]
+type BusinessesRow = Database["public"]["Tables"]["businesses"]["Row"];
 
 type JobPostRow = {
-  id: string
-  job_id: string
-  business_connection_id: string
-  platform_post_id: string | null
-  platform_post_url: string | null
-  status: 'pending' | 'posted' | 'failed' | 'deleted'
-  error_message: string | null
-  posted_at: string | null
+  id: string;
+  job_id: string;
+  business_connection_id: string;
+  platform_post_id: string | null;
+  platform_post_url: string | null;
+  status: "pending" | "posted" | "failed" | "deleted";
+  error_message: string | null;
+  posted_at: string | null;
   metrics: {
-    views?: number
-    likes?: number
-    comments?: number
-    shares?: number
-    clicks?: number
-    impressions?: number
-    reach?: number
-  } | null
-  created_at: string
-  updated_at: string
-}
+    views?: number;
+    likes?: number;
+    comments?: number;
+    shares?: number;
+    clicks?: number;
+    impressions?: number;
+    reach?: number;
+  } | null;
+  created_at: string;
+  updated_at: string;
+};
 
 type SocialPlatform = {
-  id: string
-  platform_name: string
-  platform_type: string
-}
+  id: string;
+  platform_name: string;
+  platform_type: string;
+};
 
 type JobPostWithConnection = JobPostRow & {
   social_platforms?: {
-    id: string
-    platform_name: string
-    platform_type: string
-  } | null
-}
+    id: string;
+    platform_name: string;
+    platform_type: string;
+  } | null;
+};
 
 type PostMetrics = {
-  views?: number
-  likes?: number
-  comments?: number
-  shares?: number
-  clicks?: number
-  impressions?: number
-  reach?: number
-}
+  views?: number;
+  likes?: number;
+  comments?: number;
+  shares?: number;
+  clicks?: number;
+  impressions?: number;
+  reach?: number;
+};
 
 type AnalyticsStats = {
-  totalPosts: number
-  successfulPosts: number
-  pendingPosts: number
-  failedPosts: number
-  totalViews: number
-  totalLikes: number
-  totalComments: number
-  totalShares: number
-  avgEngagementRate: number
-}
+  totalPosts: number;
+  successfulPosts: number;
+  pendingPosts: number;
+  failedPosts: number;
+  totalViews: number;
+  totalLikes: number;
+  totalComments: number;
+  totalShares: number;
+  avgEngagementRate: number;
+};
 
 export default function BusinessAnalyticsPage() {
-  const { user } = useAuth()
-  const router = useRouter()
-  const [business, setBusiness] = useState<BusinessesRow | null>(null)
-  const [posts, setPosts] = useState<JobPostWithConnection[]>([])
-  const [stats, setStats] = useState<AnalyticsStats | null>(null)
-  const [isLoadingBusiness, setIsLoadingBusiness] = useState(true)
-  const [isLoadingPosts, setIsLoadingPosts] = useState(true)
+  const { user } = useAuth();
+  const router = useRouter();
+  const [business, setBusiness] = useState<BusinessesRow | null>(null);
+  const [posts, setPosts] = useState<JobPostWithConnection[]>([]);
+  const [stats, setStats] = useState<AnalyticsStats | null>(null);
+  const [isLoadingBusiness, setIsLoadingBusiness] = useState(true);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(true);
 
   // Fetch business profile
   useEffect(() => {
     async function fetchBusiness() {
       if (!user) {
-        router.push("/login")
-        return
+        router.push("/login");
+        return;
       }
 
       const { data, error } = await supabase
         .from("businesses")
         .select("*")
         .eq("user_id", user.id)
-        .single()
+        .single();
 
       if (error || !data) {
-        toast.error("Profil bisnis tidak ditemukan")
-        return
+        toast.error("Profil bisnis tidak ditemukan");
+        return;
       }
 
-      setBusiness(data)
+      setBusiness(data);
     }
 
-    fetchBusiness()
-  }, [user, router])
+    fetchBusiness();
+  }, [user, router]);
 
   // Fetch job posts with metrics
   useEffect(() => {
     async function fetchPosts() {
-      if (!business) return
+      if (!business) return;
 
-      setIsLoadingPosts(true)
+      setIsLoadingPosts(true);
       try {
         // First, get all job IDs for this business
         const { data: jobsData, error: jobsError } = await supabase
           .from("jobs")
           .select("id")
-          .eq("business_id", business.id)
+          .eq("business_id", business.id);
 
         if (jobsError) {
-          toast.error("Gagal memuat data lowongan")
-          return
+          toast.error("Gagal memuat data lowongan");
+          return;
         }
 
         if (!jobsData || jobsData.length === 0) {
-          setPosts([])
+          setPosts([]);
           setStats({
             totalPosts: 0,
             successfulPosts: 0,
@@ -135,17 +160,18 @@ export default function BusinessAnalyticsPage() {
             totalComments: 0,
             totalShares: 0,
             avgEngagementRate: 0,
-          })
-          setIsLoadingPosts(false)
-          return
+          });
+          setIsLoadingPosts(false);
+          return;
         }
 
-        const jobIds = jobsData.map(j => j.id)
+        const jobIds = jobsData.map((j) => j.id);
 
         // Now fetch job posts with platform info
         const { data, error } = await (supabase as any)
           .from("job_posts")
-          .select(`
+          .select(
+            `
             *,
             business_social_connections!inner (
               social_platforms (
@@ -154,55 +180,58 @@ export default function BusinessAnalyticsPage() {
                 platform_type
               )
             )
-          `)
+          `,
+          )
           .in("job_id", jobIds)
-          .order("created_at", { ascending: false })
+          .order("created_at", { ascending: false });
 
         if (error) {
-          toast.error("Gagal memuat data analitik")
-          return
+          toast.error("Gagal memuat data analitik");
+          return;
         }
 
         // Transform data to flatten platform info
         const transformedPosts = (data || []).map((post: any) => ({
           ...post,
-          social_platforms: post.business_social_connections?.social_platforms || null,
-        }))
+          social_platforms:
+            post.business_social_connections?.social_platforms || null,
+        }));
 
-        setPosts(transformedPosts as JobPostWithConnection[])
+        setPosts(transformedPosts as JobPostWithConnection[]);
 
         // Calculate statistics
-        calculateStats(transformedPosts as JobPostWithConnection[])
+        calculateStats(transformedPosts as JobPostWithConnection[]);
       } finally {
-        setIsLoadingPosts(false)
+        setIsLoadingPosts(false);
       }
     }
 
-    fetchPosts()
-  }, [business])
+    fetchPosts();
+  }, [business]);
 
   // Calculate analytics statistics
   const calculateStats = (postData: JobPostWithConnection[]) => {
-    const successfulPosts = postData.filter(p => p.status === "posted")
-    const pendingPosts = postData.filter(p => p.status === "pending")
-    const failedPosts = postData.filter(p => p.status === "failed")
+    const successfulPosts = postData.filter((p) => p.status === "posted");
+    const pendingPosts = postData.filter((p) => p.status === "pending");
+    const failedPosts = postData.filter((p) => p.status === "failed");
 
-    let totalViews = 0
-    let totalLikes = 0
-    let totalComments = 0
-    let totalShares = 0
+    let totalViews = 0;
+    let totalLikes = 0;
+    let totalComments = 0;
+    let totalShares = 0;
 
-    successfulPosts.forEach(post => {
-      const metrics = (post.metrics || {}) as PostMetrics
-      totalViews += metrics.views || metrics.impressions || 0
-      totalLikes += metrics.likes || 0
-      totalComments += metrics.comments || 0
-      totalShares += metrics.shares || 0
-    })
+    successfulPosts.forEach((post) => {
+      const metrics = (post.metrics || {}) as PostMetrics;
+      totalViews += metrics.views || metrics.impressions || 0;
+      totalLikes += metrics.likes || 0;
+      totalComments += metrics.comments || 0;
+      totalShares += metrics.shares || 0;
+    });
 
-    const avgEngagementRate = totalViews > 0
-      ? ((totalLikes + totalComments + totalShares) / totalViews) * 100
-      : 0
+    const avgEngagementRate =
+      totalViews > 0
+        ? ((totalLikes + totalComments + totalShares) / totalViews) * 100
+        : 0;
 
     setStats({
       totalPosts: postData.length,
@@ -214,11 +243,13 @@ export default function BusinessAnalyticsPage() {
       totalComments,
       totalShares,
       avgEngagementRate,
-    })
-  }
+    });
+  };
 
   // Get status badge variant and icon
-  const getStatusInfo = (status: 'pending' | 'posted' | 'failed' | 'deleted') => {
+  const getStatusInfo = (
+    status: "pending" | "posted" | "failed" | "deleted",
+  ) => {
     switch (status) {
       case "posted":
         return {
@@ -226,91 +257,93 @@ export default function BusinessAnalyticsPage() {
           label: "Terbit",
           icon: CheckCircle2,
           className: "bg-green-100 text-green-800 hover:bg-green-100",
-        }
+        };
       case "pending":
         return {
           variant: "secondary" as const,
           label: "Menunggu",
           icon: Clock,
           className: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100",
-        }
+        };
       case "failed":
         return {
           variant: "destructive" as const,
           label: "Gagal",
           icon: XCircle,
           className: "bg-red-100 text-red-800 hover:bg-red-100",
-        }
+        };
       case "deleted":
         return {
           variant: "outline" as const,
           label: "Dihapus",
           icon: AlertCircle,
           className: "bg-gray-100 text-gray-800 hover:bg-gray-100",
-        }
+        };
       default:
         return {
           variant: "outline" as const,
           label: status,
           icon: AlertCircle,
           className: "",
-        }
+        };
     }
-  }
+  };
 
   // Get platform icon
   const getPlatformIcon = (platformType: string) => {
     switch (platformType) {
       case "facebook":
-        return "📘"
+        return "📘";
       case "instagram":
-        return "📷"
+        return "📷";
       case "linkedin":
-        return "💼"
+        return "💼";
       case "twitter":
-        return "🐦"
+        return "🐦";
       default:
-        return "📱"
+        return "📱";
     }
-  }
+  };
 
   // Format number to Indonesian locale
   const formatNumber = (num: number) => {
     if (num >= 1000000) {
-      return `${(num / 1000000).toFixed(1)}jt`
+      return `${(num / 1000000).toFixed(1)}jt`;
     }
     if (num >= 1000) {
-      return `${(num / 1000).toFixed(1)}rb`
+      return `${(num / 1000).toFixed(1)}rb`;
     }
-    return num.toString()
-  }
+    return num.toString();
+  };
 
   // Format date to Indonesian locale
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-"
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("id-ID", {
       day: "2-digit",
       month: "short",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    })
-  }
+    });
+  };
 
   // Get metrics from post
   const getPostMetrics = (post: JobPostWithConnection): PostMetrics => {
-    return (post.metrics || {}) as PostMetrics
-  }
+    return (post.metrics || {}) as PostMetrics;
+  };
 
   if (isLoadingBusiness) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Memuat profil bisnis...</p>
+          <p className="text-sm text-muted-foreground">
+            Memuat profil bisnis...
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -339,7 +372,9 @@ export default function BusinessAnalyticsPage() {
               ) : (
                 <div className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5 text-blue-600" />
-                  <span className="text-2xl font-bold">{stats?.totalPosts || 0}</span>
+                  <span className="text-2xl font-bold">
+                    {stats?.totalPosts || 0}
+                  </span>
                 </div>
               )}
               <p className="text-xs text-muted-foreground mt-1">
@@ -361,7 +396,9 @@ export default function BusinessAnalyticsPage() {
               ) : (
                 <div className="flex items-center gap-2">
                   <Eye className="h-5 w-5 text-green-600" />
-                  <span className="text-2xl font-bold">{formatNumber(stats?.totalViews || 0)}</span>
+                  <span className="text-2xl font-bold">
+                    {formatNumber(stats?.totalViews || 0)}
+                  </span>
                 </div>
               )}
               <p className="text-xs text-muted-foreground mt-1">
@@ -384,7 +421,11 @@ export default function BusinessAnalyticsPage() {
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-purple-600" />
                   <span className="text-2xl font-bold">
-                    {formatNumber((stats?.totalLikes || 0) + (stats?.totalComments || 0) + (stats?.totalShares || 0))}
+                    {formatNumber(
+                      (stats?.totalLikes || 0) +
+                        (stats?.totalComments || 0) +
+                        (stats?.totalShares || 0),
+                    )}
                   </span>
                 </div>
               )}
@@ -408,7 +449,10 @@ export default function BusinessAnalyticsPage() {
                 <div className="flex items-center gap-2">
                   <Share2 className="h-5 w-5 text-orange-600" />
                   <span className="text-2xl font-bold">
-                    {stats?.avgEngagementRate ? stats.avgEngagementRate.toFixed(2) : "0.00"}%
+                    {stats?.avgEngagementRate
+                      ? stats.avgEngagementRate.toFixed(2)
+                      : "0.00"}
+                    %
                   </span>
                 </div>
               )}
@@ -427,7 +471,11 @@ export default function BusinessAnalyticsPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Total Likes</p>
                   <p className="text-2xl font-bold text-blue-600">
-                    {isLoadingPosts ? <Loader2 className="h-5 w-5 animate-spin" /> : formatNumber(stats?.totalLikes || 0)}
+                    {isLoadingPosts ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      formatNumber(stats?.totalLikes || 0)
+                    )}
                   </p>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-full">
@@ -441,9 +489,15 @@ export default function BusinessAnalyticsPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Komentar</p>
+                  <p className="text-sm text-muted-foreground">
+                    Total Komentar
+                  </p>
                   <p className="text-2xl font-bold text-green-600">
-                    {isLoadingPosts ? <Loader2 className="h-5 w-5 animate-spin" /> : formatNumber(stats?.totalComments || 0)}
+                    {isLoadingPosts ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      formatNumber(stats?.totalComments || 0)
+                    )}
                   </p>
                 </div>
                 <div className="p-3 bg-green-100 rounded-full">
@@ -459,7 +513,11 @@ export default function BusinessAnalyticsPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Total Shares</p>
                   <p className="text-2xl font-bold text-purple-600">
-                    {isLoadingPosts ? <Loader2 className="h-5 w-5 animate-spin" /> : formatNumber(stats?.totalShares || 0)}
+                    {isLoadingPosts ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      formatNumber(stats?.totalShares || 0)
+                    )}
                   </p>
                 </div>
                 <div className="p-3 bg-purple-100 rounded-full">
@@ -487,7 +545,8 @@ export default function BusinessAnalyticsPage() {
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">
-                  Belum ada data analitik. Mulai posting lowongan kerja ke media sosial!
+                  Belum ada data analitik. Mulai posting lowongan kerja ke media
+                  sosial!
                 </p>
               </div>
             ) : (
@@ -507,31 +566,42 @@ export default function BusinessAnalyticsPage() {
                   </TableHeader>
                   <TableBody>
                     {posts.map((post) => {
-                      const statusInfo = getStatusInfo(post.status)
-                      const StatusIcon = statusInfo.icon
-                      const metrics = getPostMetrics(post)
+                      const statusInfo = getStatusInfo(post.status);
+                      const StatusIcon = statusInfo.icon;
+                      const metrics = getPostMetrics(post);
 
                       return (
                         <TableRow key={post.id}>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <span className="text-lg">{getPlatformIcon(post.social_platforms?.platform_type || "")}</span>
+                              <span className="text-lg">
+                                {getPlatformIcon(
+                                  post.social_platforms?.platform_type || "",
+                                )}
+                              </span>
                               <span className="font-medium capitalize">
                                 {post.social_platforms?.platform_name || "-"}
                               </span>
                             </div>
                           </TableCell>
                           <TableCell>
-                            {post.posted_at ? formatDate(post.posted_at) : formatDate(post.created_at)}
+                            {post.posted_at
+                              ? formatDate(post.posted_at)
+                              : formatDate(post.created_at)}
                           </TableCell>
                           <TableCell>
-                            <Badge className={statusInfo.className} variant={statusInfo.variant}>
+                            <Badge
+                              className={statusInfo.className}
+                              variant={statusInfo.variant}
+                            >
                               <StatusIcon className="h-3 w-3 mr-1" />
                               {statusInfo.label}
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {formatNumber(metrics.views || metrics.impressions || 0)}
+                            {formatNumber(
+                              metrics.views || metrics.impressions || 0,
+                            )}
                           </TableCell>
                           <TableCell>
                             {formatNumber(metrics.likes || 0)}
@@ -557,7 +627,7 @@ export default function BusinessAnalyticsPage() {
                             )}
                           </TableCell>
                         </TableRow>
-                      )
+                      );
                     })}
                   </TableBody>
                 </Table>
@@ -567,5 +637,5 @@ export default function BusinessAnalyticsPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

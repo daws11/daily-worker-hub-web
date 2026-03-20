@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 import {
   Check,
   X,
@@ -12,10 +12,10 @@ import {
   Briefcase,
   MapPin,
   Clock,
-} from "lucide-react"
+} from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -23,23 +23,23 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
-import type { DisputeItem } from "@/lib/types/admin"
-import { resolveDispute } from "@/lib/supabase/queries/admin"
-import { toast } from "sonner"
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import type { DisputeItem } from "@/lib/types/admin";
+import { resolveDispute } from "@/lib/supabase/queries/admin";
+import { toast } from "sonner";
 
 interface DisputeResolveDialogProps {
-  dispute: DisputeItem | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onUpdate?: () => void
-  adminId?: string
+  dispute: DisputeItem | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onUpdate?: () => void;
+  adminId?: string;
 }
 
-type ResolutionAction = "resolve_completed" | "resolve_cancelled" | "dismiss"
+type ResolutionAction = "resolve_completed" | "resolve_cancelled" | "dismiss";
 
 export function DisputeResolveDialog({
   dispute,
@@ -48,34 +48,34 @@ export function DisputeResolveDialog({
   onUpdate,
   adminId,
 }: DisputeResolveDialogProps) {
-  const [loading, setLoading] = React.useState(false)
+  const [loading, setLoading] = React.useState(false);
   const [resolutionAction, setResolutionAction] =
-    React.useState<ResolutionAction | null>(null)
-  const [resolutionNotes, setResolutionNotes] = React.useState("")
-  const [error, setError] = React.useState<string | null>(null)
+    React.useState<ResolutionAction | null>(null);
+  const [resolutionNotes, setResolutionNotes] = React.useState("");
+  const [error, setError] = React.useState<string | null>(null);
 
   // Reset state when dialog opens/closes
   React.useEffect(() => {
     if (open) {
-      setResolutionAction(null)
-      setResolutionNotes("")
-      setError(null)
+      setResolutionAction(null);
+      setResolutionNotes("");
+      setError(null);
     }
-  }, [open])
+  }, [open]);
 
   const handleResolveCompleted = async () => {
     if (!dispute || !adminId) {
-      setError("Admin ID is required for resolution")
-      return
+      setError("Admin ID is required for resolution");
+      return;
     }
 
     if (!resolutionNotes.trim()) {
-      setError("Catatan resolusi harus diisi")
-      return
+      setError("Catatan resolusi harus diisi");
+      return;
     }
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       await resolveDispute(
@@ -83,32 +83,39 @@ export function DisputeResolveDialog({
         "worker_favor",
         resolutionNotes,
         undefined,
-        adminId
-      )
-      toast.success("Sengketa berhasil diselesaikan")
-      onOpenChange(false)
-      onUpdate?.()
+        adminId,
+      );
+      toast.success("Sengketa berhasil diselesaikan");
+      onOpenChange(false);
+      onUpdate?.();
     } catch (resolveError) {
-      setError(resolveError instanceof Error ? resolveError.message : "Unknown error")
-      toast.error("Gagal menyelesaikan sengketa: " + (resolveError instanceof Error ? resolveError.message : "Unknown error"))
+      setError(
+        resolveError instanceof Error ? resolveError.message : "Unknown error",
+      );
+      toast.error(
+        "Gagal menyelesaikan sengketa: " +
+          (resolveError instanceof Error
+            ? resolveError.message
+            : "Unknown error"),
+      );
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   const handleResolveCancelled = async () => {
     if (!dispute || !adminId) {
-      setError("Admin ID is required for resolution")
-      return
+      setError("Admin ID is required for resolution");
+      return;
     }
 
     if (!resolutionNotes.trim()) {
-      setError("Catatan resolusi harus diisi")
-      return
+      setError("Catatan resolusi harus diisi");
+      return;
     }
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       await resolveDispute(
@@ -116,22 +123,29 @@ export function DisputeResolveDialog({
         "business_favor",
         resolutionNotes,
         undefined,
-        adminId
-      )
-      toast.success("Sengketa berhasil dibatalkan")
-      onOpenChange(false)
-      onUpdate?.()
+        adminId,
+      );
+      toast.success("Sengketa berhasil dibatalkan");
+      onOpenChange(false);
+      onUpdate?.();
     } catch (resolveError) {
-      setError(resolveError instanceof Error ? resolveError.message : "Unknown error")
-      toast.error("Gagal menyelesaikan sengketa: " + (resolveError instanceof Error ? resolveError.message : "Unknown error"))
+      setError(
+        resolveError instanceof Error ? resolveError.message : "Unknown error",
+      );
+      toast.error(
+        "Gagal menyelesaikan sengketa: " +
+          (resolveError instanceof Error
+            ? resolveError.message
+            : "Unknown error"),
+      );
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   const handleDismiss = () => {
-    onOpenChange(false)
-  }
+    onOpenChange(false);
+  };
 
   const formatDate = React.useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString("id-ID", {
@@ -140,45 +154,46 @@ export function DisputeResolveDialog({
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    })
-  }, [])
+    });
+  }, []);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "low":
-        return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+        return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
       case "medium":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300";
       case "high":
-        return "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300"
+        return "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300";
       case "urgent":
-        return "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+        return "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300";
       default:
-        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
-  }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
+        return "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300";
       case "reviewing":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300";
       case "resolved":
-        return "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+        return "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300";
       case "dismissed":
-        return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+        return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
       default:
-        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
-  }
+  };
 
   if (!dispute) {
-    return null
+    return null;
   }
 
-  const canResolve = dispute.status === "pending" || dispute.status === "reviewing"
-  const booking = dispute.booking
+  const canResolve =
+    dispute.status === "pending" || dispute.status === "reviewing";
+  const booking = dispute.booking;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -234,10 +249,14 @@ export function DisputeResolveDialog({
                   <Badge
                     variant="outline"
                     className={cn(
-                      booking.status === "pending" && "border-amber-500 text-amber-700",
-                      booking.status === "in_progress" && "border-blue-500 text-blue-700",
-                      booking.status === "completed" && "border-green-500 text-green-700",
-                      booking.status === "cancelled" && "border-red-500 text-red-700"
+                      booking.status === "pending" &&
+                        "border-amber-500 text-amber-700",
+                      booking.status === "in_progress" &&
+                        "border-blue-500 text-blue-700",
+                      booking.status === "completed" &&
+                        "border-green-500 text-green-700",
+                      booking.status === "cancelled" &&
+                        "border-red-500 text-red-700",
                     )}
                   >
                     {booking.status === "pending"
@@ -280,7 +299,9 @@ export function DisputeResolveDialog({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Business */}
               <div className="rounded-lg border bg-muted/20 p-4 space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Bisnis</p>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Bisnis
+                </p>
                 <p className="font-medium">
                   {booking?.business?.name ||
                     (dispute.reporter && (dispute.reporter as any).full_name) ||
@@ -293,7 +314,9 @@ export function DisputeResolveDialog({
 
               {/* Worker */}
               <div className="rounded-lg border bg-muted/20 p-4 space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Pekerja</p>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Pekerja
+                </p>
                 <p className="font-medium">
                   {booking?.worker?.full_name ||
                     (dispute.reported && (dispute.reported as any).full_name) ||
@@ -324,7 +347,9 @@ export function DisputeResolveDialog({
                   <Clock className="h-3 w-3" />
                   Dibuat:
                 </span>
-                <span className="font-medium">{formatDate(dispute.created_at)}</span>
+                <span className="font-medium">
+                  {formatDate(dispute.created_at)}
+                </span>
               </div>
               {dispute.description && (
                 <div className="pt-2 border-t">
@@ -358,7 +383,7 @@ export function DisputeResolveDialog({
                 onChange={(e) => setResolutionNotes(e.target.value)}
                 rows={4}
                 className={cn(
-                  !resolutionNotes.trim() && error && "border-destructive"
+                  !resolutionNotes.trim() && error && "border-destructive",
                 )}
               />
               {!resolutionNotes.trim() && error && (
@@ -404,8 +429,8 @@ export function DisputeResolveDialog({
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setResolutionAction(null)
-                    setError(null)
+                    setResolutionAction(null);
+                    setError(null);
                   }}
                   disabled={loading}
                 >
@@ -462,12 +487,16 @@ export function DisputeResolveDialog({
               </>
             )
           ) : (
-            <Button variant="outline" onClick={handleDismiss} disabled={loading}>
+            <Button
+              variant="outline"
+              onClick={handleDismiss}
+              disabled={loading}
+            >
               Tutup
             </Button>
           )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,68 +1,77 @@
 // @ts-nocheck
-import { supabase } from '../supabase/client'
-import { Database } from '../supabase/types'
-import { SavedSearch, CreateSavedSearchInput, UpdateSavedSearchInput, JobFilters } from '../types/job'
+import { supabase } from "../supabase/client";
+import { Database } from "../supabase/types";
+import {
+  SavedSearch,
+  CreateSavedSearchInput,
+  UpdateSavedSearchInput,
+  JobFilters,
+} from "../types/job";
 
-type SavedSearchesRow = Database['public']['Tables']['saved_searches']['Row']
-type SavedSearchesInsert = Database['public']['Tables']['saved_searches']['Insert']
-type SavedSearchesUpdate = Database['public']['Tables']['saved_searches']['Update']
+type SavedSearchesRow = Database["public"]["Tables"]["saved_searches"]["Row"];
+type SavedSearchesInsert =
+  Database["public"]["Tables"]["saved_searches"]["Insert"];
+type SavedSearchesUpdate =
+  Database["public"]["Tables"]["saved_searches"]["Update"];
 
 export async function getSavedSearches(workerId?: string): Promise<{
-  data: SavedSearch[] | null
-  error: Error | null
+  data: SavedSearch[] | null;
+  error: Error | null;
 }> {
   try {
     let query = supabase
-      .from('saved_searches')
-      .select('*')
-      .order('created_at', { ascending: false })
+      .from("saved_searches")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (workerId) {
-      query = query.eq('worker_id', workerId)
+      query = query.eq("worker_id", workerId);
     }
 
-    const { data, error } = await query
+    const { data, error } = await query;
 
     if (error) {
-      return { data: null, error }
+      return { data: null, error };
     }
 
     // Transform data to match SavedSearch type
-    const savedSearches: SavedSearch[] = (data || []).map((search: SavedSearchesRow) => {
-      return {
-        id: search.id,
-        worker_id: search.worker_id,
-        name: search.name,
-        filters: search.filters as JobFilters,
-        is_favorite: search.is_favorite,
-        created_at: search.created_at,
-        updated_at: search.updated_at,
-      }
-    })
+    const savedSearches: SavedSearch[] = (data || []).map(
+      (search: SavedSearchesRow) => {
+        return {
+          id: search.id,
+          worker_id: search.worker_id,
+          name: search.name,
+          filters: search.filters as JobFilters,
+          is_favorite: search.is_favorite,
+          created_at: search.created_at,
+          updated_at: search.updated_at,
+        };
+      },
+    );
 
-    return { data: savedSearches, error: null }
+    return { data: savedSearches, error: null };
   } catch (error) {
-    return { data: null, error: error as Error }
+    return { data: null, error: error as Error };
   }
 }
 
 export async function getSavedSearchById(id: string): Promise<{
-  data: SavedSearch | null
-  error: Error | null
+  data: SavedSearch | null;
+  error: Error | null;
 }> {
   try {
     const { data, error } = await supabase
-      .from('saved_searches')
-      .select('*')
-      .eq('id', id)
-      .single()
+      .from("saved_searches")
+      .select("*")
+      .eq("id", id)
+      .single();
 
     if (error) {
-      return { data: null, error }
+      return { data: null, error };
     }
 
     if (!data) {
-      return { data: null, error: new Error('Saved search not found') }
+      return { data: null, error: new Error("Saved search not found") };
     }
 
     const savedSearch: SavedSearch = {
@@ -73,20 +82,20 @@ export async function getSavedSearchById(id: string): Promise<{
       is_favorite: data.is_favorite,
       created_at: data.created_at,
       updated_at: data.updated_at,
-    }
+    };
 
-    return { data: savedSearch, error: null }
+    return { data: savedSearch, error: null };
   } catch (error) {
-    return { data: null, error: error as Error }
+    return { data: null, error: error as Error };
   }
 }
 
 export async function createSavedSearch(
   workerId: string,
-  input: CreateSavedSearchInput
+  input: CreateSavedSearchInput,
 ): Promise<{
-  data: SavedSearch | null
-  error: Error | null
+  data: SavedSearch | null;
+  error: Error | null;
 }> {
   try {
     const insertData: SavedSearchesInsert = {
@@ -94,16 +103,16 @@ export async function createSavedSearch(
       name: input.name,
       filters: input.filters as any,
       is_favorite: input.is_favorite ?? false,
-    }
+    };
 
     const { data, error } = await supabase
-      .from('saved_searches')
+      .from("saved_searches")
       .insert(insertData)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { data: null, error }
+      return { data: null, error };
     }
 
     const savedSearch: SavedSearch = {
@@ -114,47 +123,47 @@ export async function createSavedSearch(
       is_favorite: data.is_favorite,
       created_at: data.created_at,
       updated_at: data.updated_at,
-    }
+    };
 
-    return { data: savedSearch, error: null }
+    return { data: savedSearch, error: null };
   } catch (error) {
-    return { data: null, error: error as Error }
+    return { data: null, error: error as Error };
   }
 }
 
 export async function updateSavedSearch(
   id: string,
-  input: UpdateSavedSearchInput
+  input: UpdateSavedSearchInput,
 ): Promise<{
-  data: SavedSearch | null
-  error: Error | null
+  data: SavedSearch | null;
+  error: Error | null;
 }> {
   try {
-    const updateData: SavedSearchesUpdate = {}
+    const updateData: SavedSearchesUpdate = {};
 
     if (input.name !== undefined) {
-      updateData.name = input.name
+      updateData.name = input.name;
     }
     if (input.filters !== undefined) {
-      updateData.filters = input.filters as any
+      updateData.filters = input.filters as any;
     }
     if (input.is_favorite !== undefined) {
-      updateData.is_favorite = input.is_favorite
+      updateData.is_favorite = input.is_favorite;
     }
 
     const { data, error } = await supabase
-      .from('saved_searches')
+      .from("saved_searches")
       .update(updateData)
-      .eq('id', id)
+      .eq("id", id)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { data: null, error }
+      return { data: null, error };
     }
 
     if (!data) {
-      return { data: null, error: new Error('Saved search not found') }
+      return { data: null, error: new Error("Saved search not found") };
     }
 
     const savedSearch: SavedSearch = {
@@ -165,63 +174,63 @@ export async function updateSavedSearch(
       is_favorite: data.is_favorite,
       created_at: data.created_at,
       updated_at: data.updated_at,
-    }
+    };
 
-    return { data: savedSearch, error: null }
+    return { data: savedSearch, error: null };
   } catch (error) {
-    return { data: null, error: error as Error }
+    return { data: null, error: error as Error };
   }
 }
 
 export async function deleteSavedSearch(id: string): Promise<{
-  error: Error | null
+  error: Error | null;
 }> {
   try {
     const { error } = await supabase
-      .from('saved_searches')
+      .from("saved_searches")
       .delete()
-      .eq('id', id)
+      .eq("id", id);
 
     if (error) {
-      return { error }
+      return { error };
     }
 
-    return { error: null }
+    return { error: null };
   } catch (error) {
-    return { error: error as Error }
+    return { error: error as Error };
   }
 }
 
 export async function toggleSavedSearchFavorite(id: string): Promise<{
-  data: SavedSearch | null
-  error: Error | null
+  data: SavedSearch | null;
+  error: Error | null;
 }> {
   try {
     // First, get the current saved search
     const { data: current, error: fetchError } = await supabase
-      .from('saved_searches')
-      .select('*')
-      .eq('id', id)
-      .single()
+      .from("saved_searches")
+      .select("*")
+      .eq("id", id)
+      .single();
 
     if (fetchError) {
-      return { data: null, error: fetchError }
+      return { data: null, error: fetchError };
     }
 
     if (!current) {
-      return { data: null, error: new Error('Saved search not found') }
+      return { data: null, error: new Error("Saved search not found") };
     }
 
     // Toggle the favorite status
     const { data, error } = await supabase
-      .from('saved_searches')
+      .from("saved_searches")
       .update({ is_favorite: !current.is_favorite })
-      .eq('id', id)
+      .eq("id", id)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { data: null, error }
+      return { data: null, error };
     }
 
     const savedSearch: SavedSearch = {
@@ -232,10 +241,10 @@ export async function toggleSavedSearchFavorite(id: string): Promise<{
       is_favorite: data.is_favorite,
       created_at: data.created_at,
       updated_at: data.updated_at,
-    }
+    };
 
-    return { data: savedSearch, error: null }
+    return { data: savedSearch, error: null };
   } catch (error) {
-    return { data: null, error: error as Error }
+    return { data: null, error: error as Error };
   }
 }

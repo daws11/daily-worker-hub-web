@@ -1,36 +1,36 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useRouter } from "next/navigation"
+import * as React from "react";
+import { useRouter } from "next/navigation";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import {
   getSocialConnections,
   disconnectSocialPlatform,
   type SocialConnectionListResult,
-} from "@/lib/actions/social"
+} from "@/lib/actions/social";
 import type {
   BusinessSocialConnectionWithPlatform,
   SocialPlatformType,
-} from "@/lib/types/social"
+} from "@/lib/types/social";
 
 // Social platform configuration
 export const SOCIAL_PLATFORMS: Record<
   SocialPlatformType,
   {
-    name: string
-    description: string
-    icon: string
-    color: string
-    borderColor: string
+    name: string;
+    description: string;
+    icon: string;
+    color: string;
+    borderColor: string;
   }
 > = {
   instagram: {
@@ -61,12 +61,14 @@ export const SOCIAL_PLATFORMS: Record<
     color: "text-gray-700",
     borderColor: "border-gray-300",
   },
-}
+};
 
 export interface SocialPlatformConnectProps {
-  businessId: string
-  onConnectionChange?: (connections: BusinessSocialConnectionWithPlatform[]) => void
-  className?: string
+  businessId: string;
+  onConnectionChange?: (
+    connections: BusinessSocialConnectionWithPlatform[],
+  ) => void;
+  className?: string;
 }
 
 export function SocialPlatformConnect({
@@ -74,104 +76,109 @@ export function SocialPlatformConnect({
   onConnectionChange,
   className,
 }: SocialPlatformConnectProps) {
-  const router = useRouter()
+  const router = useRouter();
   const [connections, setConnections] = React.useState<
     BusinessSocialConnectionWithPlatform[]
-  >([])
-  const [isLoading, setIsLoading] = React.useState(true)
+  >([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [isDisconnecting, setIsDisconnecting] = React.useState<string | null>(
-    null
-  )
-  const [error, setError] = React.useState<string | null>(null)
+    null,
+  );
+  const [error, setError] = React.useState<string | null>(null);
 
   // Fetch connections on mount
   React.useEffect(() => {
     const fetchConnections = async () => {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(true);
+      setError(null);
 
-      const result: SocialConnectionListResult =
-        await getSocialConnections(businessId, { status: "active" })
+      const result: SocialConnectionListResult = await getSocialConnections(
+        businessId,
+        { status: "active" },
+      );
 
       if (result.success && result.data) {
-        setConnections(result.data)
-        onConnectionChange?.(result.data)
+        setConnections(result.data);
+        onConnectionChange?.(result.data);
       } else if (result.error) {
-        setError(result.error)
+        setError(result.error);
       }
 
-      setIsLoading(false)
-    }
+      setIsLoading(false);
+    };
 
-    fetchConnections()
-  }, [businessId, onConnectionChange])
+    fetchConnections();
+  }, [businessId, onConnectionChange]);
 
   // Get connection for a specific platform
   const getConnectionForPlatform = (
-    platformType: SocialPlatformType
+    platformType: SocialPlatformType,
   ): BusinessSocialConnectionWithPlatform | undefined => {
     return connections.find(
-      (c) => c.platform?.platform_type === platformType && c.status === "active"
-    )
-  }
+      (c) =>
+        c.platform?.platform_type === platformType && c.status === "active",
+    );
+  };
 
   // Handle OAuth connect
   const handleConnect = async (platformType: SocialPlatformType) => {
     try {
       // Open OAuth flow in popup
-      const width = 600
-      const height = 700
-      const left = window.screen.width / 2 - width / 2
-      const top = window.screen.height / 2 - height / 2
+      const width = 600;
+      const height = 700;
+      const left = window.screen.width / 2 - width / 2;
+      const top = window.screen.height / 2 - height / 2;
 
       const popup = window.open(
         `/api/social/auth/${platformType}?business_id=${businessId}`,
         `Connect ${SOCIAL_PLATFORMS[platformType].name}`,
-        `width=${width},height=${height},left=${left},top=${top}`
-      )
+        `width=${width},height=${height},left=${left},top=${top}`,
+      );
 
       // Listen for popup closure or success message
       const checkPopup = setInterval(() => {
         if (!popup || popup.closed) {
-          clearInterval(checkPopup)
+          clearInterval(checkPopup);
           // Refresh connections after popup closes
           const refreshConnections = async () => {
             const result: SocialConnectionListResult =
-              await getSocialConnections(businessId, { status: "active" })
+              await getSocialConnections(businessId, { status: "active" });
 
             if (result.success && result.data) {
-              setConnections(result.data)
-              onConnectionChange?.(result.data)
+              setConnections(result.data);
+              onConnectionChange?.(result.data);
             }
-          }
-          refreshConnections()
+          };
+          refreshConnections();
         }
-      }, 500)
+      }, 500);
     } catch (err) {
-      setError("Gagal membuka halaman koneksi")
+      setError("Gagal membuka halaman koneksi");
     }
-  }
+  };
 
   // Handle disconnect
   const handleDisconnect = async (
-    connection: BusinessSocialConnectionWithPlatform
+    connection: BusinessSocialConnectionWithPlatform,
   ) => {
-    setIsDisconnecting(connection.id)
-    setError(null)
+    setIsDisconnecting(connection.id);
+    setError(null);
 
-    const result = await disconnectSocialPlatform(connection.id, businessId)
+    const result = await disconnectSocialPlatform(connection.id, businessId);
 
     if (result.success) {
       // Remove from local state
-      const updatedConnections = connections.filter((c) => c.id !== connection.id)
-      setConnections(updatedConnections)
-      onConnectionChange?.(updatedConnections)
+      const updatedConnections = connections.filter(
+        (c) => c.id !== connection.id,
+      );
+      setConnections(updatedConnections);
+      onConnectionChange?.(updatedConnections);
     } else {
-      setError(result.error || "Gagal memutus koneksi")
+      setError(result.error || "Gagal memutus koneksi");
     }
 
-    setIsDisconnecting(null)
-  }
+    setIsDisconnecting(null);
+  };
 
   if (isLoading) {
     return (
@@ -190,7 +197,7 @@ export function SocialPlatformConnect({
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -204,15 +211,15 @@ export function SocialPlatformConnect({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {(Object.keys(SOCIAL_PLATFORMS) as SocialPlatformType[]).map(
           (platformType) => {
-            const platform = SOCIAL_PLATFORMS[platformType]
-            const connection = getConnectionForPlatform(platformType)
+            const platform = SOCIAL_PLATFORMS[platformType];
+            const connection = getConnectionForPlatform(platformType);
 
             return (
               <Card
                 key={platformType}
                 className={cn(
                   "transition-all hover:shadow-md",
-                  connection ? platform.borderColor : ""
+                  connection ? platform.borderColor : "",
                 )}
               >
                 <CardHeader>
@@ -234,7 +241,7 @@ export function SocialPlatformConnect({
                       <div
                         className={cn(
                           "flex h-6 w-6 items-center justify-center rounded-full bg-green-100",
-                          platform.color
+                          platform.color,
                         )}
                       >
                         <svg
@@ -273,7 +280,7 @@ export function SocialPlatformConnect({
                           </span>
                           <span className="text-muted-foreground">
                             {new Date(
-                              connection.last_used_at
+                              connection.last_used_at,
                             ).toLocaleDateString("id-ID", {
                               day: "numeric",
                               month: "short",
@@ -305,10 +312,10 @@ export function SocialPlatformConnect({
                   )}
                 </CardContent>
               </Card>
-            )
-          }
+            );
+          },
         )}
       </div>
     </div>
-  )
+  );
 }

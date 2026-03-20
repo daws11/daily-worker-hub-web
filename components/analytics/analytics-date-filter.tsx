@@ -1,153 +1,154 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { DateRange, DateRangePreset } from '@/lib/types/analytics'
-import { Calendar, X } from 'lucide-react'
-import { cn } from '@/lib/utils'
+} from "@/components/ui/select";
+import { DateRange, DateRangePreset } from "@/lib/types/analytics";
+import { Calendar, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AnalyticsDateFilterProps {
-  dateRange?: DateRange
-  onDateRangeChange: (dateRange: DateRange) => void
-  className?: string
+  dateRange?: DateRange;
+  onDateRangeChange: (dateRange: DateRange) => void;
+  className?: string;
 }
 
-type SelectedPreset = DateRangePreset | 'custom'
+type SelectedPreset = DateRangePreset | "custom";
 
 const dateRangePresets: { value: DateRangePreset; label: string }[] = [
-  { value: '7d', label: '7 Hari Terakhir' },
-  { value: '30d', label: '30 Hari Terakhir' },
-  { value: '90d', label: '90 Hari Terakhir' },
-  { value: '6m', label: '6 Bulan Terakhir' },
-  { value: '1y', label: '1 Tahun Terakhir' },
-  { value: 'all', label: 'Semua Waktu' },
-]
+  { value: "7d", label: "7 Hari Terakhir" },
+  { value: "30d", label: "30 Hari Terakhir" },
+  { value: "90d", label: "90 Hari Terakhir" },
+  { value: "6m", label: "6 Bulan Terakhir" },
+  { value: "1y", label: "1 Tahun Terakhir" },
+  { value: "all", label: "Semua Waktu" },
+];
 
 function getDateRangeFromPreset(preset: DateRangePreset): DateRange {
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  let from: Date
+  let from: Date;
 
   switch (preset) {
-    case '7d':
-      from = new Date(today)
-      from.setDate(from.getDate() - 7)
-      break
-    case '30d':
-      from = new Date(today)
-      from.setDate(from.getDate() - 30)
-      break
-    case '90d':
-      from = new Date(today)
-      from.setDate(from.getDate() - 90)
-      break
-    case '6m':
-      from = new Date(today)
-      from.setMonth(from.getMonth() - 6)
-      break
-    case '1y':
-      from = new Date(today)
-      from.setFullYear(from.getFullYear() - 1)
-      break
-    case 'all':
+    case "7d":
+      from = new Date(today);
+      from.setDate(from.getDate() - 7);
+      break;
+    case "30d":
+      from = new Date(today);
+      from.setDate(from.getDate() - 30);
+      break;
+    case "90d":
+      from = new Date(today);
+      from.setDate(from.getDate() - 90);
+      break;
+    case "6m":
+      from = new Date(today);
+      from.setMonth(from.getMonth() - 6);
+      break;
+    case "1y":
+      from = new Date(today);
+      from.setFullYear(from.getFullYear() - 1);
+      break;
+    case "all":
     default:
-      from = new Date(2020, 0, 1) // Default start date for "all time"
-      break
+      from = new Date(2020, 0, 1); // Default start date for "all time"
+      break;
   }
 
   return {
-    from: from.toISOString().split('T')[0],
-    to: today.toISOString().split('T')[0],
+    from: from.toISOString().split("T")[0],
+    to: today.toISOString().split("T")[0],
     preset,
-  }
+  };
 }
 
-export function AnalyticsDateFilter({ dateRange, onDateRangeChange, className }: AnalyticsDateFilterProps) {
+export function AnalyticsDateFilter({
+  dateRange,
+  onDateRangeChange,
+  className,
+}: AnalyticsDateFilterProps) {
   const [localDateRange, setLocalDateRange] = useState<DateRange>(
-    dateRange || getDateRangeFromPreset('30d')
-  )
-  const [fromDate, setFromDate] = useState<string>(
-    localDateRange.from
-  )
-  const [toDate, setToDate] = useState<string>(
-    localDateRange.to
-  )
+    dateRange || getDateRangeFromPreset("30d"),
+  );
+  const [fromDate, setFromDate] = useState<string>(localDateRange.from);
+  const [toDate, setToDate] = useState<string>(localDateRange.to);
   const [selectedPreset, setSelectedPreset] = useState<SelectedPreset>(
-    localDateRange.preset || '30d'
-  )
+    localDateRange.preset || "30d",
+  );
 
   // Update local state when dateRange prop changes
   useEffect(() => {
     if (dateRange) {
-      setLocalDateRange(dateRange)
-      setFromDate(dateRange.from)
-      setToDate(dateRange.to)
+      setLocalDateRange(dateRange);
+      setFromDate(dateRange.from);
+      setToDate(dateRange.to);
       if (dateRange.preset) {
-        setSelectedPreset(dateRange.preset)
+        setSelectedPreset(dateRange.preset);
       } else {
-        setSelectedPreset('custom')
+        setSelectedPreset("custom");
       }
     }
-  }, [dateRange])
+  }, [dateRange]);
 
   const handlePresetChange = (value: string) => {
-    const preset = value as DateRangePreset
-    setSelectedPreset(preset)
-    const newDateRange = getDateRangeFromPreset(preset)
-    setLocalDateRange(newDateRange)
-    setFromDate(newDateRange.from)
-    setToDate(newDateRange.to)
-    onDateRangeChange(newDateRange)
-  }
+    const preset = value as DateRangePreset;
+    setSelectedPreset(preset);
+    const newDateRange = getDateRangeFromPreset(preset);
+    setLocalDateRange(newDateRange);
+    setFromDate(newDateRange.from);
+    setToDate(newDateRange.to);
+    onDateRangeChange(newDateRange);
+  };
 
   const handleFromDateChange = (value: string) => {
-    setFromDate(value)
+    setFromDate(value);
     const newDateRange: DateRange = {
       ...localDateRange,
       from: value,
       preset: undefined,
-    }
-    setLocalDateRange(newDateRange)
-    setSelectedPreset('custom')
-    onDateRangeChange(newDateRange)
-  }
+    };
+    setLocalDateRange(newDateRange);
+    setSelectedPreset("custom");
+    onDateRangeChange(newDateRange);
+  };
 
   const handleToDateChange = (value: string) => {
-    setToDate(value)
+    setToDate(value);
     const newDateRange: DateRange = {
       ...localDateRange,
       to: value,
       preset: undefined,
-    }
-    setLocalDateRange(newDateRange)
-    setSelectedPreset('custom')
-    onDateRangeChange(newDateRange)
-  }
+    };
+    setLocalDateRange(newDateRange);
+    setSelectedPreset("custom");
+    onDateRangeChange(newDateRange);
+  };
 
   const handleClearDates = () => {
-    const clearedDateRange = getDateRangeFromPreset('all')
-    setLocalDateRange(clearedDateRange)
-    setFromDate(clearedDateRange.from)
-    setToDate(clearedDateRange.to)
-    setSelectedPreset('all')
-    onDateRangeChange(clearedDateRange)
-  }
+    const clearedDateRange = getDateRangeFromPreset("all");
+    setLocalDateRange(clearedDateRange);
+    setFromDate(clearedDateRange.from);
+    setToDate(clearedDateRange.to);
+    setSelectedPreset("all");
+    onDateRangeChange(clearedDateRange);
+  };
 
-  const hasCustomDates = selectedPreset === 'custom' || (localDateRange.preset === undefined)
+  const hasCustomDates =
+    selectedPreset === "custom" || localDateRange.preset === undefined;
 
   return (
-    <Card className={cn('', className)}>
+    <Card className={cn("", className)}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
@@ -174,7 +175,7 @@ export function AnalyticsDateFilter({ dateRange, onDateRangeChange, className }:
             Periode
           </Label>
           <Select
-            value={selectedPreset === 'custom' ? 'custom' : selectedPreset}
+            value={selectedPreset === "custom" ? "custom" : selectedPreset}
             onValueChange={handlePresetChange}
           >
             <SelectTrigger id="date-preset">
@@ -195,7 +196,10 @@ export function AnalyticsDateFilter({ dateRange, onDateRangeChange, className }:
           <Label className="text-sm">Rentang Tanggal Kustom</Label>
           <div className="space-y-2">
             <div className="space-y-1">
-              <Label htmlFor="date-from" className="text-xs text-muted-foreground">
+              <Label
+                htmlFor="date-from"
+                className="text-xs text-muted-foreground"
+              >
                 Dari
               </Label>
               <Input
@@ -207,7 +211,10 @@ export function AnalyticsDateFilter({ dateRange, onDateRangeChange, className }:
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="date-to" className="text-xs text-muted-foreground">
+              <Label
+                htmlFor="date-to"
+                className="text-xs text-muted-foreground"
+              >
                 Sampai
               </Label>
               <Input
@@ -222,5 +229,5 @@ export function AnalyticsDateFilter({ dateRange, onDateRangeChange, className }:
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

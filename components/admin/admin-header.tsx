@@ -1,50 +1,50 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useRouter } from "next/navigation"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { useAuth } from "@/app/providers/auth-provider"
-import { LogOut, Shield } from "lucide-react"
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/app/providers/auth-provider";
+import { LogOut, Shield } from "lucide-react";
 
 interface AdminHeaderProps extends React.HTMLAttributes<HTMLElement> {
-  className?: string
+  className?: string;
 }
 
 const AdminHeader = React.forwardRef<HTMLElement, AdminHeaderProps>(
   ({ className, ...props }, ref) => {
-    const { user, signOut } = useAuth()
-    const router = useRouter()
+    const { user, signOut } = useAuth();
+    const router = useRouter();
 
     const handleLogout = async () => {
-      await signOut()
-      router.push("/")
-    }
+      await signOut();
+      router.push("/");
+    };
 
     // Get admin initials from email or name
     const getInitials = () => {
       if (user?.user_metadata?.full_name) {
-        const name = user.user_metadata.full_name as string
+        const name = user.user_metadata.full_name as string;
         return name
           .split(" ")
           .map((n) => n[0])
           .join("")
           .toUpperCase()
-          .slice(0, 2)
+          .slice(0, 2);
       }
       if (user?.email) {
-        return user.email.slice(0, 2).toUpperCase()
+        return user.email.slice(0, 2).toUpperCase();
       }
-      return "AD"
-    }
+      return "AD";
+    };
 
     return (
       <header
         ref={ref}
         className={cn(
           "sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
-          className
+          className,
         )}
         {...props}
       >
@@ -68,7 +68,9 @@ const AdminHeader = React.forwardRef<HTMLElement, AdminHeaderProps>(
                 </p>
               </div>
               <Avatar>
-                <AvatarImage src={user?.user_metadata?.avatar_url as string | undefined} />
+                <AvatarImage
+                  src={user?.user_metadata?.avatar_url as string | undefined}
+                />
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {getInitials()}
                 </AvatarFallback>
@@ -86,10 +88,10 @@ const AdminHeader = React.forwardRef<HTMLElement, AdminHeaderProps>(
           </div>
         </div>
       </header>
-    )
-  }
-)
+    );
+  },
+);
 
-AdminHeader.displayName = "AdminHeader"
+AdminHeader.displayName = "AdminHeader";
 
-export { AdminHeader }
+export { AdminHeader };

@@ -1,20 +1,26 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Award, ChevronRight, Loader2 } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { Button } from "@/components/ui/button"
-import { AchievementBadgeIcon } from "./achievement-badge-icon"
-import type { BadgeWithProgress } from "@/lib/badges"
+import * as React from "react";
+import { Award, ChevronRight, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { AchievementBadgeIcon } from "./achievement-badge-icon";
+import type { BadgeWithProgress } from "@/lib/badges";
 
 export interface AchievementBadgeProgressProps {
-  badges: BadgeWithProgress[]
-  loading?: boolean
-  maxDisplay?: number
-  className?: string
-  onViewAll?: () => void
+  badges: BadgeWithProgress[];
+  loading?: boolean;
+  maxDisplay?: number;
+  className?: string;
+  onViewAll?: () => void;
 }
 
 export function AchievementBadgeProgress({
@@ -22,13 +28,15 @@ export function AchievementBadgeProgress({
   loading = false,
   maxDisplay = 3,
   className,
-  onViewAll
+  onViewAll,
 }: AchievementBadgeProgressProps) {
   // Filter to only show unearned badges with progress
   const inProgressBadges = badges
-    .filter(b => !b.earned && b.progress && b.progress.percentage > 0)
-    .sort((a, b) => (b.progress?.percentage || 0) - (a.progress?.percentage || 0))
-    .slice(0, maxDisplay)
+    .filter((b) => !b.earned && b.progress && b.progress.percentage > 0)
+    .sort(
+      (a, b) => (b.progress?.percentage || 0) - (a.progress?.percentage || 0),
+    )
+    .slice(0, maxDisplay);
 
   if (loading) {
     return (
@@ -42,7 +50,7 @@ export function AchievementBadgeProgress({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (inProgressBadges.length === 0) {
@@ -63,7 +71,7 @@ export function AchievementBadgeProgress({
           </div>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -77,9 +85,9 @@ export function AchievementBadgeProgress({
             </CardDescription>
           </div>
           {onViewAll && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onViewAll}
               className="text-primary"
             >
@@ -95,16 +103,16 @@ export function AchievementBadgeProgress({
         ))}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export interface BadgeProgressBarProps {
-  badge: BadgeWithProgress
-  className?: string
+  badge: BadgeWithProgress;
+  className?: string;
 }
 
 export function BadgeProgressBar({ badge, className }: BadgeProgressBarProps) {
-  const progress = badge.progress!
+  const progress = badge.progress!;
 
   return (
     <div className={cn("flex items-center gap-3", className)}>
@@ -114,7 +122,7 @@ export function BadgeProgressBar({ badge, className }: BadgeProgressBarProps) {
         earned={false}
         size="sm"
       />
-      
+
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
           <span className="text-sm font-medium truncate">{badge.name}</span>
@@ -122,32 +130,35 @@ export function BadgeProgressBar({ badge, className }: BadgeProgressBarProps) {
             {progress.current}/{progress.target}
           </span>
         </div>
-        
+
         <div className="relative">
-          <Progress 
-            value={progress.percentage} 
-            className="h-2"
-          />
+          <Progress value={progress.percentage} className="h-2" />
         </div>
-        
+
         <p className="text-xs text-muted-foreground mt-1 truncate">
           {badge.criteria}
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 export interface BadgeProgressListProps {
-  badges: BadgeWithProgress[]
-  loading?: boolean
-  className?: string
+  badges: BadgeWithProgress[];
+  loading?: boolean;
+  className?: string;
 }
 
-export function BadgeProgressList({ badges, loading, className }: BadgeProgressListProps) {
+export function BadgeProgressList({
+  badges,
+  loading,
+  className,
+}: BadgeProgressListProps) {
   const inProgressBadges = badges
-    .filter(b => !b.earned && b.progress && b.progress.percentage > 0)
-    .sort((a, b) => (b.progress?.percentage || 0) - (a.progress?.percentage || 0))
+    .filter((b) => !b.earned && b.progress && b.progress.percentage > 0)
+    .sort(
+      (a, b) => (b.progress?.percentage || 0) - (a.progress?.percentage || 0),
+    );
 
   if (loading) {
     return (
@@ -162,7 +173,7 @@ export function BadgeProgressList({ badges, loading, className }: BadgeProgressL
           </div>
         ))}
       </div>
-    )
+    );
   }
 
   if (inProgressBadges.length === 0) {
@@ -171,7 +182,7 @@ export function BadgeProgressList({ badges, loading, className }: BadgeProgressL
         <Award className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
         <p className="text-muted-foreground">All badges earned!</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -180,5 +191,5 @@ export function BadgeProgressList({ badges, loading, className }: BadgeProgressL
         <BadgeProgressBar key={badge.type} badge={badge} />
       ))}
     </div>
-  )
+  );
 }

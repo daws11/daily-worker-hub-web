@@ -1,22 +1,36 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Globe, FileText, Building2, MapPin, Phone, Mail, Briefcase } from "lucide-react"
-import { OnboardingDraft } from "@/lib/utils/draft-storage"
+import { useState, useEffect } from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Globe,
+  FileText,
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
+  Briefcase,
+} from "lucide-react";
+import { OnboardingDraft } from "@/lib/utils/draft-storage";
 
 interface BusinessDescriptionReviewProps {
-  value: Pick<OnboardingDraft, 'description' | 'website'>
-  identityInfo: Pick<OnboardingDraft, 'businessName' | 'businessType' | 'businessPhone' | 'businessEmail'>
-  locationInfo: Pick<OnboardingDraft, 'businessAddress' | 'businessLat' | 'businessLng'>
-  onChange: (data: Pick<OnboardingDraft, 'description' | 'website'>) => void
-  onValidChange: (isValid: boolean) => void
-  onTermsChange: (accepted: boolean) => void
+  value: Pick<OnboardingDraft, "description" | "website">;
+  identityInfo: Pick<
+    OnboardingDraft,
+    "businessName" | "businessType" | "businessPhone" | "businessEmail"
+  >;
+  locationInfo: Pick<
+    OnboardingDraft,
+    "businessAddress" | "businessLat" | "businessLng"
+  >;
+  onChange: (data: Pick<OnboardingDraft, "description" | "website">) => void;
+  onValidChange: (isValid: boolean) => void;
+  onTermsChange: (accepted: boolean) => void;
 }
 
 export function BusinessDescriptionReview({
@@ -27,50 +41,52 @@ export function BusinessDescriptionReview({
   onValidChange,
   onTermsChange,
 }: BusinessDescriptionReviewProps) {
-  const [description, setDescription] = useState(value.description || "")
-  const [website, setWebsite] = useState(value.website || "")
-  const [termsAccepted, setTermsAccepted] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [description, setDescription] = useState(value.description || "");
+  const [website, setWebsite] = useState(value.website || "");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Validate form
   useEffect(() => {
-    const newErrors: Record<string, string> = {}
+    const newErrors: Record<string, string> = {};
 
     // Website validation (optional, but if provided must be valid)
     if (website.trim()) {
       try {
         // Add protocol if missing
-        const urlToTest = website.startsWith('http') ? website : `https://${website}`
-        new URL(urlToTest)
+        const urlToTest = website.startsWith("http")
+          ? website
+          : `https://${website}`;
+        new URL(urlToTest);
       } catch {
-        newErrors.website = "Please enter a valid website URL"
+        newErrors.website = "Please enter a valid website URL";
       }
     }
 
-    setErrors(newErrors)
-    const isValid = Object.keys(newErrors).length === 0 && termsAccepted
-    onValidChange(isValid)
+    setErrors(newErrors);
+    const isValid = Object.keys(newErrors).length === 0 && termsAccepted;
+    onValidChange(isValid);
 
     // Notify parent of changes
-    onChange({ description, website })
-  }, [description, website, termsAccepted, onValidChange, onChange])
+    onChange({ description, website });
+  }, [description, website, termsAccepted, onValidChange, onChange]);
 
   const handleTermsChange = (checked: boolean) => {
-    setTermsAccepted(checked)
-    onTermsChange(checked)
-  }
+    setTermsAccepted(checked);
+    onTermsChange(checked);
+  };
 
   // Format website URL for display
   const formatWebsite = (url: string) => {
-    if (!url) return ''
-    return url.startsWith('http') ? url : `https://${url}`
-  }
+    if (!url) return "";
+    return url.startsWith("http") ? url : `https://${url}`;
+  };
 
   // Get business type display label
   const getBusinessTypeLabel = (type: string | undefined) => {
-    if (!type) return type
-    return type.replace('/', ' / ')
-  }
+    if (!type) return type;
+    return type.replace("/", " / ");
+  };
 
   return (
     <div className="space-y-6">
@@ -86,7 +102,8 @@ export function BusinessDescriptionReview({
         {/* Description */}
         <div className="space-y-2">
           <Label htmlFor="description">
-            Business Description <span className="text-muted-foreground">(optional)</span>
+            Business Description{" "}
+            <span className="text-muted-foreground">(optional)</span>
           </Label>
           <div className="relative">
             <Textarea
@@ -160,11 +177,15 @@ export function BusinessDescriptionReview({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Phone</span>
-                <span className="font-medium">{identityInfo.businessPhone}</span>
+                <span className="font-medium">
+                  {identityInfo.businessPhone}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Email</span>
-                <span className="font-medium">{identityInfo.businessEmail}</span>
+                <span className="font-medium">
+                  {identityInfo.businessEmail}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -194,9 +215,9 @@ export function BusinessDescriptionReview({
               {website && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Website</span>
-                  <a 
-                    href={formatWebsite(website)} 
-                    target="_blank" 
+                  <a
+                    href={formatWebsite(website)}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-primary hover:underline"
                   >
@@ -207,11 +228,15 @@ export function BusinessDescriptionReview({
               {description && (
                 <div className="pt-2">
                   <span className="text-muted-foreground">Description</span>
-                  <p className="mt-1 text-xs text-muted-foreground line-clamp-3">{description}</p>
+                  <p className="mt-1 text-xs text-muted-foreground line-clamp-3">
+                    {description}
+                  </p>
                 </div>
               )}
               {!website && !description && (
-                <p className="text-muted-foreground text-xs italic">No additional information provided</p>
+                <p className="text-muted-foreground text-xs italic">
+                  No additional information provided
+                </p>
               )}
             </CardContent>
           </Card>
@@ -227,19 +252,31 @@ export function BusinessDescriptionReview({
             onCheckedChange={handleTermsChange}
             className="mt-0.5"
           />
-          <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
-            I agree to the{' '}
-            <a href="/terms" className="text-primary hover:underline" target="_blank">
+          <Label
+            htmlFor="terms"
+            className="text-sm leading-relaxed cursor-pointer"
+          >
+            I agree to the{" "}
+            <a
+              href="/terms"
+              className="text-primary hover:underline"
+              target="_blank"
+            >
               Terms of Service
-            </a>{' '}
-            and{' '}
-            <a href="/privacy" className="text-primary hover:underline" target="_blank">
+            </a>{" "}
+            and{" "}
+            <a
+              href="/privacy"
+              className="text-primary hover:underline"
+              target="_blank"
+            >
               Privacy Policy
             </a>
-            . I understand that my business information will be visible to workers on the platform.
+            . I understand that my business information will be visible to
+            workers on the platform.
           </Label>
         </div>
       </div>
     </div>
-  )
+  );
 }

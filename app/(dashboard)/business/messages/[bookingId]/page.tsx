@@ -1,146 +1,163 @@
-"use client"
+"use client";
 
-import { useState, useCallback, useEffect, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { useAuth } from '@/app/providers/auth-provider'
-import { getBookingMessages } from '@/lib/supabase/queries/messages'
-import { getBookingById } from '@/lib/supabase/queries/bookings'
-import { sendMessage } from '@/lib/actions/messages'
-import { Loader2, AlertCircle, ArrowLeft, MessageCircle, Send } from 'lucide-react'
-import { toast } from 'sonner'
-import { useRealtimeMessages } from '@/lib/hooks/use-realtime-messages'
-import type { MessageWithRelations } from '@/lib/types/message'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useAuth } from "@/app/providers/auth-provider";
+import { getBookingMessages } from "@/lib/supabase/queries/messages";
+import { getBookingById } from "@/lib/supabase/queries/bookings";
+import { sendMessage } from "@/lib/actions/messages";
+import {
+  Loader2,
+  AlertCircle,
+  ArrowLeft,
+  MessageCircle,
+  Send,
+} from "lucide-react";
+import { toast } from "sonner";
+import { useRealtimeMessages } from "@/lib/hooks/use-realtime-messages";
+import type { MessageWithRelations } from "@/lib/types/message";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function BusinessBookingMessagePage() {
-  const params = useParams()
-  const router = useRouter()
-  const { user } = useAuth()
-  const bookingId = params.bookingId as string
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const params = useParams();
+  const router = useRouter();
+  const { user } = useAuth();
+  const bookingId = params.bookingId as string;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const [messages, setMessages] = useState<MessageWithRelations[]>([])
-  const [loading, setLoading] = useState(true)
-  const [sending, setSending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [receiverInfo, setReceiverInfo] = useState<{ id: string; name: string } | null>(null)
-  const [isConnected, setIsConnected] = useState(false)
+  const [messages, setMessages] = useState<MessageWithRelations[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [receiverInfo, setReceiverInfo] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
 
   // Fetch messages and booking details
   const fetchMessages = useCallback(async () => {
-    if (!bookingId || !user?.id) return
+    if (!bookingId || !user?.id) return;
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       // Fetch messages for this booking
-      const { data: messagesData, error: messagesError } = await getBookingMessages(bookingId)
+      const { data: messagesData, error: messagesError } =
+        await getBookingMessages(bookingId);
 
       if (messagesError) {
-        throw messagesError
+        throw messagesError;
       }
 
       // Fetch booking details to get worker info
-      const { data: bookingData, error: bookingError } = await getBookingById(bookingId)
+      const { data: bookingData, error: bookingError } =
+        await getBookingById(bookingId);
 
       if (bookingError) {
-        throw bookingError
+        throw bookingError;
       }
 
       // Determine receiver (worker)
       if (bookingData?.worker) {
         setReceiverInfo({
           id: bookingData.worker.id,
-          name: bookingData.worker.full_name || 'Pekerja'
-        })
+          name: bookingData.worker.full_name || "Pekerja",
+        });
       }
 
-      setMessages(messagesData || [])
-      
+      setMessages(messagesData || []);
+
       // Scroll to bottom after messages load
       setTimeout(() => {
         if (scrollRef.current) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-      }, 100)
+      }, 100);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Gagal memuat pesan'
-      setError(message)
-      toast.error(message)
+      const message = err instanceof Error ? err.message : "Gagal memuat pesan";
+      setError(message);
+      toast.error(message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [bookingId, user?.id])
+  }, [bookingId, user?.id]);
 
   // Subscribe to realtime message updates
   useRealtimeMessages(
     { bookingId, enabled: true },
     {
       onMessageChange: async () => {
-        await fetchMessages()
+        await fetchMessages();
       },
       onConnect: () => {
-        setIsConnected(true)
+        setIsConnected(true);
       },
       onDisconnect: () => {
-        setIsConnected(false)
-      }
-    }
-  )
+        setIsConnected(false);
+      },
+    },
+  );
 
   // Fetch messages on mount
   useEffect(() => {
-    fetchMessages()
-  }, [fetchMessages])
+    fetchMessages();
+  }, [fetchMessages]);
 
   // Send message
   const handleSendMessage = async (content: string) => {
-    if (!receiverInfo || !user?.id || !content.trim()) return
+    if (!receiverInfo || !user?.id || !content.trim()) return;
 
-    setSending(true)
+    setSending(true);
     try {
-      const result = await sendMessage(user.id, receiverInfo.id, content, bookingId)
+      const result = await sendMessage(
+        user.id,
+        receiverInfo.id,
+        content,
+        bookingId,
+      );
 
       if (!result.success) {
-        throw new Error(result.error || 'Gagal mengirim pesan')
+        throw new Error(result.error || "Gagal mengirim pesan");
       }
 
       // Refresh messages after sending
-      await fetchMessages()
-      
+      await fetchMessages();
+
       // Clear input
       if (inputRef.current) {
-        inputRef.current.value = ''
+        inputRef.current.value = "";
       }
-      
+
       // Scroll to bottom
       setTimeout(() => {
         if (scrollRef.current) {
-          scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-      }, 100)
+      }, 100);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Gagal mengirim pesan'
-      toast.error(message)
+      const message =
+        err instanceof Error ? err.message : "Gagal mengirim pesan";
+      toast.error(message);
     } finally {
-      setSending(false)
+      setSending(false);
     }
-  }
+  };
 
   // Format time
   const formatTime = (dateString: string) => {
-    return new Date(dateString).toLocaleTimeString('id-ID', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
+    return new Date(dateString).toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   return (
     <div className="space-y-4 max-w-3xl mx-auto">
@@ -150,18 +167,25 @@ export default function BusinessBookingMessagePage() {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Kembali
         </Button>
-        
+
         <div className="flex-1">
           <h1 className="text-xl font-bold">Pesan</h1>
           <p className="text-sm text-muted-foreground">
-            {receiverInfo ? `Percakapan dengan ${receiverInfo.name}` : 'Memuat...'}
+            {receiverInfo
+              ? `Percakapan dengan ${receiverInfo.name}`
+              : "Memuat..."}
           </p>
         </div>
 
         {/* Connection Status */}
-        <Badge variant={isConnected ? "default" : "secondary"} className="gap-1.5">
-          <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-yellow-500'}`} />
-          {isConnected ? 'Terhubung' : 'Menghubungkan...'}
+        <Badge
+          variant={isConnected ? "default" : "secondary"}
+          className="gap-1.5"
+        >
+          <div
+            className={`h-2 w-2 rounded-full ${isConnected ? "bg-green-500" : "bg-yellow-500"}`}
+          />
+          {isConnected ? "Terhubung" : "Menghubungkan..."}
         </Badge>
       </div>
 
@@ -202,32 +226,38 @@ export default function BusinessBookingMessagePage() {
                     <MessageCircle className="h-12 w-12 mb-4 opacity-50" />
                     <p className="font-medium">Belum ada pesan</p>
                     <p className="text-sm mt-1">
-                      Mulai percakapan dengan {receiverInfo?.name || 'pekerja'}
+                      Mulai percakapan dengan {receiverInfo?.name || "pekerja"}
                     </p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {messages.map((message) => {
-                      const isSent = message.sender_id === user?.id
+                      const isSent = message.sender_id === user?.id;
                       return (
                         <div
                           key={message.id}
-                          className={`flex ${isSent ? 'justify-end' : 'justify-start'}`}
+                          className={`flex ${isSent ? "justify-end" : "justify-start"}`}
                         >
-                          <div className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                            isSent 
-                              ? 'bg-primary text-primary-foreground' 
-                              : 'bg-muted'
-                          }`}>
+                          <div
+                            className={`max-w-[70%] rounded-lg px-4 py-2 ${
+                              isSent
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted"
+                            }`}
+                          >
                             <p className="text-sm">{message.content}</p>
-                            <p className={`text-xs mt-1 text-right ${
-                              isSent ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                            }`}>
+                            <p
+                              className={`text-xs mt-1 text-right ${
+                                isSent
+                                  ? "text-primary-foreground/70"
+                                  : "text-muted-foreground"
+                              }`}
+                            >
                               {formatTime(message.created_at)}
                             </p>
                           </div>
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 )}
@@ -238,11 +268,11 @@ export default function BusinessBookingMessagePage() {
           {/* Message Input */}
           <Card>
             <CardContent className="p-4">
-              <form 
+              <form
                 onSubmit={(e) => {
-                  e.preventDefault()
+                  e.preventDefault();
                   if (inputRef.current?.value.trim()) {
-                    handleSendMessage(inputRef.current.value.trim())
+                    handleSendMessage(inputRef.current.value.trim());
                   }
                 }}
                 className="flex gap-2"
@@ -253,8 +283,8 @@ export default function BusinessBookingMessagePage() {
                   disabled={sending || !isConnected}
                   className="flex-1"
                 />
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={sending || !isConnected}
                   size="icon"
                 >
@@ -275,5 +305,5 @@ export default function BusinessBookingMessagePage() {
         </>
       )}
     </div>
-  )
+  );
 }

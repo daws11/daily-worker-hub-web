@@ -7,21 +7,25 @@ Panduan lengkap untuk mengintegrasikan Instagram dan Facebook dengan Daily Worke
 Sebelum memulai integration, pastikan sudah menyiapkan:
 
 ### 1. Facebook Developer Account
+
 - [ ] Buat Facebook Developer account di https://developers.facebook.com
 - [ ] Verify email dan phone number
 - [ ] Catat App ID dan App Secret setelah membuat app
 
 ### 2. Instagram Business Account
+
 - [ ] Convert Instagram account ke Business/Creator account
 - [ ] Connect Instagram account ke Facebook Page
 - [ ] Pastikan Instagram Business account sudah verified
 
 ### 3. Facebook Page
+
 - [ ] Buat Facebook Page untuk business
 - [ ] Catat Page ID (dari Page Settings > About > Page ID)
 - [ ] Pastikan memiliki admin access ke page
 
 ### 4. Supabase Project
+
 - [ ] Supabase project sudah running
 - [ ] Database migrations sudah diaplikasikan
 - [ ] Edge functions sudah deployed
@@ -122,6 +126,7 @@ SOCIAL_WEBHOOK_SECRET=generate-random-secret-here
 ```
 
 **Notes:**
+
 - Untuk local development, gunakan `http://localhost:3000` untuk redirect URI
 - `INSTAGRAM_APP_ID` dan `FACEBOOK_APP_ID` bisa sama jika menggunakan satu Facebook app
 - `FACEBOOK_PAGE_ID` format numerik (contoh: `123456789012345`)
@@ -167,6 +172,7 @@ npm run dev
 ### Required OAuth Scopes
 
 **Instagram:**
+
 ```
 instagram_basic              - Profile access
 instagram_content_publish    - Post content
@@ -175,6 +181,7 @@ pages_manage_posts          - Manage page posts
 ```
 
 **Facebook:**
+
 ```
 pages_read_engagement        - Read page engagement
 pages_manage_posts          - Manage page posts
@@ -188,6 +195,7 @@ pages_read_user_content     - Read page content
 Social platform integration menggunakan 3 tables:
 
 ### 1. social_platforms
+
 Menyimpan konfigurasi untuk setiap platform type:
 
 ```sql
@@ -203,6 +211,7 @@ CREATE TABLE social_platforms (
 ```
 
 ### 2. business_social_connections
+
 Menyimpan koneksi antara business dan social platform:
 
 ```sql
@@ -225,6 +234,7 @@ CREATE TABLE business_social_connections (
 ```
 
 ### 3. job_posts
+
 Menyimpan track setiap social media post untuk setiap job:
 
 ```sql
@@ -263,6 +273,7 @@ npm run dev
 ```
 
 Steps:
+
 1. Login sebagai business user
 2. Go to Settings > Social Platforms
 3. Click "Connect Instagram" atau "Connect Facebook"
@@ -277,6 +288,7 @@ node scripts/test-social-distribution.ts
 ```
 
 Expected results:
+
 - `job_posts` table terbuat entries untuk setiap connected platform
 - Status changes: `pending` → `posting` → `posted`
 - `platform_post_id` dan `platform_post_url` terisi
@@ -285,11 +297,13 @@ Expected results:
 ### 3. Verify Social Media Posts
 
 **Instagram:**
+
 - Check Instagram Business account
 - Verify post muncul dengan caption dan hashtags
 - Note post ID untuk cross-reference
 
 **Facebook:**
+
 - Check Facebook Page
 - Verify post muncul di page feed
 - Check link ke job posting
@@ -301,6 +315,7 @@ Expected results:
 ### OAuth Issues
 
 **Problem: "Invalid OAuth redirect URI"**
+
 ```
 Solution:
 1. Pastikan redirect URI di Facebook Developer Portal sama persis dengan yang di .env.local
@@ -309,6 +324,7 @@ Solution:
 ```
 
 **Problem: "Access token expired"**
+
 ```
 Solution:
 1. Tokens expire setelah 60 hari
@@ -320,6 +336,7 @@ Solution:
 ### API Issues
 
 **Problem: "Permission denied"**
+
 ```
 Solution:
 1. Pastikan semua permissions sudah diapprove di App Review
@@ -329,6 +346,7 @@ Solution:
 ```
 
 **Problem: "Page not found"**
+
 ```
 Solution:
 1. Verify FACEBOOK_PAGE_ID correct di .env.local
@@ -339,6 +357,7 @@ Solution:
 ### Posting Issues
 
 **Problem: "Job post not created on social platform"**
+
 ```
 Solution:
 1. Check job_posts table untuk error_message
@@ -348,6 +367,7 @@ Solution:
 ```
 
 **Problem: "Auto-distribution not working"**
+
 ```
 Solution:
 1. Check database trigger exists: trigger_auto_distribute_job
@@ -359,6 +379,7 @@ Solution:
 ### Webhook Issues
 
 **Problem: "Webhook signature verification failed"**
+
 ```
 Solution:
 1. Pastikan SOCIAL_WEBHOOK_SECRET sama di .env.local dan webhook config
@@ -385,6 +406,7 @@ Post performance dapat di-view di:
    - Links ke actual social media posts
 
 3. **Database Queries**
+
 ```sql
 -- Get all posts with metrics
 SELECT
@@ -448,4 +470,4 @@ GROUP BY platform_type;
 
 ---
 
-*Dokumentasi ini akan terus di-update seiring perkembangan fitur social platform integration.*
+_Dokumentasi ini akan terus di-update seiring perkembangan fitur social platform integration._

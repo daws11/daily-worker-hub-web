@@ -1,41 +1,47 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { toast } from "sonner"
-import { 
-  Star, 
-  MessageSquare, 
+import * as React from "react";
+import { toast } from "sonner";
+import {
+  Star,
+  MessageSquare,
   Send,
   Loader2,
   CheckCircle,
-  AlertCircle
-} from "lucide-react"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+  AlertCircle,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface PreviousReview {
-  id: string
-  rating: number
-  comment: string | null
-  created_at: string
+  id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
 }
 
 export interface BookingCompletionReviewProps {
-  bookingId: string
-  workerId: string
-  businessId: string
-  businessName?: string
-  jobTitle?: string
-  onSubmit?: (data: { rating: number; comment?: string }) => Promise<void>
-  previousReview?: PreviousReview | null
-  className?: string
+  bookingId: string;
+  workerId: string;
+  businessId: string;
+  businessName?: string;
+  jobTitle?: string;
+  onSubmit?: (data: { rating: number; comment?: string }) => Promise<void>;
+  previousReview?: PreviousReview | null;
+  className?: string;
 }
 
 // ============================================================================
@@ -43,25 +49,30 @@ export interface BookingCompletionReviewProps {
 // ============================================================================
 
 interface StarRatingInputProps {
-  value: number
-  onChange: (rating: number) => void
-  disabled?: boolean
-  size?: "sm" | "md" | "lg"
+  value: number;
+  onChange: (rating: number) => void;
+  disabled?: boolean;
+  size?: "sm" | "md" | "lg";
 }
 
-function StarRatingInput({ value, onChange, disabled, size = "md" }: StarRatingInputProps) {
-  const [hoverValue, setHoverValue] = React.useState(0)
+function StarRatingInput({
+  value,
+  onChange,
+  disabled,
+  size = "md",
+}: StarRatingInputProps) {
+  const [hoverValue, setHoverValue] = React.useState(0);
 
   const sizeClasses = {
     sm: "h-5 w-5",
     md: "h-6 w-6",
     lg: "h-8 w-8",
-  }
+  };
 
   return (
     <div className="flex items-center gap-1">
       {[1, 2, 3, 4, 5].map((star) => {
-        const isFilled = star <= (hoverValue || value)
+        const isFilled = star <= (hoverValue || value);
         return (
           <button
             key={star}
@@ -72,7 +83,7 @@ function StarRatingInput({ value, onChange, disabled, size = "md" }: StarRatingI
             onMouseLeave={() => setHoverValue(0)}
             className={cn(
               "transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 rounded",
-              disabled && "cursor-not-allowed opacity-50"
+              disabled && "cursor-not-allowed opacity-50",
             )}
             aria-label={`Rate ${star} stars`}
           >
@@ -80,16 +91,16 @@ function StarRatingInput({ value, onChange, disabled, size = "md" }: StarRatingI
               className={cn(
                 sizeClasses[size],
                 "transition-colors",
-                isFilled 
-                  ? "fill-yellow-400 text-yellow-400" 
-                  : "text-gray-300 hover:text-yellow-300"
+                isFilled
+                  ? "fill-yellow-400 text-yellow-400"
+                  : "text-gray-300 hover:text-yellow-300",
               )}
             />
           </button>
-        )
+        );
       })}
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -97,17 +108,21 @@ function StarRatingInput({ value, onChange, disabled, size = "md" }: StarRatingI
 // ============================================================================
 
 interface StarRatingDisplayProps {
-  rating: number
-  size?: "sm" | "md" | "lg"
-  showValue?: boolean
+  rating: number;
+  size?: "sm" | "md" | "lg";
+  showValue?: boolean;
 }
 
-function StarRatingDisplay({ rating, size = "md", showValue = true }: StarRatingDisplayProps) {
+function StarRatingDisplay({
+  rating,
+  size = "md",
+  showValue = true,
+}: StarRatingDisplayProps) {
   const sizeClasses = {
     sm: "h-4 w-4",
     md: "h-5 w-5",
     lg: "h-6 w-6",
-  }
+  };
 
   return (
     <div className="flex items-center gap-1">
@@ -116,9 +131,9 @@ function StarRatingDisplay({ rating, size = "md", showValue = true }: StarRating
           key={star}
           className={cn(
             sizeClasses[size],
-            star <= rating 
-              ? "fill-yellow-400 text-yellow-400" 
-              : "text-gray-300"
+            star <= rating
+              ? "fill-yellow-400 text-yellow-400"
+              : "text-gray-300",
           )}
         />
       ))}
@@ -126,7 +141,7 @@ function StarRatingDisplay({ rating, size = "md", showValue = true }: StarRating
         <span className="ml-2 font-medium text-sm">{rating}/5</span>
       )}
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -143,45 +158,45 @@ export function BookingCompletionReview({
   previousReview,
   className,
 }: BookingCompletionReviewProps) {
-  const [rating, setRating] = React.useState(0)
-  const [comment, setComment] = React.useState("")
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [hasSubmitted, setHasSubmitted] = React.useState(!!previousReview)
+  const [rating, setRating] = React.useState(0);
+  const [comment, setComment] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [hasSubmitted, setHasSubmitted] = React.useState(!!previousReview);
 
   // If there's a previous review, show it
   React.useEffect(() => {
     if (previousReview) {
-      setRating(previousReview.rating)
-      setComment(previousReview.comment || "")
-      setHasSubmitted(true)
+      setRating(previousReview.rating);
+      setComment(previousReview.comment || "");
+      setHasSubmitted(true);
     }
-  }, [previousReview])
+  }, [previousReview]);
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      toast.error("Pilih rating terlebih dahulu")
-      return
+      toast.error("Pilih rating terlebih dahulu");
+      return;
     }
 
     if (!onSubmit) {
-      toast.error("Handler tidak tersedia")
-      return
+      toast.error("Handler tidak tersedia");
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
       await onSubmit({
         rating,
         comment: comment.trim() || undefined,
-      })
-      setHasSubmitted(true)
-      toast.success("Ulasan berhasil dikirim!")
+      });
+      setHasSubmitted(true);
+      toast.success("Ulasan berhasil dikirim!");
     } catch (error: any) {
-      toast.error(error.message || "Gagal mengirim ulasan")
+      toast.error(error.message || "Gagal mengirim ulasan");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   // Show submitted review
   if (hasSubmitted || previousReview) {
@@ -195,7 +210,10 @@ export function BookingCompletionReview({
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center gap-3">
-            <StarRatingDisplay rating={previousReview?.rating || rating} size="md" />
+            <StarRatingDisplay
+              rating={previousReview?.rating || rating}
+              size="md"
+            />
           </div>
 
           {(previousReview?.comment || comment) && (
@@ -208,7 +226,8 @@ export function BookingCompletionReview({
 
           {previousReview?.created_at && (
             <p className="text-xs text-muted-foreground">
-              Diberikan pada {new Date(previousReview.created_at).toLocaleDateString("id-ID", {
+              Diberikan pada{" "}
+              {new Date(previousReview.created_at).toLocaleDateString("id-ID", {
                 day: "numeric",
                 month: "long",
                 year: "numeric",
@@ -217,7 +236,7 @@ export function BookingCompletionReview({
           )}
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -296,7 +315,7 @@ export function BookingCompletionReview({
         </Button>
       </CardFooter>
     </Card>
-  )
+  );
 }
 
 // ============================================================================
@@ -309,11 +328,14 @@ export function BookingCompletionReviewCompact({
   businessId,
   onSubmit,
   previousReview,
-}: Omit<BookingCompletionReviewProps, 'businessName' | 'jobTitle' | 'className'>) {
-  const [showDialog, setShowDialog] = React.useState(false)
-  const [rating, setRating] = React.useState(previousReview?.rating || 0)
-  const [comment, setComment] = React.useState(previousReview?.comment || "")
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
+}: Omit<
+  BookingCompletionReviewProps,
+  "businessName" | "jobTitle" | "className"
+>) {
+  const [showDialog, setShowDialog] = React.useState(false);
+  const [rating, setRating] = React.useState(previousReview?.rating || 0);
+  const [comment, setComment] = React.useState(previousReview?.comment || "");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   if (previousReview) {
     return (
@@ -321,39 +343,35 @@ export function BookingCompletionReviewCompact({
         <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
         {previousReview.rating}/5
       </Badge>
-    )
+    );
   }
 
   const handleSubmit = async () => {
     if (rating === 0) {
-      toast.error("Pilih rating terlebih dahulu")
-      return
+      toast.error("Pilih rating terlebih dahulu");
+      return;
     }
 
-    if (!onSubmit) return
+    if (!onSubmit) return;
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
       await onSubmit({
         rating,
         comment: comment.trim() || undefined,
-      })
-      setShowDialog(false)
-      toast.success("Ulasan berhasil dikirim!")
+      });
+      setShowDialog(false);
+      toast.success("Ulasan berhasil dikirim!");
     } catch (error: any) {
-      toast.error(error.message || "Gagal mengirim ulasan")
+      toast.error(error.message || "Gagal mengirim ulasan");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <>
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => setShowDialog(true)}
-      >
+      <Button size="sm" variant="outline" onClick={() => setShowDialog(true)}>
         <Star className="h-4 w-4 mr-1 fill-yellow-400 text-yellow-400" />
         Beri Ulasan
       </Button>
@@ -379,7 +397,9 @@ export function BookingCompletionReviewCompact({
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Komentar (Opsional)</label>
+                <label className="text-sm font-medium">
+                  Komentar (Opsional)
+                </label>
                 <Textarea
                   placeholder="Ceritakan pengalaman Anda..."
                   value={comment}
@@ -416,11 +436,11 @@ export function BookingCompletionReviewCompact({
         </div>
       )}
     </>
-  )
+  );
 }
 
 // ============================================================================
 // STAR RATING INPUT EXPORT
 // ============================================================================
 
-export { StarRatingInput, StarRatingDisplay }
+export { StarRatingInput, StarRatingDisplay };

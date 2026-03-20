@@ -62,9 +62,9 @@ Check if a worker is available for a specific time period.
 ```typescript
 const isAvailable = await isWorkerAvailable(
   workerId,
-  new Date('2026-02-28'), // Job date
+  new Date("2026-02-28"), // Job date
   9, // 9:00 AM
-  17 // 5:00 PM
+  17, // 5:00 PM
 );
 ```
 
@@ -75,9 +75,9 @@ Calculate availability score for matching algorithm (0-20 points).
 ```typescript
 const score = await calculateAvailabilityScore(
   workerId,
-  new Date('2026-02-28'),
+  new Date("2026-02-28"),
   9,
-  17
+  17,
 ); // Returns 20 if available, 0 if not
 ```
 
@@ -91,7 +91,7 @@ const result = await setWorkerAvailability(
   1, // Monday
   9, // 9:00 AM
   17, // 5:00 PM
-  true
+  true,
 );
 ```
 
@@ -118,14 +118,16 @@ const result = await setWorkerAvailabilityForWeek(workerId, [
 Main component for setting weekly availability.
 
 ```tsx
-import { AvailabilitySlots } from "@/components/worker/availability-slots"
+import { AvailabilitySlots } from "@/components/worker/availability-slots";
 
 <AvailabilitySlots
   slots={availabilitySlots}
   onSlotToggle={(dayOfWeek) => handleToggle(dayOfWeek)}
-  onSlotTimeChange={(dayOfWeek, start, end) => handleChange(dayOfWeek, start, end)}
+  onSlotTimeChange={(dayOfWeek, start, end) =>
+    handleChange(dayOfWeek, start, end)
+  }
   disabled={isSaving}
-/>
+/>;
 ```
 
 ### `AvailabilitySetup`
@@ -133,13 +135,13 @@ import { AvailabilitySlots } from "@/components/worker/availability-slots"
 Setup wizard for new workers.
 
 ```tsx
-import { AvailabilitySetup } from "@/components/worker/availability-setup"
+import { AvailabilitySetup } from "@/components/worker/availability-setup";
 
 <AvailabilitySetup
   onComplete={(availabilities) => handleComplete(availabilities)}
   existingData={existingAvailabilities}
   isLoading={isLoading}
-/>
+/>;
 ```
 
 ### `AvailabilityCalendar`
@@ -147,13 +149,13 @@ import { AvailabilitySetup } from "@/components/worker/availability-setup"
 Calendar view for visualizing and selecting availability.
 
 ```tsx
-import { AvailabilityCalendar } from "@/components/worker/availability-calendar"
+import { AvailabilityCalendar } from "@/components/worker/availability-calendar";
 
 <AvailabilityCalendar
   selectedDate={selectedDate}
   onDateSelect={setSelectedDate}
   availableDates={availableDates}
-/>
+/>;
 ```
 
 ### `AvailabilityIndicator`
@@ -307,36 +309,36 @@ psql -f supabase/migrations/20260227_add_worker_availability.sql
 
 ```typescript
 // Test availability validation
-import { validateAvailabilityBlock } from '@/lib/algorithms/availability-checker'
+import { validateAvailabilityBlock } from "@/lib/algorithms/availability-checker";
 
-const result = validateAvailabilityBlock(9, 17)
-console.log(result) // { valid: true }
+const result = validateAvailabilityBlock(9, 17);
+console.log(result); // { valid: true }
 
-const invalid = validateAvailabilityBlock(9, 12)
-console.log(invalid) // { valid: false, error: 'Availability must be at least 4 hours' }
+const invalid = validateAvailabilityBlock(9, 12);
+console.log(invalid); // { valid: false, error: 'Availability must be at least 4 hours' }
 ```
 
 ### Integration Tests
 
 ```typescript
 // Test full availability flow
-const workerId = 'test-worker-id'
+const workerId = "test-worker-id";
 
 // Set availability
 await setWorkerAvailabilityForWeek(workerId, [
   { dayOfWeek: 1, startHour: 9, endHour: 17, isAvailable: true },
   // ... other days
-])
+]);
 
 // Check availability
 const isAvailable = await isWorkerAvailable(
   workerId,
-  new Date('2026-02-28'), // Friday (day 5)
+  new Date("2026-02-28"), // Friday (day 5)
   9,
-  17
-)
+  17,
+);
 
-console.log(isAvailable) // true
+console.log(isAvailable); // true
 ```
 
 ## Future Enhancements
@@ -357,6 +359,7 @@ Potential improvements to consider:
 **Issue**: Workers not showing up in shortlist even though they're available
 
 **Solution**:
+
 - Check that `isAvailable` is set to `true` in the database
 - Verify that the job's day of week matches the worker's availability
 - Ensure the job time falls within the worker's availability block
@@ -364,6 +367,7 @@ Potential improvements to consider:
 **Issue**: Validation errors when setting availability
 
 **Solution**:
+
 - Check that start hour < end hour
 - Verify duration is between 4-12 hours
 - Ensure hours are in 24-hour format (0-23)
@@ -371,6 +375,7 @@ Potential improvements to consider:
 **Issue**: Availability score not updating
 
 **Solution**:
+
 - Verify the worker has a `worker_availabilities` record
 - Check that the `is_available` flag is true
 - Ensure the job date and time parameters are correct
@@ -378,6 +383,7 @@ Potential improvements to consider:
 ## Support
 
 For issues or questions about the Worker Availability System:
+
 - Check this documentation
 - Review the code comments in `availability-checker.ts`
 - Test the database functions in Supabase SQL Editor

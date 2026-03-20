@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   Phone,
   PhoneIncoming,
@@ -11,19 +11,25 @@ import {
   PhoneOutgoing,
   Volume2,
   VolumeX,
-} from "lucide-react"
+} from "lucide-react";
 
-export interface VoiceCallButtonProps extends Omit<React.ComponentProps<typeof Button>, 'variant'> {
-  callState?: "idle" | "calling" | "incoming" | "connected" | "ended"
-  isMuted?: boolean
-  isSpeakerOn?: boolean
-  onToggleMute?: () => void
-  onToggleSpeaker?: () => void
-  onEndCall?: () => void
-  variant?: "default" | "icon-only" | "compact"
+export interface VoiceCallButtonProps extends Omit<
+  React.ComponentProps<typeof Button>,
+  "variant"
+> {
+  callState?: "idle" | "calling" | "incoming" | "connected" | "ended";
+  isMuted?: boolean;
+  isSpeakerOn?: boolean;
+  onToggleMute?: () => void;
+  onToggleSpeaker?: () => void;
+  onEndCall?: () => void;
+  variant?: "default" | "icon-only" | "compact";
 }
 
-const VoiceCallButton = React.forwardRef<HTMLButtonElement, VoiceCallButtonProps>(
+const VoiceCallButton = React.forwardRef<
+  HTMLButtonElement,
+  VoiceCallButtonProps
+>(
   (
     {
       callState = "idle",
@@ -38,63 +44,72 @@ const VoiceCallButton = React.forwardRef<HTMLButtonElement, VoiceCallButtonProps
       children,
       ...props
     },
-    ref
+    ref,
   ) => {
     // Get appropriate icon based on call state
     const getCallIcon = () => {
       switch (callState) {
         case "calling":
-          return <PhoneOutgoing className="h-4 w-4 animate-pulse" />
+          return <PhoneOutgoing className="h-4 w-4 animate-pulse" />;
         case "incoming":
-          return <PhoneIncoming className="h-4 w-4 animate-bounce" />
+          return <PhoneIncoming className="h-4 w-4 animate-bounce" />;
         case "connected":
-          return <Phone className="h-4 w-4" />
+          return <Phone className="h-4 w-4" />;
         default:
-          return <Phone className="h-4 w-4" />
+          return <Phone className="h-4 w-4" />;
       }
-    }
+    };
 
     // Get button text based on call state
     const getCallText = () => {
       switch (callState) {
         case "calling":
-          return "Memanggil..."
+          return "Memanggil...";
         case "incoming":
-          return "Panggilan Masuk"
+          return "Panggilan Masuk";
         case "connected":
-          return "Terhubung"
+          return "Terhubung";
         case "ended":
-          return "Panggilan Berakhir"
+          return "Panggilan Berakhir";
         default:
-          return children || "Panggilan Suara"
+          return children || "Panggilan Suara";
       }
-    }
+    };
 
     // Get button variant based on call state
-    const getButtonVariant = (): "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" => {
+    const getButtonVariant = ():
+      | "default"
+      | "destructive"
+      | "outline"
+      | "secondary"
+      | "ghost"
+      | "link" => {
       if (callState === "connected") {
-        return "destructive"
+        return "destructive";
       }
       if (callState === "calling") {
-        return "secondary"
+        return "secondary";
       }
       if (callState === "incoming") {
-        return "default"
+        return "default";
       }
-      return "default"
-    }
+      return "default";
+    };
 
     // Handle button click
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       if (callState === "connected") {
-        onEndCall?.()
+        onEndCall?.();
       } else if (props.onClick) {
         // BaseUI events need preventBaseUIHandler method
-        const baseUIEvent = e as typeof e & { preventBaseUIHandler: () => void; baseUIHandlerPrevented?: boolean }
-        baseUIEvent.preventBaseUIHandler = () => {}
-        props.onClick(baseUIEvent)
+        const baseUIEvent = e as typeof e & {
+          preventBaseUIHandler: () => void;
+          baseUIHandlerPrevented?: boolean;
+        };
+        baseUIEvent.preventBaseUIHandler = () => {};
+        props.onClick(baseUIEvent);
       }
-    }
+    };
 
     // Render icon-only variant
     if (variant === "icon-only") {
@@ -107,7 +122,7 @@ const VoiceCallButton = React.forwardRef<HTMLButtonElement, VoiceCallButtonProps
             "rounded-full",
             callState === "connected" && "bg-red-500 hover:bg-red-600",
             callState === "incoming" && "animate-pulse",
-            className
+            className,
           )}
           disabled={disabled || callState === "calling"}
           onClick={handleClick}
@@ -115,7 +130,7 @@ const VoiceCallButton = React.forwardRef<HTMLButtonElement, VoiceCallButtonProps
         >
           {getCallIcon()}
         </Button>
-      )
+      );
     }
 
     // Render compact variant
@@ -129,7 +144,7 @@ const VoiceCallButton = React.forwardRef<HTMLButtonElement, VoiceCallButtonProps
             "gap-2",
             callState === "connected" && "bg-red-500 hover:bg-red-600",
             callState === "incoming" && "animate-pulse",
-            className
+            className,
           )}
           disabled={disabled || callState === "calling"}
           onClick={handleClick}
@@ -138,7 +153,7 @@ const VoiceCallButton = React.forwardRef<HTMLButtonElement, VoiceCallButtonProps
           {getCallIcon()}
           <span>{getCallText()}</span>
         </Button>
-      )
+      );
     }
 
     // Default variant with additional controls
@@ -150,10 +165,7 @@ const VoiceCallButton = React.forwardRef<HTMLButtonElement, VoiceCallButtonProps
             <Button
               size="icon"
               variant="outline"
-              className={cn(
-                "rounded-full",
-                isMuted && "bg-muted"
-              )}
+              className={cn("rounded-full", isMuted && "bg-muted")}
               onClick={onToggleMute}
             >
               {isMuted ? (
@@ -169,10 +181,7 @@ const VoiceCallButton = React.forwardRef<HTMLButtonElement, VoiceCallButtonProps
             <Button
               size="icon"
               variant="outline"
-              className={cn(
-                "rounded-full",
-                isSpeakerOn && "bg-muted"
-              )}
+              className={cn("rounded-full", isSpeakerOn && "bg-muted")}
               onClick={onToggleSpeaker}
             >
               <Volume2 className="h-4 w-4" />
@@ -191,7 +200,7 @@ const VoiceCallButton = React.forwardRef<HTMLButtonElement, VoiceCallButtonProps
             <PhoneOff className="h-4 w-4" />
           </Button>
         </div>
-      )
+      );
     }
 
     // Idle or calling state
@@ -202,7 +211,7 @@ const VoiceCallButton = React.forwardRef<HTMLButtonElement, VoiceCallButtonProps
         className={cn(
           "gap-2",
           callState === "incoming" && "animate-pulse",
-          className
+          className,
         )}
         disabled={disabled || callState === "calling"}
         onClick={handleClick}
@@ -211,9 +220,9 @@ const VoiceCallButton = React.forwardRef<HTMLButtonElement, VoiceCallButtonProps
         {getCallIcon()}
         <span>{getCallText()}</span>
       </Button>
-    )
-  }
-)
-VoiceCallButton.displayName = "VoiceCallButton"
+    );
+  },
+);
+VoiceCallButton.displayName = "VoiceCallButton";
 
-export { VoiceCallButton }
+export { VoiceCallButton };

@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { AlertTriangle } from "lucide-react"
+import * as React from "react";
+import { AlertTriangle } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,25 +12,31 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
-import { raiseDispute } from "@/lib/actions/disputes"
-import { toast } from "sonner"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { raiseDispute } from "@/lib/actions/disputes";
+import { toast } from "sonner";
 
-type PaymentStatus = "pending" | "pending_review" | "available" | "released" | "disputed" | "cancelled"
+type PaymentStatus =
+  | "pending"
+  | "pending_review"
+  | "available"
+  | "released"
+  | "disputed"
+  | "cancelled";
 
 export interface DisputeDialogProps {
-  bookingId: string
-  businessId: string
-  paymentStatus: PaymentStatus
-  jobTitle?: string
-  workerName?: string
-  onDisputeRaised?: (bookingId: string) => void
-  trigger?: React.ReactNode
-  triggerClassName?: string
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
+  bookingId: string;
+  businessId: string;
+  paymentStatus: PaymentStatus;
+  jobTitle?: string;
+  workerName?: string;
+  onDisputeRaised?: (bookingId: string) => void;
+  trigger?: React.ReactNode;
+  triggerClassName?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function DisputeDialog({
@@ -45,70 +51,71 @@ export function DisputeDialog({
   open: controlledOpen,
   onOpenChange,
 }: DisputeDialogProps) {
-  const [internalOpen, setInternalOpen] = React.useState(false)
-  const [reason, setReason] = React.useState("")
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const [reason, setReason] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const isControlled = controlledOpen !== undefined
-  const open = isControlled ? controlledOpen : internalOpen
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
 
-  const canDispute = paymentStatus === "pending_review"
+  const canDispute = paymentStatus === "pending_review";
 
   const handleOpenChange = React.useCallback(
     (newOpen: boolean) => {
       if (isControlled && onOpenChange) {
-        onOpenChange(newOpen)
+        onOpenChange(newOpen);
       } else {
-        setInternalOpen(newOpen)
+        setInternalOpen(newOpen);
       }
 
       // Reset reason when dialog closes
       if (!newOpen) {
-        setReason("")
+        setReason("");
       }
     },
-    [isControlled, onOpenChange]
-  )
+    [isControlled, onOpenChange],
+  );
 
   const handleSubmit = async () => {
-    if (!canDispute || isSubmitting) return
+    if (!canDispute || isSubmitting) return;
 
-    const trimmedReason = reason.trim()
+    const trimmedReason = reason.trim();
     if (!trimmedReason) {
       toast.error("Alasan wajib diisi", {
         description: "Silakan jelaskan alasan sengketa Anda.",
-      })
-      return
+      });
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      const result = await raiseDispute(bookingId, businessId, trimmedReason)
+      const result = await raiseDispute(bookingId, businessId, trimmedReason);
 
       if (result.success) {
         toast.success("Sengketa berhasil dibuat!", {
           description: "Pembayaran akan ditahan singga sengketa diselesaikan.",
-        })
-        handleOpenChange(false)
-        onDisputeRaised?.(bookingId)
+        });
+        handleOpenChange(false);
+        onDisputeRaised?.(bookingId);
       } else {
         toast.error("Gagal membuat sengketa", {
-          description: result.error || "Terjadi kesalahan saat membuat sengketa.",
-        })
+          description:
+            result.error || "Terjadi kesalahan saat membuat sengketa.",
+        });
       }
     } catch {
       toast.error("Gagal membuat sengketa", {
         description: "Terjadi kesalahan tak terduga. Silakan coba lagi.",
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleCancel = () => {
-    setReason("")
-    handleOpenChange(false)
-  }
+    setReason("");
+    handleOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -134,9 +141,9 @@ export function DisputeDialog({
             <div className="flex items-start gap-2">
               <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
               <p className="text-xs text-amber-800 dark:text-amber-200">
-                <span className="font-semibold">Pembayaran akan ditahan:</span> Pembayaran
-                akan dibekukan sampai sengketa diselesaikan. Tim kami akan menginvestigasi
-                masalah ini sebelum keputusan final dibuat.
+                <span className="font-semibold">Pembayaran akan ditahan:</span>{" "}
+                Pembayaran akan dibekukan sampai sengketa diselesaikan. Tim kami
+                akan menginvestigasi masalah ini sebelum keputusan final dibuat.
               </p>
             </div>
           </div>
@@ -153,7 +160,7 @@ export function DisputeDialog({
               placeholder="Jelaskan masalah yang Anda alami (contoh: kualitas kerja tidak sesuai, pekerja tidak datang, dll.)"
               className={cn(
                 "flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-y",
-                "scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/30"
+                "scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/30",
               )}
               disabled={isSubmitting}
             />
@@ -193,5 +200,5 @@ export function DisputeDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,33 +1,33 @@
-"use server"
+"use server";
 
-import { createClient } from "../supabase/server"
-import type { Database } from "../supabase/types"
+import { createClient } from "../supabase/server";
+import type { Database } from "../supabase/types";
 
-type JobsRow = Database["public"]["Tables"]["jobs"]["Row"]
-type JobsInsert = Database["public"]["Tables"]["jobs"]["Insert"]
+type JobsRow = Database["public"]["Tables"]["jobs"]["Row"];
+type JobsInsert = Database["public"]["Tables"]["jobs"]["Insert"];
 
 export type CreateJobResult = {
-  success: boolean
-  error?: string
-  data?: JobsRow
-}
+  success: boolean;
+  error?: string;
+  data?: JobsRow;
+};
 
 export interface CreateJobInput {
-  businessId: string
-  title: string
-  positionType: string
-  deadline: string
-  address: string
-  budgetMin: number
-  budgetMax: number
-  wageMin: number
-  wageMax: number
-  workersNeeded: number
-  hoursNeeded: number
-  description: string
-  requirements: string[]
-  area: string
-  platformSettings?: Record<string, { enabled: boolean; connectionId: string }>
+  businessId: string;
+  title: string;
+  positionType: string;
+  deadline: string;
+  address: string;
+  budgetMin: number;
+  budgetMax: number;
+  wageMin: number;
+  wageMax: number;
+  workersNeeded: number;
+  hoursNeeded: number;
+  description: string;
+  requirements: string[];
+  area: string;
+  platformSettings?: Record<string, { enabled: boolean; connectionId: string }>;
 }
 
 /**
@@ -38,19 +38,21 @@ export interface CreateJobInput {
  * are stored in platform_settings for future use since they're not in the current
  * database schema.
  */
-export async function createJob(input: CreateJobInput): Promise<CreateJobResult> {
+export async function createJob(
+  input: CreateJobInput,
+): Promise<CreateJobResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Get the user's business ID to verify they own it
     const { data: business, error: businessError } = await supabase
       .from("businesses")
       .select("id, user_id")
       .eq("user_id", input.businessId)
-      .single()
+      .single();
 
     if (businessError || !business) {
-      return { success: false, error: "Bisnis tidak ditemukan" }
+      return { success: false, error: "Bisnis tidak ditemukan" };
     }
 
     // Get the first category ID as default (since category is required but not in form)
@@ -58,14 +60,14 @@ export async function createJob(input: CreateJobInput): Promise<CreateJobResult>
       .from("categories")
       .select("id")
       .limit(1)
-      .single()
+      .single();
 
     if (!category) {
-      return { success: false, error: "Kategori tidak tersedia" }
+      return { success: false, error: "Kategori tidak tersedia" };
     }
 
     // Calculate overtime multiplier based on hours needed
-    const overtimeMultiplier = input.hoursNeeded >= 9 ? 1.5 : 1.0
+    const overtimeMultiplier = input.hoursNeeded >= 9 ? 1.5 : 1.0;
 
     // Prepare platform_settings with all form data
     const platformSettings = {
@@ -78,7 +80,7 @@ export async function createJob(input: CreateJobInput): Promise<CreateJobResult>
         area: input.area,
         positionType: input.positionType,
       },
-    }
+    };
 
     // Prepare job data - using new fields from matching algorithm
     const jobData = {
@@ -95,21 +97,24 @@ export async function createJob(input: CreateJobInput): Promise<CreateJobResult>
       hours_needed: input.hoursNeeded,
       overtime_multiplier: overtimeMultiplier,
       platform_settings: platformSettings,
-    } as any
+    } as any;
 
     // Create the job
     const { data, error } = await supabase
       .from("jobs")
       .insert(jobData as any)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal membuat lowongan: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal membuat lowongan: ${error.message}`,
+      };
     }
 
-    return { success: true, data: data as JobsRow }
+    return { success: true, data: data as JobsRow };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat membuat lowongan" }
+    return { success: false, error: "Terjadi kesalahan saat membuat lowongan" };
   }
 }

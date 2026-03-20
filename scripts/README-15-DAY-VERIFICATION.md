@@ -116,12 +116,14 @@ After the automated verification passes, complete the verification by checking t
 ### "Failed to create business/worker" error
 
 Make sure your Supabase instance is running and accessible:
+
 - Local: `supabase status`
 - Remote: Check your `DATABASE_URL` and API keys
 
 ### "No compliance tracking record found" error
 
 This means the database trigger is not firing. Check:
+
 1. Does the `compliance_tracking` table exist? Run: `\d compliance_tracking`
 2. Is the trigger set up on the `bookings` table?
 3. Check Supabase logs for trigger errors
@@ -129,6 +131,7 @@ This means the database trigger is not firing. Check:
 ### "calculate_days_worked returned X, expected 15"
 
 The trigger might be counting incorrectly. Check:
+
 1. The booking statuses (should be 'accepted', not 'pending')
 2. The booking dates (should be in the current month)
 3. The trigger logic in the migration file

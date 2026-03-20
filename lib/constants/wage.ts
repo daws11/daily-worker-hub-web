@@ -34,7 +34,7 @@ export const UMK_2025 = {
 
   /** Kabupaten Bangli - Rp 2,282,689 */
   Bangli: 2282689,
-} as const
+} as const;
 
 /**
  * Get UMK value by regency/city name (case-insensitive)
@@ -42,7 +42,10 @@ export const UMK_2025 = {
  * @returns UMK value in IDR, or undefined if not found
  */
 export function getUMK(name: string): number | undefined {
-  const normalizedName = name.toLowerCase().replace(/^kota |kabupaten /gi, '').trim()
+  const normalizedName = name
+    .toLowerCase()
+    .replace(/^kota |kabupaten /gi, "")
+    .trim();
 
   const regencyMap: Record<string, number> = {
     badung: UMK_2025.Badung,
@@ -58,9 +61,9 @@ export function getUMK(name: string): number | undefined {
     negara: UMK_2025.Jembrana, // Alias for Jembrana regency capital
     semarapura: UMK_2025.Klungkung, // Alias for Klungkung regency capital
     amlapura: UMK_2025.Karangasem, // Alias for Karangasem regency capital
-  }
+  };
 
-  return regencyMap[normalizedName]
+  return regencyMap[normalizedName];
 }
 
 /**
@@ -70,9 +73,9 @@ export function getUMK(name: string): number | undefined {
  * @returns true if wage meets or exceeds UMK, false otherwise
  */
 export function isUMKCompliant(wage: number, location: string): boolean {
-  const umk = getUMK(location)
-  if (!umk) return false
-  return wage >= umk
+  const umk = getUMK(location);
+  if (!umk) return false;
+  return wage >= umk;
 }
 
 /**
@@ -80,10 +83,10 @@ export function isUMKCompliant(wage: number, location: string): boolean {
  * @returns Array of regency/city names
  */
 export function getUMKLocations(): string[] {
-  return Object.keys(UMK_2025)
+  return Object.keys(UMK_2025);
 }
 
 /**
  * UMK 2025 type definition for type safety
  */
-export type UMKLocation = keyof typeof UMK_2025
+export type UMKLocation = keyof typeof UMK_2025;

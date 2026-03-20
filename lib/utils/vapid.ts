@@ -9,16 +9,16 @@
  * @see https://tools.ietf.org/html/rfc8292
  */
 
-import webpush from 'web-push'
+import webpush from "web-push";
 
 /**
  * VAPID keys interface
  */
 export interface VapidKeys {
   /** Public key (base64 URL-encoded) - safe to expose to frontend */
-  publicKey: string
+  publicKey: string;
   /** Private key (base64 URL-encoded) - must be kept secret */
-  privateKey: string
+  privateKey: string;
 }
 
 /**
@@ -43,16 +43,16 @@ export interface VapidKeys {
  */
 export async function generateVapidKeys(): Promise<VapidKeys> {
   try {
-    const keys = webpush.generateVAPIDKeys()
+    const keys = webpush.generateVAPIDKeys();
     return {
       publicKey: keys.publicKey,
       privateKey: keys.privateKey,
-    }
+    };
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Failed to generate VAPID keys: ${error.message}`)
+      throw new Error(`Failed to generate VAPID keys: ${error.message}`);
     }
-    throw new Error('Failed to generate VAPID keys: Unknown error')
+    throw new Error("Failed to generate VAPID keys: Unknown error");
   }
 }
 
@@ -77,14 +77,14 @@ export async function generateVapidKeys(): Promise<VapidKeys> {
  * ```
  */
 export function getVapidPublicKey(): string {
-  const publicKey = process.env.VAPID_PUBLIC_KEY
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
   if (!publicKey) {
     throw new Error(
-      'VAPID_PUBLIC_KEY environment variable is not set. ' +
-        'Generate VAPID keys using generateVapidKeys() and add them to your .env.local file.'
-    )
+      "VAPID_PUBLIC_KEY environment variable is not set. " +
+        "Generate VAPID keys using generateVapidKeys() and add them to your .env.local file.",
+    );
   }
-  return publicKey
+  return publicKey;
 }
 
 /**
@@ -108,14 +108,14 @@ export function getVapidPublicKey(): string {
  * ```
  */
 export function getVapidPrivateKey(): string {
-  const privateKey = process.env.VAPID_PRIVATE_KEY
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
   if (!privateKey) {
     throw new Error(
-      'VAPID_PRIVATE_KEY environment variable is not set. ' +
-        'Generate VAPID keys using generateVapidKeys() and add them to your .env.local file.'
-    )
+      "VAPID_PRIVATE_KEY environment variable is not set. " +
+        "Generate VAPID keys using generateVapidKeys() and add them to your .env.local file.",
+    );
   }
-  return privateKey
+  return privateKey;
 }
 
 /**
@@ -135,11 +135,11 @@ export function getVapidPrivateKey(): string {
  */
 export function validateVapidConfig(): boolean {
   try {
-    getVapidPublicKey()
-    getVapidPrivateKey()
-    return true
+    getVapidPublicKey();
+    getVapidPrivateKey();
+    return true;
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -158,12 +158,12 @@ export function validateVapidConfig(): boolean {
  * ```
  */
 export function getVapidSubject(): string {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-  const contactEmail = process.env.VAPID_CONTACT_EMAIL
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const contactEmail = process.env.VAPID_CONTACT_EMAIL;
 
   if (contactEmail) {
-    return `mailto:${contactEmail}`
+    return `mailto:${contactEmail}`;
   }
 
-  return siteUrl
+  return siteUrl;
 }

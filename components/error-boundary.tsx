@@ -111,7 +111,7 @@ export class ErrorBoundary extends Component<
 export function withErrorBoundary<P extends object>(
   WrappedComponent: React.ComponentType<P>,
   fallback?: ReactNode,
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void
+  onError?: (error: Error, errorInfo: React.ErrorInfo) => void,
 ) {
   return function WithErrorBoundaryWrapper(props: P) {
     return (

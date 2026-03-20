@@ -1,7 +1,13 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   LineChart,
   Line,
@@ -11,26 +17,31 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from "recharts"
+} from "recharts";
 
 export interface ErrorRateData {
-  hour: number
-  count: number
+  hour: number;
+  count: number;
 }
 
 export interface ErrorTypeData {
-  type: string
-  count: number
+  type: string;
+  count: number;
 }
 
 export interface ErrorRateChartProps {
-  trendData: ErrorRateData[]
-  errorTypes: ErrorTypeData[]
-  loading?: boolean
-  className?: string
+  trendData: ErrorRateData[];
+  errorTypes: ErrorTypeData[];
+  loading?: boolean;
+  className?: string;
 }
 
-export function ErrorRateChart({ trendData, errorTypes, loading = false, className }: ErrorRateChartProps) {
+export function ErrorRateChart({
+  trendData,
+  errorTypes,
+  loading = false,
+  className,
+}: ErrorRateChartProps) {
   if (loading) {
     return (
       <Card className={className}>
@@ -42,27 +53,31 @@ export function ErrorRateChart({ trendData, errorTypes, loading = false, classNa
           <Skeleton className="h-64 w-full" />
         </CardContent>
       </Card>
-    )
+    );
   }
 
   const formatHour = (timestamp: number) => {
-    const date = new Date(timestamp)
-    return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-  }
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   const chartData = trendData.map((point) => ({
     ...point,
     time: formatHour(point.hour),
-  }))
+  }));
 
-  const totalErrors = errorTypes.reduce((sum, type) => sum + type.count, 0)
+  const totalErrors = errorTypes.reduce((sum, type) => sum + type.count, 0);
 
   return (
     <Card className={className}>
       <CardHeader>
         <CardTitle>Error Rate (24h)</CardTitle>
         <CardDescription>
-          Error distribution over the last 24 hours - Total: {totalErrors} errors
+          Error distribution over the last 24 hours - Total: {totalErrors}{" "}
+          errors
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -70,13 +85,13 @@ export function ErrorRateChart({ trendData, errorTypes, loading = false, classNa
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis 
-                dataKey="time" 
+              <XAxis
+                dataKey="time"
                 className="text-xs"
                 tick={{ fill: "hsl(var(--muted-foreground))" }}
                 interval="preserveStartEnd"
               />
-              <YAxis 
+              <YAxis
                 allowDecimals={false}
                 className="text-xs"
                 tick={{ fill: "hsl(var(--muted-foreground))" }}
@@ -102,7 +117,7 @@ export function ErrorRateChart({ trendData, errorTypes, loading = false, classNa
             </LineChart>
           </ResponsiveContainer>
         </div>
-        
+
         {/* Error Types Breakdown */}
         <div className="mt-4 space-y-2">
           <h4 className="text-sm font-medium">Error Types</h4>
@@ -120,5 +135,5 @@ export function ErrorRateChart({ trendData, errorTypes, loading = false, classNa
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

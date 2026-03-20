@@ -1,190 +1,199 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/providers/auth-provider'
-import { useTranslation } from '@/lib/i18n/hooks'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
-import { 
-  Loader2, 
-  ArrowLeft, 
-  Save, 
-  MapPin, 
+import { useState, useEffect } from "react";
+import { useAuth } from "@/providers/auth-provider";
+import { useTranslation } from "@/lib/i18n/hooks";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import {
+  Loader2,
+  ArrowLeft,
+  Save,
+  MapPin,
   Clock,
   DollarSign,
-  AlertCircle
-} from 'lucide-react'
-import { getCategories } from '@/lib/actions/categories'
-import { getBusinessProfile } from '@/lib/actions/business'
-import { createJob } from '@/lib/actions/jobs'
+  AlertCircle,
+} from "lucide-react";
+import { getCategories } from "@/lib/actions/categories";
+import { getBusinessProfile } from "@/lib/actions/business";
+import { createJob } from "@/lib/actions/jobs";
 
 interface JobFormData {
-  title: string
-  description: string
-  requirements: string
-  category_id: string
-  budget_min: string
-  budget_max: string
-  hours_needed: string
-  address: string
-  deadline: string
-  is_urgent: boolean
+  title: string;
+  description: string;
+  requirements: string;
+  category_id: string;
+  budget_min: string;
+  budget_max: string;
+  hours_needed: string;
+  address: string;
+  deadline: string;
+  is_urgent: boolean;
 }
 
 interface Category {
-  id: string
-  name: string
-  slug: string
+  id: string;
+  name: string;
+  slug: string;
 }
 
 interface BusinessProfile {
-  id: string
-  name: string
-  address?: string
-  lat?: number
-  lng?: number
+  id: string;
+  name: string;
+  address?: string;
+  lat?: number;
+  lng?: number;
 }
 
 export default function JobForm() {
-  const { user } = useAuth()
-  const { t } = useTranslation()
-  const router = useRouter()
+  const { user } = useAuth();
+  const { t } = useTranslation();
+  const router = useRouter();
 
-  const [loading, setLoading] = useState(false)
-  const [initialLoading, setInitialLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [categories, setCategories] = useState<Category[]>([])
-  const [business, setBusiness] = useState<BusinessProfile | null>(null)
+  const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [business, setBusiness] = useState<BusinessProfile | null>(null);
 
   const [formData, setFormData] = useState<JobFormData>({
-    title: '',
-    description: '',
-    requirements: '',
-    category_id: '',
-    budget_min: '',
-    budget_max: '',
-    hours_needed: '4',
-    address: '',
-    deadline: '',
-    is_urgent: false
-  })
+    title: "",
+    description: "",
+    requirements: "",
+    category_id: "",
+    budget_min: "",
+    budget_max: "",
+    hours_needed: "4",
+    address: "",
+    deadline: "",
+    is_urgent: false,
+  });
 
   // Fetch categories and business profile on mount
   useEffect(() => {
     async function fetchData() {
       try {
-        setInitialLoading(true)
+        setInitialLoading(true);
 
         // Fetch categories using server action
-        const catsResult = await getCategories()
-        console.log('Categories response:', catsResult)
+        const catsResult = await getCategories();
+        console.log("Categories response:", catsResult);
         if (catsResult.success && catsResult.data) {
-          setCategories(catsResult.data)
+          setCategories(catsResult.data);
         }
 
         // Fetch business profile using server action
         if (user?.id) {
-          const bizResult = await getBusinessProfile(user.id)
-          console.log('Business response:', bizResult)
+          const bizResult = await getBusinessProfile(user.id);
+          console.log("Business response:", bizResult);
           if (bizResult.success && bizResult.data) {
-            setBusiness(bizResult.data)
+            setBusiness(bizResult.data);
             // Pre-fill address if available
             if (bizResult.data.address) {
-              setFormData(prev => ({
+              setFormData((prev) => ({
                 ...prev,
-                address: bizResult.data.address || ''
-              }))
+                address: bizResult.data.address || "",
+              }));
             }
           }
         }
       } catch (err) {
-        console.error('Error fetching initial data:', err)
+        console.error("Error fetching initial data:", err);
       } finally {
-        setInitialLoading(false)
+        setInitialLoading(false);
       }
     }
 
-    fetchData()
-  }, [user?.id])
+    fetchData();
+  }, [user?.id]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target
-    
-    setFormData(prev => ({
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    const { name, value, type } = e.target;
+
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-    }))
-  }
+      [name]:
+        type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
+    }));
+  };
 
   const validateForm = (): boolean => {
     if (!formData.title.trim()) {
-      setError('Job title is required')
-      return false
+      setError("Job title is required");
+      return false;
     }
 
     if (!formData.description.trim()) {
-      setError('Job description is required')
-      return false
+      setError("Job description is required");
+      return false;
     }
 
     if (!formData.category_id) {
-      setError('Please select a category')
-      return false
+      setError("Please select a category");
+      return false;
     }
 
-    const minBudget = parseFloat(formData.budget_min)
-    const maxBudget = parseFloat(formData.budget_max)
+    const minBudget = parseFloat(formData.budget_min);
+    const maxBudget = parseFloat(formData.budget_max);
 
     if (isNaN(minBudget) || minBudget < 0) {
-      setError('Minimum budget must be a valid positive number')
-      return false
+      setError("Minimum budget must be a valid positive number");
+      return false;
     }
 
     if (isNaN(maxBudget) || maxBudget < 0) {
-      setError('Maximum budget must be a valid positive number')
-      return false
+      setError("Maximum budget must be a valid positive number");
+      return false;
     }
 
     if (maxBudget < minBudget) {
-      setError('Maximum budget must be greater than or equal to minimum budget')
-      return false
+      setError(
+        "Maximum budget must be greater than or equal to minimum budget",
+      );
+      return false;
     }
 
-    const hoursNeeded = parseInt(formData.hours_needed)
+    const hoursNeeded = parseInt(formData.hours_needed);
     if (isNaN(hoursNeeded) || hoursNeeded < 4 || hoursNeeded > 12) {
-      setError('Hours needed must be between 4 and 12')
-      return false
+      setError("Hours needed must be between 4 and 12");
+      return false;
     }
 
     if (!formData.address.trim()) {
-      setError('Job address is required')
-      return false
+      setError("Job address is required");
+      return false;
     }
 
-    return true
-  }
+    return true;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
+    e.preventDefault();
+    setError(null);
 
     if (!validateForm()) {
-      return
+      return;
     }
 
     if (!business) {
-      setError('Business profile not found. Please complete your business profile first.')
-      return
+      setError(
+        "Business profile not found. Please complete your business profile first.",
+      );
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
       const result = await createJob({
-        businessId: user?.id || '',
+        businessId: user?.id || "",
         title: formData.title.trim(),
-        positionType: 'full-time', // default
-        deadline: formData.deadline || '',
+        positionType: "full-time", // default
+        deadline: formData.deadline || "",
         address: formData.address.trim(),
         budgetMin: parseFloat(formData.budget_min),
         budgetMax: parseFloat(formData.budget_max),
@@ -193,27 +202,28 @@ export default function JobForm() {
         workersNeeded: 1,
         hoursNeeded: parseInt(formData.hours_needed),
         description: formData.description.trim(),
-        requirements: formData.requirements.split('\n').filter(r => r.trim()),
+        requirements: formData.requirements.split("\n").filter((r) => r.trim()),
         area: formData.address.trim(),
-      })
+      });
 
       if (result.success) {
-        toast.success('Job created successfully!')
+        toast.success("Job created successfully!");
         // Redirect to jobs list
-        router.push('/business/jobs')
+        router.push("/business/jobs");
       } else {
-        const message = result.error || 'Failed to create job'
-        setError(message)
-        toast.error(message)
+        const message = result.error || "Failed to create job";
+        setError(message);
+        toast.error(message);
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to create job'
-      setError(message)
-      toast.error(message)
+      const message =
+        err instanceof Error ? err.message : "Failed to create job";
+      setError(message);
+      toast.error(message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-muted/30 dark:bg-background p-4">
@@ -227,18 +237,14 @@ export default function JobForm() {
             <ArrowLeft className="w-4 h-4" />
             Back
           </button>
-          <h1 className="text-2xl font-bold m-0">
-            Create New Job
-          </h1>
+          <h1 className="text-2xl font-bold m-0">Create New Job</h1>
         </div>
 
         {/* Error Alert */}
         {error && (
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6 flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-destructive" />
-            <p className="text-destructive m-0 text-sm">
-              {error}
-            </p>
+            <p className="text-destructive m-0 text-sm">{error}</p>
           </div>
         )}
 
@@ -288,7 +294,7 @@ export default function JobForm() {
                 className="w-full p-2.5 border border-border rounded-md text-sm bg-card dark:bg-card"
               >
                 <option value="">Select a category</option>
-                {categories.map(cat => (
+                {categories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.name}
                   </option>
@@ -480,5 +486,5 @@ export default function JobForm() {
         </form>
       </div>
     </div>
-  )
+  );
 }

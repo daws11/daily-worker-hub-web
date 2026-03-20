@@ -1,126 +1,147 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
+import { useState, useEffect } from "react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Building2, Phone, Mail, Briefcase } from "lucide-react"
-import { OnboardingDraft } from "@/lib/utils/draft-storage"
+} from "@/components/ui/select";
+import { Building2, Phone, Mail, Briefcase } from "lucide-react";
+import { OnboardingDraft } from "@/lib/utils/draft-storage";
 
 interface BusinessIdentityProps {
-  value: Pick<OnboardingDraft, 'businessName' | 'businessType' | 'businessPhone' | 'businessEmail'>
-  onChange: (data: Pick<OnboardingDraft, 'businessName' | 'businessType' | 'businessPhone' | 'businessEmail'>) => void
-  onValidChange: (isValid: boolean) => void
-  initialEmail?: string
+  value: Pick<
+    OnboardingDraft,
+    "businessName" | "businessType" | "businessPhone" | "businessEmail"
+  >;
+  onChange: (
+    data: Pick<
+      OnboardingDraft,
+      "businessName" | "businessType" | "businessPhone" | "businessEmail"
+    >,
+  ) => void;
+  onValidChange: (isValid: boolean) => void;
+  initialEmail?: string;
 }
 
 const BUSINESS_TYPES = [
-  { value: 'Hotel/Villa', label: 'Hotel / Villa' },
-  { value: 'Restaurant', label: 'Restaurant' },
-  { value: 'Event Venue', label: 'Event Venue' },
-  { value: 'Spa/Wellness', label: 'Spa / Wellness' },
-  { value: 'Other', label: 'Other' },
-] as const
+  { value: "Hotel/Villa", label: "Hotel / Villa" },
+  { value: "Restaurant", label: "Restaurant" },
+  { value: "Event Venue", label: "Event Venue" },
+  { value: "Spa/Wellness", label: "Spa / Wellness" },
+  { value: "Other", label: "Other" },
+] as const;
 
-export function BusinessIdentity({ 
-  value, 
-  onChange, 
+export function BusinessIdentity({
+  value,
+  onChange,
   onValidChange,
-  initialEmail 
+  initialEmail,
 }: BusinessIdentityProps) {
-  const [businessName, setBusinessName] = useState(value.businessName || "")
-  const [businessType, setBusinessType] = useState<OnboardingDraft['businessType']>(value.businessType || undefined)
-  const [businessPhone, setBusinessPhone] = useState(value.businessPhone || "")
-  const [businessEmail, setBusinessEmail] = useState(value.businessEmail || initialEmail || "")
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [businessName, setBusinessName] = useState(value.businessName || "");
+  const [businessType, setBusinessType] = useState<
+    OnboardingDraft["businessType"]
+  >(value.businessType || undefined);
+  const [businessPhone, setBusinessPhone] = useState(value.businessPhone || "");
+  const [businessEmail, setBusinessEmail] = useState(
+    value.businessEmail || initialEmail || "",
+  );
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Auto-fill email from initial value if not already set
   useEffect(() => {
     if (initialEmail && !value.businessEmail) {
-      setBusinessEmail(initialEmail)
+      setBusinessEmail(initialEmail);
     }
-  }, [initialEmail, value.businessEmail])
+  }, [initialEmail, value.businessEmail]);
 
   // Validate form on change
   useEffect(() => {
-    const newErrors: Record<string, string> = {}
+    const newErrors: Record<string, string> = {};
 
     // Business name validation
     if (!businessName.trim()) {
-      newErrors.businessName = "Business name is required"
+      newErrors.businessName = "Business name is required";
     } else if (businessName.trim().length < 2) {
-      newErrors.businessName = "Business name must be at least 2 characters"
+      newErrors.businessName = "Business name must be at least 2 characters";
     }
 
     // Business type validation
     if (!businessType) {
-      newErrors.businessType = "Please select a business type"
+      newErrors.businessType = "Please select a business type";
     }
 
     // Phone validation (Indonesia format: +62 or 08xx)
-    const phoneClean = businessPhone.replace(/[\s-]/g, "")
+    const phoneClean = businessPhone.replace(/[\s-]/g, "");
     if (!phoneClean) {
-      newErrors.businessPhone = "Phone number is required"
+      newErrors.businessPhone = "Phone number is required";
     } else if (!/^(\+62|62|0)8[1-9][0-9]{7,10}$/.test(phoneClean)) {
-      newErrors.businessPhone = "Please enter a valid Indonesian phone number (e.g., +6281234567890)"
+      newErrors.businessPhone =
+        "Please enter a valid Indonesian phone number (e.g., +6281234567890)";
     }
 
     // Email validation
     if (!businessEmail.trim()) {
-      newErrors.businessEmail = "Email is required"
+      newErrors.businessEmail = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(businessEmail)) {
-      newErrors.businessEmail = "Please enter a valid email address"
+      newErrors.businessEmail = "Please enter a valid email address";
     }
 
-    setErrors(newErrors)
-    const isValid = Object.keys(newErrors).length === 0
-    onValidChange(isValid)
+    setErrors(newErrors);
+    const isValid = Object.keys(newErrors).length === 0;
+    onValidChange(isValid);
 
     // Notify parent of changes
-    onChange({ businessName, businessType, businessPhone, businessEmail })
-  }, [businessName, businessType, businessPhone, businessEmail, onValidChange, onChange])
+    onChange({ businessName, businessType, businessPhone, businessEmail });
+  }, [
+    businessName,
+    businessType,
+    businessPhone,
+    businessEmail,
+    onValidChange,
+    onChange,
+  ]);
 
   // Format phone number to +62 format
   const formatPhone = (value: string) => {
     // Remove non-digits
-    let cleaned = value.replace(/\D/g, "")
-    
+    let cleaned = value.replace(/\D/g, "");
+
     // Add +62 prefix if needed
     if (cleaned.startsWith("62")) {
-      cleaned = "+" + cleaned
+      cleaned = "+" + cleaned;
     } else if (cleaned.startsWith("0")) {
-      cleaned = "+62" + cleaned.slice(1)
+      cleaned = "+62" + cleaned.slice(1);
     } else if (cleaned && !cleaned.startsWith("+")) {
-      cleaned = "+62" + cleaned
+      cleaned = "+62" + cleaned;
     }
-    
-    return cleaned
-  }
+
+    return cleaned;
+  };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
+    const value = e.target.value;
     // Allow typing with or without +, we'll format on blur
-    setBusinessPhone(value)
-  }
+    setBusinessPhone(value);
+  };
 
   const handlePhoneBlur = () => {
     if (businessPhone) {
-      setBusinessPhone(formatPhone(businessPhone))
+      setBusinessPhone(formatPhone(businessPhone));
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
       <div className="space-y-2">
         <h2 className="text-xl font-semibold">Business Identity</h2>
         <p className="text-sm text-muted-foreground">
-          Tell us about your business. This information will be visible to workers looking for jobs.
+          Tell us about your business. This information will be visible to
+          workers looking for jobs.
         </p>
       </div>
 
@@ -153,7 +174,9 @@ export function BusinessIdentity({
           <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
           <Select
             value={businessType || ""}
-            onValueChange={(value) => setBusinessType(value as typeof businessType)}
+            onValueChange={(value) =>
+              setBusinessType(value as typeof businessType)
+            }
           >
             <SelectTrigger className="pl-9">
               <SelectValue placeholder="Select your business type" />
@@ -218,5 +241,5 @@ export function BusinessIdentity({
         )}
       </div>
     </div>
-  )
+  );
 }

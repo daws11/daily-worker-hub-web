@@ -1,39 +1,45 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Slider } from "@/components/ui/slider"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
-import { Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
 import {
   validateAvailabilityBlock,
   formatHour,
   getBlockDuration,
   MIN_BLOCK_HOURS,
   MAX_BLOCK_HOURS,
-} from "@/lib/algorithms/availability-checker"
-import { cn } from "@/lib/utils"
+} from "@/lib/algorithms/availability-checker";
+import { cn } from "@/lib/utils";
 
 interface AvailabilitySlot {
-  dayOfWeek: number
-  dayName: string
-  isAvailable: boolean
-  startHour: number
-  endHour: number
+  dayOfWeek: number;
+  dayName: string;
+  isAvailable: boolean;
+  startHour: number;
+  endHour: number;
 }
 
 interface AvailabilitySlotProps {
-  dayName: string
-  dayOfWeek: number
-  isAvailable: boolean
-  startHour: number
-  endHour: number
-  onToggle: () => void
-  onTimeChange: (startHour: number, endHour: number) => void
-  disabled?: boolean
+  dayName: string;
+  dayOfWeek: number;
+  isAvailable: boolean;
+  startHour: number;
+  endHour: number;
+  onToggle: () => void;
+  onTimeChange: (startHour: number, endHour: number) => void;
+  disabled?: boolean;
 }
 
 export function AvailabilitySlot({
@@ -46,48 +52,48 @@ export function AvailabilitySlot({
   onTimeChange,
   disabled = false,
 }: AvailabilitySlotProps) {
-  const [localStart, setLocalStart] = useState(startHour)
-  const [localEnd, setLocalEnd] = useState(endHour)
-  const [validationError, setValidationError] = useState<string | null>(null)
+  const [localStart, setLocalStart] = useState(startHour);
+  const [localEnd, setLocalEnd] = useState(endHour);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
-  const duration = getBlockDuration(localStart, localEnd)
+  const duration = getBlockDuration(localStart, localEnd);
 
   const validateAndUpdate = (newStart: number, newEnd: number) => {
-    const validation = validateAvailabilityBlock(newStart, newEnd)
+    const validation = validateAvailabilityBlock(newStart, newEnd);
     if (!validation.valid) {
-      setValidationError(validation.error || "Invalid availability")
-      return
+      setValidationError(validation.error || "Invalid availability");
+      return;
     }
 
-    setValidationError(null)
-    setLocalStart(newStart)
-    setLocalEnd(newEnd)
-    onTimeChange(newStart, newEnd)
-  }
+    setValidationError(null);
+    setLocalStart(newStart);
+    setLocalEnd(newEnd);
+    onTimeChange(newStart, newEnd);
+  };
 
   const handleStartChange = (value: number[]) => {
-    let newStart = Math.round(value[0])
+    let newStart = Math.round(value[0]);
 
     // Ensure end is at least MIN_BLOCK_HOURS after start
     if (newStart + MIN_BLOCK_HOURS > localEnd) {
-      newStart = localEnd - MIN_BLOCK_HOURS
+      newStart = localEnd - MIN_BLOCK_HOURS;
     }
-    if (newStart < 0) newStart = 0
+    if (newStart < 0) newStart = 0;
 
-    validateAndUpdate(newStart, localEnd)
-  }
+    validateAndUpdate(newStart, localEnd);
+  };
 
   const handleEndChange = (value: number[]) => {
-    let newEnd = Math.round(value[0])
+    let newEnd = Math.round(value[0]);
 
     // Ensure end is at least MIN_BLOCK_HOURS after start
     if (newEnd - MIN_BLOCK_HOURS < localStart) {
-      newEnd = localStart + MIN_BLOCK_HOURS
+      newEnd = localStart + MIN_BLOCK_HOURS;
     }
-    if (newEnd > 23) newEnd = 23
+    if (newEnd > 23) newEnd = 23;
 
-    validateAndUpdate(localStart, newEnd)
-  }
+    validateAndUpdate(localStart, newEnd);
+  };
 
   return (
     <div
@@ -95,7 +101,7 @@ export function AvailabilitySlot({
         "border rounded-lg p-4 space-y-3 transition-colors",
         isAvailable
           ? "bg-green-50 border-green-200"
-          : "bg-muted/30 border-muted"
+          : "bg-muted/30 border-muted",
       )}
     >
       {/* Day Header */}
@@ -202,14 +208,18 @@ export function AvailabilitySlot({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 interface AvailabilitySlotsProps {
-  slots: AvailabilitySlot[]
-  onSlotToggle: (dayOfWeek: number) => void
-  onSlotTimeChange: (dayOfWeek: number, startHour: number, endHour: number) => void
-  disabled?: boolean
+  slots: AvailabilitySlot[];
+  onSlotToggle: (dayOfWeek: number) => void;
+  onSlotTimeChange: (
+    dayOfWeek: number,
+    startHour: number,
+    endHour: number,
+  ) => void;
+  disabled?: boolean;
 }
 
 export function AvailabilitySlots({
@@ -218,7 +228,7 @@ export function AvailabilitySlots({
   onSlotTimeChange,
   disabled = false,
 }: AvailabilitySlotsProps) {
-  const availableCount = slots.filter((s) => s.isAvailable).length
+  const availableCount = slots.filter((s) => s.isAvailable).length;
 
   return (
     <Card>
@@ -235,9 +245,7 @@ export function AvailabilitySlots({
         <div className="space-y-4">
           {/* Stats */}
           <div className="flex items-center justify-between bg-muted/50 rounded-lg p-3">
-            <div className="text-sm text-muted-foreground">
-              Days Available
-            </div>
+            <div className="text-sm text-muted-foreground">Days Available</div>
             <Badge variant={availableCount > 0 ? "default" : "secondary"}>
               {availableCount} / 7
             </Badge>
@@ -275,5 +283,5 @@ export function AvailabilitySlots({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

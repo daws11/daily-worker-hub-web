@@ -1,17 +1,27 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { formatForInstagram, formatForFacebook, type SocialContentInput } from "@/lib/utils/social-content"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import {
+  formatForInstagram,
+  formatForFacebook,
+  type SocialContentInput,
+} from "@/lib/utils/social-content";
 
-export type SocialPlatform = "instagram" | "facebook"
+export type SocialPlatform = "instagram" | "facebook";
 
 export interface SocialPostPreviewProps {
-  platform: SocialPlatform
-  content: SocialContentInput
-  className?: string
+  platform: SocialPlatform;
+  content: SocialContentInput;
+  className?: string;
 }
 
 const platformConfig = {
@@ -29,25 +39,29 @@ const platformConfig = {
     textColor: "text-white",
     characterLimit: 63206,
   },
-}
+};
 
 const characterCountColor = (count: number, limit: number): string => {
-  const percentage = (count / limit) * 100
-  if (percentage >= 100) return "text-destructive"
-  if (percentage >= 90) return "text-orange-500"
-  if (percentage >= 75) return "text-yellow-500"
-  return "text-muted-foreground"
-}
+  const percentage = (count / limit) * 100;
+  if (percentage >= 100) return "text-destructive";
+  if (percentage >= 90) return "text-orange-500";
+  if (percentage >= 75) return "text-yellow-500";
+  return "text-muted-foreground";
+};
 
-export function SocialPostPreview({ platform, content, className }: SocialPostPreviewProps) {
-  const config = platformConfig[platform]
+export function SocialPostPreview({
+  platform,
+  content,
+  className,
+}: SocialPostPreviewProps) {
+  const config = platformConfig[platform];
 
   const formattedContent = React.useMemo(() => {
     if (platform === "instagram") {
-      return formatForInstagram(content)
+      return formatForInstagram(content);
     }
-    return formatForFacebook(content)
-  }, [platform, content])
+    return formatForFacebook(content);
+  }, [platform, content]);
 
   return (
     <Card className={cn("overflow-hidden", className)}>
@@ -60,12 +74,17 @@ export function SocialPostPreview({ platform, content, className }: SocialPostPr
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm opacity-90">
-              {formattedContent.characterCount.toLocaleString()} / {config.characterLimit.toLocaleString()}
+              {formattedContent.characterCount.toLocaleString()} /{" "}
+              {config.characterLimit.toLocaleString()}
             </span>
             {formattedContent.withinLimit ? (
-              <span className="text-xs px-2 py-1 rounded-full bg-white/20">✓ OK</span>
+              <span className="text-xs px-2 py-1 rounded-full bg-white/20">
+                ✓ OK
+              </span>
             ) : (
-              <span className="text-xs px-2 py-1 rounded-full bg-red-500">⚠ Too Long</span>
+              <span className="text-xs px-2 py-1 rounded-full bg-red-500">
+                ⚠ Too Long
+              </span>
             )}
           </div>
         </div>
@@ -83,8 +102,9 @@ export function SocialPostPreview({ platform, content, className }: SocialPostPr
         <div
           className={cn(
             "rounded-lg p-4 border",
-            platform === "instagram" && "bg-gradient-to-br from-purple-50 to-pink-50 border-pink-100",
-            platform === "facebook" && "bg-gray-50 border-gray-200"
+            platform === "instagram" &&
+              "bg-gradient-to-br from-purple-50 to-pink-50 border-pink-100",
+            platform === "facebook" && "bg-gray-50 border-gray-200",
           )}
         >
           {/* Platform-specific content styling */}
@@ -94,18 +114,32 @@ export function SocialPostPreview({ platform, content, className }: SocialPostPr
               className={cn(
                 "whitespace-pre-wrap break-words text-sm leading-relaxed",
                 platform === "instagram" && "font-medium",
-                platform === "facebook" && "text-gray-800"
+                platform === "facebook" && "text-gray-800",
               )}
             >
               {formattedContent.text}
             </div>
 
             {/* Character count indicator */}
-            <div className={cn("text-xs pt-2 border-t", characterCountColor(formattedContent.characterCount, config.characterLimit))}>
+            <div
+              className={cn(
+                "text-xs pt-2 border-t",
+                characterCountColor(
+                  formattedContent.characterCount,
+                  config.characterLimit,
+                ),
+              )}
+            >
               <div className="flex justify-between items-center">
-                <span>Characters: {formattedContent.characterCount.toLocaleString()}</span>
                 <span>
-                  {Math.round((formattedContent.characterCount / config.characterLimit) * 100)}% of limit
+                  Characters: {formattedContent.characterCount.toLocaleString()}
+                </span>
+                <span>
+                  {Math.round(
+                    (formattedContent.characterCount / config.characterLimit) *
+                      100,
+                  )}
+                  % of limit
                 </span>
               </div>
               {/* Progress bar */}
@@ -115,12 +149,14 @@ export function SocialPostPreview({ platform, content, className }: SocialPostPr
                     "h-full transition-all",
                     formattedContent.withinLimit
                       ? "bg-green-500"
-                      : "bg-destructive"
+                      : "bg-destructive",
                   )}
                   style={{
                     width: `${Math.min(
-                      (formattedContent.characterCount / config.characterLimit) * 100,
-                      100
+                      (formattedContent.characterCount /
+                        config.characterLimit) *
+                        100,
+                      100,
                     )}%`,
                   }}
                 />
@@ -128,35 +164,42 @@ export function SocialPostPreview({ platform, content, className }: SocialPostPr
             </div>
 
             {/* Hashtags */}
-            {formattedContent.hashtags && formattedContent.hashtags.length > 0 && (
-              <div className="pt-2">
-                <p className="text-xs text-muted-foreground mb-1">Hashtags:</p>
-                <div className="flex flex-wrap gap-1">
-                  {formattedContent.hashtags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className={cn(
-                        "text-xs px-2 py-1 rounded-full",
-                        platform === "instagram" && "bg-pink-100 text-pink-700",
-                        platform === "facebook" && "bg-blue-100 text-blue-700"
-                      )}
-                    >
-                      {tag}
-                    </span>
-                  ))}
+            {formattedContent.hashtags &&
+              formattedContent.hashtags.length > 0 && (
+                <div className="pt-2">
+                  <p className="text-xs text-muted-foreground mb-1">
+                    Hashtags:
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {formattedContent.hashtags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className={cn(
+                          "text-xs px-2 py-1 rounded-full",
+                          platform === "instagram" &&
+                            "bg-pink-100 text-pink-700",
+                          platform === "facebook" &&
+                            "bg-blue-100 text-blue-700",
+                        )}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Call to Action */}
             {formattedContent.callToAction && (
               <div className="pt-2">
-                <p className="text-xs text-muted-foreground mb-1">Call to Action:</p>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Call to Action:
+                </p>
                 <p
                   className={cn(
                     "text-sm font-medium",
                     platform === "instagram" && "text-pink-700",
-                    platform === "facebook" && "text-blue-700"
+                    platform === "facebook" && "text-blue-700",
                   )}
                 >
                   {formattedContent.callToAction}
@@ -170,7 +213,8 @@ export function SocialPostPreview({ platform, content, className }: SocialPostPr
         {!formattedContent.withinLimit && (
           <div className="mt-3 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
             <p className="text-sm text-destructive font-medium">
-              ⚠️ Content exceeds {config.name}&apos;s character limit ({config.characterLimit.toLocaleString()} characters)
+              ⚠️ Content exceeds {config.name}&apos;s character limit (
+              {config.characterLimit.toLocaleString()} characters)
             </p>
             <p className="text-xs text-destructive/80 mt-1">
               Please shorten your job description or remove some details.
@@ -179,13 +223,13 @@ export function SocialPostPreview({ platform, content, className }: SocialPostPr
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export interface SocialPostPreviewGalleryProps {
-  content: SocialContentInput
-  platforms?: SocialPlatform[]
-  className?: string
+  content: SocialContentInput;
+  platforms?: SocialPlatform[];
+  className?: string;
 }
 
 export function SocialPostPreviewGallery({
@@ -203,9 +247,13 @@ export function SocialPostPreviewGallery({
       </div>
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
         {platforms.map((platform) => (
-          <SocialPostPreview key={platform} platform={platform} content={content} />
+          <SocialPostPreview
+            key={platform}
+            platform={platform}
+            content={content}
+          />
         ))}
       </div>
     </div>
-  )
+  );
 }

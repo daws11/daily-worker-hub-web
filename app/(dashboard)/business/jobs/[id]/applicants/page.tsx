@@ -1,88 +1,97 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useAuth } from '@/app/providers/auth-provider'
-import { useParams, useRouter } from 'next/navigation'
-import { toast } from "sonner"
-import Link from "next/link"
-import { 
-  Loader2, 
-  AlertCircle, 
-  Users, 
+import * as React from "react";
+import { useAuth } from "@/app/providers/auth-provider";
+import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
+import Link from "next/link";
+import {
+  Loader2,
+  AlertCircle,
+  Users,
   ArrowLeft,
   Briefcase,
   Building2,
   Filter,
   Video,
-  ExternalLink
-} from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+  ExternalLink,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { ApplicantCard } from "@/components/business/applicant-card"
-import { getApplicationsByJob, updateApplicationStatus, acceptApplicationAndCreateBooking } from "@/lib/actions/job-applications"
+} from "@/components/ui/select";
+import { ApplicantCard } from "@/components/business/applicant-card";
+import {
+  getApplicationsByJob,
+  updateApplicationStatus,
+  acceptApplicationAndCreateBooking,
+} from "@/lib/actions/job-applications";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-type ApplicationStatus = 'pending' | 'reviewed' | 'accepted' | 'rejected' | 'withdrawn'
+type ApplicationStatus =
+  | "pending"
+  | "reviewed"
+  | "accepted"
+  | "rejected"
+  | "withdrawn";
 
 interface JobInfo {
-  id: string
-  title: string
-  description: string | null
-  budget_min: number
-  budget_max: number
-  status: string
+  id: string;
+  title: string;
+  description: string | null;
+  budget_min: number;
+  budget_max: number;
+  status: string;
 }
 
 interface WorkerInfo {
-  id: string
-  full_name: string
-  phone: string | null
-  bio: string | null
-  avatar_url: string | null
-  tier: string
-  rating: number | null
-  reliability_score: number | null
-  jobs_completed: number | null
+  id: string;
+  full_name: string;
+  phone: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  tier: string;
+  rating: number | null;
+  reliability_score: number | null;
+  jobs_completed: number | null;
 }
 
 interface JobApplication {
-  id: string
-  job_id: string
-  worker_id: string
-  business_id: string
-  status: ApplicationStatus
-  cover_letter: string | null
-  proposed_wage: number | null
-  applied_at: string
-  workers: WorkerInfo | null
+  id: string;
+  job_id: string;
+  worker_id: string;
+  business_id: string;
+  status: ApplicationStatus;
+  cover_letter: string | null;
+  proposed_wage: number | null;
+  applied_at: string;
+  workers: WorkerInfo | null;
 }
 
 interface JobWithBusiness {
-  id: string
-  title: string
-  description: string | null
-  budget_min: number
-  budget_max: number
-  hours_needed: number | null
-  deadline: string | null
-  address: string | null
-  status: string
-  business_id: string
+  id: string;
+  title: string;
+  description: string | null;
+  budget_min: number;
+  budget_max: number;
+  hours_needed: number | null;
+  deadline: string | null;
+  address: string | null;
+  status: string;
+  business_id: string;
   businesses: {
-    id: string
-    name: string
-  }
+    id: string;
+    name: string;
+  };
 }
 
 // ============================================================================
@@ -94,18 +103,18 @@ function formatPrice(price: number): string {
     style: "currency",
     currency: "IDR",
     minimumFractionDigits: 0,
-  }).format(price)
+  }).format(price);
 }
 
 function formatDate(dateString: string): string {
-  const date = new Date(dateString)
+  const date = new Date(dateString);
   return date.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "short",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  })
+  });
 }
 
 // ============================================================================
@@ -113,24 +122,26 @@ function formatDate(dateString: string): string {
 // ============================================================================
 
 export default function BusinessApplicantsPage() {
-  const { user, isLoading: authLoading } = useAuth()
-  const params = useParams()
-  const router = useRouter()
-  const jobId = params.id as string
+  const { user, isLoading: authLoading } = useAuth();
+  const params = useParams();
+  const router = useRouter();
+  const jobId = params.id as string;
 
-  const [job, setJob] = React.useState<JobWithBusiness | null>(null)
-  const [applications, setApplications] = React.useState<JobApplication[]>([])
-  const [isLoading, setIsLoading] = React.useState(true)
-  const [error, setError] = React.useState<string | null>(null)
-  const [statusFilter, setStatusFilter] = React.useState<string>("all")
-  const [processingId, setProcessingId] = React.useState<string | null>(null)
-  const [bookingIds, setBookingIds] = React.useState<Record<string, string>>({})
+  const [job, setJob] = React.useState<JobWithBusiness | null>(null);
+  const [applications, setApplications] = React.useState<JobApplication[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = React.useState<string>("all");
+  const [processingId, setProcessingId] = React.useState<string | null>(null);
+  const [bookingIds, setBookingIds] = React.useState<Record<string, string>>(
+    {},
+  );
 
   const fetchData = React.useCallback(async () => {
-    if (!user?.id || !jobId) return
+    if (!user?.id || !jobId) return;
 
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
       // Get business ID
@@ -138,16 +149,17 @@ export default function BusinessApplicantsPage() {
         .from("businesses")
         .select("id")
         .eq("user_id", user.id)
-        .single()
+        .single();
 
       if (businessError || !business) {
-        throw new Error("Data bisnis tidak ditemukan")
+        throw new Error("Data bisnis tidak ditemukan");
       }
 
       // Fetch job details
       const { data: jobData, error: jobError } = await supabase
         .from("jobs")
-        .select(`
+        .select(
+          `
           id,
           title,
           description,
@@ -161,112 +173,125 @@ export default function BusinessApplicantsPage() {
             id,
             name
           )
-        `)
+        `,
+        )
         .eq("id", jobId)
         .eq("business_id", business.id)
-        .single()
+        .single();
 
       if (jobError || !jobData) {
-        throw new Error("Pekerjaan tidak ditemukan")
+        throw new Error("Pekerjaan tidak ditemukan");
       }
 
-      setJob(jobData as JobWithBusiness)
+      setJob(jobData as JobWithBusiness);
 
       // Fetch applications
-      const result = await getApplicationsByJob(jobId, business.id)
-      
+      const result = await getApplicationsByJob(jobId, business.id);
+
       if (!result.success) {
-        throw new Error(result.error || "Gagal memuat data pelamar")
+        throw new Error(result.error || "Gagal memuat data pelamar");
       }
 
-      const apps = result.data || []
-      setApplications(apps)
+      const apps = result.data || [];
+      setApplications(apps);
 
       // Fetch booking IDs for accepted applications
       const acceptedAppIds = apps
-        .filter((app: any) => app.status === 'accepted')
-        .map((app: any) => app.id)
+        .filter((app: any) => app.status === "accepted")
+        .map((app: any) => app.id);
 
       if (acceptedAppIds.length > 0) {
         const { data: bookings } = await supabase
           .from("bookings")
           .select("id, application_id")
-          .in("application_id", acceptedAppIds)
+          .in("application_id", acceptedAppIds);
 
         if (bookings && bookings.length > 0) {
-          const bookingMap: Record<string, string> = {}
+          const bookingMap: Record<string, string> = {};
           bookings.forEach((b: any) => {
             if (b.application_id) {
-              bookingMap[b.application_id] = b.id
+              bookingMap[b.application_id] = b.id;
             }
-          })
-          setBookingIds(bookingMap)
+          });
+          setBookingIds(bookingMap);
         }
       }
     } catch (err: any) {
-      const message = err.message || "Gagal memuat data"
-      setError(message)
-      toast.error(message)
+      const message = err.message || "Gagal memuat data";
+      setError(message);
+      toast.error(message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [user?.id, jobId])
+  }, [user?.id, jobId]);
 
   React.useEffect(() => {
     // Import supabase client
-    const supabase = require("@/lib/supabase/client").supabase
-    fetchData()
-  }, [fetchData])
+    const supabase = require("@/lib/supabase/client").supabase;
+    fetchData();
+  }, [fetchData]);
 
   // Import supabase at module level for the effect
   const supabase = React.useMemo(() => {
-    return require("@/lib/supabase/client").supabase
-  }, [])
+    return require("@/lib/supabase/client").supabase;
+  }, []);
 
   const handleStatusUpdate = async (
-    applicationId: string, 
-    newStatus: 'reviewed' | 'accepted' | 'rejected'
+    applicationId: string,
+    newStatus: "reviewed" | "accepted" | "rejected",
   ) => {
-    if (!user?.id) return
+    if (!user?.id) return;
 
-    setProcessingId(applicationId)
-    
+    setProcessingId(applicationId);
+
     try {
       // Get business ID
       const { data: business } = await supabase
         .from("businesses")
         .select("id")
         .eq("user_id", user.id)
-        .single()
+        .single();
 
       if (!business) {
-        toast.error("Data bisnis tidak ditemukan / Business data not found")
-        return
+        toast.error("Data bisnis tidak ditemukan / Business data not found");
+        return;
       }
 
-      let result
-      
-      if (newStatus === 'accepted') {
+      let result;
+
+      if (newStatus === "accepted") {
         // Use special function that creates booking
-        result = await acceptApplicationAndCreateBooking(applicationId, business.id)
+        result = await acceptApplicationAndCreateBooking(
+          applicationId,
+          business.id,
+        );
       } else {
-        result = await updateApplicationStatus(applicationId, newStatus, business.id)
+        result = await updateApplicationStatus(
+          applicationId,
+          newStatus,
+          business.id,
+        );
       }
 
       if (!result.success) {
-        toast.error(result.error || "Gagal mengupdate status / Failed to update status")
-        return
+        toast.error(
+          result.error || "Gagal mengupdate status / Failed to update status",
+        );
+        return;
       }
 
       // Store booking ID if accepted
-      if (newStatus === 'accepted' && result.data?.booking?.id) {
-        const bookingId = result.data.booking.id
-        setBookingIds(prev => ({ ...prev, [applicationId]: bookingId }))
+      if (newStatus === "accepted" && result.data?.booking?.id) {
+        const bookingId = result.data.booking.id;
+        setBookingIds((prev) => ({ ...prev, [applicationId]: bookingId }));
 
         // Show toast with interview link
         toast.success(
           <div className="flex items-center gap-2">
-            <span>Pelamar diterima! Booking dibuat. / Applicant accepted! Booking created.</span>
+            <span>
+              Pelamar diterima! Booking dibuat. / Applicant accepted! Booking
+              created.
+            </span>
             <Link
               href={`/dashboard/business/interview/${bookingId}`}
               className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 underline font-medium"
@@ -276,46 +301,49 @@ export default function BusinessApplicantsPage() {
               <ExternalLink className="h-3 w-3" />
             </Link>
           </div>,
-          { duration: 8000 }
-        )
+          { duration: 8000 },
+        );
       } else {
         toast.success(
-          newStatus === 'accepted'
+          newStatus === "accepted"
             ? "Pelamar diterima dan booking dibuat! / Applicant accepted and booking created!"
-            : `Status lamaran diubah ke ${newStatus} / Application status changed to ${newStatus}`
-        )
+            : `Status lamaran diubah ke ${newStatus} / Application status changed to ${newStatus}`,
+        );
       }
-      
+
       // Refresh data
-      fetchData()
+      fetchData();
     } catch (err: any) {
-      toast.error(err.message || "Terjadi kesalahan / An error occurred")
+      toast.error(err.message || "Terjadi kesalahan / An error occurred");
     } finally {
-      setProcessingId(null)
+      setProcessingId(null);
     }
-  }
+  };
 
   // Filter applications
   const filteredApplications = React.useMemo(() => {
-    if (statusFilter === "all") return applications
-    return applications.filter(app => app.status === statusFilter)
-  }, [applications, statusFilter])
+    if (statusFilter === "all") return applications;
+    return applications.filter((app) => app.status === statusFilter);
+  }, [applications, statusFilter]);
 
   // Stats
-  const stats = React.useMemo(() => ({
-    total: applications.length,
-    pending: applications.filter(a => a.status === "pending").length,
-    shortlisted: applications.filter(a => a.status === "reviewed").length,
-    accepted: applications.filter(a => a.status === "accepted").length,
-    rejected: applications.filter(a => a.status === "rejected").length,
-  }), [applications])
+  const stats = React.useMemo(
+    () => ({
+      total: applications.length,
+      pending: applications.filter((a) => a.status === "pending").length,
+      shortlisted: applications.filter((a) => a.status === "reviewed").length,
+      accepted: applications.filter((a) => a.status === "accepted").length,
+      rejected: applications.filter((a) => a.status === "rejected").length,
+    }),
+    [applications],
+  );
 
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
         <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
       </div>
-    )
+    );
   }
 
   if (!user) {
@@ -324,11 +352,12 @@ export default function BusinessApplicantsPage() {
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-center gap-3">
           <AlertCircle className="h-5 w-5 text-red-600" />
           <p className="text-red-900 font-medium">
-            Error: Tidak dapat memuat informasi pengguna. Silakan refresh halaman.
+            Error: Tidak dapat memuat informasi pengguna. Silakan refresh
+            halaman.
           </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -360,8 +389,10 @@ export default function BusinessApplicantsPage() {
                     <span>{job.businesses?.name}</span>
                   </div>
                 </div>
-                <Badge variant={job.status === 'open' ? 'default' : 'secondary'}>
-                  {job.status === 'open' ? 'Aktif' : job.status}
+                <Badge
+                  variant={job.status === "open" ? "default" : "secondary"}
+                >
+                  {job.status === "open" ? "Aktif" : job.status}
                 </Badge>
               </div>
             </CardHeader>
@@ -404,15 +435,21 @@ export default function BusinessApplicantsPage() {
           </Card>
           <Card className="p-3">
             <p className="text-xs text-muted-foreground">Menunggu</p>
-            <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+            <p className="text-2xl font-bold text-yellow-600">
+              {stats.pending}
+            </p>
           </Card>
           <Card className="p-3">
             <p className="text-xs text-muted-foreground">Dipilih</p>
-            <p className="text-2xl font-bold text-blue-600">{stats.shortlisted}</p>
+            <p className="text-2xl font-bold text-blue-600">
+              {stats.shortlisted}
+            </p>
           </Card>
           <Card className="p-3">
             <p className="text-xs text-muted-foreground">Diterima</p>
-            <p className="text-2xl font-bold text-green-600">{stats.accepted}</p>
+            <p className="text-2xl font-bold text-green-600">
+              {stats.accepted}
+            </p>
           </Card>
           <Card className="p-3">
             <p className="text-xs text-muted-foreground">Ditolak</p>
@@ -465,7 +502,9 @@ export default function BusinessApplicantsPage() {
           <div className="bg-white rounded-lg p-12 shadow-sm text-center border-2 border-dashed border-gray-300">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">
-              {statusFilter === "all" ? "Belum Ada Pelamar" : "Tidak ada pelamar dengan status ini"}
+              {statusFilter === "all"
+                ? "Belum Ada Pelamar"
+                : "Tidak ada pelamar dengan status ini"}
             </h3>
             <p className="text-gray-600">
               {statusFilter === "all"
@@ -484,16 +523,22 @@ export default function BusinessApplicantsPage() {
                 application={application}
                 budgetMin={job?.budget_min || 0}
                 budgetMax={job?.budget_max || 0}
-                onShortlist={() => handleStatusUpdate(application.id, 'reviewed')}
-                onAccept={() => handleStatusUpdate(application.id, 'accepted')}
-                onReject={() => handleStatusUpdate(application.id, 'rejected')}
+                onShortlist={() =>
+                  handleStatusUpdate(application.id, "reviewed")
+                }
+                onAccept={() => handleStatusUpdate(application.id, "accepted")}
+                onReject={() => handleStatusUpdate(application.id, "rejected")}
                 isProcessing={processingId === application.id}
-                bookingId={application.status === 'accepted' ? bookingIds[application.id] : null}
+                bookingId={
+                  application.status === "accepted"
+                    ? bookingIds[application.id]
+                    : null
+                }
               />
             ))}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   MessageSquare,
@@ -22,28 +22,28 @@ import {
   X,
   CalendarDays,
   Trophy,
-} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet"
+} from "@/components/ui/sheet";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+} from "@/components/ui/collapsible";
 
 interface NavItem {
-  title: string
-  href: string
-  icon: React.ComponentType<{ className?: string }>
-  badge?: string | number
-  children?: NavItem[]
+  title: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: string | number;
+  children?: NavItem[];
 }
 
 const businessNavItems: NavItem[] = [
@@ -102,7 +102,7 @@ const businessNavItems: NavItem[] = [
     href: "/business/settings",
     icon: Settings,
   },
-]
+];
 
 const workerNavItems: NavItem[] = [
   {
@@ -160,21 +160,28 @@ const workerNavItems: NavItem[] = [
     href: "/worker/settings",
     icon: Settings,
   },
-]
+];
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
-  items?: NavItem[]
-  className?: string
-  collapsed?: boolean
+  items?: NavItem[];
+  className?: string;
+  collapsed?: boolean;
 }
 
-function NavItemComponent({ item, collapsed }: { item: NavItem; collapsed?: boolean }) {
-  const pathname = usePathname()
-  const [isOpen, setIsOpen] = React.useState(false)
-  
-  const isActive = pathname === item.href || pathname?.startsWith(item.href + "/")
-  const Icon = item.icon
-  const hasChildren = item.children && item.children.length > 0
+function NavItemComponent({
+  item,
+  collapsed,
+}: {
+  item: NavItem;
+  collapsed?: boolean;
+}) {
+  const pathname = usePathname();
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  const isActive =
+    pathname === item.href || pathname?.startsWith(item.href + "/");
+  const Icon = item.icon;
+  const hasChildren = item.children && item.children.length > 0;
 
   if (hasChildren) {
     return (
@@ -185,7 +192,7 @@ function NavItemComponent({ item, collapsed }: { item: NavItem; collapsed?: bool
               "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors min-h-[44px] touch-manipulation",
               isActive
                 ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />
@@ -195,7 +202,7 @@ function NavItemComponent({ item, collapsed }: { item: NavItem; collapsed?: bool
                 <ChevronDown
                   className={cn(
                     "h-4 w-4 transition-transform",
-                    isOpen && "rotate-180"
+                    isOpen && "rotate-180",
                   )}
                 />
               </>
@@ -210,7 +217,7 @@ function NavItemComponent({ item, collapsed }: { item: NavItem; collapsed?: bool
           </CollapsibleContent>
         )}
       </Collapsible>
-    )
+    );
   }
 
   return (
@@ -220,7 +227,7 @@ function NavItemComponent({ item, collapsed }: { item: NavItem; collapsed?: bool
         "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors relative min-h-[44px] touch-manipulation",
         isActive
           ? "bg-primary/10 text-primary"
-          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
       )}
     >
       <Icon className="h-4 w-4 shrink-0" />
@@ -240,17 +247,23 @@ function NavItemComponent({ item, collapsed }: { item: NavItem; collapsed?: bool
         </span>
       )}
     </Link>
-  )
+  );
 }
 
-function SidebarContent({ items, collapsed }: { items: NavItem[]; collapsed?: boolean }) {
+function SidebarContent({
+  items,
+  collapsed,
+}: {
+  items: NavItem[];
+  collapsed?: boolean;
+}) {
   return (
     <nav className="flex flex-col gap-1 p-2">
       {items.map((item) => (
         <NavItemComponent key={item.href} item={item} collapsed={collapsed} />
       ))}
     </nav>
-  )
+  );
 }
 
 export function SidebarNav({
@@ -263,21 +276,21 @@ export function SidebarNav({
     <ScrollArea className={cn("h-full", className)} {...props}>
       <SidebarContent items={items} collapsed={collapsed} />
     </ScrollArea>
-  )
+  );
 }
 
 export function MobileSidebarNav({
   items = businessNavItems,
   className,
 }: Omit<SidebarNavProps, "collapsed">) {
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(false);
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           className="md:hidden h-11 w-11 shrink-0 touch-manipulation"
         >
           <Menu className="h-5 w-5" />
@@ -293,7 +306,7 @@ export function MobileSidebarNav({
         </div>
       </SheetContent>
     </Sheet>
-  )
+  );
 }
 
-export { businessNavItems, workerNavItems, type NavItem }
+export { businessNavItems, workerNavItems, type NavItem };

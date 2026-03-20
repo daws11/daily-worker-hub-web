@@ -31,6 +31,7 @@ curl http://localhost:3000/api/docs
 ```
 
 This endpoint is useful for:
+
 - Generating client SDKs
 - Importing into API testing tools (Postman, Insomnia)
 - CI/CD pipeline validation
@@ -63,11 +64,11 @@ curl -X GET "https://api.dailyworkerhub.com/api/jobs" \
 
 API endpoints are rate-limited to ensure fair usage:
 
-| Endpoint Type | Rate Limit |
-|---------------|------------|
-| Public endpoints | 30 requests/minute |
+| Endpoint Type           | Rate Limit          |
+| ----------------------- | ------------------- |
+| Public endpoints        | 30 requests/minute  |
 | Authenticated endpoints | 100 requests/minute |
-| Payment endpoints | 10 requests/minute |
+| Payment endpoints       | 10 requests/minute  |
 
 Rate limit headers are included in responses:
 
@@ -145,6 +146,7 @@ Use existing schemas from `lib/openapi.ts` to maintain consistency:
 ```
 
 Available schemas:
+
 - `User` - User object
 - `Worker` - Worker profile
 - `WorkerPublic` - Public worker profile (safe data)
@@ -195,17 +197,17 @@ MyNewSchema: {
 
 ### Common Annotations
 
-| Annotation | Description |
-|------------|-------------|
-| `@openapi` | Marks the comment as OpenAPI documentation |
-| `tags` | Groups endpoints in Swagger UI |
-| `summary` | Short endpoint description |
-| `description` | Detailed endpoint description |
-| `parameters` | Query, path, or header parameters |
-| `requestBody` | Request body specification |
-| `responses` | Response specifications |
-| `security` | Authentication requirements |
-| `deprecated` | Marks endpoint as deprecated |
+| Annotation    | Description                                |
+| ------------- | ------------------------------------------ |
+| `@openapi`    | Marks the comment as OpenAPI documentation |
+| `tags`        | Groups endpoints in Swagger UI             |
+| `summary`     | Short endpoint description                 |
+| `description` | Detailed endpoint description              |
+| `parameters`  | Query, path, or header parameters          |
+| `requestBody` | Request body specification                 |
+| `responses`   | Response specifications                    |
+| `security`    | Authentication requirements                |
+| `deprecated`  | Marks endpoint as deprecated               |
 
 ### Parameter Locations
 
@@ -219,7 +221,7 @@ MyNewSchema: {
 Mark endpoints as public:
 
 ```typescript
-security: []
+security: [];
 ```
 
 Require authentication:
@@ -256,10 +258,10 @@ curl -X POST "http://localhost:3000/api/jobs" \
 ### Using JavaScript
 
 ```javascript
-const response = await fetch('/api/jobs', {
-  method: 'GET',
+const response = await fetch("/api/jobs", {
+  method: "GET",
   headers: {
-    'Authorization': `Bearer ${token}`,
+    Authorization: `Bearer ${token}`,
   },
 });
 
@@ -327,16 +329,17 @@ MySchema: {
 
 ## Files Reference
 
-| File | Purpose |
-|------|---------|
-| `lib/openapi.ts` | OpenAPI configuration and schemas |
-| `app/api/docs/route.ts` | Serves OpenAPI JSON spec |
-| `app/docs/page.tsx` | Swagger UI page |
-| `docs/api-documentation.md` | This documentation file |
+| File                        | Purpose                           |
+| --------------------------- | --------------------------------- |
+| `lib/openapi.ts`            | OpenAPI configuration and schemas |
+| `app/api/docs/route.ts`     | Serves OpenAPI JSON spec          |
+| `app/docs/page.tsx`         | Swagger UI page                   |
+| `docs/api-documentation.md` | This documentation file           |
 
 ## Support
 
 For API support:
+
 - Email: support@dailyworkerhub.com
 - Documentation: https://dailyworkerhub.com/docs
 - GitHub Issues: https://github.com/daws11/daily-worker-hub/issues

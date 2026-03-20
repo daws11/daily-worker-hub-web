@@ -5,6 +5,7 @@
 Sebelum memulai development, pastikan sudah menyiapkan:
 
 ### 1. Supabase Project Setup
+
 - [ ] Buat account di https://supabase.com
 - [ ] Buat project baru (Free tier bisa untuk start)
 - [ ] Catat:
@@ -13,12 +14,14 @@ Sebelum memulai development, pastikan sudah menyiapkan:
   - Service Role Key (untuk admin operations)
 
 ### 2. Android Development Environment
+
 - [ ] Android Studio Ladybug atau versi terbaru
 - [ ] JDK 17 atau 21
 - [ ] Android SDK sudah terinstall
 - [ ] Emulator atau device Android siap
 
 ### 3. Web Development Environment
+
 - [ ] Node.js 20+ (cek dengan `node --version`)
 - [ ] npm atau pnpm
 
@@ -63,6 +66,7 @@ Setelah Supabase project siap, buat tabel-tabel berikut:
 ### Core Tables
 
 #### 1. profiles
+
 ```sql
 CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id),
@@ -77,6 +81,7 @@ CREATE TABLE profiles (
 ```
 
 #### 2. workers
+
 ```sql
 CREATE TABLE workers (
   id UUID PRIMARY KEY REFERENCES profiles(id),
@@ -92,6 +97,7 @@ CREATE TABLE workers (
 ```
 
 #### 3. businesses
+
 ```sql
 CREATE TABLE businesses (
   id UUID PRIMARY KEY REFERENCES profiles(id),
@@ -104,6 +110,7 @@ CREATE TABLE businesses (
 ```
 
 #### 4. jobs
+
 ```sql
 CREATE TABLE jobs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -122,6 +129,7 @@ CREATE TABLE jobs (
 ```
 
 #### 5. job_assignments
+
 ```sql
 CREATE TABLE job_assignments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -138,6 +146,7 @@ CREATE TABLE job_assignments (
 ```
 
 #### 6. wallets
+
 ```sql
 CREATE TABLE wallets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -148,6 +157,7 @@ CREATE TABLE wallets (
 ```
 
 #### 7. wallet_transactions
+
 ```sql
 CREATE TABLE wallet_transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -234,19 +244,22 @@ Setelah setup selesai, development priorities:
 ## 🔍 Troubleshooting
 
 ### Supabase Connection Issues
+
 - Cek URL dan Anon Key sudah benar
 - Pastikan Supabase project sudah di-start
 - Cek RLS policies tidak memblokir akses
 
 ### Android Build Issues
+
 - Pastikan `local.properties` sudah terisi
 - Clear cache: `Build → Clean Project`
 - Sync Gradle: `File → Sync Project with Gradle Files`
 
 ### Next.js Issues
+
 - Hapus `.next` folder dan `npm install` ulang
 - Cek environment variables di `.env.local`
 
 ---
 
-*Dokumentasi ini akan terus di-update seiring progress development.*
+_Dokumentasi ini akan terus di-update seiring progress development._

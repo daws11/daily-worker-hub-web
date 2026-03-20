@@ -1,32 +1,32 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Controller, type ControllerProps } from "react-hook-form"
-import { X } from "lucide-react"
+import * as React from "react";
+import { Controller, type ControllerProps } from "react-hook-form";
+import { X } from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
 export interface Skill {
-  id: string
-  name: string
-  slug: string
+  id: string;
+  name: string;
+  slug: string;
 }
 
 interface SkillsSelectProps {
-  skills: Skill[]
-  selectedSkills: string[]
-  onSkillsChange: (skillIds: string[]) => void
-  placeholder?: string
-  disabled?: boolean
-  className?: string
+  skills: Skill[];
+  selectedSkills: string[];
+  onSkillsChange: (skillIds: string[]) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
 }
 
 export function SkillsSelect({
@@ -37,29 +37,29 @@ export function SkillsSelect({
   disabled = false,
   className,
 }: SkillsSelectProps) {
-  const [isOpen, setIsOpen] = React.useState(false)
-  const triggerRef = React.useRef<HTMLButtonElement>(null)
+  const [isOpen, setIsOpen] = React.useState(false);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
 
   const selectedSkillsMap = React.useMemo(
     () => new Set(selectedSkills),
-    [selectedSkills]
-  )
+    [selectedSkills],
+  );
 
   const availableSkills = React.useMemo(
     () => skills.filter((skill) => !selectedSkillsMap.has(skill.id)),
-    [skills, selectedSkillsMap]
-  )
+    [skills, selectedSkillsMap],
+  );
 
   const handleSelectSkill = (skillId: string) => {
-    onSkillsChange([...selectedSkills, skillId])
-    setIsOpen(false)
-    triggerRef.current?.focus()
-  }
+    onSkillsChange([...selectedSkills, skillId]);
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  };
 
   const handleRemoveSkill = (skillId: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    onSkillsChange(selectedSkills.filter((id) => id !== skillId))
-  }
+    e.stopPropagation();
+    onSkillsChange(selectedSkills.filter((id) => id !== skillId));
+  };
 
   return (
     <div className={cn("space-y-2", className)}>
@@ -91,15 +91,11 @@ export function SkillsSelect({
       {selectedSkills.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {selectedSkills.map((skillId) => {
-            const skill = skills.find((s) => s.id === skillId)
-            if (!skill) return null
+            const skill = skills.find((s) => s.id === skillId);
+            if (!skill) return null;
 
             return (
-              <Badge
-                key={skill.id}
-                variant="secondary"
-                className="gap-1 pr-1"
-              >
+              <Badge key={skill.id} variant="secondary" className="gap-1 pr-1">
                 {skill.name}
                 {!disabled && (
                   <button
@@ -112,30 +108,30 @@ export function SkillsSelect({
                   </button>
                 )}
               </Badge>
-            )
+            );
           })}
         </div>
       )}
     </div>
-  )
+  );
 }
 
 interface FormSkillsSelectProps<
   TFieldValues extends Record<string, any> = Record<string, any>,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 > {
-  skills: Skill[]
-  placeholder?: string
-  disabled?: boolean
-  className?: string
+  skills: Skill[];
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
 }
 
 interface FormSkillsSelectInnerProps {
-  field: { value: string[]; onChange: (value: string[]) => void }
-  skills: Skill[]
-  placeholder?: string
-  disabled?: boolean
-  className?: string
+  field: { value: string[]; onChange: (value: string[]) => void };
+  skills: Skill[];
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
 }
 
 function FormSkillsSelectInner({
@@ -154,14 +150,14 @@ function FormSkillsSelectInner({
       disabled={disabled}
       className={className}
     />
-  )
+  );
 }
 
-import type { FieldPath } from "react-hook-form"
+import type { FieldPath } from "react-hook-form";
 
 export function FormSkillsSelect<
   TFieldValues extends Record<string, any> = Record<string, any>,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >({
   control,
   name,
@@ -170,7 +166,10 @@ export function FormSkillsSelect<
   disabled,
   className,
 }: Omit<ControllerProps<TFieldValues, TName>, "render"> &
-  Pick<FormSkillsSelectProps<TFieldValues, TName>, "skills" | "placeholder" | "disabled" | "className">) {
+  Pick<
+    FormSkillsSelectProps<TFieldValues, TName>,
+    "skills" | "placeholder" | "disabled" | "className"
+  >) {
   return (
     <Controller
       control={control}
@@ -185,5 +184,5 @@ export function FormSkillsSelect<
         />
       )}
     />
-  )
+  );
 }

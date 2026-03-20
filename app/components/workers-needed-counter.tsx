@@ -1,23 +1,23 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
-import { MinusIcon, PlusIcon } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { MinusIcon, PlusIcon } from "lucide-react";
 
 export interface WorkersNeededCounterProps {
-  value?: number
-  onChange?: (value: number) => void
-  min?: number
-  max?: number
-  error?: string
-  label?: string
-  disabled?: boolean
-  required?: boolean
-  className?: string
+  value?: number;
+  onChange?: (value: number) => void;
+  min?: number;
+  max?: number;
+  error?: string;
+  label?: string;
+  disabled?: boolean;
+  required?: boolean;
+  className?: string;
 }
 
 export const WorkersNeededCounter = React.forwardRef<
@@ -37,113 +37,113 @@ export const WorkersNeededCounter = React.forwardRef<
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const [internalValue, setInternalValue] = React.useState(value)
-    const [inputError, setInputError] = React.useState<string | null>(null)
+    const [internalValue, setInternalValue] = React.useState(value);
+    const [inputError, setInputError] = React.useState<string | null>(null);
 
     // Sync internal state with external value prop
     React.useEffect(() => {
-      setInternalValue(value)
-    }, [value])
+      setInternalValue(value);
+    }, [value]);
 
     const validateValue = (val: number): string | null => {
       if (val < min) {
-        return `Minimum value is ${min}`
+        return `Minimum value is ${min}`;
       }
       if (max !== undefined && val > max) {
-        return `Maximum value is ${max}`
+        return `Maximum value is ${max}`;
       }
-      return null
-    }
+      return null;
+    };
 
     const handleDecrement = () => {
-      const newValue = internalValue - 1
-      const validationError = validateValue(newValue)
+      const newValue = internalValue - 1;
+      const validationError = validateValue(newValue);
 
       if (validationError) {
-        setInputError(validationError)
-        return
+        setInputError(validationError);
+        return;
       }
 
-      setInputError(null)
-      setInternalValue(newValue)
+      setInputError(null);
+      setInternalValue(newValue);
       if (onChange) {
-        onChange(newValue)
+        onChange(newValue);
       }
-    }
+    };
 
     const handleIncrement = () => {
-      const newValue = internalValue + 1
-      const validationError = validateValue(newValue)
+      const newValue = internalValue + 1;
+      const validationError = validateValue(newValue);
 
       if (validationError) {
-        setInputError(validationError)
-        return
+        setInputError(validationError);
+        return;
       }
 
-      setInputError(null)
-      setInternalValue(newValue)
+      setInputError(null);
+      setInternalValue(newValue);
       if (onChange) {
-        onChange(newValue)
+        onChange(newValue);
       }
-    }
+    };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const inputValue = e.target.value
-      const numericValue = parseInt(inputValue, 10)
+      const inputValue = e.target.value;
+      const numericValue = parseInt(inputValue, 10);
 
       if (inputValue === "") {
-        setInternalValue(min)
-        setInputError(null)
+        setInternalValue(min);
+        setInputError(null);
         if (onChange) {
-          onChange(min)
+          onChange(min);
         }
-        return
+        return;
       }
 
       if (isNaN(numericValue)) {
-        return
+        return;
       }
 
-      const validationError = validateValue(numericValue)
+      const validationError = validateValue(numericValue);
 
       if (validationError) {
-        setInputError(validationError)
-        setInternalValue(numericValue)
-        return
+        setInputError(validationError);
+        setInternalValue(numericValue);
+        return;
       }
 
-      setInputError(null)
-      setInternalValue(numericValue)
+      setInputError(null);
+      setInternalValue(numericValue);
       if (onChange) {
-        onChange(numericValue)
+        onChange(numericValue);
       }
-    }
+    };
 
     const handleBlur = () => {
-      const validationError = validateValue(internalValue)
+      const validationError = validateValue(internalValue);
       if (validationError) {
-        setInputError(validationError)
+        setInputError(validationError);
         // Reset to min if below min
         if (internalValue < min) {
-          setInternalValue(min)
+          setInternalValue(min);
           if (onChange) {
-            onChange(min)
+            onChange(min);
           }
         }
         // Reset to max if above max
         if (max !== undefined && internalValue > max) {
-          setInternalValue(max)
+          setInternalValue(max);
           if (onChange) {
-            onChange(max)
+            onChange(max);
           }
         }
       }
-    }
+    };
 
-    const canDecrement = internalValue > min
-    const canIncrement = max === undefined || internalValue < max
+    const canDecrement = internalValue > min;
+    const canIncrement = max === undefined || internalValue < max;
 
     return (
       <div ref={ref} className={cn("space-y-2", className)} {...props}>
@@ -175,7 +175,7 @@ export const WorkersNeededCounter = React.forwardRef<
             max={max}
             className={cn(
               "text-center",
-              (error || inputError) && "border-destructive"
+              (error || inputError) && "border-destructive",
             )}
           />
           <Button
@@ -195,8 +195,8 @@ export const WorkersNeededCounter = React.forwardRef<
           </p>
         )}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-WorkersNeededCounter.displayName = "WorkersNeededCounter"
+WorkersNeededCounter.displayName = "WorkersNeededCounter";

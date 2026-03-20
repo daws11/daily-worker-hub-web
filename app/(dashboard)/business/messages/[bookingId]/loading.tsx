@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MessageDetailLoading() {
   return (
@@ -15,8 +15,11 @@ export default function MessageDetailLoading() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {[1, 2, 3, 4, 5].map((i) => (
-          <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
-            <Skeleton className={`h-16 ${i % 2 === 0 ? 'w-64' : 'w-48'}`} />
+          <div
+            key={i}
+            className={`flex ${i % 2 === 0 ? "justify-end" : "justify-start"}`}
+          >
+            <Skeleton className={`h-16 ${i % 2 === 0 ? "w-64" : "w-48"}`} />
           </div>
         ))}
       </div>
@@ -26,5 +29,5 @@ export default function MessageDetailLoading() {
         <Skeleton className="h-10 w-full" />
       </div>
     </div>
-  )
+  );
 }

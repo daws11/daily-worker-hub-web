@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,22 +11,22 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { MessageThread } from "@/components/messaging/message-thread"
-import { MessageInput } from "@/components/messaging/message-input"
-import { useMessages } from "@/lib/hooks/use-messages"
-import { useRealtimeMessages } from "@/lib/hooks/use-realtime-messages"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/dialog";
+import { MessageThread } from "@/components/messaging/message-thread";
+import { MessageInput } from "@/components/messaging/message-input";
+import { useMessages } from "@/lib/hooks/use-messages";
+import { useRealtimeMessages } from "@/lib/hooks/use-realtime-messages";
+import { cn } from "@/lib/utils";
 
 export interface BookingMessagesDialogProps {
-  bookingId: string
-  currentUserId: string
-  receiverId: string
-  receiverName?: string
-  trigger?: React.ReactNode
-  triggerClassName?: string
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
+  bookingId: string;
+  currentUserId: string;
+  receiverId: string;
+  receiverName?: string;
+  trigger?: React.ReactNode;
+  triggerClassName?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function BookingMessagesDialog({
@@ -39,21 +39,21 @@ export function BookingMessagesDialog({
   open: controlledOpen,
   onOpenChange,
 }: BookingMessagesDialogProps) {
-  const [internalOpen, setInternalOpen] = React.useState(false)
+  const [internalOpen, setInternalOpen] = React.useState(false);
 
-  const isControlled = controlledOpen !== undefined
-  const open = isControlled ? controlledOpen : internalOpen
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
 
   const handleOpenChange = React.useCallback(
     (newOpen: boolean) => {
       if (isControlled && onOpenChange) {
-        onOpenChange(newOpen)
+        onOpenChange(newOpen);
       } else {
-        setInternalOpen(newOpen)
+        setInternalOpen(newOpen);
       }
     },
-    [isControlled, onOpenChange]
-  )
+    [isControlled, onOpenChange],
+  );
 
   // Fetch messages for this booking
   const {
@@ -66,7 +66,7 @@ export function BookingMessagesDialog({
     bookingId,
     userId: currentUserId,
     autoFetch: open, // Only fetch when dialog is open
-  })
+  });
 
   // Subscribe to realtime message updates
   const { isConnected } = useRealtimeMessages(
@@ -74,22 +74,26 @@ export function BookingMessagesDialog({
     {
       onMessageChange: async (event) => {
         // Refresh messages when any change occurs
-        await refreshMessages()
+        await refreshMessages();
       },
-    }
-  )
+    },
+  );
 
   // Mark messages as read when dialog opens
   React.useEffect(() => {
     if (open) {
       // Mark messages received by current user as read
-      markBookingAsRead(bookingId, currentUserId)
+      markBookingAsRead(bookingId, currentUserId);
     }
-  }, [open, bookingId, currentUserId, markBookingAsRead])
+  }, [open, bookingId, currentUserId, markBookingAsRead]);
 
-  const handleSendMessage = async (receiverId: string, content: string, bookingId?: string) => {
-    await sendNewMessage(receiverId, content, bookingId)
-  }
+  const handleSendMessage = async (
+    receiverId: string,
+    content: string,
+    bookingId?: string,
+  ) => {
+    await sendNewMessage(receiverId, content, bookingId);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -139,5 +143,5 @@ export function BookingMessagesDialog({
         )}
       </DialogContent>
     </Dialog>
-  )
+  );
 }

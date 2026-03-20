@@ -7,19 +7,21 @@ This document describes the integration testing infrastructure and authenticatio
 ## Integration Tests
 
 ### Location
+
 `DWhubfix/app/src/test/java/com/example/dwhubfix/data/repository/integration/`
 
 ### Test Coverage
 
-| Test Class | Tests | Status |
-|------------|-------|--------|
-| `AuthRepositoryIntegrationTest.kt` | 15 | ⚠️ Needs JVM Environment Fix |
-| `JobRepositoryIntegrationTest.kt` | - | Pending |
-| `MatchingRepositoryIntegrationTest.kt` | - | Pending |
+| Test Class                             | Tests | Status                       |
+| -------------------------------------- | ----- | ---------------------------- |
+| `AuthRepositoryIntegrationTest.kt`     | 15    | ⚠️ Needs JVM Environment Fix |
+| `JobRepositoryIntegrationTest.kt`      | -     | Pending                      |
+| `MatchingRepositoryIntegrationTest.kt` | -     | Pending                      |
 
 ### Auth Repository Tests (15 tests)
 
 **Login Tests (5):**
+
 - Valid credentials returns success with user ID
 - Invalid password returns failure
 - Non-existent email returns failure
@@ -27,26 +29,31 @@ This document describes the integration testing infrastructure and authenticatio
 - User ID saved to SharedPreferences
 
 **Registration Tests (3):**
+
 - Register new worker creates user that can login
 - Register with duplicate email returns failure
 - Register new business creates user
 
 **Logout Tests (3):**
+
 - Clears session from Supabase
 - Clears access token from SharedPreferences
 - Clears user ID from SharedPreferences
 
 **Session Persistence Tests (3):**
+
 - Access token persists across operations
 - getAccessToken returns token after login
 - getUserId returns correct user ID after login
 
 **Cross-User Tests (1):**
+
 - Worker and business can both authenticate with different IDs
 
 ### Test Infrastructure
 
 **Files:**
+
 - `BaseIntegrationTest.kt` - Common setup/teardown with authentication helpers
 - `TestDataManager.kt` - Configuration loading and Supabase client creation
 - `TestSharedPreferencesProvider.kt` - In-memory SharedPreferences for testing
@@ -54,6 +61,7 @@ This document describes the integration testing infrastructure and authenticatio
 
 **Configuration:**
 `DWhubfix/app/src/test/resources/test-config.properties`
+
 ```properties
 supabase.test.url=https://airhufmbwqxmojnkknan.supabase.co
 supabase.test.key=<anon_key>
@@ -70,6 +78,7 @@ test.user.business.password=TestBusiness123!
 **Problem:** Integration tests fail when running in JVM environment due to Supabase Auth library's dependency on Android platform infrastructure (`SettingsUtil`).
 
 **Error:**
+
 ```
 java.lang.IllegalStateException at SettingsUtil.kt:11
 ```
@@ -79,6 +88,7 @@ java.lang.IllegalStateException at SettingsUtil.kt:11
 **Current Status:** Tests compile but fail at runtime.
 
 **Possible Solutions:**
+
 1. Use Android instrumented tests instead of JVM unit tests
 2. Mock Supabase Auth layer entirely
 3. Use Robolectric for Android context simulation
@@ -88,11 +98,13 @@ java.lang.IllegalStateException at SettingsUtil.kt:11
 **Problem:** Cannot deploy triggers to `auth.users` table due to permission restrictions.
 
 **Error:**
+
 ```
 ERROR: permission denied for schema auth (SQLSTATE 42501)
 ```
 
 **Root Cause:**
+
 - Supabase Dashboard SQL Editor uses `authenticated` role
 - Auth schema triggers require `service_role` database access
 - Direct database connection has network/IPv6 limitations
@@ -105,30 +117,34 @@ ERROR: permission denied for schema auth (SQLSTATE 42501)
 
 ### Tables Related to Auth
 
-| Table | Purpose | Auto-creation |
-|-------|---------|---------------|
-| `profiles` | Main user profile | ❌ Manual needed |
-| `worker_profiles` | Worker-specific data | ❌ Manual needed |
-| `business_profiles` | Business-specific data | ❌ Manual needed |
-| `wallets` | User wallet | ✅ Via trigger on profiles |
+| Table               | Purpose                | Auto-creation              |
+| ------------------- | ---------------------- | -------------------------- |
+| `profiles`          | Main user profile      | ❌ Manual needed           |
+| `worker_profiles`   | Worker-specific data   | ❌ Manual needed           |
+| `business_profiles` | Business-specific data | ❌ Manual needed           |
+| `wallets`           | User wallet            | ✅ Via trigger on profiles |
 
 ### Helper Functions Available
 
 **`public.create_missing_profile(user_id, user_role, user_full_name)`**
+
 - Creates profile record for existing auth user
 - Returns JSONB with success status
 - Can be called by authenticated users
 
 **`public.check_profile_exists(user_id)`**
+
 - Checks if profile exists for a user
 - Returns JSONB with existence status
 
 ## Test Data Cleanup
 
 ### Cleanup Function
+
 `cleanup_integration_test(test_id TEXT)` - Deletes all test data tagged with `test_id`
 
 **Tables cleaned (in order):**
+
 1. `wallet_transactions`
 2. `transactions`
 3. `verification_codes`
@@ -146,6 +162,7 @@ ERROR: permission denied for schema auth (SQLSTATE 42501)
 ### Test Tracking Columns
 
 All tables include:
+
 - `test_id TEXT` - Test identifier for data isolation
 - `is_test_data BOOLEAN` - Flag for test data
 
@@ -154,6 +171,7 @@ All tables include:
 ### Prerequisites
 
 1. Configure test users in Supabase:
+
    ```sql
    -- Create test users (run in Supabase SQL Editor)
    INSERT INTO auth.users (id, email, encrypted_password, email_confirmed_at)

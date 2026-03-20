@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { AlertCircle } from "lucide-react"
-import { toast } from "sonner"
+import * as React from "react";
+import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 import {
   Dialog,
@@ -12,34 +12,34 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import {
   getActiveCancellationReasons,
   cancelBookingWithReason,
   type CancellationReasonsListResult,
   type CancellationResult,
-} from "@/lib/actions/cancellations"
+} from "@/lib/actions/cancellations";
 
 export interface EmergencyCancellationDialogProps {
-  bookingId: string
-  workerId: string
-  jobTitle: string
-  businessName?: string
-  onCancel?: () => void
-  onSuccess?: () => void
-  trigger?: React.ReactNode
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
+  bookingId: string;
+  workerId: string;
+  jobTitle: string;
+  businessName?: string;
+  onCancel?: () => void;
+  onSuccess?: () => void;
+  trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 function EmergencyCancellationDialog({
@@ -53,93 +53,97 @@ function EmergencyCancellationDialog({
   open: controlledOpen,
   onOpenChange,
 }: EmergencyCancellationDialogProps) {
-  const [internalOpen, setInternalOpen] = React.useState(false)
-  const [selectedReasonId, setSelectedReasonId] = React.useState<string>("")
-  const [note, setNote] = React.useState("")
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [isLoadingReasons, setIsLoadingReasons] = React.useState(true)
-  const [reasons, setReasons] = React.useState<CancellationReasonsListResult["data"]>([])
-  const [error, setError] = React.useState<string | null>(null)
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const [selectedReasonId, setSelectedReasonId] = React.useState<string>("");
+  const [note, setNote] = React.useState("");
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isLoadingReasons, setIsLoadingReasons] = React.useState(true);
+  const [reasons, setReasons] = React.useState<
+    CancellationReasonsListResult["data"]
+  >([]);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const isControlled = controlledOpen !== undefined
-  const open = isControlled ? controlledOpen : internalOpen
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
 
   // Fetch cancellation reasons on mount
   React.useEffect(() => {
     async function fetchReasons() {
-      setIsLoadingReasons(true)
-      const result = await getActiveCancellationReasons()
+      setIsLoadingReasons(true);
+      const result = await getActiveCancellationReasons();
       if (result.success && result.data) {
-        setReasons(result.data)
+        setReasons(result.data);
       } else {
-        setError(result.error || "Gagal memuat alasan pembatalan")
+        setError(result.error || "Gagal memuat alasan pembatalan");
       }
-      setIsLoadingReasons(false)
+      setIsLoadingReasons(false);
     }
-    fetchReasons()
-  }, [])
+    fetchReasons();
+  }, []);
 
   const handleOpenChange = React.useCallback(
     (newOpen: boolean) => {
       if (isControlled && onOpenChange) {
-        onOpenChange(newOpen)
+        onOpenChange(newOpen);
       } else {
-        setInternalOpen(newOpen)
+        setInternalOpen(newOpen);
       }
 
       // Reset form when dialog closes
       if (!newOpen) {
-        setSelectedReasonId("")
-        setNote("")
-        setError(null)
-        onCancel?.()
+        setSelectedReasonId("");
+        setNote("");
+        setError(null);
+        onCancel?.();
       }
     },
-    [isControlled, onOpenChange, onCancel]
-  )
+    [isControlled, onOpenChange, onCancel],
+  );
 
   const selectedReason = React.useMemo(() => {
-    if (!selectedReasonId || !reasons) return null
-    return reasons.find((r) => r.id === selectedReasonId)
-  }, [selectedReasonId, reasons])
+    if (!selectedReasonId || !reasons) return null;
+    return reasons.find((r) => r.id === selectedReasonId);
+  }, [selectedReasonId, reasons]);
 
   const handleSubmit = async () => {
     if (!selectedReasonId) {
-      setError("Silakan pilih alasan pembatalan")
-      return
+      setError("Silakan pilih alasan pembatalan");
+      return;
     }
 
-    setIsSubmitting(true)
-    setError(null)
+    setIsSubmitting(true);
+    setError(null);
 
     try {
       const result: CancellationResult = await cancelBookingWithReason(
         bookingId,
         selectedReasonId,
         note.trim() || undefined,
-        { workerId }
-      )
+        { workerId },
+      );
 
       if (result.success) {
-        toast.success("Booking berhasil dibatalkan / Booking cancelled successfully")
-        handleOpenChange(false)
-        onSuccess?.()
+        toast.success(
+          "Booking berhasil dibatalkan / Booking cancelled successfully",
+        );
+        handleOpenChange(false);
+        onSuccess?.();
       } else {
-        setError(result.error || "Gagal membatalkan booking")
+        setError(result.error || "Gagal membatalkan booking");
       }
     } catch (err) {
-      setError("Terjadi kesalahan saat membatalkan booking")
+      setError("Terjadi kesalahan saat membatalkan booking");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleCancel = () => {
-    setSelectedReasonId("")
-    setNote("")
-    setError(null)
-    handleOpenChange(false)
-  }
+    setSelectedReasonId("");
+    setNote("");
+    setError(null);
+    handleOpenChange(false);
+  };
 
   const getPenaltyInfo = (penaltyPercentage: number) => {
     if (penaltyPercentage === 0) {
@@ -147,37 +151,40 @@ function EmergencyCancellationDialog({
         text: "Tidak ada penalti",
         color: "text-green-600",
         bgColor: "bg-green-50 border-green-200",
-      }
+      };
     } else if (penaltyPercentage <= 10) {
       return {
         text: `Penalti ringan ${penaltyPercentage}%`,
         color: "text-yellow-600",
         bgColor: "bg-yellow-50 border-yellow-200",
-      }
+      };
     } else {
       return {
         text: `Penalti ${penaltyPercentage}%`,
         color: "text-orange-600",
         bgColor: "bg-orange-50 border-orange-200",
-      }
+      };
     }
-  }
+  };
 
   const penaltyInfo = selectedReason
     ? getPenaltyInfo(selectedReason.penalty_percentage)
-    : null
+    : null;
 
   // Group reasons by category
   const groupedReasons = React.useMemo(() => {
-    if (!reasons) return {}
-    return reasons.reduce((acc, reason) => {
-      if (!acc[reason.category]) {
-        acc[reason.category] = []
-      }
-      acc[reason.category].push(reason)
-      return acc
-    }, {} as Record<string, typeof reasons>)
-  }, [reasons])
+    if (!reasons) return {};
+    return reasons.reduce(
+      (acc, reason) => {
+        if (!acc[reason.category]) {
+          acc[reason.category] = [];
+        }
+        acc[reason.category].push(reason);
+        return acc;
+      },
+      {} as Record<string, typeof reasons>,
+    );
+  }, [reasons]);
 
   const categoryLabels: Record<string, string> = {
     illness: "Sakit",
@@ -187,13 +194,11 @@ function EmergencyCancellationDialog({
     transportation: "Transportasi",
     schedule_conflict: "Konflik Jadwal",
     other: "Lainnya",
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      {trigger && (
-        <DialogTrigger asChild>{trigger}</DialogTrigger>
-      )}
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
 
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
@@ -224,18 +229,20 @@ function EmergencyCancellationDialog({
                 />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(groupedReasons).map(([category, categoryReasons]) => (
-                  <React.Fragment key={category}>
-                    <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
-                      {categoryLabels[category] || category}
-                    </div>
-                    {categoryReasons.map((reason) => (
-                      <SelectItem key={reason.id} value={reason.id}>
-                        {reason.name}
-                      </SelectItem>
-                    ))}
-                  </React.Fragment>
-                ))}
+                {Object.entries(groupedReasons).map(
+                  ([category, categoryReasons]) => (
+                    <React.Fragment key={category}>
+                      <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                        {categoryLabels[category] || category}
+                      </div>
+                      {categoryReasons.map((reason) => (
+                        <SelectItem key={reason.id} value={reason.id}>
+                          {reason.name}
+                        </SelectItem>
+                      ))}
+                    </React.Fragment>
+                  ),
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -245,10 +252,15 @@ function EmergencyCancellationDialog({
             <div
               className={cn(
                 "flex items-start gap-2 rounded-md border px-3 py-2 text-sm",
-                penaltyInfo.bgColor
+                penaltyInfo.bgColor,
               )}
             >
-              <AlertCircle className={cn("h-4 w-4 mt-0.5 flex-shrink-0", penaltyInfo.color)} />
+              <AlertCircle
+                className={cn(
+                  "h-4 w-4 mt-0.5 flex-shrink-0",
+                  penaltyInfo.color,
+                )}
+              />
               <div>
                 <p className={cn("font-medium", penaltyInfo.color)}>
                   {penaltyInfo.text}
@@ -272,7 +284,7 @@ function EmergencyCancellationDialog({
               placeholder="Tambahkan penjelasan tentang pembatalan ini..."
               className={cn(
                 "flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-y",
-                "scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/30"
+                "scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/30",
               )}
               disabled={isSubmitting}
             />
@@ -310,7 +322,7 @@ function EmergencyCancellationDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
-export { EmergencyCancellationDialog }
+export { EmergencyCancellationDialog };

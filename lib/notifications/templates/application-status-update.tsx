@@ -1,14 +1,14 @@
-import * as React from "react"
+import * as React from "react";
 
 export interface ApplicationStatusUpdateProps {
-  workerName: string
-  jobTitle: string
-  businessName: string
-  status: "accepted" | "rejected" | "pending" | "reviewing"
-  statusMessage?: string
-  applicationId: string
-  nextSteps?: string
-  dashboardUrl: string
+  workerName: string;
+  jobTitle: string;
+  businessName: string;
+  status: "accepted" | "rejected" | "pending" | "reviewing";
+  statusMessage?: string;
+  applicationId: string;
+  nextSteps?: string;
+  dashboardUrl: string;
 }
 
 const statusConfig = {
@@ -36,7 +36,7 @@ const statusConfig = {
     color: "#3b82f6",
     bgColor: "#dbeafe",
   },
-}
+};
 
 export function ApplicationStatusUpdateEmail({
   workerName,
@@ -48,23 +48,24 @@ export function ApplicationStatusUpdateEmail({
   nextSteps,
   dashboardUrl,
 }: ApplicationStatusUpdateProps) {
-  const config = statusConfig[status]
+  const config = statusConfig[status];
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
         <h1 style={styles.logo}>Daily Worker Hub</h1>
       </div>
-      
+
       <div style={styles.content}>
         <h2 style={styles.title}>
           {config.emoji} {config.title}
         </h2>
-        
+
         <p style={styles.greeting}>Halo {workerName},</p>
-        
+
         <p style={styles.text}>
-          Ada update terbaru untuk lamaran Anda di <strong>{businessName}</strong> untuk posisi{" "}
+          Ada update terbaru untuk lamaran Anda di{" "}
+          <strong>{businessName}</strong> untuk posisi{" "}
           <strong>{jobTitle}</strong>.
         </p>
 
@@ -90,19 +91,24 @@ export function ApplicationStatusUpdateEmail({
 
         {status === "rejected" && (
           <p style={styles.encouragement}>
-            Jangan berkecil hati! Masih banyak peluang kerja lainnya yang menunggu Anda.
-            Terus tingkatkan keahlian dan coba lamar pekerjaan lain yang sesuai.
+            Jangan berkecil hati! Masih banyak peluang kerja lainnya yang
+            menunggu Anda. Terus tingkatkan keahlian dan coba lamar pekerjaan
+            lain yang sesuai.
           </p>
         )}
 
         <div style={styles.buttonContainer}>
-          <a href={`${dashboardUrl}/applications/${applicationId}`} style={styles.button}>
+          <a
+            href={`${dashboardUrl}/applications/${applicationId}`}
+            style={styles.button}
+          >
             Lihat Detail Lamaran
           </a>
         </div>
 
         <p style={styles.note}>
-          Anda menerima email ini karena telah melamar pekerjaan di Daily Worker Hub.
+          Anda menerima email ini karena telah melamar pekerjaan di Daily Worker
+          Hub.
         </p>
       </div>
 
@@ -115,7 +121,7 @@ export function ApplicationStatusUpdateEmail({
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 const styles: Record<string, React.CSSProperties> = {
@@ -237,6 +243,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#9ca3af",
     margin: "4px 0",
   },
-}
+};
 
-export default ApplicationStatusUpdateEmail
+export default ApplicationStatusUpdateEmail;

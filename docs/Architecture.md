@@ -1,4 +1,5 @@
 # Architecture - Daily Worker Hub Web MVP
+
 **Project:** Daily Worker Hub - Web MVP
 **Tech Stack:** Next.js 14 + Supabase Local (Self-Hosted)
 **Version:** 1.0
@@ -59,13 +60,13 @@
 
 ### 1.2 Components
 
-| Component | Provider | Purpose |
-|-----------|----------|---------|
-| **VPS Server** | DigitalOcean / Contabo | Host Next.js app and Supabase Local (Docker) |
-| **Supabase Local** | Docker (Supabase CLI) | Self-hosted database, auth, storage, edge functions |
-| **DNS Provider** | Hostinger MCP | Manage DNS records for dailyworkerhub.com (A record → VPS IP) |
-| **Reverse Proxy** | Nginx (VPS) | Route traffic to Next.js (3000) and Supabase Studio (8000) |
-| **SSL/TLS** | Let's Encrypt / Certbot | Free SSL for dailyworkerhub.com |
+| Component          | Provider                | Purpose                                                       |
+| ------------------ | ----------------------- | ------------------------------------------------------------- |
+| **VPS Server**     | DigitalOcean / Contabo  | Host Next.js app and Supabase Local (Docker)                  |
+| **Supabase Local** | Docker (Supabase CLI)   | Self-hosted database, auth, storage, edge functions           |
+| **DNS Provider**   | Hostinger MCP           | Manage DNS records for dailyworkerhub.com (A record → VPS IP) |
+| **Reverse Proxy**  | Nginx (VPS)             | Route traffic to Next.js (3000) and Supabase Studio (8000)    |
+| **SSL/TLS**        | Let's Encrypt / Certbot | Free SSL for dailyworkerhub.com                               |
 
 ---
 
@@ -73,49 +74,49 @@
 
 ### 2.1 Frontend
 
-| Technology | Purpose | Version |
-|------------|---------|---------|
-| **Next.js** | React Framework with App Router | 14.1+ |
-| **React** | UI Library | 18.2+ |
-| **TypeScript** | Type Safety | 5.3+ |
-| **Tailwind CSS** | Styling | 3.4+ |
-| **shadcn/ui** | Component Library | Latest |
-| **Lucide React** | Icons | Latest |
-| **React Hook Form** | Form Management | 7.47+ |
-| **Zod** | Schema Validation | 3.22+ |
-| **TanStack Query** | Server State Management | 5.17+ |
-| **Zustand** | Client State Management | 4.4+ |
-| **React Hot Toast** | Notifications | 2.4+ |
+| Technology          | Purpose                         | Version |
+| ------------------- | ------------------------------- | ------- |
+| **Next.js**         | React Framework with App Router | 14.1+   |
+| **React**           | UI Library                      | 18.2+   |
+| **TypeScript**      | Type Safety                     | 5.3+    |
+| **Tailwind CSS**    | Styling                         | 3.4+    |
+| **shadcn/ui**       | Component Library               | Latest  |
+| **Lucide React**    | Icons                           | Latest  |
+| **React Hook Form** | Form Management                 | 7.47+   |
+| **Zod**             | Schema Validation               | 3.22+   |
+| **TanStack Query**  | Server State Management         | 5.17+   |
+| **Zustand**         | Client State Management         | 4.4+    |
+| **React Hot Toast** | Notifications                   | 2.4+    |
 
 ### 2.2 Backend & Database (Self-Hosted)
 
-| Technology | Purpose | Version |
-|------------|---------|---------|
-| **Supabase Local** | Self-hosted backend (Docker) | Latest |
-| **PostgreSQL** | Database (managed by Supabase Docker) | 15+ |
-| **Supabase Auth** | Authentication (JWT, OAuth) | Built-in |
-| **Supabase Realtime** | Real-time subscriptions | Built-in |
-| **Supabase Storage** | File Storage (S3-compatible) | Built-in |
-| **Supabase Edge Functions** | Serverless Functions | Deno-based |
-| **Prisma** | ORM (Optional, for type-safe queries) | 5.8+ |
+| Technology                  | Purpose                               | Version    |
+| --------------------------- | ------------------------------------- | ---------- |
+| **Supabase Local**          | Self-hosted backend (Docker)          | Latest     |
+| **PostgreSQL**              | Database (managed by Supabase Docker) | 15+        |
+| **Supabase Auth**           | Authentication (JWT, OAuth)           | Built-in   |
+| **Supabase Realtime**       | Real-time subscriptions               | Built-in   |
+| **Supabase Storage**        | File Storage (S3-compatible)          | Built-in   |
+| **Supabase Edge Functions** | Serverless Functions                  | Deno-based |
+| **Prisma**                  | ORM (Optional, for type-safe queries) | 5.8+       |
 
 ### 2.3 Infrastructure
 
-| Technology | Purpose | Provider |
-|------------|---------|----------|
-| **VPS** | Host Next.js + Supabase Local | DigitalOcean (4GB RAM, 2 vCPUs, $24/mo) |
-| **Docker** | Containerize Supabase Local | Docker CE |
-| **Nginx** | Reverse proxy & SSL termination | Nginx (VPS) |
-| **Let's Encrypt** | Free SSL certificates | Certbot |
-| **Hostinger MCP** | DNS management | Hostinger (MCP Server) |
-| **PM2** | Process Manager | PM2 (VPS) |
+| Technology        | Purpose                         | Provider                                |
+| ----------------- | ------------------------------- | --------------------------------------- |
+| **VPS**           | Host Next.js + Supabase Local   | DigitalOcean (4GB RAM, 2 vCPUs, $24/mo) |
+| **Docker**        | Containerize Supabase Local     | Docker CE                               |
+| **Nginx**         | Reverse proxy & SSL termination | Nginx (VPS)                             |
+| **Let's Encrypt** | Free SSL certificates           | Certbot                                 |
+| **Hostinger MCP** | DNS management                  | Hostinger (MCP Server)                  |
+| **PM2**           | Process Manager                 | PM2 (VPS)                               |
 
 ### 2.4 Admin Dashboard & Community Platform
 
-| Platform | Framework | Tech Stack |
-|----------|-----------|------------|
-| **Admin Dashboard** | Next.js 14 (App Router) | shadcn/ui + Tailwind CSS + TanStack Query + Recharts + Supabase Auth |
-| **Community Platform** | Next.js 14 (App Router) | shadcn/ui + Tailwind CSS + Supabase Realtime + OpenAI/Anthropic API |
+| Platform               | Framework               | Tech Stack                                                           |
+| ---------------------- | ----------------------- | -------------------------------------------------------------------- |
+| **Admin Dashboard**    | Next.js 14 (App Router) | shadcn/ui + Tailwind CSS + TanStack Query + Recharts + Supabase Auth |
+| **Community Platform** | Next.js 14 (App Router) | shadcn/ui + Tailwind CSS + Supabase Realtime + OpenAI/Anthropic API  |
 
 #### Admin Dashboard Features
 
@@ -141,13 +142,13 @@
 
 ### 3.1 VPS Requirements
 
-| Resource | Minimum | Recommended |
-|----------|---------|-------------|
-| **CPU** | 2 vCPUs | 4 vCPUs |
-| **RAM** | 4 GB | 8 GB |
-| **Storage** | 80 GB SSD | 160 GB SSD |
-| **Bandwidth** | 4 TB | 5 TB |
-| **OS** | Ubuntu 22.04 LTS | Ubuntu 22.04 LTS |
+| Resource      | Minimum          | Recommended      |
+| ------------- | ---------------- | ---------------- |
+| **CPU**       | 2 vCPUs          | 4 vCPUs          |
+| **RAM**       | 4 GB             | 8 GB             |
+| **Storage**   | 80 GB SSD        | 160 GB SSD       |
+| **Bandwidth** | 4 TB             | 5 TB             |
+| **OS**        | Ubuntu 22.04 LTS | Ubuntu 22.04 LTS |
 
 ### 3.2 Software Installation (VPS)
 
@@ -210,14 +211,14 @@ supabase db reset
 
 ### 4.2 Supabase Local Services (Docker)
 
-| Service | Port | Internal Access |
-|---------|------|-----------------|
-| **Studio UI** | 8000 | http://localhost:8000 (via Docker port forwarding) |
-| **PostgreSQL** | 5432 | localhost:5432 (via Docker) |
-| **API (REST)** | 3000 | localhost:3000 (via Docker) |
-| **Auth** | 9999 | localhost:9999 (via Docker) |
-| **Realtime** | 4000 | localhost:4000 (via Docker) |
-| **Storage** | 5000 | localhost:5000 (via Docker) |
+| Service        | Port | Internal Access                                    |
+| -------------- | ---- | -------------------------------------------------- |
+| **Studio UI**  | 8000 | http://localhost:8000 (via Docker port forwarding) |
+| **PostgreSQL** | 5432 | localhost:5432 (via Docker)                        |
+| **API (REST)** | 3000 | localhost:3000 (via Docker)                        |
+| **Auth**       | 9999 | localhost:9999 (via Docker)                        |
+| **Realtime**   | 4000 | localhost:4000 (via Docker)                        |
+| **Storage**    | 5000 | localhost:5000 (via Docker)                        |
 
 ---
 
@@ -344,35 +345,35 @@ pm2 startup
 ```typescript
 // lib/mcp/hostinger-dns.ts
 export interface UpdateDnsParams {
-  domain: string
-  type: 'A' | 'CNAME'
-  name: string
-  value: string
-  ttl: number
+  domain: string;
+  type: "A" | "CNAME";
+  name: string;
+  value: string;
+  ttl: number;
 }
 
 export async function updateDnsRecord(params: UpdateDnsParams) {
   // Call Hostinger MCP API
-  const response = await fetch('https://api.hostinger.com/v1/dns/records', {
-    method: 'POST',
+  const response = await fetch("https://api.hostinger.com/v1/dns/records", {
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${process.env.HOSTINGER_API_KEY}`,
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.HOSTINGER_API_KEY}`,
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(params),
-  })
+  });
 
-  return response.json()
+  return response.json();
 }
 
 // Example Usage
 await updateDnsRecord({
-  domain: 'dailyworkerhub.com',
-  type: 'A',
-  name: '@',
-  value: '161.35.123.456',
+  domain: "dailyworkerhub.com",
+  type: "A",
+  name: "@",
+  value: "161.35.123.456",
   ttl: 3600,
-})
+});
 ```
 
 ---
@@ -1105,173 +1106,180 @@ CREATE INDEX idx_feedback_created_at ON feedback(created_at DESC);
 
 ```typescript
 // supabase/functions/reliability-score/index.ts
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 serve(async (req) => {
   try {
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    )
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    );
 
-    const { worker_id } = await req.json()
+    const { worker_id } = await req.json();
 
     // Get completed bookings in last 90 days
     const { data: bookings } = await supabase
-      .from('bookings')
-      .select('status, check_in_time, check_out_time')
-      .eq('worker_id', worker_id)
-      .eq('status', 'completed')
-      .gte('created_at', new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString())
+      .from("bookings")
+      .select("status, check_in_time, check_out_time")
+      .eq("worker_id", worker_id)
+      .eq("status", "completed")
+      .gte(
+        "created_at",
+        new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+      );
 
     // Calculate metrics
-    const totalBookings = bookings.length
-    const onTimeBookings = bookings.filter(b => {
-      const checkIn = new Date(b.check_in_time!)
-      const jobStart = new Date(b.check_in_time!) 
-      const diffMinutes = (checkIn.getTime() - jobStart.getTime()) / 60000
-      return diffMinutes >= -15 && diffMinutes <= 15
-    }).length
+    const totalBookings = bookings.length;
+    const onTimeBookings = bookings.filter((b) => {
+      const checkIn = new Date(b.check_in_time!);
+      const jobStart = new Date(b.check_in_time!);
+      const diffMinutes = (checkIn.getTime() - jobStart.getTime()) / 60000;
+      return diffMinutes >= -15 && diffMinutes <= 15;
+    }).length;
 
-    const attendanceRate = (totalBookings > 0) ? (totalBookings / totalBookings) * 100 : 100
-    const punctualityRate = (totalBookings > 0) ? (onTimeBookings / totalBookings) * 100 : 100
+    const attendanceRate =
+      totalBookings > 0 ? (totalBookings / totalBookings) * 100 : 100;
+    const punctualityRate =
+      totalBookings > 0 ? (onTimeBookings / totalBookings) * 100 : 100;
 
     // Get average rating
     const { data: reviews } = await supabase
-      .from('reviews')
-      .select('rating')
-      .eq('worker_id', worker_id)
+      .from("reviews")
+      .select("rating")
+      .eq("worker_id", worker_id);
 
-    const avgRating = reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-      : 3.0
+    const avgRating =
+      reviews.length > 0
+        ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+        : 3.0;
 
     // Calculate reliability score (weighted average)
-    const reliabilityScore = (
-      (attendanceRate * 0.3) +
-      (punctualityRate * 0.3) +
-      (avgRating * 0.4)
-    ) / 5
+    const reliabilityScore =
+      (attendanceRate * 0.3 + punctualityRate * 0.3 + avgRating * 0.4) / 5;
 
     // Update worker profile
     await supabase
-      .from('worker_profiles')
+      .from("worker_profiles")
       .update({
         reliability_score: Math.max(1, Math.min(5, reliabilityScore)),
         total_shifts: totalBookings,
         attendance_rate,
-        punctuality_rate
+        punctuality_rate,
       })
-      .eq('id', worker_id)
+      .eq("id", worker_id);
 
     return new Response(
       JSON.stringify({ success: true, reliability_score: reliabilityScore }),
-      { headers: { 'Content-Type': 'application/json' } }
-    )
+      { headers: { "Content-Type": "application/json" } },
+    );
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    )
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
-})
+});
 ```
 
 ### 12.2 Compliance Guard (21-Day Limit)
 
 ```typescript
 // supabase/functions/compliance-guard/index.ts
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 
 serve(async (req) => {
   try {
     const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    );
 
-    const { business_id, worker_id } = await req.json()
+    const { business_id, worker_id } = await req.json();
 
-    const now = new Date()
-    const month = now.getMonth() + 1
-    const year = now.getFullYear()
+    const now = new Date();
+    const month = now.getMonth() + 1;
+    const year = now.getFullYear();
 
     // Get compliance record for this month
     const { data: record } = await supabase
-      .from('compliance_records')
-      .select('*')
-      .eq('business_id', business_id)
-      .eq('worker_id', worker_id)
-      .eq('month', month)
-      .eq('year', year)
-      .single()
+      .from("compliance_records")
+      .select("*")
+      .eq("business_id", business_id)
+      .eq("worker_id", worker_id)
+      .eq("month", month)
+      .eq("year", year)
+      .single();
 
     if (!record) {
       // Create new record
-      await supabase.from('compliance_records').insert({
+      await supabase.from("compliance_records").insert({
         business_id,
         worker_id,
         month,
         year,
-        days_worked: 1
-      })
+        days_worked: 1,
+      });
     } else {
       // Increment days worked
-      const newDaysWorked = record.days_worked + 1
+      const newDaysWorked = record.days_worked + 1;
 
       if (newDaysWorked >= 21) {
         // Block this pairing
         await supabase
-          .from('compliance_records')
+          .from("compliance_records")
           .update({ blocked: true })
-          .eq('id', record.id)
+          .eq("id", record.id);
 
         return new Response(
-          JSON.stringify({ 
-            success: false, 
+          JSON.stringify({
+            success: false,
             blocked: true,
-            message: 'PP 35/2021: Cannot work more than 21 days/month with same business'
+            message:
+              "PP 35/2021: Cannot work more than 21 days/month with same business",
           }),
-          { headers: { 'Content-Type': 'application/json' } }
-        )
-      } else if (newDaysWorked >= 15 && newDaysWorked < 21 && !record.warning_sent) {
+          { headers: { "Content-Type": "application/json" } },
+        );
+      } else if (
+        newDaysWorked >= 15 &&
+        newDaysWorked < 21 &&
+        !record.warning_sent
+      ) {
         // Send warning at day 15
         await supabase
-          .from('compliance_records')
+          .from("compliance_records")
           .update({ warning_sent: true })
-          .eq('id', record.id)
+          .eq("id", record.id);
 
         return new Response(
-          JSON.stringify({ 
-            success: true, 
+          JSON.stringify({
+            success: true,
             warning: true,
             days_worked: newDaysWorked,
-            message: `Peringatan: ${21 - newDaysWorked} hari tersisa`
+            message: `Peringatan: ${21 - newDaysWorked} hari tersisa`,
           }),
-          { headers: { 'Content-Type': 'application/json' } }
-        )
+          { headers: { "Content-Type": "application/json" } },
+        );
       } else {
         // Normal increment
         await supabase
-          .from('compliance_records')
+          .from("compliance_records")
           .update({ days_worked: newDaysWorked })
-          .eq('id', record.id)
+          .eq("id", record.id);
       }
     }
 
-    return new Response(
-      JSON.stringify({ success: true }),
-      { headers: { 'Content-Type': 'application/json' } }
-    )
+    return new Response(JSON.stringify({ success: true }), {
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    )
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
-})
+});
 ```
 
 ---
@@ -1321,14 +1329,14 @@ serve(async (req) => {
 
 ## 15. Monitoring & Observability
 
-| Tool | Purpose | Integration |
-|------|---------|-------------|
-| **Sentry** | Error tracking | Next.js middleware |
-| **PostHog** | User analytics | Client-side tracking |
-| **Supabase Dashboard** | Database monitoring | Built-in (Local Studio) |
-| **Nginx Access Logs** | Web server monitoring | Built-in (VPS logs) |
-| **PM2** | Process monitoring | Built-in (VPS logs) |
-| **Docker Logs** | Container monitoring | Docker logs |
+| Tool                   | Purpose               | Integration             |
+| ---------------------- | --------------------- | ----------------------- |
+| **Sentry**             | Error tracking        | Next.js middleware      |
+| **PostHog**            | User analytics        | Client-side tracking    |
+| **Supabase Dashboard** | Database monitoring   | Built-in (Local Studio) |
+| **Nginx Access Logs**  | Web server monitoring | Built-in (VPS logs)     |
+| **PM2**                | Process monitoring    | Built-in (VPS logs)     |
+| **Docker Logs**        | Container monitoring  | Docker logs             |
 
 ---
 
@@ -1395,12 +1403,12 @@ echo "DNS setup completed!"
 
 ## 17. Cost Analysis (Self-Hosted)
 
-| Component | Monthly Cost | Annual Cost |
-|-----------|--------------|-------------|
-| **VPS (DigitalOcean 4GB)** | $24.00 | $288.00 |
-| **Domain (Hostinger)** | ~$10.00 | ~$120.00 |
-| **SSL (Let's Encrypt)** | $0.00 | $0.00 |
-| **Total** | **~$34.00** | **~$408.00** |
+| Component                  | Monthly Cost | Annual Cost  |
+| -------------------------- | ------------ | ------------ |
+| **VPS (DigitalOcean 4GB)** | $24.00       | $288.00      |
+| **Domain (Hostinger)**     | ~$10.00      | ~$120.00     |
+| **SSL (Let's Encrypt)**    | $0.00        | $0.00        |
+| **Total**                  | **~$34.00**  | **~$408.00** |
 
 **Savings vs Supabase Cloud:** Self-hosting saves ~$25-50/month compared to Pro plan, plus gives full control.
 

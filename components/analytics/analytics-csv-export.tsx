@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import React, { useCallback } from 'react'
-import { Button } from '@/components/ui/button'
-import { Download } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { AnalyticsExportData } from '@/lib/types/analytics'
+import React, { useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { AnalyticsExportData } from "@/lib/types/analytics";
 
 /**
  * Props for the AnalyticsCsvExport component
@@ -13,39 +13,45 @@ interface AnalyticsCsvExportProps {
   /**
    * Array of analytics data to export
    */
-  data: AnalyticsExportData[]
+  data: AnalyticsExportData[];
   /**
    * Filename for the exported CSV (without extension)
    * @default 'analytics-export'
    */
-  filename?: string
+  filename?: string;
   /**
    * Optional custom class name for styling
    */
-  className?: string
+  className?: string;
   /**
    * Button variant from shadcn/ui Button component
    * @default 'outline'
    */
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+  variant?:
+    | "default"
+    | "destructive"
+    | "outline"
+    | "secondary"
+    | "ghost"
+    | "link";
   /**
    * Button size from shadcn/ui Button component
    * @default 'default'
    */
-  size?: 'default' | 'sm' | 'lg' | 'icon'
+  size?: "default" | "sm" | "lg" | "icon";
   /**
    * Whether the export button is disabled
    * @default false
    */
-  disabled?: boolean
+  disabled?: boolean;
   /**
    * Optional callback when export completes successfully
    */
-  onExportComplete?: (filename: string) => void
+  onExportComplete?: (filename: string) => void;
   /**
    * Optional callback when export fails
    */
-  onExportError?: (error: Error) => void
+  onExportError?: (error: Error) => void;
 }
 
 /**
@@ -57,11 +63,18 @@ interface AnalyticsCsvExportProps {
  */
 function convertToCSV(data: AnalyticsExportData[]): string {
   if (!data || data.length === 0) {
-    throw new Error('No data available for export')
+    throw new Error("No data available for export");
   }
 
   // Define CSV headers
-  const headers = ['Date', 'Worker Name', 'Position', 'Amount', 'Status', 'Reliability Score']
+  const headers = [
+    "Date",
+    "Worker Name",
+    "Position",
+    "Amount",
+    "Status",
+    "Reliability Score",
+  ];
 
   // Convert data rows to CSV format
   const rows = data.map((row) => {
@@ -72,12 +85,12 @@ function convertToCSV(data: AnalyticsExportData[]): string {
       row.amount.toString(),
       row.status,
       row.reliability_score.toString(),
-    ]
-    return values.join(',')
-  })
+    ];
+    return values.join(",");
+  });
 
   // Combine headers and rows
-  return [headers.join(','), ...rows].join('\n')
+  return [headers.join(","), ...rows].join("\n");
 }
 
 /**
@@ -90,25 +103,27 @@ function convertToCSV(data: AnalyticsExportData[]): string {
 function downloadCSV(csvContent: string, filename: string): void {
   try {
     // Create blob with CSV content
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
 
     // Create download link
-    const link = document.createElement('a')
-    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
 
-    link.setAttribute('href', url)
-    link.setAttribute('download', `${filename}.csv`)
-    link.style.visibility = 'hidden'
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${filename}.csv`);
+    link.style.visibility = "hidden";
 
     // Append to document, click, and cleanup
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
     // Revoke URL to free memory
-    URL.revokeObjectURL(url)
+    URL.revokeObjectURL(url);
   } catch (error) {
-    throw new Error(`Failed to create CSV download: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    throw new Error(
+      `Failed to create CSV download: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
 }
 
@@ -129,10 +144,10 @@ function downloadCSV(csvContent: string, filename: string): void {
  */
 export function AnalyticsCsvExport({
   data,
-  filename = 'analytics-export',
+  filename = "analytics-export",
   className,
-  variant = 'outline',
-  size = 'default',
+  variant = "outline",
+  size = "default",
   disabled = false,
   onExportComplete,
   onExportError,
@@ -143,24 +158,25 @@ export function AnalyticsCsvExport({
   const handleExport = useCallback(() => {
     try {
       // Generate timestamp for unique filename
-      const timestamp = new Date().toISOString().split('T')[0]
-      const uniqueFilename = `${filename}-${timestamp}`
+      const timestamp = new Date().toISOString().split("T")[0];
+      const uniqueFilename = `${filename}-${timestamp}`;
 
       // Convert data to CSV
-      const csvContent = convertToCSV(data)
+      const csvContent = convertToCSV(data);
 
       // Trigger download
-      downloadCSV(csvContent, uniqueFilename)
+      downloadCSV(csvContent, uniqueFilename);
 
       // Call success callback if provided
-      onExportComplete?.(uniqueFilename)
+      onExportComplete?.(uniqueFilename);
     } catch (error) {
-      const exportError = error instanceof Error ? error : new Error('Unknown export error')
-      onExportError?.(exportError)
+      const exportError =
+        error instanceof Error ? error : new Error("Unknown export error");
+      onExportError?.(exportError);
     }
-  }, [data, filename, onExportComplete, onExportError])
+  }, [data, filename, onExportComplete, onExportError]);
 
-  const isDisabled = disabled || !data || data.length === 0
+  const isDisabled = disabled || !data || data.length === 0;
 
   return (
     <Button
@@ -168,10 +184,10 @@ export function AnalyticsCsvExport({
       size={size}
       onClick={handleExport}
       disabled={isDisabled}
-      className={cn('', className)}
+      className={cn("", className)}
     >
       <Download className="h-4 w-4" />
       Ekspor CSV
     </Button>
-  )
+  );
 }

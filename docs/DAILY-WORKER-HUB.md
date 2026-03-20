@@ -12,11 +12,13 @@ Menghubungkan bisnis hospitality di Bali dengan pekerja harian profesional secar
 ## Target Users
 
 **Businesses:**
+
 - Hotels, villas, restaurants
 - Need daily workers: drivers, cleaners, stewards, cooks, dll.
 - Need flexibility: peak season, events, staff shortages
 
 **Workers:**
+
 - Professional daily workers in Bali
 - Want flexible jobs
 - Reliable income from multiple sources
@@ -24,6 +26,7 @@ Menghubungkan bisnis hospitality di Bali dengan pekerja harian profesional secar
 ## Tech Stack
 
 **Frontend:**
+
 - Next.js 14 + TypeScript
 - Tailwind CSS + shadcn/ui
 - TanStack Query (server state)
@@ -31,6 +34,7 @@ Menghubungkan bisnis hospitality di Bali dengan pekerja harian profesional secar
 - Zod (validation)
 
 **Backend:**
+
 - Supabase Local (self-hosted via Docker)
 - PostgreSQL 15+
 - Supabase Auth (JWT, Google OAuth)
@@ -39,6 +43,7 @@ Menghubungkan bisnis hospitality di Bali dengan pekerja harian profesional secar
 - Supabase Edge Functions (Deno-based)
 
 **Infrastructure:**
+
 - VPS (DigitalOcean/Contabo) - Ubuntu 22.04
 - Hostinger MCP (DNS management)
 - Nginx (reverse proxy)
@@ -46,6 +51,7 @@ Menghubungkan bisnis hospitality di Bali dengan pekerja harian profesional secar
 - Let's Encrypt (SSL)
 
 **Cost:**
+
 - VPS: $24/month
 - Domain: ~$10/month
 - Total: ~$34/month (save ~$16 vs Supabase Pro)
@@ -55,6 +61,7 @@ Menghubungkan bisnis hospitality di Bali dengan pekerja harian profesional secar
 **Repo:** https://github.com/daws11/daily-worker-hub-web
 
 **Documentation Status:** ✅ Complete (Feb 21, 2026)
+
 - PRD.md - User Stories, Features, Out of Scope
 - Architecture.md - Database Schema, Data Flow, Deployment
 - AI_Rules.md - Coding Standards, Naming Conventions
@@ -66,6 +73,7 @@ Menghubungkan bisnis hospitality di Bali dengan pekerja harian profesional secar
 ## Current Focus
 
 **Immediate Next Steps:**
+
 1. Initialize Next.js 14 project with TypeScript
 2. Setup Supabase Local (VPS)
 3. Configure Tailwind CSS + shadcn/ui
@@ -73,12 +81,14 @@ Menghubungkan bisnis hospitality di Bali dengan pekerja harian profesional secar
 5. Create folder structure (app/, components/, lib/)
 
 **Key Business Metrics (MVP Targets):**
+
 - 50 businesses, 500 workers in 3 months
 - 1,000+ transactions/month
 - 0 PP 35/2021 compliance violations
 - 99.5% uptime
 
 **Core Values:**
+
 - Community First (bukan sekadar marketplace)
 - Compliance (PP 35/2021, UMK Bali)
 - Transparency (skill, rating, jarak, compliance)

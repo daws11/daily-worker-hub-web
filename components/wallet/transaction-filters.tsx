@@ -1,112 +1,127 @@
-"use client"
+"use client";
 
-import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { TransactionFilters as TransactionFiltersType, WalletTransactionType } from '@/lib/types/wallet'
-import { X, Filter } from 'lucide-react'
-import { cn } from '@/lib/utils'
+} from "@/components/ui/select";
+import {
+  TransactionFilters as TransactionFiltersType,
+  WalletTransactionType,
+} from "@/lib/types/wallet";
+import { X, Filter } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TransactionFiltersProps {
-  filters?: TransactionFiltersType
-  onFiltersChange: (filters: TransactionFiltersType) => void
-  className?: string
+  filters?: TransactionFiltersType;
+  onFiltersChange: (filters: TransactionFiltersType) => void;
+  className?: string;
 }
 
 const transactionTypes: { value: WalletTransactionType; label: string }[] = [
-  { value: 'credit', label: 'Pemasukan' },
-  { value: 'debit', label: 'Pengeluaran' },
-  { value: 'pending', label: 'Tertahan' },
-  { value: 'released', label: 'Diterbitkan' },
-]
+  { value: "credit", label: "Pemasukan" },
+  { value: "debit", label: "Pengeluaran" },
+  { value: "pending", label: "Tertahan" },
+  { value: "released", label: "Diterbitkan" },
+];
 
-export function TransactionFilters({ filters, onFiltersChange, className }: TransactionFiltersProps) {
-  const [localFilters, setLocalFilters] = useState<TransactionFiltersType>(filters || {})
-  const [amountMin, setAmountMin] = useState<string>(filters?.amountMin?.toString() || '')
-  const [amountMax, setAmountMax] = useState<string>(filters?.amountMax?.toString() || '')
-  const [dateAfter, setDateAfter] = useState<string>(filters?.dateAfter || '')
-  const [dateBefore, setDateBefore] = useState<string>(filters?.dateBefore || '')
+export function TransactionFilters({
+  filters,
+  onFiltersChange,
+  className,
+}: TransactionFiltersProps) {
+  const [localFilters, setLocalFilters] = useState<TransactionFiltersType>(
+    filters || {},
+  );
+  const [amountMin, setAmountMin] = useState<string>(
+    filters?.amountMin?.toString() || "",
+  );
+  const [amountMax, setAmountMax] = useState<string>(
+    filters?.amountMax?.toString() || "",
+  );
+  const [dateAfter, setDateAfter] = useState<string>(filters?.dateAfter || "");
+  const [dateBefore, setDateBefore] = useState<string>(
+    filters?.dateBefore || "",
+  );
 
   const hasActiveFilters = Boolean(
     localFilters.type ||
     localFilters.amountMin ||
     localFilters.amountMax ||
     localFilters.dateAfter ||
-    localFilters.dateBefore
-  )
+    localFilters.dateBefore,
+  );
 
   const handleTypeChange = (value: string) => {
     const newFilters = {
       ...localFilters,
-      type: value === 'all' ? undefined : (value as WalletTransactionType),
-    }
-    setLocalFilters(newFilters)
-    onFiltersChange(newFilters)
-  }
+      type: value === "all" ? undefined : (value as WalletTransactionType),
+    };
+    setLocalFilters(newFilters);
+    onFiltersChange(newFilters);
+  };
 
   const handleAmountMinChange = (value: string) => {
-    setAmountMin(value)
-    const numValue = value ? parseInt(value, 10) : undefined
+    setAmountMin(value);
+    const numValue = value ? parseInt(value, 10) : undefined;
     const newFilters = {
       ...localFilters,
       amountMin: numValue,
-    }
-    setLocalFilters(newFilters)
-    onFiltersChange(newFilters)
-  }
+    };
+    setLocalFilters(newFilters);
+    onFiltersChange(newFilters);
+  };
 
   const handleAmountMaxChange = (value: string) => {
-    setAmountMax(value)
-    const numValue = value ? parseInt(value, 10) : undefined
+    setAmountMax(value);
+    const numValue = value ? parseInt(value, 10) : undefined;
     const newFilters = {
       ...localFilters,
       amountMax: numValue,
-    }
-    setLocalFilters(newFilters)
-    onFiltersChange(newFilters)
-  }
+    };
+    setLocalFilters(newFilters);
+    onFiltersChange(newFilters);
+  };
 
   const handleDateAfterChange = (value: string) => {
-    setDateAfter(value)
+    setDateAfter(value);
     const newFilters = {
       ...localFilters,
       dateAfter: value || undefined,
-    }
-    setLocalFilters(newFilters)
-    onFiltersChange(newFilters)
-  }
+    };
+    setLocalFilters(newFilters);
+    onFiltersChange(newFilters);
+  };
 
   const handleDateBeforeChange = (value: string) => {
-    setDateBefore(value)
+    setDateBefore(value);
     const newFilters = {
       ...localFilters,
       dateBefore: value || undefined,
-    }
-    setLocalFilters(newFilters)
-    onFiltersChange(newFilters)
-  }
+    };
+    setLocalFilters(newFilters);
+    onFiltersChange(newFilters);
+  };
 
   const handleClearFilters = () => {
-    const clearedFilters: TransactionFiltersType = {}
-    setLocalFilters(clearedFilters)
-    setAmountMin('')
-    setAmountMax('')
-    setDateAfter('')
-    setDateBefore('')
-    onFiltersChange(clearedFilters)
-  }
+    const clearedFilters: TransactionFiltersType = {};
+    setLocalFilters(clearedFilters);
+    setAmountMin("");
+    setAmountMax("");
+    setDateAfter("");
+    setDateBefore("");
+    onFiltersChange(clearedFilters);
+  };
 
   return (
-    <Card className={cn('', className)}>
+    <Card className={cn("", className)}>
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
@@ -133,7 +148,7 @@ export function TransactionFilters({ filters, onFiltersChange, className }: Tran
             Transaction Type
           </Label>
           <Select
-            value={localFilters.type || 'all'}
+            value={localFilters.type || "all"}
             onValueChange={handleTypeChange}
           >
             <SelectTrigger id="transaction-type">
@@ -181,7 +196,10 @@ export function TransactionFilters({ filters, onFiltersChange, className }: Tran
           <Label className="text-sm">Transaction Date</Label>
           <div className="space-y-2">
             <div className="space-y-1">
-              <Label htmlFor="date-after" className="text-xs text-muted-foreground">
+              <Label
+                htmlFor="date-after"
+                className="text-xs text-muted-foreground"
+              >
                 From
               </Label>
               <Input
@@ -192,7 +210,10 @@ export function TransactionFilters({ filters, onFiltersChange, className }: Tran
               />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="date-before" className="text-xs text-muted-foreground">
+              <Label
+                htmlFor="date-before"
+                className="text-xs text-muted-foreground"
+              >
                 To
               </Label>
               <Input
@@ -206,5 +227,5 @@ export function TransactionFilters({ filters, onFiltersChange, className }: Tran
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

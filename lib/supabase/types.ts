@@ -4,1442 +4,1511 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[]
+  | Json[];
 
 export type Database = {
   graphql_public: {
     Tables: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Views: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Functions: {
       graphql: {
         Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
     Enums: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
+      [_ in never]: never;
+    };
+  };
   pgbouncer: {
     Tables: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Views: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Functions: {
       get_auth: {
-        Args: { p_usename: string }
+        Args: { p_usename: string };
         Returns: {
-          password: string
-          username: string
-        }[]
-      }
-    }
+          password: string;
+          username: string;
+        }[];
+      };
+    };
     Enums: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
+      [_ in never]: never;
+    };
+  };
   public: {
     Tables: {
       bookings: {
         Row: {
-          actual_hours: number | null
-          business_id: string
-          cancellation_note: string | null
-          cancellation_reason_id: string | null
-          cancelled_at: string | null
-          check_in_at: string | null
-          check_out_at: string | null
-          created_at: string
-          end_date: string | null
-          final_price: number | null
-          id: string
-          interview_duration: number | null
-          interview_status: "pending" | "in_progress" | "completed" | "skipped" | "failed" | null
-          job_id: string
-          matching_score: number | null
-          payment_id: string | null
-          payment_status: "pending" | "processing" | "paid" | "failed" | "refunded" | "pending_review" | null
-          rating_by_business: number | null
-          rating_by_worker: number | null
-          review_by_business: string | null
-          review_by_worker: string | null
-          review_deadline: string | null
-          rated_at: string | null
-          start_date: string | null
-          total_amount: number | null
-          status: Database["public"]["Enums"]["booking_status"]
-          time_to_hire: number | null
-          updated_at: string
-          worker_id: string
-        }
+          actual_hours: number | null;
+          business_id: string;
+          cancellation_note: string | null;
+          cancellation_reason_id: string | null;
+          cancelled_at: string | null;
+          check_in_at: string | null;
+          check_out_at: string | null;
+          created_at: string;
+          end_date: string | null;
+          final_price: number | null;
+          id: string;
+          interview_duration: number | null;
+          interview_status:
+            | "pending"
+            | "in_progress"
+            | "completed"
+            | "skipped"
+            | "failed"
+            | null;
+          job_id: string;
+          matching_score: number | null;
+          payment_id: string | null;
+          payment_status:
+            | "pending"
+            | "processing"
+            | "paid"
+            | "failed"
+            | "refunded"
+            | "pending_review"
+            | null;
+          rating_by_business: number | null;
+          rating_by_worker: number | null;
+          review_by_business: string | null;
+          review_by_worker: string | null;
+          review_deadline: string | null;
+          rated_at: string | null;
+          start_date: string | null;
+          total_amount: number | null;
+          status: Database["public"]["Enums"]["booking_status"];
+          time_to_hire: number | null;
+          updated_at: string;
+          worker_id: string;
+        };
         Insert: {
-          actual_hours?: number | null
-          business_id: string
-          cancellation_note?: string | null
-          cancellation_reason_id?: string | null
-          cancelled_at?: string | null
-          check_in_at?: string | null
-          check_out_at?: string | null
-          created_at?: string
-          end_date?: string | null
-          final_price?: number | null
-          id?: string
-          interview_duration?: number | null
-          interview_status?: "pending" | "in_progress" | "completed" | "skipped" | "failed" | null
-          job_id: string
-          matching_score?: number | null
-          payment_id?: string | null
-          payment_status?: "pending" | "processing" | "paid" | "failed" | "refunded" | "pending_review" | null
-          rating_by_business?: number | null
-          rating_by_worker?: number | null
-          review_by_business?: string | null
-          review_by_worker?: string | null
-          review_deadline?: string | null
-          rated_at?: string | null
-          start_date?: string | null
-          total_amount?: number | null
-          status?: Database["public"]["Enums"]["booking_status"]
-          time_to_hire?: number | null
-          updated_at?: string
-          worker_id: string
-        }
+          actual_hours?: number | null;
+          business_id: string;
+          cancellation_note?: string | null;
+          cancellation_reason_id?: string | null;
+          cancelled_at?: string | null;
+          check_in_at?: string | null;
+          check_out_at?: string | null;
+          created_at?: string;
+          end_date?: string | null;
+          final_price?: number | null;
+          id?: string;
+          interview_duration?: number | null;
+          interview_status?:
+            | "pending"
+            | "in_progress"
+            | "completed"
+            | "skipped"
+            | "failed"
+            | null;
+          job_id: string;
+          matching_score?: number | null;
+          payment_id?: string | null;
+          payment_status?:
+            | "pending"
+            | "processing"
+            | "paid"
+            | "failed"
+            | "refunded"
+            | "pending_review"
+            | null;
+          rating_by_business?: number | null;
+          rating_by_worker?: number | null;
+          review_by_business?: string | null;
+          review_by_worker?: string | null;
+          review_deadline?: string | null;
+          rated_at?: string | null;
+          start_date?: string | null;
+          total_amount?: number | null;
+          status?: Database["public"]["Enums"]["booking_status"];
+          time_to_hire?: number | null;
+          updated_at?: string;
+          worker_id: string;
+        };
         Update: {
-          actual_hours?: number | null
-          business_id?: string
-          cancellation_note?: string | null
-          cancellation_reason_id?: string | null
-          cancelled_at?: string | null
-          check_in_at?: string | null
-          check_out_at?: string | null
-          created_at?: string
-          end_date?: string | null
-          final_price?: number | null
-          id?: string
-          interview_duration?: number | null
-          interview_status?: "pending" | "in_progress" | "completed" | "skipped" | "failed" | null
-          job_id?: string
-          matching_score?: number | null
-          payment_id?: string | null
-          payment_status?: "pending" | "processing" | "paid" | "failed" | "refunded" | "pending_review" | null
-          rating_by_business?: number | null
-          rating_by_worker?: number | null
-          review_by_business?: string | null
-          review_by_worker?: string | null
-          review_deadline?: string | null
-          rated_at?: string | null
-          start_date?: string | null
-          total_amount?: number | null
-          status?: Database["public"]["Enums"]["booking_status"]
-          time_to_hire?: number | null
-          updated_at?: string
-          worker_id?: string
-        }
+          actual_hours?: number | null;
+          business_id?: string;
+          cancellation_note?: string | null;
+          cancellation_reason_id?: string | null;
+          cancelled_at?: string | null;
+          check_in_at?: string | null;
+          check_out_at?: string | null;
+          created_at?: string;
+          end_date?: string | null;
+          final_price?: number | null;
+          id?: string;
+          interview_duration?: number | null;
+          interview_status?:
+            | "pending"
+            | "in_progress"
+            | "completed"
+            | "skipped"
+            | "failed"
+            | null;
+          job_id?: string;
+          matching_score?: number | null;
+          payment_id?: string | null;
+          payment_status?:
+            | "pending"
+            | "processing"
+            | "paid"
+            | "failed"
+            | "refunded"
+            | "pending_review"
+            | null;
+          rating_by_business?: number | null;
+          rating_by_worker?: number | null;
+          review_by_business?: string | null;
+          review_by_worker?: string | null;
+          review_deadline?: string | null;
+          rated_at?: string | null;
+          start_date?: string | null;
+          total_amount?: number | null;
+          status?: Database["public"]["Enums"]["booking_status"];
+          time_to_hire?: number | null;
+          updated_at?: string;
+          worker_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "bookings_business_id_fkey"
-            columns: ["business_id"]
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
+            foreignKeyName: "bookings_business_id_fkey";
+            columns: ["business_id"];
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "bookings_cancellation_reason_id_fkey"
-            columns: ["cancellation_reason_id"]
-            referencedRelation: "cancellation_reasons"
-            referencedColumns: ["id"]
+            foreignKeyName: "bookings_cancellation_reason_id_fkey";
+            columns: ["cancellation_reason_id"];
+            referencedRelation: "cancellation_reasons";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "bookings_job_id_fkey"
-            columns: ["job_id"]
-            referencedRelation: "jobs"
-            referencedColumns: ["id"]
+            foreignKeyName: "bookings_job_id_fkey";
+            columns: ["job_id"];
+            referencedRelation: "jobs";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "bookings_worker_id_fkey"
-            columns: ["worker_id"]
-            referencedRelation: "workers"
-            referencedColumns: ["id"]
+            foreignKeyName: "bookings_worker_id_fkey";
+            columns: ["worker_id"];
+            referencedRelation: "workers";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       cancellation_reasons: {
         Row: {
-          category: Database["public"]["Enums"]["cancellation_reason_category"]
-          created_at: string
-          description: string
-          id: string
-          is_active: boolean
-          name: string
-          penalty_percentage: number
-          requires_verification: boolean
-          sort_order: number
-          updated_at: string
-        }
+          category: Database["public"]["Enums"]["cancellation_reason_category"];
+          created_at: string;
+          description: string;
+          id: string;
+          is_active: boolean;
+          name: string;
+          penalty_percentage: number;
+          requires_verification: boolean;
+          sort_order: number;
+          updated_at: string;
+        };
         Insert: {
-          category: Database["public"]["Enums"]["cancellation_reason_category"]
-          created_at?: string
-          description?: string
-          id?: string
-          is_active?: boolean
-          name: string
-          penalty_percentage?: number
-          requires_verification?: boolean
-          sort_order?: number
-          updated_at?: string
-        }
+          category: Database["public"]["Enums"]["cancellation_reason_category"];
+          created_at?: string;
+          description?: string;
+          id?: string;
+          is_active?: boolean;
+          name: string;
+          penalty_percentage?: number;
+          requires_verification?: boolean;
+          sort_order?: number;
+          updated_at?: string;
+        };
         Update: {
-          category?: Database["public"]["Enums"]["cancellation_reason_category"]
-          created_at?: string
-          description?: string
-          id?: string
-          is_active?: boolean
-          name?: string
-          penalty_percentage?: number
-          requires_verification?: boolean
-          sort_order?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          category?: Database["public"]["Enums"]["cancellation_reason_category"];
+          created_at?: string;
+          description?: string;
+          id?: string;
+          is_active?: boolean;
+          name?: string;
+          penalty_percentage?: number;
+          requires_verification?: boolean;
+          sort_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       businesses: {
         Row: {
-          address: string | null
-          created_at: string
-          description: string | null
-          email: string | null
-          id: string
-          is_verified: boolean
-          lat: number | null
-          lng: number | null
-          name: string
-          phone: string | null
-          updated_at: string
-          user_id: string
-          website: string | null
-        }
+          address: string | null;
+          created_at: string;
+          description: string | null;
+          email: string | null;
+          id: string;
+          is_verified: boolean;
+          lat: number | null;
+          lng: number | null;
+          name: string;
+          phone: string | null;
+          updated_at: string;
+          user_id: string;
+          website: string | null;
+        };
         Insert: {
-          address?: string | null
-          created_at?: string
-          description?: string | null
-          email?: string | null
-          id?: string
-          is_verified?: boolean
-          lat?: number | null
-          lng?: number | null
-          name: string
-          phone?: string | null
-          updated_at?: string
-          user_id: string
-          website?: string | null
-        }
+          address?: string | null;
+          created_at?: string;
+          description?: string | null;
+          email?: string | null;
+          id?: string;
+          is_verified?: boolean;
+          lat?: number | null;
+          lng?: number | null;
+          name: string;
+          phone?: string | null;
+          updated_at?: string;
+          user_id: string;
+          website?: string | null;
+        };
         Update: {
-          address?: string | null
-          created_at?: string
-          description?: string | null
-          email?: string | null
-          id?: string
-          is_verified?: boolean
-          lat?: number | null
-          lng?: number | null
-          name?: string
-          phone?: string | null
-          updated_at?: string
-          user_id?: string
-          website?: string | null
-        }
+          address?: string | null;
+          created_at?: string;
+          description?: string | null;
+          email?: string | null;
+          id?: string;
+          is_verified?: boolean;
+          lat?: number | null;
+          lng?: number | null;
+          name?: string;
+          phone?: string | null;
+          updated_at?: string;
+          user_id?: string;
+          website?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "businesses_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "businesses_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       badges: {
         Row: {
-          category: Database["public"]["Enums"]["badge_category"]
-          created_at: string
-          description: string
-          icon: string
-          id: string
-          is_certified: boolean
-          name: string
-          provider_id: string | null
-          slug: string
-        }
+          category: Database["public"]["Enums"]["badge_category"];
+          created_at: string;
+          description: string;
+          icon: string;
+          id: string;
+          is_certified: boolean;
+          name: string;
+          provider_id: string | null;
+          slug: string;
+        };
         Insert: {
-          category: Database["public"]["Enums"]["badge_category"]
-          created_at?: string
-          description?: string
-          icon?: string
-          id?: string
-          is_certified?: boolean
-          name: string
-          provider_id?: string | null
-          slug: string
-        }
+          category: Database["public"]["Enums"]["badge_category"];
+          created_at?: string;
+          description?: string;
+          icon?: string;
+          id?: string;
+          is_certified?: boolean;
+          name: string;
+          provider_id?: string | null;
+          slug: string;
+        };
         Update: {
-          category?: Database["public"]["Enums"]["badge_category"]
-          created_at?: string
-          description?: string
-          icon?: string
-          id?: string
-          is_certified?: boolean
-          name?: string
-          provider_id?: string | null
-          slug?: string
-        }
+          category?: Database["public"]["Enums"]["badge_category"];
+          created_at?: string;
+          description?: string;
+          icon?: string;
+          id?: string;
+          is_certified?: boolean;
+          name?: string;
+          provider_id?: string | null;
+          slug?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "badges_provider_id_fkey"
-            columns: ["provider_id"]
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
+            foreignKeyName: "badges_provider_id_fkey";
+            columns: ["provider_id"];
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       categories: {
         Row: {
-          created_at: string
-          id: string
-          name: string
-          slug: string
-        }
+          created_at: string;
+          id: string;
+          name: string;
+          slug: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          slug: string
-        }
+          created_at?: string;
+          id?: string;
+          name: string;
+          slug: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          slug?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          id?: string;
+          name?: string;
+          slug?: string;
+        };
+        Relationships: [];
+      };
       jobs: {
         Row: {
-          address: string | null
-          budget_max: number
-          budget_min: number
-          business_id: string
-          category_id: string
-          created_at: string
-          deadline: string | null
-          description: string | null
-          hours_needed: number
-          id: string
-          lat: number | null
-          lng: number | null
-          overtime_multiplier: number
-          requirements: string | null
-          status: Database["public"]["Enums"]["job_status"]
-          title: string
-          updated_at: string
-        }
+          address: string | null;
+          budget_max: number;
+          budget_min: number;
+          business_id: string;
+          category_id: string;
+          created_at: string;
+          deadline: string | null;
+          description: string | null;
+          hours_needed: number;
+          id: string;
+          lat: number | null;
+          lng: number | null;
+          overtime_multiplier: number;
+          requirements: string | null;
+          status: Database["public"]["Enums"]["job_status"];
+          title: string;
+          updated_at: string;
+        };
         Insert: {
-          address?: string | null
-          budget_max?: number
-          budget_min?: number
-          business_id: string
-          category_id: string
-          created_at?: string
-          deadline?: string | null
-          description?: string | null
-          hours_needed?: number
-          id?: string
-          lat?: number | null
-          lng?: number | null
-          overtime_multiplier?: number
-          requirements?: string | null
-          status?: Database["public"]["Enums"]["job_status"]
-          title: string
-          updated_at?: string
-        }
+          address?: string | null;
+          budget_max?: number;
+          budget_min?: number;
+          business_id: string;
+          category_id: string;
+          created_at?: string;
+          deadline?: string | null;
+          description?: string | null;
+          hours_needed?: number;
+          id?: string;
+          lat?: number | null;
+          lng?: number | null;
+          overtime_multiplier?: number;
+          requirements?: string | null;
+          status?: Database["public"]["Enums"]["job_status"];
+          title: string;
+          updated_at?: string;
+        };
         Update: {
-          address?: string | null
-          budget_max?: number
-          budget_min?: number
-          business_id?: string
-          category_id?: string
-          created_at?: string
-          deadline?: string | null
-          description?: string | null
-          hours_needed?: number
-          id?: string
-          lat?: number | null
-          lng?: number | null
-          overtime_multiplier?: number
-          requirements?: string | null
-          status?: Database["public"]["Enums"]["job_status"]
-          title?: string
-          updated_at?: string
-        }
+          address?: string | null;
+          budget_max?: number;
+          budget_min?: number;
+          business_id?: string;
+          category_id?: string;
+          created_at?: string;
+          deadline?: string | null;
+          description?: string | null;
+          hours_needed?: number;
+          id?: string;
+          lat?: number | null;
+          lng?: number | null;
+          overtime_multiplier?: number;
+          requirements?: string | null;
+          status?: Database["public"]["Enums"]["job_status"];
+          title?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "jobs_business_id_fkey"
-            columns: ["business_id"]
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
+            foreignKeyName: "jobs_business_id_fkey";
+            columns: ["business_id"];
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "jobs_category_id_fkey"
-            columns: ["category_id"]
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
+            foreignKeyName: "jobs_category_id_fkey";
+            columns: ["category_id"];
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       jobs_skills: {
         Row: {
-          job_id: string
-          skill_id: string
-        }
+          job_id: string;
+          skill_id: string;
+        };
         Insert: {
-          job_id: string
-          skill_id: string
-        }
+          job_id: string;
+          skill_id: string;
+        };
         Update: {
-          job_id?: string
-          skill_id?: string
-        }
+          job_id?: string;
+          skill_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "jobs_skills_job_id_fkey"
-            columns: ["job_id"]
-            referencedRelation: "jobs"
-            referencedColumns: ["id"]
+            foreignKeyName: "jobs_skills_job_id_fkey";
+            columns: ["job_id"];
+            referencedRelation: "jobs";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "jobs_skills_skill_id_fkey"
-            columns: ["skill_id"]
-            referencedRelation: "skills"
-            referencedColumns: ["id"]
+            foreignKeyName: "jobs_skills_skill_id_fkey";
+            columns: ["skill_id"];
+            referencedRelation: "skills";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       messages: {
         Row: {
-          booking_id: string | null
-          content: string
-          created_at: string
-          id: string
-          is_read: boolean
-          receiver_id: string
-          sender_id: string
-        }
+          booking_id: string | null;
+          content: string;
+          created_at: string;
+          id: string;
+          is_read: boolean;
+          receiver_id: string;
+          sender_id: string;
+        };
         Insert: {
-          booking_id?: string | null
-          content: string
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          receiver_id: string
-          sender_id: string
-        }
+          booking_id?: string | null;
+          content: string;
+          created_at?: string;
+          id?: string;
+          is_read?: boolean;
+          receiver_id: string;
+          sender_id: string;
+        };
         Update: {
-          booking_id?: string | null
-          content?: string
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          receiver_id?: string
-          sender_id?: string
-        }
+          booking_id?: string | null;
+          content?: string;
+          created_at?: string;
+          id?: string;
+          is_read?: boolean;
+          receiver_id?: string;
+          sender_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "messages_booking_id_fkey"
-            columns: ["booking_id"]
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
+            foreignKeyName: "messages_booking_id_fkey";
+            columns: ["booking_id"];
+            referencedRelation: "bookings";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "messages_receiver_id_fkey"
-            columns: ["receiver_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "messages_receiver_id_fkey";
+            columns: ["receiver_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "messages_sender_id_fkey"
-            columns: ["sender_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "messages_sender_id_fkey";
+            columns: ["sender_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       notifications: {
         Row: {
-          body: string
-          created_at: string
-          id: string
-          is_read: boolean
-          link: string | null
-          title: string
-          user_id: string
-        }
+          body: string;
+          created_at: string;
+          id: string;
+          is_read: boolean;
+          link: string | null;
+          title: string;
+          user_id: string;
+        };
         Insert: {
-          body: string
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          link?: string | null
-          title: string
-          user_id: string
-        }
+          body: string;
+          created_at?: string;
+          id?: string;
+          is_read?: boolean;
+          link?: string | null;
+          title: string;
+          user_id: string;
+        };
         Update: {
-          body?: string
-          created_at?: string
-          id?: string
-          is_read?: boolean
-          link?: string | null
-          title?: string
-          user_id?: string
-        }
+          body?: string;
+          created_at?: string;
+          id?: string;
+          is_read?: boolean;
+          link?: string | null;
+          title?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "notifications_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "notifications_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       reports: {
         Row: {
-          created_at: string
-          id: string
-          reason: string
-          reported_id: string
-          reported_type: Database["public"]["Enums"]["report_type"]
-          reporter_id: string
-          status: Database["public"]["Enums"]["report_status"]
-        }
+          created_at: string;
+          id: string;
+          reason: string;
+          reported_id: string;
+          reported_type: Database["public"]["Enums"]["report_type"];
+          reporter_id: string;
+          status: Database["public"]["Enums"]["report_status"];
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          reason: string
-          reported_id: string
-          reported_type: Database["public"]["Enums"]["report_type"]
-          reporter_id: string
-          status?: Database["public"]["Enums"]["report_status"]
-        }
+          created_at?: string;
+          id?: string;
+          reason: string;
+          reported_id: string;
+          reported_type: Database["public"]["Enums"]["report_type"];
+          reporter_id: string;
+          status?: Database["public"]["Enums"]["report_status"];
+        };
         Update: {
-          created_at?: string
-          id?: string
-          reason?: string
-          reported_id?: string
-          reported_type?: Database["public"]["Enums"]["report_type"]
-          reporter_id?: string
-          status?: Database["public"]["Enums"]["report_status"]
-        }
+          created_at?: string;
+          id?: string;
+          reason?: string;
+          reported_id?: string;
+          reported_type?: Database["public"]["Enums"]["report_type"];
+          reporter_id?: string;
+          status?: Database["public"]["Enums"]["report_status"];
+        };
         Relationships: [
           {
-            foreignKeyName: "reports_reporter_id_fkey"
-            columns: ["reporter_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "reports_reporter_id_fkey";
+            columns: ["reporter_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       reviews: {
         Row: {
-          booking_id: string
-          comment: string | null
-          created_at: string
-          id: string
-          rating: number
-          worker_id: string
-        }
+          booking_id: string;
+          comment: string | null;
+          created_at: string;
+          id: string;
+          rating: number;
+          worker_id: string;
+        };
         Insert: {
-          booking_id: string
-          comment?: string | null
-          created_at?: string
-          id?: string
-          rating: number
-          worker_id: string
-        }
+          booking_id: string;
+          comment?: string | null;
+          created_at?: string;
+          id?: string;
+          rating: number;
+          worker_id: string;
+        };
         Update: {
-          booking_id?: string
-          comment?: string | null
-          created_at?: string
-          id?: string
-          rating?: number
-          worker_id?: string
-        }
+          booking_id?: string;
+          comment?: string | null;
+          created_at?: string;
+          id?: string;
+          rating?: number;
+          worker_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "reviews_booking_id_fkey"
-            columns: ["booking_id"]
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
+            foreignKeyName: "reviews_booking_id_fkey";
+            columns: ["booking_id"];
+            referencedRelation: "bookings";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "reviews_worker_id_fkey"
-            columns: ["worker_id"]
-            referencedRelation: "workers"
-            referencedColumns: ["id"]
+            foreignKeyName: "reviews_worker_id_fkey";
+            columns: ["worker_id"];
+            referencedRelation: "workers";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       skills: {
         Row: {
-          created_at: string
-          id: string
-          name: string
-          slug: string
-        }
+          created_at: string;
+          id: string;
+          name: string;
+          slug: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          slug: string
-        }
+          created_at?: string;
+          id?: string;
+          name: string;
+          slug: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          name?: string
-          slug?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          id?: string;
+          name?: string;
+          slug?: string;
+        };
+        Relationships: [];
+      };
       transactions: {
         Row: {
-          amount: number
-          booking_id: string
-          created_at: string
-          id: string
-          provider_transaction_id: string | null
-          status: Database["public"]["Enums"]["transaction_status"]
-          type: Database["public"]["Enums"]["transaction_type"]
-        }
+          amount: number;
+          booking_id: string;
+          created_at: string;
+          id: string;
+          provider_transaction_id: string | null;
+          status: Database["public"]["Enums"]["transaction_status"];
+          type: Database["public"]["Enums"]["transaction_type"];
+        };
         Insert: {
-          amount: number
-          booking_id: string
-          created_at?: string
-          id?: string
-          provider_transaction_id?: string | null
-          status?: Database["public"]["Enums"]["transaction_status"]
-          type: Database["public"]["Enums"]["transaction_type"]
-        }
+          amount: number;
+          booking_id: string;
+          created_at?: string;
+          id?: string;
+          provider_transaction_id?: string | null;
+          status?: Database["public"]["Enums"]["transaction_status"];
+          type: Database["public"]["Enums"]["transaction_type"];
+        };
         Update: {
-          amount?: number
-          booking_id?: string
-          created_at?: string
-          id?: string
-          provider_transaction_id?: string | null
-          status?: Database["public"]["Enums"]["transaction_status"]
-          type?: Database["public"]["Enums"]["transaction_type"]
-        }
+          amount?: number;
+          booking_id?: string;
+          created_at?: string;
+          id?: string;
+          provider_transaction_id?: string | null;
+          status?: Database["public"]["Enums"]["transaction_status"];
+          type?: Database["public"]["Enums"]["transaction_type"];
+        };
         Relationships: [
           {
-            foreignKeyName: "transactions_booking_id_fkey"
-            columns: ["booking_id"]
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
+            foreignKeyName: "transactions_booking_id_fkey";
+            columns: ["booking_id"];
+            referencedRelation: "bookings";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       users: {
         Row: {
-          avatar_url: string | null
-          created_at: string
-          email: string
-          full_name: string
-          id: string
-          language_preference: string | null
-          phone: string | null
-          role: Database["public"]["Enums"]["user_role"]
-          updated_at: string
-        }
+          avatar_url: string | null;
+          created_at: string;
+          email: string;
+          full_name: string;
+          id: string;
+          language_preference: string | null;
+          phone: string | null;
+          role: Database["public"]["Enums"]["user_role"];
+          updated_at: string;
+        };
         Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          email: string
-          full_name?: string
-          id?: string
-          language_preference?: string | null
-          phone?: string | null
-          role: Database["public"]["Enums"]["user_role"]
-          updated_at?: string
-        }
+          avatar_url?: string | null;
+          created_at?: string;
+          email: string;
+          full_name?: string;
+          id?: string;
+          language_preference?: string | null;
+          phone?: string | null;
+          role: Database["public"]["Enums"]["user_role"];
+          updated_at?: string;
+        };
         Update: {
-          avatar_url?: string | null
-          created_at?: string
-          email?: string
-          full_name?: string
-          id?: string
-          language_preference?: string | null
-          phone?: string | null
-          role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          avatar_url?: string | null;
+          created_at?: string;
+          email?: string;
+          full_name?: string;
+          id?: string;
+          language_preference?: string | null;
+          phone?: string | null;
+          role?: Database["public"]["Enums"]["user_role"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       webhooks: {
         Row: {
-          created_at: string
-          events: string[]
-          id: string
-          is_active: boolean
-          secret: string
-          url: string
-        }
+          created_at: string;
+          events: string[];
+          id: string;
+          is_active: boolean;
+          secret: string;
+          url: string;
+        };
         Insert: {
-          created_at?: string
-          events?: string[]
-          id?: string
-          is_active?: boolean
-          secret: string
-          url: string
-        }
+          created_at?: string;
+          events?: string[];
+          id?: string;
+          is_active?: boolean;
+          secret: string;
+          url: string;
+        };
         Update: {
-          created_at?: string
-          events?: string[]
-          id?: string
-          is_active?: boolean
-          secret?: string
-          url?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          events?: string[];
+          id?: string;
+          is_active?: boolean;
+          secret?: string;
+          url?: string;
+        };
+        Relationships: [];
+      };
       worker_badges: {
         Row: {
-          badge_id: string
-          created_at: string
-          verification_status: Database["public"]["Enums"]["badge_verification_status"]
-          verified_at: string | null
-          verified_by: string | null
-          worker_id: string
-        }
+          badge_id: string;
+          created_at: string;
+          verification_status: Database["public"]["Enums"]["badge_verification_status"];
+          verified_at: string | null;
+          verified_by: string | null;
+          worker_id: string;
+        };
         Insert: {
-          badge_id: string
-          created_at?: string
-          verification_status: Database["public"]["Enums"]["badge_verification_status"]
-          verified_at?: string | null
-          verified_by?: string | null
-          worker_id: string
-        }
+          badge_id: string;
+          created_at?: string;
+          verification_status: Database["public"]["Enums"]["badge_verification_status"];
+          verified_at?: string | null;
+          verified_by?: string | null;
+          worker_id: string;
+        };
         Update: {
-          badge_id?: string
-          created_at?: string
-          verification_status?: Database["public"]["Enums"]["badge_verification_status"]
-          verified_at?: string | null
-          verified_by?: string | null
-          worker_id?: string
-        }
+          badge_id?: string;
+          created_at?: string;
+          verification_status?: Database["public"]["Enums"]["badge_verification_status"];
+          verified_at?: string | null;
+          verified_by?: string | null;
+          worker_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "worker_badges_badge_id_fkey"
-            columns: ["badge_id"]
-            referencedRelation: "badges"
-            referencedColumns: ["id"]
+            foreignKeyName: "worker_badges_badge_id_fkey";
+            columns: ["badge_id"];
+            referencedRelation: "badges";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "worker_badges_verified_by_fkey"
-            columns: ["verified_by"]
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
+            foreignKeyName: "worker_badges_verified_by_fkey";
+            columns: ["verified_by"];
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "worker_badges_worker_id_fkey"
-            columns: ["worker_id"]
-            referencedRelation: "workers"
-            referencedColumns: ["id"]
+            foreignKeyName: "worker_badges_worker_id_fkey";
+            columns: ["worker_id"];
+            referencedRelation: "workers";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       workers: {
         Row: {
-          address: string | null
-          area: string | null
-          avatar_url: string | null
-          bio: string | null
-          created_at: string
-          dob: string | null
-          full_name: string
-          id: string
-          jobs_completed: number
-          kyc_status: "pending" | "in_review" | "approved" | "rejected" | null
-          lat: number | null
-          lng: number | null
-          location_name: string | null
-          phone: string | null
-          rating: number | null
-          punctuality: number | null
-          tier: Database["public"]["Enums"]["worker_tier"]
-          updated_at: string
-          user_id: string
-        }
+          address: string | null;
+          area: string | null;
+          avatar_url: string | null;
+          bio: string | null;
+          created_at: string;
+          dob: string | null;
+          full_name: string;
+          id: string;
+          jobs_completed: number;
+          kyc_status: "pending" | "in_review" | "approved" | "rejected" | null;
+          lat: number | null;
+          lng: number | null;
+          location_name: string | null;
+          phone: string | null;
+          rating: number | null;
+          punctuality: number | null;
+          tier: Database["public"]["Enums"]["worker_tier"];
+          updated_at: string;
+          user_id: string;
+        };
         Insert: {
-          address?: string | null
-          area?: string | null
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          dob?: string | null
-          full_name: string
-          id?: string
-          jobs_completed?: number
-          kyc_status?: "pending" | "in_review" | "approved" | "rejected" | null
-          lat?: number | null
-          lng?: number | null
-          location_name?: string | null
-          phone?: string | null
-          rating?: number | null
-          punctuality?: number | null
-          tier?: Database["public"]["Enums"]["worker_tier"]
-          updated_at?: string
-          user_id: string
-        }
+          address?: string | null;
+          area?: string | null;
+          avatar_url?: string | null;
+          bio?: string | null;
+          created_at?: string;
+          dob?: string | null;
+          full_name: string;
+          id?: string;
+          jobs_completed?: number;
+          kyc_status?: "pending" | "in_review" | "approved" | "rejected" | null;
+          lat?: number | null;
+          lng?: number | null;
+          location_name?: string | null;
+          phone?: string | null;
+          rating?: number | null;
+          punctuality?: number | null;
+          tier?: Database["public"]["Enums"]["worker_tier"];
+          updated_at?: string;
+          user_id: string;
+        };
         Update: {
-          address?: string | null
-          area?: string | null
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          dob?: string | null
-          full_name?: string
-          id?: string
-          jobs_completed?: number
-          kyc_status?: "pending" | "in_review" | "approved" | "rejected" | null
-          lat?: number | null
-          lng?: number | null
-          location_name?: string | null
-          phone?: string | null
-          rating?: number | null
-          punctuality?: number | null
-          tier?: Database["public"]["Enums"]["worker_tier"]
-          updated_at?: string
-          user_id?: string
-        }
+          address?: string | null;
+          area?: string | null;
+          avatar_url?: string | null;
+          bio?: string | null;
+          created_at?: string;
+          dob?: string | null;
+          full_name?: string;
+          id?: string;
+          jobs_completed?: number;
+          kyc_status?: "pending" | "in_review" | "approved" | "rejected" | null;
+          lat?: number | null;
+          lng?: number | null;
+          location_name?: string | null;
+          phone?: string | null;
+          rating?: number | null;
+          punctuality?: number | null;
+          tier?: Database["public"]["Enums"]["worker_tier"];
+          updated_at?: string;
+          user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "workers_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "workers_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       worker_availabilities: {
         Row: {
-          id: string
-          worker_id: string
-          day_of_week: number
-          start_hour: number
-          end_hour: number
-          is_available: boolean
-          created_at: string
-          updated_at: string
-        }
+          id: string;
+          worker_id: string;
+          day_of_week: number;
+          start_hour: number;
+          end_hour: number;
+          is_available: boolean;
+          created_at: string;
+          updated_at: string;
+        };
         Insert: {
-          id?: string
-          worker_id: string
-          day_of_week: number
-          start_hour: number
-          end_hour: number
-          is_available?: boolean
-          created_at?: string
-          updated_at?: string
-        }
+          id?: string;
+          worker_id: string;
+          day_of_week: number;
+          start_hour: number;
+          end_hour: number;
+          is_available?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
         Update: {
-          id?: string
-          worker_id?: string
-          day_of_week?: number
-          start_hour?: number
-          end_hour?: number
-          is_available?: boolean
-          created_at?: string
-          updated_at?: string
-        }
+          id?: string;
+          worker_id?: string;
+          day_of_week?: number;
+          start_hour?: number;
+          end_hour?: number;
+          is_available?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "worker_availabilities_worker_id_fkey"
-            columns: ["worker_id"]
-            referencedRelation: "workers"
-            referencedColumns: ["id"]
+            foreignKeyName: "worker_availabilities_worker_id_fkey";
+            columns: ["worker_id"];
+            referencedRelation: "workers";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       interview_sessions: {
         Row: {
-          id: string
-          booking_id: string
-          business_id: string
-          worker_id: string
-          worker_tier: Database["public"]["Enums"]["worker_tier"]
-          status: "pending" | "in_progress" | "completed" | "skipped" | "failed"
-          type: "none" | "chat" | "chat_and_voice"
-          started_at: string | null
-          completed_at: string | null
-          chat_started_at: string | null
-          chat_completed_at: string | null
-          voice_started_at: string | null
-          voice_completed_at: string | null
-          created_at: string
-          chat_duration: number | null
-          voice_duration: number | null
-          total_duration: number | null
-          messages_sent: number
-          voice_call_initiated: boolean
-          time_to_hire: number | null
-        }
+          id: string;
+          booking_id: string;
+          business_id: string;
+          worker_id: string;
+          worker_tier: Database["public"]["Enums"]["worker_tier"];
+          status:
+            | "pending"
+            | "in_progress"
+            | "completed"
+            | "skipped"
+            | "failed";
+          type: "none" | "chat" | "chat_and_voice";
+          started_at: string | null;
+          completed_at: string | null;
+          chat_started_at: string | null;
+          chat_completed_at: string | null;
+          voice_started_at: string | null;
+          voice_completed_at: string | null;
+          created_at: string;
+          chat_duration: number | null;
+          voice_duration: number | null;
+          total_duration: number | null;
+          messages_sent: number;
+          voice_call_initiated: boolean;
+          time_to_hire: number | null;
+        };
         Insert: {
-          id?: string
-          booking_id: string
-          business_id: string
-          worker_id: string
-          worker_tier: Database["public"]["Enums"]["worker_tier"]
-          status?: "pending" | "in_progress" | "completed" | "skipped" | "failed"
-          type?: "none" | "chat" | "chat_and_voice"
-          started_at?: string | null
-          completed_at?: string | null
-          chat_started_at?: string | null
-          chat_completed_at?: string | null
-          voice_started_at?: string | null
-          voice_completed_at?: string | null
-          created_at?: string
-          chat_duration?: number | null
-          voice_duration?: number | null
-          total_duration?: number | null
-          messages_sent?: number
-          voice_call_initiated?: boolean
-          time_to_hire?: number | null
-        }
+          id?: string;
+          booking_id: string;
+          business_id: string;
+          worker_id: string;
+          worker_tier: Database["public"]["Enums"]["worker_tier"];
+          status?:
+            | "pending"
+            | "in_progress"
+            | "completed"
+            | "skipped"
+            | "failed";
+          type?: "none" | "chat" | "chat_and_voice";
+          started_at?: string | null;
+          completed_at?: string | null;
+          chat_started_at?: string | null;
+          chat_completed_at?: string | null;
+          voice_started_at?: string | null;
+          voice_completed_at?: string | null;
+          created_at?: string;
+          chat_duration?: number | null;
+          voice_duration?: number | null;
+          total_duration?: number | null;
+          messages_sent?: number;
+          voice_call_initiated?: boolean;
+          time_to_hire?: number | null;
+        };
         Update: {
-          id?: string
-          booking_id?: string
-          business_id?: string
-          worker_id?: string
-          worker_tier?: Database["public"]["Enums"]["worker_tier"]
-          status?: "pending" | "in_progress" | "completed" | "skipped" | "failed"
-          type?: "none" | "chat" | "chat_and_voice"
-          started_at?: string | null
-          completed_at?: string | null
-          chat_started_at?: string | null
-          chat_completed_at?: string | null
-          voice_started_at?: string | null
-          voice_completed_at?: string | null
-          created_at?: string
-          chat_duration?: number | null
-          voice_duration?: number | null
-          total_duration?: number | null
-          messages_sent?: number
-          voice_call_initiated?: boolean
-          time_to_hire?: number | null
-        }
+          id?: string;
+          booking_id?: string;
+          business_id?: string;
+          worker_id?: string;
+          worker_tier?: Database["public"]["Enums"]["worker_tier"];
+          status?:
+            | "pending"
+            | "in_progress"
+            | "completed"
+            | "skipped"
+            | "failed";
+          type?: "none" | "chat" | "chat_and_voice";
+          started_at?: string | null;
+          completed_at?: string | null;
+          chat_started_at?: string | null;
+          chat_completed_at?: string | null;
+          voice_started_at?: string | null;
+          voice_completed_at?: string | null;
+          created_at?: string;
+          chat_duration?: number | null;
+          voice_duration?: number | null;
+          total_duration?: number | null;
+          messages_sent?: number;
+          voice_call_initiated?: boolean;
+          time_to_hire?: number | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "interview_sessions_booking_id_fkey"
-            columns: ["booking_id"]
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
+            foreignKeyName: "interview_sessions_booking_id_fkey";
+            columns: ["booking_id"];
+            referencedRelation: "bookings";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "interview_sessions_business_id_fkey"
-            columns: ["business_id"]
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
+            foreignKeyName: "interview_sessions_business_id_fkey";
+            columns: ["business_id"];
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "interview_sessions_worker_id_fkey"
-            columns: ["worker_id"]
-            referencedRelation: "workers"
-            referencedColumns: ["id"]
+            foreignKeyName: "interview_sessions_worker_id_fkey";
+            columns: ["worker_id"];
+            referencedRelation: "workers";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       job_applications: {
         Row: {
-          id: string
-          job_id: string
-          worker_id: string
-          business_id: string
-          status: "pending" | "reviewed" | "accepted" | "rejected" | "withdrawn"
-          cover_letter: string | null
-          proposed_rate: number | null
-          availability_date: string | null
-          notes: string | null
-          created_at: string
-          updated_at: string
-          reviewed_at: string | null
-          reviewed_by: string | null
-        }
+          id: string;
+          job_id: string;
+          worker_id: string;
+          business_id: string;
+          status:
+            | "pending"
+            | "reviewed"
+            | "accepted"
+            | "rejected"
+            | "withdrawn";
+          cover_letter: string | null;
+          proposed_rate: number | null;
+          availability_date: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+        };
         Insert: {
-          id?: string
-          job_id: string
-          worker_id: string
-          business_id: string
-          status?: "pending" | "reviewed" | "accepted" | "rejected" | "withdrawn"
-          cover_letter?: string | null
-          proposed_rate?: number | null
-          availability_date?: string | null
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-        }
+          id?: string;
+          job_id: string;
+          worker_id: string;
+          business_id: string;
+          status?:
+            | "pending"
+            | "reviewed"
+            | "accepted"
+            | "rejected"
+            | "withdrawn";
+          cover_letter?: string | null;
+          proposed_rate?: number | null;
+          availability_date?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+        };
         Update: {
-          id?: string
-          job_id?: string
-          worker_id?: string
-          business_id?: string
-          status?: "pending" | "reviewed" | "accepted" | "rejected" | "withdrawn"
-          cover_letter?: string | null
-          proposed_rate?: number | null
-          availability_date?: string | null
-          notes?: string | null
-          created_at?: string
-          updated_at?: string
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-        }
+          id?: string;
+          job_id?: string;
+          worker_id?: string;
+          business_id?: string;
+          status?:
+            | "pending"
+            | "reviewed"
+            | "accepted"
+            | "rejected"
+            | "withdrawn";
+          cover_letter?: string | null;
+          proposed_rate?: number | null;
+          availability_date?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "job_applications_job_id_fkey"
-            columns: ["job_id"]
-            referencedRelation: "jobs"
-            referencedColumns: ["id"]
+            foreignKeyName: "job_applications_job_id_fkey";
+            columns: ["job_id"];
+            referencedRelation: "jobs";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "job_applications_worker_id_fkey"
-            columns: ["worker_id"]
-            referencedRelation: "workers"
-            referencedColumns: ["id"]
+            foreignKeyName: "job_applications_worker_id_fkey";
+            columns: ["worker_id"];
+            referencedRelation: "workers";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "job_applications_business_id_fkey"
-            columns: ["business_id"]
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
+            foreignKeyName: "job_applications_business_id_fkey";
+            columns: ["business_id"];
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       payment_transactions: {
         Row: {
-          id: string
-          business_id: string
-          booking_id: string | null
-          amount: number
-          fee_amount: number
-          status: "pending" | "processing" | "paid" | "failed" | "refunded"
-          payment_provider: "xendit" | "midtrans"
-          provider_payment_id: string | null
-          payment_url: string | null
-          qris_expires_at: string | null
-          paid_at: string | null
-          failure_reason: string | null
-          metadata: Record<string, unknown>
-          created_at: string
-          updated_at: string
-        }
+          id: string;
+          business_id: string;
+          booking_id: string | null;
+          amount: number;
+          fee_amount: number;
+          status: "pending" | "processing" | "paid" | "failed" | "refunded";
+          payment_provider: "xendit" | "midtrans";
+          provider_payment_id: string | null;
+          payment_url: string | null;
+          qris_expires_at: string | null;
+          paid_at: string | null;
+          failure_reason: string | null;
+          metadata: Record<string, unknown>;
+          created_at: string;
+          updated_at: string;
+        };
         Insert: {
-          id?: string
-          business_id: string
-          booking_id?: string | null
-          amount: number
-          fee_amount?: number
-          status?: "pending" | "processing" | "paid" | "failed" | "refunded"
-          payment_provider: "xendit" | "midtrans"
-          provider_payment_id?: string | null
-          payment_url?: string | null
-          qris_expires_at?: string | null
-          paid_at?: string | null
-          failure_reason?: string | null
-          metadata?: Record<string, unknown>
-          created_at?: string
-          updated_at?: string
-        }
+          id?: string;
+          business_id: string;
+          booking_id?: string | null;
+          amount: number;
+          fee_amount?: number;
+          status?: "pending" | "processing" | "paid" | "failed" | "refunded";
+          payment_provider: "xendit" | "midtrans";
+          provider_payment_id?: string | null;
+          payment_url?: string | null;
+          qris_expires_at?: string | null;
+          paid_at?: string | null;
+          failure_reason?: string | null;
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
         Update: {
-          id?: string
-          business_id?: string
-          booking_id?: string | null
-          amount?: number
-          fee_amount?: number
-          status?: "pending" | "processing" | "paid" | "failed" | "refunded"
-          payment_provider?: "xendit" | "midtrans"
-          provider_payment_id?: string | null
-          payment_url?: string | null
-          qris_expires_at?: string | null
-          paid_at?: string | null
-          failure_reason?: string | null
-          metadata?: Record<string, unknown>
-          created_at?: string
-          updated_at?: string
-        }
+          id?: string;
+          business_id?: string;
+          booking_id?: string | null;
+          amount?: number;
+          fee_amount?: number;
+          status?: "pending" | "processing" | "paid" | "failed" | "refunded";
+          payment_provider?: "xendit" | "midtrans";
+          provider_payment_id?: string | null;
+          payment_url?: string | null;
+          qris_expires_at?: string | null;
+          paid_at?: string | null;
+          failure_reason?: string | null;
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "payment_transactions_business_id_fkey"
-            columns: ["business_id"]
-            referencedRelation: "businesses"
-            referencedColumns: ["id"]
+            foreignKeyName: "payment_transactions_business_id_fkey";
+            columns: ["business_id"];
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       kyc_verifications: {
         Row: {
-          id: string
-          worker_id: string
-          status: "pending" | "in_review" | "approved" | "rejected"
-          document_type: string
-          document_url: string
-          selfie_url: string | null
-          rejection_reason: string | null
-          reviewed_at: string | null
-          reviewed_by: string | null
-          created_at: string
-          updated_at: string
-        }
+          id: string;
+          worker_id: string;
+          status: "pending" | "in_review" | "approved" | "rejected";
+          document_type: string;
+          document_url: string;
+          selfie_url: string | null;
+          rejection_reason: string | null;
+          reviewed_at: string | null;
+          reviewed_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
         Insert: {
-          id?: string
-          worker_id: string
-          status?: "pending" | "in_review" | "approved" | "rejected"
-          document_type: string
-          document_url: string
-          selfie_url?: string | null
-          rejection_reason?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
+          id?: string;
+          worker_id: string;
+          status?: "pending" | "in_review" | "approved" | "rejected";
+          document_type: string;
+          document_url: string;
+          selfie_url?: string | null;
+          rejection_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
         Update: {
-          id?: string
-          worker_id?: string
-          status?: "pending" | "in_review" | "approved" | "rejected"
-          document_type?: string
-          document_url?: string
-          selfie_url?: string | null
-          rejection_reason?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
+          id?: string;
+          worker_id?: string;
+          status?: "pending" | "in_review" | "approved" | "rejected";
+          document_type?: string;
+          document_url?: string;
+          selfie_url?: string | null;
+          rejection_reason?: string | null;
+          reviewed_at?: string | null;
+          reviewed_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "kyc_verifications_worker_id_fkey"
-            columns: ["worker_id"]
-            referencedRelation: "workers"
-            referencedColumns: ["id"]
+            foreignKeyName: "kyc_verifications_worker_id_fkey";
+            columns: ["worker_id"];
+            referencedRelation: "workers";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       disputes: {
         Row: {
-          id: string
-          booking_id: string
-          opened_by: string
-          status: "open" | "in_progress" | "resolved" | "closed"
-          reason: string
-          resolution: string | null
-          resolved_at: string | null
-          resolved_by: string | null
-          created_at: string
-          updated_at: string
-        }
+          id: string;
+          booking_id: string;
+          opened_by: string;
+          status: "open" | "in_progress" | "resolved" | "closed";
+          reason: string;
+          resolution: string | null;
+          resolved_at: string | null;
+          resolved_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
         Insert: {
-          id?: string
-          booking_id: string
-          opened_by: string
-          status?: "open" | "in_progress" | "resolved" | "closed"
-          reason: string
-          resolution?: string | null
-          resolved_at?: string | null
-          resolved_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
+          id?: string;
+          booking_id: string;
+          opened_by: string;
+          status?: "open" | "in_progress" | "resolved" | "closed";
+          reason: string;
+          resolution?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
         Update: {
-          id?: string
-          booking_id?: string
-          opened_by?: string
-          status?: "open" | "in_progress" | "resolved" | "closed"
-          reason?: string
-          resolution?: string | null
-          resolved_at?: string | null
-          resolved_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
+          id?: string;
+          booking_id?: string;
+          opened_by?: string;
+          status?: "open" | "in_progress" | "resolved" | "closed";
+          reason?: string;
+          resolution?: string | null;
+          resolved_at?: string | null;
+          resolved_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "disputes_booking_id_fkey"
-            columns: ["booking_id"]
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
+            foreignKeyName: "disputes_booking_id_fkey";
+            columns: ["booking_id"];
+            referencedRelation: "bookings";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       admin_audit_logs: {
         Row: {
-          id: string
-          admin_id: string
-          action: string
-          resource_type: string
-          resource_id: string | null
-          details: Record<string, unknown>
-          created_at: string
-        }
+          id: string;
+          admin_id: string;
+          action: string;
+          resource_type: string;
+          resource_id: string | null;
+          details: Record<string, unknown>;
+          created_at: string;
+        };
         Insert: {
-          id?: string
-          admin_id: string
-          action: string
-          resource_type: string
-          resource_id?: string | null
-          details?: Record<string, unknown>
-          created_at?: string
-        }
+          id?: string;
+          admin_id: string;
+          action: string;
+          resource_type: string;
+          resource_id?: string | null;
+          details?: Record<string, unknown>;
+          created_at?: string;
+        };
         Update: {
-          id?: string
-          admin_id?: string
-          action?: string
-          resource_type?: string
-          resource_id?: string | null
-          details?: Record<string, unknown>
-          created_at?: string
-        }
-        Relationships: []
-      }
+          id?: string;
+          admin_id?: string;
+          action?: string;
+          resource_type?: string;
+          resource_id?: string | null;
+          details?: Record<string, unknown>;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       admin_users: {
         Row: {
-          id: string
-          user_id: string
-          role: "super_admin" | "admin" | "moderator"
-          permissions: string[]
-          created_at: string
-          updated_at: string
-        }
+          id: string;
+          user_id: string;
+          role: "super_admin" | "admin" | "moderator";
+          permissions: string[];
+          created_at: string;
+          updated_at: string;
+        };
         Insert: {
-          id?: string
-          user_id: string
-          role?: "super_admin" | "admin" | "moderator"
-          permissions?: string[]
-          created_at?: string
-          updated_at?: string
-        }
+          id?: string;
+          user_id: string;
+          role?: "super_admin" | "admin" | "moderator";
+          permissions?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
         Update: {
-          id?: string
-          user_id?: string
-          role?: "super_admin" | "admin" | "moderator"
-          permissions?: string[]
-          created_at?: string
-          updated_at?: string
-        }
+          id?: string;
+          user_id?: string;
+          role?: "super_admin" | "admin" | "moderator";
+          permissions?: string[];
+          created_at?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "admin_users_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
+            foreignKeyName: "admin_users_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       applications: {
         Row: {
-          id: string
-          job_id: string
-          worker_id: string
-          status: string
-          message: string | null
-          proposed_rate: number | null
-          availability_date: string | null
-          created_at: string
-          updated_at: string
-        }
+          id: string;
+          job_id: string;
+          worker_id: string;
+          status: string;
+          message: string | null;
+          proposed_rate: number | null;
+          availability_date: string | null;
+          created_at: string;
+          updated_at: string;
+        };
         Insert: {
-          id?: string
-          job_id: string
-          worker_id: string
-          status?: string
-          message?: string | null
-          proposed_rate?: number | null
-          availability_date?: string | null
-          created_at?: string
-          updated_at?: string
-        }
+          id?: string;
+          job_id: string;
+          worker_id: string;
+          status?: string;
+          message?: string | null;
+          proposed_rate?: number | null;
+          availability_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
         Update: {
-          id?: string
-          job_id?: string
-          worker_id?: string
-          status?: string
-          message?: string | null
-          proposed_rate?: number | null
-          availability_date?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          id?: string;
+          job_id?: string;
+          worker_id?: string;
+          status?: string;
+          message?: string | null;
+          proposed_rate?: number | null;
+          availability_date?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       worker_achievements: {
         Row: {
-          id: string
-          worker_id: string
-          badge_type: string
-          earned_at: string
-          metadata: Record<string, unknown> | null
-          created_at: string
-        }
+          id: string;
+          worker_id: string;
+          badge_type: string;
+          earned_at: string;
+          metadata: Record<string, unknown> | null;
+          created_at: string;
+        };
         Insert: {
-          id?: string
-          worker_id: string
-          badge_type: string
-          earned_at: string
-          metadata?: Record<string, unknown> | null
-          created_at?: string
-        }
+          id?: string;
+          worker_id: string;
+          badge_type: string;
+          earned_at: string;
+          metadata?: Record<string, unknown> | null;
+          created_at?: string;
+        };
         Update: {
-          id?: string
-          worker_id?: string
-          badge_type?: string
-          earned_at?: string
-          metadata?: Record<string, unknown> | null
-          created_at?: string
-        }
-        Relationships: []
-      }
+          id?: string;
+          worker_id?: string;
+          badge_type?: string;
+          earned_at?: string;
+          metadata?: Record<string, unknown> | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       worker_badge_progress: {
         Row: {
-          id: string
-          worker_id: string
-          badge_type: string
-          current_value: number
-          target_value: number
-          last_updated: string
-        }
+          id: string;
+          worker_id: string;
+          badge_type: string;
+          current_value: number;
+          target_value: number;
+          last_updated: string;
+        };
         Insert: {
-          id?: string
-          worker_id: string
-          badge_type: string
-          current_value: number
-          target_value: number
-          last_updated?: string
-        }
+          id?: string;
+          worker_id: string;
+          badge_type: string;
+          current_value: number;
+          target_value: number;
+          last_updated?: string;
+        };
         Update: {
-          id?: string
-          worker_id?: string
-          badge_type?: string
-          current_value?: number
-          target_value?: number
-          last_updated?: string
-        }
-        Relationships: []
-      }
+          id?: string;
+          worker_id?: string;
+          badge_type?: string;
+          current_value?: number;
+          target_value?: number;
+          last_updated?: string;
+        };
+        Relationships: [];
+      };
       notification_preferences: {
         Row: {
-          id: string
-          user_id: string
-          push_enabled: boolean
-          booking_notifications: boolean
-          reminder_notifications: boolean
-          payment_notifications: boolean
-          message_notifications: boolean
-          review_notifications: boolean
-          quiet_hours_enabled: boolean
-          quiet_hours_start: string | null
-          quiet_hours_end: string | null
-          created_at: string
-          updated_at: string
-        }
+          id: string;
+          user_id: string;
+          push_enabled: boolean;
+          booking_notifications: boolean;
+          reminder_notifications: boolean;
+          payment_notifications: boolean;
+          message_notifications: boolean;
+          review_notifications: boolean;
+          quiet_hours_enabled: boolean;
+          quiet_hours_start: string | null;
+          quiet_hours_end: string | null;
+          created_at: string;
+          updated_at: string;
+        };
         Insert: {
-          id?: string
-          user_id: string
-          push_enabled?: boolean
-          booking_notifications?: boolean
-          reminder_notifications?: boolean
-          payment_notifications?: boolean
-          message_notifications?: boolean
-          review_notifications?: boolean
-          quiet_hours_enabled?: boolean
-          quiet_hours_start?: string | null
-          quiet_hours_end?: string | null
-          created_at?: string
-          updated_at?: string
-        }
+          id?: string;
+          user_id: string;
+          push_enabled?: boolean;
+          booking_notifications?: boolean;
+          reminder_notifications?: boolean;
+          payment_notifications?: boolean;
+          message_notifications?: boolean;
+          review_notifications?: boolean;
+          quiet_hours_enabled?: boolean;
+          quiet_hours_start?: string | null;
+          quiet_hours_end?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
         Update: {
-          id?: string
-          user_id?: string
-          push_enabled?: boolean
-          booking_notifications?: boolean
-          reminder_notifications?: boolean
-          payment_notifications?: boolean
-          message_notifications?: boolean
-          review_notifications?: boolean
-          quiet_hours_enabled?: boolean
-          quiet_hours_start?: string | null
-          quiet_hours_end?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          id?: string;
+          user_id?: string;
+          push_enabled?: boolean;
+          booking_notifications?: boolean;
+          reminder_notifications?: boolean;
+          payment_notifications?: boolean;
+          message_notifications?: boolean;
+          review_notifications?: boolean;
+          quiet_hours_enabled?: boolean;
+          quiet_hours_start?: string | null;
+          quiet_hours_end?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       user_fcm_tokens: {
         Row: {
-          id: string
-          user_id: string
-          token: string
-          device_type: string | null
-          is_active: boolean
-          last_used_at: string | null
-          created_at: string
-        }
+          id: string;
+          user_id: string;
+          token: string;
+          device_type: string | null;
+          is_active: boolean;
+          last_used_at: string | null;
+          created_at: string;
+        };
         Insert: {
-          id?: string
-          user_id: string
-          token: string
-          device_type?: string | null
-          is_active?: boolean
-          last_used_at?: string | null
-          created_at?: string
-        }
+          id?: string;
+          user_id: string;
+          token: string;
+          device_type?: string | null;
+          is_active?: boolean;
+          last_used_at?: string | null;
+          created_at?: string;
+        };
         Update: {
-          id?: string
-          user_id?: string
-          token?: string
-          device_type?: string | null
-          is_active?: boolean
-          last_used_at?: string | null
-          created_at?: string
-        }
-        Relationships: []
-      }
-    }
+          id?: string;
+          user_id?: string;
+          token?: string;
+          device_type?: string | null;
+          is_active?: boolean;
+          last_used_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+    };
     Views: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Functions: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Enums: {
-      badge_category: "certification" | "skill" | "specialization" | "training"
-      badge_verification_status: "pending" | "rejected" | "verified"
+      badge_category: "certification" | "skill" | "specialization" | "training";
+      badge_verification_status: "pending" | "rejected" | "verified";
       booking_status:
         | "pending"
         | "accepted"
         | "rejected"
         | "in_progress"
         | "completed"
-        | "cancelled"
+        | "cancelled";
       cancellation_reason_category:
         | "illness"
         | "family_emergency"
@@ -1447,668 +1516,676 @@ export type Database = {
         | "weather"
         | "transportation"
         | "schedule_conflict"
-        | "other"
-      job_status: "open" | "in_progress" | "completed" | "cancelled" | "draft"
-      report_status: "pending" | "reviewing" | "resolved" | "dismissed"
-      report_type: "user" | "job" | "business" | "booking"
-      transaction_status: "pending" | "processing" | "paid" | "failed" | "refunded"
-      transaction_type: "payment" | "refund"
-      user_role: "worker" | "business"
-      worker_tier: "classic" | "pro" | "elite" | "champion"
-    }
+        | "other";
+      job_status: "open" | "in_progress" | "completed" | "cancelled" | "draft";
+      report_status: "pending" | "reviewing" | "resolved" | "dismissed";
+      report_type: "user" | "job" | "business" | "booking";
+      transaction_status:
+        | "pending"
+        | "processing"
+        | "paid"
+        | "failed"
+        | "refunded";
+      transaction_type: "payment" | "refund";
+      user_role: "worker" | "business";
+      worker_tier: "classic" | "pro" | "elite" | "champion";
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
+      [_ in never]: never;
+    };
+  };
   storage: {
     Tables: {
       buckets: {
         Row: {
-          allowed_mime_types: string[] | null
-          avif_autodetection: boolean | null
-          created_at: string | null
-          file_size_limit: number | null
-          id: string
-          name: string
-          owner: string | null
-          owner_id: string | null
-          public: boolean | null
-          type: Database["storage"]["Enums"]["buckettype"]
-          updated_at: string | null
-        }
+          allowed_mime_types: string[] | null;
+          avif_autodetection: boolean | null;
+          created_at: string | null;
+          file_size_limit: number | null;
+          id: string;
+          name: string;
+          owner: string | null;
+          owner_id: string | null;
+          public: boolean | null;
+          type: Database["storage"]["Enums"]["buckettype"];
+          updated_at: string | null;
+        };
         Insert: {
-          allowed_mime_types?: string[] | null
-          avif_autodetection?: boolean | null
-          created_at?: string | null
-          file_size_limit?: number | null
-          id: string
-          name: string
-          owner?: string | null
-          owner_id?: string | null
-          public?: boolean | null
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string | null
-        }
+          allowed_mime_types?: string[] | null;
+          avif_autodetection?: boolean | null;
+          created_at?: string | null;
+          file_size_limit?: number | null;
+          id: string;
+          name: string;
+          owner?: string | null;
+          owner_id?: string | null;
+          public?: boolean | null;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string | null;
+        };
         Update: {
-          allowed_mime_types?: string[] | null
-          avif_autodetection?: boolean | null
-          created_at?: string | null
-          file_size_limit?: number | null
-          id?: string
-          name?: string
-          owner?: string | null
-          owner_id?: string | null
-          public?: boolean | null
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
+          allowed_mime_types?: string[] | null;
+          avif_autodetection?: boolean | null;
+          created_at?: string | null;
+          file_size_limit?: number | null;
+          id?: string;
+          name?: string;
+          owner?: string | null;
+          owner_id?: string | null;
+          public?: boolean | null;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string | null;
+        };
+        Relationships: [];
+      };
       buckets_analytics: {
         Row: {
-          created_at: string
-          deleted_at: string | null
-          format: string
-          id: string
-          name: string
-          type: Database["storage"]["Enums"]["buckettype"]
-          updated_at: string
-        }
+          created_at: string;
+          deleted_at: string | null;
+          format: string;
+          id: string;
+          name: string;
+          type: Database["storage"]["Enums"]["buckettype"];
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          deleted_at?: string | null
-          format?: string
-          id?: string
-          name: string
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string
-        }
+          created_at?: string;
+          deleted_at?: string | null;
+          format?: string;
+          id?: string;
+          name: string;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          deleted_at?: string | null
-          format?: string
-          id?: string
-          name?: string
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          deleted_at?: string | null;
+          format?: string;
+          id?: string;
+          name?: string;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       buckets_vectors: {
         Row: {
-          created_at: string
-          id: string
-          type: Database["storage"]["Enums"]["buckettype"]
-          updated_at: string
-        }
+          created_at: string;
+          id: string;
+          type: Database["storage"]["Enums"]["buckettype"];
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          id: string
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string
-        }
+          created_at?: string;
+          id: string;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          id?: string;
+          type?: Database["storage"]["Enums"]["buckettype"];
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       iceberg_namespaces: {
         Row: {
-          bucket_name: string
-          catalog_id: string
-          created_at: string
-          id: string
-          metadata: Json
-          name: string
-          updated_at: string
-        }
+          bucket_name: string;
+          catalog_id: string;
+          created_at: string;
+          id: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        };
         Insert: {
-          bucket_name: string
-          catalog_id: string
-          created_at?: string
-          id?: string
-          metadata?: Json
-          name: string
-          updated_at?: string
-        }
+          bucket_name: string;
+          catalog_id: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
+          name: string;
+          updated_at?: string;
+        };
         Update: {
-          bucket_name?: string
-          catalog_id?: string
-          created_at?: string
-          id?: string
-          metadata?: Json
-          name?: string
-          updated_at?: string
-        }
+          bucket_name?: string;
+          catalog_id?: string;
+          created_at?: string;
+          id?: string;
+          metadata?: Json;
+          name?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "iceberg_namespaces_catalog_id_fkey"
-            columns: ["catalog_id"]
-            referencedRelation: "buckets_analytics"
-            referencedColumns: ["id"]
+            foreignKeyName: "iceberg_namespaces_catalog_id_fkey";
+            columns: ["catalog_id"];
+            referencedRelation: "buckets_analytics";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       iceberg_tables: {
         Row: {
-          bucket_name: string
-          catalog_id: string
-          created_at: string
-          id: string
-          location: string
-          name: string
-          namespace_id: string
-          remote_table_id: string | null
-          shard_id: string | null
-          shard_key: string | null
-          updated_at: string
-        }
+          bucket_name: string;
+          catalog_id: string;
+          created_at: string;
+          id: string;
+          location: string;
+          name: string;
+          namespace_id: string;
+          remote_table_id: string | null;
+          shard_id: string | null;
+          shard_key: string | null;
+          updated_at: string;
+        };
         Insert: {
-          bucket_name: string
-          catalog_id: string
-          created_at?: string
-          id?: string
-          location: string
-          name: string
-          namespace_id: string
-          remote_table_id?: string | null
-          shard_id?: string | null
-          shard_key?: string | null
-          updated_at?: string
-        }
+          bucket_name: string;
+          catalog_id: string;
+          created_at?: string;
+          id?: string;
+          location: string;
+          name: string;
+          namespace_id: string;
+          remote_table_id?: string | null;
+          shard_id?: string | null;
+          shard_key?: string | null;
+          updated_at?: string;
+        };
         Update: {
-          bucket_name?: string
-          catalog_id?: string
-          created_at?: string
-          id?: string
-          location?: string
-          name?: string
-          namespace_id?: string
-          remote_table_id?: string | null
-          shard_id?: string | null
-          shard_key?: string | null
-          updated_at?: string
-        }
+          bucket_name?: string;
+          catalog_id?: string;
+          created_at?: string;
+          id?: string;
+          location?: string;
+          name?: string;
+          namespace_id?: string;
+          remote_table_id?: string | null;
+          shard_id?: string | null;
+          shard_key?: string | null;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "iceberg_tables_catalog_id_fkey"
-            columns: ["catalog_id"]
-            referencedRelation: "buckets_analytics"
-            referencedColumns: ["id"]
+            foreignKeyName: "iceberg_tables_catalog_id_fkey";
+            columns: ["catalog_id"];
+            referencedRelation: "buckets_analytics";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "iceberg_tables_namespace_id_fkey"
-            columns: ["namespace_id"]
-            referencedRelation: "iceberg_namespaces"
-            referencedColumns: ["id"]
+            foreignKeyName: "iceberg_tables_namespace_id_fkey";
+            columns: ["namespace_id"];
+            referencedRelation: "iceberg_namespaces";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       migrations: {
         Row: {
-          executed_at: string | null
-          hash: string
-          id: number
-          name: string
-        }
+          executed_at: string | null;
+          hash: string;
+          id: number;
+          name: string;
+        };
         Insert: {
-          executed_at?: string | null
-          hash: string
-          id: number
-          name: string
-        }
+          executed_at?: string | null;
+          hash: string;
+          id: number;
+          name: string;
+        };
         Update: {
-          executed_at?: string | null
-          hash?: string
-          id?: number
-          name?: string
-        }
-        Relationships: []
-      }
+          executed_at?: string | null;
+          hash?: string;
+          id?: number;
+          name?: string;
+        };
+        Relationships: [];
+      };
       objects: {
         Row: {
-          bucket_id: string | null
-          created_at: string | null
-          id: string
-          last_accessed_at: string | null
-          level: number | null
-          metadata: Json | null
-          name: string | null
-          owner: string | null
-          owner_id: string | null
-          path_tokens: string[] | null
-          updated_at: string | null
-          user_metadata: Json | null
-          version: string | null
-        }
+          bucket_id: string | null;
+          created_at: string | null;
+          id: string;
+          last_accessed_at: string | null;
+          level: number | null;
+          metadata: Json | null;
+          name: string | null;
+          owner: string | null;
+          owner_id: string | null;
+          path_tokens: string[] | null;
+          updated_at: string | null;
+          user_metadata: Json | null;
+          version: string | null;
+        };
         Insert: {
-          bucket_id?: string | null
-          created_at?: string | null
-          id?: string
-          last_accessed_at?: string | null
-          level?: number | null
-          metadata?: Json | null
-          name?: string | null
-          owner?: string | null
-          owner_id?: string | null
-          path_tokens?: string[] | null
-          updated_at?: string | null
-          user_metadata?: Json | null
-          version?: string | null
-        }
+          bucket_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+          last_accessed_at?: string | null;
+          level?: number | null;
+          metadata?: Json | null;
+          name?: string | null;
+          owner?: string | null;
+          owner_id?: string | null;
+          path_tokens?: string[] | null;
+          updated_at?: string | null;
+          user_metadata?: Json | null;
+          version?: string | null;
+        };
         Update: {
-          bucket_id?: string | null
-          created_at?: string | null
-          id?: string
-          last_accessed_at?: string | null
-          level?: number | null
-          metadata?: Json | null
-          name?: string | null
-          owner?: string | null
-          owner_id?: string | null
-          path_tokens?: string[] | null
-          updated_at?: string | null
-          user_metadata?: Json | null
-          version?: string | null
-        }
+          bucket_id?: string | null;
+          created_at?: string | null;
+          id?: string;
+          last_accessed_at?: string | null;
+          level?: number | null;
+          metadata?: Json | null;
+          name?: string | null;
+          owner?: string | null;
+          owner_id?: string | null;
+          path_tokens?: string[] | null;
+          updated_at?: string | null;
+          user_metadata?: Json | null;
+          version?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "objects_bucketId_fkey"
-            columns: ["bucket_id"]
-            referencedRelation: "buckets"
-            referencedColumns: ["id"]
+            foreignKeyName: "objects_bucketId_fkey";
+            columns: ["bucket_id"];
+            referencedRelation: "buckets";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       prefixes: {
         Row: {
-          bucket_id: string
-          created_at: string | null
-          level: number
-          name: string
-          updated_at: string | null
-        }
+          bucket_id: string;
+          created_at: string | null;
+          level: number;
+          name: string;
+          updated_at: string | null;
+        };
         Insert: {
-          bucket_id: string
-          created_at?: string | null
-          level?: number
-          name: string
-          updated_at?: string | null
-        }
+          bucket_id: string;
+          created_at?: string | null;
+          level?: number;
+          name: string;
+          updated_at?: string | null;
+        };
         Update: {
-          bucket_id?: string
-          created_at?: string | null
-          level?: number
-          name?: string
-          updated_at?: string | null
-        }
+          bucket_id?: string;
+          created_at?: string | null;
+          level?: number;
+          name?: string;
+          updated_at?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "prefixes_bucketId_fkey"
-            columns: ["bucket_id"]
-            referencedRelation: "buckets"
-            referencedColumns: ["id"]
+            foreignKeyName: "prefixes_bucketId_fkey";
+            columns: ["bucket_id"];
+            referencedRelation: "buckets";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       s3_multipart_uploads: {
         Row: {
-          bucket_id: string
-          created_at: string
-          id: string
-          in_progress_size: number
-          key: string
-          owner_id: string | null
-          upload_signature: string
-          user_metadata: Json | null
-          version: string
-        }
+          bucket_id: string;
+          created_at: string;
+          id: string;
+          in_progress_size: number;
+          key: string;
+          owner_id: string | null;
+          upload_signature: string;
+          user_metadata: Json | null;
+          version: string;
+        };
         Insert: {
-          bucket_id: string
-          created_at?: string
-          id: string
-          in_progress_size?: number
-          key: string
-          owner_id?: string | null
-          upload_signature: string
-          user_metadata?: Json | null
-          version: string
-        }
+          bucket_id: string;
+          created_at?: string;
+          id: string;
+          in_progress_size?: number;
+          key: string;
+          owner_id?: string | null;
+          upload_signature: string;
+          user_metadata?: Json | null;
+          version: string;
+        };
         Update: {
-          bucket_id?: string
-          created_at?: string
-          id?: string
-          in_progress_size?: number
-          key?: string
-          owner_id?: string | null
-          upload_signature?: string
-          user_metadata?: Json | null
-          version?: string
-        }
+          bucket_id?: string;
+          created_at?: string;
+          id?: string;
+          in_progress_size?: number;
+          key?: string;
+          owner_id?: string | null;
+          upload_signature?: string;
+          user_metadata?: Json | null;
+          version?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "s3_multipart_uploads_bucket_id_fkey"
-            columns: ["bucket_id"]
-            referencedRelation: "buckets"
-            referencedColumns: ["id"]
+            foreignKeyName: "s3_multipart_uploads_bucket_id_fkey";
+            columns: ["bucket_id"];
+            referencedRelation: "buckets";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       s3_multipart_uploads_parts: {
         Row: {
-          bucket_id: string
-          created_at: string
-          etag: string
-          id: string
-          key: string
-          owner_id: string | null
-          part_number: number
-          size: number
-          upload_id: string
-          version: string
-        }
+          bucket_id: string;
+          created_at: string;
+          etag: string;
+          id: string;
+          key: string;
+          owner_id: string | null;
+          part_number: number;
+          size: number;
+          upload_id: string;
+          version: string;
+        };
         Insert: {
-          bucket_id: string
-          created_at?: string
-          etag: string
-          id?: string
-          key: string
-          owner_id?: string | null
-          part_number: number
-          size?: number
-          upload_id: string
-          version: string
-        }
+          bucket_id: string;
+          created_at?: string;
+          etag: string;
+          id?: string;
+          key: string;
+          owner_id?: string | null;
+          part_number: number;
+          size?: number;
+          upload_id: string;
+          version: string;
+        };
         Update: {
-          bucket_id?: string
-          created_at?: string
-          etag?: string
-          id?: string
-          key?: string
-          owner_id?: string | null
-          part_number?: number
-          size?: number
-          upload_id?: string
-          version?: string
-        }
+          bucket_id?: string;
+          created_at?: string;
+          etag?: string;
+          id?: string;
+          key?: string;
+          owner_id?: string | null;
+          part_number?: number;
+          size?: number;
+          upload_id?: string;
+          version?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "s3_multipart_uploads_parts_bucket_id_fkey"
-            columns: ["bucket_id"]
-            referencedRelation: "buckets"
-            referencedColumns: ["id"]
+            foreignKeyName: "s3_multipart_uploads_parts_bucket_id_fkey";
+            columns: ["bucket_id"];
+            referencedRelation: "buckets";
+            referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "s3_multipart_uploads_parts_upload_id_fkey"
-            columns: ["upload_id"]
-            referencedRelation: "s3_multipart_uploads"
-            referencedColumns: ["id"]
+            foreignKeyName: "s3_multipart_uploads_parts_upload_id_fkey";
+            columns: ["upload_id"];
+            referencedRelation: "s3_multipart_uploads";
+            referencedColumns: ["id"];
           },
-        ]
-      }
+        ];
+      };
       vector_indexes: {
         Row: {
-          bucket_id: string
-          created_at: string
-          data_type: string
-          dimension: number
-          distance_metric: string
-          id: string
-          metadata_configuration: Json | null
-          name: string
-          updated_at: string
-        }
+          bucket_id: string;
+          created_at: string;
+          data_type: string;
+          dimension: number;
+          distance_metric: string;
+          id: string;
+          metadata_configuration: Json | null;
+          name: string;
+          updated_at: string;
+        };
         Insert: {
-          bucket_id: string
-          created_at?: string
-          data_type: string
-          dimension: number
-          distance_metric: string
-          id?: string
-          metadata_configuration?: Json | null
-          name: string
-          updated_at?: string
-        }
+          bucket_id: string;
+          created_at?: string;
+          data_type: string;
+          dimension: number;
+          distance_metric: string;
+          id?: string;
+          metadata_configuration?: Json | null;
+          name: string;
+          updated_at?: string;
+        };
         Update: {
-          bucket_id?: string
-          created_at?: string
-          data_type?: string
-          dimension?: number
-          distance_metric?: string
-          id?: string
-          metadata_configuration?: Json | null
-          name?: string
-          updated_at?: string
-        }
+          bucket_id?: string;
+          created_at?: string;
+          data_type?: string;
+          dimension?: number;
+          distance_metric?: string;
+          id?: string;
+          metadata_configuration?: Json | null;
+          name?: string;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "vector_indexes_bucket_id_fkey"
-            columns: ["bucket_id"]
-            referencedRelation: "buckets_vectors"
-            referencedColumns: ["id"]
+            foreignKeyName: "vector_indexes_bucket_id_fkey";
+            columns: ["bucket_id"];
+            referencedRelation: "buckets_vectors";
+            referencedColumns: ["id"];
           },
-        ]
-      }
-    }
+        ];
+      };
+    };
     Views: {
-      [_ in never]: never
-    }
+      [_ in never]: never;
+    };
     Functions: {
       add_prefixes: {
-        Args: { _bucket_id: string; _name: string }
-        Returns: undefined
-      }
+        Args: { _bucket_id: string; _name: string };
+        Returns: undefined;
+      };
       can_insert_object: {
-        Args: { bucketid: string; metadata: Json; name: string; owner: string }
-        Returns: undefined
-      }
+        Args: { bucketid: string; metadata: Json; name: string; owner: string };
+        Returns: undefined;
+      };
       delete_leaf_prefixes: {
-        Args: { bucket_ids: string[]; names: string[] }
-        Returns: undefined
-      }
+        Args: { bucket_ids: string[]; names: string[] };
+        Returns: undefined;
+      };
       delete_prefix: {
-        Args: { _bucket_id: string; _name: string }
-        Returns: boolean
-      }
-      extension: { Args: { name: string }; Returns: string }
-      filename: { Args: { name: string }; Returns: string }
-      foldername: { Args: { name: string }; Returns: string[] }
-      get_level: { Args: { name: string }; Returns: number }
-      get_prefix: { Args: { name: string }; Returns: string }
-      get_prefixes: { Args: { name: string }; Returns: string[] }
+        Args: { _bucket_id: string; _name: string };
+        Returns: boolean;
+      };
+      extension: { Args: { name: string }; Returns: string };
+      filename: { Args: { name: string }; Returns: string };
+      foldername: { Args: { name: string }; Returns: string[] };
+      get_level: { Args: { name: string }; Returns: number };
+      get_prefix: { Args: { name: string }; Returns: string };
+      get_prefixes: { Args: { name: string }; Returns: string[] };
       get_size_by_bucket: {
-        Args: never
+        Args: never;
         Returns: {
-          bucket_id: string
-          size: number
-        }[]
-      }
+          bucket_id: string;
+          size: number;
+        }[];
+      };
       list_multipart_uploads_with_delimiter: {
         Args: {
-          bucket_id: string
-          delimiter_param: string
-          max_keys?: number
-          next_key_token?: string
-          next_upload_token?: string
-          prefix_param: string
-        }
+          bucket_id: string;
+          delimiter_param: string;
+          max_keys?: number;
+          next_key_token?: string;
+          next_upload_token?: string;
+          prefix_param: string;
+        };
         Returns: {
-          created_at: string
-          id: string
-          key: string
-        }[]
-      }
+          created_at: string;
+          id: string;
+          key: string;
+        }[];
+      };
       list_objects_with_delimiter: {
         Args: {
-          bucket_id: string
-          delimiter_param: string
-          max_keys?: number
-          next_token?: string
-          prefix_param: string
-          start_after?: string
-        }
+          bucket_id: string;
+          delimiter_param: string;
+          max_keys?: number;
+          next_token?: string;
+          prefix_param: string;
+          start_after?: string;
+        };
         Returns: {
-          id: string
-          metadata: Json
-          name: string
-          updated_at: string
-        }[]
-      }
+          id: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        }[];
+      };
       lock_top_prefixes: {
-        Args: { bucket_ids: string[]; names: string[] }
-        Returns: undefined
-      }
-      operation: { Args: never; Returns: string }
+        Args: { bucket_ids: string[]; names: string[] };
+        Returns: undefined;
+      };
+      operation: { Args: never; Returns: string };
       search:
         | {
             Args: {
-              bucketname: string
-              levels?: number
-              limits?: number
-              offsets?: number
-              prefix: string
-            }
+              bucketname: string;
+              levels?: number;
+              limits?: number;
+              offsets?: number;
+              prefix: string;
+            };
             Returns: {
-              created_at: string
-              id: string
-              last_accessed_at: string
-              metadata: Json
-              name: string
-              updated_at: string
-            }[]
+              created_at: string;
+              id: string;
+              last_accessed_at: string;
+              metadata: Json;
+              name: string;
+              updated_at: string;
+            }[];
           }
         | {
             Args: {
-              bucketname: string
-              levels?: number
-              limits?: number
-              offsets?: number
-              prefix: string
-              search?: string
-              sortcolumn?: string
-              sortorder?: string
-            }
+              bucketname: string;
+              levels?: number;
+              limits?: number;
+              offsets?: number;
+              prefix: string;
+              search?: string;
+              sortcolumn?: string;
+              sortorder?: string;
+            };
             Returns: {
-              created_at: string
-              id: string
-              last_accessed_at: string
-              metadata: Json
-              name: string
-              updated_at: string
-            }[]
-          }
+              created_at: string;
+              id: string;
+              last_accessed_at: string;
+              metadata: Json;
+              name: string;
+              updated_at: string;
+            }[];
+          };
       search_legacy_v1: {
         Args: {
-          bucketname: string
-          levels?: number
-          limits?: number
-          offsets?: number
-          prefix: string
-          search?: string
-          sortcolumn?: string
-          sortorder?: string
-        }
+          bucketname: string;
+          levels?: number;
+          limits?: number;
+          offsets?: number;
+          prefix: string;
+          search?: string;
+          sortcolumn?: string;
+          sortorder?: string;
+        };
         Returns: {
-          created_at: string
-          id: string
-          last_accessed_at: string
-          metadata: Json
-          name: string
-          updated_at: string
-        }[]
-      }
+          created_at: string;
+          id: string;
+          last_accessed_at: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        }[];
+      };
       search_v1_optimised: {
         Args: {
-          bucketname: string
-          levels?: number
-          limits?: number
-          offsets?: number
-          prefix: string
-          search?: string
-          sortcolumn?: string
-          sortorder?: string
-        }
+          bucketname: string;
+          levels?: number;
+          limits?: number;
+          offsets?: number;
+          prefix: string;
+          search?: string;
+          sortcolumn?: string;
+          sortorder?: string;
+        };
         Returns: {
-          created_at: string
-          id: string
-          last_accessed_at: string
-          metadata: Json
-          name: string
-          updated_at: string
-        }[]
-      }
+          created_at: string;
+          id: string;
+          last_accessed_at: string;
+          metadata: Json;
+          name: string;
+          updated_at: string;
+        }[];
+      };
       search_v2:
         | {
             Args: {
-              bucket_name: string
-              levels?: number
-              limits?: number
-              prefix: string
-              start_after?: string
-            }
+              bucket_name: string;
+              levels?: number;
+              limits?: number;
+              prefix: string;
+              start_after?: string;
+            };
             Returns: {
-              created_at: string
-              id: string
-              key: string
-              metadata: Json
-              name: string
-              updated_at: string
-            }[]
+              created_at: string;
+              id: string;
+              key: string;
+              metadata: Json;
+              name: string;
+              updated_at: string;
+            }[];
           }
         | {
             Args: {
-              bucket_name: string
-              levels?: number
-              limits?: number
-              prefix: string
-              sort_column?: string
-              sort_column_after?: string
-              sort_order?: string
-              start_after?: string
-            }
+              bucket_name: string;
+              levels?: number;
+              limits?: number;
+              prefix: string;
+              sort_column?: string;
+              sort_column_after?: string;
+              sort_order?: string;
+              start_after?: string;
+            };
             Returns: {
-              created_at: string
-              id: string
-              key: string
-              last_accessed_at: string
-              metadata: Json
-              name: string
-              updated_at: string
-            }[]
-          }
-    }
+              created_at: string;
+              id: string;
+              key: string;
+              last_accessed_at: string;
+              metadata: Json;
+              name: string;
+              updated_at: string;
+            }[];
+          };
+    };
     Enums: {
-      buckettype: "STANDARD" | "ANALYTICS" | "VECTOR"
-    }
+      buckettype: "STANDARD" | "ANALYTICS" | "VECTOR";
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
+      [_ in never]: never;
+    };
+  };
+};
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  "public"
+>];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
       DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
+      Row: infer R;
     }
     ? R
     : never
@@ -2116,95 +2193,95 @@ export type Tables<
         DefaultSchema["Views"])
     ? (DefaultSchema["Tables"] &
         DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
+        Row: infer R;
       }
       ? R
       : never
-    : never
+    : never;
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
+      Insert: infer I;
     }
     ? I
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
+        Insert: infer I;
       }
       ? I
       : never
-    : never
+    : never;
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
+      Update: infer U;
     }
     ? U
     : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
     ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
+        Update: infer U;
       }
       ? U
       : never
-    : never
+    : never;
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+    : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+    : never;
 
 export const Constants = {
   graphql_public: {
@@ -2248,7 +2325,7 @@ export const Constants = {
       buckettype: ["STANDARD", "ANALYTICS", "VECTOR"],
     },
   },
-} as const
+} as const;
 
 // Convenience type aliases
-export type WorkerTier = Enums<"worker_tier">
+export type WorkerTier = Enums<"worker_tier">;

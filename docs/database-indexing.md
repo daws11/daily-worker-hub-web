@@ -16,6 +16,7 @@ Proper database indexing is critical for performance, especially as the platform
 ### B-tree Indexes (Default)
 
 Standard PostgreSQL indexes, ideal for:
+
 - Equality comparisons (`=`, `IN`)
 - Range queries (`<`, `>`, `BETWEEN`)
 - Sorting operations (`ORDER BY`)
@@ -54,13 +55,13 @@ For PostGIS geospatial queries. Requires PostGIS extension:
 
 ### Jobs Table
 
-| Index Name | Columns | Purpose |
-|------------|---------|---------|
-| `idx_jobs_status_created_at` | (status, created_at DESC) | Job marketplace - filter by status, sort by newest |
-| `idx_jobs_business_id` | (business_id) | Business job management |
-| `idx_jobs_category_id` | (category_id) | Category filtering |
-| `idx_jobs_category_id_status` | (category_id, status) | Category-filtered marketplace |
-| `idx_jobs_location` | (lat, lng) | Location-based queries (numeric) |
+| Index Name                    | Columns                   | Purpose                                            |
+| ----------------------------- | ------------------------- | -------------------------------------------------- |
+| `idx_jobs_status_created_at`  | (status, created_at DESC) | Job marketplace - filter by status, sort by newest |
+| `idx_jobs_business_id`        | (business_id)             | Business job management                            |
+| `idx_jobs_category_id`        | (category_id)             | Category filtering                                 |
+| `idx_jobs_category_id_status` | (category_id, status)     | Category-filtered marketplace                      |
+| `idx_jobs_location`           | (lat, lng)                | Location-based queries (numeric)                   |
 
 #### Query Examples
 
@@ -84,12 +85,12 @@ ORDER BY created_at DESC;
 
 ### Bookings Table
 
-| Index Name | Columns | Purpose |
-|------------|---------|---------|
-| `idx_bookings_worker_id_status` | (worker_id, status) | Worker dashboard - bookings by status |
+| Index Name                        | Columns               | Purpose                                 |
+| --------------------------------- | --------------------- | --------------------------------------- |
+| `idx_bookings_worker_id_status`   | (worker_id, status)   | Worker dashboard - bookings by status   |
 | `idx_bookings_business_id_status` | (business_id, status) | Business dashboard - bookings by status |
-| `idx_bookings_job_id` | (job_id) | Job-related bookings |
-| `idx_bookings_scheduled_date` | (start_date) | Date range queries for scheduling |
+| `idx_bookings_job_id`             | (job_id)              | Job-related bookings                    |
+| `idx_bookings_scheduled_date`     | (start_date)          | Date range queries for scheduling       |
 
 #### Query Examples
 
@@ -114,10 +115,10 @@ ORDER BY start_date;
 
 ### Users Table
 
-| Index Name | Columns | Purpose |
-|------------|---------|---------|
+| Index Name        | Columns        | Purpose                      |
+| ----------------- | -------------- | ---------------------------- |
 | `idx_users_email` | (email) UNIQUE | Email lookup, authentication |
-| `idx_users_role` | (role) | Role-based queries |
+| `idx_users_role`  | (role)         | Role-based queries           |
 
 #### Query Examples
 
@@ -133,11 +134,11 @@ SELECT * FROM users WHERE role = 'business';
 
 ### Job Applications Table
 
-| Index Name | Columns | Purpose |
-|------------|---------|---------|
-| `idx_applications_job_id_status` | (job_id, status) | Business: manage applications by job |
-| `idx_applications_worker_id` | (worker_id) | Worker: track own applications |
-| `idx_applications_business_id_status` | (business_id, status) | Business dashboard aggregation |
+| Index Name                            | Columns               | Purpose                              |
+| ------------------------------------- | --------------------- | ------------------------------------ |
+| `idx_applications_job_id_status`      | (job_id, status)      | Business: manage applications by job |
+| `idx_applications_worker_id`          | (worker_id)           | Worker: track own applications       |
+| `idx_applications_business_id_status` | (business_id, status) | Business dashboard aggregation       |
 
 #### Query Examples
 
@@ -160,11 +161,11 @@ GROUP BY status;
 
 ### Reviews Table
 
-| Index Name | Columns | Purpose |
-|------------|---------|---------|
-| `idx_reviews_booking_id` | (booking_id) | Link reviews to bookings |
-| `idx_reviews_worker_id` | (worker_id) | Worker review lookup |
-| `idx_reviews_worker_id_rating` | (worker_id, rating) | Worker rating aggregation |
+| Index Name                       | Columns               | Purpose                     |
+| -------------------------------- | --------------------- | --------------------------- |
+| `idx_reviews_booking_id`         | (booking_id)          | Link reviews to bookings    |
+| `idx_reviews_worker_id`          | (worker_id)           | Worker review lookup        |
+| `idx_reviews_worker_id_rating`   | (worker_id, rating)   | Worker rating aggregation   |
 | `idx_reviews_business_id_rating` | (business_id, rating) | Business rating aggregation |
 
 #### Query Examples

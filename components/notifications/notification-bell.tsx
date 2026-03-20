@@ -1,27 +1,27 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Bell, Check, Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { Bell, Check, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 interface Notification {
-  id: string
-  title: string
-  body: string
-  link?: string | null
-  is_read: boolean
-  created_at: string
+  id: string;
+  title: string;
+  body: string;
+  link?: string | null;
+  is_read: boolean;
+  created_at: string;
 }
 
 export interface NotificationBellProps {
-  initialCount?: number
-  className?: string
-  onFetchNotifications?: () => Promise<Notification[]>
-  onMarkAsRead?: (notificationId: string) => Promise<void>
-  onMarkAllAsRead?: () => Promise<void>
+  initialCount?: number;
+  className?: string;
+  onFetchNotifications?: () => Promise<Notification[]>;
+  onMarkAsRead?: (notificationId: string) => Promise<void>;
+  onMarkAllAsRead?: () => Promise<void>;
 }
 
 export function NotificationBell({
@@ -31,69 +31,74 @@ export function NotificationBell({
   onMarkAsRead,
   onMarkAllAsRead,
 }: NotificationBellProps) {
-  const [isOpen, setIsOpen] = React.useState(false)
-  const [notifications, setNotifications] = React.useState<Notification[]>([])
-  const [unreadCount, setUnreadCount] = React.useState(initialCount)
-  const [isLoading, setIsLoading] = React.useState(false)
-  const dropdownRef = React.useRef<HTMLDivElement>(null)
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [notifications, setNotifications] = React.useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = React.useState(initialCount);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
 
   // Fetch notifications when dropdown opens
   React.useEffect(() => {
     if (isOpen && onFetchNotifications) {
-      setIsLoading(true)
+      setIsLoading(true);
       onFetchNotifications()
         .then((data) => {
-          setNotifications(data)
-          setUnreadCount(data.filter((n) => !n.is_read).length)
+          setNotifications(data);
+          setUnreadCount(data.filter((n) => !n.is_read).length);
         })
-        .finally(() => setIsLoading(false))
+        .finally(() => setIsLoading(false));
     }
-  }, [isOpen, onFetchNotifications])
+  }, [isOpen, onFetchNotifications]);
 
   // Close dropdown when clicking outside
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleMarkAsRead = async (notificationId: string) => {
     if (onMarkAsRead) {
-      await onMarkAsRead(notificationId)
+      await onMarkAsRead(notificationId);
       setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n))
-      )
-      setUnreadCount((prev) => Math.max(0, prev - 1))
+        prev.map((n) =>
+          n.id === notificationId ? { ...n, is_read: true } : n,
+        ),
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     }
-  }
+  };
 
   const handleMarkAllAsRead = async () => {
     if (onMarkAllAsRead) {
-      await onMarkAllAsRead()
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
-      setUnreadCount(0)
+      await onMarkAllAsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      setUnreadCount(0);
     }
-  }
+  };
 
   const formatTime = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-    const minutes = Math.floor(diff / 60000)
-    const hours = Math.floor(diff / 3600000)
-    const days = Math.floor(diff / 86400000)
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
 
-    if (minutes < 1) return "Baru saja"
-    if (minutes < 60) return `${minutes} menit lalu`
-    if (hours < 24) return `${hours} jam lalu`
-    if (days < 7) return `${days} hari lalu`
-    return date.toLocaleDateString("id-ID", { day: "numeric", month: "short" })
-  }
+    if (minutes < 1) return "Baru saja";
+    if (minutes < 60) return `${minutes} menit lalu`;
+    if (hours < 24) return `${hours} jam lalu`;
+    if (days < 7) return `${days} hari lalu`;
+    return date.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+  };
 
   return (
     <div ref={dropdownRef} className={cn("relative", className)}>
@@ -151,15 +156,15 @@ export function NotificationBell({
                     key={notification.id}
                     className={cn(
                       "px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer",
-                      !notification.is_read && "bg-blue-50/50"
+                      !notification.is_read && "bg-blue-50/50",
                     )}
                     onClick={() => {
                       if (!notification.is_read) {
-                        handleMarkAsRead(notification.id)
+                        handleMarkAsRead(notification.id);
                       }
                       if (notification.link) {
-                        window.location.href = notification.link
-                        setIsOpen(false)
+                        window.location.href = notification.link;
+                        setIsOpen(false);
                       }
                     }}
                   >
@@ -168,12 +173,19 @@ export function NotificationBell({
                       {!notification.is_read && (
                         <span className="mt-1.5 h-2 w-2 rounded-full bg-blue-600 flex-shrink-0" />
                       )}
-                      
-                      <div className={cn("flex-1 min-w-0", notification.is_read && "ml-5")}>
-                        <p className={cn(
-                          "text-sm font-medium text-gray-900 truncate",
-                          !notification.is_read && "font-semibold"
-                        )}>
+
+                      <div
+                        className={cn(
+                          "flex-1 min-w-0",
+                          notification.is_read && "ml-5",
+                        )}
+                      >
+                        <p
+                          className={cn(
+                            "text-sm font-medium text-gray-900 truncate",
+                            !notification.is_read && "font-semibold",
+                          )}
+                        >
                           {notification.title}
                         </p>
                         <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">
@@ -205,7 +217,7 @@ export function NotificationBell({
         </div>
       )}
     </div>
-  )
+  );
 }
 
-export default NotificationBell
+export default NotificationBell;

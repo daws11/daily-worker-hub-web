@@ -1,41 +1,42 @@
-"use server"
+"use server";
 
-import { createClient } from "../supabase/server"
-import type { Database } from "../supabase/types"
-import { checkComplianceBeforeAccept } from "./compliance"
-import { createInterviewSession as createInterviewSessionUtil } from "../algorithms/interview-flow"
+import { createClient } from "../supabase/server";
+import type { Database } from "../supabase/types";
+import { checkComplianceBeforeAccept } from "./compliance";
+import { createInterviewSession as createInterviewSessionUtil } from "../algorithms/interview-flow";
 
-type Booking = Database["public"]["Tables"]["bookings"]["Row"]
-type Job = Database["public"]["Tables"]["jobs"]["Row"]
+type Booking = Database["public"]["Tables"]["bookings"]["Row"];
+type Job = Database["public"]["Tables"]["jobs"]["Row"];
 
 // Database row type for interview_sessions
-type InterviewSessionRow = Database["public"]["Tables"]["interview_sessions"]["Row"]
+type InterviewSessionRow =
+  Database["public"]["Tables"]["interview_sessions"]["Row"];
 
 /**
  * Interview session type (stored in a separate table or as JSON in booking)
  */
 export type InterviewSession = {
-  id: string
-  bookingId: string
-  businessId: string
-  workerId: string
-  workerTier: Database["public"]["Enums"]["worker_tier"]
-  status: 'pending' | 'in_progress' | 'completed' | 'skipped' | 'failed'
-  type: 'none' | 'chat' | 'chat_and_voice'
-  startedAt: string | null
-  completedAt: string | null
-  chatStartedAt: string | null
-  chatCompletedAt: string | null
-  voiceStartedAt: string | null
-  voiceCompletedAt: string | null
-  chatDuration: number | null
-  voiceDuration: number | null
-  totalDuration: number | null
-  messagesSent: number
-  voiceCallInitiated: boolean
-  timeToHire: number | null
-  createdAt: string
-}
+  id: string;
+  bookingId: string;
+  businessId: string;
+  workerId: string;
+  workerTier: Database["public"]["Enums"]["worker_tier"];
+  status: "pending" | "in_progress" | "completed" | "skipped" | "failed";
+  type: "none" | "chat" | "chat_and_voice";
+  startedAt: string | null;
+  completedAt: string | null;
+  chatStartedAt: string | null;
+  chatCompletedAt: string | null;
+  voiceStartedAt: string | null;
+  voiceCompletedAt: string | null;
+  chatDuration: number | null;
+  voiceDuration: number | null;
+  totalDuration: number | null;
+  messagesSent: number;
+  voiceCallInitiated: boolean;
+  timeToHire: number | null;
+  createdAt: string;
+};
 
 /**
  * Transform database snake_case row to camelCase InterviewSession
@@ -62,77 +63,79 @@ function transformInterviewSession(row: InterviewSessionRow): InterviewSession {
     voiceCallInitiated: row.voice_call_initiated,
     timeToHire: row.time_to_hire,
     createdAt: row.created_at,
-  }
+  };
 }
 
 // Types for bookings with joined data
 type BookingWithJob = Booking & {
   jobs: {
-    id: string
-    title: string
-    budget_min: number
-    budget_max: number
-  } | null
-}
+    id: string;
+    title: string;
+    budget_min: number;
+    budget_max: number;
+  } | null;
+};
 
 type BookingWithJobAndBusiness = Booking & {
   jobs: {
-    id: string
-    title: string
-    description: string | null
-    budget_min: number
-    budget_max: number
-    deadline: string | null
-    address: string | null
-  } | null
+    id: string;
+    title: string;
+    description: string | null;
+    budget_min: number;
+    budget_max: number;
+    deadline: string | null;
+    address: string | null;
+  } | null;
   businesses: {
-    id: string
-    name: string
-    phone: string | null
-    email: string | null
-  } | null
-}
+    id: string;
+    name: string;
+    phone: string | null;
+    email: string | null;
+  } | null;
+};
 
 type BookingWithJobAndWorker = Booking & {
   jobs: {
-    id: string
-    title: string
-    description: string | null
-    budget_min: number
-    budget_max: number
-    deadline: string | null
-    address: string | null
-  } | null
+    id: string;
+    title: string;
+    description: string | null;
+    budget_min: number;
+    budget_max: number;
+    deadline: string | null;
+    address: string | null;
+  } | null;
   workers: {
-    id: string
-    full_name: string
-    phone: string | null
-    bio: string | null
-    avatar_url: string | null
-  } | null
-}
+    id: string;
+    full_name: string;
+    phone: string | null;
+    bio: string | null;
+    avatar_url: string | null;
+  } | null;
+};
 
 // Type for updating a booking
-type BookingUpdate = Partial<Database["public"]["Tables"]["bookings"]["Update"]> & {
-  check_out_at?: string
-}
+type BookingUpdate = Partial<
+  Database["public"]["Tables"]["bookings"]["Update"]
+> & {
+  check_out_at?: string;
+};
 
 export type CheckoutResult = {
-  success: boolean
-  error?: string
-  data?: Booking
-}
+  success: boolean;
+  error?: string;
+  data?: Booking;
+};
 
 export type CreateBookingResult = {
-  success: boolean
-  error?: string
-  data?: Booking
+  success: boolean;
+  error?: string;
+  data?: Booking;
   complianceStatus?: {
-    canAccept: boolean
-    daysWorked: number
-    message: string
-  }
-}
+    canAccept: boolean;
+    daysWorked: number;
+    message: string;
+  };
+};
 
 /**
  * Create a new booking with PP 35/2021 compliance check
@@ -150,32 +153,40 @@ export async function createBooking(
   workerId: string,
   businessId: string,
   startDate?: string,
-  endDate?: string
+  endDate?: string,
 ): Promise<CreateBookingResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // First, check PP 35/2021 compliance (21-day limit)
-    const complianceCheck = await checkComplianceBeforeAccept(workerId, businessId)
+    const complianceCheck = await checkComplianceBeforeAccept(
+      workerId,
+      businessId,
+    );
 
     if (!complianceCheck.success) {
       return {
         success: false,
-        error: complianceCheck.error || "Gagal mengecek kepatuhan PP 35/2021"
-      }
+        error: complianceCheck.error || "Gagal mengecek kepatuhan PP 35/2021",
+      };
     }
 
     // If worker cannot be accepted due to compliance
-    if (!complianceCheck.canAccept || complianceCheck.data?.status === "blocked") {
+    if (
+      !complianceCheck.canAccept ||
+      complianceCheck.data?.status === "blocked"
+    ) {
       return {
         success: false,
-        error: "Pekerja telah mencapai batas 21 hari bulan ini (PP 35/2021). Tidak dapat menerima booking baru.",
+        error:
+          "Pekerja telah mencapai batas 21 hari bulan ini (PP 35/2021). Tidak dapat menerima booking baru.",
         complianceStatus: {
           canAccept: false,
           daysWorked: complianceCheck.data?.daysWorked || 21,
-          message: complianceCheck.data?.message || "PP 35/2021 violation detected"
-        }
-      }
+          message:
+            complianceCheck.data?.message || "PP 35/2021 violation detected",
+        },
+      };
     }
 
     // Verify the job exists
@@ -184,10 +195,10 @@ export async function createBooking(
       .select("id, business_id")
       .eq("id", jobId)
       .eq("business_id", businessId)
-      .single()
+      .single();
 
     if (jobError || !job) {
-      return { success: false, error: "Pekerjaan tidak ditemukan" }
+      return { success: false, error: "Pekerjaan tidak ditemukan" };
     }
 
     // Create the booking with pending status
@@ -202,24 +213,28 @@ export async function createBooking(
         end_date: endDate,
       })
       .select()
-      .single()
+      .single();
 
     if (bookingError) {
-      return { success: false, error: `Gagal membuat booking: ${bookingError.message}` }
+      return {
+        success: false,
+        error: `Gagal membuat booking: ${bookingError.message}`,
+      };
     }
 
     // If there's a warning (16-20 days), include compliance info
-    const complianceStatus = complianceCheck.data?.status === "warning"
-      ? {
-          canAccept: true,
-          daysWorked: complianceCheck.data?.daysWorked || 0,
-          message: complianceCheck.data?.message || ""
-        }
-      : undefined
+    const complianceStatus =
+      complianceCheck.data?.status === "warning"
+        ? {
+            canAccept: true,
+            daysWorked: complianceCheck.data?.daysWorked || 0,
+            message: complianceCheck.data?.message || "",
+          }
+        : undefined;
 
-    return { success: true, data: booking, complianceStatus }
+    return { success: true, data: booking, complianceStatus };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat membuat booking" }
+    return { success: false, error: "Terjadi kesalahan saat membuat booking" };
   }
 }
 
@@ -231,14 +246,18 @@ export async function createBooking(
  * @param businessId - The business ID (for verification)
  * @returns Booking result
  */
-export async function acceptBooking(bookingId: string, businessId: string): Promise<CheckoutResult> {
+export async function acceptBooking(
+  bookingId: string,
+  businessId: string,
+): Promise<CheckoutResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Get the booking to verify it belongs to the business
     const { data: booking, error: fetchError } = await supabase
       .from("bookings")
-      .select(`
+      .select(
+        `
         *,
         jobs (
           id,
@@ -246,34 +265,42 @@ export async function acceptBooking(bookingId: string, businessId: string): Prom
           budget_min,
           budget_max
         )
-      `)
+      `,
+      )
       .eq("id", bookingId)
       .eq("business_id", businessId)
-      .single()
+      .single();
 
     if (fetchError || !booking) {
-      return { success: false, error: "Booking tidak ditemukan" }
+      return { success: false, error: "Booking tidak ditemukan" };
     }
 
     // Type assertion
-    const typedBooking = booking as BookingWithJob
+    const typedBooking = booking as BookingWithJob;
 
     // Check compliance before accepting
     const complianceCheck = await checkComplianceBeforeAccept(
       typedBooking.worker_id,
-      typedBooking.business_id
-    )
+      typedBooking.business_id,
+    );
 
     if (!complianceCheck.success) {
-      return { success: false, error: complianceCheck.error || "Gagal mengecek kepatuhan PP 35/2021" }
+      return {
+        success: false,
+        error: complianceCheck.error || "Gagal mengecek kepatuhan PP 35/2021",
+      };
     }
 
     // If worker cannot be accepted due to compliance (blocked at 21 days)
-    if (!complianceCheck.canAccept || complianceCheck.data?.status === "blocked") {
+    if (
+      !complianceCheck.canAccept ||
+      complianceCheck.data?.status === "blocked"
+    ) {
       return {
         success: false,
-        error: "Pekerja telah mencapai batas 21 hari bulan ini (PP 35/2021). Tidak dapat menerima pekerja ini."
-      }
+        error:
+          "Pekerja telah mencapai batas 21 hari bulan ini (PP 35/2021). Tidak dapat menerima pekerja ini.",
+      };
     }
 
     // Update booking status to accepted
@@ -286,26 +313,29 @@ export async function acceptBooking(bookingId: string, businessId: string): Prom
       .eq("id", bookingId)
       .eq("business_id", businessId)
       .select()
-      .single()
+      .single();
 
     if (updateError) {
-      return { success: false, error: `Gagal menerima booking: ${updateError.message}` }
+      return {
+        success: false,
+        error: `Gagal menerima booking: ${updateError.message}`,
+      };
     }
 
     // Send notification to worker
-    const { createNotification } = await import("./notifications")
-    const jobTitle = typedBooking.jobs?.title || "pekerjaan"
+    const { createNotification } = await import("./notifications");
+    const jobTitle = typedBooking.jobs?.title || "pekerjaan";
 
     await createNotification(
       typedBooking.worker_id,
       "Booking Diterima",
       `Selamat! ${jobTitle} Anda telah diterima oleh bisnis.`,
-      `/worker/jobs`
-    )
+      `/worker/jobs`,
+    );
 
-    return { success: true, data: updatedBooking }
+    return { success: true, data: updatedBooking };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat menerima booking" }
+    return { success: false, error: "Terjadi kesalahan saat menerima booking" };
   }
 }
 
@@ -316,60 +346,68 @@ export async function acceptBooking(bookingId: string, businessId: string): Prom
  * @param businessId - The business ID (for verification)
  * @returns Booking result
  */
-export async function rejectBooking(bookingId: string, businessId: string): Promise<CheckoutResult> {
+export async function rejectBooking(
+  bookingId: string,
+  businessId: string,
+): Promise<CheckoutResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Get the booking to verify it belongs to the business
     const { data: booking, error: fetchError } = await supabase
       .from("bookings")
-      .select(`
+      .select(
+        `
         *,
         jobs (
           id,
           title
         )
-      `)
+      `,
+      )
       .eq("id", bookingId)
       .eq("business_id", businessId)
-      .single()
+      .single();
 
     if (fetchError || !booking) {
-      return { success: false, error: "Booking tidak ditemukan" }
+      return { success: false, error: "Booking tidak ditemukan" };
     }
 
     // Type assertion
-    const typedBooking = booking as BookingWithJob
+    const typedBooking = booking as BookingWithJob;
 
     // Update booking status to rejected
     const { data: updatedBooking, error: updateError } = await supabase
       .from("bookings")
       .update({
-        status: "rejected"
+        status: "rejected",
       })
       .eq("id", bookingId)
       .eq("business_id", businessId)
       .select()
-      .single()
+      .single();
 
     if (updateError) {
-      return { success: false, error: `Gagal menolak booking: ${updateError.message}` }
+      return {
+        success: false,
+        error: `Gagal menolak booking: ${updateError.message}`,
+      };
     }
 
     // Send notification to worker
-    const { createNotification } = await import("./notifications")
-    const jobTitle = typedBooking.jobs?.title || "pekerjaan"
+    const { createNotification } = await import("./notifications");
+    const jobTitle = typedBooking.jobs?.title || "pekerjaan";
 
     await createNotification(
       typedBooking.worker_id,
       "Booking Ditolak",
       `Mohon maaf, ${jobTitle} Anda ditolak oleh bisnis.`,
-      `/worker/jobs`
-    )
+      `/worker/jobs`,
+    );
 
-    return { success: true, data: updatedBooking }
+    return { success: true, data: updatedBooking };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat menolak booking" }
+    return { success: false, error: "Terjadi kesalahan saat menolak booking" };
   }
 }
 
@@ -379,14 +417,18 @@ export async function rejectBooking(bookingId: string, businessId: string): Prom
  * - Sets checkout_time and review_deadline
  * - Initiates payment hold in worker's pending balance
  */
-export async function checkoutBooking(bookingId: string, workerId: string): Promise<CheckoutResult> {
+export async function checkoutBooking(
+  bookingId: string,
+  workerId: string,
+): Promise<CheckoutResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the booking belongs to the worker and is in_progress
     const { data: booking, error: fetchError } = await supabase
       .from("bookings")
-      .select(`
+      .select(
+        `
         *,
         jobs (
           id,
@@ -394,28 +436,33 @@ export async function checkoutBooking(bookingId: string, workerId: string): Prom
           budget_min,
           budget_max
         )
-      `)
+      `,
+      )
       .eq("id", bookingId)
       .eq("worker_id", workerId)
-      .single()
+      .single();
 
     if (fetchError || !booking) {
-      return { success: false, error: "Pekerjaan tidak ditemukan" }
+      return { success: false, error: "Pekerjaan tidak ditemukan" };
     }
 
     // Type assertion for joined query result
-    const typedBooking = booking as BookingWithJob
+    const typedBooking = booking as BookingWithJob;
 
     if (typedBooking.status !== "in_progress") {
-      return { success: false, error: "Hanya pekerjaan yang sedang berjalan yang bisa di-checkout" }
+      return {
+        success: false,
+        error: "Hanya pekerjaan yang sedang berjalan yang bisa di-checkout",
+      };
     }
 
     // Calculate final price (use the budget_max as the agreed price)
-    const finalPrice = typedBooking.jobs?.budget_max || typedBooking.final_price || 0
+    const finalPrice =
+      typedBooking.jobs?.budget_max || typedBooking.final_price || 0;
 
     // Calculate review deadline (24 hours from now)
-    const reviewDeadline = new Date()
-    reviewDeadline.setHours(reviewDeadline.getHours() + 24)
+    const reviewDeadline = new Date();
+    reviewDeadline.setHours(reviewDeadline.getHours() + 24);
 
     // Update the booking
     const bookingUpdate: BookingUpdate = {
@@ -423,7 +470,7 @@ export async function checkoutBooking(bookingId: string, workerId: string): Prom
       check_out_at: new Date().toISOString(),
       payment_status: "pending_review",
       review_deadline: reviewDeadline.toISOString(),
-    }
+    };
 
     const { data: updatedBooking, error: updateError } = await supabase
       .from("bookings")
@@ -431,39 +478,45 @@ export async function checkoutBooking(bookingId: string, workerId: string): Prom
       .eq("id", bookingId)
       .eq("worker_id", workerId)
       .select()
-      .single()
+      .single();
 
     if (updateError) {
-      return { success: false, error: `Gagal checkout: ${updateError.message}` }
+      return {
+        success: false,
+        error: `Gagal checkout: ${updateError.message}`,
+      };
     }
 
     // Add pending funds to worker's wallet
     // Import dynamically to avoid circular dependency
-    const { addPendingFundsAction } = await import("./wallets")
+    const { addPendingFundsAction } = await import("./wallets");
     const walletResult = await addPendingFundsAction(
       workerId,
       finalPrice,
       bookingId,
-      `Pembayaran untuk ${typedBooking.jobs?.title || "pekerjaan"}`
-    )
+      `Pembayaran untuk ${typedBooking.jobs?.title || "pekerjaan"}`,
+    );
 
     if (!walletResult.success) {
       // Log but don't fail - booking was updated successfully
-      console.error("Gagal menambahkan dana ke dompet worker:", walletResult.error)
+      console.error(
+        "Gagal menambahkan dana ke dompet worker:",
+        walletResult.error,
+      );
     }
 
     // Send notifications
     // Import dynamically to avoid circular dependency
-    const { createNotification } = await import("./notifications")
+    const { createNotification } = await import("./notifications");
 
     // Notify worker about successful checkout
-    const jobTitle = typedBooking.jobs?.title || "pekerjaan"
+    const jobTitle = typedBooking.jobs?.title || "pekerjaan";
     await createNotification(
       workerId,
       "Checkout Berhasil",
       `Anda telah menyelesaikan ${jobTitle}. Pembayaran sedang dalam proses review selama 24 jam.`,
-      `/worker/jobs`
-    )
+      `/worker/jobs`,
+    );
 
     // Notify business about worker checkout
     if (typedBooking.business_id) {
@@ -471,13 +524,16 @@ export async function checkoutBooking(bookingId: string, workerId: string): Prom
         typedBooking.business_id,
         "Pekerjaan Selesai",
         `Pekerja telah menyelesaikan ${jobTitle}. Silakan review pekerjaan dalam 24 jam.`,
-        `/business/jobs`
-      )
+        `/business/jobs`,
+      );
     }
 
-    return { success: true, data: updatedBooking }
+    return { success: true, data: updatedBooking };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat checkout pekerjaan" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat checkout pekerjaan",
+    };
   }
 }
 
@@ -486,11 +542,12 @@ export async function checkoutBooking(bookingId: string, workerId: string): Prom
  */
 export async function getWorkerBooking(bookingId: string, workerId: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from("bookings")
-      .select(`
+      .select(
+        `
         *,
         jobs (
           id,
@@ -507,31 +564,44 @@ export async function getWorkerBooking(bookingId: string, workerId: string) {
           phone,
           email
         )
-      `)
+      `,
+      )
       .eq("id", bookingId)
       .eq("worker_id", workerId)
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: error.message, data: null }
+      return { success: false, error: error.message, data: null };
     }
 
-    return { success: true, data: data as BookingWithJobAndBusiness | null, error: null }
+    return {
+      success: true,
+      data: data as BookingWithJobAndBusiness | null,
+      error: null,
+    };
   } catch (error) {
-    return { success: false, error: "Gagal mengambil data booking", data: null }
+    return {
+      success: false,
+      error: "Gagal mengambil data booking",
+      data: null,
+    };
   }
 }
 
 /**
  * Get booking details for a business
  */
-export async function getBusinessBooking(bookingId: string, businessId: string) {
+export async function getBusinessBooking(
+  bookingId: string,
+  businessId: string,
+) {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from("bookings")
-      .select(`
+      .select(
+        `
         *,
         jobs (
           id,
@@ -549,31 +619,44 @@ export async function getBusinessBooking(bookingId: string, businessId: string) 
           bio,
           avatar_url
         )
-      `)
+      `,
+      )
       .eq("id", bookingId)
       .eq("business_id", businessId)
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: error.message, data: null }
+      return { success: false, error: error.message, data: null };
     }
 
-    return { success: true, data: data as BookingWithJobAndWorker | null, error: null }
+    return {
+      success: true,
+      data: data as BookingWithJobAndWorker | null,
+      error: null,
+    };
   } catch (error) {
-    return { success: false, error: "Gagal mengambil data booking", data: null }
+    return {
+      success: false,
+      error: "Gagal mengambil data booking",
+      data: null,
+    };
   }
 }
 
 /**
  * Get all bookings for a worker
  */
-export async function getWorkerBookings(workerId: string, status?: Booking["status"]) {
+export async function getWorkerBookings(
+  workerId: string,
+  status?: Booking["status"],
+) {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     let query = supabase
       .from("bookings")
-      .select(`
+      .select(
+        `
         *,
         jobs (
           id,
@@ -590,36 +673,49 @@ export async function getWorkerBookings(workerId: string, status?: Booking["stat
           phone,
           email
         )
-      `)
+      `,
+      )
       .eq("worker_id", workerId)
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: false });
 
     if (status) {
-      query = query.eq("status", status)
+      query = query.eq("status", status);
     }
 
-    const { data, error } = await query
+    const { data, error } = await query;
 
     if (error) {
-      return { success: false, error: error.message, data: null }
+      return { success: false, error: error.message, data: null };
     }
 
-    return { success: true, data: data as BookingWithJobAndBusiness[] | null, error: null }
+    return {
+      success: true,
+      data: data as BookingWithJobAndBusiness[] | null,
+      error: null,
+    };
   } catch (error) {
-    return { success: false, error: "Gagal mengambil data booking", data: null }
+    return {
+      success: false,
+      error: "Gagal mengambil data booking",
+      data: null,
+    };
   }
 }
 
 /**
  * Get all bookings for a business
  */
-export async function getBusinessBookings(businessId: string, status?: Booking["status"]) {
+export async function getBusinessBookings(
+  businessId: string,
+  status?: Booking["status"],
+) {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     let query = supabase
       .from("bookings")
-      .select(`
+      .select(
+        `
         *,
         jobs (
           id,
@@ -637,23 +733,32 @@ export async function getBusinessBookings(businessId: string, status?: Booking["
           bio,
           avatar_url
         )
-      `)
+      `,
+      )
       .eq("business_id", businessId)
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: false });
 
     if (status) {
-      query = query.eq("status", status)
+      query = query.eq("status", status);
     }
 
-    const { data, error } = await query
+    const { data, error } = await query;
 
     if (error) {
-      return { success: false, error: error.message, data: null }
+      return { success: false, error: error.message, data: null };
     }
 
-    return { success: true, data: data as BookingWithJobAndWorker[] | null, error: null }
+    return {
+      success: true,
+      data: data as BookingWithJobAndWorker[] | null,
+      error: null,
+    };
   } catch (error) {
-    return { success: false, error: "Gagal mengambil data booking", data: null }
+    return {
+      success: false,
+      error: "Gagal mengambil data booking",
+      data: null,
+    };
   }
 }
 
@@ -668,20 +773,20 @@ export async function createInterviewSession(
   bookingId: string,
   businessId: string,
   workerId: string,
-  workerTier: Database["public"]["Enums"]["worker_tier"]
+  workerTier: Database["public"]["Enums"]["worker_tier"],
 ): Promise<{ success: boolean; error?: string; data?: InterviewSession }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the booking exists
     const { data: booking, error: bookingError } = await supabase
       .from("bookings")
       .select("*")
       .eq("id", bookingId)
-      .single()
+      .single();
 
     if (bookingError || !booking) {
-      return { success: false, error: "Booking tidak ditemukan" }
+      return { success: false, error: "Booking tidak ditemukan" };
     }
 
     // Create interview session
@@ -689,8 +794,8 @@ export async function createInterviewSession(
       bookingId,
       businessId,
       workerId,
-      workerTier
-    )
+      workerTier,
+    );
 
     const { data, error } = await supabase
       .from("interview_sessions")
@@ -715,15 +820,21 @@ export async function createInterviewSession(
         time_to_hire: session.timeToHire,
       })
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal membuat interview session: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal membuat interview session: ${error.message}`,
+      };
     }
 
-    return { success: true, data: transformInterviewSession(data) }
+    return { success: true, data: transformInterviewSession(data) };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat membuat interview session" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat membuat interview session",
+    };
   }
 }
 
@@ -732,10 +843,10 @@ export async function createInterviewSession(
  */
 export async function startInterviewSession(
   interviewSessionId: string,
-  userId: string
+  userId: string,
 ): Promise<{ success: boolean; error?: string; data?: InterviewSession }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the interview session exists and belongs to the user
     const { data: session, error: fetchError } = await supabase
@@ -743,34 +854,43 @@ export async function startInterviewSession(
       .select("*")
       .eq("id", interviewSessionId)
       .or(`business_id.eq.${userId},worker_id.eq.${userId}`)
-      .single()
+      .single();
 
     if (fetchError || !session) {
-      return { success: false, error: "Interview session tidak ditemukan" }
+      return { success: false, error: "Interview session tidak ditemukan" };
     }
 
-    if (session.status !== 'pending') {
-      return { success: false, error: "Interview session sudah dimulai atau selesai" }
+    if (session.status !== "pending") {
+      return {
+        success: false,
+        error: "Interview session sudah dimulai atau selesai",
+      };
     }
 
     // Update session to in_progress
     const { data, error } = await supabase
       .from("interview_sessions")
       .update({
-        status: 'in_progress',
+        status: "in_progress",
         started_at: new Date().toISOString(),
       })
       .eq("id", interviewSessionId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal memulai interview: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal memulai interview: ${error.message}`,
+      };
     }
 
-    return { success: true, data: transformInterviewSession(data) }
+    return { success: true, data: transformInterviewSession(data) };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat memulai interview" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat memulai interview",
+    };
   }
 }
 
@@ -779,10 +899,10 @@ export async function startInterviewSession(
  */
 export async function startChatInterview(
   interviewSessionId: string,
-  userId: string
+  userId: string,
 ): Promise<{ success: boolean; error?: string; data?: InterviewSession }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the interview session
     const { data: session, error: fetchError } = await supabase
@@ -790,14 +910,14 @@ export async function startChatInterview(
       .select("*")
       .eq("id", interviewSessionId)
       .or(`business_id.eq.${userId},worker_id.eq.${userId}`)
-      .single()
+      .single();
 
     if (fetchError || !session) {
-      return { success: false, error: "Interview session tidak ditemukan" }
+      return { success: false, error: "Interview session tidak ditemukan" };
     }
 
     if (session.chat_started_at) {
-      return { success: false, error: "Chat interview sudah dimulai" }
+      return { success: false, error: "Chat interview sudah dimulai" };
     }
 
     // Update session
@@ -808,15 +928,15 @@ export async function startChatInterview(
       })
       .eq("id", interviewSessionId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal memulai chat: ${error.message}` }
+      return { success: false, error: `Gagal memulai chat: ${error.message}` };
     }
 
-    return { success: true, data: transformInterviewSession(data) }
+    return { success: true, data: transformInterviewSession(data) };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat memulai chat" }
+    return { success: false, error: "Terjadi kesalahan saat memulai chat" };
   }
 }
 
@@ -825,10 +945,10 @@ export async function startChatInterview(
  */
 export async function completeChatInterview(
   interviewSessionId: string,
-  userId: string
+  userId: string,
 ): Promise<{ success: boolean; error?: string; data?: InterviewSession }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the interview session
     const { data: session, error: fetchError } = await supabase
@@ -836,23 +956,23 @@ export async function completeChatInterview(
       .select("*")
       .eq("id", interviewSessionId)
       .or(`business_id.eq.${userId},worker_id.eq.${userId}`)
-      .single()
+      .single();
 
     if (fetchError || !session) {
-      return { success: false, error: "Interview session tidak ditemukan" }
+      return { success: false, error: "Interview session tidak ditemukan" };
     }
 
     if (!session.chat_started_at) {
-      return { success: false, error: "Chat interview belum dimulai" }
+      return { success: false, error: "Chat interview belum dimulai" };
     }
 
     if (session.chat_completed_at) {
-      return { success: false, error: "Chat interview sudah selesai" }
+      return { success: false, error: "Chat interview sudah selesai" };
     }
 
-    const chatStartedAt = new Date(session.chat_started_at).getTime()
-    const chatCompletedAt = Date.now()
-    const chatDuration = Math.floor((chatCompletedAt - chatStartedAt) / 1000)
+    const chatStartedAt = new Date(session.chat_started_at).getTime();
+    const chatCompletedAt = Date.now();
+    const chatDuration = Math.floor((chatCompletedAt - chatStartedAt) / 1000);
 
     // Update session
     const { data, error } = await supabase
@@ -863,15 +983,21 @@ export async function completeChatInterview(
       })
       .eq("id", interviewSessionId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal menyelesaikan chat: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal menyelesaikan chat: ${error.message}`,
+      };
     }
 
-    return { success: true, data: transformInterviewSession(data) }
+    return { success: true, data: transformInterviewSession(data) };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat menyelesaikan chat" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat menyelesaikan chat",
+    };
   }
 }
 
@@ -880,10 +1006,10 @@ export async function completeChatInterview(
  */
 export async function startVoiceCallInterview(
   interviewSessionId: string,
-  userId: string
+  userId: string,
 ): Promise<{ success: boolean; error?: string; data?: InterviewSession }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the interview session
     const { data: session, error: fetchError } = await supabase
@@ -891,14 +1017,14 @@ export async function startVoiceCallInterview(
       .select("*")
       .eq("id", interviewSessionId)
       .or(`business_id.eq.${userId},worker_id.eq.${userId}`)
-      .single()
+      .single();
 
     if (fetchError || !session) {
-      return { success: false, error: "Interview session tidak ditemukan" }
+      return { success: false, error: "Interview session tidak ditemukan" };
     }
 
     if (session.voice_started_at) {
-      return { success: false, error: "Voice call sudah dimulai" }
+      return { success: false, error: "Voice call sudah dimulai" };
     }
 
     // Update session
@@ -910,15 +1036,21 @@ export async function startVoiceCallInterview(
       })
       .eq("id", interviewSessionId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal memulai voice call: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal memulai voice call: ${error.message}`,
+      };
     }
 
-    return { success: true, data: transformInterviewSession(data) }
+    return { success: true, data: transformInterviewSession(data) };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat memulai voice call" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat memulai voice call",
+    };
   }
 }
 
@@ -927,10 +1059,10 @@ export async function startVoiceCallInterview(
  */
 export async function completeVoiceCallInterview(
   interviewSessionId: string,
-  userId: string
+  userId: string,
 ): Promise<{ success: boolean; error?: string; data?: InterviewSession }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the interview session
     const { data: session, error: fetchError } = await supabase
@@ -938,23 +1070,25 @@ export async function completeVoiceCallInterview(
       .select("*")
       .eq("id", interviewSessionId)
       .or(`business_id.eq.${userId},worker_id.eq.${userId}`)
-      .single()
+      .single();
 
     if (fetchError || !session) {
-      return { success: false, error: "Interview session tidak ditemukan" }
+      return { success: false, error: "Interview session tidak ditemukan" };
     }
 
     if (!session.voice_started_at) {
-      return { success: false, error: "Voice call belum dimulai" }
+      return { success: false, error: "Voice call belum dimulai" };
     }
 
     if (session.voice_completed_at) {
-      return { success: false, error: "Voice call sudah selesai" }
+      return { success: false, error: "Voice call sudah selesai" };
     }
 
-    const voiceStartedAt = new Date(session.voice_started_at).getTime()
-    const voiceCompletedAt = Date.now()
-    const voiceDuration = Math.floor((voiceCompletedAt - voiceStartedAt) / 1000)
+    const voiceStartedAt = new Date(session.voice_started_at).getTime();
+    const voiceCompletedAt = Date.now();
+    const voiceDuration = Math.floor(
+      (voiceCompletedAt - voiceStartedAt) / 1000,
+    );
 
     // Update session
     const { data, error } = await supabase
@@ -965,15 +1099,21 @@ export async function completeVoiceCallInterview(
       })
       .eq("id", interviewSessionId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal menyelesaikan voice call: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal menyelesaikan voice call: ${error.message}`,
+      };
     }
 
-    return { success: true, data: transformInterviewSession(data) }
+    return { success: true, data: transformInterviewSession(data) };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat menyelesaikan voice call" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat menyelesaikan voice call",
+    };
   }
 }
 
@@ -982,10 +1122,10 @@ export async function completeVoiceCallInterview(
  */
 export async function completeInterviewSession(
   interviewSessionId: string,
-  userId: string
+  userId: string,
 ): Promise<{ success: boolean; error?: string; data?: InterviewSession }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the interview session
     const { data: session, error: fetchError } = await supabase
@@ -993,51 +1133,59 @@ export async function completeInterviewSession(
       .select("*")
       .eq("id", interviewSessionId)
       .or(`business_id.eq.${userId},worker_id.eq.${userId}`)
-      .single()
+      .single();
 
     if (fetchError || !session) {
-      return { success: false, error: "Interview session tidak ditemukan" }
+      return { success: false, error: "Interview session tidak ditemukan" };
     }
 
-    if (session.status === 'completed' || session.status === 'skipped') {
-      return { success: false, error: "Interview session sudah selesai" }
+    if (session.status === "completed" || session.status === "skipped") {
+      return { success: false, error: "Interview session sudah selesai" };
     }
 
     // Calculate total duration
-    let totalDuration = 0
+    let totalDuration = 0;
     if (session.started_at) {
-      totalDuration = Math.floor((Date.now() - new Date(session.started_at).getTime()) / 1000)
+      totalDuration = Math.floor(
+        (Date.now() - new Date(session.started_at).getTime()) / 1000,
+      );
     }
 
     // Update session
     const { data, error } = await supabase
       .from("interview_sessions")
       .update({
-        status: 'completed',
+        status: "completed",
         completed_at: new Date().toISOString(),
         total_duration: totalDuration,
       })
       .eq("id", interviewSessionId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal menyelesaikan interview: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal menyelesaikan interview: ${error.message}`,
+      };
     }
 
     // Update booking status to accepted
     const { error: bookingError } = await supabase
       .from("bookings")
-      .update({ status: 'accepted' })
-      .eq("id", session.booking_id)
+      .update({ status: "accepted" })
+      .eq("id", session.booking_id);
 
     if (bookingError) {
-      console.error("Gagal mengupdate status booking:", bookingError)
+      console.error("Gagal mengupdate status booking:", bookingError);
     }
 
-    return { success: true, data: transformInterviewSession(data) }
+    return { success: true, data: transformInterviewSession(data) };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat menyelesaikan interview" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat menyelesaikan interview",
+    };
   }
 }
 
@@ -1046,10 +1194,10 @@ export async function completeInterviewSession(
  */
 export async function cancelInterviewSession(
   interviewSessionId: string,
-  userId: string
+  userId: string,
 ): Promise<{ success: boolean; error?: string; data?: InterviewSession }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the interview session
     const { data: session, error: fetchError } = await supabase
@@ -1057,44 +1205,50 @@ export async function cancelInterviewSession(
       .select("*")
       .eq("id", interviewSessionId)
       .or(`business_id.eq.${userId},worker_id.eq.${userId}`)
-      .single()
+      .single();
 
     if (fetchError || !session) {
-      return { success: false, error: "Interview session tidak ditemukan" }
+      return { success: false, error: "Interview session tidak ditemukan" };
     }
 
-    if (session.status === 'completed' || session.status === 'skipped') {
-      return { success: false, error: "Interview session sudah selesai" }
+    if (session.status === "completed" || session.status === "skipped") {
+      return { success: false, error: "Interview session sudah selesai" };
     }
 
     // Update session
     const { data, error } = await supabase
       .from("interview_sessions")
       .update({
-        status: 'failed',
+        status: "failed",
         completed_at: new Date().toISOString(),
       })
       .eq("id", interviewSessionId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal membatalkan interview: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal membatalkan interview: ${error.message}`,
+      };
     }
 
     // Update booking status to rejected
     const { error: bookingError } = await supabase
       .from("bookings")
-      .update({ status: 'rejected' })
-      .eq("id", session.booking_id)
+      .update({ status: "rejected" })
+      .eq("id", session.booking_id);
 
     if (bookingError) {
-      console.error("Gagal mengupdate status booking:", bookingError)
+      console.error("Gagal mengupdate status booking:", bookingError);
     }
 
-    return { success: true, data: transformInterviewSession(data) }
+    return { success: true, data: transformInterviewSession(data) };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat membatalkan interview" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat membatalkan interview",
+    };
   }
 }
 
@@ -1102,19 +1256,19 @@ export async function cancelInterviewSession(
  * Get interview session by booking ID
  */
 export async function getInterviewSessionByBooking(
-  bookingId: string
+  bookingId: string,
 ): Promise<{ success: boolean; error?: string; data?: InterviewSession }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from("interview_sessions")
       .select("*")
       .eq("booking_id", bookingId)
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: error.message, data: null }
+      return { success: false, error: error.message, data: null };
     }
 
     // Transform snake_case into camelCase
@@ -1137,13 +1291,19 @@ export async function getInterviewSessionByBooking(
       totalDuration: data.total_duration,
       messagesSent: data.messages_sent,
       voiceCallInitiated: data.voice_call_initiated,
-      timeToHire: data.time_to_hire ? parseFloat(String(data.time_to_hire)) : null,
-      createdAt: data.created_at
-    }
+      timeToHire: data.time_to_hire
+        ? parseFloat(String(data.time_to_hire))
+        : null,
+      createdAt: data.created_at,
+    };
 
-    return { success: true, data: session, error: null }
+    return { success: true, data: session, error: null };
   } catch (error) {
-    return { success: false, error: "Gagal mengambil interview session", data: null }
+    return {
+      success: false,
+      error: "Gagal mengambil interview session",
+      data: null,
+    };
   }
 }
 
@@ -1151,14 +1311,17 @@ export async function getInterviewSessionByBooking(
  * Increment message count in interview session
  */
 export async function incrementInterviewMessageCount(
-  interviewSessionId: string
+  interviewSessionId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
-    const { error } = await (supabase as any).rpc('increment_interview_messages', {
-      session_id: interviewSessionId
-    })
+    const { error } = await (supabase as any).rpc(
+      "increment_interview_messages",
+      {
+        session_id: interviewSessionId,
+      },
+    );
 
     if (error) {
       // Fallback: fetch, increment, update
@@ -1166,19 +1329,19 @@ export async function incrementInterviewMessageCount(
         .from("interview_sessions")
         .select("messages_sent")
         .eq("id", interviewSessionId)
-        .single()
+        .single();
 
       if (session) {
         await supabase
           .from("interview_sessions")
           .update({ messages_sent: (session.messages_sent || 0) + 1 })
-          .eq("id", interviewSessionId)
+          .eq("id", interviewSessionId);
       }
     }
 
-    return { success: true }
+    return { success: true };
   } catch (error) {
-    return { success: false, error: "Gagal mengupdate message count" }
+    return { success: false, error: "Gagal mengupdate message count" };
   }
 }
 
@@ -1186,38 +1349,40 @@ export async function incrementInterviewMessageCount(
  * Calculate time-to-hire for a booking
  */
 export async function calculateBookingTimeToHire(
-  bookingId: string
+  bookingId: string,
 ): Promise<{ success: boolean; timeToHire?: number; error?: string }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Get booking with job
     const { data: booking, error: bookingError } = await supabase
       .from("bookings")
-      .select(`
+      .select(
+        `
         *,
         jobs (
           created_at
         )
-      `)
+      `,
+      )
       .eq("id", bookingId)
-      .single()
+      .single();
 
     if (bookingError || !booking || !booking.jobs) {
-      return { success: false, error: "Booking atau job tidak ditemukan" }
+      return { success: false, error: "Booking atau job tidak ditemukan" };
     }
 
     if (!booking.updated_at) {
-      return { success: false, error: "Booking belum diupdate" }
+      return { success: false, error: "Booking belum diupdate" };
     }
 
-    const jobPostedAt = new Date(booking.jobs.created_at).getTime()
-    const bookingAcceptedAt = new Date(booking.updated_at).getTime()
-    const timeToHireMinutes = Math.round(((bookingAcceptedAt - jobPostedAt) / (1000 * 60)) * 10) / 10
+    const jobPostedAt = new Date(booking.jobs.created_at).getTime();
+    const bookingAcceptedAt = new Date(booking.updated_at).getTime();
+    const timeToHireMinutes =
+      Math.round(((bookingAcceptedAt - jobPostedAt) / (1000 * 60)) * 10) / 10;
 
-    return { success: true, timeToHire: timeToHireMinutes }
+    return { success: true, timeToHire: timeToHireMinutes };
   } catch (error) {
-    return { success: false, error: "Gagal menghitung time-to-hire" }
+    return { success: false, error: "Gagal menghitung time-to-hire" };
   }
 }
-

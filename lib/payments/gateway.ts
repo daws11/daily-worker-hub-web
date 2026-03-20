@@ -1,26 +1,31 @@
 /**
  * Payment Gateway Interface
- * 
+ *
  * Unified interface for payment gateway operations.
  * All payment providers (Xendit, Midtrans, etc.) must implement this interface.
  */
 
-import type { PaymentProvider } from '../types/payment'
+import type { PaymentProvider } from "../types/payment";
 
 // Re-export PaymentProvider for convenience
-export type { PaymentProvider } from '../types/payment'
+export type { PaymentProvider } from "../types/payment";
 
 /**
  * Payment status enum
  */
-export type PaymentStatus = 'pending' | 'success' | 'failed' | 'expired' | 'cancelled'
+export type PaymentStatus =
+  | "pending"
+  | "success"
+  | "failed"
+  | "expired"
+  | "cancelled";
 
 /**
  * Payment fee breakdown
  */
 export interface PaymentFee {
-  type: string
-  amount: number
+  type: string;
+  amount: number;
 }
 
 /**
@@ -28,27 +33,27 @@ export interface PaymentFee {
  */
 export interface CreateInvoiceInput {
   /** Unique identifier for the payment (e.g., transaction ID) */
-  externalId: string
+  externalId: string;
   /** Payment amount in IDR */
-  amount: number
+  amount: number;
   /** Payment description */
-  description: string
+  description: string;
   /** Customer email */
-  customerEmail?: string
+  customerEmail?: string;
   /** Customer name */
-  customerName?: string
+  customerName?: string;
   /** Invoice expiry time in minutes (default: 60) */
-  expiryMinutes?: number
+  expiryMinutes?: number;
   /** Payment method (provider-specific) */
-  paymentMethod?: string
+  paymentMethod?: string;
   /** Success redirect URL */
-  successRedirectUrl?: string
+  successRedirectUrl?: string;
   /** Failure redirect URL */
-  failureRedirectUrl?: string
+  failureRedirectUrl?: string;
   /** Webhook callback URL */
-  callbackUrl?: string
+  callbackUrl?: string;
   /** Additional metadata */
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -56,37 +61,37 @@ export interface CreateInvoiceInput {
  */
 export interface InvoiceResponse {
   /** Gateway invoice/transaction ID */
-  id: string
+  id: string;
   /** External ID provided in request */
-  externalId: string
+  externalId: string;
   /** Payment provider name */
-  provider: PaymentProvider
+  provider: PaymentProvider;
   /** Payment amount */
-  amount: number
+  amount: number;
   /** Current payment status */
-  status: PaymentStatus
+  status: PaymentStatus;
   /** Payment/invoice URL for user redirect */
-  invoiceUrl?: string
+  invoiceUrl?: string;
   /** QR code string (for QRIS payments) */
-  qrString?: string
+  qrString?: string;
   /** Payment token (for frontend integration) */
-  token?: string
+  token?: string;
   /** Virtual account number (for bank transfers) */
-  vaNumber?: string
+  vaNumber?: string;
   /** Bill key (for bill payments) */
-  billKey?: string
+  billKey?: string;
   /** Biller code (for bill payments) */
-  billerCode?: string
+  billerCode?: string;
   /** Payment expiry timestamp */
-  expiresAt?: string
+  expiresAt?: string;
   /** Payment creation timestamp */
-  createdAt: string
+  createdAt: string;
   /** Payment completion timestamp */
-  paidAt?: string
+  paidAt?: string;
   /** Payment method used */
-  paymentMethod?: string
+  paymentMethod?: string;
   /** Payment channel/bank used */
-  paymentChannel?: string
+  paymentChannel?: string;
 }
 
 /**
@@ -94,23 +99,23 @@ export interface InvoiceResponse {
  */
 export interface PaymentStatusResponse {
   /** Gateway transaction ID */
-  id: string
+  id: string;
   /** External ID / Order ID */
-  externalId: string
+  externalId: string;
   /** Payment provider name */
-  provider: PaymentProvider
+  provider: PaymentProvider;
   /** Payment amount */
-  amount: number
+  amount: number;
   /** Current payment status */
-  status: PaymentStatus
+  status: PaymentStatus;
   /** Payment completion timestamp */
-  paidAt?: string
+  paidAt?: string;
   /** Payment method used */
-  paymentMethod?: string
+  paymentMethod?: string;
   /** Payment channel/bank used */
-  paymentChannel?: string
+  paymentChannel?: string;
   /** Fee breakdown */
-  fees?: PaymentFee[]
+  fees?: PaymentFee[];
 }
 
 /**
@@ -118,40 +123,45 @@ export interface PaymentStatusResponse {
  */
 export interface WebhookPayload {
   /** Gateway transaction ID */
-  id: string
+  id: string;
   /** External ID / Order ID */
-  externalId: string
+  externalId: string;
   /** Payment provider name */
-  provider: PaymentProvider
+  provider: PaymentProvider;
   /** Payment amount */
-  amount: number
+  amount: number;
   /** Current payment status */
-  status: PaymentStatus
+  status: PaymentStatus;
   /** Payment completion timestamp */
-  paidAt?: string
+  paidAt?: string;
   /** Payment method used */
-  paymentMethod?: string
+  paymentMethod?: string;
   /** Payment channel/bank used */
-  paymentChannel?: string
+  paymentChannel?: string;
   /** Raw webhook data from provider */
-  rawData: Record<string, unknown>
+  rawData: Record<string, unknown>;
 }
 
 /**
  * Disbursement status enum
  */
-export type DisbursementStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+export type DisbursementStatus =
+  | "pending"
+  | "processing"
+  | "completed"
+  | "failed"
+  | "cancelled";
 
 /**
  * Bank details for disbursement
  */
 export interface BankDetails {
   /** Bank code (e.g., BCA, BRI, MANDIRI, BNI) */
-  bankCode: string
+  bankCode: string;
   /** Bank account number */
-  accountNumber: string
+  accountNumber: string;
   /** Bank account holder name */
-  accountHolderName: string
+  accountHolderName: string;
 }
 
 /**
@@ -159,19 +169,19 @@ export interface BankDetails {
  */
 export interface DisbursementInput {
   /** Unique identifier for the disbursement (e.g., payout request ID) */
-  externalId: string
+  externalId: string;
   /** Disbursement amount in IDR */
-  amount: number
+  amount: number;
   /** Bank details for the recipient */
-  bankDetails: BankDetails
+  bankDetails: BankDetails;
   /** Description for the disbursement */
-  description?: string
+  description?: string;
   /** Email notification for the recipient */
-  emailTo?: string
+  emailTo?: string;
   /** Webhook callback URL */
-  callbackUrl?: string
+  callbackUrl?: string;
   /** Additional metadata */
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -179,31 +189,31 @@ export interface DisbursementInput {
  */
 export interface DisbursementResponse {
   /** Gateway disbursement ID */
-  id: string
+  id: string;
   /** External ID provided in request */
-  externalId: string
+  externalId: string;
   /** Payment provider name */
-  provider: PaymentProvider
+  provider: PaymentProvider;
   /** Disbursement amount */
-  amount: number
+  amount: number;
   /** Current disbursement status */
-  status: DisbursementStatus
+  status: DisbursementStatus;
   /** Bank code */
-  bankCode: string
+  bankCode: string;
   /** Bank account number */
-  accountNumber: string
+  accountNumber: string;
   /** Account holder name */
-  accountHolderName: string
+  accountHolderName: string;
   /** Estimated arrival time */
-  estimatedArrival?: string
+  estimatedArrival?: string;
   /** Disbursement creation timestamp */
-  createdAt: string
+  createdAt: string;
   /** Disbursement completion timestamp */
-  completedAt?: string
+  completedAt?: string;
   /** Failure reason if failed */
-  failureReason?: string
+  failureReason?: string;
   /** Fee charged for disbursement */
-  fee?: number
+  fee?: number;
 }
 
 /**
@@ -211,97 +221,100 @@ export interface DisbursementResponse {
  */
 export interface DisbursementWebhookPayload {
   /** Gateway disbursement ID */
-  id: string
+  id: string;
   /** External ID / Payout Request ID */
-  externalId: string
+  externalId: string;
   /** Payment provider name */
-  provider: PaymentProvider
+  provider: PaymentProvider;
   /** Disbursement amount */
-  amount: number
+  amount: number;
   /** Current disbursement status */
-  status: DisbursementStatus
+  status: DisbursementStatus;
   /** Disbursement completion timestamp */
-  completedAt?: string
+  completedAt?: string;
   /** Failure reason if failed */
-  failureReason?: string
+  failureReason?: string;
   /** Raw webhook data from provider */
-  rawData: Record<string, unknown>
+  rawData: Record<string, unknown>;
 }
 
 /**
  * Payment Gateway Interface
- * 
+ *
  * All payment gateways must implement this interface to be used
  * with the unified payment system.
  */
 export interface PaymentGateway {
   /** Gateway provider identifier */
-  readonly provider: PaymentProvider
+  readonly provider: PaymentProvider;
 
   /**
    * Create a new payment invoice
-   * 
+   *
    * @param input - Invoice creation parameters
    * @returns Invoice response with payment URL and details
    */
-  createInvoice(input: CreateInvoiceInput): Promise<InvoiceResponse>
+  createInvoice(input: CreateInvoiceInput): Promise<InvoiceResponse>;
 
   /**
    * Verify payment status by transaction ID
-   * 
+   *
    * @param transactionId - Gateway transaction ID
    * @returns Payment status response
    */
-  verifyPayment(transactionId: string): Promise<PaymentStatusResponse>
+  verifyPayment(transactionId: string): Promise<PaymentStatusResponse>;
 
   /**
    * Get payment status by external ID
-   * 
+   *
    * @param externalId - External ID / Order ID
    * @returns Payment status response
    */
-  getPaymentStatus(externalId: string): Promise<PaymentStatusResponse>
+  getPaymentStatus(externalId: string): Promise<PaymentStatusResponse>;
 
   /**
    * Verify webhook signature
-   * 
+   *
    * @param signature - Signature from webhook headers
    * @param payload - Additional payload data for verification
    * @returns True if signature is valid
    */
-  verifyWebhookSignature(signature: string | null, ...payload: unknown[]): boolean
+  verifyWebhookSignature(
+    signature: string | null,
+    ...payload: unknown[]
+  ): boolean;
 
   /**
    * Calculate payment fee for a given amount and method
-   * 
+   *
    * @param amount - Payment amount
    * @param paymentMethod - Payment method (optional)
    * @returns Fee amount in IDR
    */
-  calculateFee(amount: number, paymentMethod?: string): number
+  calculateFee(amount: number, paymentMethod?: string): number;
 
   /**
    * Validate API credentials
-   * 
+   *
    * @returns True if credentials are valid
    */
-  validateCredentials(): Promise<boolean>
+  validateCredentials(): Promise<boolean>;
 
   /**
    * Create a disbursement (withdrawal to bank account)
-   * 
+   *
    * @param input - Disbursement creation parameters
    * @returns Disbursement response with status and details
    */
-  createDisbursement(input: DisbursementInput): Promise<DisbursementResponse>
+  createDisbursement(input: DisbursementInput): Promise<DisbursementResponse>;
 
   /**
    * Get disbursement status by disbursement ID
-   * 
+   *
    * @param disbursementId - Gateway disbursement ID
    * @returns Disbursement status response
    */
-  getDisbursementStatus(disbursementId: string): Promise<DisbursementResponse>
+  getDisbursementStatus(disbursementId: string): Promise<DisbursementResponse>;
 }
 
 /**
@@ -309,26 +322,26 @@ export interface PaymentGateway {
  */
 export interface GatewayConfig {
   /** Default gateway provider */
-  defaultProvider: PaymentProvider
+  defaultProvider: PaymentProvider;
   /** Enable specific providers */
-  enabledProviders: PaymentProvider[]
+  enabledProviders: PaymentProvider[];
   /** Gateway-specific configurations */
-  providerConfigs?: Record<string, unknown>
+  providerConfigs?: Record<string, unknown>;
 }
 
 /**
  * Payment gateway factory for creating gateway instances
  */
 export class PaymentGatewayFactory {
-  private static instance: PaymentGatewayFactory
-  private gateways: Map<PaymentProvider, PaymentGateway> = new Map()
-  private config: GatewayConfig
+  private static instance: PaymentGatewayFactory;
+  private gateways: Map<PaymentProvider, PaymentGateway> = new Map();
+  private config: GatewayConfig;
 
   private constructor(config?: GatewayConfig) {
     this.config = config || {
-      defaultProvider: 'xendit',
-      enabledProviders: ['xendit', 'midtrans'],
-    }
+      defaultProvider: "xendit",
+      enabledProviders: ["xendit", "midtrans"],
+    };
   }
 
   /**
@@ -336,63 +349,66 @@ export class PaymentGatewayFactory {
    */
   static getInstance(config?: GatewayConfig): PaymentGatewayFactory {
     if (!PaymentGatewayFactory.instance) {
-      PaymentGatewayFactory.instance = new PaymentGatewayFactory(config)
+      PaymentGatewayFactory.instance = new PaymentGatewayFactory(config);
     }
-    return PaymentGatewayFactory.instance
+    return PaymentGatewayFactory.instance;
   }
 
   /**
    * Register a gateway instance
    */
   registerGateway(gateway: PaymentGateway): void {
-    this.gateways.set(gateway.provider, gateway)
+    this.gateways.set(gateway.provider, gateway);
   }
 
   /**
    * Get a gateway by provider name
    */
   getGateway(provider?: PaymentProvider): PaymentGateway {
-    const targetProvider = provider || this.config.defaultProvider
+    const targetProvider = provider || this.config.defaultProvider;
 
     if (!this.gateways.has(targetProvider)) {
-      throw new Error(`Payment gateway not registered: ${targetProvider}`)
+      throw new Error(`Payment gateway not registered: ${targetProvider}`);
     }
 
-    return this.gateways.get(targetProvider)!
+    return this.gateways.get(targetProvider)!;
   }
 
   /**
    * Get all registered gateways
    */
   getGateways(): Map<PaymentProvider, PaymentGateway> {
-    return this.gateways
+    return this.gateways;
   }
 
   /**
    * Check if a provider is enabled
    */
   isProviderEnabled(provider: PaymentProvider): boolean {
-    return this.config.enabledProviders.includes(provider)
+    return this.config.enabledProviders.includes(provider);
   }
 
   /**
    * Get enabled providers
    */
   getEnabledProviders(): PaymentProvider[] {
-    return this.config.enabledProviders
+    return this.config.enabledProviders;
   }
 }
 
 /**
  * Utility function to format currency for display
  */
-export function formatCurrency(amount: number, currency: string = 'IDR'): string {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
+export function formatCurrency(
+  amount: number,
+  currency: string = "IDR",
+): string {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
     currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount)
+  }).format(amount);
 }
 
 /**
@@ -400,41 +416,41 @@ export function formatCurrency(amount: number, currency: string = 'IDR'): string
  */
 export function parseCurrency(value: string): number {
   // Remove currency symbols and thousand separators
-  const cleaned = value.replace(/[^\d.-]/g, '')
-  return parseFloat(cleaned) || 0
+  const cleaned = value.replace(/[^\d.-]/g, "");
+  return parseFloat(cleaned) || 0;
 }
 
 /**
  * Calculate total amount including fees
  */
 export function calculateTotalWithFee(amount: number, fee: number): number {
-  return amount + fee
+  return amount + fee;
 }
 
 /**
  * Check if payment is successful
  */
 export function isPaymentSuccessful(status: PaymentStatus): boolean {
-  return status === 'success'
+  return status === "success";
 }
 
 /**
  * Check if payment is pending
  */
 export function isPaymentPending(status: PaymentStatus): boolean {
-  return status === 'pending'
+  return status === "pending";
 }
 
 /**
  * Check if payment is failed
  */
 export function isPaymentFailed(status: PaymentStatus): boolean {
-  return status === 'failed' || status === 'cancelled' || status === 'expired'
+  return status === "failed" || status === "cancelled" || status === "expired";
 }
 
 /**
  * Check if payment is still active (can be paid)
  */
 export function isPaymentActive(status: PaymentStatus): boolean {
-  return status === 'pending'
+  return status === "pending";
 }

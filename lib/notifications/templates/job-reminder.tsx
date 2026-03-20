@@ -1,20 +1,20 @@
-import * as React from "react"
+import * as React from "react";
 
 export interface JobReminderProps {
-  workerName: string
-  jobTitle: string
-  businessName: string
-  startTime: string
-  endTime: string
-  location: string
-  locationUrl?: string
-  contactPerson?: string
-  contactPhone?: string
-  specialNotes?: string
-  dressCode?: string
-  items?: string[]
-  bookingId: string
-  dashboardUrl: string
+  workerName: string;
+  jobTitle: string;
+  businessName: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  locationUrl?: string;
+  contactPerson?: string;
+  contactPhone?: string;
+  specialNotes?: string;
+  dressCode?: string;
+  items?: string[];
+  bookingId: string;
+  dashboardUrl: string;
 }
 
 export function JobReminderEmail({
@@ -38,18 +38,19 @@ export function JobReminderEmail({
       <div style={styles.header}>
         <h1 style={styles.logo}>Daily Worker Hub</h1>
       </div>
-      
+
       <div style={styles.content}>
         <div style={styles.urgentBanner}>
           <span style={styles.clockIcon}>⏰</span>
           <h2 style={styles.urgentTitle}>Pengingat Pekerjaan Besok!</h2>
         </div>
-        
+
         <p style={styles.greeting}>Halo {workerName},</p>
-        
+
         <p style={styles.text}>
-          Ini adalah pengingat bahwa Anda memiliki pekerjaan di <strong>{businessName}</strong> besok.
-          Pastikan Anda siap dan hadir tepat waktu!
+          Ini adalah pengingat bahwa Anda memiliki pekerjaan di{" "}
+          <strong>{businessName}</strong> besok. Pastikan Anda siap dan hadir
+          tepat waktu!
         </p>
 
         <div style={styles.jobCard}>
@@ -63,7 +64,9 @@ export function JobReminderEmail({
               <span style={styles.infoIcon}>🕐</span>
               <div>
                 <p style={styles.infoLabel}>Waktu Kerja</p>
-                <p style={styles.infoValue}>{startTime} - {endTime}</p>
+                <p style={styles.infoValue}>
+                  {startTime} - {endTime}
+                </p>
               </div>
             </div>
 
@@ -145,7 +148,10 @@ export function JobReminderEmail({
         </div>
 
         <div style={styles.buttonContainer}>
-          <a href={`${dashboardUrl}/bookings/${bookingId}`} style={styles.button}>
+          <a
+            href={`${dashboardUrl}/bookings/${bookingId}`}
+            style={styles.button}
+          >
             Lihat Detail Booking
           </a>
         </div>
@@ -165,7 +171,7 @@ export function JobReminderEmail({
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 const styles: Record<string, React.CSSProperties> = {
@@ -390,6 +396,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#9ca3af",
     margin: "4px 0",
   },
-}
+};
 
-export default JobReminderEmail
+export default JobReminderEmail;

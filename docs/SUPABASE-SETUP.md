@@ -3,12 +3,14 @@
 ## ✅ Environment Files Sudah Dikonfigurasi
 
 ### 1. Admin Dashboard (.env.local)
+
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://airhufmbwqxmojnkknan.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 ### 2. Android App (local.properties)
+
 ```bash
 supabase.url=https://airhufmbwqxmojnkknan.supabase.co
 supabase.anonKey=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
@@ -60,11 +62,13 @@ Jika ingin import via PostgreSQL client:
 Jika ingin menggunakan Supabase CLI:
 
 1. **Install Supabase CLI:**
+
    ```bash
    npm install -g supabase
    ```
 
 2. **Login & Link Project:**
+
    ```bash
    supabase login
    supabase link --project-ref airhufmbwqxmojnkknan
@@ -103,29 +107,33 @@ WHERE schemaname = 'public';
 
 ## 🎯 Tabel yang Dibuat
 
-| Tabel | Deskripsi |
-|--------|-----------|
-| `profiles` | User profiles & roles (worker, business, admin) |
-| `workers` | Worker-specific data (skills, ratings, KYC) |
-| `businesses` | Business-specific data |
-| `jobs` | Job postings dari businesses |
-| `job_assignments` | Job-worker matching |
-| `wallets` | Closed-loop wallet system |
-| `wallet_transactions` | Transaction history |
-| `audit_logs` | System audit trail |
+| Tabel                 | Deskripsi                                       |
+| --------------------- | ----------------------------------------------- |
+| `profiles`            | User profiles & roles (worker, business, admin) |
+| `workers`             | Worker-specific data (skills, ratings, KYC)     |
+| `businesses`          | Business-specific data                          |
+| `jobs`                | Job postings dari businesses                    |
+| `job_assignments`     | Job-worker matching                             |
+| `wallets`             | Closed-loop wallet system                       |
+| `wallet_transactions` | Transaction history                             |
+| `audit_logs`          | System audit trail                              |
 
 ---
 
 ## 🔒 Security Notes
 
 ### Service Role Key
+
 Service role key telah digunakan untuk environment configuration.
 **PENTING:** JANGAN share service role key di public!
+
 - Hanya gunakan untuk server-side operations
 - Gunakan anon key untuk client-side (mobile, web)
 
 ### Row Level Security (RLS)
+
 RLS policies sudah dikonfigurasi dalam schema:
+
 - Users hanya bisa akses data mereka sendiri
 - Admins bisa akses semua data
 - Public users hanya bisa lihat data verified workers/businesses
@@ -137,6 +145,7 @@ RLS policies sudah dikonfigurasi dalam schema:
 ### Schema Import Gagal
 
 **Error: Table already exists**
+
 - Drop tabel manual di SQL Editor:
   ```sql
   DROP TABLE IF EXISTS wallet_transactions CASCADE;
@@ -150,10 +159,12 @@ RLS policies sudah dikonfigurasi dalam schema:
   ```
 
 **Error: Permission denied**
+
 - Pastikan login sebagai admin/owner di Supabase
 - Gunakan service role key untuk full access
 
 **Error: Connection failed**
+
 - Cek project URL: harus diakhiri dengan `.co`
 - Cek database status: Dashboard → Database
 
@@ -164,6 +175,7 @@ RLS policies sudah dikonfigurasi dalam schema:
 Setelah schema berhasil di-import:
 
 1. **Test Connection:**
+
    ```bash
    cd daily-worker-admin
    npm install
@@ -182,4 +194,4 @@ Setelah schema berhasil di-import:
 
 ---
 
-*Dokumentasi ini akan di-update seiring progress.*
+_Dokumentasi ini akan di-update seiring progress._

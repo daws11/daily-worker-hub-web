@@ -1,14 +1,20 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { toast } from "sonner"
-import { Star, TrendingUp } from "lucide-react"
+import * as React from "react";
+import { toast } from "sonner";
+import { Star, TrendingUp } from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { WorkerReviewList, WorkerReviewDisplay } from "@/components/review/worker-review-display"
-import { BusinessReviewList, BusinessReviewDisplay } from "@/components/review/business-review-display"
+import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  WorkerReviewList,
+  WorkerReviewDisplay,
+} from "@/components/review/worker-review-display";
+import {
+  BusinessReviewList,
+  BusinessReviewDisplay,
+} from "@/components/review/business-review-display";
 import {
   getReviewsForWorker,
   getReviewsForBusiness,
@@ -16,158 +22,188 @@ import {
   getBusinessAverageRating,
   getWorkerRatingBreakdown,
   getWorkerRehireRate,
-} from "@/lib/supabase/queries/reviews"
+} from "@/lib/supabase/queries/reviews";
 
 export interface ReviewListProps {
   /** ID of the entity (worker or business) to fetch reviews for */
-  entityId: string
+  entityId: string;
   /** Type of entity - whether fetching reviews for a worker or business */
-  entityType: "worker" | "business"
+  entityType: "worker" | "business";
   /** Number of reviews per page */
-  perPage?: number
+  perPage?: number;
   /** Additional class name for the container */
-  className?: string
+  className?: string;
 }
 
 interface RatingSummary {
-  averageRating: number | null
-  totalReviews: number
+  averageRating: number | null;
+  totalReviews: number;
 }
 
 interface RatingBreakdownItem {
-  rating: number
-  count: number
-  percentage: number
+  rating: number;
+  count: number;
+  percentage: number;
 }
 
-const REVIEWS_PER_PAGE = 10
+const REVIEWS_PER_PAGE = 10;
 
 function formatRating(rating: number | null): string {
-  if (rating === null) return "0.0"
-  return rating.toFixed(1)
+  if (rating === null) return "0.0";
+  return rating.toFixed(1);
 }
 
 function getRatingColor(rating: number | null): string {
-  if (rating === null) return "text-muted-foreground"
-  if (rating >= 4.5) return "text-green-600 dark:text-green-400"
-  if (rating >= 3.5) return "text-yellow-600 dark:text-yellow-400"
-  if (rating >= 2.5) return "text-orange-600 dark:text-orange-400"
-  return "text-red-600 dark:text-red-400"
+  if (rating === null) return "text-muted-foreground";
+  if (rating >= 4.5) return "text-green-600 dark:text-green-400";
+  if (rating >= 3.5) return "text-yellow-600 dark:text-yellow-400";
+  if (rating >= 2.5) return "text-orange-600 dark:text-orange-400";
+  return "text-red-600 dark:text-red-400";
 }
 
-export function ReviewList({ entityId, entityType, perPage = REVIEWS_PER_PAGE, className }: ReviewListProps) {
-  const [reviews, setReviews] = React.useState<any[]>([])
-  const [isLoading, setIsLoading] = React.useState(true)
-  const [currentPage, setCurrentPage] = React.useState(1)
+export function ReviewList({
+  entityId,
+  entityType,
+  perPage = REVIEWS_PER_PAGE,
+  className,
+}: ReviewListProps) {
+  const [reviews, setReviews] = React.useState<any[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [currentPage, setCurrentPage] = React.useState(1);
 
   // Summary stats
   const [ratingSummary, setRatingSummary] = React.useState<RatingSummary>({
     averageRating: null,
     totalReviews: 0,
-  })
+  });
 
   // For workers: rating breakdown and rehire rate
-  const [ratingBreakdown, setRatingBreakdown] = React.useState<RatingBreakdownItem[]>([])
-  const [rehireRate, setRehireRate] = React.useState<number | null>(null)
+  const [ratingBreakdown, setRatingBreakdown] = React.useState<
+    RatingBreakdownItem[]
+  >([]);
+  const [rehireRate, setRehireRate] = React.useState<number | null>(null);
 
-  const totalPages = Math.ceil(ratingSummary.totalReviews / perPage)
-  const paginatedReviews = reviews.slice((currentPage - 1) * perPage, currentPage * perPage)
+  const totalPages = Math.ceil(ratingSummary.totalReviews / perPage);
+  const paginatedReviews = reviews.slice(
+    (currentPage - 1) * perPage,
+    currentPage * perPage,
+  );
 
   const loadReviews = React.useCallback(async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       if (entityType === "worker") {
         // Fetch reviews for worker (from businesses)
-        const [reviewsResult, ratingResult, breakdownResult, rehireResult] = await Promise.all([
-          getReviewsForWorker(entityId),
-          getWorkerAverageRating(entityId),
-          getWorkerRatingBreakdown(entityId),
-          getWorkerRehireRate(entityId),
-        ])
+        const [reviewsResult, ratingResult, breakdownResult, rehireResult] =
+          await Promise.all([
+            getReviewsForWorker(entityId),
+            getWorkerAverageRating(entityId),
+            getWorkerRatingBreakdown(entityId),
+            getWorkerRehireRate(entityId),
+          ]);
 
         if (reviewsResult.error) {
-          throw reviewsResult.error
+          throw reviewsResult.error;
         }
 
         if (ratingResult.error) {
-          throw ratingResult.error
+          throw ratingResult.error;
         }
 
-        setReviews(reviewsResult.data || [])
+        setReviews(reviewsResult.data || []);
 
         if (ratingResult.data) {
           setRatingSummary({
             averageRating: ratingResult.data.average,
             totalReviews: ratingResult.data.count,
-          })
+          });
         }
 
         if (breakdownResult.data?.breakdown) {
           const breakdown: RatingBreakdownItem[] = [
-            { rating: 5, count: breakdownResult.data.breakdown[5] || 0, percentage: breakdownResult.data.percentages[5] || 0 },
-            { rating: 4, count: breakdownResult.data.breakdown[4] || 0, percentage: breakdownResult.data.percentages[4] || 0 },
-            { rating: 3, count: breakdownResult.data.breakdown[3] || 0, percentage: breakdownResult.data.percentages[3] || 0 },
-            { rating: 2, count: breakdownResult.data.breakdown[2] || 0, percentage: breakdownResult.data.percentages[2] || 0 },
-            { rating: 1, count: breakdownResult.data.breakdown[1] || 0, percentage: breakdownResult.data.percentages[1] || 0 },
-          ]
-          setRatingBreakdown(breakdown)
+            {
+              rating: 5,
+              count: breakdownResult.data.breakdown[5] || 0,
+              percentage: breakdownResult.data.percentages[5] || 0,
+            },
+            {
+              rating: 4,
+              count: breakdownResult.data.breakdown[4] || 0,
+              percentage: breakdownResult.data.percentages[4] || 0,
+            },
+            {
+              rating: 3,
+              count: breakdownResult.data.breakdown[3] || 0,
+              percentage: breakdownResult.data.percentages[3] || 0,
+            },
+            {
+              rating: 2,
+              count: breakdownResult.data.breakdown[2] || 0,
+              percentage: breakdownResult.data.percentages[2] || 0,
+            },
+            {
+              rating: 1,
+              count: breakdownResult.data.breakdown[1] || 0,
+              percentage: breakdownResult.data.percentages[1] || 0,
+            },
+          ];
+          setRatingBreakdown(breakdown);
         }
 
         if (rehireResult.data?.rehireRate !== null) {
-          setRehireRate(rehireResult.data.rehireRate)
+          setRehireRate(rehireResult.data.rehireRate);
         }
-
       } else {
         // Fetch reviews for business (from workers)
         const [reviewsResult, ratingResult] = await Promise.all([
           getReviewsForBusiness(entityId),
           getBusinessAverageRating(entityId),
-        ])
+        ]);
 
         if (reviewsResult.error) {
-          throw reviewsResult.error
+          throw reviewsResult.error;
         }
 
         if (ratingResult.error) {
-          throw ratingResult.error
+          throw ratingResult.error;
         }
 
-        setReviews(reviewsResult.data || [])
+        setReviews(reviewsResult.data || []);
 
         if (ratingResult.data) {
           setRatingSummary({
             averageRating: ratingResult.data.average,
             totalReviews: ratingResult.data.count,
-          })
+          });
         }
       }
     } catch (error: any) {
-      toast.error("Gagal memuat ulasan: " + error.message)
+      toast.error("Gagal memuat ulasan: " + error.message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [entityId, entityType])
+  }, [entityId, entityType]);
 
   React.useEffect(() => {
-    loadReviews()
-  }, [loadReviews])
+    loadReviews();
+  }, [loadReviews]);
 
   // Reset to page 1 when reviews change
   React.useEffect(() => {
-    setCurrentPage(1)
-  }, [ratingSummary.totalReviews])
+    setCurrentPage(1);
+  }, [ratingSummary.totalReviews]);
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
-    )
+    );
   }
 
   return (
@@ -183,18 +219,22 @@ export function ReviewList({ entityId, entityType, perPage = REVIEWS_PER_PAGE, c
         <CardContent>
           <div className="flex items-center gap-6">
             <div className="text-center">
-              <div className={cn("text-4xl font-bold", getRatingColor(ratingSummary.averageRating))}>
+              <div
+                className={cn(
+                  "text-4xl font-bold",
+                  getRatingColor(ratingSummary.averageRating),
+                )}
+              >
                 {formatRating(ratingSummary.averageRating)}
               </div>
-              <p className="text-sm text-muted-foreground mt-1">
-                out of 5
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">out of 5</p>
             </div>
 
             <div className="flex-1 space-y-3">
               <div>
                 <p className="text-sm font-medium">
-                  {ratingSummary.totalReviews} {ratingSummary.totalReviews === 1 ? "review" : "reviews"}
+                  {ratingSummary.totalReviews}{" "}
+                  {ratingSummary.totalReviews === 1 ? "review" : "reviews"}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {entityType === "worker" ? "from businesses" : "from workers"}
@@ -216,15 +256,22 @@ export function ReviewList({ entityId, entityType, perPage = REVIEWS_PER_PAGE, c
             {entityType === "worker" && ratingBreakdown.length > 0 && (
               <div className="flex-1 space-y-2">
                 {ratingBreakdown.map((item) => (
-                  <div key={item.rating} className="flex items-center gap-2 text-sm">
-                    <span className="w-12 text-muted-foreground">{item.rating} star</span>
+                  <div
+                    key={item.rating}
+                    className="flex items-center gap-2 text-sm"
+                  >
+                    <span className="w-12 text-muted-foreground">
+                      {item.rating} star
+                    </span>
                     <div className="flex-1 h-2 bg-primary/20 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-primary transition-all"
                         style={{ width: `${item.percentage}%` }}
                       />
                     </div>
-                    <span className="w-8 text-right text-muted-foreground">{item.count}</span>
+                    <span className="w-8 text-right text-muted-foreground">
+                      {item.count}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -245,15 +292,18 @@ export function ReviewList({ entityId, entityType, perPage = REVIEWS_PER_PAGE, c
                 would_rehire: review.would_rehire,
                 created_at: review.created_at,
               }))}
-              reviewers={new Map(
-                paginatedReviews.map((review) => [
-                  review.id,
-                  {
-                    business_name: review.business?.name || "Unknown Business",
-                    logo_url: null,
-                  },
-                ])
-              )}
+              reviewers={
+                new Map(
+                  paginatedReviews.map((review) => [
+                    review.id,
+                    {
+                      business_name:
+                        review.business?.name || "Unknown Business",
+                      logo_url: null,
+                    },
+                  ]),
+                )
+              }
               showReviewerInfo
               size="md"
             />
@@ -265,15 +315,17 @@ export function ReviewList({ entityId, entityType, perPage = REVIEWS_PER_PAGE, c
                 comment: review.comment,
                 created_at: review.created_at,
               }))}
-              reviewers={new Map(
-                paginatedReviews.map((review) => [
-                  review.id,
-                  {
-                    full_name: review.worker?.full_name || "Unknown Worker",
-                    avatar_url: review.worker?.avatar_url || null,
-                  },
-                ])
-              )}
+              reviewers={
+                new Map(
+                  paginatedReviews.map((review) => [
+                    review.id,
+                    {
+                      full_name: review.worker?.full_name || "Unknown Worker",
+                      avatar_url: review.worker?.avatar_url || null,
+                    },
+                  ]),
+                )
+              }
               showReviewerInfo
               size="md"
             />
@@ -292,39 +344,45 @@ export function ReviewList({ entityId, entityType, perPage = REVIEWS_PER_PAGE, c
               </Button>
 
               <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                  // Show first, last, current, and adjacent pages
-                  const showPage =
-                    page === 1 ||
-                    page === totalPages ||
-                    (page >= currentPage - 1 && page <= currentPage + 1)
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => {
+                    // Show first, last, current, and adjacent pages
+                    const showPage =
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1);
 
-                  if (!showPage) {
-                    if (
-                      (page === 2 && currentPage > 4) ||
-                      (page === totalPages - 1 && currentPage < totalPages - 3)
-                    ) {
-                      return (
-                        <span key={page} className="px-2 text-muted-foreground">
-                          ...
-                        </span>
-                      )
+                    if (!showPage) {
+                      if (
+                        (page === 2 && currentPage > 4) ||
+                        (page === totalPages - 1 &&
+                          currentPage < totalPages - 3)
+                      ) {
+                        return (
+                          <span
+                            key={page}
+                            className="px-2 text-muted-foreground"
+                          >
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
                     }
-                    return null
-                  }
 
-                  return (
-                    <Button
-                      key={page}
-                      variant={currentPage === page ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handlePageChange(page)}
-                      className="min-w-[2.5rem]"
-                    >
-                      {page}
-                    </Button>
-                  )
-                })}
+                    return (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(page)}
+                        className="min-w-[2.5rem]"
+                      >
+                        {page}
+                      </Button>
+                    );
+                  },
+                )}
               </div>
 
               <Button
@@ -347,5 +405,5 @@ export function ReviewList({ entityId, entityType, perPage = REVIEWS_PER_PAGE, c
         </Card>
       )}
     </div>
-  )
+  );
 }

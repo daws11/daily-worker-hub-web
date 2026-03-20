@@ -1,19 +1,19 @@
-import * as React from "react"
+import * as React from "react";
 
 export interface BookingConfirmedProps {
-  recipientName: string
-  recipientType: "worker" | "business"
-  jobTitle: string
-  workerName: string
-  businessName: string
-  startDate: string
-  endDate?: string
-  location: string
-  dailyWage: number
-  totalDays?: number
-  bookingId: string
-  specialInstructions?: string
-  dashboardUrl: string
+  recipientName: string;
+  recipientType: "worker" | "business";
+  jobTitle: string;
+  workerName: string;
+  businessName: string;
+  startDate: string;
+  endDate?: string;
+  location: string;
+  dailyWage: number;
+  totalDays?: number;
+  bookingId: string;
+  specialInstructions?: string;
+  dashboardUrl: string;
 }
 
 export function BookingConfirmedEmail({
@@ -31,24 +31,24 @@ export function BookingConfirmedEmail({
   specialInstructions,
   dashboardUrl,
 }: BookingConfirmedProps) {
-  const isWorker = recipientType === "worker"
+  const isWorker = recipientType === "worker";
   const formattedWage = new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
     minimumFractionDigits: 0,
-  }).format(dailyWage)
+  }).format(dailyWage);
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
         <h1 style={styles.logo}>Daily Worker Hub</h1>
       </div>
-      
+
       <div style={styles.content}>
         <h2 style={styles.title}>🎉 Booking Dikonfirmasi!</h2>
-        
+
         <p style={styles.greeting}>Halo {recipientName},</p>
-        
+
         <p style={styles.text}>
           {isWorker
             ? `Selamat! Booking Anda dengan ${businessName} telah dikonfirmasi.`
@@ -57,12 +57,12 @@ export function BookingConfirmedEmail({
 
         <div style={styles.bookingCard}>
           <h3 style={styles.cardTitle}>Detail Booking</h3>
-          
+
           <div style={styles.detailRow}>
             <span style={styles.detailLabel}>Posisi:</span>
             <span style={styles.detailValue}>{jobTitle}</span>
           </div>
-          
+
           <div style={styles.detailRow}>
             <span style={styles.detailLabel}>
               {isWorker ? "Mitra:" : "Pekerja:"}
@@ -71,33 +71,33 @@ export function BookingConfirmedEmail({
               {isWorker ? businessName : workerName}
             </span>
           </div>
-          
+
           <div style={styles.detailRow}>
             <span style={styles.detailLabel}>Tanggal Mulai:</span>
             <span style={styles.detailValue}>{startDate}</span>
           </div>
-          
+
           {endDate && (
             <div style={styles.detailRow}>
               <span style={styles.detailLabel}>Tanggal Selesai:</span>
               <span style={styles.detailValue}>{endDate}</span>
             </div>
           )}
-          
+
           {totalDays && (
             <div style={styles.detailRow}>
               <span style={styles.detailLabel}>Total Hari:</span>
               <span style={styles.detailValue}>{totalDays} hari</span>
             </div>
           )}
-          
+
           <div style={styles.detailRow}>
             <span style={styles.detailLabel}>Lokasi:</span>
             <span style={styles.detailValue}>{location}</span>
           </div>
-          
+
           <div style={styles.divider} />
-          
+
           <div style={styles.wageRow}>
             <span style={styles.wageLabel}>Upah per Hari:</span>
             <span style={styles.wageValue}>{formattedWage}</span>
@@ -122,14 +122,17 @@ export function BookingConfirmedEmail({
         </div>
 
         <div style={styles.buttonContainer}>
-          <a href={`${dashboardUrl}/bookings/${bookingId}`} style={styles.button}>
+          <a
+            href={`${dashboardUrl}/bookings/${bookingId}`}
+            style={styles.button}
+          >
             Lihat Detail Booking
           </a>
         </div>
 
         <p style={styles.note}>
-          Simpan informasi booking ini dengan baik. Jika ada pertanyaan atau perubahan,
-          silakan hubungi pihak terkait melalui aplikasi.
+          Simpan informasi booking ini dengan baik. Jika ada pertanyaan atau
+          perubahan, silakan hubungi pihak terkait melalui aplikasi.
         </p>
       </div>
 
@@ -142,7 +145,7 @@ export function BookingConfirmedEmail({
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 const styles: Record<string, React.CSSProperties> = {
@@ -299,6 +302,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#9ca3af",
     margin: "4px 0",
   },
-}
+};
 
-export default BookingConfirmedEmail
+export default BookingConfirmedEmail;

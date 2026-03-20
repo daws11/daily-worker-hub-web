@@ -1,8 +1,8 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { AlertCircle, CheckCircle2, XCircle } from "lucide-react"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 const complianceBadgeVariants = cva(
   "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -20,13 +20,14 @@ const complianceBadgeVariants = cva(
     defaultVariants: {
       status: "non_compliant",
     },
-  }
-)
+  },
+);
 
 export interface ComplianceBadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof complianceBadgeVariants> {
-  status: "compliant" | "partial" | "non_compliant"
+  status: "compliant" | "partial" | "non_compliant";
 }
 
 function ComplianceBadge({
@@ -38,15 +39,15 @@ function ComplianceBadge({
     compliant: CheckCircle2,
     partial: AlertCircle,
     non_compliant: XCircle,
-  }
+  };
 
   const labelMap = {
     compliant: "Sesuai PP 35/2021",
     partial: "Sebagian Sesuai PP 35/2021",
     non_compliant: "Tidak Sesuai PP 35/2021",
-  }
+  };
 
-  const Icon = iconMap[status]
+  const Icon = iconMap[status];
 
   return (
     <div
@@ -56,7 +57,7 @@ function ComplianceBadge({
       <Icon className="h-3.5 w-3.5" />
       <span>{labelMap[status]}</span>
     </div>
-  )
+  );
 }
 
-export { ComplianceBadge, complianceBadgeVariants }
+export { ComplianceBadge, complianceBadgeVariants };

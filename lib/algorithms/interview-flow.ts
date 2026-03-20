@@ -7,25 +7,25 @@
  * - Classic: In-app chat + voice call (10-15 min total)
  */
 
-import { WorkerTier } from '@/lib/supabase/types';
+import { WorkerTier } from "@/lib/supabase/types";
 
 /**
  * Interview status tracking
  */
 export type InterviewStatus =
-  | 'pending'      // Interview not started yet
-  | 'in_progress'  // Interview currently ongoing
-  | 'completed'    // Interview completed successfully
-  | 'skipped'      // Interview skipped (Elite/Champion)
-  | 'failed'       // Interview failed/declined
+  | "pending" // Interview not started yet
+  | "in_progress" // Interview currently ongoing
+  | "completed" // Interview completed successfully
+  | "skipped" // Interview skipped (Elite/Champion)
+  | "failed"; // Interview failed/declined
 
 /**
  * Interview type based on worker tier
  */
 export type InterviewType =
-  | 'none'          // No interview needed (Elite/Champion)
-  | 'chat'          // Chat only (Pro)
-  | 'chat_and_voice'; // Chat + voice (Classic)
+  | "none" // No interview needed (Elite/Champion)
+  | "chat" // Chat only (Pro)
+  | "chat_and_voice"; // Chat + voice (Classic)
 
 /**
  * Interview configuration for each tier
@@ -35,8 +35,8 @@ export interface InterviewConfig {
   required: boolean;
   chatRequired: boolean;
   voiceRequired: boolean;
-  minChatDuration: number;  // Minimum chat duration in seconds
-  maxChatDuration: number;  // Maximum chat duration in seconds
+  minChatDuration: number; // Minimum chat duration in seconds
+  maxChatDuration: number; // Maximum chat duration in seconds
   minVoiceDuration: number; // Minimum voice duration in seconds
   maxVoiceDuration: number; // Maximum voice duration in seconds
   estimatedTimeToHire: number; // Estimated time to hire in minutes
@@ -60,12 +60,12 @@ export interface InterviewSession {
   chatCompletedAt: string | null;
   voiceStartedAt: string | null;
   voiceCompletedAt: string | null;
-  chatDuration: number | null;  // in seconds
+  chatDuration: number | null; // in seconds
   voiceDuration: number | null; // in seconds
-  totalDuration: number | null;  // in seconds
+  totalDuration: number | null; // in seconds
   messagesSent: number;
   voiceCallInitiated: boolean;
-  timeToHire: number | null;    // From job posting to booking acceptance, in minutes
+  timeToHire: number | null; // From job posting to booking acceptance, in minutes
   createdAt: string;
 }
 
@@ -77,10 +77,10 @@ export interface InterviewSession {
  */
 export function getInterviewConfig(tier: WorkerTier): InterviewConfig {
   switch (tier) {
-    case 'champion':
-    case 'elite':
+    case "champion":
+    case "elite":
       return {
-        type: 'none',
+        type: "none",
         required: false,
         chatRequired: false,
         voiceRequired: false,
@@ -89,35 +89,35 @@ export function getInterviewConfig(tier: WorkerTier): InterviewConfig {
         minVoiceDuration: 0,
         maxVoiceDuration: 0,
         estimatedTimeToHire: 5,
-        description: 'Instant dispatch - no interview needed',
+        description: "Instant dispatch - no interview needed",
       };
 
-    case 'pro':
+    case "pro":
       return {
-        type: 'chat',
+        type: "chat",
         required: true,
         chatRequired: true,
         voiceRequired: false,
-        minChatDuration: 300,    // 5 minutes minimum
-        maxChatDuration: 600,    // 10 minutes maximum
+        minChatDuration: 300, // 5 minutes minimum
+        maxChatDuration: 600, // 10 minutes maximum
         minVoiceDuration: 0,
-        maxVoiceDuration: 300,   // 5 minutes optional
+        maxVoiceDuration: 300, // 5 minutes optional
         estimatedTimeToHire: 20, // Chat + optional voice
-        description: 'In-app chat interview (5-10 min), voice call optional',
+        description: "In-app chat interview (5-10 min), voice call optional",
       };
 
-    case 'classic':
+    case "classic":
       return {
-        type: 'chat_and_voice',
+        type: "chat_and_voice",
         required: true,
         chatRequired: true,
         voiceRequired: true,
-        minChatDuration: 300,    // 5 minutes minimum
-        maxChatDuration: 600,    // 10 minutes maximum
-        minVoiceDuration: 180,   // 3 minutes minimum
-        maxVoiceDuration: 300,   // 5 minutes maximum
+        minChatDuration: 300, // 5 minutes minimum
+        maxChatDuration: 600, // 10 minutes maximum
+        minVoiceDuration: 180, // 3 minutes minimum
+        maxVoiceDuration: 300, // 5 minutes maximum
         estimatedTimeToHire: 25, // Chat + voice
-        description: 'In-app chat + voice call (10-15 min total)',
+        description: "In-app chat + voice call (10-15 min total)",
       };
   }
 }
@@ -176,21 +176,21 @@ export function getNextInterviewStep(session: InterviewSession): string | null {
     return null; // No interview needed
   }
 
-  if (session.status === 'pending') {
+  if (session.status === "pending") {
     if (config.chatRequired) {
-      return 'Start chat interview';
+      return "Start chat interview";
     }
     if (config.voiceRequired) {
-      return 'Start voice call';
+      return "Start voice call";
     }
   }
 
-  if (session.status === 'in_progress') {
+  if (session.status === "in_progress") {
     if (config.chatRequired && !session.chatCompletedAt) {
-      return 'Continue chat interview';
+      return "Continue chat interview";
     }
     if (config.voiceRequired && !session.voiceCompletedAt) {
-      return 'Start voice call';
+      return "Start voice call";
     }
   }
 
@@ -208,11 +208,11 @@ export function isInterviewComplete(session: InterviewSession): boolean {
 
   // No interview needed
   if (!config.required) {
-    return session.status === 'skipped' || session.status === 'completed';
+    return session.status === "skipped" || session.status === "completed";
   }
 
   // Interview completed
-  if (session.status === 'completed') {
+  if (session.status === "completed") {
     return true;
   }
 
@@ -291,7 +291,9 @@ export function getVoiceDurationMinutes(session: InterviewSession): number {
  * @param session - Interview session
  * @returns True if chat meets minimum duration
  */
-export function meetsChatDurationRequirement(session: InterviewSession): boolean {
+export function meetsChatDurationRequirement(
+  session: InterviewSession,
+): boolean {
   const config = getInterviewConfig(session.workerTier);
 
   if (!config.chatRequired) {
@@ -315,7 +317,9 @@ export function meetsChatDurationRequirement(session: InterviewSession): boolean
  * @param session - Interview session
  * @returns True if voice call meets minimum duration
  */
-export function meetsVoiceDurationRequirement(session: InterviewSession): boolean {
+export function meetsVoiceDurationRequirement(
+  session: InterviewSession,
+): boolean {
   const config = getInterviewConfig(session.workerTier);
 
   if (!config.voiceRequired) {
@@ -344,7 +348,7 @@ export function isInterviewValid(session: InterviewSession): boolean {
 
   // No interview needed
   if (!config.required) {
-    return session.status === 'skipped' || session.status === 'completed';
+    return session.status === "skipped" || session.status === "completed";
   }
 
   // Check chat requirement
@@ -357,7 +361,7 @@ export function isInterviewValid(session: InterviewSession): boolean {
     return false;
   }
 
-  return session.status === 'completed';
+  return session.status === "completed";
 }
 
 /**
@@ -406,11 +410,11 @@ export function getInterviewProgress(session: InterviewSession): number {
  */
 export function getInterviewStatusLabel(status: InterviewStatus): string {
   const labels: Record<InterviewStatus, string> = {
-    pending: 'Menunggu',
-    in_progress: 'Sedang Berlangsung',
-    completed: 'Selesai',
-    skipped: 'Dilewati',
-    failed: 'Gagal',
+    pending: "Menunggu",
+    in_progress: "Sedang Berlangsung",
+    completed: "Selesai",
+    skipped: "Dilewati",
+    failed: "Gagal",
   };
   return labels[status];
 }
@@ -423,9 +427,9 @@ export function getInterviewStatusLabel(status: InterviewStatus): string {
  */
 export function getInterviewTypeLabel(type: InterviewType): string {
   const labels: Record<InterviewType, string> = {
-    none: 'Tidak Perlu',
-    chat: 'Chat',
-    chat_and_voice: 'Chat & Panggilan',
+    none: "Tidak Perlu",
+    chat: "Chat",
+    chat_and_voice: "Chat & Panggilan",
   };
   return labels[type];
 }
@@ -443,8 +447,8 @@ export function createInterviewSession(
   bookingId: string,
   businessId: string,
   workerId: string,
-  workerTier: WorkerTier
-): Omit<InterviewSession, 'id' | 'createdAt'> {
+  workerTier: WorkerTier,
+): Omit<InterviewSession, "id" | "createdAt"> {
   const config = getInterviewConfig(workerTier);
 
   // No interview needed - skip immediately
@@ -454,8 +458,8 @@ export function createInterviewSession(
       businessId,
       workerId,
       workerTier,
-      status: 'skipped',
-      type: 'none',
+      status: "skipped",
+      type: "none",
       startedAt: new Date().toISOString(),
       completedAt: new Date().toISOString(),
       chatStartedAt: null,
@@ -477,7 +481,7 @@ export function createInterviewSession(
     businessId,
     workerId,
     workerTier,
-    status: 'pending',
+    status: "pending",
     type: config.type,
     startedAt: null,
     completedAt: null,
@@ -503,7 +507,7 @@ export function createInterviewSession(
  */
 export function calculateTimeToHire(
   jobPostedAt: string,
-  bookingAcceptedAt: string
+  bookingAcceptedAt: string,
 ): number {
   const posted = new Date(jobPostedAt).getTime();
   const accepted = new Date(bookingAcceptedAt).getTime();
@@ -543,7 +547,7 @@ export function formatDurationMinutes(minutes: number): string {
   const rounded = Math.round(minutes * 10) / 10;
 
   if (rounded < 1) {
-    return '<1 menit';
+    return "<1 menit";
   }
 
   if (Number.isInteger(rounded)) {

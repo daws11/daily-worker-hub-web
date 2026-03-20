@@ -1,61 +1,68 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { 
-  MapPin, 
-  Calendar, 
-  Clock, 
-  Star, 
+import * as React from "react";
+import {
+  MapPin,
+  Calendar,
+  Clock,
+  Star,
   BadgeCheck,
   MessageCircle,
-  ChevronLeft
-} from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { TierBadge } from "@/components/worker/tier-badge"
-import { WorkerStatsCard, MiniStats, type WorkerStats } from "@/components/workers/worker-stats-card"
-import { WorkerBadgesDisplay, WorkerBadgesEmpty } from "@/components/workers/worker-badges-display"
-import type { BadgeWithProgress } from "@/lib/badges"
-import type { WorkerTier } from "@/lib/supabase/types"
+  ChevronLeft,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { TierBadge } from "@/components/worker/tier-badge";
+import {
+  WorkerStatsCard,
+  MiniStats,
+  type WorkerStats,
+} from "@/components/workers/worker-stats-card";
+import {
+  WorkerBadgesDisplay,
+  WorkerBadgesEmpty,
+} from "@/components/workers/worker-badges-display";
+import type { BadgeWithProgress } from "@/lib/badges";
+import type { WorkerTier } from "@/lib/supabase/types";
 
 // Public worker profile type matching API response
 export interface PublicWorkerProfile {
-  id: string
-  fullName: string
-  avatarUrl: string | null
-  bio: string | null
-  tier: WorkerTier
+  id: string;
+  fullName: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  tier: WorkerTier;
   skills: Array<{
-    id: string
-    name: string
-    slug: string
-  }>
-  stats: WorkerStats
+    id: string;
+    name: string;
+    slug: string;
+  }>;
+  stats: WorkerStats;
   badges: Array<{
-    id: string
-    name: string
-    slug: string
-    icon: string
-    description: string
-    category: string
-    earnedAt?: string
-  }>
-  achievements: BadgeWithProgress[]
-  isAvailable: boolean
-  isVerified: boolean
-  joinedAt: string
+    id: string;
+    name: string;
+    slug: string;
+    icon: string;
+    description: string;
+    category: string;
+    earnedAt?: string;
+  }>;
+  achievements: BadgeWithProgress[];
+  isAvailable: boolean;
+  isVerified: boolean;
+  joinedAt: string;
 }
 
 export interface PublicWorkerProfileProps {
-  worker: PublicWorkerProfile
-  isAuthenticated?: boolean
-  onBookNow?: () => void
-  onBack?: () => void
-  className?: string
+  worker: PublicWorkerProfile;
+  isAuthenticated?: boolean;
+  onBookNow?: () => void;
+  onBack?: () => void;
+  className?: string;
 }
 
 export function PublicWorkerProfile({
@@ -63,19 +70,19 @@ export function PublicWorkerProfile({
   isAuthenticated = false,
   onBookNow,
   onBack,
-  className
+  className,
 }: PublicWorkerProfileProps) {
-  const initials = getInitials(worker.fullName)
+  const initials = getInitials(worker.fullName);
 
   const handleBookNow = () => {
     if (isAuthenticated) {
-      onBookNow?.()
+      onBookNow?.();
     } else {
       // Redirect to login with return URL
-      const currentPath = window.location.pathname
-      window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`
+      const currentPath = window.location.pathname;
+      window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
     }
-  }
+  };
 
   return (
     <div className={cn("max-w-4xl mx-auto", className)}>
@@ -100,21 +107,21 @@ export function PublicWorkerProfile({
               <div className="flex-shrink-0">
                 <div className="relative">
                   <Avatar className="h-24 w-24 sm:h-28 sm:w-28 border-4 border-background shadow-lg">
-                    <AvatarImage 
-                      src={worker.avatarUrl || undefined} 
-                      alt={worker.fullName} 
+                    <AvatarImage
+                      src={worker.avatarUrl || undefined}
+                      alt={worker.fullName}
                     />
                     <AvatarFallback className="text-2xl font-bold bg-primary/10">
                       {initials}
                     </AvatarFallback>
                   </Avatar>
                   {/* Availability indicator */}
-                  <div className={cn(
-                    "absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-background flex items-center justify-center",
-                    worker.isAvailable 
-                      ? "bg-green-500" 
-                      : "bg-gray-400"
-                  )}>
+                  <div
+                    className={cn(
+                      "absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-background flex items-center justify-center",
+                      worker.isAvailable ? "bg-green-500" : "bg-gray-400",
+                    )}
+                  >
                     <Clock className="h-3 w-3 text-white" />
                   </div>
                   {/* Verified badge */}
@@ -134,13 +141,16 @@ export function PublicWorkerProfile({
                       {worker.fullName}
                     </h1>
                     {worker.isVerified && (
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                      <Badge
+                        variant="secondary"
+                        className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                      >
                         <BadgeCheck className="h-3 w-3 mr-1" />
                         Verified
                       </Badge>
                     )}
                   </div>
-                  
+
                   <div className="flex flex-wrap items-center gap-3 text-muted-foreground text-sm">
                     <TierBadge tier={worker.tier} size="sm" variant="minimal" />
                     <div className="flex items-center gap-1">
@@ -154,8 +164,8 @@ export function PublicWorkerProfile({
                 {worker.skills.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {worker.skills.map((skill) => (
-                      <Badge 
-                        key={skill.id} 
+                      <Badge
+                        key={skill.id}
                         variant="outline"
                         className="bg-background/50"
                       >
@@ -167,17 +177,23 @@ export function PublicWorkerProfile({
 
                 {/* Availability status */}
                 <div className="flex items-center gap-2">
-                  <span className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium",
-                    worker.isAvailable
-                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                      : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                  )}>
-                    <span className={cn(
-                      "w-2 h-2 rounded-full",
-                      worker.isAvailable ? "bg-green-500" : "bg-gray-400"
-                    )} />
-                    {worker.isAvailable ? 'Available Now' : 'Currently Unavailable'}
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium",
+                      worker.isAvailable
+                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                        : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "w-2 h-2 rounded-full",
+                        worker.isAvailable ? "bg-green-500" : "bg-gray-400",
+                      )}
+                    />
+                    {worker.isAvailable
+                      ? "Available Now"
+                      : "Currently Unavailable"}
                   </span>
                 </div>
 
@@ -201,7 +217,7 @@ export function PublicWorkerProfile({
                         "h-4 w-4",
                         i < Math.round(worker.stats.avgRating!)
                           ? "text-yellow-500 fill-yellow-500"
-                          : "text-gray-300"
+                          : "text-gray-300",
                       )}
                     />
                   ))}
@@ -211,8 +227,8 @@ export function PublicWorkerProfile({
                 </div>
               )}
             </div>
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               onClick={handleBookNow}
               className="w-full sm:w-auto"
             >
@@ -254,7 +270,9 @@ export function PublicWorkerProfile({
               />
             ) : (
               <>
-                <h2 className="text-lg font-semibold mb-4">Badges & Achievements</h2>
+                <h2 className="text-lg font-semibold mb-4">
+                  Badges & Achievements
+                </h2>
                 <WorkerBadgesEmpty />
               </>
             )}
@@ -262,32 +280,42 @@ export function PublicWorkerProfile({
         </div>
       </Card>
     </div>
-  )
+  );
 }
 
 // Compact variant for use in lists or cards
 export interface PublicWorkerProfileCompactProps {
-  worker: PublicWorkerProfile
-  onBookNow?: () => void
-  className?: string
+  worker: PublicWorkerProfile;
+  onBookNow?: () => void;
+  className?: string;
 }
 
 export function PublicWorkerProfileCompact({
   worker,
   onBookNow,
-  className
+  className,
 }: PublicWorkerProfileCompactProps) {
-  const initials = getInitials(worker.fullName)
+  const initials = getInitials(worker.fullName);
 
   return (
-    <Card className={cn("overflow-hidden hover:shadow-md transition-shadow", className)}>
+    <Card
+      className={cn(
+        "overflow-hidden hover:shadow-md transition-shadow",
+        className,
+      )}
+    >
       <CardContent className="p-4">
         <div className="flex items-start gap-4">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
             <Avatar className="h-14 w-14">
-              <AvatarImage src={worker.avatarUrl || undefined} alt={worker.fullName} />
-              <AvatarFallback className="bg-primary/10">{initials}</AvatarFallback>
+              <AvatarImage
+                src={worker.avatarUrl || undefined}
+                alt={worker.fullName}
+              />
+              <AvatarFallback className="bg-primary/10">
+                {initials}
+              </AvatarFallback>
             </Avatar>
             {worker.isAvailable && (
               <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-green-500 border-2 border-background" />
@@ -302,7 +330,7 @@ export function PublicWorkerProfileCompact({
                 <BadgeCheck className="h-4 w-4 text-blue-500 flex-shrink-0" />
               )}
             </div>
-            
+
             <div className="flex items-center gap-2 mb-2">
               <TierBadge tier={worker.tier} size="sm" variant="minimal" />
             </div>
@@ -327,7 +355,7 @@ export function PublicWorkerProfileCompact({
             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
               <div className="flex items-center gap-1">
                 <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
-                <span>{worker.stats.avgRating?.toFixed(1) || 'N/A'}</span>
+                <span>{worker.stats.avgRating?.toFixed(1) || "N/A"}</span>
                 <span className="text-xs">({worker.stats.reviewsCount})</span>
               </div>
               <div className="flex items-center gap-1">
@@ -336,34 +364,30 @@ export function PublicWorkerProfileCompact({
             </div>
 
             {/* Book button */}
-            <Button 
-              size="sm" 
-              className="w-full"
-              onClick={onBookNow}
-            >
+            <Button size="sm" className="w-full" onClick={onBookNow}>
               Book Now
             </Button>
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // Helper functions
 function getInitials(name: string): string {
   return name
-    .split(' ')
-    .map(word => word[0])
-    .join('')
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
     .toUpperCase()
-    .slice(0, 2)
+    .slice(0, 2);
 }
 
 function formatJoinedDate(dateString: string): string {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long'
-  })
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+  });
 }

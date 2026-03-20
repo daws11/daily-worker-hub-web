@@ -1,42 +1,50 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { logger } from '@/lib/logger'
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { logger } from "@/lib/logger";
 
-const routeLogger = logger.createApiLogger('notifications/preferences')
+const routeLogger = logger.createApiLogger("notifications/preferences");
 
 /**
  * GET /api/notifications/preferences
  * Get notification preferences for the authenticated user
  */
 export async function GET(request: NextRequest) {
-  const { startTime, requestId } = logger.requestStart(request, { route: 'notifications/preferences' })
-  
+  const { startTime, requestId } = logger.requestStart(request, {
+    route: "notifications/preferences",
+  });
+
   try {
-    const supabase = await createClient()
-    
+    const supabase = await createClient();
+
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
-      routeLogger.warn('Unauthorized access attempt', { requestId })
+      routeLogger.warn("Unauthorized access attempt", { requestId });
       return NextResponse.json(
-        { error: 'Tidak terautentikasi' },
-        { status: 401 }
-      )
+        { error: "Tidak terautentikasi" },
+        { status: 401 },
+      );
     }
 
     const { data: preferences, error } = await (supabase as any)
-      .from('notification_preferences')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
+      .from("notification_preferences")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
 
-    if (error && error.code !== 'PGRST116') {
-      routeLogger.error('Failed to fetch notification preferences', error, { requestId, userId: user.id })
+    if (error && error.code !== "PGRST116") {
+      routeLogger.error("Failed to fetch notification preferences", error, {
+        requestId,
+        userId: user.id,
+      });
       return NextResponse.json(
-        { error: 'Gagal mengambil preferensi notifikasi' },
-        { status: 500 }
-      )
+        { error: "Gagal mengambil preferensi notifikasi" },
+        { status: 500 },
+      );
     }
 
     // Return default preferences if none exist
@@ -51,52 +59,71 @@ export async function GET(request: NextRequest) {
         review_notifications: true,
         marketing_notifications: false,
         quiet_hours_enabled: false,
-        quiet_hours_start: '22:00',
-        quiet_hours_end: '07:00',
-      }
+        quiet_hours_start: "22:00",
+        quiet_hours_end: "07:00",
+      };
 
       // Create default preferences
       const { data: newPrefs, error: createError } = await (supabase as any)
-        .from('notification_preferences')
+        .from("notification_preferences")
         .insert(defaultPreferences)
         .select()
-        .single()
+        .single();
 
       if (createError) {
-        routeLogger.warn('Failed to create default preferences', { requestId, userId: user.id })
+        routeLogger.warn("Failed to create default preferences", {
+          requestId,
+          userId: user.id,
+        });
       }
 
-      routeLogger.info('Default notification preferences created', { requestId, userId: user.id })
-      logger.requestSuccess(request, { status: 200 }, startTime, { requestId, userId: user.id })
+      routeLogger.info("Default notification preferences created", {
+        requestId,
+        userId: user.id,
+      });
+      logger.requestSuccess(request, { status: 200 }, startTime, {
+        requestId,
+        userId: user.id,
+      });
 
-      return NextResponse.json({ 
+      return NextResponse.json({
         success: true,
-        data: newPrefs || defaultPreferences 
-      })
+        data: newPrefs || defaultPreferences,
+      });
     }
 
-    routeLogger.info('Notification preferences fetched', { requestId, userId: user.id })
-    logger.requestSuccess(request, { status: 200 }, startTime, { requestId, userId: user.id })
+    routeLogger.info("Notification preferences fetched", {
+      requestId,
+      userId: user.id,
+    });
+    logger.requestSuccess(request, { status: 200 }, startTime, {
+      requestId,
+      userId: user.id,
+    });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      data: preferences 
-    })
+      data: preferences,
+    });
   } catch (error) {
-    routeLogger.error('Unexpected error in GET /api/notifications/preferences', error, { requestId })
-    logger.requestError(request, error, 500, startTime, { requestId })
-    
+    routeLogger.error(
+      "Unexpected error in GET /api/notifications/preferences",
+      error,
+      { requestId },
+    );
+    logger.requestError(request, error, 500, startTime, { requestId });
+
     return NextResponse.json(
-      { error: 'Terjadi kesalahan server', details: (error as Error).message },
-      { status: 500 }
-    )
+      { error: "Terjadi kesalahan server", details: (error as Error).message },
+      { status: 500 },
+    );
   }
 }
 
 /**
  * PUT /api/notifications/preferences
  * Update notification preferences for the authenticated user
- * 
+ *
  * Request body:
  * - push_enabled: boolean
  * - booking_notifications: boolean
@@ -110,124 +137,148 @@ export async function GET(request: NextRequest) {
  * - quiet_hours_end: string (HH:mm format)
  */
 export async function PUT(request: NextRequest) {
-  const { startTime, requestId } = logger.requestStart(request, { route: 'notifications/preferences' })
-  
+  const { startTime, requestId } = logger.requestStart(request, {
+    route: "notifications/preferences",
+  });
+
   try {
-    const supabase = await createClient()
-    
+    const supabase = await createClient();
+
     // Get authenticated user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
-      routeLogger.warn('Unauthorized access attempt', { requestId })
+      routeLogger.warn("Unauthorized access attempt", { requestId });
       return NextResponse.json(
-        { error: 'Tidak terautentikasi' },
-        { status: 401 }
-      )
+        { error: "Tidak terautentikasi" },
+        { status: 401 },
+      );
     }
 
-    const body = await request.json()
+    const body = await request.json();
 
     // Validate quiet hours format if provided
-    if (body.quiet_hours_start && !/^\d{2}:\d{2}$/.test(body.quiet_hours_start)) {
+    if (
+      body.quiet_hours_start &&
+      !/^\d{2}:\d{2}$/.test(body.quiet_hours_start)
+    ) {
       return NextResponse.json(
-        { error: 'Format quiet_hours_start tidak valid. Gunakan HH:mm' },
-        { status: 400 }
-      )
+        { error: "Format quiet_hours_start tidak valid. Gunakan HH:mm" },
+        { status: 400 },
+      );
     }
 
     if (body.quiet_hours_end && !/^\d{2}:\d{2}$/.test(body.quiet_hours_end)) {
       return NextResponse.json(
-        { error: 'Format quiet_hours_end tidak valid. Gunakan HH:mm' },
-        { status: 400 }
-      )
+        { error: "Format quiet_hours_end tidak valid. Gunakan HH:mm" },
+        { status: 400 },
+      );
     }
 
     // Prepare update data (only allow valid fields)
     const updateData: Record<string, any> = {
       updated_at: new Date().toISOString(),
-    }
+    };
 
     const allowedFields = [
-      'push_enabled',
-      'booking_notifications',
-      'payment_notifications',
-      'message_notifications',
-      'reminder_notifications',
-      'review_notifications',
-      'marketing_notifications',
-      'quiet_hours_enabled',
-      'quiet_hours_start',
-      'quiet_hours_end',
-    ]
+      "push_enabled",
+      "booking_notifications",
+      "payment_notifications",
+      "message_notifications",
+      "reminder_notifications",
+      "review_notifications",
+      "marketing_notifications",
+      "quiet_hours_enabled",
+      "quiet_hours_start",
+      "quiet_hours_end",
+    ];
 
     allowedFields.forEach((field) => {
       if (body[field] !== undefined) {
-        updateData[field] = body[field]
+        updateData[field] = body[field];
       }
-    })
+    });
 
     // Check if preferences exist
     const { data: existing } = await (supabase as any)
-      .from('notification_preferences')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
+      .from("notification_preferences")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
 
-    let result
+    let result;
 
     if (existing) {
       // Update existing preferences
       const { data, error } = await (supabase as any)
-        .from('notification_preferences')
+        .from("notification_preferences")
         .update(updateData)
-        .eq('user_id', user.id)
+        .eq("user_id", user.id)
         .select()
-        .single()
+        .single();
 
       if (error) {
-        routeLogger.error('Failed to update notification preferences', error, { requestId, userId: user.id })
+        routeLogger.error("Failed to update notification preferences", error, {
+          requestId,
+          userId: user.id,
+        });
         return NextResponse.json(
-          { error: 'Gagal memperbarui preferensi notifikasi' },
-          { status: 500 }
-        )
+          { error: "Gagal memperbarui preferensi notifikasi" },
+          { status: 500 },
+        );
       }
 
-      result = data
+      result = data;
     } else {
       // Create new preferences
       const { data, error } = await (supabase as any)
-        .from('notification_preferences')
+        .from("notification_preferences")
         .insert({ user_id: user.id, ...updateData })
         .select()
-        .single()
+        .single();
 
       if (error) {
-        routeLogger.error('Failed to create notification preferences', error, { requestId, userId: user.id })
+        routeLogger.error("Failed to create notification preferences", error, {
+          requestId,
+          userId: user.id,
+        });
         return NextResponse.json(
-          { error: 'Gagal membuat preferensi notifikasi' },
-          { status: 500 }
-        )
+          { error: "Gagal membuat preferensi notifikasi" },
+          { status: 500 },
+        );
       }
 
-      result = data
+      result = data;
     }
 
-    routeLogger.info('Notification preferences updated', { requestId, userId: user.id })
-    logger.requestSuccess(request, { status: 200 }, startTime, { requestId, userId: user.id })
+    routeLogger.info("Notification preferences updated", {
+      requestId,
+      userId: user.id,
+    });
+    logger.requestSuccess(request, { status: 200 }, startTime, {
+      requestId,
+      userId: user.id,
+    });
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Preferensi notifikasi berhasil diperbarui',
-      data: result 
-    })
+    return NextResponse.json({
+      success: true,
+      message: "Preferensi notifikasi berhasil diperbarui",
+      data: result,
+    });
   } catch (error) {
-    routeLogger.error('Unexpected error in PUT /api/notifications/preferences', error, { requestId })
-    logger.requestError(request, error, 500, startTime, { requestId })
-    
+    routeLogger.error(
+      "Unexpected error in PUT /api/notifications/preferences",
+      error,
+      { requestId },
+    );
+    logger.requestError(request, error, 500, startTime, { requestId });
+
     return NextResponse.json(
-      { error: 'Terjadi kesalahan server', details: (error as Error).message },
-      { status: 500 }
-    )
+      { error: "Terjadi kesalahan server", details: (error as Error).message },
+      { status: 500 },
+    );
   }
 }

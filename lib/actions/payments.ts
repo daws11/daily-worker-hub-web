@@ -1,18 +1,18 @@
 // @ts-nocheck
-"use server"
+"use server";
 
-import { createClient } from "../supabase/server"
-import type { Database } from "../supabase/types"
-import { 
-  createInvoice, 
-  calculateFee,
-  type PaymentProvider 
-} from "../payments"
-import { validateTopUpAmount, calculatePaymentFeeDetails } from "../utils/payment-validator"
-import { PAYMENT_CONSTANTS } from "../types/payment"
+import { createClient } from "../supabase/server";
+import type { Database } from "../supabase/types";
+import { createInvoice, calculateFee, type PaymentProvider } from "../payments";
+import {
+  validateTopUpAmount,
+  calculatePaymentFeeDetails,
+} from "../utils/payment-validator";
+import { PAYMENT_CONSTANTS } from "../types/payment";
 
-type PaymentTransaction = Database["public"]["Tables"]["payment_transactions"]["Row"]
-type Wallet = Database["public"]["Tables"]["wallets"]["Row"]
+type PaymentTransaction =
+  Database["public"]["Tables"]["payment_transactions"]["Row"];
+type Wallet = Database["public"]["Tables"]["wallets"]["Row"];
 
 // Type for creating a new payment transaction
 type PaymentTransactionInsert = Pick<
@@ -26,55 +26,55 @@ type PaymentTransactionInsert = Pick<
   | "qris_expires_at"
   | "fee_amount"
   | "metadata"
->
+>;
 
 export type PaymentResult = {
-  success: boolean
-  error?: string
+  success: boolean;
+  error?: string;
   data?: {
-    transaction: PaymentTransaction
-    payment_url: string
-    expires_at: string
-  }
-}
+    transaction: PaymentTransaction;
+    payment_url: string;
+    expires_at: string;
+  };
+};
 
 export type WalletBalanceResult = {
-  success: boolean
-  error?: string
+  success: boolean;
+  error?: string;
   data?: {
-    balance: number
-    currency: string
-  }
-}
+    balance: number;
+    currency: string;
+  };
+};
 
 export type PaymentHistoryResult = {
-  success: boolean
-  error?: string
-  data?: PaymentTransaction[]
-  count?: number
-}
+  success: boolean;
+  error?: string;
+  data?: PaymentTransaction[];
+  count?: number;
+};
 
 export type PayoutRequestResult = {
-  success: boolean
-  error?: string
+  success: boolean;
+  error?: string;
   data?: {
     payout_request: {
-      id: string
-      worker_id: string
-      amount: number
-      fee_amount: number
-      net_amount: number
-      status: string
-      bank_account_number: string
-      bank_account_name: string
-      bank_code: string
-      requested_at: string
-      processed_at: string | null
-      completed_at: string | null
-    }
-    estimated_arrival?: string
-  }
-}
+      id: string;
+      worker_id: string;
+      amount: number;
+      fee_amount: number;
+      net_amount: number;
+      status: string;
+      bank_account_number: string;
+      bank_account_name: string;
+      bank_code: string;
+      requested_at: string;
+      processed_at: string | null;
+      completed_at: string | null;
+    };
+    estimated_arrival?: string;
+  };
+};
 
 /**
  * Initialize QRIS payment for business wallet top-up
@@ -84,37 +84,37 @@ export async function initializeQrisPayment(
   businessId: string,
   amount: number,
   metadata?: Record<string, unknown>,
-  provider: PaymentProvider = "xendit"
+  provider: PaymentProvider = "xendit",
 ): Promise<PaymentResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Validate the top-up amount
-    const validation = validateTopUpAmount(amount)
+    const validation = validateTopUpAmount(amount);
     if (!validation.valid) {
-      return { success: false, error: validation.error }
+      return { success: false, error: validation.error };
     }
 
     // Calculate payment fee using the new gateway interface
-    const feeAmount = calculateFee(amount, "qris")
-    const totalAmount = amount + feeAmount
+    const feeAmount = calculateFee(amount, "qris");
+    const totalAmount = amount + feeAmount;
 
     // Check if business exists and has a wallet
     const { data: business, error: businessError } = await supabase
       .from("businesses")
       .select("id, name")
       .eq("id", businessId)
-      .single()
+      .single();
 
     if (businessError || !business) {
-      return { success: false, error: "Business tidak ditemukan" }
+      return { success: false, error: "Business tidak ditemukan" };
     }
 
     // Create payment transaction with pending status
-    const externalId = `payment_${businessId}_${Date.now()}_${Math.random().toString(36).substring(7)}`
+    const externalId = `payment_${businessId}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     const qrisExpiresAt = new Date(
-      Date.now() + PAYMENT_CONSTANTS.QRIS_EXPIRY_MINUTES * 60000
-    ).toISOString()
+      Date.now() + PAYMENT_CONSTANTS.QRIS_EXPIRY_MINUTES * 60000,
+    ).toISOString();
 
     const newTransaction: PaymentTransactionInsert = {
       business_id: businessId,
@@ -126,23 +126,27 @@ export async function initializeQrisPayment(
       qris_expires_at: qrisExpiresAt,
       fee_amount: feeAmount,
       metadata: metadata || {},
-    }
+    };
 
     const { data: transaction, error: transactionError } = await supabase
       .from("payment_transactions")
       .insert(newTransaction)
       .select()
-      .single()
+      .single();
 
     if (transactionError || !transaction) {
-      return { success: false, error: `Gagal membuat transaksi: ${transactionError?.message}` }
+      return {
+        success: false,
+        error: `Gagal membuat transaksi: ${transactionError?.message}`,
+      };
     }
 
     // Create payment invoice with the gateway
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL 
-        ? `https://${process.env.VERCEL_URL}` 
-        : 'http://localhost:3000'
+      const baseUrl =
+        process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : "http://localhost:3000";
 
       const invoice = await createInvoice(
         {
@@ -161,8 +165,8 @@ export async function initializeQrisPayment(
             fee_amount: feeAmount,
           },
         },
-        provider
-      )
+        provider,
+      );
 
       // Update transaction with payment details
       const { error: updateError } = await supabase
@@ -178,55 +182,73 @@ export async function initializeQrisPayment(
             token: invoice.token,
           },
         })
-        .eq("id", transaction.id)
+        .eq("id", transaction.id);
 
       if (updateError) {
-        return { success: false, error: `Gagal menyimpan detail pembayaran: ${updateError.message}` }
+        return {
+          success: false,
+          error: `Gagal menyimpan detail pembayaran: ${updateError.message}`,
+        };
       }
 
       return {
         success: true,
         data: {
-          transaction: { ...transaction, payment_url: invoice.invoiceUrl, provider_payment_id: invoice.id },
+          transaction: {
+            ...transaction,
+            payment_url: invoice.invoiceUrl,
+            provider_payment_id: invoice.id,
+          },
           payment_url: invoice.invoiceUrl,
           expires_at: qrisExpiresAt,
         },
-      }
+      };
     } catch (gatewayError) {
       // If gateway fails, mark transaction as failed
       await supabase
         .from("payment_transactions")
         .update({
           status: "failed",
-          failure_reason: gatewayError instanceof Error ? gatewayError.message : "Gagal membuat payment invoice",
+          failure_reason:
+            gatewayError instanceof Error
+              ? gatewayError.message
+              : "Gagal membuat payment invoice",
         })
-        .eq("id", transaction.id)
+        .eq("id", transaction.id);
 
       return {
         success: false,
         error: `Gagal membuat payment invoice: ${gatewayError instanceof Error ? gatewayError.message : "Unknown error"}`,
-      }
+      };
     }
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat inisialisasi pembayaran QRIS" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat inisialisasi pembayaran QRIS",
+    };
   }
 }
 
 /**
  * Get wallet balance for a business
  */
-export async function getBusinessWalletBalance(businessId: string): Promise<WalletBalanceResult> {
+export async function getBusinessWalletBalance(
+  businessId: string,
+): Promise<WalletBalanceResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data: wallet, error } = await supabase
       .from("wallets")
       .select("balance, currency")
       .eq("business_id", businessId)
-      .maybeSingle()
+      .maybeSingle();
 
     if (error) {
-      return { success: false, error: `Gagal mengambil saldo wallet: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal mengambil saldo wallet: ${error.message}`,
+      };
     }
 
     // If wallet doesn't exist, create one with zero balance
@@ -241,47 +263,64 @@ export async function getBusinessWalletBalance(businessId: string): Promise<Wall
           is_active: true,
         })
         .select("balance, currency")
-        .single()
+        .single();
 
       if (createError || !newWallet) {
-        return { success: false, error: `Gagal membuat wallet: ${createError?.message}` }
+        return {
+          success: false,
+          error: `Gagal membuat wallet: ${createError?.message}`,
+        };
       }
 
-      return { success: true, data: { balance: newWallet.balance, currency: newWallet.currency } }
+      return {
+        success: true,
+        data: { balance: newWallet.balance, currency: newWallet.currency },
+      };
     }
 
-    return { success: true, data: { balance: wallet.balance, currency: wallet.currency } }
+    return {
+      success: true,
+      data: { balance: wallet.balance, currency: wallet.currency },
+    };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat mengambil saldo wallet" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat mengambil saldo wallet",
+    };
   }
 }
 
 /**
  * Get wallet balance for a worker
  */
-export async function getWorkerWalletBalance(workerId: string): Promise<WalletBalanceResult> {
+export async function getWorkerWalletBalance(
+  workerId: string,
+): Promise<WalletBalanceResult> {
   try {
-    const supabase = await createClient()
-    
+    const supabase = await createClient();
+
     // First get the worker's user_id
     const { data: worker, error: workerError } = await supabase
       .from("workers")
       .select("user_id")
       .eq("id", workerId)
-      .single()
+      .single();
 
     if (workerError || !worker) {
-      return { success: false, error: "Worker tidak ditemukan" }
+      return { success: false, error: "Worker tidak ditemukan" };
     }
 
     const { data: wallet, error } = await supabase
       .from("wallets")
       .select("balance")
       .eq("user_id", worker.user_id)
-      .maybeSingle()
+      .maybeSingle();
 
     if (error) {
-      return { success: false, error: `Gagal mengambil saldo wallet: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal mengambil saldo wallet: ${error.message}`,
+      };
     }
 
     // If wallet doesn't exist, create one with zero balance
@@ -295,18 +334,30 @@ export async function getWorkerWalletBalance(workerId: string): Promise<WalletBa
           available_balance: 0,
         })
         .select("balance")
-        .single()
+        .single();
 
       if (createError || !newWallet) {
-        return { success: false, error: `Gagal membuat wallet: ${createError?.message}` }
+        return {
+          success: false,
+          error: `Gagal membuat wallet: ${createError?.message}`,
+        };
       }
-      
-      return { success: true, data: { balance: newWallet.balance, currency: "IDR" } }
+
+      return {
+        success: true,
+        data: { balance: newWallet.balance, currency: "IDR" },
+      };
     }
 
-    return { success: true, data: { balance: wallet.balance, currency: "IDR" } }
+    return {
+      success: true,
+      data: { balance: wallet.balance, currency: "IDR" },
+    };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat mengambil saldo wallet" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat mengambil saldo wallet",
+    };
   }
 }
 
@@ -315,30 +366,36 @@ export async function getWorkerWalletBalance(workerId: string): Promise<WalletBa
  */
 export async function getBusinessPaymentHistory(
   businessId: string,
-  status?: "pending" | "success" | "failed" | "expired"
+  status?: "pending" | "success" | "failed" | "expired",
 ): Promise<PaymentHistoryResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     let query = supabase
       .from("payment_transactions")
       .select("*")
       .eq("business_id", businessId)
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: false });
 
     if (status) {
-      query = query.eq("status", status)
+      query = query.eq("status", status);
     }
 
-    const { data, error } = await query
+    const { data, error } = await query;
 
     if (error) {
-      return { success: false, error: `Gagal mengambil riwayat pembayaran: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal mengambil riwayat pembayaran: ${error.message}`,
+      };
     }
 
-    return { success: true, data: data || [], count: data?.length || 0 }
+    return { success: true, data: data || [], count: data?.length || 0 };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat mengambil riwayat pembayaran" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat mengambil riwayat pembayaran",
+    };
   }
 }
 
@@ -347,29 +404,32 @@ export async function getBusinessPaymentHistory(
  */
 export async function getPaymentTransactionDetails(
   transactionId: string,
-  businessId: string
+  businessId: string,
 ): Promise<{
-  success: boolean
-  error?: string
-  data?: PaymentTransaction
+  success: boolean;
+  error?: string;
+  data?: PaymentTransaction;
 }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from("payment_transactions")
       .select("*")
       .eq("id", transactionId)
       .eq("business_id", businessId)
-      .single()
+      .single();
 
     if (error || !data) {
-      return { success: false, error: "Transaksi tidak ditemukan" }
+      return { success: false, error: "Transaksi tidak ditemukan" };
     }
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat mengambil detail transaksi" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat mengambil detail transaksi",
+    };
   }
 }
 
@@ -380,27 +440,27 @@ export async function getPaymentTransactionDetails(
 export async function requestPayout(
   workerId: string,
   amount: number,
-  bankAccountId?: string
+  bankAccountId?: string,
 ): Promise<PayoutRequestResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Validate minimum payout amount (Rp 50,000)
-    const MIN_PAYOUT_AMOUNT = 50000
+    const MIN_PAYOUT_AMOUNT = 50000;
     if (amount < MIN_PAYOUT_AMOUNT) {
       return {
         success: false,
         error: `Minimal penarikan Rp ${MIN_PAYOUT_AMOUNT.toLocaleString("id-ID")}`,
-      }
+      };
     }
 
     // Validate maximum payout amount (Rp 10,000,000)
-    const MAX_PAYOUT_AMOUNT = 10000000
+    const MAX_PAYOUT_AMOUNT = 10000000;
     if (amount > MAX_PAYOUT_AMOUNT) {
       return {
         success: false,
         error: `Maksimal penarikan Rp ${MAX_PAYOUT_AMOUNT.toLocaleString("id-ID")}`,
-      }
+      };
     }
 
     // Get worker's wallet to check balance
@@ -408,10 +468,10 @@ export async function requestPayout(
       .from("wallets")
       .select("id, balance")
       .eq("worker_id", workerId)
-      .maybeSingle()
+      .maybeSingle();
 
     if (walletError || !wallet) {
-      return { success: false, error: "Wallet tidak ditemukan" }
+      return { success: false, error: "Wallet tidak ditemukan" };
     }
 
     // Validate that worker has sufficient balance
@@ -419,49 +479,53 @@ export async function requestPayout(
       return {
         success: false,
         error: `Saldo tidak cukup. Saldo tersedia: Rp ${wallet.balance.toLocaleString("id-ID")}`,
-      }
+      };
     }
 
     // Get worker's bank account
-    let bankAccount: any = null
+    let bankAccount: any = null;
 
     if (bankAccountId) {
-      const { data: specifiedAccount, error: accountError } = await (supabase as any)
+      const { data: specifiedAccount, error: accountError } = await (
+        supabase as any
+      )
         .from("bank_accounts")
         .select("*")
         .eq("id", bankAccountId)
         .eq("worker_id", workerId)
-        .single()
+        .single();
 
       if (accountError || !specifiedAccount) {
-        return { success: false, error: "Rekening bank tidak ditemukan" }
+        return { success: false, error: "Rekening bank tidak ditemukan" };
       }
-      bankAccount = specifiedAccount
+      bankAccount = specifiedAccount;
     } else {
-      const { data: primaryAccount, error: primaryError } = await (supabase as any)
+      const { data: primaryAccount, error: primaryError } = await (
+        supabase as any
+      )
         .from("bank_accounts")
         .select("*")
         .eq("worker_id", workerId)
         .eq("is_primary", true)
-        .maybeSingle()
+        .maybeSingle();
 
       if (primaryError) {
-        return { success: false, error: "Gagal mengambil rekening bank" }
+        return { success: false, error: "Gagal mengambil rekening bank" };
       }
 
       if (!primaryAccount) {
         return {
           success: false,
           error: "Silakan tambahkan rekening bank terlebih dahulu",
-        }
+        };
       }
-      bankAccount = primaryAccount
+      bankAccount = primaryAccount;
     }
 
     // Calculate payout fee (2%)
-    const feePercentage = 0.02
-    const feeAmount = Math.round(amount * feePercentage)
-    const netAmount = amount - feeAmount
+    const feePercentage = 0.02;
+    const feeAmount = Math.round(amount * feePercentage);
+    const netAmount = amount - feeAmount;
 
     // Create payout request
     const { data: payoutRequest, error: payoutError } = await (supabase as any)
@@ -486,20 +550,26 @@ export async function requestPayout(
         metadata: { bank_account_id: bankAccount.id },
       })
       .select()
-      .single()
+      .single();
 
     if (payoutError || !payoutRequest) {
-      return { success: false, error: `Gagal membuat permintaan penarikan: ${payoutError?.message}` }
+      return {
+        success: false,
+        error: `Gagal membuat permintaan penarikan: ${payoutError?.message}`,
+      };
     }
 
     // Debit wallet
     const { error: debitError } = await (supabase as any)
       .from("wallets")
       .update({ balance: wallet.balance - amount })
-      .eq("id", wallet.id)
+      .eq("id", wallet.id);
 
     if (debitError) {
-      return { success: false, error: `Gagal mengurangi saldo wallet: ${debitError.message}` }
+      return {
+        success: false,
+        error: `Gagal mengurangi saldo wallet: ${debitError.message}`,
+      };
     }
 
     return {
@@ -508,9 +578,12 @@ export async function requestPayout(
         payout_request: payoutRequest,
         estimated_arrival: "1-2 hari kerja",
       },
-    }
+    };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat memproses permintaan penarikan" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat memproses permintaan penarikan",
+    };
   }
 }
 
@@ -518,35 +591,43 @@ export async function requestPayout(
  * Calculate payment fee for a given amount
  * Returns fee breakdown including percentage and fixed fee
  */
-export async function calculateTopUpFee(amount: number, paymentMethod: string = "qris"): Promise<{
-  success: boolean
-  error?: string
+export async function calculateTopUpFee(
+  amount: number,
+  paymentMethod: string = "qris",
+): Promise<{
+  success: boolean;
+  error?: string;
   data?: {
-    amount: number
-    fee_amount: number
-    total_amount: number
-    fee_percentage: number
-  }
+    amount: number;
+    fee_amount: number;
+    total_amount: number;
+    fee_percentage: number;
+  };
 }> {
   try {
     // Validate amount first
-    const validation = validateTopUpAmount(amount)
+    const validation = validateTopUpAmount(amount);
     if (!validation.valid) {
-      return { success: false, error: validation.error }
+      return { success: false, error: validation.error };
     }
 
     // Calculate fee using the new gateway interface
-    const feeAmount = calculateFee(amount, paymentMethod)
-    const totalAmount = amount + feeAmount
+    const feeAmount = calculateFee(amount, paymentMethod);
+    const totalAmount = amount + feeAmount;
 
     // Determine fee percentage based on payment method
-    let feePercentage = 0.007 // Default 0.7% for QRIS
+    let feePercentage = 0.007; // Default 0.7% for QRIS
     if (paymentMethod === "credit_card" || paymentMethod === "card") {
-      feePercentage = 0.029 // 2.9%
-    } else if (paymentMethod === "gopay" || paymentMethod === "shopeepay" || paymentMethod === "dana" || paymentMethod === "ovo") {
-      feePercentage = 0.015 // 1.5%
+      feePercentage = 0.029; // 2.9%
+    } else if (
+      paymentMethod === "gopay" ||
+      paymentMethod === "shopeepay" ||
+      paymentMethod === "dana" ||
+      paymentMethod === "ovo"
+    ) {
+      feePercentage = 0.015; // 1.5%
     } else if (paymentMethod === "bank_transfer" || paymentMethod === "va") {
-      feePercentage = 0.005 // 0.5%
+      feePercentage = 0.005; // 0.5%
     }
 
     return {
@@ -557,8 +638,11 @@ export async function calculateTopUpFee(amount: number, paymentMethod: string = 
         total_amount: totalAmount,
         fee_percentage: feePercentage,
       },
-    }
+    };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat menghitung biaya top up" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat menghitung biaya top up",
+    };
   }
 }

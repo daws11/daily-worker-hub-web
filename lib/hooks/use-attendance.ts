@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from "react"
-import { toast } from "sonner"
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import {
   checkIn,
   checkOut,
@@ -11,7 +11,7 @@ import {
   calculateAttendanceRate,
   getAttendanceList,
   getWorkerAttendanceStats,
-} from "../supabase/queries/attendance"
+} from "../supabase/queries/attendance";
 import type {
   AttendanceWithRelations,
   WorkerAttendanceHistory,
@@ -19,275 +19,359 @@ import type {
   AttendanceListResponse,
   AttendanceStats,
   LocationVerificationResult,
-} from "../types/attendance"
-import { useTranslation } from "../i18n/hooks"
+} from "../types/attendance";
+import { useTranslation } from "../i18n/hooks";
 
 type UseAttendanceOptions = {
-  workerId?: string
-  jobId?: string
-  businessId?: string
-  autoFetch?: boolean
-}
+  workerId?: string;
+  jobId?: string;
+  businessId?: string;
+  autoFetch?: boolean;
+};
 
 type UseAttendanceReturn = {
-  attendanceList: AttendanceListResponse | null
-  workerHistory: WorkerAttendanceHistory | null
-  jobHistory: JobAttendanceHistory | null
-  attendanceStats: AttendanceStats | null
-  attendanceRate: number | null
-  locationVerified: LocationVerificationResult | null
-  isLoading: boolean
-  error: string | null
+  attendanceList: AttendanceListResponse | null;
+  workerHistory: WorkerAttendanceHistory | null;
+  jobHistory: JobAttendanceHistory | null;
+  attendanceStats: AttendanceStats | null;
+  attendanceRate: number | null;
+  locationVerified: LocationVerificationResult | null;
+  isLoading: boolean;
+  error: string | null;
   fetchAttendanceList: (params?: {
-    worker_id?: string
-    job_id?: string
-    business_id?: string
-    start_date?: string
-    end_date?: string
-    page?: number
-    limit?: number
-  }) => Promise<void>
-  fetchWorkerHistory: (workerId: string) => Promise<void>
-  fetchJobHistory: (jobId: string) => Promise<void>
-  fetchWorkerStats: (workerId: string) => Promise<void>
-  fetchAttendanceRate: (workerId: string) => Promise<void>
-  verifyLocation: (jobId: string, workerLat: number, workerLng: number) => Promise<void>
-  workerCheckIn: (bookingId: string, lat?: number, lng?: number) => Promise<void>
-  workerCheckOut: (bookingId: string, lat?: number, lng?: number) => Promise<void>
-  refreshAttendance: () => Promise<void>
-}
+    worker_id?: string;
+    job_id?: string;
+    business_id?: string;
+    start_date?: string;
+    end_date?: string;
+    page?: number;
+    limit?: number;
+  }) => Promise<void>;
+  fetchWorkerHistory: (workerId: string) => Promise<void>;
+  fetchJobHistory: (jobId: string) => Promise<void>;
+  fetchWorkerStats: (workerId: string) => Promise<void>;
+  fetchAttendanceRate: (workerId: string) => Promise<void>;
+  verifyLocation: (
+    jobId: string,
+    workerLat: number,
+    workerLng: number,
+  ) => Promise<void>;
+  workerCheckIn: (
+    bookingId: string,
+    lat?: number,
+    lng?: number,
+  ) => Promise<void>;
+  workerCheckOut: (
+    bookingId: string,
+    lat?: number,
+    lng?: number,
+  ) => Promise<void>;
+  refreshAttendance: () => Promise<void>;
+};
 
-export function useAttendance(options: UseAttendanceOptions = {}): UseAttendanceReturn {
-  const { workerId, jobId, businessId } = options
-  const { t } = useTranslation()
+export function useAttendance(
+  options: UseAttendanceOptions = {},
+): UseAttendanceReturn {
+  const { workerId, jobId, businessId } = options;
+  const { t } = useTranslation();
 
-  const [attendanceList, setAttendanceList] = useState<AttendanceListResponse | null>(null)
-  const [workerHistory, setWorkerHistory] = useState<WorkerAttendanceHistory | null>(null)
-  const [jobHistory, setJobHistory] = useState<JobAttendanceHistory | null>(null)
-  const [attendanceStats, setAttendanceStats] = useState<AttendanceStats | null>(null)
-  const [attendanceRate, setAttendanceRate] = useState<number | null>(null)
-  const [locationVerified, setLocationVerified] = useState<LocationVerificationResult | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [attendanceList, setAttendanceList] =
+    useState<AttendanceListResponse | null>(null);
+  const [workerHistory, setWorkerHistory] =
+    useState<WorkerAttendanceHistory | null>(null);
+  const [jobHistory, setJobHistory] = useState<JobAttendanceHistory | null>(
+    null,
+  );
+  const [attendanceStats, setAttendanceStats] =
+    useState<AttendanceStats | null>(null);
+  const [attendanceRate, setAttendanceRate] = useState<number | null>(null);
+  const [locationVerified, setLocationVerified] =
+    useState<LocationVerificationResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchAttendanceList = useCallback(async (
-    params?: {
-      worker_id?: string
-      job_id?: string
-      business_id?: string
-      start_date?: string
-      end_date?: string
-      page?: number
-      limit?: number
-    }
-  ) => {
-    setIsLoading(true)
-    setError(null)
+  const fetchAttendanceList = useCallback(
+    async (params?: {
+      worker_id?: string;
+      job_id?: string;
+      business_id?: string;
+      start_date?: string;
+      end_date?: string;
+      page?: number;
+      limit?: number;
+    }) => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const result = await getAttendanceList(params || {
-        worker_id: workerId,
-        job_id: jobId,
-        business_id: businessId,
-      })
+      try {
+        const result = await getAttendanceList(
+          params || {
+            worker_id: workerId,
+            job_id: jobId,
+            business_id: businessId,
+          },
+        );
 
-      if (result.error) {
-        setError(result.error.message)
-        toast.error(t('attendance.fetchAttendanceListFailed', { message: result.error.message }))
-        return
+        if (result.error) {
+          setError(result.error.message);
+          toast.error(
+            t("attendance.fetchAttendanceListFailed", {
+              message: result.error.message,
+            }),
+          );
+          return;
+        }
+
+        setAttendanceList(result.data);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : t("errors.generic");
+        setError(errorMessage);
+        toast.error(
+          t("attendance.fetchAttendanceListFailed", { message: errorMessage }),
+        );
+      } finally {
+        setIsLoading(false);
       }
-
-      setAttendanceList(result.data)
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
-      setError(errorMessage)
-      toast.error(t('attendance.fetchAttendanceListFailed', { message: errorMessage }))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [workerId, jobId, businessId])
+    },
+    [workerId, jobId, businessId],
+  );
 
   const fetchWorkerHistory = useCallback(async (workerId: string) => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const result = await getWorkerAttendanceHistory(workerId)
+      const result = await getWorkerAttendanceHistory(workerId);
 
       if (result.error) {
-        setError(result.error.message)
-        toast.error(t('attendance.fetchWorkerHistoryFailed', { message: result.error.message }))
-        return
+        setError(result.error.message);
+        toast.error(
+          t("attendance.fetchWorkerHistoryFailed", {
+            message: result.error.message,
+          }),
+        );
+        return;
       }
 
-      setWorkerHistory(result.data)
+      setWorkerHistory(result.data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
-      setError(errorMessage)
-      toast.error(t('attendance.fetchWorkerHistoryFailed', { message: errorMessage }))
+      const errorMessage =
+        err instanceof Error ? err.message : t("errors.generic");
+      setError(errorMessage);
+      toast.error(
+        t("attendance.fetchWorkerHistoryFailed", { message: errorMessage }),
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [])
+  }, []);
 
   const fetchJobHistory = useCallback(async (jobId: string) => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const result = await getJobAttendanceHistory(jobId)
+      const result = await getJobAttendanceHistory(jobId);
 
       if (result.error) {
-        setError(result.error.message)
-        toast.error(t('attendance.fetchJobHistoryFailed', { message: result.error.message }))
-        return
+        setError(result.error.message);
+        toast.error(
+          t("attendance.fetchJobHistoryFailed", {
+            message: result.error.message,
+          }),
+        );
+        return;
       }
 
-      setJobHistory(result.data)
+      setJobHistory(result.data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
-      setError(errorMessage)
-      toast.error(t('attendance.fetchJobHistoryFailed', { message: errorMessage }))
+      const errorMessage =
+        err instanceof Error ? err.message : t("errors.generic");
+      setError(errorMessage);
+      toast.error(
+        t("attendance.fetchJobHistoryFailed", { message: errorMessage }),
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [])
+  }, []);
 
   const fetchWorkerStats = useCallback(async (workerId: string) => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const result = await getWorkerAttendanceStats(workerId)
+      const result = await getWorkerAttendanceStats(workerId);
 
       if (result.error) {
-        setError(result.error.message)
-        toast.error(t('attendance.fetchWorkerStatsFailed', { message: result.error.message }))
-        return
+        setError(result.error.message);
+        toast.error(
+          t("attendance.fetchWorkerStatsFailed", {
+            message: result.error.message,
+          }),
+        );
+        return;
       }
 
-      setAttendanceStats(result.data)
+      setAttendanceStats(result.data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
-      setError(errorMessage)
-      toast.error(t('attendance.fetchWorkerStatsFailed', { message: errorMessage }))
+      const errorMessage =
+        err instanceof Error ? err.message : t("errors.generic");
+      setError(errorMessage);
+      toast.error(
+        t("attendance.fetchWorkerStatsFailed", { message: errorMessage }),
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [])
+  }, []);
 
   const fetchAttendanceRate = useCallback(async (workerId: string) => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const result = await calculateAttendanceRate(workerId)
+      const result = await calculateAttendanceRate(workerId);
 
       if (result.error) {
-        setError(result.error.message)
-        toast.error(t('attendance.calculateAttendanceRateFailed', { message: result.error.message }))
-        return
+        setError(result.error.message);
+        toast.error(
+          t("attendance.calculateAttendanceRateFailed", {
+            message: result.error.message,
+          }),
+        );
+        return;
       }
 
-      setAttendanceRate(result.data)
+      setAttendanceRate(result.data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
-      setError(errorMessage)
-      toast.error(t('attendance.calculateAttendanceRateFailed', { message: errorMessage }))
+      const errorMessage =
+        err instanceof Error ? err.message : t("errors.generic");
+      setError(errorMessage);
+      toast.error(
+        t("attendance.calculateAttendanceRateFailed", {
+          message: errorMessage,
+        }),
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [])
+  }, []);
 
-  const verifyLocation = useCallback(async (jobId: string, workerLat: number, workerLng: number) => {
-    setIsLoading(true)
-    setError(null)
+  const verifyLocation = useCallback(
+    async (jobId: string, workerLat: number, workerLng: number) => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const result = await verifyWorkerLocation(jobId, workerLat, workerLng)
+      try {
+        const result = await verifyWorkerLocation(jobId, workerLat, workerLng);
 
-      setLocationVerified(result)
+        setLocationVerified(result);
 
-      if (!result.is_verified && result.status !== 'unverified') {
-        toast.warning(t('attendance.locationVerificationFailed'))
+        if (!result.is_verified && result.status !== "unverified") {
+          toast.warning(t("attendance.locationVerificationFailed"));
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : t("errors.generic");
+        setError(errorMessage);
+        toast.error(t("attendance.locationVerificationFailed"));
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
-      setError(errorMessage)
-      toast.error(t('attendance.locationVerificationFailed'))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
+    },
+    [],
+  );
 
-  const workerCheckIn = useCallback(async (bookingId: string, lat?: number, lng?: number) => {
-    setIsLoading(true)
-    setError(null)
+  const workerCheckIn = useCallback(
+    async (bookingId: string, lat?: number, lng?: number) => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const result = await checkIn(bookingId, lat, lng)
+      try {
+        const result = await checkIn(bookingId, lat, lng);
 
-      if (result.error) {
-        setError(result.error.message)
-        toast.error(t('attendance.checkInFailed', { message: result.error.message }))
-        return
+        if (result.error) {
+          setError(result.error.message);
+          toast.error(
+            t("attendance.checkInFailed", { message: result.error.message }),
+          );
+          return;
+        }
+
+        toast.success(t("attendance.checkInSuccess"));
+
+        // Refresh attendance data after check-in
+        await fetchAttendanceList();
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : t("errors.generic");
+        setError(errorMessage);
+        toast.error(t("attendance.checkInFailed", { message: errorMessage }));
+      } finally {
+        setIsLoading(false);
       }
+    },
+    [fetchAttendanceList],
+  );
 
-      toast.success(t('attendance.checkInSuccess'))
+  const workerCheckOut = useCallback(
+    async (bookingId: string, lat?: number, lng?: number) => {
+      setIsLoading(true);
+      setError(null);
 
-      // Refresh attendance data after check-in
-      await fetchAttendanceList()
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
-      setError(errorMessage)
-      toast.error(t('attendance.checkInFailed', { message: errorMessage }))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [fetchAttendanceList])
+      try {
+        const result = await checkOut(bookingId, lat, lng);
 
-  const workerCheckOut = useCallback(async (bookingId: string, lat?: number, lng?: number) => {
-    setIsLoading(true)
-    setError(null)
+        if (result.error) {
+          setError(result.error.message);
+          toast.error(
+            t("attendance.checkOutFailed", { message: result.error.message }),
+          );
+          return;
+        }
 
-    try {
-      const result = await checkOut(bookingId, lat, lng)
+        toast.success(t("attendance.checkOutSuccess"));
 
-      if (result.error) {
-        setError(result.error.message)
-        toast.error(t('attendance.checkOutFailed', { message: result.error.message }))
-        return
+        // Refresh attendance data after check-out
+        await fetchAttendanceList();
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : t("errors.generic");
+        setError(errorMessage);
+        toast.error(t("attendance.checkOutFailed", { message: errorMessage }));
+      } finally {
+        setIsLoading(false);
       }
-
-      toast.success(t('attendance.checkOutSuccess'))
-
-      // Refresh attendance data after check-out
-      await fetchAttendanceList()
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
-      setError(errorMessage)
-      toast.error(t('attendance.checkOutFailed', { message: errorMessage }))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [fetchAttendanceList])
+    },
+    [fetchAttendanceList],
+  );
 
   const refreshAttendance = useCallback(async () => {
-    await fetchAttendanceList()
-  }, [fetchAttendanceList])
+    await fetchAttendanceList();
+  }, [fetchAttendanceList]);
 
   // Auto-fetch on mount and when options change
   useEffect(() => {
     if (options.autoFetch !== false && (workerId || jobId || businessId)) {
       if (workerId) {
-        fetchWorkerHistory(workerId)
+        fetchWorkerHistory(workerId);
       } else if (jobId) {
-        fetchJobHistory(jobId)
+        fetchJobHistory(jobId);
       } else {
-        fetchAttendanceList()
+        fetchAttendanceList();
       }
     }
-  }, [workerId, jobId, businessId, options.autoFetch, fetchAttendanceList, fetchWorkerHistory, fetchJobHistory])
+  }, [
+    workerId,
+    jobId,
+    businessId,
+    options.autoFetch,
+    fetchAttendanceList,
+    fetchWorkerHistory,
+    fetchJobHistory,
+  ]);
 
   return {
     attendanceList,
@@ -307,5 +391,5 @@ export function useAttendance(options: UseAttendanceOptions = {}): UseAttendance
     workerCheckIn,
     workerCheckOut,
     refreshAttendance,
-  }
+  };
 }

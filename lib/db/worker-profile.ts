@@ -1,36 +1,37 @@
-import { supabase } from '../supabase/client'
-import { Database } from '../supabase/types'
+import { supabase } from "../supabase/client";
+import { Database } from "../supabase/types";
 
-type WorkerProfile = Database['public']['Tables']['workers']['Row']
-type WorkerInsert = any
-type WorkerUpdate = any
+type WorkerProfile = Database["public"]["Tables"]["workers"]["Row"];
+type WorkerInsert = any;
+type WorkerUpdate = any;
 
 type KycVerification = {
-  id: string
-  worker_id: string
-  ktp_number: string
-  ktp_image_url: string | null
-  selfie_image_url: string | null
-  ktp_extracted_data: Record<string, any> | null
-  status: 'unverified' | 'pending' | 'verified' | 'rejected'
-  rejection_reason: string | null
-  submitted_at: string
-  verified_at: string | null
-  created_at: string
-  updated_at: string
-  verified_by: string | null
-}
+  id: string;
+  worker_id: string;
+  ktp_number: string;
+  ktp_image_url: string | null;
+  selfie_image_url: string | null;
+  ktp_extracted_data: Record<string, any> | null;
+  status: "unverified" | "pending" | "verified" | "rejected";
+  rejection_reason: string | null;
+  submitted_at: string;
+  verified_at: string | null;
+  created_at: string;
+  updated_at: string;
+  verified_by: string | null;
+};
 
-type KycVerificationInsert = any
-type WorkerSkillInsert = any
+type KycVerificationInsert = any;
+type WorkerSkillInsert = any;
 
 /**
  * Get worker profile by user ID
  */
 export async function getWorkerProfile(userId: string) {
   const { data, error } = await supabase
-    .from('workers')
-    .select(`
+    .from("workers")
+    .select(
+      `
       *,
       worker_skills (
         skill_id,
@@ -40,15 +41,16 @@ export async function getWorkerProfile(userId: string) {
           slug
         )
       )
-    `)
-    .eq('user_id', userId)
-    .single()
+    `,
+    )
+    .eq("user_id", userId)
+    .single();
 
   if (error) {
-    return { data: null, error }
+    return { data: null, error };
   }
 
-  return { data, error: null }
+  return { data, error: null };
 }
 
 /**
@@ -56,24 +58,23 @@ export async function getWorkerProfile(userId: string) {
  */
 export async function createWorkerProfile(
   userId: string,
-  profile: Omit<WorkerInsert, 'user_id' | 'kyc_status' | 'reliability_score'>
+  profile: Omit<WorkerInsert, "user_id" | "kyc_status" | "reliability_score">,
 ) {
-  const { data, error } = await (supabase
-    .from('workers') as any)
+  const { data, error } = await (supabase.from("workers") as any)
     .insert({
       user_id: userId,
-      kyc_status: 'unverified',
+      kyc_status: "unverified",
       reliability_score: 0,
       ...profile,
     })
     .select()
-    .single()
+    .single();
 
   if (error) {
-    return { data: null, error }
+    return { data: null, error };
   }
 
-  return { data, error: null }
+  return { data, error: null };
 }
 
 /**
@@ -81,108 +82,103 @@ export async function createWorkerProfile(
  */
 export async function updateWorkerProfile(
   workerId: string,
-  updates: WorkerUpdate
+  updates: WorkerUpdate,
 ) {
-  const { data, error } = await (supabase
-    .from('workers') as any)
+  const { data, error } = await (supabase.from("workers") as any)
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', workerId)
+    .eq("id", workerId)
     .select()
-    .single()
+    .single();
 
   if (error) {
-    return { data: null, error }
+    return { data: null, error };
   }
 
-  return { data, error: null }
+  return { data, error: null };
 }
 
 /**
  * Submit KYC verification
  */
 export async function submitKycVerification(kycData: {
-  workerId: string
-  ktpNumber: string
-  ktpImageUrl: string
-  selfieImageUrl: string
-  ktpExtractedData?: KycVerificationInsert['ktp_extracted_data']
+  workerId: string;
+  ktpNumber: string;
+  ktpImageUrl: string;
+  selfieImageUrl: string;
+  ktpExtractedData?: KycVerificationInsert["ktp_extracted_data"];
 }) {
   // First, update worker's KYC status to pending
-  const { error: updateError } = await (supabase
-    .from('workers') as any)
+  const { error: updateError } = await (supabase.from("workers") as any)
     .update({
-      kyc_status: 'pending',
+      kyc_status: "pending",
       updated_at: new Date().toISOString(),
     })
-    .eq('id', kycData.workerId)
+    .eq("id", kycData.workerId);
 
   if (updateError) {
-    return { data: null, error: updateError }
+    return { data: null, error: updateError };
   }
 
   // Then insert KYC verification record
   const { data, error } = await (supabase as any)
-    .from('kyc_verifications')
+    .from("kyc_verifications")
     .insert({
       worker_id: kycData.workerId,
       ktp_number: kycData.ktpNumber,
       ktp_image_url: kycData.ktpImageUrl,
       selfie_image_url: kycData.selfieImageUrl,
       ktp_extracted_data: kycData.ktpExtractedData || null,
-      status: 'pending',
+      status: "pending",
       submitted_at: new Date().toISOString(),
     })
     .select()
-    .single()
+    .single();
 
   if (error) {
-    return { data: null, error }
+    return { data: null, error };
   }
 
-  return { data, error: null }
+  return { data, error: null };
 }
 
 /**
  * Link skills to a worker (replaces all existing skills)
  */
-export async function linkWorkerSkills(
-  workerId: string,
-  skillIds: string[]
-) {
+export async function linkWorkerSkills(workerId: string, skillIds: string[]) {
   // First, delete existing skills for this worker
   const { error: deleteError } = await (supabase as any)
-    .from('worker_skills')
+    .from("worker_skills")
     .delete()
-    .eq('worker_id', workerId)
+    .eq("worker_id", workerId);
 
   if (deleteError) {
-    return { data: null, error: deleteError }
+    return { data: null, error: deleteError };
   }
 
   // If no skills to add, return success
   if (skillIds.length === 0) {
-    return { data: [], error: null }
+    return { data: [], error: null };
   }
 
   // Insert new skill links
   const insertData: WorkerSkillInsert[] = skillIds.map((skillId) => ({
     worker_id: workerId,
     skill_id: skillId,
-  }))
+  }));
 
   const { data, error } = await (supabase as any)
-    .from('worker_skills')
+    .from("worker_skills")
     .insert(insertData)
-    .select()
+    .select();
 
   if (error) {
-    return { data: null, error }
+    return { data: null, error };
   }
 
-  return { data, error: null }
+  return { data, error: null };
 }
 
 /**
@@ -190,8 +186,9 @@ export async function linkWorkerSkills(
  */
 export async function getWorkerProfileWithKyc(userId: string) {
   const { data, error } = await supabase
-    .from('workers')
-    .select(`
+    .from("workers")
+    .select(
+      `
       *,
       worker_skills (
         skill_id,
@@ -213,15 +210,16 @@ export async function getWorkerProfileWithKyc(userId: string) {
         verified_at,
         verified_by
       )
-    `)
-    .eq('user_id', userId)
-    .single()
+    `,
+    )
+    .eq("user_id", userId)
+    .single();
 
   if (error) {
-    return { data: null, error }
+    return { data: null, error };
   }
 
-  return { data, error: null }
+  return { data, error: null };
 }
 
 /**
@@ -229,16 +227,16 @@ export async function getWorkerProfileWithKyc(userId: string) {
  */
 export async function getKycStatus(workerId: string) {
   const { data, error } = await (supabase as any)
-    .from('kyc_verifications')
-    .select('*')
-    .eq('worker_id', workerId)
-    .order('submitted_at', { ascending: false })
+    .from("kyc_verifications")
+    .select("*")
+    .eq("worker_id", workerId)
+    .order("submitted_at", { ascending: false })
     .limit(1)
-    .maybeSingle()
+    .maybeSingle();
 
   if (error) {
-    return { data: null, error }
+    return { data: null, error };
   }
 
-  return { data, error: null }
+  return { data, error: null };
 }

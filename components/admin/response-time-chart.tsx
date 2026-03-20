@@ -1,7 +1,13 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   LineChart,
   Line,
@@ -11,22 +17,26 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-} from "recharts"
+} from "recharts";
 
 export interface ResponseTimeData {
-  timestamp: number
-  average: number
-  p95: number
-  p99: number
+  timestamp: number;
+  average: number;
+  p95: number;
+  p99: number;
 }
 
 export interface ResponseTimeChartProps {
-  data: ResponseTimeData[]
-  loading?: boolean
-  className?: string
+  data: ResponseTimeData[];
+  loading?: boolean;
+  className?: string;
 }
 
-export function ResponseTimeChart({ data, loading = false, className }: ResponseTimeChartProps) {
+export function ResponseTimeChart({
+  data,
+  loading = false,
+  className,
+}: ResponseTimeChartProps) {
   if (loading) {
     return (
       <Card className={className}>
@@ -38,20 +48,23 @@ export function ResponseTimeChart({ data, loading = false, className }: Response
           <Skeleton className="h-64 w-full" />
         </CardContent>
       </Card>
-    )
+    );
   }
 
   const formatTimestamp = (timestamp: number) => {
-    const date = new Date(timestamp)
-    return date.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })
-  }
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
-  const formatMs = (value: number) => `${value}ms`
+  const formatMs = (value: number) => `${value}ms`;
 
   const chartData = data.map((point) => ({
     ...point,
     time: formatTimestamp(point.timestamp),
-  }))
+  }));
 
   return (
     <Card className={className}>
@@ -66,12 +79,12 @@ export function ResponseTimeChart({ data, loading = false, className }: Response
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis 
-                dataKey="time" 
+              <XAxis
+                dataKey="time"
                 className="text-xs"
                 tick={{ fill: "hsl(var(--muted-foreground))" }}
               />
-              <YAxis 
+              <YAxis
                 tickFormatter={formatMs}
                 className="text-xs"
                 tick={{ fill: "hsl(var(--muted-foreground))" }}
@@ -118,5 +131,5 @@ export function ResponseTimeChart({ data, loading = false, className }: Response
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

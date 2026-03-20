@@ -18,6 +18,7 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 ## 1. Environment & Configuration
 
 ### Environment Variables
+
 - [ ] **Production `.env` configured** with all required variables
 - [ ] `NEXT_PUBLIC_APP_URL` - Production domain
 - [ ] `NEXT_PUBLIC_SUPABASE_URL` - Production Supabase project URL
@@ -30,6 +31,7 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 - [ ] `JWT_SECRET` - For session tokens (if applicable)
 
 ### Secrets Management
+
 - [ ] Store secrets in Vercel Environment Variables (or chosen hosting)
 - [ ] Never commit `.env.local` or `.env.production` to git
 - [ ] Document all required env vars in `.env.example`
@@ -39,6 +41,7 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 ## 2. Database & Supabase
 
 ### Production Supabase Project
+
 - [ ] **Create production Supabase project** (separate from development)
 - [ ] Run all migrations on production database
 - [ ] Verify Row Level Security (RLS) policies are enabled
@@ -46,11 +49,13 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 - [ ] Configure connection pooling (Supabase Pooler)
 
 ### Data Migration
+
 - [ ] Export seed/demo data (if needed for production)
 - [ ] Verify all tables exist with correct schema
 - [ ] Test database connection from production app
 
 ### Storage Buckets
+
 - [ ] Create `avatars` bucket (public)
 - [ ] Create `kyc-documents` bucket (private)
 - [ ] Create `job-attachments` bucket (private)
@@ -61,6 +66,7 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 ## 3. Payment Integration (Xendit)
 
 ### Xendit Production Setup
+
 - [ ] **Create production Xendit account** (if not exists)
 - [ ] Complete business verification with Xendit
 - [ ] Get production API keys (secret + public)
@@ -71,11 +77,13 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 - [ ] Test all payment flows in sandbox first ✅ (BLOCKED - needs manual testing)
 
 ### Payment Methods
+
 - [ ] QRIS enabled
 - [ ] Virtual Accounts (BCA, Mandiri, BNI, BRI) enabled
 - [ ] Disbursement to bank accounts enabled
 
 ### Compliance
+
 - [ ] Verify Xendit fee structure for production
 - [ ] Set up disbursement callback handling
 - [ ] Test refund/void scenarios
@@ -85,12 +93,14 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 ## 4. Security
 
 ### Authentication
+
 - [ ] Supabase Auth configured for production
 - [ ] Email templates customized (verification, password reset)
 - [ ] Session timeout configured appropriately
 - [ ] Rate limiting on auth endpoints
 
 ### API Security
+
 - [ ] All API routes use proper authentication
 - [ ] Server-side validation with Zod schemas
 - [ ] Rate limiting on sensitive endpoints (payments, bookings)
@@ -98,12 +108,14 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 - [ ] CSRF protection enabled
 
 ### Data Protection
+
 - [ ] PII data encrypted at rest (Supabase handles this)
 - [ ] Sensitive data not logged
 - [ ] KYC documents stored securely (private bucket)
 - [ ] Password requirements enforced
 
 ### Headers & HTTPS
+
 - [ ] HTTPS enforced (SSL certificate)
 - [ ] Security headers configured:
   - `X-Frame-Options: DENY`
@@ -116,6 +128,7 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 ## 5. Performance
 
 ### Next.js Optimization
+
 - [ ] `npm run build` completes without errors
 - [ ] Image optimization enabled (`next/image`)
 - [ ] Font optimization enabled
@@ -123,11 +136,13 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 - [ ] Static pages pre-rendered where possible
 
 ### Caching
+
 - [ ] Static assets cached with long TTL
 - [ ] API responses cached appropriately
 - [ ] ISR (Incremental Static Regeneration) configured for public pages
 
 ### Monitoring
+
 - [ ] Lighthouse score > 80 for all key pages
 - [ ] Core Web Vitals in green zone
 - [ ] No console errors in production build
@@ -137,16 +152,19 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 ## 6. Monitoring & Logging
 
 ### Error Tracking
+
 - [ ] Set up error monitoring (Sentry, LogSnag, or similar)
 - [ ] Configure alerting for critical errors
 - [ ] Add comprehensive error logging to all API routes (Task #4)
 
 ### Analytics
+
 - [ ] Google Analytics or Plausible configured
 - [ ] Event tracking for key actions (signup, booking, payment)
 - [ ] Privacy policy updated for analytics
 
 ### Uptime Monitoring
+
 - [ ] Set up uptime monitoring (UptimeRobot, Better Uptime)
 - [ ] Configure status page (optional)
 
@@ -155,6 +173,7 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 ## 7. Testing
 
 ### E2E Tests
+
 - [ ] All E2E tests passing locally
 - [ ] Critical user flows tested:
   - [ ] Worker registration & onboarding
@@ -166,6 +185,7 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
   - [ ] Withdrawal flow
 
 ### Manual Testing Checklist
+
 - [ ] Test on mobile devices (Android primary)
 - [ ] Test on different browsers (Chrome, Safari, Firefox)
 - [ ] Test dark mode
@@ -178,11 +198,13 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 ## 8. Domain & Hosting
 
 ### Domain Setup
+
 - [ ] Purchase domain (if not owned)
 - [ ] Configure DNS records
 - [ ] SSL certificate configured (automatic with Vercel)
 
 ### Hosting (Vercel Recommended)
+
 - [ ] Create Vercel project
 - [ ] Connect GitHub repository
 - [ ] Configure build settings:
@@ -192,6 +214,7 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 - [ ] Configure preview deployments for PRs
 
 ### Alternative Hosting
+
 - [ ] Docker container configured (if self-hosting)
 - [ ] PM2 or similar process manager
 - [ ] Nginx reverse proxy configured
@@ -201,6 +224,7 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 ## 9. CI/CD Pipeline
 
 ### GitHub Actions (or similar)
+
 - [ ] Lint check on PR
 - [ ] Type check on PR
 - [ ] Unit tests on PR
@@ -209,6 +233,7 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 - [ ] Production deployment on main branch merge
 
 ### Deployment Workflow
+
 - [ ] Staging environment (optional)
 - [ ] Production deployment requires approval (optional)
 - [ ] Rollback procedure documented
@@ -218,6 +243,7 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 ## 10. Launch Day Checklist
 
 ### Pre-Launch (T-1 day)
+
 - [ ] All tests passing
 - [ ] Production build successful
 - [ ] Environment variables verified
@@ -225,6 +251,7 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 - [ ] Team notified of launch
 
 ### Launch (T-0)
+
 - [ ] Deploy to production
 - [ ] Verify homepage loads
 - [ ] Test registration flow
@@ -233,6 +260,7 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 - [ ] Monitor error logs for 30 minutes
 
 ### Post-Launch (T+1 hour)
+
 - [ ] Check uptime monitor
 - [ ] Verify no critical errors
 - [ ] Test payment flow with real transaction (small amount)
@@ -243,12 +271,14 @@ This checklist ensures a smooth production deployment for Daily Worker Hub MVP. 
 ## 11. Post-Launch
 
 ### Week 1
+
 - [ ] Daily monitoring of error logs
 - [ ] Monitor payment success rates
 - [ ] Collect user feedback
 - [ ] Address any critical bugs immediately
 
 ### Month 1
+
 - [ ] Review analytics data
 - [ ] Optimize based on user behavior
 - [ ] Plan Phase 2 features
@@ -268,21 +298,21 @@ If critical issues found post-launch:
 
 ## 📞 Emergency Contacts
 
-| Role | Contact |
-|------|---------|
-| Lead Developer | David (@AbdurrahmanFirdaus) |
-| Xendit Support | support@xendit.co |
-| Supabase Support | support@supabase.io |
-| Vercel Support | support@vercel.com |
+| Role             | Contact                     |
+| ---------------- | --------------------------- |
+| Lead Developer   | David (@AbdurrahmanFirdaus) |
+| Xendit Support   | support@xendit.co           |
+| Supabase Support | support@supabase.io         |
+| Vercel Support   | support@vercel.com          |
 
 ---
 
 ## ✅ Sign-Off
 
-- [ ] Technical review completed by: ___________
-- [ ] Security review completed by: ___________
-- [ ] Product owner approval: ___________
-- [ ] Launch authorized by: ___________
+- [ ] Technical review completed by: ****\_\_\_****
+- [ ] Security review completed by: ****\_\_\_****
+- [ ] Product owner approval: ****\_\_\_****
+- [ ] Launch authorized by: ****\_\_\_****
 
 ---
 

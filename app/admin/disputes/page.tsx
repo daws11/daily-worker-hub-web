@@ -1,12 +1,24 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useAuth } from "@/app/providers/auth-provider"
-import dynamic from 'next/dynamic'
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, AlertTriangle, Loader2 } from "lucide-react"
+import * as React from "react";
+import { useAuth } from "@/app/providers/auth-provider";
+import dynamic from "next/dynamic";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
 
-import { getDisputes } from "@/lib/supabase/queries/admin"
-import type { DisputeFilters, DisputeItem, PaginatedAdminResponse } from "@/lib/types/admin"
+import { getDisputes } from "@/lib/supabase/queries/admin";
+import type {
+  DisputeFilters,
+  DisputeItem,
+  PaginatedAdminResponse,
+} from "@/lib/types/admin";
 
 import {
   Table,
@@ -15,125 +27,150 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const DisputeResolveDialog = dynamic(
-  () => import('@/components/admin/dispute-resolve-dialog').then(mod => ({ default: mod.DisputeResolveDialog })),
+  () =>
+    import("@/components/admin/dispute-resolve-dialog").then((mod) => ({
+      default: mod.DisputeResolveDialog,
+    })),
   {
-    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>,
-    ssr: false
-  }
-)
+    loading: () => (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin" />
+      </div>
+    ),
+    ssr: false,
+  },
+);
 
 interface DisputesPageProps extends React.HTMLAttributes<HTMLDivElement> {
-  className?: string
+  className?: string;
 }
 
-export default function DisputesPage({ className, ...props }: DisputesPageProps) {
-  const { user } = useAuth()
-  const [disputes, setDisputes] = React.useState<DisputeItem[]>([])
-  const [loading, setLoading] = React.useState<boolean>(true)
-  const [error, setError] = React.useState<string | null>(null)
+export default function DisputesPage({
+  className,
+  ...props
+}: DisputesPageProps) {
+  const { user } = useAuth();
+  const [disputes, setDisputes] = React.useState<DisputeItem[]>([]);
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<string | null>(null);
   const [pagination, setPagination] = React.useState({
     page: 1,
     limit: 20,
     total: 0,
     totalPages: 0,
-  })
+  });
 
   const [filters, setFilters] = React.useState<DisputeFilters>({
     sortBy: "created_at",
     sortOrder: "desc",
-  })
-  const [searchInput, setSearchInput] = React.useState("")
+  });
+  const [searchInput, setSearchInput] = React.useState("");
 
   // Dialog state
-  const [selectedDispute, setSelectedDispute] = React.useState<DisputeItem | null>(null)
-  const [dialogOpen, setDialogOpen] = React.useState(false)
+  const [selectedDispute, setSelectedDispute] =
+    React.useState<DisputeItem | null>(null);
+  const [dialogOpen, setDialogOpen] = React.useState(false);
 
   const fetchDisputes = React.useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     const response = await getDisputes(
       filters,
       pagination.page,
-      pagination.limit
-    )
+      pagination.limit,
+    );
 
-    setDisputes(response.items)
+    setDisputes(response.items);
     setPagination((prev) => ({
       ...prev,
       total: response.total,
       totalPages: response.totalPages,
-    }))
+    }));
 
-    setLoading(false)
-  }, [filters, pagination.page, pagination.limit])
+    setLoading(false);
+  }, [filters, pagination.page, pagination.limit]);
 
   React.useEffect(() => {
-    fetchDisputes()
-  }, [fetchDisputes])
+    fetchDisputes();
+  }, [fetchDisputes]);
 
   const handleSearch = React.useCallback(
     (value: string) => {
-      setSearchInput(value)
-      setFilters((prev) => ({ ...prev, search: value || undefined }))
-      setPagination((prev) => ({ ...prev, page: 1 }))
+      setSearchInput(value);
+      setFilters((prev) => ({ ...prev, search: value || undefined }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     },
-    [setFilters, setPagination]
-  )
+    [setFilters, setPagination],
+  );
 
   const handleStatusFilter = React.useCallback(
     (value: string) => {
       setFilters((prev) => ({
         ...prev,
-        status: value === "all" ? undefined : (value as "pending" | "reviewing" | "resolved" | "dismissed"),
-      }))
-      setPagination((prev) => ({ ...prev, page: 1 }))
+        status:
+          value === "all"
+            ? undefined
+            : (value as "pending" | "reviewing" | "resolved" | "dismissed"),
+      }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     },
-    [setFilters, setPagination]
-  )
+    [setFilters, setPagination],
+  );
 
   const handleTypeFilter = React.useCallback(
     (value: string) => {
       setFilters((prev) => ({
         ...prev,
-        type: value === "all" ? undefined : (value as "booking" | "payment" | "behavior" | "quality" | "other"),
-      }))
-      setPagination((prev) => ({ ...prev, page: 1 }))
+        type:
+          value === "all"
+            ? undefined
+            : (value as
+                | "booking"
+                | "payment"
+                | "behavior"
+                | "quality"
+                | "other"),
+      }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     },
-    [setFilters, setPagination]
-  )
+    [setFilters, setPagination],
+  );
 
   const goToPage = React.useCallback(
     (page: number) => {
-      setPagination((prev) => ({ ...prev, page: Math.max(1, Math.min(page, pagination.totalPages)) }))
+      setPagination((prev) => ({
+        ...prev,
+        page: Math.max(1, Math.min(page, pagination.totalPages)),
+      }));
     },
-    [pagination.totalPages, setPagination]
-  )
+    [pagination.totalPages, setPagination],
+  );
 
   const handleResolve = (dispute: DisputeItem) => {
-    setSelectedDispute(dispute)
-    setDialogOpen(true)
-  }
+    setSelectedDispute(dispute);
+    setDialogOpen(true);
+  };
 
   const handleDialogUpdate = () => {
-    fetchDisputes()
-    setSelectedDispute(null)
-    setDialogOpen(false)
-  }
+    fetchDisputes();
+    setSelectedDispute(null);
+    setDialogOpen(false);
+  };
 
   const formatDate = React.useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString("id-ID", {
@@ -142,47 +179,46 @@ export default function DisputesPage({ className, ...props }: DisputesPageProps)
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    })
-  }, [])
+    });
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
+        return "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300";
       case "reviewing":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300";
       case "resolved":
-        return "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+        return "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300";
       case "dismissed":
-        return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+        return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
       default:
-        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
-  }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "low":
-        return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+        return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
       case "medium":
-        return "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+        return "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300";
       case "high":
-        return "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300"
+        return "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300";
       case "urgent":
-        return "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+        return "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300";
       default:
-        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+        return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     }
-  }
+  };
 
-  const canResolve = (status: string) => status === "pending" || status === "reviewing"
+  const canResolve = (status: string) =>
+    status === "pending" || status === "reviewing";
 
   return (
     <div className={cn("space-y-6", className)} {...props}>
       <div>
-        <h1 className="text-3xl font-bold text-foreground">
-          Kelola Sengketa
-        </h1>
+        <h1 className="text-3xl font-bold text-foreground">Kelola Sengketa</h1>
         <p className="text-muted-foreground mt-2">
           Tinjau dan selesaikan sengketa antara pekerja dan bisnis
         </p>
@@ -336,8 +372,14 @@ export default function DisputesPage({ className, ...props }: DisputesPageProps)
           {pagination.totalPages > 1 && (
             <div className="flex items-center justify-between px-2">
               <div className="text-sm text-muted-foreground">
-                Menampilkan {Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)} hingga{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} dari {pagination.total} sengketa
+                Menampilkan{" "}
+                {Math.min(
+                  (pagination.page - 1) * pagination.limit + 1,
+                  pagination.total,
+                )}{" "}
+                hingga{" "}
+                {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
+                dari {pagination.total} sengketa
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -390,5 +432,5 @@ export default function DisputesPage({ className, ...props }: DisputesPageProps)
         adminId={user?.id}
       />
     </div>
-  )
+  );
 }

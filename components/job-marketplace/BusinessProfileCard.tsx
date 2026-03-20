@@ -1,15 +1,20 @@
-import React from 'react'
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Business } from '@/lib/types/job'
-import { Building2, CheckCircle2, ExternalLink } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Business } from "@/lib/types/job";
+import { Building2, CheckCircle2, ExternalLink } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface BusinessProfileCardProps {
-  business: Business
-  onViewProfile?: () => void
-  className?: string
+  business: Business;
+  onViewProfile?: () => void;
+  className?: string;
 }
 
 export function BusinessProfileCard({
@@ -19,14 +24,16 @@ export function BusinessProfileCard({
 }: BusinessProfileCardProps) {
   // Get initials for avatar fallback
   const getInitials = (name: string) => {
-    const words = name.trim().split(/\s+/)
-    if (words.length === 0) return '?'
-    if (words.length === 1) return words[0].charAt(0).toUpperCase()
-    return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase()
-  }
+    const words = name.trim().split(/\s+/);
+    if (words.length === 0) return "?";
+    if (words.length === 1) return words[0].charAt(0).toUpperCase();
+    return (
+      words[0].charAt(0) + words[words.length - 1].charAt(0)
+    ).toUpperCase();
+  };
 
   return (
-    <Card className={cn('w-full', className)}>
+    <Card className={cn("w-full", className)}>
       <CardHeader className="pb-4">
         <div className="flex items-start gap-3">
           <Avatar className="h-12 w-12">
@@ -71,5 +78,5 @@ export function BusinessProfileCard({
         </CardFooter>
       )}
     </Card>
-  )
+  );
 }

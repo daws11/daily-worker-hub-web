@@ -1,19 +1,19 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import { AdminNav } from '@/components/admin/admin-nav'
-import { AdminHeader } from '@/components/admin/admin-header'
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import { AdminNav } from "@/components/admin/admin-nav";
+import { AdminHeader } from "@/components/admin/admin-header";
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Admin Dashboard - Daily Worker Hub',
-  description: 'Platform administration and management',
-}
+  title: "Admin Dashboard - Daily Worker Hub",
+  description: "Platform administration and management",
+};
 
 export default function AdminLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <div className={inter.className}>
@@ -26,11 +26,9 @@ export default function AdminLayout({
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
           <AdminHeader />
-          <main className="flex-1 p-6">
-            {children}
-          </main>
+          <main className="flex-1 p-6">{children}</main>
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,7 +1,7 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 const kycStatusVariants = cva(
   "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -21,13 +21,14 @@ const kycStatusVariants = cva(
     defaultVariants: {
       status: "unverified",
     },
-  }
-)
+  },
+);
 
 export interface KycStatusBadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof kycStatusVariants> {
-  status: "unverified" | "pending" | "verified" | "rejected"
+  status: "unverified" | "pending" | "verified" | "rejected";
 }
 
 const statusLabels: Record<KycStatusBadgeProps["status"], string> = {
@@ -35,7 +36,7 @@ const statusLabels: Record<KycStatusBadgeProps["status"], string> = {
   pending: "Pending",
   verified: "Verified",
   rejected: "Rejected",
-}
+};
 
 export function KycStatusBadge({
   status,
@@ -43,11 +44,8 @@ export function KycStatusBadge({
   ...props
 }: KycStatusBadgeProps) {
   return (
-    <div
-      className={cn(kycStatusVariants({ status }), className)}
-      {...props}
-    >
+    <div className={cn(kycStatusVariants({ status }), className)} {...props}>
       {statusLabels[status]}
     </div>
-  )
+  );
 }

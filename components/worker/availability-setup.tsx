@@ -1,30 +1,45 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { AlertCircle, Clock, CheckCircle2, ArrowRight, ArrowLeft, Sparkles } from "lucide-react"
-import { DAYS_OF_WEEK, DAY_NAMES } from "@/lib/algorithms/availability-checker"
-import { cn } from "@/lib/utils"
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertCircle,
+  Clock,
+  CheckCircle2,
+  ArrowRight,
+  ArrowLeft,
+  Sparkles,
+} from "lucide-react";
+import { DAYS_OF_WEEK, DAY_NAMES } from "@/lib/algorithms/availability-checker";
+import { cn } from "@/lib/utils";
 
 interface DayAvailability {
-  dayOfWeek: number
-  dayName: string
-  isAvailable: boolean
-  startHour: number
-  endHour: number
+  dayOfWeek: number;
+  dayName: string;
+  isAvailable: boolean;
+  startHour: number;
+  endHour: number;
 }
 
 interface AvailabilitySetupProps {
-  onComplete: (availabilities: {
-    dayOfWeek: number
-    startHour: number
-    endHour: number
-    isAvailable: boolean
-  }[]) => void
-  existingData?: DayAvailability[]
-  isLoading?: boolean
+  onComplete: (
+    availabilities: {
+      dayOfWeek: number;
+      startHour: number;
+      endHour: number;
+      isAvailable: boolean;
+    }[],
+  ) => void;
+  existingData?: DayAvailability[];
+  isLoading?: boolean;
 }
 
 export function AvailabilitySetup({
@@ -33,18 +48,18 @@ export function AvailabilitySetup({
   isLoading = false,
 }: AvailabilitySetupProps) {
   // Initialize with default 9-17 (9 AM - 5 PM) availability for weekdays
-  const [currentStep, setCurrentStep] = useState(0)
+  const [currentStep, setCurrentStep] = useState(0);
   const [selectedDays, setSelectedDays] = useState<number[]>(() => {
     if (existingData) {
-      return existingData.filter((d) => d.isAvailable).map((d) => d.dayOfWeek)
+      return existingData.filter((d) => d.isAvailable).map((d) => d.dayOfWeek);
     }
     // Default: Monday-Friday
-    return [1, 2, 3, 4, 5]
-  })
+    return [1, 2, 3, 4, 5];
+  });
 
   // Default time settings
-  const [defaultStartHour, setDefaultStartHour] = useState(9)
-  const [defaultEndHour, setDefaultEndHour] = useState(17)
+  const [defaultStartHour, setDefaultStartHour] = useState(9);
+  const [defaultEndHour, setDefaultEndHour] = useState(17);
 
   const STEPS = [
     {
@@ -62,31 +77,31 @@ export function AvailabilitySetup({
       title: "Review Your Availability",
       description: "Confirm your weekly availability settings",
     },
-  ]
+  ];
 
   const toggleDay = (dayOfWeek: number) => {
     setSelectedDays((prev) =>
       prev.includes(dayOfWeek)
         ? prev.filter((d) => d !== dayOfWeek)
-        : [...prev, dayOfWeek]
-    )
-  }
+        : [...prev, dayOfWeek],
+    );
+  };
 
   const handleQuickSelect = (days: number[]) => {
-    setSelectedDays(days)
-  }
+    setSelectedDays(days);
+  };
 
   const getDuration = () => {
-    return defaultEndHour - defaultStartHour
-  }
+    return defaultEndHour - defaultStartHour;
+  };
 
   const isDurationValid = () => {
-    const duration = getDuration()
-    return duration >= 4 && duration <= 12
-  }
+    const duration = getDuration();
+    return duration >= 4 && duration <= 12;
+  };
 
   const getPreviewAvailabilities = () => {
-    const allDays: number[] = [1, 2, 3, 4, 5, 6, 7]
+    const allDays: number[] = [1, 2, 3, 4, 5, 6, 7];
 
     return allDays.map((dayOfWeek) => ({
       dayOfWeek,
@@ -94,8 +109,8 @@ export function AvailabilitySetup({
       isAvailable: selectedDays.includes(dayOfWeek),
       startHour: defaultStartHour,
       endHour: defaultEndHour,
-    }))
-  }
+    }));
+  };
 
   const handleComplete = () => {
     const availabilities = getPreviewAvailabilities().map((day) => ({
@@ -103,21 +118,21 @@ export function AvailabilitySetup({
       startHour: day.startHour,
       endHour: day.endHour,
       isAvailable: day.isAvailable,
-    }))
-    onComplete(availabilities)
-  }
+    }));
+    onComplete(availabilities);
+  };
 
   const nextStep = () => {
     if (currentStep < STEPS.length - 1) {
-      setCurrentStep(currentStep + 1)
+      setCurrentStep(currentStep + 1);
     }
-  }
+  };
 
   const prevStep = () => {
     if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep(currentStep - 1);
     }
-  }
+  };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -131,8 +146,8 @@ export function AvailabilitySetup({
                 currentStep === index
                   ? "bg-blue-600 text-white"
                   : currentStep > index
-                  ? "bg-green-600 text-white"
-                  : "bg-muted text-muted-foreground"
+                    ? "bg-green-600 text-white"
+                    : "bg-muted text-muted-foreground",
               )}
             >
               {currentStep > index ? (
@@ -145,7 +160,7 @@ export function AvailabilitySetup({
               <div
                 className={cn(
                   "w-8 h-0.5 mx-2",
-                  currentStep > index ? "bg-green-600" : "bg-muted"
+                  currentStep > index ? "bg-green-600" : "bg-muted",
                 )}
               />
             )}
@@ -206,8 +221,8 @@ export function AvailabilitySetup({
               {/* Day Selection Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {DAY_NAMES.slice(1).map((dayName, index) => {
-                  const dayOfWeek = index + 1
-                  const isSelected = selectedDays.includes(dayOfWeek)
+                  const dayOfWeek = index + 1;
+                  const isSelected = selectedDays.includes(dayOfWeek);
 
                   return (
                     <button
@@ -218,7 +233,7 @@ export function AvailabilitySetup({
                         "flex items-center justify-between p-4 border-2 rounded-lg transition-colors",
                         isSelected
                           ? "border-blue-600 bg-blue-50"
-                          : "border-border bg-muted/30 hover:bg-muted/50"
+                          : "border-border bg-muted/30 hover:bg-muted/50",
                       )}
                     >
                       <span className="font-medium">{dayName}</span>
@@ -226,7 +241,7 @@ export function AvailabilitySetup({
                         <CheckCircle2 className="h-5 w-5 text-blue-600" />
                       )}
                     </button>
-                  )
+                  );
                 })}
               </div>
 
@@ -264,8 +279,8 @@ export function AvailabilitySetup({
                       }
                       size="sm"
                       onClick={() => {
-                        setDefaultStartHour(option.start)
-                        setDefaultEndHour(option.end)
+                        setDefaultStartHour(option.start);
+                        setDefaultEndHour(option.end);
                       }}
                       disabled={isLoading}
                     >
@@ -365,8 +380,7 @@ export function AvailabilitySetup({
                   <div>• {selectedDays.length} days available</div>
                   <div>• {getDuration()} hours per day</div>
                   <div>
-                    • {selectedDays.length * getDuration()} total hours per
-                    week
+                    • {selectedDays.length * getDuration()} total hours per week
                   </div>
                 </div>
               </div>
@@ -384,7 +398,7 @@ export function AvailabilitySetup({
                         "flex items-center justify-between p-3 border rounded-lg",
                         day.isAvailable
                           ? "bg-green-50 border-green-200"
-                          : "bg-muted/30"
+                          : "bg-muted/30",
                       )}
                     >
                       <div>
@@ -440,5 +454,5 @@ export function AvailabilitySetup({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

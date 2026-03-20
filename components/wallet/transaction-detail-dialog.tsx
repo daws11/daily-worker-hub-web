@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
 import {
   Dialog,
@@ -9,54 +9,61 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import { Calendar, Briefcase, Hash, ArrowDownLeft, ArrowUpRight, Clock } from "lucide-react"
-import { cn } from "@/lib/utils"
-import type { Database } from "@/lib/supabase/types"
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import {
+  Calendar,
+  Briefcase,
+  Hash,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Clock,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { Database } from "@/lib/supabase/types";
 
 type WalletTransactionRow = {
-  id: string
-  wallet_id: string
-  amount: number
-  type: 'credit' | 'debit' | 'pending' | 'released'
-  booking_id: string | null
-  description: string | null
-  created_at: string
-}
-type WalletTransactionType = WalletTransactionRow["type"]
+  id: string;
+  wallet_id: string;
+  amount: number;
+  type: "credit" | "debit" | "pending" | "released";
+  booking_id: string | null;
+  description: string | null;
+  created_at: string;
+};
+type WalletTransactionType = WalletTransactionRow["type"];
 
 export interface TransactionDetailDialogProps {
   transaction: {
-    id: string
-    amount: number
-    type: WalletTransactionType
-    description: string | null
-    created_at: string
+    id: string;
+    amount: number;
+    type: WalletTransactionType;
+    description: string | null;
+    created_at: string;
     bookings?: {
-      id: string
+      id: string;
       jobs: {
-        id: string
-        title: string
-      }
-    } | null
-  } | null
-  trigger?: React.ReactNode
-  triggerClassName?: string
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
+        id: string;
+        title: string;
+      };
+    } | null;
+  } | null;
+  trigger?: React.ReactNode;
+  triggerClassName?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const transactionTypeConfig: Record<
   WalletTransactionType,
   {
-    variant: "default" | "secondary" | "destructive" | "outline"
-    label: string
-    icon: React.ReactNode
-    amountColor: string
-    amountPrefix: string
-    description: string
+    variant: "default" | "secondary" | "destructive" | "outline";
+    label: string;
+    icon: React.ReactNode;
+    amountColor: string;
+    amountPrefix: string;
+    description: string;
   }
 > = {
   credit: {
@@ -65,7 +72,7 @@ const transactionTypeConfig: Record<
     icon: <ArrowDownLeft className="h-5 w-5" />,
     amountColor: "text-green-600",
     amountPrefix: "+",
-    description: "Uang masuk ke dompet Anda"
+    description: "Uang masuk ke dompet Anda",
   },
   debit: {
     variant: "destructive",
@@ -73,7 +80,7 @@ const transactionTypeConfig: Record<
     icon: <ArrowUpRight className="h-5 w-5" />,
     amountColor: "text-red-600",
     amountPrefix: "-",
-    description: "Uang keluar dari dompet Anda"
+    description: "Uang keluar dari dompet Anda",
   },
   pending: {
     variant: "secondary",
@@ -81,7 +88,7 @@ const transactionTypeConfig: Record<
     icon: <Clock className="h-5 w-5" />,
     amountColor: "text-yellow-600",
     amountPrefix: "",
-    description: "Dana ditahan sementara sampai pekerjaan selesai"
+    description: "Dana ditahan sementara sampai pekerjaan selesai",
   },
   released: {
     variant: "default",
@@ -89,9 +96,9 @@ const transactionTypeConfig: Record<
     icon: <ArrowDownLeft className="h-5 w-5" />,
     amountColor: "text-green-600",
     amountPrefix: "+",
-    description: "Dana diterbitkan setelah pekerjaan selesai"
+    description: "Dana diterbitkan setelah pekerjaan selesai",
   },
-}
+};
 
 function formatAmount(amount: number): string {
   return new Intl.NumberFormat("id-ID", {
@@ -99,21 +106,21 @@ function formatAmount(amount: number): string {
     currency: "IDR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount)
+  }).format(amount);
 }
 
 function formatDateTime(dateString: string): string {
   try {
-    const date = new Date(dateString)
+    const date = new Date(dateString);
     return date.toLocaleDateString("id-ID", {
       day: "2-digit",
       month: "long",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    })
+    });
   } catch {
-    return dateString
+    return dateString;
   }
 }
 
@@ -124,28 +131,28 @@ export function TransactionDetailDialog({
   open: controlledOpen,
   onOpenChange,
 }: TransactionDetailDialogProps) {
-  const [internalOpen, setInternalOpen] = React.useState(false)
+  const [internalOpen, setInternalOpen] = React.useState(false);
 
-  const isControlled = controlledOpen !== undefined
-  const open = isControlled ? controlledOpen : internalOpen
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
 
   const handleOpenChange = React.useCallback(
     (newOpen: boolean) => {
       if (isControlled && onOpenChange) {
-        onOpenChange(newOpen)
+        onOpenChange(newOpen);
       } else {
-        setInternalOpen(newOpen)
+        setInternalOpen(newOpen);
       }
     },
-    [isControlled, onOpenChange]
-  )
+    [isControlled, onOpenChange],
+  );
 
   if (!transaction) {
-    return null
+    return null;
   }
 
-  const { type, amount, description, created_at, bookings } = transaction
-  const config = transactionTypeConfig[type]
+  const { type, amount, description, created_at, bookings } = transaction;
+  const config = transactionTypeConfig[type];
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -167,18 +174,38 @@ export function TransactionDetailDialog({
           {/* Amount and Type */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={cn("flex items-center justify-center h-12 w-12 rounded-full", config.variant === "default" ? "bg-green-100" : config.variant === "destructive" ? "bg-red-100" : "bg-yellow-100")}>
-                <div className={cn(config.variant === "default" ? "text-green-600" : config.variant === "destructive" ? "text-red-600" : "text-yellow-600")}>
+              <div
+                className={cn(
+                  "flex items-center justify-center h-12 w-12 rounded-full",
+                  config.variant === "default"
+                    ? "bg-green-100"
+                    : config.variant === "destructive"
+                      ? "bg-red-100"
+                      : "bg-yellow-100",
+                )}
+              >
+                <div
+                  className={cn(
+                    config.variant === "default"
+                      ? "text-green-600"
+                      : config.variant === "destructive"
+                        ? "text-red-600"
+                        : "text-yellow-600",
+                  )}
+                >
                   {config.icon}
                 </div>
               </div>
               <div>
                 <Badge variant={config.variant}>{config.label}</Badge>
-                <p className="text-sm text-muted-foreground mt-1">{config.description}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {config.description}
+                </p>
               </div>
             </div>
             <span className={cn("text-2xl font-bold", config.amountColor)}>
-              {config.amountPrefix}{formatAmount(amount)}
+              {config.amountPrefix}
+              {formatAmount(amount)}
             </span>
           </div>
 
@@ -190,7 +217,9 @@ export function TransactionDetailDialog({
               <Calendar className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-medium">Tanggal & Waktu</p>
-                <p className="text-sm text-muted-foreground">{formatDateTime(created_at)}</p>
+                <p className="text-sm text-muted-foreground">
+                  {formatDateTime(created_at)}
+                </p>
               </div>
             </div>
 
@@ -198,7 +227,9 @@ export function TransactionDetailDialog({
               <Hash className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-medium">ID Transaksi</p>
-                <p className="text-sm text-muted-foreground font-mono">{transaction.id}</p>
+                <p className="text-sm text-muted-foreground font-mono">
+                  {transaction.id}
+                </p>
               </div>
             </div>
 
@@ -207,8 +238,12 @@ export function TransactionDetailDialog({
                 <Briefcase className="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">Pekerjaan Terkait</p>
-                  <p className="text-sm text-muted-foreground">{bookings.jobs.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Booking ID: {bookings.id}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {bookings.jobs.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Booking ID: {bookings.id}
+                  </p>
                 </div>
               </div>
             )}
@@ -228,5 +263,5 @@ export function TransactionDetailDialog({
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

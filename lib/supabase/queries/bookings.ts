@@ -1,52 +1,57 @@
 // @ts-nocheck
-import { supabase } from "../client"
-import type { Database } from "../types"
+import { supabase } from "../client";
+import type { Database } from "../types";
 
-type BookingRow = Database["public"]["Tables"]["bookings"]["Row"]
-type BookingUpdate = Database["public"]["Tables"]["bookings"]["Update"]
+type BookingRow = Database["public"]["Tables"]["bookings"]["Row"];
+type BookingUpdate = Database["public"]["Tables"]["bookings"]["Update"];
 
 export type JobBookingWithDetails = BookingRow & {
   // Attendance fields (may not be in current DB schema but needed for feature)
-  check_in_at?: string | null
-  check_out_at?: string | null
-  check_in_lat?: number | null
-  check_in_lng?: number | null
-  check_out_lat?: number | null
-  check_out_lng?: number | null
-  booking_notes?: string | null
+  check_in_at?: string | null;
+  check_out_at?: string | null;
+  check_in_lat?: number | null;
+  check_in_lng?: number | null;
+  check_out_lat?: number | null;
+  check_out_lng?: number | null;
+  booking_notes?: string | null;
   worker?: {
-    id: string
-    full_name: string
-    avatar_url: string
-    phone: string
-    bio: string
-  }
+    id: string;
+    full_name: string;
+    avatar_url: string;
+    phone: string;
+    bio: string;
+  };
   business?: {
-    id: string
-    name: string
-    phone?: string
-    email?: string
-  }
+    id: string;
+    name: string;
+    phone?: string;
+    email?: string;
+  };
   job?: {
-    id: string
-    title: string
-    description?: string
-    budget_min?: number
-    budget_max?: number
-    deadline?: string
-    address?: string
-    lat?: number
-    lng?: number
-  }
+    id: string;
+    title: string;
+    description?: string;
+    budget_min?: number;
+    budget_max?: number;
+    deadline?: string;
+    address?: string;
+    lat?: number;
+    lng?: number;
+  };
   wallet_transaction?: {
-    id: string
-    amount: number
-    type: 'earn' | 'payout' | 'refund' | 'hold' | 'release'
-    status: 'pending_review' | 'available' | 'released' | 'disputed' | 'cancelled'
-    description: string | null
-    created_at: string
-  } | null
-}
+    id: string;
+    amount: number;
+    type: "earn" | "payout" | "refund" | "hold" | "release";
+    status:
+      | "pending_review"
+      | "available"
+      | "released"
+      | "disputed"
+      | "cancelled";
+    description: string | null;
+    created_at: string;
+  } | null;
+};
 
 /**
  * Get all bookings for a specific job
@@ -54,8 +59,9 @@ export type JobBookingWithDetails = BookingRow & {
 export async function getJobBookings(jobId: string) {
   try {
     const { data, error } = await supabase
-      .from('bookings')
-      .select(`
+      .from("bookings")
+      .select(
+        `
         *,
         worker:workers!inner(
           id,
@@ -76,19 +82,20 @@ export async function getJobBookings(jobId: string) {
           description,
           created_at
         )
-      `)
-      .eq('job_id', jobId)
-      .order('created_at', { ascending: false })
+      `,
+      )
+      .eq("job_id", jobId)
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error('Error fetching job bookings:', error)
-      return { data: null, error }
+      console.error("Error fetching job bookings:", error);
+      return { data: null, error };
     }
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Unexpected error fetching job bookings:', error)
-    return { data: null, error }
+    console.error("Unexpected error fetching job bookings:", error);
+    return { data: null, error };
   }
 }
 
@@ -98,8 +105,9 @@ export async function getJobBookings(jobId: string) {
 export async function getWorkerBookings(workerId: string) {
   try {
     const { data, error } = await supabase
-      .from('bookings')
-      .select(`
+      .from("bookings")
+      .select(
+        `
         *,
         job:jobs!inner(
           id,
@@ -126,19 +134,20 @@ export async function getWorkerBookings(workerId: string) {
           description,
           created_at
         )
-      `)
-      .eq('worker_id', workerId)
-      .order('created_at', { ascending: false })
+      `,
+      )
+      .eq("worker_id", workerId)
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error('Error fetching worker bookings:', error)
-      return { data: null, error }
+      console.error("Error fetching worker bookings:", error);
+      return { data: null, error };
     }
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Unexpected error fetching worker bookings:', error)
-    return { data: null, error }
+    console.error("Unexpected error fetching worker bookings:", error);
+    return { data: null, error };
   }
 }
 
@@ -148,8 +157,9 @@ export async function getWorkerBookings(workerId: string) {
 export async function getBusinessBookings(businessId: string) {
   try {
     const { data, error } = await supabase
-      .from('bookings')
-      .select(`
+      .from("bookings")
+      .select(
+        `
         *,
         worker:workers!inner(
           id,
@@ -173,19 +183,20 @@ export async function getBusinessBookings(businessId: string) {
           description,
           created_at
         )
-      `)
-      .eq('business_id', businessId)
-      .order('created_at', { ascending: false })
+      `,
+      )
+      .eq("business_id", businessId)
+      .order("created_at", { ascending: false });
 
     if (error) {
-      console.error('Error fetching business bookings:', error)
-      return { data: null, error }
+      console.error("Error fetching business bookings:", error);
+      return { data: null, error };
     }
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Unexpected error fetching business bookings:', error)
-    return { data: null, error }
+    console.error("Unexpected error fetching business bookings:", error);
+    return { data: null, error };
   }
 }
 
@@ -195,8 +206,9 @@ export async function getBusinessBookings(businessId: string) {
 export async function getBookingById(bookingId: string) {
   try {
     const { data, error } = await supabase
-      .from('bookings')
-      .select(`
+      .from("bookings")
+      .select(
+        `
         *,
         worker:workers!inner(
           id,
@@ -226,19 +238,20 @@ export async function getBookingById(bookingId: string) {
           description,
           created_at
         )
-      `)
-      .eq('id', bookingId)
-      .single()
+      `,
+      )
+      .eq("id", bookingId)
+      .single();
 
     if (error) {
-      console.error('Error fetching booking:', error)
-      return { data: null, error }
+      console.error("Error fetching booking:", error);
+      return { data: null, error };
     }
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Unexpected error fetching booking:', error)
-    return { data: null, error }
+    console.error("Unexpected error fetching booking:", error);
+    return { data: null, error };
   }
 }
 
@@ -247,25 +260,31 @@ export async function getBookingById(bookingId: string) {
  */
 export async function updateBookingStatus(
   bookingId: string,
-  status: 'pending' | 'accepted' | 'rejected' | 'in_progress' | 'completed' | 'cancelled'
+  status:
+    | "pending"
+    | "accepted"
+    | "rejected"
+    | "in_progress"
+    | "completed"
+    | "cancelled",
 ) {
   try {
     const { data, error } = await supabase
-      .from('bookings')
+      .from("bookings")
       .update({ status, updated_at: new Date().toISOString() })
-      .eq('id', bookingId)
+      .eq("id", bookingId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      console.error('Error updating booking status:', error)
-      return { data: null, error }
+      console.error("Error updating booking status:", error);
+      return { data: null, error };
     }
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Unexpected error updating booking status:', error)
-    return { data: null, error }
+    console.error("Unexpected error updating booking status:", error);
+    return { data: null, error };
   }
 }
 
@@ -274,24 +293,33 @@ export async function updateBookingStatus(
  */
 export async function updateMultipleBookingStatuses(
   bookingIds: string[],
-  status: 'pending' | 'accepted' | 'rejected' | 'in_progress' | 'completed' | 'cancelled'
+  status:
+    | "pending"
+    | "accepted"
+    | "rejected"
+    | "in_progress"
+    | "completed"
+    | "cancelled",
 ) {
   try {
     const { data, error } = await supabase
-      .from('bookings')
+      .from("bookings")
       .update({ status, updated_at: new Date().toISOString() })
-      .in('id', bookingIds)
-      .select()
+      .in("id", bookingIds)
+      .select();
 
     if (error) {
-      console.error('Error updating multiple booking statuses:', error)
-      return { data: null, error }
+      console.error("Error updating multiple booking statuses:", error);
+      return { data: null, error };
     }
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Unexpected error updating multiple booking statuses:', error)
-    return { data: null, error }
+    console.error(
+      "Unexpected error updating multiple booking statuses:",
+      error,
+    );
+    return { data: null, error };
   }
 }
 
@@ -301,44 +329,46 @@ export async function updateMultipleBookingStatuses(
 export async function addBookingNotes(bookingId: string, notes: string) {
   try {
     const { data, error } = await supabase
-      .from('bookings')
+      .from("bookings")
       .update({ booking_notes: notes, updated_at: new Date().toISOString() })
-      .eq('id', bookingId)
+      .eq("id", bookingId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      console.error('Error adding booking notes:', error)
-      return { data: null, error }
+      console.error("Error adding booking notes:", error);
+      return { data: null, error };
     }
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Unexpected error adding booking notes:', error)
-    return { data: null, error }
+    console.error("Unexpected error adding booking notes:", error);
+    return { data: null, error };
   }
 }
 
 /**
  * Create a new booking
  */
-export async function createBooking(booking: Omit<BookingRow, 'id' | 'created_at' | 'updated_at'>) {
+export async function createBooking(
+  booking: Omit<BookingRow, "id" | "created_at" | "updated_at">,
+) {
   try {
     const { data, error } = await supabase
-      .from('bookings')
+      .from("bookings")
       .insert(booking)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      console.error('Error creating booking:', error)
-      return { data: null, error }
+      console.error("Error creating booking:", error);
+      return { data: null, error };
     }
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Unexpected error creating booking:', error)
-    return { data: null, error }
+    console.error("Unexpected error creating booking:", error);
+    return { data: null, error };
   }
 }
 
@@ -348,19 +378,19 @@ export async function createBooking(booking: Omit<BookingRow, 'id' | 'created_at
 export async function deleteBooking(bookingId: string) {
   try {
     const { error } = await supabase
-      .from('bookings')
+      .from("bookings")
       .delete()
-      .eq('id', bookingId)
+      .eq("id", bookingId);
 
     if (error) {
-      console.error('Error deleting booking:', error)
-      return { error }
+      console.error("Error deleting booking:", error);
+      return { error };
     }
 
-    return { error: null }
+    return { error: null };
   } catch (error) {
-    console.error('Unexpected error deleting booking:', error)
-    return { error }
+    console.error("Unexpected error deleting booking:", error);
+    return { error };
   }
 }
 
@@ -374,48 +404,48 @@ export async function deleteBooking(bookingId: string) {
  */
 export function calculateReliabilityScore(
   bookings: Array<{
-    status: string
-    check_in_at?: string | null
-    check_out_at?: string | null
+    status: string;
+    check_in_at?: string | null;
+    check_out_at?: string | null;
   }>,
-  averageRating: number | null = null
+  averageRating: number | null = null,
 ): number {
   if (!bookings || bookings.length === 0) {
-    return 3.0 // Default score for new workers
+    return 3.0; // Default score for new workers
   }
 
-  const completedBookings = bookings.filter(b => b.status === 'completed')
-  const totalBookings = bookings.length
+  const completedBookings = bookings.filter((b) => b.status === "completed");
+  const totalBookings = bookings.length;
 
   if (completedBookings.length === 0) {
-    return 2.5 // Lower score if no completed bookings
+    return 2.5; // Lower score if no completed bookings
   }
 
   // 1. Attendance Score (40% weight): % of completed vs total
-  const attendanceRate = completedBookings.length / totalBookings
-  const attendanceScore = attendanceRate * 5.0
+  const attendanceRate = completedBookings.length / totalBookings;
+  const attendanceScore = attendanceRate * 5.0;
 
   // 2. Punctuality Score (30% weight): % of bookings with check-ins
-  const bookingsWithCheckIn = completedBookings.filter(booking => booking.check_in_at !== null && booking.check_in_at !== undefined)
-  const punctualityRate = completedBookings.length > 0
-    ? bookingsWithCheckIn.length / completedBookings.length
-    : 0
-  const punctualityScore = punctualityRate * 5.0
+  const bookingsWithCheckIn = completedBookings.filter(
+    (booking) =>
+      booking.check_in_at !== null && booking.check_in_at !== undefined,
+  );
+  const punctualityRate =
+    completedBookings.length > 0
+      ? bookingsWithCheckIn.length / completedBookings.length
+      : 0;
+  const punctualityScore = punctualityRate * 5.0;
 
   // 3. Rating Score (30% weight): Average rating from reviews
-  const ratingScore = averageRating !== null && averageRating > 0
-    ? averageRating
-    : 4.0 // Default to 4.0 if no ratings yet
+  const ratingScore =
+    averageRating !== null && averageRating > 0 ? averageRating : 4.0; // Default to 4.0 if no ratings yet
 
   // Calculate weighted average
-  const weightedScore = (
-    (attendanceScore * 0.40) +
-    (punctualityScore * 0.30) +
-    (ratingScore * 0.30)
-  )
+  const weightedScore =
+    attendanceScore * 0.4 + punctualityScore * 0.3 + ratingScore * 0.3;
 
   // Clamp between 1.0 and 5.0
-  return Math.max(1.0, Math.min(5.0, weightedScore))
+  return Math.max(1.0, Math.min(5.0, weightedScore));
 }
 
 /**
@@ -426,52 +456,64 @@ export async function getWorkerReliabilityMetrics(workerId: string) {
   try {
     // Fetch bookings data
     const { data: bookingsData, error: bookingsError } = await supabase
-      .from('bookings')
-      .select('status, check_in_at, check_out_at')
-      .eq('worker_id', workerId)
-      .order('created_at', { ascending: false })
+      .from("bookings")
+      .select("status, check_in_at, check_out_at")
+      .eq("worker_id", workerId)
+      .order("created_at", { ascending: false });
 
     if (bookingsError) {
-      console.error('Error fetching worker reliability metrics:', bookingsError)
-      return { data: null, error: bookingsError }
+      console.error(
+        "Error fetching worker reliability metrics:",
+        bookingsError,
+      );
+      return { data: null, error: bookingsError };
     }
 
     // Fetch average rating from reviews
     const { data: reviewsData, error: reviewsError } = await supabase
-      .from('reviews')
-      .select('rating')
-      .eq('worker_id', workerId)
-      .eq('reviewer', 'business')
+      .from("reviews")
+      .select("rating")
+      .eq("worker_id", workerId)
+      .eq("reviewer", "business");
 
     if (reviewsError) {
-      console.error('Error fetching worker reviews for reliability:', reviewsError)
-      return { data: null, error: reviewsError }
+      console.error(
+        "Error fetching worker reviews for reliability:",
+        reviewsError,
+      );
+      return { data: null, error: reviewsError };
     }
 
     const bookings = (bookingsData || []) as unknown as Array<{
-      status: string
-      check_in_at?: string | null
-      check_out_at?: string | null
-    }>
-    const completedBookings = bookings.filter(b => b.status === 'completed')
-    const totalBookings = bookings.length
+      status: string;
+      check_in_at?: string | null;
+      check_out_at?: string | null;
+    }>;
+    const completedBookings = bookings.filter((b) => b.status === "completed");
+    const totalBookings = bookings.length;
 
     // Calculate attendance
-    const attendanceRate = totalBookings > 0
-      ? (completedBookings.length / totalBookings) * 100
-      : 0
+    const attendanceRate =
+      totalBookings > 0 ? (completedBookings.length / totalBookings) * 100 : 0;
 
     // Calculate punctuality
-    const bookingsWithCheckIn = completedBookings.filter(booking => booking.check_in_at !== null && booking.check_in_at !== undefined)
-    const punctualityRate = completedBookings.length > 0
-      ? (bookingsWithCheckIn.length / completedBookings.length) * 100
-      : 0
+    const bookingsWithCheckIn = completedBookings.filter(
+      (booking) =>
+        booking.check_in_at !== null && booking.check_in_at !== undefined,
+    );
+    const punctualityRate =
+      completedBookings.length > 0
+        ? (bookingsWithCheckIn.length / completedBookings.length) * 100
+        : 0;
 
     // Calculate average rating from reviews
-    let avgRating: number | null = null
+    let avgRating: number | null = null;
     if (reviewsData && reviewsData.length > 0) {
-      const sum = reviewsData.reduce((acc, review) => acc + (review.rating || 0), 0)
-      avgRating = sum / reviewsData.length
+      const sum = reviewsData.reduce(
+        (acc, review) => acc + (review.rating || 0),
+        0,
+      );
+      avgRating = sum / reviewsData.length;
     }
 
     const metrics = {
@@ -480,12 +522,15 @@ export async function getWorkerReliabilityMetrics(workerId: string) {
       attendanceRate: Math.round(attendanceRate),
       punctualityRate: Math.round(punctualityRate),
       averageRating: avgRating ? Math.round(avgRating * 10) / 10 : null,
-      reliabilityScore: calculateReliabilityScore(bookings, avgRating)
-    }
+      reliabilityScore: calculateReliabilityScore(bookings, avgRating),
+    };
 
-    return { data: metrics, error: null }
+    return { data: metrics, error: null };
   } catch (error) {
-    console.error('Unexpected error fetching worker reliability metrics:', error)
-    return { data: null, error }
+    console.error(
+      "Unexpected error fetching worker reliability metrics:",
+      error,
+    );
+    return { data: null, error };
   }
 }

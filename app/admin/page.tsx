@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Users,
   Briefcase,
@@ -13,72 +13,79 @@ import {
   Building2,
   UserCheck,
   Activity,
-} from "lucide-react"
+} from "lucide-react";
 
-import { AnalyticsCard } from "@/components/admin/analytics-card"
-import { useAuth } from "@/app/providers/auth-provider"
-import { getPlatformMetrics } from "@/lib/supabase/queries/analytics"
-import { getAdminPendingCounts, type AdminPendingCounts } from "@/lib/supabase/queries/admin"
-import { getRecentAuditLogs } from "@/lib/supabase/queries/audit-logs"
-import type { PlatformMetrics } from "@/lib/types/admin"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Badge } from "@/components/ui/badge"
+import { AnalyticsCard } from "@/components/admin/analytics-card";
+import { useAuth } from "@/app/providers/auth-provider";
+import { getPlatformMetrics } from "@/lib/supabase/queries/analytics";
+import {
+  getAdminPendingCounts,
+  type AdminPendingCounts,
+} from "@/lib/supabase/queries/admin";
+import { getRecentAuditLogs } from "@/lib/supabase/queries/audit-logs";
+import type { PlatformMetrics } from "@/lib/types/admin";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 export default function AdminDashboardPage() {
-  const router = useRouter()
-  const { user, isLoading: authLoading } = useAuth()
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
 
-  const [metrics, setMetrics] = useState<PlatformMetrics | null>(null)
-  const [pendingCounts, setPendingCounts] = useState<AdminPendingCounts | null>(null)
-  const [recentLogs, setRecentLogs] = useState<any[] | null>(null)
-  const [isDataLoading, setIsDataLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [metrics, setMetrics] = useState<PlatformMetrics | null>(null);
+  const [pendingCounts, setPendingCounts] = useState<AdminPendingCounts | null>(
+    null,
+  );
+  const [recentLogs, setRecentLogs] = useState<any[] | null>(null);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/login?redirect=/admin")
+      router.push("/login?redirect=/admin");
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, router]);
 
   useEffect(() => {
     async function loadDashboardData() {
-      if (!user) return
+      if (!user) return;
 
-      setIsDataLoading(true)
-      setError(null)
+      setIsDataLoading(true);
+      setError(null);
 
       try {
         const [metricsResult, pendingResult, logsResult] = await Promise.all([
           getPlatformMetrics(),
           getAdminPendingCounts(),
           getRecentAuditLogs(10),
-        ])
+        ]);
 
         if (metricsResult) {
-          setMetrics(metricsResult)
+          setMetrics(metricsResult);
         } else {
-          throw new Error("Failed to load metrics")
+          throw new Error("Failed to load metrics");
         }
 
         if (pendingResult) {
-          setPendingCounts(pendingResult)
+          setPendingCounts(pendingResult);
         }
 
         if (logsResult) {
-          setRecentLogs(logsResult)
+          setRecentLogs(logsResult);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load dashboard data")
+        setError(
+          err instanceof Error ? err.message : "Failed to load dashboard data",
+        );
       } finally {
-        setIsDataLoading(false)
+        setIsDataLoading(false);
       }
     }
 
     if (user) {
-      loadDashboardData()
+      loadDashboardData();
     }
-  }, [user])
+  }, [user]);
 
   const getActionLabel = (action: string) => {
     const actionMap: Record<string, string> = {
@@ -91,20 +98,29 @@ export default function AdminDashboardPage() {
       resolve_dispute: "Resolved Dispute",
       dismiss_report: "Dismissed Report",
       delete_job: "Deleted Job",
-    }
-    return actionMap[action] || action
-  }
+    };
+    return actionMap[action] || action;
+  };
 
   const getActionColor = (action: string) => {
-    if (action.includes("approve")) return "default"
-    if (action.includes("reject") || action.includes("ban") || action.includes("delete")) return "destructive"
-    if (action.includes("suspend")) return "secondary"
-    return "outline"
-  }
+    if (action.includes("approve")) return "default";
+    if (
+      action.includes("reject") ||
+      action.includes("ban") ||
+      action.includes("delete")
+    )
+      return "destructive";
+    if (action.includes("suspend")) return "secondary";
+    return "outline";
+  };
 
   const totalPending = pendingCounts
-    ? pendingCounts.pendingBusinessVerifications + pendingCounts.pendingKYCVerifications + pendingCounts.pendingJobsForModeration + pendingCounts.openDisputes + pendingCounts.activeComplianceWarnings
-    : 0
+    ? pendingCounts.pendingBusinessVerifications +
+      pendingCounts.pendingKYCVerifications +
+      pendingCounts.pendingJobsForModeration +
+      pendingCounts.openDisputes +
+      pendingCounts.activeComplianceWarnings
+    : 0;
 
   if (authLoading || isDataLoading) {
     return (
@@ -120,7 +136,7 @@ export default function AdminDashboardPage() {
         </div>
         <Skeleton className="h-64" />
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -128,7 +144,9 @@ export default function AdminDashboardPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground mt-2">Overview of platform activity</p>
+          <p className="text-muted-foreground mt-2">
+            Overview of platform activity
+          </p>
         </div>
         <Card className="border-destructive">
           <CardContent className="pt-6">
@@ -136,7 +154,7 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -145,7 +163,9 @@ export default function AdminDashboardPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground mt-2">Overview of platform activity and pending items</p>
+          <p className="text-muted-foreground mt-2">
+            Overview of platform activity and pending items
+          </p>
         </div>
         {totalPending > 0 && (
           <Badge variant="destructive" className="text-sm px-3 py-1">
@@ -167,11 +187,18 @@ export default function AdminDashboardPage() {
           value={metrics?.jobs.active || 0}
           description={`${metrics?.jobs.newThisWeek || 0} new this week`}
           icon={<Briefcase className="h-4 w-4" />}
-          trend={metrics?.jobs.newThisWeek ? { value: 0, label: "this week" } : undefined}
+          trend={
+            metrics?.jobs.newThisWeek
+              ? { value: 0, label: "this week" }
+              : undefined
+          }
         />
         <AnalyticsCard
           title="Pending Verifications"
-          value={(pendingCounts?.pendingBusinessVerifications || 0) + (pendingCounts?.pendingKYCVerifications || 0)}
+          value={
+            (pendingCounts?.pendingBusinessVerifications || 0) +
+            (pendingCounts?.pendingKYCVerifications || 0)
+          }
           description={`${pendingCounts?.pendingBusinessVerifications || 0} business • ${pendingCounts?.pendingKYCVerifications || 0} KYC`}
           icon={<FileCheck className="h-4 w-4" />}
         />
@@ -188,12 +215,18 @@ export default function AdminDashboardPage() {
         <Link href="/admin/businesses" className="group">
           <Card className="transition-colors hover:bg-accent/50 cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Business Verifications</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Business Verifications
+              </CardTitle>
               <Building2 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{pendingCounts?.pendingBusinessVerifications || 0}</div>
-              <p className="text-xs text-muted-foreground mt-1">Pending approvals</p>
+              <div className="text-2xl font-bold">
+                {pendingCounts?.pendingBusinessVerifications || 0}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Pending approvals
+              </p>
               <div className="flex items-center text-xs text-muted-foreground mt-2 group-hover:text-foreground">
                 Review <ArrowRight className="ml-1 h-3 w-3" />
               </div>
@@ -204,12 +237,18 @@ export default function AdminDashboardPage() {
         <Link href="/admin/kycs" className="group">
           <Card className="transition-colors hover:bg-accent/50 cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">KYC Verifications</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                KYC Verifications
+              </CardTitle>
               <UserCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{pendingCounts?.pendingKYCVerifications || 0}</div>
-              <p className="text-xs text-muted-foreground mt-1">Pending approvals</p>
+              <div className="text-2xl font-bold">
+                {pendingCounts?.pendingKYCVerifications || 0}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Pending approvals
+              </p>
               <div className="flex items-center text-xs text-muted-foreground mt-2 group-hover:text-foreground">
                 Review <ArrowRight className="ml-1 h-3 w-3" />
               </div>
@@ -224,8 +263,12 @@ export default function AdminDashboardPage() {
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{pendingCounts?.openDisputes || 0}</div>
-              <p className="text-xs text-muted-foreground mt-1">Requires resolution</p>
+              <div className="text-2xl font-bold">
+                {pendingCounts?.openDisputes || 0}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Requires resolution
+              </p>
               <div className="flex items-center text-xs text-muted-foreground mt-2 group-hover:text-foreground">
                 Resolve <ArrowRight className="ml-1 h-3 w-3" />
               </div>
@@ -236,11 +279,15 @@ export default function AdminDashboardPage() {
         <Link href="/admin/users" className="group">
           <Card className="transition-colors hover:bg-accent/50 cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">User Management</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                User Management
+              </CardTitle>
               <Shield className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{metrics?.users.total || 0}</div>
+              <div className="text-2xl font-bold">
+                {metrics?.users.total || 0}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">Total users</p>
               <div className="flex items-center text-xs text-muted-foreground mt-2 group-hover:text-foreground">
                 Manage <ArrowRight className="ml-1 h-3 w-3" />
@@ -259,7 +306,10 @@ export default function AdminDashboardPage() {
           {recentLogs && recentLogs.length > 0 ? (
             <div className="space-y-4">
               {recentLogs.map((log) => (
-                <div key={log.id} className="flex items-start gap-3 pb-3 border-b last:border-0 last:pb-0">
+                <div
+                  key={log.id}
+                  className="flex items-start gap-3 pb-3 border-b last:border-0 last:pb-0"
+                >
                   <div className="text-muted-foreground">
                     <Activity className="h-4 w-4" />
                   </div>
@@ -268,7 +318,10 @@ export default function AdminDashboardPage() {
                       <span className="font-medium text-sm">
                         {log.admin?.user?.full_name || "Admin"}
                       </span>
-                      <Badge variant={getActionColor(log.action) as any} className="text-xs">
+                      <Badge
+                        variant={getActionColor(log.action) as any}
+                        className="text-xs"
+                      >
                         {getActionLabel(log.action)}
                       </Badge>
                     </div>
@@ -280,10 +333,12 @@ export default function AdminDashboardPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">No recent activity</p>
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No recent activity
+            </p>
           )}
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

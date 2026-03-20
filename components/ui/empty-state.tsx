@@ -1,27 +1,27 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /**
  * Props for the EmptyState component
  */
 export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Icon to display (React node) */
-  icon?: React.ReactNode
+  icon?: React.ReactNode;
   /** Title text */
-  title: string
+  title: string;
   /** Description text */
-  description?: string
+  description?: string;
   /** Action button props */
   action?: {
-    label: string
-    onClick: () => void
-    variant?: "primary" | "secondary" | "ghost" | "outline"
-  }
+    label: string;
+    onClick: () => void;
+    variant?: "primary" | "secondary" | "ghost" | "outline";
+  };
   /** Custom illustration URL or component */
-  illustration?: React.ReactNode
+  illustration?: React.ReactNode;
   /** Size variant */
-  size?: "sm" | "md" | "lg"
+  size?: "sm" | "md" | "lg";
 }
 
 /**
@@ -29,7 +29,12 @@ export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
  */
 const defaultIcons = {
   empty: (
-    <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg
+      className="h-12 w-12"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -39,7 +44,12 @@ const defaultIcons = {
     </svg>
   ),
   search: (
-    <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg
+      className="h-12 w-12"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -49,7 +59,12 @@ const defaultIcons = {
     </svg>
   ),
   error: (
-    <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg
+      className="h-12 w-12"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -59,7 +74,12 @@ const defaultIcons = {
     </svg>
   ),
   noData: (
-    <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg
+      className="h-12 w-12"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -69,7 +89,12 @@ const defaultIcons = {
     </svg>
   ),
   noUsers: (
-    <svg className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <svg
+      className="h-12 w-12"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
       <path
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -78,11 +103,11 @@ const defaultIcons = {
       />
     </svg>
   ),
-}
+};
 
 /**
  * EmptyState component for displaying empty or no-data states
- * 
+ *
  * @example
  * ```tsx
  * <EmptyState
@@ -121,14 +146,14 @@ export function EmptyState({
       title: "text-xl",
       description: "text-lg",
     },
-  }
+  };
 
   return (
     <div
       className={cn(
         "flex flex-col items-center justify-center text-center",
         sizes[size].container,
-        className
+        className,
       )}
       {...props}
     >
@@ -138,7 +163,7 @@ export function EmptyState({
         <div
           className={cn(
             "mb-4 text-slate-400 dark:text-slate-500",
-            sizes[size].icon
+            sizes[size].icon,
           )}
           aria-hidden="true"
         >
@@ -148,7 +173,7 @@ export function EmptyState({
       <h3
         className={cn(
           "font-semibold text-slate-900 dark:text-slate-100",
-          sizes[size].title
+          sizes[size].title,
         )}
       >
         {title}
@@ -157,7 +182,7 @@ export function EmptyState({
         <p
           className={cn(
             "mt-2 text-slate-500 dark:text-slate-400 max-w-sm",
-            sizes[size].description
+            sizes[size].description,
           )}
         >
           {description}
@@ -174,7 +199,7 @@ export function EmptyState({
         </Button>
       )}
     </div>
-  )
+  );
 }
 
 /**
@@ -182,12 +207,12 @@ export function EmptyState({
  */
 export interface EmptyStateCardProps extends EmptyStateProps {
   /** Whether to show a bordered card style */
-  bordered?: boolean
+  bordered?: boolean;
 }
 
 /**
  * EmptyStateCard component for empty states within a card container
- * 
+ *
  * @example
  * ```tsx
  * <EmptyStateCard
@@ -206,13 +231,14 @@ export function EmptyStateCard({
     <EmptyState
       className={cn(
         "rounded-2xl bg-white dark:bg-slate-900",
-        bordered && "border-2 border-dashed border-slate-200 dark:border-slate-700",
-        className
+        bordered &&
+          "border-2 border-dashed border-slate-200 dark:border-slate-700",
+        className,
       )}
       {...props}
     />
-  )
+  );
 }
 
 // Export default icons for use in parent components
-export { defaultIcons }
+export { defaultIcons };

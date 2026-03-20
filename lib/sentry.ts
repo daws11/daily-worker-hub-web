@@ -75,7 +75,7 @@ export function captureException(error: unknown, context?: ErrorContext): void {
  */
 export function captureMessage(
   message: string,
-  level: SeverityLevel = "info"
+  level: SeverityLevel = "info",
 ): void {
   Sentry.captureMessage(message, level);
 }
@@ -132,7 +132,7 @@ export function setUserContext(user: SentryUser | null): void {
 export function addBreadcrumb(
   category: string,
   message: string,
-  data?: Record<string, unknown>
+  data?: Record<string, unknown>,
 ): void {
   Sentry.addBreadcrumb({
     category,
@@ -162,7 +162,7 @@ export function addBreadcrumb(
 export async function startSpan<T>(
   name: string,
   op: string,
-  callback: () => T | Promise<T>
+  callback: () => T | Promise<T>,
 ): Promise<T> {
   return Sentry.startSpan({ name, op }, callback);
 }
@@ -215,7 +215,7 @@ export function setExtra(key: string, value: unknown): void {
  */
 export function withErrorTracking<T extends (...args: unknown[]) => unknown>(
   fn: T,
-  context?: ErrorContext
+  context?: ErrorContext,
 ): T {
   return ((...args: Parameters<T>) => {
     try {
@@ -249,7 +249,7 @@ export function reportApiError(
   error: unknown,
   endpoint: string,
   method: string,
-  statusCode?: number
+  statusCode?: number,
 ): void {
   captureException(error, {
     tags: {
@@ -281,7 +281,7 @@ export function reportPaymentError(
   error: unknown,
   paymentType: "topup" | "withdrawal" | "payment",
   amount?: number,
-  userId?: string
+  userId?: string,
 ): void {
   captureException(error, {
     tags: {

@@ -5,6 +5,7 @@ This document describes the verification process for the PP 35/2021 alternative 
 ## Overview
 
 When a worker has reached the 21-day PP 35/2021 limit for a business, the system should:
+
 1. Block acceptance of that worker's application
 2. Display an `AlternativeWorkersSuggestion` component with workers who haven't reached the limit
 3. Allow the business to select and accept alternative workers
@@ -12,6 +13,7 @@ When a worker has reached the 21-day PP 35/2021 limit for a business, the system
 ## Verification Steps
 
 ### Step 1: Create Test Data
+
 - Create a test business
 - Create 5 test workers with different day counts:
   - **Blocked Worker**: 21 days (should NOT appear in alternatives)
@@ -21,23 +23,28 @@ When a worker has reached the 21-day PP 35/2021 limit for a business, the system
   - **Approaching Worker**: 15 days (warning level, should appear fourth)
 
 ### Step 2: Verify Compliance Tracking
+
 - Verify `compliance_tracking` table has correct records for all workers
 - Each worker should have the expected number of days worked
 
 ### Step 3: Verify getAlternativeWorkers Query
+
 - Call `getAlternativeWorkers(businessId, month)` function
 - Verify it returns workers who have NOT reached 21-day limit
 - Verify blocked worker (21 days) is NOT in the list
 
 ### Step 4: Verify Worker Sorting
+
 - Verify returned workers are sorted by availability (days worked ascending)
 - Workers with fewer days worked should appear first
 
 ### Step 5: Verify All Workers Can Be Accepted
+
 - For each alternative worker, verify `getComplianceStatus` returns status !== 'blocked'
 - All alternative workers should have `canAccept = true`
 
 ### Step 6: Verify UI Component Expectations
+
 - `AlternativeWorkersSuggestion` component should display:
   - Alert banner: "Alternative Workers Available"
   - Worker count message
@@ -213,6 +220,7 @@ ORDER BY ct.days_worked ASC;
 ```
 
 Expected results:
+
 - Workers with < 21 days worked should be shown as alternatives
 - Workers with 21+ days worked should be blocked
 

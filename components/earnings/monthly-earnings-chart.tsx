@@ -1,5 +1,5 @@
-import * as React from "react"
-import { BarChart3 } from "lucide-react"
+import * as React from "react";
+import { BarChart3 } from "lucide-react";
 
 import {
   Card,
@@ -7,22 +7,25 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { formatIDR } from "@/lib/utils/currency"
-import type { MonthlyEarnings } from "@/lib/types/earnings"
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { formatIDR } from "@/lib/utils/currency";
+import type { MonthlyEarnings } from "@/lib/types/earnings";
 
 export interface MonthlyEarningsChartProps extends React.HTMLAttributes<HTMLDivElement> {
-  data?: MonthlyEarnings[] | null
-  isLoading?: boolean
-  title?: string
-  description?: string
-  showIcon?: boolean
-  showEmptyState?: boolean
-  maxBars?: number
+  data?: MonthlyEarnings[] | null;
+  isLoading?: boolean;
+  title?: string;
+  description?: string;
+  showIcon?: boolean;
+  showEmptyState?: boolean;
+  maxBars?: number;
 }
 
-const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsChartProps>(
+const MonthlyEarningsChart = React.forwardRef<
+  HTMLDivElement,
+  MonthlyEarningsChartProps
+>(
   (
     {
       data,
@@ -35,7 +38,7 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
     // Loading state
     if (isLoading) {
@@ -43,7 +46,12 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
             <div className="flex items-center gap-2">
-              {showIcon && <BarChart3 className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
+              {showIcon && (
+                <BarChart3
+                  className="h-5 w-5 text-muted-foreground"
+                  aria-hidden="true"
+                />
+              )}
               <CardTitle>{title}</CardTitle>
             </div>
             <CardDescription>{description}</CardDescription>
@@ -54,7 +62,7 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
             </div>
           </CardContent>
         </Card>
-      )
+      );
     }
 
     // Empty state (no data)
@@ -64,7 +72,12 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
           <Card ref={ref} className={cn("w-full", className)} {...props}>
             <CardHeader>
               <div className="flex items-center gap-2">
-                {showIcon && <BarChart3 className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
+                {showIcon && (
+                  <BarChart3
+                    className="h-5 w-5 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                )}
                 <CardTitle>{title}</CardTitle>
               </div>
               <CardDescription>{description}</CardDescription>
@@ -72,33 +85,36 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
             <CardContent>
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <BarChart3 className="h-12 w-12 text-muted-foreground/50 mb-3" />
-                <p className="text-sm text-muted-foreground">Belum ada data pendapatan</p>
+                <p className="text-sm text-muted-foreground">
+                  Belum ada data pendapatan
+                </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Data pendapatan bulanan akan muncul di sini setelah Anda menyelesaikan pekerjaan
+                  Data pendapatan bulanan akan muncul di sini setelah Anda
+                  menyelesaikan pekerjaan
                 </p>
               </div>
             </CardContent>
           </Card>
-        )
+        );
       }
-      return null
+      return null;
     }
 
     // Limit data to maxBars
-    const chartData = data.slice(-maxBars)
+    const chartData = data.slice(-maxBars);
 
     // Calculate chart dimensions
-    const maxEarnings = Math.max(...chartData.map((d) => d.earnings), 1)
-    const chartHeight = 200
-    const barWidth = 24
-    const gapWidth = 12
-    const chartWidth = chartData.length * (barWidth + gapWidth) - gapWidth
+    const maxEarnings = Math.max(...chartData.map((d) => d.earnings), 1);
+    const chartHeight = 200;
+    const barWidth = 24;
+    const gapWidth = 12;
+    const chartWidth = chartData.length * (barWidth + gapWidth) - gapWidth;
 
     // Helper to get month short name
     const getMonthShortName = (monthName: string): string => {
-      const parts = monthName.split(" ")
+      const parts = monthName.split(" ");
       if (parts.length >= 2) {
-        const month = parts[0]
+        const month = parts[0];
         const monthMap: Record<string, string> = {
           January: "Jan",
           February: "Feb",
@@ -112,17 +128,19 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
           October: "Okt",
           November: "Nov",
           December: "Des",
-        }
-        return monthMap[month] || month.substring(0, 3)
+        };
+        return monthMap[month] || month.substring(0, 3);
       }
-      return monthName.substring(0, 3)
-    }
+      return monthName.substring(0, 3);
+    };
 
     return (
       <Card ref={ref} className={cn("w-full", className)} {...props}>
         <CardHeader>
           <div className="flex items-center gap-2">
-            {showIcon && <BarChart3 className="h-5 w-5 text-muted-foreground" />}
+            {showIcon && (
+              <BarChart3 className="h-5 w-5 text-muted-foreground" />
+            )}
             <CardTitle>{title}</CardTitle>
           </div>
           <CardDescription>{description}</CardDescription>
@@ -157,9 +175,10 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
 
                   {/* Bars */}
                   {chartData.map((item, index) => {
-                    const barHeight = (item.earnings / maxEarnings) * (chartHeight - 20)
-                    const x = index * (barWidth + gapWidth)
-                    const y = chartHeight - barHeight
+                    const barHeight =
+                      (item.earnings / maxEarnings) * (chartHeight - 20);
+                    const x = index * (barWidth + gapWidth);
+                    const y = chartHeight - barHeight;
 
                     return (
                       <g key={item.month}>
@@ -174,8 +193,12 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
                           className="hover:fill-primary/80 transition-colors cursor-pointer"
                         >
                           <title>
-                            {item.month_name}: {formatIDR(item.earnings)} ({item.bookings_count}{" "}
-                            {item.bookings_count === 1 ? "pekerjaan" : "pekerjaan"})
+                            {item.month_name}: {formatIDR(item.earnings)} (
+                            {item.bookings_count}{" "}
+                            {item.bookings_count === 1
+                              ? "pekerjaan"
+                              : "pekerjaan"}
+                            )
                           </title>
                         </rect>
 
@@ -196,12 +219,12 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
                           </text>
                         )}
                       </g>
-                    )
+                    );
                   })}
 
                   {/* X-axis labels */}
                   {chartData.map((item, index) => {
-                    const x = index * (barWidth + gapWidth) + barWidth / 2
+                    const x = index * (barWidth + gapWidth) + barWidth / 2;
 
                     return (
                       <text
@@ -214,7 +237,7 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
                       >
                         {getMonthShortName(item.month_name)}
                       </text>
-                    )
+                    );
                   })}
                 </svg>
               </div>
@@ -223,16 +246,21 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
             {/* Summary statistics */}
             <div className="flex items-center justify-between pt-2 border-t text-sm flex-wrap gap-2">
               <div className="text-center flex-1 min-w-[100px]">
-                <p className="text-xs text-muted-foreground">Total Pendapatan</p>
+                <p className="text-xs text-muted-foreground">
+                  Total Pendapatan
+                </p>
                 <p className="font-semibold">
-                  {formatIDR(chartData.reduce((sum, item) => sum + item.earnings, 0))}
+                  {formatIDR(
+                    chartData.reduce((sum, item) => sum + item.earnings, 0),
+                  )}
                 </p>
               </div>
               <div className="text-center flex-1 min-w-[100px] border-x px-4">
                 <p className="text-xs text-muted-foreground">Rata-rata</p>
                 <p className="font-semibold">
                   {formatIDR(
-                    chartData.reduce((sum, item) => sum + item.earnings, 0) / chartData.length
+                    chartData.reduce((sum, item) => sum + item.earnings, 0) /
+                      chartData.length,
                   )}
                 </p>
               </div>
@@ -244,9 +272,9 @@ const MonthlyEarningsChart = React.forwardRef<HTMLDivElement, MonthlyEarningsCha
           </div>
         </CardContent>
       </Card>
-    )
-  }
-)
-MonthlyEarningsChart.displayName = "MonthlyEarningsChart"
+    );
+  },
+);
+MonthlyEarningsChart.displayName = "MonthlyEarningsChart";
 
-export { MonthlyEarningsChart }
+export { MonthlyEarningsChart };

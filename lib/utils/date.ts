@@ -1,4 +1,4 @@
-import type { Locale } from '@/lib/i18n/types'
+import type { Locale } from "@/lib/i18n/types";
 
 /**
  * Map locale code to BCP 47 language tag for date formatting
@@ -7,10 +7,10 @@ import type { Locale } from '@/lib/i18n/types'
  */
 function getDateTimeLocale(locale: Locale): string {
   const localeMap: Record<Locale, string> = {
-    id: 'id-ID',
-    en: 'en-US',
-  }
-  return localeMap[locale]
+    id: "id-ID",
+    en: "en-US",
+  };
+  return localeMap[locale];
 }
 
 /**
@@ -19,19 +19,19 @@ function getDateTimeLocale(locale: Locale): string {
  * @param locale - Locale code ('id' or 'en'), defaults to 'id'
  * @returns Formatted date string (e.g., "Selasa, 25 Februari 2026" for 'id', "Tuesday, February 25, 2026" for 'en')
  */
-export function formatDate(dateString: string, locale: Locale = 'id'): string {
-  const date = new Date(dateString)
+export function formatDate(dateString: string, locale: Locale = "id"): string {
+  const date = new Date(dateString);
 
   if (isNaN(date.getTime())) {
-    throw new Error(`Invalid date string: ${dateString}`)
+    throw new Error(`Invalid date string: ${dateString}`);
   }
 
   return new Intl.DateTimeFormat(getDateTimeLocale(locale), {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(date)
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
 }
 
 /**
@@ -40,20 +40,23 @@ export function formatDate(dateString: string, locale: Locale = 'id'): string {
  * @param locale - Locale code ('id' or 'en'), defaults to 'id'
  * @returns Formatted date and time string (e.g., "25 Februari 2026, 14.30" for 'id', "February 25, 2026, 2:30 PM" for 'en')
  */
-export function formatDateTime(dateString: string, locale: Locale = 'id'): string {
-  const date = new Date(dateString)
+export function formatDateTime(
+  dateString: string,
+  locale: Locale = "id",
+): string {
+  const date = new Date(dateString);
 
   if (isNaN(date.getTime())) {
-    throw new Error(`Invalid date string: ${dateString}`)
+    throw new Error(`Invalid date string: ${dateString}`);
   }
 
   return new Intl.DateTimeFormat(getDateTimeLocale(locale), {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(date)
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
 }
 
 /**
@@ -62,17 +65,17 @@ export function formatDateTime(dateString: string, locale: Locale = 'id'): strin
  * @param locale - Locale code ('id' or 'en'), defaults to 'id'
  * @returns Formatted time string (e.g., "14.30" for 'id', "2:30 PM" for 'en')
  */
-export function formatTime(dateString: string, locale: Locale = 'id'): string {
-  const date = new Date(dateString)
+export function formatTime(dateString: string, locale: Locale = "id"): string {
+  const date = new Date(dateString);
 
   if (isNaN(date.getTime())) {
-    throw new Error(`Invalid date string: ${dateString}`)
+    throw new Error(`Invalid date string: ${dateString}`);
   }
 
   return new Intl.DateTimeFormat(getDateTimeLocale(locale), {
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(date)
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
 }
 
 /**
@@ -81,48 +84,51 @@ export function formatTime(dateString: string, locale: Locale = 'id'): string {
  * @param locale - Locale code ('id' or 'en'), defaults to 'id'
  * @returns Formatted short date string (e.g., "25 Feb 2026" for 'id', "Feb 25, 2026" for 'en')
  */
-export function formatShortDate(dateString: string, locale: Locale = 'id'): string {
-  const date = new Date(dateString)
+export function formatShortDate(
+  dateString: string,
+  locale: Locale = "id",
+): string {
+  const date = new Date(dateString);
 
   if (isNaN(date.getTime())) {
-    throw new Error(`Invalid date string: ${dateString}`)
+    throw new Error(`Invalid date string: ${dateString}`);
   }
 
   return new Intl.DateTimeFormat(getDateTimeLocale(locale), {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(date)
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(date);
 }
 
 export function getStartOfMonth(date: Date | string = new Date()): Date {
-  const d = typeof date === 'string' ? new Date(date) : date
-  return new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0)
+  const d = typeof date === "string" ? new Date(date) : date;
+  return new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
 }
 
 export function getEndOfMonth(date: Date | string = new Date()): Date {
-  const d = typeof date === 'string' ? new Date(date) : date
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999)
+  const d = typeof date === "string" ? new Date(date) : date;
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
 }
 
 export function getStartOfDay(date: Date | string = new Date()): Date {
-  const d = typeof date === 'string' ? new Date(date) : date
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)
+  const d = typeof date === "string" ? new Date(date) : date;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
 }
 
 export function getEndOfDay(date: Date | string = new Date()): Date {
-  const d = typeof date === 'string' ? new Date(date) : date
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999)
+  const d = typeof date === "string" ? new Date(date) : date;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
 }
 
 export function getStartOfWeek(date: Date | string = new Date()): Date {
-  const d = typeof date === 'string' ? new Date(date) : date
-  const day = d.getDay()
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-  return new Date(d.setDate(diff))
+  const d = typeof date === "string" ? new Date(date) : date;
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(d.setDate(diff));
 }
 
 export function getEndOfWeek(date: Date | string = new Date()): Date {
-  const start = getStartOfWeek(date)
-  return new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000)
+  const start = getStartOfWeek(date);
+  return new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000);
 }

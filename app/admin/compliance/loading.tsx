@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ComplianceLoading() {
   return (
@@ -18,5 +18,5 @@ export default function ComplianceLoading() {
       </div>
       <Skeleton className="h-96" />
     </div>
-  )
+  );
 }

@@ -1,47 +1,54 @@
-"use server"
+"use server";
 
-import { createClient } from "../supabase/server"
-import type { Database } from "../supabase/types"
-import { createNotification } from "../actions/notifications"
+import { createClient } from "../supabase/server";
+import type { Database } from "../supabase/types";
+import { createNotification } from "../actions/notifications";
 
-type Booking = Database["public"]["Tables"]["bookings"]["Row"]
-type CancellationReason = Database["public"]["Tables"]["cancellation_reasons"]["Row"]
-type Worker = Database["public"]["Tables"]["workers"]["Row"]
-type Business = Database["public"]["Tables"]["businesses"]["Row"]
-type Job = Database["public"]["Tables"]["jobs"]["Row"]
+type Booking = Database["public"]["Tables"]["bookings"]["Row"];
+type CancellationReason =
+  Database["public"]["Tables"]["cancellation_reasons"]["Row"];
+type Worker = Database["public"]["Tables"]["workers"]["Row"];
+type Business = Database["public"]["Tables"]["businesses"]["Row"];
+type Job = Database["public"]["Tables"]["jobs"]["Row"];
 
 export type CancellationResult = {
-  success: boolean
-  error?: string
-  data?: Booking
-}
+  success: boolean;
+  error?: string;
+  data?: Booking;
+};
 
 export type CancellationReasonsListResult = {
-  success: boolean
-  error?: string
-  data?: CancellationReason[]
-}
+  success: boolean;
+  error?: string;
+  data?: CancellationReason[];
+};
 
 /**
  * Get all active cancellation reasons, ordered by sort_order
  */
 export async function getActiveCancellationReasons(): Promise<CancellationReasonsListResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from("cancellation_reasons")
       .select("*")
       .eq("is_active", true)
-      .order("sort_order", { ascending: true })
+      .order("sort_order", { ascending: true });
 
     if (error) {
-      return { success: false, error: `Gagal mengambil alasan pembatalan: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal mengambil alasan pembatalan: ${error.message}`,
+      };
     }
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat mengambil alasan pembatalan" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat mengambil alasan pembatalan",
+    };
   }
 }
 
@@ -54,22 +61,26 @@ export async function cancelBookingWithReason(
   cancellationReasonId: string,
   cancellationNote?: string,
   options?: {
-    workerId?: string
-    businessId?: string
-  }
+    workerId?: string;
+    businessId?: string;
+  },
 ): Promise<CancellationResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Determine which role is cancelling and build the query accordingly
     if (!options?.workerId && !options?.businessId) {
-      return { success: false, error: "Worker ID atau Business ID harus diberikan" }
+      return {
+        success: false,
+        error: "Worker ID atau Business ID harus diberikan",
+      };
     }
 
     // Fetch the booking with job, worker, and business details
     let bookingQuery = supabase
       .from("bookings")
-      .select(`
+      .select(
+        `
         *,
         jobs (
           id,
@@ -85,32 +96,41 @@ export async function cancelBookingWithReason(
           user_id,
           name
         )
-      `)
-      .eq("id", bookingId)
+      `,
+      )
+      .eq("id", bookingId);
 
     if (options?.workerId) {
-      bookingQuery = bookingQuery.eq("worker_id", options.workerId)
+      bookingQuery = bookingQuery.eq("worker_id", options.workerId);
     } else if (options?.businessId) {
-      bookingQuery = bookingQuery.eq("business_id", options.businessId)
+      bookingQuery = bookingQuery.eq("business_id", options.businessId);
     }
 
-    const { data: bookingResult, error: fetchError } = await bookingQuery.single()
+    const { data: bookingResult, error: fetchError } =
+      await bookingQuery.single();
 
     if (fetchError || !bookingResult) {
-      return { success: false, error: "Booking tidak ditemukan" }
+      return { success: false, error: "Booking tidak ditemukan" };
     }
 
     const booking = bookingResult as Booking & {
-      jobs: Job
-      workers: Worker
-      businesses: Business
-    }
+      jobs: Job;
+      workers: Worker;
+      businesses: Business;
+    };
 
-    const bookingData = booking as Booking
+    const bookingData = booking as Booking;
 
     // Validate booking status - only allow cancellation of accepted or in_progress bookings
-    if (bookingData.status !== "accepted" && bookingData.status !== "in_progress") {
-      return { success: false, error: "Hanya booking yang diterima atau sedang berlangsung yang bisa dibatalkan" }
+    if (
+      bookingData.status !== "accepted" &&
+      bookingData.status !== "in_progress"
+    ) {
+      return {
+        success: false,
+        error:
+          "Hanya booking yang diterima atau sedang berlangsung yang bisa dibatalkan",
+      };
     }
 
     // Get cancellation reason details
@@ -118,15 +138,16 @@ export async function cancelBookingWithReason(
       .from("cancellation_reasons")
       .select("*")
       .eq("id", cancellationReasonId)
-      .single()
+      .single();
 
     if (reasonError || !reason) {
-      return { success: false, error: "Alasan pembatalan tidak valid" }
+      return { success: false, error: "Alasan pembatalan tidak valid" };
     }
 
     // Update the booking status to cancelled with cancellation details
-    const { data: updatedBooking, error: updateError } = await (supabase
-      .from("bookings") as any)
+    const { data: updatedBooking, error: updateError } = await (
+      supabase.from("bookings") as any
+    )
       .update({
         status: "cancelled",
         cancellation_reason_id: cancellationReasonId,
@@ -135,31 +156,37 @@ export async function cancelBookingWithReason(
       })
       .eq("id", bookingId)
       .select()
-      .single()
+      .single();
 
     if (updateError) {
-      return { success: false, error: `Gagal membatalkan booking: ${updateError.message}` }
+      return {
+        success: false,
+        error: `Gagal membatalkan booking: ${updateError.message}`,
+      };
     }
 
     // Determine who to notify and create appropriate notification
-    const cancellingParty = options?.workerId ? "worker" : "business"
-    const notifierName = cancellingParty === "worker" ? booking.workers.full_name : booking.businesses.name
-    const jobTitle = booking.jobs.title
+    const cancellingParty = options?.workerId ? "worker" : "business";
+    const notifierName =
+      cancellingParty === "worker"
+        ? booking.workers.full_name
+        : booking.businesses.name;
+    const jobTitle = booking.jobs.title;
 
-    let notifyUserId: string
-    let notificationTitle: string
-    let notificationBody: string
+    let notifyUserId: string;
+    let notificationTitle: string;
+    let notificationBody: string;
 
     if (cancellingParty === "worker") {
       // Worker cancelled - notify business
-      notifyUserId = booking.businesses.user_id
-      notificationTitle = "Pekerja Membatalkan Booking"
-      notificationBody = `${notifierName} telah membatalkan booking untuk pekerjaan "${jobTitle}". Alasan: ${reason.name}${cancellationNote ? `. Catatan: ${cancellationNote}` : ""}`
+      notifyUserId = booking.businesses.user_id;
+      notificationTitle = "Pekerja Membatalkan Booking";
+      notificationBody = `${notifierName} telah membatalkan booking untuk pekerjaan "${jobTitle}". Alasan: ${reason.name}${cancellationNote ? `. Catatan: ${cancellationNote}` : ""}`;
     } else {
       // Business cancelled - notify worker
-      notifyUserId = booking.workers.user_id
-      notificationTitle = "Booking Dibatalkan"
-      notificationBody = `Booking untuk pekerjaan "${jobTitle}" telah dibatalkan oleh ${notifierName}. Alasan: ${reason.name}${cancellationNote ? `. Catatan: ${cancellationNote}` : ""}`
+      notifyUserId = booking.workers.user_id;
+      notificationTitle = "Booking Dibatalkan";
+      notificationBody = `Booking untuk pekerjaan "${jobTitle}" telah dibatalkan oleh ${notifierName}. Alasan: ${reason.name}${cancellationNote ? `. Catatan: ${cancellationNote}` : ""}`;
     }
 
     // Create notification for the affected party
@@ -167,14 +194,17 @@ export async function cancelBookingWithReason(
       notifyUserId,
       notificationTitle,
       notificationBody,
-      `/bookings/${bookingId}`
-    )
+      `/bookings/${bookingId}`,
+    );
 
     // Don't fail the cancellation if notification fails, but continue with the operation
 
-    return { success: true, data: updatedBooking }
+    return { success: true, data: updatedBooking };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat membatalkan booking" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat membatalkan booking",
+    };
   }
 }
 
@@ -186,10 +216,10 @@ export async function workerCancelBooking(
   bookingId: string,
   workerId: string,
   cancellationReasonId: string,
-  cancellationNote?: string
+  cancellationNote?: string,
 ): Promise<CancellationResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the booking belongs to the worker
     const { data: booking, error: fetchError } = await supabase
@@ -197,16 +227,23 @@ export async function workerCancelBooking(
       .select("*")
       .eq("id", bookingId)
       .eq("worker_id", workerId)
-      .single()
+      .single();
 
     if (fetchError || !booking) {
-      return { success: false, error: "Booking tidak ditemukan" }
+      return { success: false, error: "Booking tidak ditemukan" };
     }
 
-    const bookingData = booking as Booking
+    const bookingData = booking as Booking;
 
-    if (bookingData.status !== "accepted" && bookingData.status !== "in_progress") {
-      return { success: false, error: "Hanya booking yang diterima atau sedang berlangsung yang bisa dibatalkan" }
+    if (
+      bookingData.status !== "accepted" &&
+      bookingData.status !== "in_progress"
+    ) {
+      return {
+        success: false,
+        error:
+          "Hanya booking yang diterima atau sedang berlangsung yang bisa dibatalkan",
+      };
     }
 
     // Get cancellation reason to check penalty
@@ -214,15 +251,14 @@ export async function workerCancelBooking(
       .from("cancellation_reasons")
       .select("*")
       .eq("id", cancellationReasonId)
-      .single()
+      .single();
 
     if (reasonError || !reason) {
-      return { success: false, error: "Alasan pembatalan tidak valid" }
+      return { success: false, error: "Alasan pembatalan tidak valid" };
     }
 
     // Update the booking status to cancelled with cancellation details
-    const { data, error } = await (supabase
-      .from("bookings") as any)
+    const { data, error } = await (supabase.from("bookings") as any)
       .update({
         status: "cancelled",
         cancellation_reason_id: cancellationReasonId,
@@ -232,15 +268,21 @@ export async function workerCancelBooking(
       .eq("id", bookingId)
       .eq("worker_id", workerId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal membatalkan booking: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal membatalkan booking: ${error.message}`,
+      };
     }
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat membatalkan booking" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat membatalkan booking",
+    };
   }
 }
 
@@ -252,10 +294,10 @@ export async function businessCancelBooking(
   bookingId: string,
   businessId: string,
   cancellationReasonId: string,
-  cancellationNote?: string
+  cancellationNote?: string,
 ): Promise<CancellationResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the booking belongs to the business
     const { data: booking, error: fetchError } = await supabase
@@ -263,16 +305,23 @@ export async function businessCancelBooking(
       .select("*")
       .eq("id", bookingId)
       .eq("business_id", businessId)
-      .single()
+      .single();
 
     if (fetchError || !booking) {
-      return { success: false, error: "Booking tidak ditemukan" }
+      return { success: false, error: "Booking tidak ditemukan" };
     }
 
-    const bookingData = booking as Booking
+    const bookingData = booking as Booking;
 
-    if (bookingData.status !== "accepted" && bookingData.status !== "in_progress") {
-      return { success: false, error: "Hanya booking yang diterima atau sedang berlangsung yang bisa dibatalkan" }
+    if (
+      bookingData.status !== "accepted" &&
+      bookingData.status !== "in_progress"
+    ) {
+      return {
+        success: false,
+        error:
+          "Hanya booking yang diterima atau sedang berlangsung yang bisa dibatalkan",
+      };
     }
 
     // Get cancellation reason to check penalty
@@ -280,15 +329,14 @@ export async function businessCancelBooking(
       .from("cancellation_reasons")
       .select("*")
       .eq("id", cancellationReasonId)
-      .single()
+      .single();
 
     if (reasonError || !reason) {
-      return { success: false, error: "Alasan pembatalan tidak valid" }
+      return { success: false, error: "Alasan pembatalan tidak valid" };
     }
 
     // Update the booking status to cancelled with cancellation details
-    const { data, error } = await (supabase
-      .from("bookings") as any)
+    const { data, error } = await (supabase.from("bookings") as any)
       .update({
         status: "cancelled",
         cancellation_reason_id: cancellationReasonId,
@@ -298,15 +346,21 @@ export async function businessCancelBooking(
       .eq("id", bookingId)
       .eq("business_id", businessId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal membatalkan booking: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal membatalkan booking: ${error.message}`,
+      };
     }
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat membatalkan booking" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat membatalkan booking",
+    };
   }
 }
 
@@ -314,24 +368,30 @@ export async function businessCancelBooking(
  * Get cancellation reason by ID
  */
 export async function getCancellationReason(
-  reasonId: string
+  reasonId: string,
 ): Promise<{ success: boolean; data?: CancellationReason; error?: string }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from("cancellation_reasons")
       .select("*")
       .eq("id", reasonId)
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal mengambil alasan pembatalan: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal mengambil alasan pembatalan: ${error.message}`,
+      };
     }
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat mengambil alasan pembatalan" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat mengambil alasan pembatalan",
+    };
   }
 }
 
@@ -340,11 +400,12 @@ export async function getCancellationReason(
  */
 export async function getWorkerCancellationHistory(workerId: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from("bookings")
-      .select(`
+      .select(
+        `
         *,
         jobs (
           id,
@@ -361,19 +422,24 @@ export async function getWorkerCancellationHistory(workerId: string) {
           category,
           penalty_percentage
         )
-      `)
+      `,
+      )
       .eq("worker_id", workerId)
       .eq("status", "cancelled")
       .not("cancellation_reason_id", "is", null)
-      .order("cancelled_at", { ascending: false })
+      .order("cancelled_at", { ascending: false });
 
     if (error) {
-      return { success: false, error: error.message, data: null }
+      return { success: false, error: error.message, data: null };
     }
 
-    return { success: true, data, error: null }
+    return { success: true, data, error: null };
   } catch (error) {
-    return { success: false, error: "Gagal mengambil riwayat pembatalan", data: null }
+    return {
+      success: false,
+      error: "Gagal mengambil riwayat pembatalan",
+      data: null,
+    };
   }
 }
 
@@ -382,11 +448,12 @@ export async function getWorkerCancellationHistory(workerId: string) {
  */
 export async function getBusinessCancellationHistory(businessId: string) {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from("bookings")
-      .select(`
+      .select(
+        `
         *,
         jobs (
           id,
@@ -404,18 +471,23 @@ export async function getBusinessCancellationHistory(businessId: string) {
           category,
           penalty_percentage
         )
-      `)
+      `,
+      )
       .eq("business_id", businessId)
       .eq("status", "cancelled")
       .not("cancellation_reason_id", "is", null)
-      .order("cancelled_at", { ascending: false })
+      .order("cancelled_at", { ascending: false });
 
     if (error) {
-      return { success: false, error: error.message, data: null }
+      return { success: false, error: error.message, data: null };
     }
 
-    return { success: true, data, error: null }
+    return { success: true, data, error: null };
   } catch (error) {
-    return { success: false, error: "Gagal mengambil riwayat pembatalan", data: null }
+    return {
+      success: false,
+      error: "Gagal mengambil riwayat pembatalan",
+      data: null,
+    };
   }
 }

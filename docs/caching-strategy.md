@@ -21,66 +21,71 @@ Location: `lib/cache.ts`
 ### Basic Usage
 
 ```typescript
-import { cache, LRUCache, CACHE_TTL } from '@/lib/cache'
+import { cache, LRUCache, CACHE_TTL } from "@/lib/cache";
 
 // Get a value
-const data = cache.get('jobs:list:category-123')
+const data = cache.get("jobs:list:category-123");
 
 // Set a value with TTL
-cache.set('jobs:list:category-123', jobData, CACHE_TTL.JOBS)
+cache.set("jobs:list:category-123", jobData, CACHE_TTL.JOBS);
 
 // Delete a key
-cache.del('jobs:list:category-123')
+cache.del("jobs:list:category-123");
 
 // Get or set pattern (recommended)
 const data = await cache.getOrSet(
-  'jobs:list:all',
+  "jobs:list:all",
   async () => fetchJobsFromDB(),
-  CACHE_TTL.JOBS
-)
+  CACHE_TTL.JOBS,
+);
 ```
 
 ## Cache Namespaces
 
-| Namespace | Description | Default TTL |
-|-----------|-------------|-------------|
-| `jobs` | Job listings and details | 5 minutes |
-| `workers` | Worker profiles and data | 10 minutes |
-| `badges` | Badge definitions and progress | 1 hour |
-| `categories` | Job categories | 1 hour |
-| `sessions` | User authentication context | 15 minutes |
+| Namespace    | Description                    | Default TTL |
+| ------------ | ------------------------------ | ----------- |
+| `jobs`       | Job listings and details       | 5 minutes   |
+| `workers`    | Worker profiles and data       | 10 minutes  |
+| `badges`     | Badge definitions and progress | 1 hour      |
+| `categories` | Job categories                 | 1 hour      |
+| `sessions`   | User authentication context    | 15 minutes  |
 
 ## TTL Presets
 
 ```typescript
 export const CACHE_TTL = {
-  JOBS: 5 * 60 * 1000,           // 5 minutes
-  WORKERS: 10 * 60 * 1000,       // 10 minutes
-  BADGES: 60 * 60 * 1000,        // 1 hour
-  CATEGORIES: 60 * 60 * 1000,    // 1 hour
-  SESSIONS: 15 * 60 * 1000,      // 15 minutes
-}
+  JOBS: 5 * 60 * 1000, // 5 minutes
+  WORKERS: 10 * 60 * 1000, // 10 minutes
+  BADGES: 60 * 60 * 1000, // 1 hour
+  CATEGORIES: 60 * 60 * 1000, // 1 hour
+  SESSIONS: 15 * 60 * 1000, // 15 minutes
+};
 ```
 
 ## Cache Key Patterns
 
 ### Jobs
+
 - `jobs:list:{filters}` - Job listings with specific filters
 - `jobs:{jobId}` - Individual job details
 
 ### Workers
+
 - `workers:{workerId}:public` - Public worker profile
 - `workers:{workerId}:badges` - Worker badge progress
 - `workers:list:{filters}` - Worker listings
 
 ### Badges
+
 - `badges:definitions` - All badge definitions
 - `badges:worker:{workerId}:{filter}` - Worker's badges (all/earned/progress)
 
 ### Categories
+
 - `categories:all` - All job categories
 
 ### Sessions
+
 - `sessions:{userId}` - User session data
 - `sessions:{userId}:auth` - Auth context
 
@@ -89,18 +94,19 @@ export const CACHE_TTL = {
 ### Automatic Invalidation
 
 Cache entries are automatically invalidated when:
+
 1. TTL expires
 2. LRU eviction occurs (when cache is full)
 
 ### Manual Invalidation Helpers
 
 ```typescript
-import { 
+import {
   invalidateJobCache,
   invalidateWorkerCache,
   invalidateUserCache,
   invalidateBadgeCache,
-  invalidateCategoryCache 
+  invalidateCategoryCache
 } from '@/lib/cache'
 
 // Invalidate job caches (pass jobId for specific job, or omit for all listings)
@@ -121,16 +127,16 @@ invalidateCategoryCache()
 
 ### When to Invalidate
 
-| Action | Cache to Invalidate |
-|--------|---------------------|
-| Create new job | `invalidateJobCache()` |
-| Update job | `invalidateJobCache(jobId)` |
-| Delete job | `invalidateJobCache(jobId)` |
+| Action                 | Cache to Invalidate               |
+| ---------------------- | --------------------------------- |
+| Create new job         | `invalidateJobCache()`            |
+| Update job             | `invalidateJobCache(jobId)`       |
+| Delete job             | `invalidateJobCache(jobId)`       |
 | Worker updates profile | `invalidateWorkerCache(workerId)` |
-| Worker earns badge | `invalidateWorkerCache(workerId)` |
-| User logs out | `invalidateUserCache(userId)` |
-| Admin updates badge | `invalidateBadgeCache()` |
-| Admin updates category | `invalidateCategoryCache()` |
+| Worker earns badge     | `invalidateWorkerCache(workerId)` |
+| User logs out          | `invalidateUserCache(userId)`     |
+| Admin updates badge    | `invalidateBadgeCache()`          |
+| Admin updates category | `invalidateCategoryCache()`       |
 
 ## API Routes with Caching
 
@@ -141,15 +147,16 @@ invalidateCategoryCache()
 ```typescript
 // Cache key includes all filter parameters
 const cacheKey = LRUCache.createKey(
-  'jobs', 'list',
-  categoryId || 'all',
-  search || 'none',
-  wageMin || '0',
-  wageMax || 'max',
-  sort || 'newest',
-  page || '1',
-  limit || '20'
-)
+  "jobs",
+  "list",
+  categoryId || "all",
+  search || "none",
+  wageMin || "0",
+  wageMax || "max",
+  sort || "newest",
+  page || "1",
+  limit || "20",
+);
 ```
 
 **Cache Bypass:** Add `?nocache=true` to force fresh data
@@ -159,7 +166,7 @@ const cacheKey = LRUCache.createKey(
 **Cache Strategy:** Cache all categories for 1 hour (rarely change)
 
 ```typescript
-const CATEGORIES_CACHE_KEY = LRUCache.createKey('categories', 'all')
+const CATEGORIES_CACHE_KEY = LRUCache.createKey("categories", "all");
 ```
 
 ### 3. GET /api/workers/[id]/public
@@ -167,7 +174,7 @@ const CATEGORIES_CACHE_KEY = LRUCache.createKey('categories', 'all')
 **Cache Strategy:** Cache public profile for 10 minutes
 
 ```typescript
-const cacheKey = LRUCache.createKey('workers', workerId, 'public')
+const cacheKey = LRUCache.createKey("workers", workerId, "public");
 ```
 
 ### 4. GET /api/workers/badges
@@ -175,17 +182,17 @@ const cacheKey = LRUCache.createKey('workers', workerId, 'public')
 **Cache Strategy:** Cache badge data for 1 hour
 
 ```typescript
-const cacheKey = LRUCache.createKey('badges', 'worker', workerId, filter)
+const cacheKey = LRUCache.createKey("badges", "worker", workerId, filter);
 ```
 
 ## Response Headers
 
 Cached responses include helpful headers:
 
-| Header | Value | Description |
-|--------|-------|-------------|
-| `X-Cache` | `HIT` or `MISS` | Whether response came from cache |
-| `X-Cache-Key` | `namespace:key` | The cache key used |
+| Header        | Value           | Description                      |
+| ------------- | --------------- | -------------------------------- |
+| `X-Cache`     | `HIT` or `MISS` | Whether response came from cache |
+| `X-Cache-Key` | `namespace:key` | The cache key used               |
 
 ## Admin Cache Management
 
@@ -196,6 +203,7 @@ View cache statistics and performance metrics.
 **Authentication:** Requires `Authorization: Bearer {ADMIN_API_SECRET}`
 
 **Response:**
+
 ```json
 {
   "stats": {
@@ -221,6 +229,7 @@ View cache statistics and performance metrics.
 Clear cache entries.
 
 **Query Parameters:**
+
 - `namespace` - Clear specific namespace (jobs, workers, badges, categories, sessions)
 - `key` - Clear specific cache key
 - `workerId` - Clear all caches for a worker
@@ -228,6 +237,7 @@ Clear cache entries.
 - `userId` - Clear user session cache
 
 **Examples:**
+
 ```bash
 # Clear all cache
 DELETE /api/admin/cache-stats
@@ -253,16 +263,17 @@ Warm up cache (placeholder for future implementation).
 
 ### Hit Rate Targets
 
-| Endpoint | Target Hit Rate |
-|----------|-----------------|
-| /api/jobs | > 70% |
-| /api/categories | > 90% |
-| /api/workers/[id]/public | > 60% |
-| /api/workers/badges | > 50% |
+| Endpoint                 | Target Hit Rate |
+| ------------------------ | --------------- |
+| /api/jobs                | > 70%           |
+| /api/categories          | > 90%           |
+| /api/workers/[id]/public | > 60%           |
+| /api/workers/badges      | > 50%           |
 
 ### Monitoring
 
 Monitor cache performance through:
+
 1. Admin stats endpoint
 2. Response headers (`X-Cache`)
 3. Application logs

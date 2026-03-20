@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { supabase } from '../client'
+import { supabase } from "../client";
 import type {
   UserGrowthMetrics,
   JobCompletionMetrics,
@@ -17,7 +17,7 @@ import type {
   ComplianceQueryParams,
   RevenueQueryParams,
   BookingSummaryQueryParams,
-} from '../../types/analytics'
+} from "../../types/analytics";
 
 // ============================================================================
 // USER GROWTH ANALYTICS
@@ -29,21 +29,23 @@ import type {
  * @returns Array of user growth metrics by date
  */
 export async function getUserGrowthMetrics(
-  params: UserGrowthQueryParams = {}
+  params: UserGrowthQueryParams = {},
 ): Promise<UserGrowthMetrics[]> {
-  const { start_date, end_date } = params
+  const { start_date, end_date } = params;
 
-  const { data, error } = await (supabase as any)
-    .rpc('get_analytics_user_growth', {
+  const { data, error } = await (supabase as any).rpc(
+    "get_analytics_user_growth",
+    {
       start_date: start_date || null,
       end_date: end_date || null,
-    })
+    },
+  );
 
   if (error) {
-    throw new Error(`Failed to fetch user growth metrics: ${error.message}`)
+    throw new Error(`Failed to fetch user growth metrics: ${error.message}`);
   }
 
-  return data || []
+  return data || [];
 }
 
 /**
@@ -52,15 +54,15 @@ export async function getUserGrowthMetrics(
  */
 export async function getDailyActiveUsers(): Promise<DailyActiveUsers[]> {
   const { data, error } = await (supabase as any)
-    .from('analytics_daily_active_users')
-    .select('*')
-    .order('date', { ascending: true })
+    .from("analytics_daily_active_users")
+    .select("*")
+    .order("date", { ascending: true });
 
   if (error) {
-    throw new Error(`Failed to fetch daily active users: ${error.message}`)
+    throw new Error(`Failed to fetch daily active users: ${error.message}`);
   }
 
-  return data || []
+  return data || [];
 }
 
 /**
@@ -69,15 +71,15 @@ export async function getDailyActiveUsers(): Promise<DailyActiveUsers[]> {
  */
 export async function getMonthlyActiveUsers(): Promise<MonthlyActiveUsers[]> {
   const { data, error } = await (supabase as any)
-    .from('analytics_monthly_active_users')
-    .select('*')
-    .order('month', { ascending: true })
+    .from("analytics_monthly_active_users")
+    .select("*")
+    .order("month", { ascending: true });
 
   if (error) {
-    throw new Error(`Failed to fetch monthly active users: ${error.message}`)
+    throw new Error(`Failed to fetch monthly active users: ${error.message}`);
   }
 
-  return data || []
+  return data || [];
 }
 
 /**
@@ -85,10 +87,12 @@ export async function getMonthlyActiveUsers(): Promise<MonthlyActiveUsers[]> {
  * This should be called periodically to keep DAU data up to date
  */
 export async function refreshDailyActiveUsers(): Promise<void> {
-  const { error } = await (supabase as any).rpc('refresh_analytics_daily_active_users')
+  const { error } = await (supabase as any).rpc(
+    "refresh_analytics_daily_active_users",
+  );
 
   if (error) {
-    throw new Error(`Failed to refresh daily active users: ${error.message}`)
+    throw new Error(`Failed to refresh daily active users: ${error.message}`);
   }
 }
 
@@ -97,10 +101,12 @@ export async function refreshDailyActiveUsers(): Promise<void> {
  * This should be called periodically to keep MAU data up to date
  */
 export async function refreshMonthlyActiveUsers(): Promise<void> {
-  const { error } = await (supabase as any).rpc('refresh_analytics_monthly_active_users')
+  const { error } = await (supabase as any).rpc(
+    "refresh_analytics_monthly_active_users",
+  );
 
   if (error) {
-    throw new Error(`Failed to refresh monthly active users: ${error.message}`)
+    throw new Error(`Failed to refresh monthly active users: ${error.message}`);
   }
 }
 
@@ -114,21 +120,23 @@ export async function refreshMonthlyActiveUsers(): Promise<void> {
  * @returns Array of job completion metrics by date
  */
 export async function getJobCompletionMetrics(
-  params: JobCompletionQueryParams = {}
+  params: JobCompletionQueryParams = {},
 ): Promise<JobCompletionMetrics[]> {
-  const { start_date, end_date } = params
+  const { start_date, end_date } = params;
 
-  const { data, error } = await (supabase as any)
-    .rpc('get_analytics_job_completion', {
+  const { data, error } = await (supabase as any).rpc(
+    "get_analytics_job_completion",
+    {
       start_date: start_date || null,
       end_date: end_date || null,
-    })
+    },
+  );
 
   if (error) {
-    throw new Error(`Failed to fetch job completion metrics: ${error.message}`)
+    throw new Error(`Failed to fetch job completion metrics: ${error.message}`);
   }
 
-  return data || []
+  return data || [];
 }
 
 // ============================================================================
@@ -141,21 +149,25 @@ export async function getJobCompletionMetrics(
  * @returns Array of transaction volume metrics by date
  */
 export async function getTransactionVolumeMetrics(
-  params: TransactionVolumeQueryParams = {}
+  params: TransactionVolumeQueryParams = {},
 ): Promise<TransactionVolumeMetrics[]> {
-  const { start_date, end_date } = params
+  const { start_date, end_date } = params;
 
-  const { data, error } = await (supabase as any)
-    .rpc('get_analytics_transaction_volume', {
+  const { data, error } = await (supabase as any).rpc(
+    "get_analytics_transaction_volume",
+    {
       start_date: start_date || null,
       end_date: end_date || null,
-    })
+    },
+  );
 
   if (error) {
-    throw new Error(`Failed to fetch transaction volume metrics: ${error.message}`)
+    throw new Error(
+      `Failed to fetch transaction volume metrics: ${error.message}`,
+    );
   }
 
-  return data || []
+  return data || [];
 }
 
 // ============================================================================
@@ -166,15 +178,20 @@ export async function getTransactionVolumeMetrics(
  * Get geographic distribution of workers and jobs
  * @returns Array of geographic distribution data by location
  */
-export async function getGeographicDistribution(): Promise<GeographicDistribution[]> {
-  const { data, error } = await (supabase as any)
-    .rpc('get_analytics_geographic_distribution')
+export async function getGeographicDistribution(): Promise<
+  GeographicDistribution[]
+> {
+  const { data, error } = await (supabase as any).rpc(
+    "get_analytics_geographic_distribution",
+  );
 
   if (error) {
-    throw new Error(`Failed to fetch geographic distribution: ${error.message}`)
+    throw new Error(
+      `Failed to fetch geographic distribution: ${error.message}`,
+    );
   }
 
-  return data || []
+  return data || [];
 }
 
 // ============================================================================
@@ -186,14 +203,15 @@ export async function getGeographicDistribution(): Promise<GeographicDistributio
  * @returns Array of trending categories sorted by booking count
  */
 export async function getTrendingCategories(): Promise<TrendingCategory[]> {
-  const { data, error } = await (supabase as any)
-    .rpc('get_analytics_trending_categories')
+  const { data, error } = await (supabase as any).rpc(
+    "get_analytics_trending_categories",
+  );
 
   if (error) {
-    throw new Error(`Failed to fetch trending categories: ${error.message}`)
+    throw new Error(`Failed to fetch trending categories: ${error.message}`);
   }
 
-  return data || []
+  return data || [];
 }
 
 // ============================================================================
@@ -206,21 +224,23 @@ export async function getTrendingCategories(): Promise<TrendingCategory[]> {
  * @returns Array of compliance metrics by date
  */
 export async function getComplianceMetrics(
-  params: ComplianceQueryParams = {}
+  params: ComplianceQueryParams = {},
 ): Promise<ComplianceMetrics[]> {
-  const { start_date, end_date } = params
+  const { start_date, end_date } = params;
 
-  const { data, error } = await (supabase as any)
-    .rpc('get_analytics_compliance_violations', {
+  const { data, error } = await (supabase as any).rpc(
+    "get_analytics_compliance_violations",
+    {
       start_date: start_date || null,
       end_date: end_date || null,
-    })
+    },
+  );
 
   if (error) {
-    throw new Error(`Failed to fetch compliance metrics: ${error.message}`)
+    throw new Error(`Failed to fetch compliance metrics: ${error.message}`);
   }
 
-  return data || []
+  return data || [];
 }
 
 // ============================================================================
@@ -233,21 +253,20 @@ export async function getComplianceMetrics(
  * @returns Array of revenue metrics by date
  */
 export async function getRevenueMetrics(
-  params: RevenueQueryParams = {}
+  params: RevenueQueryParams = {},
 ): Promise<RevenueMetrics[]> {
-  const { start_date, end_date } = params
+  const { start_date, end_date } = params;
 
-  const { data, error } = await (supabase as any)
-    .rpc('get_analytics_revenue', {
-      start_date: start_date || null,
-      end_date: end_date || null,
-    })
+  const { data, error } = await (supabase as any).rpc("get_analytics_revenue", {
+    start_date: start_date || null,
+    end_date: end_date || null,
+  });
 
   if (error) {
-    throw new Error(`Failed to fetch revenue metrics: ${error.message}`)
+    throw new Error(`Failed to fetch revenue metrics: ${error.message}`);
   }
 
-  return data || []
+  return data || [];
 }
 
 // ============================================================================
@@ -260,21 +279,23 @@ export async function getRevenueMetrics(
  * @returns Array of booking metrics by date
  */
 export async function getBookingMetrics(
-  params: BookingSummaryQueryParams = {}
+  params: BookingSummaryQueryParams = {},
 ): Promise<BookingMetrics[]> {
-  const { start_date, end_date } = params
+  const { start_date, end_date } = params;
 
-  const { data, error } = await (supabase as any)
-    .rpc('get_analytics_booking_summary', {
+  const { data, error } = await (supabase as any).rpc(
+    "get_analytics_booking_summary",
+    {
       start_date: start_date || null,
       end_date: end_date || null,
-    })
+    },
+  );
 
   if (error) {
-    throw new Error(`Failed to fetch booking metrics: ${error.message}`)
+    throw new Error(`Failed to fetch booking metrics: ${error.message}`);
   }
 
-  return data || []
+  return data || [];
 }
 
 // ============================================================================
@@ -288,11 +309,11 @@ export async function getBookingMetrics(
  * @returns Object containing all analytics data
  */
 export async function getAnalyticsDashboard(params?: {
-  start_date?: string
-  end_date?: string
+  start_date?: string;
+  end_date?: string;
 }) {
-  const start_date = params?.start_date || null
-  const end_date = params?.end_date || null
+  const start_date = params?.start_date || null;
+  const end_date = params?.end_date || null;
 
   // Fetch all time-series metrics in parallel for better performance
   const [
@@ -313,7 +334,7 @@ export async function getAnalyticsDashboard(params?: {
     getComplianceMetrics({ start_date, end_date }),
     getRevenueMetrics({ start_date, end_date }),
     getBookingMetrics({ start_date, end_date }),
-  ])
+  ]);
 
   return {
     user_growth: {
@@ -340,66 +361,66 @@ export async function getAnalyticsDashboard(params?: {
     bookings: {
       metrics: bookings,
     },
-  }
+  };
 }
 
 export async function getPlatformMetrics(): Promise<{
   users: {
-    total: number
-    workers: number
-    businesses: number
-    admins: number
-    newThisWeek: number
-    newThisMonth: number
-  }
+    total: number;
+    workers: number;
+    businesses: number;
+    admins: number;
+    newThisWeek: number;
+    newThisMonth: number;
+  };
   jobs: {
-    total: number
-    active: number
-    completed: number
-    cancelled: number
-    newThisWeek: number
-    newThisMonth: number
-  }
+    total: number;
+    active: number;
+    completed: number;
+    cancelled: number;
+    newThisWeek: number;
+    newThisMonth: number;
+  };
   bookings: {
-    total: number
-    pending: number
-    inProgress: number
-    completed: number
-    cancelled: number
-    newThisWeek: number
-    newThisMonth: number
-  }
+    total: number;
+    pending: number;
+    inProgress: number;
+    completed: number;
+    cancelled: number;
+    newThisWeek: number;
+    newThisMonth: number;
+  };
   transactions: {
-    total: number
-    totalVolume: number
-    pendingVolume: number
-    completedVolume: number
-    thisWeekVolume: number
-    thisMonthVolume: number
-  }
+    total: number;
+    totalVolume: number;
+    pendingVolume: number;
+    completedVolume: number;
+    thisWeekVolume: number;
+    thisMonthVolume: number;
+  };
   verifications: {
-    pendingBusiness: number
-    pendingKYC: number
-    approvedThisWeek: number
-    rejectedThisWeek: number
-  }
+    pendingBusiness: number;
+    pendingKYC: number;
+    approvedThisWeek: number;
+    rejectedThisWeek: number;
+  };
   disputes: {
-    open: number
-    resolvedThisWeek: number
-    resolvedThisMonth: number
-    avgResolutionTime: number
-  }
+    open: number;
+    resolvedThisWeek: number;
+    resolvedThisMonth: number;
+    avgResolutionTime: number;
+  };
   reports: {
-    pending: number
-    open: number
-    resolvedThisWeek: number
-  }
+    pending: number;
+    open: number;
+    resolvedThisWeek: number;
+  };
 } | null> {
   try {
-    const oneWeekAgo = new Date()
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-    const oneMonthAgo = new Date()
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
     const [
       { count: totalUsers },
@@ -424,28 +445,82 @@ export async function getPlatformMetrics(): Promise<{
       { count: pendingBusinessVerifications },
       { count: pendingKYCVerifications },
     ] = await Promise.all([
-      supabase.from('users').select('*', { count: 'exact', head: true }),
-      supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'worker'),
-      supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'business'),
-      supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'admin' as any),
-      supabase.from('users').select('*', { count: 'exact', head: true }).gte('created_at', oneWeekAgo.toISOString()),
-      supabase.from('users').select('*', { count: 'exact', head: true }).gte('created_at', oneMonthAgo.toISOString()),
-      supabase.from('jobs').select('*', { count: 'exact', head: true }),
-      supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'open'),
-      supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
-      supabase.from('jobs').select('*', { count: 'exact', head: true }).eq('status', 'cancelled'),
-      supabase.from('jobs').select('*', { count: 'exact', head: true }).gte('created_at', oneWeekAgo.toISOString()),
-      supabase.from('jobs').select('*', { count: 'exact', head: true }).gte('created_at', oneMonthAgo.toISOString()),
-      supabase.from('bookings').select('*', { count: 'exact', head: true }),
-      supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-      supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('status', 'in_progress'),
-      supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('status', 'completed'),
-      supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('status', 'cancelled'),
-      supabase.from('bookings').select('*', { count: 'exact', head: true }).gte('created_at', oneWeekAgo.toISOString()),
-      supabase.from('bookings').select('*', { count: 'exact', head: true }).gte('created_at', oneMonthAgo.toISOString()),
-      supabase.from('businesses').select('*', { count: 'exact', head: true }).eq('verification_status', 'pending'),
-      (supabase as any).from('kyc_verifications').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-    ])
+      supabase.from("users").select("*", { count: "exact", head: true }),
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .eq("role", "worker"),
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .eq("role", "business"),
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .eq("role", "admin" as any),
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneWeekAgo.toISOString()),
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneMonthAgo.toISOString()),
+      supabase.from("jobs").select("*", { count: "exact", head: true }),
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "open"),
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "completed"),
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "cancelled"),
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneWeekAgo.toISOString()),
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneMonthAgo.toISOString()),
+      supabase.from("bookings").select("*", { count: "exact", head: true }),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending"),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "in_progress"),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "completed"),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "cancelled"),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneWeekAgo.toISOString()),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneMonthAgo.toISOString()),
+      supabase
+        .from("businesses")
+        .select("*", { count: "exact", head: true })
+        .eq("verification_status", "pending"),
+      (supabase as any)
+        .from("kyc_verifications")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending"),
+    ]);
 
     return {
       users: {
@@ -498,9 +573,9 @@ export async function getPlatformMetrics(): Promise<{
         open: 0,
         resolvedThisWeek: 0,
       },
-    }
+    };
   } catch (error) {
-    console.error('Failed to fetch platform metrics:', error)
-    return null
+    console.error("Failed to fetch platform metrics:", error);
+    return null;
   }
 }

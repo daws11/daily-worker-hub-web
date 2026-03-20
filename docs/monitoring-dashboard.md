@@ -143,6 +143,7 @@ Authorization: Bearer <ADMIN_API_SECRET>
 ### Missing Data
 
 Some metrics are currently using mock data:
+
 - API response times
 - Error rates (Sentry integration pending)
 - Active users (session tracking pending)

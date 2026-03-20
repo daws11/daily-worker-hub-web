@@ -1,94 +1,93 @@
-"use client"
+"use client";
 
-import { useEffect, useState, useCallback } from "react"
-import { Download, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { useEffect, useState, useCallback } from "react";
+import { Download, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
 export function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null)
-  const [showPrompt, setShowPrompt] = useState(false)
-  const [isInstalled, setIsInstalled] = useState(false)
+    useState<BeforeInstallPromptEvent | null>(null);
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
     // Check if app is already installed
     if (window.matchMedia("(display-mode: standalone)").matches) {
-      setIsInstalled(true)
-      return
+      setIsInstalled(true);
+      return;
     }
 
     // Listen for beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       // Prevent the default browser install prompt
-      e.preventDefault()
+      e.preventDefault();
       // Store the event for later use
-      setDeferredPrompt(e as BeforeInstallPromptEvent)
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       // Show our custom install prompt
-      setShowPrompt(true)
-    }
+      setShowPrompt(true);
+    };
 
     // Listen for app installed event
     const handleAppInstalled = () => {
-      setIsInstalled(true)
-      setShowPrompt(false)
-      setDeferredPrompt(null)
-    }
+      setIsInstalled(true);
+      setShowPrompt(false);
+      setDeferredPrompt(null);
+    };
 
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
-    window.addEventListener("appinstalled", handleAppInstalled)
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
       window.removeEventListener(
         "beforeinstallprompt",
-        handleBeforeInstallPrompt
-      )
-      window.removeEventListener("appinstalled", handleAppInstalled)
-    }
-  }, [])
+        handleBeforeInstallPrompt,
+      );
+      window.removeEventListener("appinstalled", handleAppInstalled);
+    };
+  }, []);
 
   const handleInstallClick = useCallback(async () => {
     if (!deferredPrompt) {
-      return
+      return;
     }
 
     // Show the browser install prompt
-    await deferredPrompt.prompt()
+    await deferredPrompt.prompt();
 
     // Wait for the user to respond to the prompt
-    const { outcome } = await deferredPrompt.userChoice
+    const { outcome } = await deferredPrompt.userChoice;
 
     if (outcome === "accepted") {
-      setIsInstalled(true)
+      setIsInstalled(true);
     }
 
     // Clear the deferred prompt
-    setDeferredPrompt(null)
-    setShowPrompt(false)
-  }, [deferredPrompt])
+    setDeferredPrompt(null);
+    setShowPrompt(false);
+  }, [deferredPrompt]);
 
   const handleDismiss = useCallback(() => {
-    setShowPrompt(false)
+    setShowPrompt(false);
     // Store in localStorage so we don't show again for this session
     try {
-      localStorage.setItem("pwa-install-prompt-dismissed", Date.now().toString())
+      localStorage.setItem(
+        "pwa-install-prompt-dismissed",
+        Date.now().toString(),
+      );
     } catch {
       // Ignore localStorage errors
     }
-  }, [])
+  }, []);
 
   // Don't show if already installed, no prompt available, or recently dismissed
-  if (
-    isInstalled ||
-    !deferredPrompt ||
-    !showPrompt
-  ) {
-    return null
+  if (isInstalled || !deferredPrompt || !showPrompt) {
+    return null;
   }
 
   return (
@@ -97,7 +96,7 @@ export function PWAInstallPrompt() {
         "fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96",
         "z-50 animate-in slide-in-from-bottom-full duration-300",
         "bg-background border border-border rounded-lg shadow-lg p-4",
-        "flex items-start gap-3"
+        "flex items-start gap-3",
       )}
     >
       <div className="flex-shrink-0">
@@ -106,9 +105,7 @@ export function PWAInstallPrompt() {
         </div>
       </div>
       <div className="flex-1 min-w-0">
-        <h3 className="font-semibold text-sm text-foreground">
-          Install App
-        </h3>
+        <h3 className="font-semibold text-sm text-foreground">Install App</h3>
         <p className="text-xs text-muted-foreground mt-1">
           Install Daily Worker Hub on your device for quick access and offline
           support.
@@ -139,5 +136,5 @@ export function PWAInstallPrompt() {
         <X className="h-4 w-4" />
       </button>
     </div>
-  )
+  );
 }

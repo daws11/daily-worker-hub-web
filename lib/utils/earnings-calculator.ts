@@ -5,17 +5,19 @@ import type {
   IncomeProjection,
   EarningsTransaction,
   EARNINGS_CONSTANTS,
-} from '../types/earnings'
+} from "../types/earnings";
 
 /**
  * Calculate total earnings from an array of transactions
  * @param transactions - Array of earnings transactions
  * @returns Total earnings amount
  */
-export function calculateTotalEarnings(transactions: EarningsTransaction[]): number {
+export function calculateTotalEarnings(
+  transactions: EarningsTransaction[],
+): number {
   return transactions
-    .filter((t) => t.status === 'success')
-    .reduce((sum, t) => sum + t.amount, 0)
+    .filter((t) => t.status === "success")
+    .reduce((sum, t) => sum + t.amount, 0);
 }
 
 /**
@@ -28,21 +30,21 @@ export function calculateTotalEarnings(transactions: EarningsTransaction[]): num
 export function calculateEarningsInDateRange(
   transactions: EarningsTransaction[],
   startDate: string,
-  endDate: string
+  endDate: string,
 ): number {
-  const start = new Date(startDate)
-  const end = new Date(endDate)
+  const start = new Date(startDate);
+  const end = new Date(endDate);
 
   return transactions
     .filter((t) => {
-      const transactionDate = new Date(t.created_at)
+      const transactionDate = new Date(t.created_at);
       return (
-        t.status === 'success' &&
+        t.status === "success" &&
         transactionDate >= start &&
         transactionDate <= end
-      )
+      );
     })
-    .reduce((sum, t) => sum + t.amount, 0)
+    .reduce((sum, t) => sum + t.amount, 0);
 }
 
 /**
@@ -51,23 +53,23 @@ export function calculateEarningsInDateRange(
  * @returns Map of month (YYYY-MM) to transactions
  */
 export function groupTransactionsByMonth(
-  transactions: EarningsTransaction[]
+  transactions: EarningsTransaction[],
 ): Map<string, EarningsTransaction[]> {
-  const grouped = new Map<string, EarningsTransaction[]>()
+  const grouped = new Map<string, EarningsTransaction[]>();
 
   for (const transaction of transactions) {
-    if (transaction.status !== 'success') continue
+    if (transaction.status !== "success") continue;
 
-    const date = new Date(transaction.created_at)
-    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+    const date = new Date(transaction.created_at);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 
     if (!grouped.has(monthKey)) {
-      grouped.set(monthKey, [])
+      grouped.set(monthKey, []);
     }
-    grouped.get(monthKey)!.push(transaction)
+    grouped.get(monthKey)!.push(transaction);
   }
 
-  return grouped
+  return grouped;
 }
 
 /**
@@ -76,20 +78,20 @@ export function groupTransactionsByMonth(
  * @returns Array of monthly earnings data
  */
 export function calculateMonthlyEarnings(
-  groupedTransactions: Map<string, EarningsTransaction[]>
+  groupedTransactions: Map<string, EarningsTransaction[]>,
 ): MonthlyEarnings[] {
-  const monthlyEarnings: MonthlyEarnings[] = []
+  const monthlyEarnings: MonthlyEarnings[] = [];
 
   for (const [month, transactions] of groupedTransactions.entries()) {
-    const total = transactions.reduce((sum, t) => sum + t.amount, 0)
-    const count = transactions.length
-    const average = count > 0 ? total / count : 0
+    const total = transactions.reduce((sum, t) => sum + t.amount, 0);
+    const count = transactions.length;
+    const average = count > 0 ? total / count : 0;
 
-    const date = new Date(month + '-01')
-    const monthName = new Intl.DateTimeFormat('id-ID', {
-      month: 'long',
-      year: 'numeric',
-    }).format(date)
+    const date = new Date(month + "-01");
+    const monthName = new Intl.DateTimeFormat("id-ID", {
+      month: "long",
+      year: "numeric",
+    }).format(date);
 
     monthlyEarnings.push({
       month,
@@ -97,11 +99,11 @@ export function calculateMonthlyEarnings(
       earnings: total,
       bookings_count: count,
       average_earning: average,
-    })
+    });
   }
 
   // Sort by month descending (most recent first)
-  return monthlyEarnings.sort((a, b) => b.month.localeCompare(a.month))
+  return monthlyEarnings.sort((a, b) => b.month.localeCompare(a.month));
 }
 
 /**
@@ -110,25 +112,28 @@ export function calculateMonthlyEarnings(
  * @returns Map of position title to transactions
  */
 export function groupTransactionsByPosition(
-  transactions: EarningsTransaction[]
-): Map<string, { transactions: EarningsTransaction[]; categoryName: string | null }> {
+  transactions: EarningsTransaction[],
+): Map<
+  string,
+  { transactions: EarningsTransaction[]; categoryName: string | null }
+> {
   const grouped = new Map<
     string,
     { transactions: EarningsTransaction[]; categoryName: string | null }
-  >()
+  >();
 
   for (const transaction of transactions) {
-    if (transaction.status !== 'success') continue
+    if (transaction.status !== "success") continue;
 
-    const key = transaction.job_title
+    const key = transaction.job_title;
 
     if (!grouped.has(key)) {
-      grouped.set(key, { transactions: [], categoryName: null })
+      grouped.set(key, { transactions: [], categoryName: null });
     }
-    grouped.get(key)!.transactions.push(transaction)
+    grouped.get(key)!.transactions.push(transaction);
   }
 
-  return grouped
+  return grouped;
 }
 
 /**
@@ -137,20 +142,27 @@ export function groupTransactionsByPosition(
  * @returns Array of position earnings data
  */
 export function calculateEarningsByPosition(
-  groupedTransactions: Map<string, { transactions: EarningsTransaction[]; categoryName: string | null }>
+  groupedTransactions: Map<
+    string,
+    { transactions: EarningsTransaction[]; categoryName: string | null }
+  >,
 ): PositionEarnings[] {
-  const positionEarnings: PositionEarnings[] = []
+  const positionEarnings: PositionEarnings[] = [];
 
-  for (const [positionTitle, { transactions }] of groupedTransactions.entries()) {
-    const amounts = transactions.map((t) => t.amount)
-    const total = amounts.reduce((sum, amount) => sum + amount, 0)
-    const count = transactions.length
-    const average = count > 0 ? total / count : 0
-    const highest = amounts.length > 0 ? Math.max(...amounts) : 0
-    const lowest = amounts.length > 0 ? Math.min(...amounts) : 0
+  for (const [
+    positionTitle,
+    { transactions },
+  ] of groupedTransactions.entries()) {
+    const amounts = transactions.map((t) => t.amount);
+    const total = amounts.reduce((sum, amount) => sum + amount, 0);
+    const count = transactions.length;
+    const average = count > 0 ? total / count : 0;
+    const highest = amounts.length > 0 ? Math.max(...amounts) : 0;
+    const lowest = amounts.length > 0 ? Math.min(...amounts) : 0;
     const lastBooking = transactions.sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    )[0]
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    )[0];
 
     positionEarnings.push({
       position_title: positionTitle,
@@ -160,12 +172,13 @@ export function calculateEarningsByPosition(
       average_earning: average,
       highest_single_earning: highest,
       lowest_single_earning: lowest,
-      last_booking_date: lastBooking?.completed_at || lastBooking?.created_at || null,
-    })
+      last_booking_date:
+        lastBooking?.completed_at || lastBooking?.created_at || null,
+    });
   }
 
   // Sort by total earnings descending (highest earning first)
-  return positionEarnings.sort((a, b) => b.total_earnings - a.total_earnings)
+  return positionEarnings.sort((a, b) => b.total_earnings - a.total_earnings);
 }
 
 /**
@@ -174,11 +187,14 @@ export function calculateEarningsByPosition(
  * @param previous - Previous value
  * @returns Percentage change (can be negative for decrease)
  */
-export function calculatePercentageChange(current: number, previous: number): number {
+export function calculatePercentageChange(
+  current: number,
+  previous: number,
+): number {
   if (previous === 0) {
-    return current > 0 ? 100 : 0
+    return current > 0 ? 100 : 0;
   }
-  return ((current - previous) / previous) * 100
+  return ((current - previous) / previous) * 100;
 }
 
 /**
@@ -187,8 +203,11 @@ export function calculatePercentageChange(current: number, previous: number): nu
  * @param bookingCount - Number of bookings
  * @returns Average earnings per booking
  */
-export function calculateAveragePerBooking(totalEarnings: number, bookingCount: number): number {
-  return bookingCount > 0 ? totalEarnings / bookingCount : 0
+export function calculateAveragePerBooking(
+  totalEarnings: number,
+  bookingCount: number,
+): number {
+  return bookingCount > 0 ? totalEarnings / bookingCount : 0;
 }
 
 /**
@@ -201,14 +220,14 @@ export function calculateAveragePerBooking(totalEarnings: number, bookingCount: 
 export function calculateBookingFrequency(
   bookingCount: number,
   startDate: string,
-  endDate: string
+  endDate: string,
 ): number {
-  const start = new Date(startDate)
-  const end = new Date(endDate)
-  const weeks = (end.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000)
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const weeks = (end.getTime() - start.getTime()) / (7 * 24 * 60 * 60 * 1000);
 
-  if (weeks <= 0) return 0
-  return bookingCount / weeks
+  if (weeks <= 0) return 0;
+  return bookingCount / weeks;
 }
 
 /**
@@ -219,11 +238,11 @@ export function calculateBookingFrequency(
  */
 export function determineConfidenceLevel(
   dataPoints: number,
-  thresholds: typeof EARNINGS_CONSTANTS
-): 'low' | 'medium' | 'high' {
-  if (dataPoints >= thresholds.HIGH_CONFIDENCE_THRESHOLD) return 'high'
-  if (dataPoints >= thresholds.MEDIUM_CONFIDENCE_THRESHOLD) return 'medium'
-  return 'low'
+  thresholds: typeof EARNINGS_CONSTANTS,
+): "low" | "medium" | "high" {
+  if (dataPoints >= thresholds.HIGH_CONFIDENCE_THRESHOLD) return "high";
+  if (dataPoints >= thresholds.MEDIUM_CONFIDENCE_THRESHOLD) return "medium";
+  return "low";
 }
 
 /**
@@ -232,11 +251,14 @@ export function determineConfidenceLevel(
  * @param previousAmount - Amount in previous period
  * @returns Trend percentage (positive for upward, negative for downward)
  */
-export function calculateTrend(recentAmount: number, previousAmount: number): number {
+export function calculateTrend(
+  recentAmount: number,
+  previousAmount: number,
+): number {
   if (previousAmount === 0) {
-    return recentAmount > 0 ? 100 : 0
+    return recentAmount > 0 ? 100 : 0;
   }
-  return ((recentAmount - previousAmount) / previousAmount) * 100
+  return ((recentAmount - previousAmount) / previousAmount) * 100;
 }
 
 /**
@@ -249,9 +271,9 @@ export function calculateTrend(recentAmount: number, previousAmount: number): nu
 export function projectIncomeSimpleAverage(
   averageEarningPerBooking: number,
   bookingFrequency: number,
-  periodInWeeks: number
+  periodInWeeks: number,
 ): number {
-  return averageEarningPerBooking * bookingFrequency * periodInWeeks
+  return averageEarningPerBooking * bookingFrequency * periodInWeeks;
 }
 
 /**
@@ -264,18 +286,18 @@ export function projectIncomeSimpleAverage(
 export function projectIncomeTrendBased(
   recentAmount: number,
   trendPercentage: number,
-  periods: number
+  periods: number,
 ): number {
-  const growthFactor = 1 + trendPercentage / 100
-  let projected = 0
-  let amount = recentAmount
+  const growthFactor = 1 + trendPercentage / 100;
+  let projected = 0;
+  let amount = recentAmount;
 
   for (let i = 0; i < periods; i++) {
-    projected += amount
-    amount *= growthFactor
+    projected += amount;
+    amount *= growthFactor;
   }
 
-  return projected
+  return projected;
 }
 
 /**
@@ -288,9 +310,12 @@ export function projectIncomeTrendBased(
 export function projectIncomeBookingBased(
   confirmedBookingsTotal: number,
   averageNewBookingsPerPeriod: number,
-  averageEarningPerBooking: number
+  averageEarningPerBooking: number,
 ): number {
-  return confirmedBookingsTotal + averageNewBookingsPerPeriod * averageEarningPerBooking
+  return (
+    confirmedBookingsTotal +
+    averageNewBookingsPerPeriod * averageEarningPerBooking
+  );
 }
 
 /**
@@ -306,14 +331,14 @@ export function projectIncomeBookingBased(
  * @returns Income projection object
  */
 export function createIncomeProjection(
-  period: 'week' | 'month' | 'quarter',
+  period: "week" | "month" | "quarter",
   projectedIncome: number,
   recentBookingsCount: number,
   averageEarningPerBooking: number,
   bookingFrequency: number,
   trendPercentage: number,
-  calculationMethod: 'simple_average' | 'trend_based' | 'booking_based',
-  thresholds: typeof EARNINGS_CONSTANTS
+  calculationMethod: "simple_average" | "trend_based" | "booking_based",
+  thresholds: typeof EARNINGS_CONSTANTS,
 ): IncomeProjection {
   return {
     period,
@@ -327,7 +352,7 @@ export function createIncomeProjection(
       trend_percentage: Math.round(trendPercentage * 10) / 10,
     },
     calculated_at: new Date().toISOString(),
-  }
+  };
 }
 
 /**
@@ -337,35 +362,35 @@ export function createIncomeProjection(
  * @returns Start date (ISO string)
  */
 export function calculatePeriodStartDate(
-  period: 'today' | 'week' | 'month' | 'quarter' | 'year' | 'all_time',
-  endDate: string = new Date().toISOString()
+  period: "today" | "week" | "month" | "quarter" | "year" | "all_time",
+  endDate: string = new Date().toISOString(),
 ): string {
-  const end = new Date(endDate)
-  const start = new Date(end)
+  const end = new Date(endDate);
+  const start = new Date(end);
 
   switch (period) {
-    case 'today':
-      start.setHours(0, 0, 0, 0)
-      break
-    case 'week':
-      start.setDate(end.getDate() - 7)
-      break
-    case 'month':
-      start.setMonth(end.getMonth() - 1)
-      break
-    case 'quarter':
-      start.setMonth(end.getMonth() - 3)
-      break
-    case 'year':
-      start.setFullYear(end.getFullYear() - 1)
-      break
-    case 'all_time':
+    case "today":
+      start.setHours(0, 0, 0, 0);
+      break;
+    case "week":
+      start.setDate(end.getDate() - 7);
+      break;
+    case "month":
+      start.setMonth(end.getMonth() - 1);
+      break;
+    case "quarter":
+      start.setMonth(end.getMonth() - 3);
+      break;
+    case "year":
+      start.setFullYear(end.getFullYear() - 1);
+      break;
+    case "all_time":
       // Return a very old date
-      return new Date('2000-01-01').toISOString()
-      break
+      return new Date("2000-01-01").toISOString();
+      break;
   }
 
-  return start.toISOString()
+  return start.toISOString();
 }
 
 /**
@@ -378,15 +403,15 @@ export function calculatePeriodStartDate(
 export function filterTransactionsByDateRange(
   transactions: EarningsTransaction[],
   startDate: string,
-  endDate: string
+  endDate: string,
 ): EarningsTransaction[] {
-  const start = new Date(startDate)
-  const end = new Date(endDate)
+  const start = new Date(startDate);
+  const end = new Date(endDate);
 
   return transactions.filter((t) => {
-    const transactionDate = new Date(t.created_at)
-    return transactionDate >= start && transactionDate <= end
-  })
+    const transactionDate = new Date(t.created_at);
+    return transactionDate >= start && transactionDate <= end;
+  });
 }
 
 /**
@@ -401,30 +426,37 @@ export function calculateEarningsSummary(
   transactions: EarningsTransaction[],
   currentMonthStart: string,
   previousMonthStart: string,
-  previousMonthEnd: string
-): Omit<EarningsSummary, 'period_start' | 'period_end' | 'currency'> {
-  const successfulTransactions = transactions.filter((t) => t.status === 'success')
+  previousMonthEnd: string,
+): Omit<EarningsSummary, "period_start" | "period_end" | "currency"> {
+  const successfulTransactions = transactions.filter(
+    (t) => t.status === "success",
+  );
   const currentMonthTransactions = filterTransactionsByDateRange(
     successfulTransactions,
     currentMonthStart,
-    new Date().toISOString()
-  )
+    new Date().toISOString(),
+  );
   const previousMonthTransactions = filterTransactionsByDateRange(
     successfulTransactions,
     previousMonthStart,
-    previousMonthEnd
-  )
+    previousMonthEnd,
+  );
 
-  const totalEarnings = calculateTotalEarnings(successfulTransactions)
-  const currentMonthEarnings = calculateTotalEarnings(currentMonthTransactions)
-  const previousMonthEarnings = calculateTotalEarnings(previousMonthTransactions)
+  const totalEarnings = calculateTotalEarnings(successfulTransactions);
+  const currentMonthEarnings = calculateTotalEarnings(currentMonthTransactions);
+  const previousMonthEarnings = calculateTotalEarnings(
+    previousMonthTransactions,
+  );
 
-  const totalBookings = successfulTransactions.length
-  const averagePerBooking = calculateAveragePerBooking(totalEarnings, totalBookings)
+  const totalBookings = successfulTransactions.length;
+  const averagePerBooking = calculateAveragePerBooking(
+    totalEarnings,
+    totalBookings,
+  );
   const monthOverMonthChange = calculatePercentageChange(
     currentMonthEarnings,
-    previousMonthEarnings
-  )
+    previousMonthEarnings,
+  );
 
   return {
     total_earnings: totalEarnings,
@@ -433,5 +465,5 @@ export function calculateEarningsSummary(
     month_over_month_change: monthOverMonthChange,
     total_bookings_completed: totalBookings,
     average_earnings_per_booking: averagePerBooking,
-  }
+  };
 }

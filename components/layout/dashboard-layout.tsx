@@ -1,17 +1,17 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { cn } from "@/lib/utils"
-import { SiteHeader } from "./site-header"
-import { SidebarNav, businessNavItems } from "./sidebar-nav"
-import { Button } from "@/components/ui/button"
-import { PanelLeftClose, PanelLeft } from "lucide-react"
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { SiteHeader } from "./site-header";
+import { SidebarNav, businessNavItems } from "./sidebar-nav";
+import { Button } from "@/components/ui/button";
+import { PanelLeftClose, PanelLeft } from "lucide-react";
 
 interface DashboardLayoutProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode
-  sidebarItems?: typeof businessNavItems
-  headerProps?: React.ComponentProps<typeof SiteHeader>
-  collapsible?: boolean
+  children: React.ReactNode;
+  sidebarItems?: typeof businessNavItems;
+  headerProps?: React.ComponentProps<typeof SiteHeader>;
+  collapsible?: boolean;
 }
 
 export function DashboardLayout({
@@ -22,7 +22,7 @@ export function DashboardLayout({
   className,
   ...props
 }: DashboardLayoutProps) {
-  const [collapsed, setCollapsed] = React.useState(false)
+  const [collapsed, setCollapsed] = React.useState(false);
 
   return (
     <div className={cn("min-h-screen bg-background", className)} {...props}>
@@ -31,28 +31,36 @@ export function DashboardLayout({
         <aside
           className={cn(
             "hidden md:flex flex-col border-r bg-muted/30 transition-all duration-300",
-            collapsed ? "w-[60px]" : "w-64"
+            collapsed ? "w-[60px]" : "w-64",
           )}
         >
           {/* Sidebar Header */}
-          <div className={cn(
-            "flex h-16 items-center border-b px-4",
-            collapsed && "justify-center px-2"
-          )}>
+          <div
+            className={cn(
+              "flex h-16 items-center border-b px-4",
+              collapsed && "justify-center px-2",
+            )}
+          >
             {!collapsed && (
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                  <span className="text-sm font-bold text-primary-foreground">DW</span>
+                  <span className="text-sm font-bold text-primary-foreground">
+                    DW
+                  </span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm font-semibold">Daily Worker</span>
-                  <span className="text-xs text-muted-foreground">Business Hub</span>
+                  <span className="text-xs text-muted-foreground">
+                    Business Hub
+                  </span>
                 </div>
               </div>
             )}
             {collapsed && (
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <span className="text-sm font-bold text-primary-foreground">DW</span>
+                <span className="text-sm font-bold text-primary-foreground">
+                  DW
+                </span>
               </div>
             )}
           </div>
@@ -64,10 +72,9 @@ export function DashboardLayout({
 
           {/* Collapse Toggle */}
           {collapsible && (
-            <div className={cn(
-              "border-t p-2",
-              collapsed && "flex justify-center"
-            )}>
+            <div
+              className={cn("border-t p-2", collapsed && "flex justify-center")}
+            >
               <Button
                 variant="ghost"
                 size={collapsed ? "icon" : "default"}
@@ -99,5 +106,5 @@ export function DashboardLayout({
         </div>
       </div>
     </div>
-  )
+  );
 }

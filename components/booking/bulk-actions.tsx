@@ -1,24 +1,30 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Check, X, Loader2 } from "lucide-react"
+import * as React from "react";
+import { Check, X, Loader2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-type BookingStatus = "pending" | "accepted" | "rejected" | "in_progress" | "completed" | "cancelled"
+type BookingStatus =
+  | "pending"
+  | "accepted"
+  | "rejected"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
 
 export interface BulkActionsProps {
-  selectedBookingIds: string[]
-  onBulkAccept?: (bookingIds: string[]) => Promise<void> | void
-  onBulkReject?: (bookingIds: string[]) => Promise<void> | void
-  isLoading?: boolean
-  disabled?: boolean
-  size?: "default" | "sm" | "lg"
-  variant?: "default" | "outline" | "ghost"
-  className?: string
-  showLabels?: boolean
-  showCount?: boolean
+  selectedBookingIds: string[];
+  onBulkAccept?: (bookingIds: string[]) => Promise<void> | void;
+  onBulkReject?: (bookingIds: string[]) => Promise<void> | void;
+  isLoading?: boolean;
+  disabled?: boolean;
+  size?: "default" | "sm" | "lg";
+  variant?: "default" | "outline" | "ghost";
+  className?: string;
+  showLabels?: boolean;
+  showCount?: boolean;
 }
 
 export function BulkActions({
@@ -33,63 +39,63 @@ export function BulkActions({
   showLabels = true,
   showCount = true,
 }: BulkActionsProps) {
-  const [isAccepting, setIsAccepting] = React.useState(false)
-  const [isRejecting, setIsRejecting] = React.useState(false)
+  const [isAccepting, setIsAccepting] = React.useState(false);
+  const [isRejecting, setIsRejecting] = React.useState(false);
 
-  const hasSelection = selectedBookingIds.length > 0
-  const isActionDisabled = disabled || isLoading || !hasSelection
+  const hasSelection = selectedBookingIds.length > 0;
+  const isActionDisabled = disabled || isLoading || !hasSelection;
 
   const handleBulkAccept = async () => {
-    if (isActionDisabled || !onBulkAccept) return
+    if (isActionDisabled || !onBulkAccept) return;
 
-    setIsAccepting(true)
+    setIsAccepting(true);
     try {
-      await onBulkAccept(selectedBookingIds)
+      await onBulkAccept(selectedBookingIds);
     } finally {
-      setIsAccepting(false)
+      setIsAccepting(false);
     }
-  }
+  };
 
   const handleBulkReject = async () => {
-    if (isActionDisabled || !onBulkReject) return
+    if (isActionDisabled || !onBulkReject) return;
 
-    setIsRejecting(true)
+    setIsRejecting(true);
     try {
-      await onBulkReject(selectedBookingIds)
+      await onBulkReject(selectedBookingIds);
     } finally {
-      setIsRejecting(false)
+      setIsRejecting(false);
     }
-  }
+  };
 
   const getButtonSize = () => {
     switch (size) {
       case "sm":
-        return "sm"
+        return "sm";
       case "lg":
-        return "lg"
+        return "lg";
       default:
-        return "default"
+        return "default";
     }
-  }
+  };
 
   const getAcceptVariant = () => {
-    if (variant === "ghost") return "ghost"
-    if (variant === "outline") return "outline"
-    return "default"
-  }
+    if (variant === "ghost") return "ghost";
+    if (variant === "outline") return "outline";
+    return "default";
+  };
 
   const getRejectVariant = () => {
-    if (variant === "ghost") return "ghost"
-    return "destructive"
-  }
+    if (variant === "ghost") return "ghost";
+    return "destructive";
+  };
 
   const getLabel = (baseLabel: string) => {
-    if (!showCount) return baseLabel
-    return `${baseLabel} (${selectedBookingIds.length})`
-  }
+    if (!showCount) return baseLabel;
+    return `${baseLabel} (${selectedBookingIds.length})`;
+  };
 
   if (!hasSelection) {
-    return null
+    return null;
   }
 
   return (
@@ -138,5 +144,5 @@ export function BulkActions({
         </Button>
       )}
     </div>
-  )
+  );
 }

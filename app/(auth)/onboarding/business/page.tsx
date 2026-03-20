@@ -1,73 +1,94 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/app/providers/auth-provider"
-import { supabase } from "@/lib/supabase/client"
-import { saveDraft, loadDraft, clearDraft, OnboardingDraft } from "@/lib/utils/draft-storage"
-import { completeBusinessOnboarding } from "@/lib/actions/onboarding"
-import { ProgressBar } from "@/components/onboarding/progress-bar"
-import { StepNavigation } from "@/components/onboarding/step-navigation"
-import { BusinessIdentity } from "@/components/onboarding/business-steps/identity"
-import { BusinessLocation } from "@/components/onboarding/business-steps/location"
-import { BusinessDescriptionReview } from "@/components/onboarding/business-steps/description-review"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Loader2 } from "lucide-react"
-import { toast } from "sonner"
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/providers/auth-provider";
+import { supabase } from "@/lib/supabase/client";
+import {
+  saveDraft,
+  loadDraft,
+  clearDraft,
+  OnboardingDraft,
+} from "@/lib/utils/draft-storage";
+import { completeBusinessOnboarding } from "@/lib/actions/onboarding";
+import { ProgressBar } from "@/components/onboarding/progress-bar";
+import { StepNavigation } from "@/components/onboarding/step-navigation";
+import { BusinessIdentity } from "@/components/onboarding/business-steps/identity";
+import { BusinessLocation } from "@/components/onboarding/business-steps/location";
+import { BusinessDescriptionReview } from "@/components/onboarding/business-steps/description-review";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
-const TOTAL_STEPS = 3
+const TOTAL_STEPS = 3;
 
 // Custom progress bar labels for business
-const BUSINESS_STEP_LABELS = ["Identity", "Location", "Review"]
+const BUSINESS_STEP_LABELS = ["Identity", "Location", "Review"];
 
-function BusinessProgressBar({ currentStep, totalSteps = 3 }: { currentStep: number; totalSteps?: number }) {
-  const progress = (currentStep / totalSteps) * 100
+function BusinessProgressBar({
+  currentStep,
+  totalSteps = 3,
+}: {
+  currentStep: number;
+  totalSteps?: number;
+}) {
+  const progress = (currentStep / totalSteps) * 100;
 
   return (
     <div className="w-full space-y-3">
       {/* Progress bar */}
       <div className="h-2 bg-muted rounded-full overflow-hidden">
-        <div 
+        <div
           className="h-full bg-primary transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
-      
+
       {/* Step labels */}
       <div className="flex justify-between text-sm">
         {BUSINESS_STEP_LABELS.map((label, index) => {
-          const stepNumber = index + 1
-          const isActive = stepNumber === currentStep
-          const isCompleted = stepNumber < currentStep
-          
+          const stepNumber = index + 1;
+          const isActive = stepNumber === currentStep;
+          const isCompleted = stepNumber < currentStep;
+
           return (
-            <div 
+            <div
               key={label}
               className={`flex flex-col items-center ${
-                isActive ? "text-primary font-medium" : 
-                isCompleted ? "text-muted-foreground" : 
-                "text-muted-foreground/50"
+                isActive
+                  ? "text-primary font-medium"
+                  : isCompleted
+                    ? "text-muted-foreground"
+                    : "text-muted-foreground/50"
               }`}
             >
-              <div 
+              <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium mb-1 transition-colors ${
-                  isActive ? "bg-primary text-primary-foreground" :
-                  isCompleted ? "bg-primary/20 text-primary" :
-                  "bg-muted text-muted-foreground"
+                  isActive
+                    ? "bg-primary text-primary-foreground"
+                    : isCompleted
+                      ? "bg-primary/20 text-primary"
+                      : "bg-muted text-muted-foreground"
                 }`}
               >
                 {isCompleted ? (
-                  <svg 
-                    className="w-4 h-4" 
-                    fill="none" 
-                    stroke="currentColor" 
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M5 13l4 4L19 7" 
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
                     />
                   </svg>
                 ) : (
@@ -76,64 +97,73 @@ function BusinessProgressBar({ currentStep, totalSteps = 3 }: { currentStep: num
               </div>
               <span className="text-xs hidden sm:block">{label}</span>
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }
 
 export default function BusinessOnboardingPage() {
-  const router = useRouter()
-  const { user, isLoading: authLoading } = useAuth()
-  
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useAuth();
+
   // Current step
-  const [currentStep, setCurrentStep] = useState(1)
-  
+  const [currentStep, setCurrentStep] = useState(1);
+
   // Form data
-  const [identityInfo, setIdentityInfo] = useState<Pick<OnboardingDraft, 'businessName' | 'businessType' | 'businessPhone' | 'businessEmail'>>({
+  const [identityInfo, setIdentityInfo] = useState<
+    Pick<
+      OnboardingDraft,
+      "businessName" | "businessType" | "businessPhone" | "businessEmail"
+    >
+  >({
     businessName: "",
     businessType: undefined,
     businessPhone: "",
-    businessEmail: ""
-  })
-  const [locationInfo, setLocationInfo] = useState<Pick<OnboardingDraft, 'businessAddress' | 'businessLat' | 'businessLng'>>({
+    businessEmail: "",
+  });
+  const [locationInfo, setLocationInfo] = useState<
+    Pick<OnboardingDraft, "businessAddress" | "businessLat" | "businessLng">
+  >({
     businessAddress: "",
     businessLat: 0,
-    businessLng: 0
-  })
-  const [additionalInfo, setAdditionalInfo] = useState<Pick<OnboardingDraft, 'description' | 'website'>>({
+    businessLng: 0,
+  });
+  const [additionalInfo, setAdditionalInfo] = useState<
+    Pick<OnboardingDraft, "description" | "website">
+  >({
     description: "",
-    website: ""
-  })
-  
+    website: "",
+  });
+
   // Form validation states
-  const [step1Valid, setStep1Valid] = useState(false)
-  const [step2Valid, setStep2Valid] = useState(false)
-  const [step3Valid, setStep3Valid] = useState(false)
-  const [termsAccepted, setTermsAccepted] = useState(false)
-  
+  const [step1Valid, setStep1Valid] = useState(false);
+  const [step2Valid, setStep2Valid] = useState(false);
+  const [step3Valid, setStep3Valid] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
   // Loading states
-  const [isLoading, setIsLoading] = useState(false)
-  const [isCheckingProfile, setIsCheckingProfile] = useState(true)
-  const [hasBusinessProfile, setHasBusinessProfile] = useState(false)
-  
+  const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingProfile, setIsCheckingProfile] = useState(true);
+  const [hasBusinessProfile, setHasBusinessProfile] = useState(false);
+
   // User's initial email from auth
-  const [initialEmail, setInitialEmail] = useState<string>("")
+  const [initialEmail, setInitialEmail] = useState<string>("");
 
   // Check if user is logged in and has existing business profile
   useEffect(() => {
     async function checkUserProfile() {
-      if (authLoading) return
-      
+      if (authLoading) return;
+
       if (!user) {
-        router.push("/login")
-        return
+        router.push("/login");
+        return;
       }
 
       // Get email from user
-      const email = user.email || ""
-      setInitialEmail(email)
+      const email = user.email || "";
+      setInitialEmail(email);
 
       // Check if business profile already exists
       try {
@@ -141,41 +171,77 @@ export default function BusinessOnboardingPage() {
           .from("businesses")
           .select("id")
           .eq("user_id", user.id)
-          .single()
+          .single();
 
         if (existingBusiness) {
-          setHasBusinessProfile(true)
+          setHasBusinessProfile(true);
           // Redirect to business dashboard
-          router.push("/business/jobs")
-          return
+          router.push("/business/jobs");
+          return;
         }
       } catch (error) {
         // No business profile exists, continue with onboarding
       }
-      
+
       // Load draft if exists
-      const draft = loadDraft()
+      const draft = loadDraft();
       if (draft && draft.isBusiness) {
-        if (draft.businessName) setIdentityInfo(prev => ({ ...prev, businessName: draft.businessName || "" }))
-        if (draft.businessType) setIdentityInfo(prev => ({ ...prev, businessType: draft.businessType }))
-        if (draft.businessPhone) setIdentityInfo(prev => ({ ...prev, businessPhone: draft.businessPhone || "" }))
-        if (draft.businessEmail) setIdentityInfo(prev => ({ ...prev, businessEmail: draft.businessEmail || "" }))
-        if (draft.businessAddress) setLocationInfo(prev => ({ ...prev, businessAddress: draft.businessAddress || "" }))
-        if (draft.businessLat) setLocationInfo(prev => ({ ...prev, businessLat: draft.businessLat || 0 }))
-        if (draft.businessLng) setLocationInfo(prev => ({ ...prev, businessLng: draft.businessLng || 0 }))
-        if (draft.description) setAdditionalInfo(prev => ({ ...prev, description: draft.description || "" }))
-        if (draft.website) setAdditionalInfo(prev => ({ ...prev, website: draft.website || "" }))
-        if (draft.currentStep) setCurrentStep(draft.currentStep)
+        if (draft.businessName)
+          setIdentityInfo((prev) => ({
+            ...prev,
+            businessName: draft.businessName || "",
+          }));
+        if (draft.businessType)
+          setIdentityInfo((prev) => ({
+            ...prev,
+            businessType: draft.businessType,
+          }));
+        if (draft.businessPhone)
+          setIdentityInfo((prev) => ({
+            ...prev,
+            businessPhone: draft.businessPhone || "",
+          }));
+        if (draft.businessEmail)
+          setIdentityInfo((prev) => ({
+            ...prev,
+            businessEmail: draft.businessEmail || "",
+          }));
+        if (draft.businessAddress)
+          setLocationInfo((prev) => ({
+            ...prev,
+            businessAddress: draft.businessAddress || "",
+          }));
+        if (draft.businessLat)
+          setLocationInfo((prev) => ({
+            ...prev,
+            businessLat: draft.businessLat || 0,
+          }));
+        if (draft.businessLng)
+          setLocationInfo((prev) => ({
+            ...prev,
+            businessLng: draft.businessLng || 0,
+          }));
+        if (draft.description)
+          setAdditionalInfo((prev) => ({
+            ...prev,
+            description: draft.description || "",
+          }));
+        if (draft.website)
+          setAdditionalInfo((prev) => ({
+            ...prev,
+            website: draft.website || "",
+          }));
+        if (draft.currentStep) setCurrentStep(draft.currentStep);
       } else {
         // Pre-fill email
-        setIdentityInfo(prev => ({ ...prev, businessEmail: email }))
+        setIdentityInfo((prev) => ({ ...prev, businessEmail: email }));
       }
-      
-      setIsCheckingProfile(false)
+
+      setIsCheckingProfile(false);
     }
 
-    checkUserProfile()
-  }, [user, authLoading, router])
+    checkUserProfile();
+  }, [user, authLoading, router]);
 
   // Save draft when step changes
   useEffect(() => {
@@ -187,53 +253,60 @@ export default function BusinessOnboardingPage() {
         businessLng: locationInfo.businessLng,
         ...additionalInfo,
         currentStep,
-        isBusiness: true
-      })
+        isBusiness: true,
+      });
     }
-  }, [identityInfo, locationInfo, additionalInfo, currentStep, isCheckingProfile, hasBusinessProfile])
+  }, [
+    identityInfo,
+    locationInfo,
+    additionalInfo,
+    currentStep,
+    isCheckingProfile,
+    hasBusinessProfile,
+  ]);
 
   // Check if current step is valid
   const isCurrentStepValid = useCallback(() => {
     switch (currentStep) {
       case 1:
-        return step1Valid
+        return step1Valid;
       case 2:
-        return step2Valid
+        return step2Valid;
       case 3:
-        return step3Valid && termsAccepted
+        return step3Valid && termsAccepted;
       default:
-        return false
+        return false;
     }
-  }, [currentStep, step1Valid, step2Valid, step3Valid, termsAccepted])
+  }, [currentStep, step1Valid, step2Valid, step3Valid, termsAccepted]);
 
   // Navigation handlers
   const handleBack = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
+      setCurrentStep(currentStep - 1);
     }
-  }
+  };
 
   const handleNext = async () => {
     if (currentStep < TOTAL_STEPS) {
-      setCurrentStep(currentStep + 1)
+      setCurrentStep(currentStep + 1);
     } else {
       // Complete onboarding
-      await handleComplete()
+      await handleComplete();
     }
-  }
+  };
 
   const handleComplete = async () => {
     if (!user) {
-      toast.error("You must be logged in to complete onboarding")
-      return
+      toast.error("You must be logged in to complete onboarding");
+      return;
     }
 
     if (!termsAccepted) {
-      toast.error("Please accept the terms and conditions")
-      return
+      toast.error("Please accept the terms and conditions");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
       const result = await completeBusinessOnboarding({
@@ -246,27 +319,27 @@ export default function BusinessOnboardingPage() {
         lat: locationInfo.businessLat || 0,
         lng: locationInfo.businessLng || 0,
         description: additionalInfo.description || undefined,
-        businessType: identityInfo.businessType || "Other"
-      })
+        businessType: identityInfo.businessType || "Other",
+      });
 
       if (result.success) {
         // Clear draft
-        clearDraft()
-        
-        toast.success("Business profile created successfully!")
-        
+        clearDraft();
+
+        toast.success("Business profile created successfully!");
+
         // Redirect to business dashboard
-        router.push("/business/jobs")
+        router.push("/business/jobs");
       } else {
-        toast.error(result.error || "Failed to create business profile")
+        toast.error(result.error || "Failed to create business profile");
       }
     } catch (error) {
-      console.error("Onboarding error:", error)
-      toast.error("An unexpected error occurred")
+      console.error("Onboarding error:", error);
+      toast.error("An unexpected error occurred");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Show loading state while checking profile
   if (authLoading || isCheckingProfile) {
@@ -277,12 +350,12 @@ export default function BusinessOnboardingPage() {
           <p className="text-muted-foreground">Checking your profile...</p>
         </div>
       </div>
-    )
+    );
   }
 
   // If user has business profile, don't render (will redirect)
   if (hasBusinessProfile) {
-    return null
+    return null;
   }
 
   return (
@@ -297,7 +370,10 @@ export default function BusinessOnboardingPage() {
         </div>
 
         {/* Progress Bar */}
-        <BusinessProgressBar currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+        <BusinessProgressBar
+          currentStep={currentStep}
+          totalSteps={TOTAL_STEPS}
+        />
 
         {/* Step Content */}
         <Card>
@@ -308,8 +384,10 @@ export default function BusinessOnboardingPage() {
               {currentStep === 3 && "Description & Review"}
             </CardTitle>
             <CardDescription>
-              {currentStep === 1 && "Let's start with some basic information about your business"}
-              {currentStep === 2 && "Help workers find your business by setting your location"}
+              {currentStep === 1 &&
+                "Let's start with some basic information about your business"}
+              {currentStep === 2 &&
+                "Help workers find your business by setting your location"}
               {currentStep === 3 && "Add a description and review your profile"}
             </CardDescription>
           </CardHeader>
@@ -364,5 +442,5 @@ export default function BusinessOnboardingPage() {
         </p>
       </div>
     </div>
-  )
+  );
 }

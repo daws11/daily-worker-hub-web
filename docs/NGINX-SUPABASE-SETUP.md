@@ -1,9 +1,11 @@
 # Supabase Dev Nginx Configuration
 
 ## Problem
+
 VPS Supabase dev hanya mengekspos `/rest/v1/` (PostgREST), tapi tidak mengekspos endpoint lain seperti `/auth/v1/` untuk login/register.
 
 ## Solution
+
 Deploy konfigurasi nginx yang proper untuk mengekspos semua Supabase endpoints.
 
 ## Quick Deploy (Copy-Paste)
@@ -26,14 +28,14 @@ sudo ./deploy-nginx-supabase.sh
 
 Mengekspos semua Supabase endpoints:
 
-| Service | Internal Port | Public URL |
-|---------|---------------|-------------|
-| Auth (GOTRUE) | 9999 | `http://supabase-dev.dailyworkerhub.com/auth/v1/` |
-| REST (PostgREST) | 3000 | `http://supabase-dev.dailyworkerhub.com/rest/v1/` |
-| Storage | 5000 | `http://supabase-dev.dailyworkerhub.com/storage/v1/` |
-| Functions | 9111 | `http://supabase-dev.dailyworkerhub.com/functions/v1/` |
-| Realtime (WebSocket) | 4000 | `http://supabase-dev.dailyworkerhub.com/realtime/v1/` |
-| Studio | 54323 | `http://supabase-dev.dailyworkerhub.com/studio/` |
+| Service              | Internal Port | Public URL                                             |
+| -------------------- | ------------- | ------------------------------------------------------ |
+| Auth (GOTRUE)        | 9999          | `http://supabase-dev.dailyworkerhub.com/auth/v1/`      |
+| REST (PostgREST)     | 3000          | `http://supabase-dev.dailyworkerhub.com/rest/v1/`      |
+| Storage              | 5000          | `http://supabase-dev.dailyworkerhub.com/storage/v1/`   |
+| Functions            | 9111          | `http://supabase-dev.dailyworkerhub.com/functions/v1/` |
+| Realtime (WebSocket) | 4000          | `http://supabase-dev.dailyworkerhub.com/realtime/v1/`  |
+| Studio               | 54323         | `http://supabase-dev.dailyworkerhub.com/studio/`       |
 
 ## Features
 
@@ -61,25 +63,30 @@ curl http://supabase-dev.dailyworkerhub.com/storage/v1/
 ## Troubleshooting
 
 ### Supabase tidak berjalan?
+
 ```bash
 supabase status
 supabase start
 ```
 
 ### Firewall memblock ports?
+
 ```bash
 sudo ufw allow 80/tcp
 sudo ufw status
 ```
 
 ### Check nginx logs?
+
 ```bash
 tail -f /var/log/nginx/supabase-dev-error.log
 tail -f /var/log/nginx/supabase-dev-access.log
 ```
 
 ### Port berbeda dari default?
+
 Update konfigurasi nginx dengan port yang benar:
+
 ```bash
 # Cek port Supabase yang sedang berjalan
 supabase status

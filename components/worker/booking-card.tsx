@@ -1,44 +1,67 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Calendar, Clock, MapPin, DollarSign, Building2, CheckCircle, AlertTriangle } from "lucide-react"
+import * as React from "react";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  DollarSign,
+  Building2,
+  CheckCircle,
+  AlertTriangle,
+} from "lucide-react";
 
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { BookingStatusBadge, type BookingStatus } from "@/components/worker/booking-status-badge"
-import { EmergencyCancellationDialog } from "@/components/worker/emergency-cancellation-dialog"
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  BookingStatusBadge,
+  type BookingStatus,
+} from "@/components/worker/booking-status-badge";
+import { EmergencyCancellationDialog } from "@/components/worker/emergency-cancellation-dialog";
 
 export interface BookingJob {
-  id: string
-  title: string
-  description: string
-  address: string
+  id: string;
+  title: string;
+  description: string;
+  address: string;
 }
 
 export interface BookingBusiness {
-  id: string
-  name: string
-  is_verified: boolean
+  id: string;
+  name: string;
+  is_verified: boolean;
 }
 
 export interface Booking {
-  id: string
-  job_id: string
-  business_id: string
-  status: "pending" | "accepted" | "rejected" | "in_progress" | "completed" | "cancelled"
-  start_date: string
-  end_date: string
-  final_price: number
-  created_at: string
-  job?: BookingJob
-  business?: BookingBusiness
+  id: string;
+  job_id: string;
+  business_id: string;
+  status:
+    | "pending"
+    | "accepted"
+    | "rejected"
+    | "in_progress"
+    | "completed"
+    | "cancelled";
+  start_date: string;
+  end_date: string;
+  final_price: number;
+  created_at: string;
+  job?: BookingJob;
+  business?: BookingBusiness;
 }
 
 export interface BookingCardProps {
-  booking: Booking
-  workerId: string
-  onCancel?: (bookingId: string) => void | Promise<void>
+  booking: Booking;
+  workerId: string;
+  onCancel?: (bookingId: string) => void | Promise<void>;
 }
 
 function formatPrice(price: number): string {
@@ -46,54 +69,55 @@ function formatPrice(price: number): string {
     style: "currency",
     currency: "IDR",
     minimumFractionDigits: 0,
-  }).format(price)
+  }).format(price);
 }
 
 function formatDate(dateString: string): string {
-  const date = new Date(dateString)
+  const date = new Date(dateString);
   return date.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "short",
     year: "numeric",
-  })
+  });
 }
 
 function formatTime(dateString: string): string {
-  const date = new Date(dateString)
+  const date = new Date(dateString);
   return date.toLocaleTimeString("id-ID", {
     hour: "2-digit",
     minute: "2-digit",
-  })
+  });
 }
 
-function mapBookingStatus(
-  status: Booking["status"]
-): BookingStatus {
-  if (status === "in_progress") return "accepted"
-  return status as BookingStatus
+function mapBookingStatus(status: Booking["status"]): BookingStatus {
+  if (status === "in_progress") return "accepted";
+  return status as BookingStatus;
 }
 
 function BookingCard({ booking, workerId, onCancel }: BookingCardProps) {
-  const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false)
-  const [isCancelling, setIsCancelling] = React.useState(false)
+  const [cancelDialogOpen, setCancelDialogOpen] = React.useState(false);
+  const [isCancelling, setIsCancelling] = React.useState(false);
 
   const handleCancelConfirm = async () => {
-    setCancelDialogOpen(false)
+    setCancelDialogOpen(false);
     // The EmergencyCancellationDialog handles the cancellation internally
     // This callback is just for refreshing the list
-    onCancel?.(booking.id)
-  }
+    onCancel?.(booking.id);
+  };
 
-  const canCancel = booking.status === "pending" || booking.status === "accepted"
-  const displayStatus = mapBookingStatus(booking.status)
-  const isEmergencyCancellation = booking.status === "accepted"
+  const canCancel =
+    booking.status === "pending" || booking.status === "accepted";
+  const displayStatus = mapBookingStatus(booking.status);
+  const isEmergencyCancellation = booking.status === "accepted";
 
   return (
     <>
       <Card className="w-full">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <div className="flex-1 space-y-1">
-            <CardTitle className="text-lg">{booking.job?.title || "Unknown Job"}</CardTitle>
+            <CardTitle className="text-lg">
+              {booking.job?.title || "Unknown Job"}
+            </CardTitle>
             <div className="flex items-center gap-2">
               <Building2 className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
@@ -118,14 +142,17 @@ function BookingCard({ booking, workerId, onCancel }: BookingCardProps) {
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Date:</span>
-              <span className="font-medium">{formatDate(booking.start_date)}</span>
+              <span className="font-medium">
+                {formatDate(booking.start_date)}
+              </span>
             </div>
 
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Time:</span>
               <span className="font-medium">
-                {formatTime(booking.start_date)} - {formatTime(booking.end_date)}
+                {formatTime(booking.start_date)} -{" "}
+                {formatTime(booking.end_date)}
               </span>
             </div>
 
@@ -133,14 +160,18 @@ function BookingCard({ booking, workerId, onCancel }: BookingCardProps) {
               <div className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
                 <span className="text-muted-foreground">Location:</span>
-                <span className="font-medium flex-1">{booking.job.address}</span>
+                <span className="font-medium flex-1">
+                  {booking.job.address}
+                </span>
               </div>
             )}
 
             <div className="flex items-center gap-2">
               <DollarSign className="h-4 w-4 text-muted-foreground" />
               <span className="text-muted-foreground">Wage:</span>
-              <span className="font-semibold text-lg">{formatPrice(booking.final_price)}</span>
+              <span className="font-semibold text-lg">
+                {formatPrice(booking.final_price)}
+              </span>
             </div>
           </div>
         </CardContent>
@@ -155,9 +186,15 @@ function BookingCard({ booking, workerId, onCancel }: BookingCardProps) {
               size="sm"
               onClick={() => setCancelDialogOpen(true)}
               disabled={isCancelling}
-              className={isEmergencyCancellation ? "border-orange-500 text-orange-600 hover:bg-orange-50" : ""}
+              className={
+                isEmergencyCancellation
+                  ? "border-orange-500 text-orange-600 hover:bg-orange-50"
+                  : ""
+              }
             >
-              {isEmergencyCancellation && <AlertTriangle className="h-4 w-4 mr-2" />}
+              {isEmergencyCancellation && (
+                <AlertTriangle className="h-4 w-4 mr-2" />
+              )}
               {isEmergencyCancellation ? "Emergency Cancel" : "Cancel Booking"}
             </Button>
           )}
@@ -174,7 +211,7 @@ function BookingCard({ booking, workerId, onCancel }: BookingCardProps) {
         onSuccess={handleCancelConfirm}
       />
     </>
-  )
+  );
 }
 
-export { BookingCard }
+export { BookingCard };

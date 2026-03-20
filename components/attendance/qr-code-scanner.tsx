@@ -1,75 +1,81 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Camera, CameraOff, X } from "lucide-react"
-import { Html5Qrcode } from "html5-qrcode"
-import { toast } from "sonner"
+import * as React from "react";
+import { Camera, CameraOff, X } from "lucide-react";
+import { Html5Qrcode } from "html5-qrcode";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { cn } from "@/lib/utils"
-import { useTranslation } from "@/lib/i18n/hooks"
-import { validateJobQRCode } from "@/lib/supabase/queries/jobs"
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/hooks";
+import { validateJobQRCode } from "@/lib/supabase/queries/jobs";
 
-export type QRScannerMode = "check-in" | "check-out"
+export type QRScannerMode = "check-in" | "check-out";
 
 export interface QRCodeScannerProps extends React.HTMLAttributes<HTMLDivElement> {
-  bookingId: string
-  mode: QRScannerMode
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSuccess?: (jobId: string, lat?: number, lng?: number) => void
+  bookingId: string;
+  mode: QRScannerMode;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: (jobId: string, lat?: number, lng?: number) => void;
 }
 
 const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
-  ({ bookingId, mode, open, onOpenChange, onSuccess, className, ...props }, ref) => {
-    const { t } = useTranslation()
-    const scannerRef = React.useRef<Html5Qrcode | null>(null)
-    const [isScanning, setIsScanning] = React.useState(false)
-    const [cameraError, setCameraError] = React.useState<string | null>(null)
-    const [processing, setProcessing] = React.useState(false)
-    const scannerContainerId = React.useRef(`qr-scanner-${bookingId}-${mode}`)
+  (
+    { bookingId, mode, open, onOpenChange, onSuccess, className, ...props },
+    ref,
+  ) => {
+    const { t } = useTranslation();
+    const scannerRef = React.useRef<Html5Qrcode | null>(null);
+    const [isScanning, setIsScanning] = React.useState(false);
+    const [cameraError, setCameraError] = React.useState<string | null>(null);
+    const [processing, setProcessing] = React.useState(false);
+    const scannerContainerId = React.useRef(`qr-scanner-${bookingId}-${mode}`);
 
     // Get mode display text
-    const modeText = mode === "check-in" ? t("attendance.modeCheckIn") : t("attendance.modeCheckOut")
+    const modeText =
+      mode === "check-in"
+        ? t("attendance.modeCheckIn")
+        : t("attendance.modeCheckOut");
 
     // Start scanning
     const startScanning = React.useCallback(async () => {
-      setCameraError(null)
+      setCameraError(null);
 
       // Check if camera is available
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        const errorMessage = t("attendance.cameraNotAvailable")
-        setCameraError(errorMessage)
-        toast.error(errorMessage)
-        return
+        const errorMessage = t("attendance.cameraNotAvailable");
+        setCameraError(errorMessage);
+        toast.error(errorMessage);
+        return;
       }
 
       try {
-        const scanner = new Html5Qrcode(scannerContainerId.current)
-        scannerRef.current = scanner
+        const scanner = new Html5Qrcode(scannerContainerId.current);
+        scannerRef.current = scanner;
 
         const config = {
           fps: 10,
           qrbox: { width: 250, height: 250 },
           aspectRatio: 1.0,
-        }
+        };
 
         await scanner.start(
           { facingMode: "environment" },
           config,
           async (decodedText: string) => {
             // Stop scanning on successful scan
-            await stopScanning()
+            await stopScanning();
 
             // Process the QR code
-            await processQRCode(decodedText)
+            await processQRCode(decodedText);
           },
           (errorMessage: string, error?: any) => {
             // Ignore scan errors (happens when no QR code is in frame)
@@ -77,143 +83,151 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
             if (error?.type !== 0) {
               // Type 0 is "no code found", which is expected when scanning
             }
-          }
-        )
+          },
+        );
 
-        setIsScanning(true)
+        setIsScanning(true);
       } catch (error) {
-        let errorMessage = t("attendance.cameraAccessFailed")
+        let errorMessage = t("attendance.cameraAccessFailed");
         if (error instanceof Error) {
           if (error.name === "NotAllowedError") {
-            errorMessage = t("attendance.cameraPermissionDenied")
+            errorMessage = t("attendance.cameraPermissionDenied");
           } else if (error.name === "NotFoundError") {
-            errorMessage = t("attendance.cameraNotFound")
+            errorMessage = t("attendance.cameraNotFound");
           } else if (error.name === "NotSupportedError") {
-            errorMessage = t("attendance.cameraNotSupported")
+            errorMessage = t("attendance.cameraNotSupported");
           }
         }
-        setCameraError(errorMessage)
-        toast.error(errorMessage)
+        setCameraError(errorMessage);
+        toast.error(errorMessage);
       }
-    }, [t])
+    }, [t]);
 
     // Stop scanning
     const stopScanning = React.useCallback(async () => {
       if (scannerRef.current && isScanning) {
         try {
-          await scannerRef.current.stop()
-          setIsScanning(false)
+          await scannerRef.current.stop();
+          setIsScanning(false);
         } catch (error) {
           // Scanner might already be stopped
-          setIsScanning(false)
+          setIsScanning(false);
         }
       }
-    }, [isScanning])
+    }, [isScanning]);
 
     // Process QR code data
     const processQRCode = React.useCallback(
       async (decodedText: string) => {
-        if (processing) return
+        if (processing) return;
 
-        setProcessing(true)
+        setProcessing(true);
 
         try {
           // Validate QR code format and verify it's a valid job QR code
-          const result = await validateJobQRCode(decodedText)
+          const result = await validateJobQRCode(decodedText);
 
           if (!result.isValid) {
-            toast.error(result.error || t("attendance.qrCodeInvalid"))
-            setProcessing(false)
+            toast.error(result.error || t("attendance.qrCodeInvalid"));
+            setProcessing(false);
             // Restart scanning
-            await startScanning()
-            return
+            await startScanning();
+            return;
           }
 
           // Get current GPS location
-          let lat: number | undefined
-          let lng: number | undefined
+          let lat: number | undefined;
+          let lng: number | undefined;
 
           if (navigator.geolocation) {
             try {
-              const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(resolve, reject, {
-                  enableHighAccuracy: true,
-                  timeout: 10000,
-                  maximumAge: 0,
-                })
-              })
+              const position = await new Promise<GeolocationPosition>(
+                (resolve, reject) => {
+                  navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0,
+                  });
+                },
+              );
 
-              lat = position.coords.latitude
-              lng = position.coords.longitude
+              lat = position.coords.latitude;
+              lng = position.coords.longitude;
             } catch (error) {
               // Location capture failed, but continue without it
-              let locationWarning = t("attendance.locationCaptureFailed")
+              let locationWarning = t("attendance.locationCaptureFailed");
               if (error instanceof Error) {
                 if (error.name === "NotAllowedError") {
-                  locationWarning = t("attendance.locationPermissionDenied")
+                  locationWarning = t("attendance.locationPermissionDenied");
                 } else if (error.name === "TimeoutError") {
-                  locationWarning = t("attendance.locationTimeout")
+                  locationWarning = t("attendance.locationTimeout");
                 }
               }
-              toast.warning(locationWarning)
+              toast.warning(locationWarning);
             }
           }
 
           // Success! Call the success callback
-          const successMessage = mode === "check-in" ? t("attendance.checkInSuccess") : t("attendance.checkOutSuccess")
-          toast.success(successMessage)
+          const successMessage =
+            mode === "check-in"
+              ? t("attendance.checkInSuccess")
+              : t("attendance.checkOutSuccess");
+          toast.success(successMessage);
 
-          onSuccess?.(result.jobId!, lat, lng)
+          onSuccess?.(result.jobId!, lat, lng);
 
           // Close the dialog
-          onOpenChange(false)
+          onOpenChange(false);
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : t("attendance.failedToProcessQRCode")
-          toast.error(errorMessage)
-          setProcessing(false)
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : t("attendance.failedToProcessQRCode");
+          toast.error(errorMessage);
+          setProcessing(false);
           // Restart scanning
-          await startScanning()
+          await startScanning();
         }
       },
-      [processing, onSuccess, onOpenChange, mode, t, startScanning]
-    )
+      [processing, onSuccess, onOpenChange, mode, t, startScanning],
+    );
 
     // Close dialog handler
     const handleClose = React.useCallback(async () => {
-      await stopScanning()
-      onOpenChange(false)
-    }, [stopScanning, onOpenChange])
+      await stopScanning();
+      onOpenChange(false);
+    }, [stopScanning, onOpenChange]);
 
     // Start scanning when dialog opens
     React.useEffect(() => {
       if (open && !isScanning && !cameraError) {
         // Small delay to ensure dialog is rendered
         const timer = setTimeout(() => {
-          startScanning()
-        }, 100)
-        return () => clearTimeout(timer)
+          startScanning();
+        }, 100);
+        return () => clearTimeout(timer);
       }
 
       // Cleanup when dialog closes
       return () => {
         if (!open && isScanning) {
-          stopScanning()
+          stopScanning();
         }
-      }
-    }, [open, isScanning, cameraError, startScanning, stopScanning])
+      };
+    }, [open, isScanning, cameraError, startScanning, stopScanning]);
 
     // Cleanup on unmount
     React.useEffect(() => {
       return () => {
         if (scannerRef.current) {
           try {
-            scannerRef.current.clear()
+            scannerRef.current.clear();
           } catch {
             // Ignore cleanup errors
           }
         }
-      }
-    }, [])
+      };
+    }, []);
 
     return (
       <Dialog open={open} onOpenChange={handleClose}>
@@ -225,7 +239,9 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
           <DialogHeader>
             <div className="flex items-center justify-between">
               <div>
-                <DialogTitle>{t("attendance.scanQRCodeFor", { mode: modeText })}</DialogTitle>
+                <DialogTitle>
+                  {t("attendance.scanQRCodeFor", { mode: modeText })}
+                </DialogTitle>
                 <DialogDescription>
                   {t("attendance.qrScannerDescription")}
                 </DialogDescription>
@@ -253,7 +269,9 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
                 <div className="absolute inset-0 flex items-center justify-center bg-muted">
                   <div className="text-center space-y-2">
                     <Camera className="h-8 w-8 mx-auto text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">{t("attendance.loadingCamera")}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {t("attendance.loadingCamera")}
+                    </p>
                   </div>
                 </div>
               )}
@@ -272,7 +290,9 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
                   <div className="text-center space-y-2">
                     <div className="h-8 w-8 mx-auto border-4 border-primary border-t-transparent rounded-full animate-spin" />
                     <p className="text-sm font-medium">
-                      {mode === "check-in" ? t("attendance.processingCheckIn") : t("attendance.processingCheckOut")}
+                      {mode === "check-in"
+                        ? t("attendance.processingCheckIn")
+                        : t("attendance.processingCheckOut")}
                     </p>
                   </div>
                 </div>
@@ -312,9 +332,9 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
           </div>
         </DialogContent>
       </Dialog>
-    )
-  }
-)
-QRCodeScanner.displayName = "QRCodeScanner"
+    );
+  },
+);
+QRCodeScanner.displayName = "QRCodeScanner";
 
-export { QRCodeScanner }
+export { QRCodeScanner };

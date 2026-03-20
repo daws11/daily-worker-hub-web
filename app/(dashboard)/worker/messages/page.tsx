@@ -1,109 +1,126 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useCallback } from "react"
-import { useAuth } from '@/app/providers/auth-provider'
-import { toast } from "sonner"
-import { Loader2, AlertCircle, MessageSquare, Send, Search, Bell } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { getConversations } from "@/lib/actions/messages"
+import * as React from "react";
+import { useCallback } from "react";
+import { useAuth } from "@/app/providers/auth-provider";
+import { toast } from "sonner";
+import {
+  Loader2,
+  AlertCircle,
+  MessageSquare,
+  Send,
+  Search,
+  Bell,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getConversations } from "@/lib/actions/messages";
 
 export interface Message {
-  id: string
-  sender_id: string
-  recipient_id: string
-  content: string
-  read: boolean
-  created_at: string
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  content: string;
+  read: boolean;
+  created_at: string;
   sender?: {
-    id: string
-    name: string
-    avatar_url?: string
-  }
+    id: string;
+    name: string;
+    avatar_url?: string;
+  };
 }
 
 export interface Conversation {
-  id: string
-  participant_id: string
-  participant_name: string
-  participant_avatar?: string
-  last_message: string
-  last_message_time: string
-  unread_count: number
+  id: string;
+  participant_id: string;
+  participant_name: string;
+  participant_avatar?: string;
+  last_message: string;
+  last_message_time: string;
+  unread_count: number;
 }
 
 function formatTime(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24))
-  
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffDays = Math.floor(
+    (now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
   if (diffDays === 0) {
-    return date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
+    return date.toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   } else if (diffDays === 1) {
-    return "Kemarin"
+    return "Kemarin";
   } else if (diffDays < 7) {
-    return date.toLocaleDateString("id-ID", { weekday: "short" })
+    return date.toLocaleDateString("id-ID", { weekday: "short" });
   } else {
-    return date.toLocaleDateString("id-ID", { day: "numeric", month: "short" })
+    return date.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
   }
 }
 
 export default function WorkerMessagesPage() {
-  const { signOut, user, isLoading: authLoading } = useAuth()
-  const [conversations, setConversations] = React.useState<Conversation[]>([])
-  const [isLoading, setIsLoading] = React.useState(true)
-  const [error, setError] = React.useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = React.useState("")
-  const [selectedConversation, setSelectedConversation] = React.useState<string | null>(null)
+  const { signOut, user, isLoading: authLoading } = useAuth();
+  const [conversations, setConversations] = React.useState<Conversation[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [selectedConversation, setSelectedConversation] = React.useState<
+    string | null
+  >(null);
 
   const fetchConversations = useCallback(async () => {
-    if (!user?.id) return
+    if (!user?.id) return;
 
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
       // Fetch real conversations from database
-      const result = await getConversations(user.id)
-      
+      const result = await getConversations(user.id);
+
       if (!result.success) {
-        throw new Error(result.error || "Gagal memuat percakapan")
+        throw new Error(result.error || "Gagal memuat percakapan");
       }
-      
-      setConversations(result.data || [])
+
+      setConversations(result.data || []);
     } catch (err: any) {
-      const message = err.message || "Gagal memuat pesan"
-      setError(message)
-      toast.error(message)
+      const message = err.message || "Gagal memuat pesan";
+      setError(message);
+      toast.error(message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [user?.id])
+  }, [user?.id]);
 
   React.useEffect(() => {
-    fetchConversations()
-  }, [fetchConversations])
+    fetchConversations();
+  }, [fetchConversations]);
 
   const handleLogout = async () => {
-    await signOut()
-  }
+    await signOut();
+  };
 
-  const filteredConversations = conversations.filter(conv =>
-    conv.participant_name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredConversations = conversations.filter((conv) =>
+    conv.participant_name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
-  const totalUnread = conversations.reduce((sum, conv) => sum + conv.unread_count, 0)
+  const totalUnread = conversations.reduce(
+    (sum, conv) => sum + conv.unread_count,
+    0,
+  );
 
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
       </div>
-    )
+    );
   }
 
   if (!user) {
@@ -112,11 +129,12 @@ export default function WorkerMessagesPage() {
         <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-center gap-3">
           <AlertCircle className="h-5 w-5 text-red-600" />
           <p className="text-red-900 font-medium">
-            Error: Tidak dapat memuat informasi pengguna. Silakan refresh halaman.
+            Error: Tidak dapat memuat informasi pengguna. Silakan refresh
+            halaman.
           </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -125,9 +143,7 @@ export default function WorkerMessagesPage() {
         {/* Page Header */}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold mb-1">
-              Pesan
-            </h1>
+            <h1 className="text-xl sm:text-2xl font-bold mb-1">Pesan</h1>
             <p className="text-sm text-muted-foreground m-0">
               Komunikasi dengan bisnis dan tim
             </p>
@@ -139,7 +155,7 @@ export default function WorkerMessagesPage() {
             size="sm"
             className="min-h-[44px] touch-manipulation"
           >
-            {authLoading ? 'Memproses...' : 'Keluar'}
+            {authLoading ? "Memproses..." : "Keluar"}
           </Button>
         </div>
 
@@ -182,7 +198,9 @@ export default function WorkerMessagesPage() {
               <Bell className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{totalUnread}</div>
+              <div className="text-2xl font-bold text-red-600">
+                {totalUnread}
+              </div>
             </CardContent>
           </Card>
 
@@ -195,10 +213,14 @@ export default function WorkerMessagesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {conversations.filter(c => {
-                  const today = new Date().toDateString()
-                  return new Date(c.last_message_time).toDateString() === today
-                }).length}
+                {
+                  conversations.filter((c) => {
+                    const today = new Date().toDateString();
+                    return (
+                      new Date(c.last_message_time).toDateString() === today
+                    );
+                  }).length
+                }
               </div>
             </CardContent>
           </Card>
@@ -230,9 +252,7 @@ export default function WorkerMessagesPage() {
           <Card>
             <CardContent className="py-12 flex flex-col items-center justify-center text-center border-2 border-dashed border-gray-300">
               <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">
-                Belum Ada Pesan
-              </h3>
+              <h3 className="text-lg font-semibold mb-2">Belum Ada Pesan</h3>
               <p className="text-muted-foreground">
                 Percakapan dengan bisnis akan muncul di sini
               </p>
@@ -255,7 +275,9 @@ export default function WorkerMessagesPage() {
                   <div
                     key={conversation.id}
                     className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 hover:bg-muted cursor-pointer transition-colors min-h-[60px] touch-manipulation ${
-                      selectedConversation === conversation.id ? 'bg-accent' : ''
+                      selectedConversation === conversation.id
+                        ? "bg-accent"
+                        : ""
                     }`}
                     onClick={() => setSelectedConversation(conversation.id)}
                   >
@@ -265,7 +287,7 @@ export default function WorkerMessagesPage() {
                         {conversation.participant_name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
                         <p className="font-medium text-sm truncate">
@@ -293,17 +315,21 @@ export default function WorkerMessagesPage() {
         )}
 
         {/* No Search Results */}
-        {!isLoading && !error && searchQuery && filteredConversations.length === 0 && conversations.length > 0 && (
-          <Card>
-            <CardContent className="py-8 flex flex-col items-center justify-center text-center">
-              <Search className="h-8 w-8 text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">
-                Tidak ada percakapan yang cocok dengan "{searchQuery}"
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        {!isLoading &&
+          !error &&
+          searchQuery &&
+          filteredConversations.length === 0 &&
+          conversations.length > 0 && (
+            <Card>
+              <CardContent className="py-8 flex flex-col items-center justify-center text-center">
+                <Search className="h-8 w-8 text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">
+                  Tidak ada percakapan yang cocok dengan "{searchQuery}"
+                </p>
+              </CardContent>
+            </Card>
+          )}
       </div>
     </div>
-  )
+  );
 }

@@ -1,14 +1,14 @@
-import * as React from "react"
+import * as React from "react";
 
 export interface ApplicationReceivedProps {
-  businessName: string
-  workerName: string
-  jobTitle: string
-  applicationId: string
-  workerSkills?: string[]
-  workerExperience?: string
-  applicationDate: string
-  dashboardUrl: string
+  businessName: string;
+  workerName: string;
+  jobTitle: string;
+  applicationId: string;
+  workerSkills?: string[];
+  workerExperience?: string;
+  applicationDate: string;
+  dashboardUrl: string;
 }
 
 export function ApplicationReceivedEmail({
@@ -26,12 +26,12 @@ export function ApplicationReceivedEmail({
       <div style={styles.header}>
         <h1 style={styles.logo}>Daily Worker Hub</h1>
       </div>
-      
+
       <div style={styles.content}>
         <h2 style={styles.title}>Lamaran Baru Diterima! 🎉</h2>
-        
+
         <p style={styles.greeting}>Halo {businessName},</p>
-        
+
         <p style={styles.text}>
           Anda menerima lamaran baru untuk posisi <strong>{jobTitle}</strong>.
         </p>
@@ -54,13 +54,15 @@ export function ApplicationReceivedEmail({
               </tr>
             </tbody>
           </table>
-          
+
           {workerSkills && workerSkills.length > 0 && (
             <div style={styles.section}>
               <p style={styles.label}>Keahlian:</p>
               <div style={styles.skills}>
                 {workerSkills.map((skill, index) => (
-                  <span key={index} style={styles.skill}>{skill}</span>
+                  <span key={index} style={styles.skill}>
+                    {skill}
+                  </span>
                 ))}
               </div>
             </div>
@@ -75,27 +77,31 @@ export function ApplicationReceivedEmail({
         </div>
 
         <div style={styles.buttonContainer}>
-          <a href={`${dashboardUrl}/applications/${applicationId}`} style={styles.button}>
+          <a
+            href={`${dashboardUrl}/applications/${applicationId}`}
+            style={styles.button}
+          >
             Lihat Lamaran
           </a>
         </div>
 
         <p style={styles.note}>
-          Segera tinjau lamaran ini dan berikan respons kepada pelamar.
-          Respons cepat akan meningkatkan reputasi bisnis Anda.
+          Segera tinjau lamaran ini dan berikan respons kepada pelamar. Respons
+          cepat akan meningkatkan reputasi bisnis Anda.
         </p>
       </div>
 
       <div style={styles.footer}>
         <p style={styles.footerText}>
-          Email ini dikirim oleh Daily Worker Hub karena Anda menerima lamaran baru.
+          Email ini dikirim oleh Daily Worker Hub karena Anda menerima lamaran
+          baru.
         </p>
         <p style={styles.footerText}>
           © {new Date().getFullYear()} Daily Worker Hub. Hak cipta dilindungi.
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 const styles: Record<string, React.CSSProperties> = {
@@ -215,6 +221,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#9ca3af",
     margin: "4px 0",
   },
-}
+};
 
-export default ApplicationReceivedEmail
+export default ApplicationReceivedEmail;

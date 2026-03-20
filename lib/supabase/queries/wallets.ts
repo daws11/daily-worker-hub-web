@@ -1,53 +1,58 @@
-import { supabase } from '../client'
-import type { Database } from '../types'
+import { supabase } from "../client";
+import type { Database } from "../types";
 
 type WalletsRow = {
-  id: string
-  business_id: string | null
-  worker_id: string | null
-  user_id: string | null
-  balance: number
-  currency: string
-  is_active: boolean
-  created_at: string
-  updated_at: string
-}
+  id: string;
+  business_id: string | null;
+  worker_id: string | null;
+  user_id: string | null;
+  balance: number;
+  currency: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
 
 export type WalletTransactionWithDetails = {
-  id: string
-  wallet_id: string
-  amount: number
-  type: 'hold' | 'release' | 'earn' | 'payout' | 'refund'
-  status: 'pending_review' | 'available' | 'released' | 'disputed' | 'cancelled'
-  booking_id: string | null
-  description: string | null
-  created_at: string
+  id: string;
+  wallet_id: string;
+  amount: number;
+  type: "hold" | "release" | "earn" | "payout" | "refund";
+  status:
+    | "pending_review"
+    | "available"
+    | "released"
+    | "disputed"
+    | "cancelled";
+  booking_id: string | null;
+  description: string | null;
+  created_at: string;
   booking?: {
-    id: string
+    id: string;
     job?: {
-      id: string
-      title: string
-    }
-  } | null
-}
+      id: string;
+      title: string;
+    };
+  } | null;
+};
 
 /**
  * Create a new wallet
  */
 export async function createWallet(
-  walletData: Omit<WalletsRow, 'id' | 'created_at' | 'updated_at'>
+  walletData: Omit<WalletsRow, "id" | "created_at" | "updated_at">,
 ): Promise<WalletsRow> {
   const { data, error } = await (supabase as any)
-    .from('wallets')
+    .from("wallets")
     .insert(walletData)
     .select()
-    .single()
+    .single();
 
   if (error) {
-    throw new Error(`Failed to create wallet: ${error.message}`)
+    throw new Error(`Failed to create wallet: ${error.message}`);
   }
 
-  return data
+  return data;
 }
 
 /**
@@ -57,20 +62,20 @@ export async function createWallet(
 export async function createWalletForUser(userId: string) {
   try {
     const { data, error } = await (supabase as any)
-      .from('wallets')
+      .from("wallets")
       .insert({ user_id: userId })
       .select()
-      .single()
+      .single();
 
     if (error) {
-      console.error('Error creating wallet:', error)
-      return { data: null, error }
+      console.error("Error creating wallet:", error);
+      return { data: null, error };
     }
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Unexpected error creating wallet:', error)
-    return { data: null, error }
+    console.error("Unexpected error creating wallet:", error);
+    return { data: null, error };
   }
 }
 
@@ -79,43 +84,45 @@ export async function createWalletForUser(userId: string) {
  */
 export async function updateWallet(
   walletId: string,
-  updates: Partial<Pick<WalletsRow, 'balance' | 'currency' | 'is_active'>>
+  updates: Partial<Pick<WalletsRow, "balance" | "currency" | "is_active">>,
 ): Promise<WalletsRow> {
   const { data, error } = await (supabase as any)
-    .from('wallets')
+    .from("wallets")
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', walletId)
+    .eq("id", walletId)
     .select()
-    .single()
+    .single();
 
   if (error) {
-    throw new Error(`Failed to update wallet: ${error.message}`)
+    throw new Error(`Failed to update wallet: ${error.message}`);
   }
 
-  return data
+  return data;
 }
 
 /**
  * Get a single wallet by ID
  */
-export async function getWalletById(walletId: string): Promise<WalletsRow | null> {
+export async function getWalletById(
+  walletId: string,
+): Promise<WalletsRow | null> {
   const { data, error } = await (supabase as any)
-    .from('wallets')
-    .select('*')
-    .eq('id', walletId)
-    .single()
+    .from("wallets")
+    .select("*")
+    .eq("id", walletId)
+    .single();
 
   if (error) {
-    if (error.code === 'PGRST116') {
-      return null
+    if (error.code === "PGRST116") {
+      return null;
     }
-    throw new Error(`Failed to fetch wallet: ${error.message}`)
+    throw new Error(`Failed to fetch wallet: ${error.message}`);
   }
 
-  return data
+  return data;
 }
 
 /**
@@ -125,55 +132,59 @@ export async function getWalletById(walletId: string): Promise<WalletsRow | null
 export async function getWallet(userId: string) {
   try {
     const { data, error } = await (supabase as any)
-      .from('wallets')
-      .select('*')
-      .eq('user_id', userId)
-      .single()
+      .from("wallets")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
 
     if (error) {
-      console.error('Error fetching wallet:', error)
-      return { data: null, error }
+      console.error("Error fetching wallet:", error);
+      return { data: null, error };
     }
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Unexpected error fetching wallet:', error)
-    return { data: null, error }
+    console.error("Unexpected error fetching wallet:", error);
+    return { data: null, error };
   }
 }
 
 /**
  * Get wallet by business ID
  */
-export async function getBusinessWallet(businessId: string): Promise<WalletsRow | null> {
+export async function getBusinessWallet(
+  businessId: string,
+): Promise<WalletsRow | null> {
   const { data, error } = await (supabase as any)
-    .from('wallets')
-    .select('*')
-    .eq('business_id', businessId)
-    .maybeSingle()
+    .from("wallets")
+    .select("*")
+    .eq("business_id", businessId)
+    .maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to fetch business wallet: ${error.message}`)
+    throw new Error(`Failed to fetch business wallet: ${error.message}`);
   }
 
-  return data
+  return data;
 }
 
 /**
  * Get wallet by worker ID
  */
-export async function getWorkerWallet(workerId: string): Promise<WalletsRow | null> {
+export async function getWorkerWallet(
+  workerId: string,
+): Promise<WalletsRow | null> {
   const { data, error } = await (supabase as any)
-    .from('wallets')
-    .select('*')
-    .eq('worker_id', workerId)
-    .maybeSingle()
+    .from("wallets")
+    .select("*")
+    .eq("worker_id", workerId)
+    .maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to fetch worker wallet: ${error.message}`)
+    throw new Error(`Failed to fetch worker wallet: ${error.message}`);
   }
 
-  return data
+  return data;
 }
 
 /**
@@ -182,12 +193,12 @@ export async function getWorkerWallet(workerId: string): Promise<WalletsRow | nu
  */
 export async function getOrCreateBusinessWallet(
   businessId: string,
-  currency: string = 'IDR'
+  currency: string = "IDR",
 ): Promise<WalletsRow> {
-  const existingWallet = await getBusinessWallet(businessId)
+  const existingWallet = await getBusinessWallet(businessId);
 
   if (existingWallet) {
-    return existingWallet
+    return existingWallet;
   }
 
   return createWallet({
@@ -197,7 +208,7 @@ export async function getOrCreateBusinessWallet(
     balance: 0,
     currency,
     is_active: true,
-  })
+  });
 }
 
 /**
@@ -206,12 +217,12 @@ export async function getOrCreateBusinessWallet(
  */
 export async function getOrCreateWorkerWallet(
   workerId: string,
-  currency: string = 'IDR'
+  currency: string = "IDR",
 ): Promise<WalletsRow> {
-  const existingWallet = await getWorkerWallet(workerId)
+  const existingWallet = await getWorkerWallet(workerId);
 
   if (existingWallet) {
-    return existingWallet
+    return existingWallet;
   }
 
   return createWallet({
@@ -221,34 +232,31 @@ export async function getOrCreateWorkerWallet(
     balance: 0,
     currency,
     is_active: true,
-  })
+  });
 }
 
 /**
  * Update wallet balance (legacy compatibility)
  * @deprecated Use updateWallet with explicit balance instead
  */
-export async function updateBalance(
-  walletId: string,
-  newBalance: number
-) {
+export async function updateBalance(walletId: string, newBalance: number) {
   try {
     const { data, error } = await (supabase as any)
-      .from('wallets')
+      .from("wallets")
       .update({ balance: newBalance, updated_at: new Date().toISOString() })
-      .eq('id', walletId)
+      .eq("id", walletId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      console.error('Error updating wallet balance:', error)
-      return { data: null, error }
+      console.error("Error updating wallet balance:", error);
+      return { data: null, error };
     }
 
-    return { data, error: null }
+    return { data, error: null };
   } catch (error) {
-    console.error('Unexpected error updating wallet balance:', error)
-    return { data: null, error }
+    console.error("Unexpected error updating wallet balance:", error);
+    return { data: null, error };
   }
 }
 
@@ -257,17 +265,17 @@ export async function updateBalance(
  */
 export async function creditWallet(
   walletId: string,
-  amount: number
+  amount: number,
 ): Promise<WalletsRow> {
   // First get current balance
-  const wallet = await getWalletById(walletId)
+  const wallet = await getWalletById(walletId);
   if (!wallet) {
-    throw new Error('Wallet not found')
+    throw new Error("Wallet not found");
   }
 
-  const newBalance = wallet.balance + amount
+  const newBalance = wallet.balance + amount;
 
-  return updateWallet(walletId, { balance: newBalance })
+  return updateWallet(walletId, { balance: newBalance });
 }
 
 /**
@@ -275,21 +283,21 @@ export async function creditWallet(
  */
 export async function debitWallet(
   walletId: string,
-  amount: number
+  amount: number,
 ): Promise<WalletsRow> {
   // First get current balance
-  const wallet = await getWalletById(walletId)
+  const wallet = await getWalletById(walletId);
   if (!wallet) {
-    throw new Error('Wallet not found')
+    throw new Error("Wallet not found");
   }
 
   if (wallet.balance < amount) {
-    throw new Error('Insufficient wallet balance')
+    throw new Error("Insufficient wallet balance");
   }
 
-  const newBalance = wallet.balance - amount
+  const newBalance = wallet.balance - amount;
 
-  return updateWallet(walletId, { balance: newBalance })
+  return updateWallet(walletId, { balance: newBalance });
 }
 
 /**
@@ -299,22 +307,24 @@ export async function debitWallet(
 export async function calculatePendingBalance(walletId: string) {
   try {
     const { data, error } = await (supabase as any)
-      .from('wallet_transactions')
-      .select('amount')
-      .eq('wallet_id', walletId)
-      .eq('type', 'pending')
+      .from("wallet_transactions")
+      .select("amount")
+      .eq("wallet_id", walletId)
+      .eq("type", "pending");
 
     if (error) {
-      console.error('Error calculating pending balance:', error)
-      return { data: null, error }
+      console.error("Error calculating pending balance:", error);
+      return { data: null, error };
     }
 
-    const pendingBalance = data?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) ?? 0
+    const pendingBalance =
+      data?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) ??
+      0;
 
-    return { data: pendingBalance, error: null }
+    return { data: pendingBalance, error: null };
   } catch (error) {
-    console.error('Unexpected error calculating pending balance:', error)
-    return { data: null, error }
+    console.error("Unexpected error calculating pending balance:", error);
+    return { data: null, error };
   }
 }
 
@@ -325,22 +335,24 @@ export async function calculatePendingBalance(walletId: string) {
 export async function getTotalEarnings(walletId: string) {
   try {
     const { data, error } = await (supabase as any)
-      .from('wallet_transactions')
-      .select('amount')
-      .eq('wallet_id', walletId)
-      .eq('type', 'credit')
+      .from("wallet_transactions")
+      .select("amount")
+      .eq("wallet_id", walletId)
+      .eq("type", "credit");
 
     if (error) {
-      console.error('Error calculating total earnings:', error)
-      return { data: null, error }
+      console.error("Error calculating total earnings:", error);
+      return { data: null, error };
     }
 
-    const totalEarnings = data?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) ?? 0
+    const totalEarnings =
+      data?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) ??
+      0;
 
-    return { data: totalEarnings, error: null }
+    return { data: totalEarnings, error: null };
   } catch (error) {
-    console.error('Unexpected error calculating total earnings:', error)
-    return { data: null, error }
+    console.error("Unexpected error calculating total earnings:", error);
+    return { data: null, error };
   }
 }
 
@@ -348,14 +360,14 @@ export async function getTotalEarnings(walletId: string) {
  * Deactivate a wallet
  */
 export async function deactivateWallet(walletId: string): Promise<WalletsRow> {
-  return updateWallet(walletId, { is_active: false })
+  return updateWallet(walletId, { is_active: false });
 }
 
 /**
  * Activate a wallet
  */
 export async function activateWallet(walletId: string): Promise<WalletsRow> {
-  return updateWallet(walletId, { is_active: true })
+  return updateWallet(walletId, { is_active: true });
 }
 
 /**
@@ -363,11 +375,11 @@ export async function activateWallet(walletId: string): Promise<WalletsRow> {
  */
 export async function deleteWallet(walletId: string): Promise<void> {
   const { error } = await (supabase as any)
-    .from('wallets')
+    .from("wallets")
     .delete()
-    .eq('id', walletId)
+    .eq("id", walletId);
 
   if (error) {
-    throw new Error(`Failed to delete wallet: ${error.message}`)
+    throw new Error(`Failed to delete wallet: ${error.message}`);
   }
 }

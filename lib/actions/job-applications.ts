@@ -1,35 +1,41 @@
-"use server"
+"use server";
 
-import { createClient } from "../supabase/server"
-import type { Database } from "../supabase/types"
-import { createNotification } from "./notifications"
-import { sendPushNotification, isNotificationTypeEnabled } from "./push-notifications"
-import { checkComplianceBeforeAccept } from "./compliance"
+import { createClient } from "../supabase/server";
+import type { Database } from "../supabase/types";
+import { createNotification } from "./notifications";
+import {
+  sendPushNotification,
+  isNotificationTypeEnabled,
+} from "./push-notifications";
+import { checkComplianceBeforeAccept } from "./compliance";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-type JobApplication = Database["public"]["Tables"]["job_applications"]["Row"]
-type JobApplicationInsert = Omit<Database["public"]["Tables"]["job_applications"]["Insert"], 'id' | 'created_at' | 'updated_at'>
-type Booking = Database["public"]["Tables"]["bookings"]["Row"]
-type Job = Database["public"]["Tables"]["jobs"]["Row"]
+type JobApplication = Database["public"]["Tables"]["job_applications"]["Row"];
+type JobApplicationInsert = Omit<
+  Database["public"]["Tables"]["job_applications"]["Insert"],
+  "id" | "created_at" | "updated_at"
+>;
+type Booking = Database["public"]["Tables"]["bookings"]["Row"];
+type Job = Database["public"]["Tables"]["jobs"]["Row"];
 
 export type ApplicationResult = {
-  success: boolean
-  error?: string
-  data?: JobApplication
-}
+  success: boolean;
+  error?: string;
+  data?: JobApplication;
+};
 
 export type ApplicationWithBooking = {
-  application: JobApplication
-  booking: Booking
-}
+  application: JobApplication;
+  booking: Booking;
+};
 
 export type DuplicateCheckResult = {
-  hasApplied: boolean
-  application?: JobApplication
-}
+  hasApplied: boolean;
+  application?: JobApplication;
+};
 
 // ============================================================================
 // JOB APPLICATION ACTIONS
@@ -49,23 +55,23 @@ export async function createJobApplication(
   jobId: string,
   workerId: string,
   options?: {
-    coverLetter?: string
-    proposedWage?: number
-    availability?: any[]
-  }
+    coverLetter?: string;
+    proposedWage?: number;
+    availability?: any[];
+  },
 ): Promise<ApplicationResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the worker exists
     const { data: worker, error: workerError } = await supabase
       .from("workers")
       .select("id, user_id, full_name")
       .eq("id", workerId)
-      .single()
+      .single();
 
     if (workerError || !worker) {
-      return { success: false, error: "Data pekerja tidak ditemukan" }
+      return { success: false, error: "Data pekerja tidak ditemukan" };
     }
 
     // Get job details
@@ -73,15 +79,15 @@ export async function createJobApplication(
       .from("jobs")
       .select("id, business_id, title, status")
       .eq("id", jobId)
-      .single()
+      .single();
 
     if (jobError || !job) {
-      return { success: false, error: "Pekerjaan tidak ditemukan" }
+      return { success: false, error: "Pekerjaan tidak ditemukan" };
     }
 
     // Check if job is still open
-    if (job.status !== 'open') {
-      return { success: false, error: "Pekerjaan ini sudah tidak tersedia" }
+    if (job.status !== "open") {
+      return { success: false, error: "Pekerjaan ini sudah tidak tersedia" };
     }
 
     // Check if worker has already applied for this job
@@ -90,29 +96,41 @@ export async function createJobApplication(
       .select("*")
       .eq("job_id", jobId)
       .eq("worker_id", workerId)
-      .single()
+      .single();
 
     if (existingApplication) {
       // Check if they can re-apply (only if previous application was withdrawn)
-      if (existingApplication.status !== 'withdrawn') {
-        return { success: false, error: "Anda sudah melamar untuk pekerjaan ini" }
+      if (existingApplication.status !== "withdrawn") {
+        return {
+          success: false,
+          error: "Anda sudah melamar untuk pekerjaan ini",
+        };
       }
     }
 
     // Check PP 35/2021 compliance (21-day limit) BEFORE allowing application
-    const complianceCheck = await checkComplianceBeforeAccept(workerId, job.business_id)
+    const complianceCheck = await checkComplianceBeforeAccept(
+      workerId,
+      job.business_id,
+    );
 
     if (!complianceCheck.success) {
-      return { success: false, error: complianceCheck.error || "Gagal mengecek kepatuhan PP 35/2021" }
+      return {
+        success: false,
+        error: complianceCheck.error || "Gagal mengecek kepatuhan PP 35/2021",
+      };
     }
 
     // If worker cannot apply due to compliance (blocked at 21 days)
-    if (!complianceCheck.canAccept || complianceCheck.data?.status === "blocked") {
-      const daysWorked = complianceCheck.data?.daysWorked || 21
+    if (
+      !complianceCheck.canAccept ||
+      complianceCheck.data?.status === "blocked"
+    ) {
+      const daysWorked = complianceCheck.data?.daysWorked || 21;
       return {
         success: false,
-        error: `Anda telah bekerja ${daysWorked} hari bulan ini dengan bisnis ini. PP 35/2021 membatasi pekerja harian maksimal 21 hari/bulan. Silakan cari pekerjaan di bisnis lain.`
-      }
+        error: `Anda telah bekerja ${daysWorked} hari bulan ini dengan bisnis ini. PP 35/2021 membatasi pekerja harian maksimal 21 hari/bulan. Silakan cari pekerjaan di bisnis lain.`,
+      };
     }
 
     // Get business owner's user_id for notification
@@ -120,10 +138,10 @@ export async function createJobApplication(
       .from("businesses")
       .select("user_id")
       .eq("id", job.business_id)
-      .single()
+      .single();
 
     if (businessError || !business) {
-      return { success: false, error: "Data bisnis tidak ditemukan" }
+      return { success: false, error: "Data bisnis tidak ditemukan" };
     }
 
     // Create the job application
@@ -131,21 +149,21 @@ export async function createJobApplication(
       job_id: jobId,
       worker_id: workerId,
       business_id: job.business_id,
-      status: 'pending',
+      status: "pending",
       cover_letter: options?.coverLetter || null,
       proposed_rate: options?.proposedWage || null,
       availability_date: options?.availability?.[0] || null,
-    }
+    };
 
     const { data, error } = await supabase
       .from("job_applications")
       .insert(newApplication)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      console.error("Error creating application:", error)
-      return { success: false, error: `Gagal melamar: ${error.message}` }
+      console.error("Error creating application:", error);
+      return { success: false, error: `Gagal melamar: ${error.message}` };
     }
 
     // Create notification for business owner
@@ -153,13 +171,16 @@ export async function createJobApplication(
       business.user_id,
       "Pelamar Baru",
       `${worker.full_name} melamar untuk pekerjaan ${job.title}`,
-      `/business/jobs/${jobId}/applicants`
-    )
+      `/business/jobs/${jobId}/applicants`,
+    );
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
-    console.error("Error in createJobApplication:", error)
-    return { success: false, error: "Terjadi kesalahan saat melamar pekerjaan" }
+    console.error("Error in createJobApplication:", error);
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat melamar pekerjaan",
+    };
   }
 }
 
@@ -173,10 +194,10 @@ export async function createJobApplication(
  */
 export async function getApplicationsByJob(
   jobId: string,
-  businessId: string
+  businessId: string,
 ): Promise<{ success: boolean; error?: string; data?: any[] }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the job belongs to the business
     const { data: job, error: jobError } = await supabase
@@ -184,16 +205,20 @@ export async function getApplicationsByJob(
       .select("id")
       .eq("id", jobId)
       .eq("business_id", businessId)
-      .single()
+      .single();
 
     if (jobError || !job) {
-      return { success: false, error: "Pekerjaan tidak ditemukan atau bukan milik Anda" }
+      return {
+        success: false,
+        error: "Pekerjaan tidak ditemukan atau bukan milik Anda",
+      };
     }
 
     // Get applications with worker details
     const { data, error } = await supabase
       .from("job_applications")
-      .select(`
+      .select(
+        `
         *,
         workers (
           id,
@@ -205,17 +230,18 @@ export async function getApplicationsByJob(
           rating,
           jobs_completed
         )
-      `)
+      `,
+      )
       .eq("job_id", jobId)
-      .order("applied_at", { ascending: false })
+      .order("applied_at", { ascending: false });
 
     if (error) {
-      return { success: false, error: error.message }
+      return { success: false, error: error.message };
     }
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
-    return { success: false, error: "Gagal mengambil data pelamar" }
+    return { success: false, error: "Gagal mengambil data pelamar" };
   }
 }
 
@@ -229,14 +255,15 @@ export async function getApplicationsByJob(
  */
 export async function getApplicationsByWorker(
   workerId: string,
-  status?: string
+  status?: string,
 ): Promise<{ success: boolean; error?: string; data?: any[] }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     let query = supabase
       .from("job_applications")
-      .select(`
+      .select(
+        `
         *,
         jobs (
           id,
@@ -254,23 +281,27 @@ export async function getApplicationsByWorker(
           phone,
           email
         )
-      `)
+      `,
+      )
       .eq("worker_id", workerId)
-      .order("applied_at", { ascending: false })
+      .order("applied_at", { ascending: false });
 
     if (status) {
-      query = query.eq("status", status as Database["public"]["Tables"]["job_applications"]["Row"]["status"])
+      query = query.eq(
+        "status",
+        status as Database["public"]["Tables"]["job_applications"]["Row"]["status"],
+      );
     }
 
-    const { data, error } = await query
+    const { data, error } = await query;
 
     if (error) {
-      return { success: false, error: error.message }
+      return { success: false, error: error.message };
     }
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
-    return { success: false, error: "Gagal mengambil data lamaran" }
+    return { success: false, error: "Gagal mengambil data lamaran" };
   }
 }
 
@@ -285,11 +316,11 @@ export async function getApplicationsByWorker(
  */
 export async function updateApplicationStatus(
   applicationId: string,
-  status: 'reviewed' | 'accepted' | 'rejected',
-  businessId: string
+  status: "reviewed" | "accepted" | "rejected",
+  businessId: string,
 ): Promise<ApplicationResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the application belongs to the business
     const { data: application, error: fetchError } = await supabase
@@ -297,20 +328,23 @@ export async function updateApplicationStatus(
       .select("*")
       .eq("id", applicationId)
       .eq("business_id", businessId)
-      .single()
+      .single();
 
     if (fetchError || !application) {
-      return { success: false, error: "Lamaran tidak ditemukan" }
+      return { success: false, error: "Lamaran tidak ditemukan" };
     }
 
     // Validate status transition
     const validTransitions: Record<string, string[]> = {
-      'pending': ['reviewed', 'accepted', 'rejected'],
-      'reviewed': ['accepted', 'rejected'],
-    }
+      pending: ["reviewed", "accepted", "rejected"],
+      reviewed: ["accepted", "rejected"],
+    };
 
     if (!validTransitions[application.status]?.includes(status)) {
-      return { success: false, error: `Tidak dapat mengubah status dari ${application.status} ke ${status}` }
+      return {
+        success: false,
+        error: `Tidak dapat mengubah status dari ${application.status} ke ${status}`,
+      };
     }
 
     // Update the application
@@ -320,10 +354,13 @@ export async function updateApplicationStatus(
       .eq("id", applicationId)
       .eq("business_id", businessId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal mengupdate status: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal mengupdate status: ${error.message}`,
+      };
     }
 
     // Send notification to worker
@@ -331,53 +368,59 @@ export async function updateApplicationStatus(
       .from("workers")
       .select("user_id")
       .eq("id", application.worker_id)
-      .single()
+      .single();
 
     const { data: job } = await supabase
       .from("jobs")
       .select("title")
       .eq("id", application.job_id)
-      .single()
+      .single();
 
     if (worker && job) {
       const statusMessages: Record<string, { title: string; body: string }> = {
-        'reviewed': {
+        reviewed: {
           title: "Lamaran Ditinjau",
-          body: `Lamaran Anda untuk ${job.title} sedang ditinjau`
+          body: `Lamaran Anda untuk ${job.title} sedang ditinjau`,
         },
-        'accepted': {
+        accepted: {
           title: "Lamaran Diterima",
-          body: `Selamat! Lamaran Anda untuk ${job.title} telah diterima`
+          body: `Selamat! Lamaran Anda untuk ${job.title} telah diterima`,
         },
-        'rejected': {
+        rejected: {
           title: "Lamaran Ditolak",
-          body: `Maaf, lamaran Anda untuk ${job.title} belum dapat diterima`
-        }
-      }
+          body: `Maaf, lamaran Anda untuk ${job.title} belum dapat diterima`,
+        },
+      };
 
-      const msg = statusMessages[status]
+      const msg = statusMessages[status];
       await createNotification(
         worker.user_id,
         msg.title,
         msg.body,
-        status === 'accepted' ? `/worker/bookings` : `/worker/applications`
-      )
+        status === "accepted" ? `/worker/bookings` : `/worker/applications`,
+      );
 
       // Send push notification if enabled
-      const { enabled } = await isNotificationTypeEnabled(worker.user_id, "booking_status")
+      const { enabled } = await isNotificationTypeEnabled(
+        worker.user_id,
+        "booking_status",
+      );
       if (enabled) {
         await sendPushNotification(
           worker.user_id,
           msg.title,
           msg.body,
-          `/worker/applications`
-        )
+          `/worker/applications`,
+        );
       }
     }
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat mengupdate status lamaran" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat mengupdate status lamaran",
+    };
   }
 }
 
@@ -394,15 +437,20 @@ export async function updateApplicationStatus(
  */
 export async function acceptApplicationAndCreateBooking(
   applicationId: string,
-  businessId: string
-): Promise<{ success: boolean; error?: string; data?: ApplicationWithBooking }> {
+  businessId: string,
+): Promise<{
+  success: boolean;
+  error?: string;
+  data?: ApplicationWithBooking;
+}> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Get the application with worker and job details
     const { data: application, error: appError } = await supabase
       .from("job_applications")
-      .select(`
+      .select(
+        `
         *,
         workers (
           id,
@@ -416,45 +464,55 @@ export async function acceptApplicationAndCreateBooking(
           budget_min,
           budget_max
         )
-      `)
+      `,
+      )
       .eq("id", applicationId)
       .eq("business_id", businessId)
-      .single()
+      .single();
 
     if (appError || !application) {
-      return { success: false, error: "Lamaran tidak ditemukan" }
+      return { success: false, error: "Lamaran tidak ditemukan" };
     }
 
     // Check PP 35/2021 compliance (21-day limit) BEFORE accepting
     const complianceCheck = await checkComplianceBeforeAccept(
       application.worker_id,
-      businessId
-    )
+      businessId,
+    );
 
     if (!complianceCheck.success) {
-      return { success: false, error: complianceCheck.error || "Gagal mengecek kepatuhan PP 35/2021" }
+      return {
+        success: false,
+        error: complianceCheck.error || "Gagal mengecek kepatuhan PP 35/2021",
+      };
     }
 
     // If worker cannot be accepted due to compliance (blocked at 21 days)
-    if (!complianceCheck.canAccept || complianceCheck.data?.status === "blocked") {
-      const daysWorked = complianceCheck.data?.daysWorked || 21
+    if (
+      !complianceCheck.canAccept ||
+      complianceCheck.data?.status === "blocked"
+    ) {
+      const daysWorked = complianceCheck.data?.daysWorked || 21;
       return {
         success: false,
-        error: `Pekerja telah bekerja ${daysWorked} hari bulan ini dengan bisnis Anda. PP 35/2021 membatasi pekerja harian maksimal 21 hari/bulan. Tidak dapat menerima pekerja ini bulan ini.`
-      }
+        error: `Pekerja telah bekerja ${daysWorked} hari bulan ini dengan bisnis Anda. PP 35/2021 membatasi pekerja harian maksimal 21 hari/bulan. Tidak dapat menerima pekerja ini bulan ini.`,
+      };
     }
 
     // Update application status to accepted
     const { data: updatedApplication, error: updateError } = await supabase
       .from("job_applications")
-      .update({ status: 'accepted' })
+      .update({ status: "accepted" })
       .eq("id", applicationId)
       .eq("business_id", businessId)
       .select()
-      .single()
+      .single();
 
     if (updateError) {
-      return { success: false, error: `Gagal menerima lamaran: ${updateError.message}` }
+      return {
+        success: false,
+        error: `Gagal menerima lamaran: ${updateError.message}`,
+      };
     }
 
     // Create the booking
@@ -470,33 +528,39 @@ export async function acceptApplicationAndCreateBooking(
         final_price: application.jobs?.budget_max || 0,
       })
       .select()
-      .single()
+      .single();
 
     if (bookingError) {
       // Rollback application status update
       await supabase
         .from("job_applications")
-        .update({ status: 'pending' })
-        .eq("id", applicationId)
+        .update({ status: "pending" })
+        .eq("id", applicationId);
 
-      return { success: false, error: `Gagal membuat booking: ${bookingError.message}` }
+      return {
+        success: false,
+        error: `Gagal membuat booking: ${bookingError.message}`,
+      };
     }
 
     // Create interview session based on worker tier
-    const workerTier = (application.workers as any)?.tier || 'classic'
+    const workerTier = (application.workers as any)?.tier || "classic";
 
     // Import interview session functions
-    const { createInterviewSession } = await import("./bookings")
+    const { createInterviewSession } = await import("./bookings");
 
     const interviewResult = await createInterviewSession(
       booking.id,
       businessId,
       application.worker_id,
-      workerTier
-    )
+      workerTier,
+    );
 
     if (!interviewResult.success) {
-      console.error("Failed to create interview session:", interviewResult.error)
+      console.error(
+        "Failed to create interview session:",
+        interviewResult.error,
+      );
       // Don't fail the booking creation - interview is a secondary process
     }
 
@@ -506,18 +570,21 @@ export async function acceptApplicationAndCreateBooking(
         (application.workers as any).user_id,
         "Lamaran Diterima",
         `Selamat! Lamaran Anda untuk ${application.jobs?.title} telah diterima. Anda akan segera dihubungi untuk wawancara.`,
-        `/worker/bookings`
-      )
+        `/worker/bookings`,
+      );
 
       // Send push notification if enabled
-      const { enabled } = await isNotificationTypeEnabled((application.workers as any).user_id, "booking_status")
+      const { enabled } = await isNotificationTypeEnabled(
+        (application.workers as any).user_id,
+        "booking_status",
+      );
       if (enabled) {
         await sendPushNotification(
           (application.workers as any).user_id,
           "Lamaran Diterima",
           `Selamat! Lamaran Anda untuk ${application.jobs?.title} telah diterima.`,
-          `/worker/bookings`
-        )
+          `/worker/bookings`,
+        );
       }
     }
 
@@ -525,12 +592,12 @@ export async function acceptApplicationAndCreateBooking(
       success: true,
       data: {
         application: updatedApplication as JobApplication,
-        booking: booking as Booking
-      }
-    }
+        booking: booking as Booking,
+      },
+    };
   } catch (error) {
-    console.error("Error in acceptApplicationAndCreateBooking:", error)
-    return { success: false, error: "Terjadi kesalahan saat menerima lamaran" }
+    console.error("Error in acceptApplicationAndCreateBooking:", error);
+    return { success: false, error: "Terjadi kesalahan saat menerima lamaran" };
   }
 }
 
@@ -544,10 +611,10 @@ export async function acceptApplicationAndCreateBooking(
  */
 export async function withdrawApplication(
   applicationId: string,
-  workerId: string
+  workerId: string,
 ): Promise<ApplicationResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the application belongs to the worker and is pending
     const { data: application, error: fetchError } = await supabase
@@ -555,27 +622,33 @@ export async function withdrawApplication(
       .select("*")
       .eq("id", applicationId)
       .eq("worker_id", workerId)
-      .single()
+      .single();
 
     if (fetchError || !application) {
-      return { success: false, error: "Lamaran tidak ditemukan" }
+      return { success: false, error: "Lamaran tidak ditemukan" };
     }
 
     if (application.status !== "pending") {
-      return { success: false, error: "Hanya lamaran yang masih pending yang bisa ditarik" }
+      return {
+        success: false,
+        error: "Hanya lamaran yang masih pending yang bisa ditarik",
+      };
     }
 
     // Update the application status to withdrawn
     const { data, error } = await supabase
       .from("job_applications")
-      .update({ status: 'withdrawn' })
+      .update({ status: "withdrawn" })
       .eq("id", applicationId)
       .eq("worker_id", workerId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal menarik lamaran: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal menarik lamaran: ${error.message}`,
+      };
     }
 
     // Get business owner's user_id for notification
@@ -583,20 +656,20 @@ export async function withdrawApplication(
       .from("businesses")
       .select("user_id")
       .eq("id", application.business_id)
-      .single()
+      .single();
 
     if (business) {
       await createNotification(
         business.user_id,
         "Lamaran Ditarik",
         "Seorang pekerja telah menarik lamarannya",
-        `/business/jobs/${application.job_id}/applicants`
-      )
+        `/business/jobs/${application.job_id}/applicants`,
+      );
     }
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat menarik lamaran" }
+    return { success: false, error: "Terjadi kesalahan saat menarik lamaran" };
   }
 }
 
@@ -609,25 +682,25 @@ export async function withdrawApplication(
  */
 export async function checkDuplicateApplication(
   jobId: string,
-  workerId: string
+  workerId: string,
 ): Promise<DuplicateCheckResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from("job_applications")
       .select("*")
       .eq("job_id", jobId)
       .eq("worker_id", workerId)
-      .single()
+      .single();
 
     if (error || !data) {
-      return { hasApplied: false }
+      return { hasApplied: false };
     }
 
-    return { hasApplied: true, application: data }
+    return { hasApplied: true, application: data };
   } catch (error) {
-    return { hasApplied: false }
+    return { hasApplied: false };
   }
 }
 
@@ -639,8 +712,11 @@ export async function checkDuplicateApplication(
  * @deprecated Use createJobApplication instead
  * This function is kept for backward compatibility
  */
-export async function applyForJob(jobId: string, workerId: string): Promise<ApplicationResult> {
-  return createJobApplication(jobId, workerId)
+export async function applyForJob(
+  jobId: string,
+  workerId: string,
+): Promise<ApplicationResult> {
+  return createJobApplication(jobId, workerId);
 }
 
 /**
@@ -648,7 +724,7 @@ export async function applyForJob(jobId: string, workerId: string): Promise<Appl
  * This function is kept for backward compatibility
  */
 export async function getWorkerApplications(workerId: string) {
-  return getApplicationsByWorker(workerId)
+  return getApplicationsByWorker(workerId);
 }
 
 /**
@@ -656,35 +732,53 @@ export async function getWorkerApplications(workerId: string) {
  * This function is kept for backward compatibility
  */
 export async function getJobApplicants(jobId: string, businessId: string) {
-  return getApplicationsByJob(jobId, businessId)
+  return getApplicationsByJob(jobId, businessId);
 }
 
 /**
  * @deprecated Use updateApplicationStatus or acceptApplicationAndCreateBooking instead
  * This function is kept for backward compatibility
  */
-export async function acceptApplication(bookingId: string, businessId: string): Promise<ApplicationResult> {
+export async function acceptApplication(
+  bookingId: string,
+  businessId: string,
+): Promise<ApplicationResult> {
   // Legacy function - this now requires refactoring as bookings no longer store applications
   // Recommend using acceptApplicationAndCreateBooking with applicationId instead
-  return { success: false, error: "Gunakan acceptApplicationAndCreateBooking dengan applicationId" }
+  return {
+    success: false,
+    error: "Gunakan acceptApplicationAndCreateBooking dengan applicationId",
+  };
 }
 
 /**
  * @deprecated Use updateApplicationStatus instead
  * This function is kept for backward compatibility
  */
-export async function rejectApplication(bookingId: string, businessId: string): Promise<ApplicationResult> {
+export async function rejectApplication(
+  bookingId: string,
+  businessId: string,
+): Promise<ApplicationResult> {
   // Legacy function - this now requires refactoring as bookings no longer store applications
   // Recommend using updateApplicationStatus with applicationId instead
-  return { success: false, error: "Gunakan updateApplicationStatus dengan applicationId" }
+  return {
+    success: false,
+    error: "Gunakan updateApplicationStatus dengan applicationId",
+  };
 }
 
 /**
  * @deprecated Use withdrawApplication instead
  * This function is kept for backward compatibility
  */
-export async function cancelApplication(bookingId: string, workerId: string): Promise<ApplicationResult> {
+export async function cancelApplication(
+  bookingId: string,
+  workerId: string,
+): Promise<ApplicationResult> {
   // Legacy function - this now requires refactoring as bookings no longer store applications
   // Recommend using withdrawApplication with applicationId instead
-  return { success: false, error: "Gunakan withdrawApplication dengan applicationId" }
+  return {
+    success: false,
+    error: "Gunakan withdrawApplication dengan applicationId",
+  };
 }

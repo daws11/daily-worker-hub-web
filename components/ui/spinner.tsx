@@ -1,31 +1,31 @@
-import * as React from "react"
-import { cn } from "../../lib/utils"
+import * as React from "react";
+import { cn } from "../../lib/utils";
 
 /**
  * Spinner size types
  */
-export type SpinnerSize = "sm" | "md" | "lg"
+export type SpinnerSize = "sm" | "md" | "lg";
 
 /**
  * Spinner color variants
  */
-export type SpinnerColor = "primary" | "white" | "current"
+export type SpinnerColor = "primary" | "white" | "current";
 
 /**
  * Props for the Spinner component
  */
 export interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Size of the spinner */
-  size?: SpinnerSize
+  size?: SpinnerSize;
   /** Color variant */
-  color?: SpinnerColor
+  color?: SpinnerColor;
   /** Accessible label for screen readers */
-  label?: string
+  label?: string;
 }
 
 /**
  * Spinner component for loading states
- * 
+ *
  * @example
  * ```tsx
  * <Spinner size="md" />
@@ -43,13 +43,13 @@ export function Spinner({
     sm: "h-4 w-4",
     md: "h-6 w-6",
     lg: "h-8 w-8",
-  }
+  };
 
   const colors: Record<SpinnerColor, string> = {
     primary: "text-teal-600 dark:text-teal-500",
     white: "text-white",
     current: "text-current",
-  }
+  };
 
   return (
     <div
@@ -59,11 +59,7 @@ export function Spinner({
       {...props}
     >
       <svg
-        className={cn(
-          "animate-spin",
-          sizes[size],
-          colors[color]
-        )}
+        className={cn("animate-spin", sizes[size], colors[color])}
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
@@ -85,7 +81,7 @@ export function Spinner({
       </svg>
       <span className="sr-only">{label}</span>
     </div>
-  )
+  );
 }
 
 /**
@@ -93,16 +89,16 @@ export function Spinner({
  */
 export interface LoadingOverlayProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Whether the overlay is visible */
-  isLoading: boolean
+  isLoading: boolean;
   /** Loading label */
-  label?: string
+  label?: string;
   /** Spinner size */
-  spinnerSize?: SpinnerSize
+  spinnerSize?: SpinnerSize;
 }
 
 /**
  * LoadingOverlay component for blocking content during loading
- * 
+ *
  * @example
  * ```tsx
  * <LoadingOverlay isLoading={isSubmitting} label="Menyimpan..." />
@@ -117,7 +113,7 @@ export function LoadingOverlay({
   ...props
 }: LoadingOverlayProps) {
   if (!isLoading) {
-    return <>{children}</>
+    return <>{children}</>;
   }
 
   return (
@@ -137,7 +133,7 @@ export function LoadingOverlay({
         )}
       </div>
     </div>
-  )
+  );
 }
 
 /**
@@ -145,14 +141,14 @@ export function LoadingOverlay({
  */
 export interface LoadingDotsProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Size of the dots */
-  size?: SpinnerSize
+  size?: SpinnerSize;
   /** Color variant */
-  color?: SpinnerColor
+  color?: SpinnerColor;
 }
 
 /**
  * LoadingDots component for inline loading indicators
- * 
+ *
  * @example
  * ```tsx
  * <LoadingDots size="sm" />
@@ -168,13 +164,13 @@ export function LoadingDots({
     sm: "h-1.5 w-1.5",
     md: "h-2 w-2",
     lg: "h-2.5 w-2.5",
-  }
+  };
 
   const colors: Record<SpinnerColor, string> = {
     primary: "bg-teal-600 dark:bg-teal-500",
     white: "bg-white",
     current: "bg-current",
-  }
+  };
 
   return (
     <div
@@ -190,12 +186,12 @@ export function LoadingDots({
             "rounded-full",
             sizes[size],
             colors[color],
-            "animate-bounce"
+            "animate-bounce",
           )}
           style={{ animationDelay: `${i * 0.15}s` }}
         />
       ))}
       <span className="sr-only">Memuat...</span>
     </div>
-  )
+  );
 }

@@ -4,17 +4,17 @@
  * Displays a worker's tier with appropriate styling and icon
  */
 
-import { WorkerTier } from '@/lib/supabase/types';
-import { getTierLabel, getTierBonus } from '@/lib/algorithms/tier-classifier';
-import { Crown, Star, Shield, Award } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { WorkerTier } from "@/lib/supabase/types";
+import { getTierLabel, getTierBonus } from "@/lib/algorithms/tier-classifier";
+import { Crown, Star, Shield, Award } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TierBadgeProps {
   tier: WorkerTier;
   showScore?: boolean;
   showLabel?: boolean;
-  size?: 'sm' | 'md' | 'lg';
-  variant?: 'default' | 'minimal' | 'detailed';
+  size?: "sm" | "md" | "lg";
+  variant?: "default" | "minimal" | "detailed";
 }
 
 interface TierConfig {
@@ -30,39 +30,39 @@ interface TierConfig {
 const tierConfig = {
   champion: {
     icon: Crown,
-    gradient: 'from-yellow-400 to-orange-500',
-    bgGradient: 'bg-gradient-to-r from-yellow-400 to-orange-500',
-    textColor: 'text-yellow-600',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-400',
-    label: 'Champion',
+    gradient: "from-yellow-400 to-orange-500",
+    bgGradient: "bg-gradient-to-r from-yellow-400 to-orange-500",
+    textColor: "text-yellow-600",
+    bgColor: "bg-yellow-50",
+    borderColor: "border-yellow-400",
+    label: "Champion",
   },
   elite: {
     icon: Star,
-    gradient: 'from-purple-400 to-pink-500',
-    bgGradient: 'bg-gradient-to-r from-purple-400 to-pink-500',
-    textColor: 'text-purple-600',
-    bgColor: 'bg-purple-50',
-    borderColor: 'border-purple-400',
-    label: 'Elite',
+    gradient: "from-purple-400 to-pink-500",
+    bgGradient: "bg-gradient-to-r from-purple-400 to-pink-500",
+    textColor: "text-purple-600",
+    bgColor: "bg-purple-50",
+    borderColor: "border-purple-400",
+    label: "Elite",
   },
   pro: {
     icon: Shield,
-    gradient: 'from-blue-400 to-cyan-500',
-    bgGradient: 'bg-gradient-to-r from-blue-400 to-cyan-500',
-    textColor: 'text-blue-600',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-400',
-    label: 'Pro',
+    gradient: "from-blue-400 to-cyan-500",
+    bgGradient: "bg-gradient-to-r from-blue-400 to-cyan-500",
+    textColor: "text-blue-600",
+    bgColor: "bg-blue-50",
+    borderColor: "border-blue-400",
+    label: "Pro",
   },
   classic: {
     icon: Award,
-    gradient: 'from-gray-400 to-gray-500',
-    bgGradient: 'bg-gradient-to-r from-gray-400 to-gray-500',
-    textColor: 'text-gray-600',
-    bgColor: 'bg-gray-50',
-    borderColor: 'border-gray-400',
-    label: 'Classic',
+    gradient: "from-gray-400 to-gray-500",
+    bgGradient: "bg-gradient-to-r from-gray-400 to-gray-500",
+    textColor: "text-gray-600",
+    bgColor: "bg-gray-50",
+    borderColor: "border-gray-400",
+    label: "Classic",
   },
 } as const satisfies Record<WorkerTier, TierConfig>;
 
@@ -70,28 +70,28 @@ export function TierBadge({
   tier,
   showScore = false,
   showLabel = true,
-  size = 'md',
-  variant = 'default',
+  size = "md",
+  variant = "default",
 }: TierBadgeProps) {
   const config = tierConfig[tier] as TierConfig;
   const Icon = config.icon;
   const bonus = getTierBonus(tier);
 
-  if (variant === 'minimal') {
+  if (variant === "minimal") {
     return (
       <div
         className={cn(
-          'flex items-center gap-1.5 px-2 py-1 rounded-full border',
+          "flex items-center gap-1.5 px-2 py-1 rounded-full border",
           config.bgColor,
           config.borderColor,
-          size === 'sm' && 'text-xs',
-          size === 'md' && 'text-sm',
-          size === 'lg' && 'text-base'
+          size === "sm" && "text-xs",
+          size === "md" && "text-sm",
+          size === "lg" && "text-base",
         )}
       >
-        <Icon className={cn('h-3 w-3', config.textColor)} />
+        <Icon className={cn("h-3 w-3", config.textColor)} />
         {showLabel && (
-          <span className={cn('font-medium', config.textColor)}>
+          <span className={cn("font-medium", config.textColor)}>
             {getTierLabel(tier)}
           </span>
         )}
@@ -102,28 +102,28 @@ export function TierBadge({
   return (
     <div
       className={cn(
-        'flex items-center gap-2',
-        size === 'sm' && 'gap-1',
-        size === 'lg' && 'gap-3'
+        "flex items-center gap-2",
+        size === "sm" && "gap-1",
+        size === "lg" && "gap-3",
       )}
     >
       <div
         className={cn(
-          'flex items-center justify-center rounded-full',
-          'border-2 shadow-sm',
+          "flex items-center justify-center rounded-full",
+          "border-2 shadow-sm",
           config.bgColor,
           config.borderColor,
-          size === 'sm' && 'h-6 w-6',
-          size === 'md' && 'h-8 w-8',
-          size === 'lg' && 'h-10 w-10'
+          size === "sm" && "h-6 w-6",
+          size === "md" && "h-8 w-8",
+          size === "lg" && "h-10 w-10",
         )}
       >
         <Icon
           className={cn(
             config.textColor,
-            size === 'sm' && 'h-3 w-3',
-            size === 'md' && 'h-4 w-4',
-            size === 'lg' && 'h-5 w-5'
+            size === "sm" && "h-3 w-3",
+            size === "md" && "h-4 w-4",
+            size === "lg" && "h-5 w-5",
           )}
         />
       </div>
@@ -132,11 +132,11 @@ export function TierBadge({
         {showLabel && (
           <span
             className={cn(
-              'font-bold',
-              size === 'sm' && 'text-xs',
-              size === 'md' && 'text-sm',
-              size === 'lg' && 'text-base',
-              config.textColor
+              "font-bold",
+              size === "sm" && "text-xs",
+              size === "md" && "text-sm",
+              size === "lg" && "text-base",
+              config.textColor,
             )}
           >
             {getTierLabel(tier)}
@@ -145,8 +145,8 @@ export function TierBadge({
         {showScore && (
           <span
             className={cn(
-              'text-xs font-medium text-gray-500',
-              size === 'lg' && 'text-sm'
+              "text-xs font-medium text-gray-500",
+              size === "lg" && "text-sm",
             )}
           >
             +{bonus} bonus
@@ -162,7 +162,9 @@ interface TierBadgeSmallProps {
 }
 
 export function TierBadgeSmall({ tier }: TierBadgeSmallProps) {
-  return <TierBadge tier={tier} size="sm" variant="minimal" showLabel={false} />;
+  return (
+    <TierBadge tier={tier} size="sm" variant="minimal" showLabel={false} />
+  );
 }
 
 interface TierBadgeCompactProps {
@@ -170,14 +172,12 @@ interface TierBadgeCompactProps {
   showLabel?: boolean;
 }
 
-export function TierBadgeCompact({ tier, showLabel = true }: TierBadgeCompactProps) {
+export function TierBadgeCompact({
+  tier,
+  showLabel = true,
+}: TierBadgeCompactProps) {
   return (
-    <TierBadge
-      tier={tier}
-      size="sm"
-      variant="minimal"
-      showLabel={showLabel}
-    />
+    <TierBadge tier={tier} size="sm" variant="minimal" showLabel={showLabel} />
   );
 }
 
@@ -200,17 +200,17 @@ export function TierBadgeDetailed({
   return (
     <div
       className={cn(
-        'flex items-start gap-3 p-3 rounded-lg border',
+        "flex items-start gap-3 p-3 rounded-lg border",
         config.bgColor,
-        config.borderColor
+        config.borderColor,
       )}
     >
       <div
         className={cn(
-          'flex items-center justify-center rounded-full',
-          'border-2',
+          "flex items-center justify-center rounded-full",
+          "border-2",
           config.bgGradient,
-          'h-10 w-10'
+          "h-10 w-10",
         )}
       >
         <Icon className="text-white h-5 w-5" />
@@ -218,10 +218,15 @@ export function TierBadgeDetailed({
 
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-1">
-          <span className={cn('font-bold text-sm', config.textColor)}>
+          <span className={cn("font-bold text-sm", config.textColor)}>
             {getTierLabel(tier)}
           </span>
-          <span className={cn('text-xs px-2 py-0.5 rounded-full bg-white/50', config.textColor)}>
+          <span
+            className={cn(
+              "text-xs px-2 py-0.5 rounded-full bg-white/50",
+              config.textColor,
+            )}
+          >
             +{getTierBonus(tier)} bonus
           </span>
         </div>

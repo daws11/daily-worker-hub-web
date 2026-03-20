@@ -31,10 +31,11 @@ All backups are compressed using gzip and stored with timestamps.
 ### Required Tools
 
 - **PostgreSQL client tools** (`pg_dump`, `psql`)
+
   ```bash
   # Ubuntu/Debian
   sudo apt-get install postgresql-client
-  
+
   # macOS
   brew install postgresql
   ```
@@ -109,16 +110,19 @@ psql "$SUPABASE_DB_URL" -c "SELECT version();"
 ### Manual Backup
 
 **Full backup (schema + data):**
+
 ```bash
 ./scripts/backup-supabase.sh --full
 ```
 
 **Schema-only backup:**
+
 ```bash
 ./scripts/backup-supabase.sh --schema-only
 ```
 
 **Data-only backup:**
+
 ```bash
 ./scripts/backup-supabase.sh --data-only
 ```
@@ -156,33 +160,38 @@ cat logs/backup-failures.log
 ### Restore Steps
 
 1. **Stop your application** to prevent conflicts:
+
    ```bash
    # Stop any services using the database
    pm2 stop all  # if using PM2
    ```
 
 2. **Extract the backup:**
+
    ```bash
    cd backups
    gunzip -k daily-worker-hub-full-YYYYMMDD_HHMMSS.sql.gz
    ```
 
 3. **Review the backup (optional):**
+
    ```bash
    head -n 50 daily-worker-hub-full-YYYYMMDD_HHMMSS.sql
    ```
 
 4. **Restore the database:**
+
    ```bash
    # Full restore (drops existing tables and recreates)
    psql "$SUPABASE_DB_URL" < daily-worker-hub-full-YYYYMMDD_HHMMSS.sql
-   
+
    # Or restore specific tables only
    psql "$SUPABASE_DB_URL" -c "DROP TABLE IF EXISTS your_table CASCADE;"
    psql "$SUPABASE_DB_URL" < daily-worker-hub-full-YYYYMMDD_HHMMSS.sql
    ```
 
 5. **Verify restoration:**
+
    ```bash
    psql "$SUPABASE_DB_URL" -c "SELECT count(*) FROM users;"
    psql "$SUPABASE_DB_URL" -c "SELECT count(*) FROM jobs;"
@@ -198,15 +207,17 @@ cat logs/backup-failures.log
 To restore specific tables:
 
 1. Extract the backup:
+
    ```bash
    gunzip -c daily-worker-hub-data-YYYYMMDD_HHMMSS.sql.gz > temp.sql
    ```
 
 2. Extract specific table data:
+
    ```bash
    # Find the table section
    grep -n "COPY.*your_table" temp.sql
-   
+
    # Extract that section manually
    sed -n 'start_line,end_linep' temp.sql > your_table.sql
    ```
@@ -221,6 +232,7 @@ To restore specific tables:
 ### Using Cron (Linux/macOS)
 
 1. **Open crontab:**
+
    ```bash
    crontab -e
    ```
@@ -228,20 +240,23 @@ To restore specific tables:
 2. **Add backup schedule:**
 
    **Daily full backup at 2 AM:**
+
    ```cron
    0 2 * * * cd /path/to/daily-worker-hub-clean && ./scripts/backup-supabase.sh --full >> logs/cron.log 2>&1
    ```
 
    **Twice daily (every 12 hours):**
+
    ```cron
    0 */12 * * * cd /path/to/daily-worker-hub-clean && ./scripts/backup-supabase.sh --full >> logs/cron.log 2>&1
    ```
 
    **Weekly full + daily data-only:**
+
    ```cron
    # Full backup every Sunday at 2 AM
    0 2 * * 0 cd /path/to/daily-worker-hub-clean && ./scripts/backup-supabase.sh --full >> logs/cron.log 2>&1
-   
+
    # Data-only backup daily at 2 AM
    0 2 * * 1-6 cd /path/to/daily-worker-hub-clean && ./scripts/backup-supabase.sh --data-only >> logs/cron.log 2>&1
    ```
@@ -257,38 +272,40 @@ To restore specific tables:
 ### Using Systemd Timer (Linux)
 
 1. **Create service file:**
+
    ```bash
    sudo nano /etc/systemd/system/dwh-backup.service
    ```
-   
+
    ```ini
    [Unit]
    Description=Daily Worker Hub Backup
    After=network.target
-   
+
    [Service]
    Type=oneshot
    User=your-user
    WorkingDirectory=/path/to/daily-worker-hub-clean
    ExecStart=/path/to/daily-worker-hub-clean/scripts/backup-supabase.sh --full
-   
+
    [Install]
    WantedBy=multi-user.target
    ```
 
 2. **Create timer file:**
+
    ```bash
    sudo nano /etc/systemd/system/dwh-backup.timer
    ```
-   
+
    ```ini
    [Unit]
    Description=Daily Worker Hub Backup Timer
-   
+
    [Timer]
    OnCalendar=daily
    Persistent=true
-   
+
    [Install]
    WantedBy=timers.target
    ```
@@ -398,16 +415,19 @@ psql "$SUPABASE_DB_URL" -c "SELECT count(*) FROM each_table;"
 ### Backup Fails
 
 **Error: Connection refused**
+
 - Check database URL format
 - Verify password is correct
 - Ensure IP is whitelisted
 
 **Error: pg_dump not found**
+
 ```bash
 sudo apt-get install postgresql-client
 ```
 
 **Error: Permission denied**
+
 ```bash
 chmod +x scripts/backup-supabase.sh
 chmod 755 backups/ logs/
@@ -416,14 +436,17 @@ chmod 755 backups/ logs/
 ### Restore Fails
 
 **Error: Database exists**
+
 - The backup includes `DROP IF EXISTS` commands
 - If still failing, manually drop tables first
 
 **Error: Foreign key violations**
+
 - Tables are ordered correctly in full backups
 - For partial restores, respect table dependencies
 
 **Error: Out of disk space**
+
 - Check available space: `df -h`
 - Clean old backups: adjust `RETENTION_DAYS`
 - Compress backup before restore
@@ -431,6 +454,7 @@ chmod 755 backups/ logs/
 ### Contact
 
 For backup-related issues:
+
 - Check logs: `logs/backup.log`
 - Review failures: `logs/backup-failures.log`
 - Contact: [Your support channel]

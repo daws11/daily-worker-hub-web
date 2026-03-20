@@ -1,33 +1,39 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { cn } from "@/lib/utils"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 import {
   getSocialConnections,
   type SocialConnectionListResult,
-} from "@/lib/actions/social"
+} from "@/lib/actions/social";
 import type {
   BusinessSocialConnectionWithPlatform,
   SocialPlatformType,
-} from "@/lib/types/social"
-import { SOCIAL_PLATFORMS } from "./social-platform-connect"
+} from "@/lib/types/social";
+import { SOCIAL_PLATFORMS } from "./social-platform-connect";
 
 export interface PlatformSelection {
-  platformType: SocialPlatformType
-  connectionId: string
-  enabled: boolean
+  platformType: SocialPlatformType;
+  connectionId: string;
+  enabled: boolean;
 }
 
 export interface SocialPlatformSelectorProps {
-  businessId: string
-  selectedPlatforms: SocialPlatformType[]
-  onSelectionChange: (platforms: PlatformSelection[]) => void
-  disabled?: boolean
-  className?: string
+  businessId: string;
+  selectedPlatforms: SocialPlatformType[];
+  onSelectionChange: (platforms: PlatformSelection[]) => void;
+  disabled?: boolean;
+  className?: string;
 }
 
 export function SocialPlatformSelector({
@@ -39,78 +45,86 @@ export function SocialPlatformSelector({
 }: SocialPlatformSelectorProps) {
   const [connections, setConnections] = React.useState<
     BusinessSocialConnectionWithPlatform[]
-  >([])
-  const [isLoading, setIsLoading] = React.useState(true)
-  const [error, setError] = React.useState<string | null>(null)
-  const [enabledPlatforms, setEnabledPlatforms] = React.useState<Set<SocialPlatformType>>(
-    new Set(selectedPlatforms)
-  )
+  >([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+  const [enabledPlatforms, setEnabledPlatforms] = React.useState<
+    Set<SocialPlatformType>
+  >(new Set(selectedPlatforms));
 
   // Fetch connections on mount
   React.useEffect(() => {
     const fetchConnections = async () => {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(true);
+      setError(null);
 
-      const result: SocialConnectionListResult = await getSocialConnections(businessId, {
-        status: "active",
-      })
+      const result: SocialConnectionListResult = await getSocialConnections(
+        businessId,
+        {
+          status: "active",
+        },
+      );
 
       if (result.success && result.data) {
-        setConnections(result.data)
+        setConnections(result.data);
       } else if (result.error) {
-        setError(result.error)
+        setError(result.error);
       }
 
-      setIsLoading(false)
-    }
+      setIsLoading(false);
+    };
 
-    fetchConnections()
-  }, [businessId])
+    fetchConnections();
+  }, [businessId]);
 
   // Update enabled platforms when selectedPlatforms prop changes
   React.useEffect(() => {
-    setEnabledPlatforms(new Set(selectedPlatforms))
-  }, [selectedPlatforms])
+    setEnabledPlatforms(new Set(selectedPlatforms));
+  }, [selectedPlatforms]);
 
   // Handle platform toggle
-  const handleToggle = (platformType: SocialPlatformType, connectionId: string, enabled: boolean) => {
-    const newEnabled = new Set(enabledPlatforms)
+  const handleToggle = (
+    platformType: SocialPlatformType,
+    connectionId: string,
+    enabled: boolean,
+  ) => {
+    const newEnabled = new Set(enabledPlatforms);
 
     if (enabled) {
-      newEnabled.add(platformType)
+      newEnabled.add(platformType);
     } else {
-      newEnabled.delete(platformType)
+      newEnabled.delete(platformType);
     }
 
-    setEnabledPlatforms(newEnabled)
+    setEnabledPlatforms(newEnabled);
 
     // Build the selection array
     const selections: PlatformSelection[] = Array.from(newEnabled).map((pt) => {
-      const conn = connections.find((c) => c.platform?.platform_type === pt)
+      const conn = connections.find((c) => c.platform?.platform_type === pt);
       return {
         platformType: pt,
         connectionId: conn?.id || "",
         enabled: true,
-      }
-    })
+      };
+    });
 
-    onSelectionChange(selections)
-  }
+    onSelectionChange(selections);
+  };
 
   // Get connection for a specific platform
   const getConnectionForPlatform = (
-    platformType: SocialPlatformType
+    platformType: SocialPlatformType,
   ): BusinessSocialConnectionWithPlatform | undefined => {
     return connections.find(
-      (c) => c.platform?.platform_type === platformType && c.status === "active"
-    )
-  }
+      (c) =>
+        c.platform?.platform_type === platformType && c.status === "active",
+    );
+  };
 
   // Check if platform is enabled
   const isPlatformEnabled = (platformType: SocialPlatformType): boolean => {
-    return enabledPlatforms.has(platformType)
-  }
+    return enabledPlatforms.has(platformType);
+  };
 
   if (isLoading) {
     return (
@@ -129,7 +143,7 @@ export function SocialPlatformSelector({
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   if (connections.length === 0) {
@@ -137,12 +151,12 @@ export function SocialPlatformSelector({
       <Card className={cn("", className)}>
         <CardContent className="py-8 text-center">
           <p className="text-muted-foreground">
-            Tidak ada platform social media yang terhubung. Hubungkan platform terlebih
-            dahulu untuk membagikan lowongan pekerjaan.
+            Tidak ada platform social media yang terhubung. Hubungkan platform
+            terlebih dahulu untuk membagikan lowongan pekerjaan.
           </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -164,13 +178,13 @@ export function SocialPlatformSelector({
           <div className="space-y-4">
             {(Object.keys(SOCIAL_PLATFORMS) as SocialPlatformType[]).map(
               (platformType) => {
-                const platform = SOCIAL_PLATFORMS[platformType]
-                const connection = getConnectionForPlatform(platformType)
-                const isEnabled = isPlatformEnabled(platformType)
+                const platform = SOCIAL_PLATFORMS[platformType];
+                const connection = getConnectionForPlatform(platformType);
+                const isEnabled = isPlatformEnabled(platformType);
 
                 // Only show platforms that have active connections
                 if (!connection) {
-                  return null
+                  return null;
                 }
 
                 return (
@@ -178,7 +192,7 @@ export function SocialPlatformSelector({
                     key={platformType}
                     className={cn(
                       "flex items-center justify-between p-4 rounded-lg border transition-colors",
-                      isEnabled ? platform.borderColor : "border-muted"
+                      isEnabled ? platform.borderColor : "border-muted",
                     )}
                   >
                     <div className="flex items-center gap-3">
@@ -188,7 +202,8 @@ export function SocialPlatformSelector({
                       <div>
                         <p className="font-medium">{platform.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {connection.platform_account_name || "Account Terhubung"}
+                          {connection.platform_account_name ||
+                            "Account Terhubung"}
                         </p>
                       </div>
                     </div>
@@ -200,8 +215,8 @@ export function SocialPlatformSelector({
                       disabled={disabled}
                     />
                   </div>
-                )
-              }
+                );
+              },
             )}
 
             {connections.length === 0 && (
@@ -214,5 +229,5 @@ export function SocialPlatformSelector({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

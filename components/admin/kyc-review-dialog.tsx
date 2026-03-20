@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Image from "next/image"
-import { Check, X, FileText, User, Calendar, AlertCircle } from "lucide-react"
+import * as React from "react";
+import Image from "next/image";
+import { Check, X, FileText, User, Calendar, AlertCircle } from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { KycStatusBadge } from "@/components/worker/kyc-status-badge"
-import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils";
+import { KycStatusBadge } from "@/components/worker/kyc-status-badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -14,19 +14,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import type { KYCVerificationItem } from "@/lib/types/admin"
-import { processKYCVerification } from "@/lib/supabase/queries/admin"
-import { toast } from "sonner"
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import type { KYCVerificationItem } from "@/lib/types/admin";
+import { processKYCVerification } from "@/lib/supabase/queries/admin";
+import { toast } from "sonner";
 
 interface KycReviewDialogProps {
-  kyc: KYCVerificationItem | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onUpdate?: () => void
-  adminId?: string
+  kyc: KYCVerificationItem | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onUpdate?: () => void;
+  adminId?: string;
 }
 
 export function KycReviewDialog({
@@ -36,80 +36,80 @@ export function KycReviewDialog({
   onUpdate,
   adminId,
 }: KycReviewDialogProps) {
-  const [loading, setLoading] = React.useState(false)
-  const [rejectMode, setRejectMode] = React.useState(false)
-  const [rejectionReason, setRejectionReason] = React.useState("")
-  const [error, setError] = React.useState<string | null>(null)
+  const [loading, setLoading] = React.useState(false);
+  const [rejectMode, setRejectMode] = React.useState(false);
+  const [rejectionReason, setRejectionReason] = React.useState("");
+  const [error, setError] = React.useState<string | null>(null);
 
   // Reset state when dialog opens/closes
   React.useEffect(() => {
     if (open) {
-      setRejectMode(false)
-      setRejectionReason("")
-      setError(null)
+      setRejectMode(false);
+      setRejectionReason("");
+      setError(null);
     }
-  }, [open])
+  }, [open]);
 
   const handleApprove = async () => {
     if (!kyc || !adminId) {
-      setError("Admin ID is required for approval")
-      return
+      setError("Admin ID is required for approval");
+      return;
     }
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     const result = await processKYCVerification(
       kyc.id,
       "approve",
       undefined,
-      adminId
-    )
+      adminId,
+    );
 
     if (result.error) {
-      setError(result.error)
-      toast.error("Gagal menyetujui KYC: " + result.error)
+      setError(result.error);
+      toast.error("Gagal menyetujui KYC: " + result.error);
     } else {
-      toast.success("KYC berhasil disetujui")
-      onOpenChange(false)
-      onUpdate?.()
+      toast.success("KYC berhasil disetujui");
+      onOpenChange(false);
+      onUpdate?.();
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   const handleReject = async () => {
     if (!kyc || !adminId) {
-      setError("Admin ID is required for rejection")
-      return
+      setError("Admin ID is required for rejection");
+      return;
     }
 
     if (!rejectionReason.trim()) {
-      setError("Alasan penolakan harus diisi")
-      return
+      setError("Alasan penolakan harus diisi");
+      return;
     }
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     const result = await processKYCVerification(
       kyc.id,
       "reject",
       rejectionReason,
-      adminId
-    )
+      adminId,
+    );
 
     if (result.error) {
-      setError(result.error)
-      toast.error("Gagal menolak KYC: " + result.error)
+      setError(result.error);
+      toast.error("Gagal menolak KYC: " + result.error);
     } else {
-      toast.success("KYC berhasil ditolak")
-      onOpenChange(false)
-      onUpdate?.()
+      toast.success("KYC berhasil ditolak");
+      onOpenChange(false);
+      onUpdate?.();
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   const formatDate = React.useCallback((dateString: string) => {
     return new Date(dateString).toLocaleDateString("id-ID", {
@@ -118,14 +118,14 @@ export function KycReviewDialog({
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    })
-  }, [])
+    });
+  }, []);
 
   if (!kyc) {
-    return null
+    return null;
   }
 
-  const isPending = kyc.status === "pending"
+  const isPending = kyc.status === "pending";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -152,7 +152,9 @@ export function KycReviewDialog({
             <div className="rounded-lg border bg-muted/20 p-4 space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Nama:</span>
-                <span className="font-medium">{kyc.worker?.full_name || "-"}</span>
+                <span className="font-medium">
+                  {kyc.worker?.full_name || "-"}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Email:</span>
@@ -160,14 +162,18 @@ export function KycReviewDialog({
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Nomor KTP:</span>
-                <span className="font-medium font-mono">{kyc.ktp_number || "-"}</span>
+                <span className="font-medium font-mono">
+                  {kyc.ktp_number || "-"}
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
                   Submitted:
                 </span>
-                <span className="font-medium">{formatDate(kyc.submittedAt)}</span>
+                <span className="font-medium">
+                  {formatDate(kyc.submittedAt)}
+                </span>
               </div>
               {isPending && kyc.pendingDays > 0 && (
                 <div className="flex items-center justify-between text-amber-600 dark:text-amber-500">
@@ -274,7 +280,9 @@ export function KycReviewDialog({
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 rows={4}
-                className={cn(!rejectionReason.trim() && error && "border-destructive")}
+                className={cn(
+                  !rejectionReason.trim() && error && "border-destructive",
+                )}
               />
               {!rejectionReason.trim() && error && (
                 <p className="text-sm text-destructive">{error}</p>
@@ -298,9 +306,9 @@ export function KycReviewDialog({
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setRejectMode(false)
-                    setRejectionReason("")
-                    setError(null)
+                    setRejectMode(false);
+                    setRejectionReason("");
+                    setError(null);
                   }}
                   disabled={loading}
                 >
@@ -355,5 +363,5 @@ export function KycReviewDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

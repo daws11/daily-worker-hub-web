@@ -1,5 +1,5 @@
-import * as React from "react"
-import { Wallet as WalletIcon } from "lucide-react"
+import * as React from "react";
+import { Wallet as WalletIcon } from "lucide-react";
 
 import {
   Card,
@@ -7,19 +7,19 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { formatIDR } from "@/lib/utils/currency"
-import type { Wallet, WalletType } from "@/lib/types/payment"
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { formatIDR } from "@/lib/utils/currency";
+import type { Wallet, WalletType } from "@/lib/types/payment";
 
 export interface WalletBalanceProps extends React.HTMLAttributes<HTMLDivElement> {
-  wallet?: Wallet | null
-  isLoading?: boolean
-  walletType?: WalletType
-  title?: string
-  description?: string
-  showIcon?: boolean
-  balanceLabel?: string
+  wallet?: Wallet | null;
+  isLoading?: boolean;
+  walletType?: WalletType;
+  title?: string;
+  description?: string;
+  showIcon?: boolean;
+  balanceLabel?: string;
 }
 
 const WalletBalance = React.forwardRef<HTMLDivElement, WalletBalanceProps>(
@@ -35,21 +35,21 @@ const WalletBalance = React.forwardRef<HTMLDivElement, WalletBalanceProps>(
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
     // Get default title based on wallet type
     const getDefaultTitle = (): string => {
-      if (title) return title
-      return walletType === "business" ? "Dompet Bisnis" : "Dompet Pekerja"
-    }
+      if (title) return title;
+      return walletType === "business" ? "Dompet Bisnis" : "Dompet Pekerja";
+    };
 
     // Get default description based on wallet type
     const getDefaultDescription = (): string => {
-      if (description) return description
+      if (description) return description;
       return walletType === "business"
         ? "Saldo dompet bisnis Anda"
-        : "Saldo dompet pendapatan Anda"
-    }
+        : "Saldo dompet pendapatan Anda";
+    };
 
     // Loading state
     if (isLoading) {
@@ -57,7 +57,9 @@ const WalletBalance = React.forwardRef<HTMLDivElement, WalletBalanceProps>(
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
             <div className="flex items-center gap-2">
-              {showIcon && <WalletIcon className="h-5 w-5 text-muted-foreground" />}
+              {showIcon && (
+                <WalletIcon className="h-5 w-5 text-muted-foreground" />
+              )}
               <CardTitle>{getDefaultTitle()}</CardTitle>
             </div>
             <CardDescription>{getDefaultDescription()}</CardDescription>
@@ -68,7 +70,7 @@ const WalletBalance = React.forwardRef<HTMLDivElement, WalletBalanceProps>(
             </div>
           </CardContent>
         </Card>
-      )
+      );
     }
 
     // Empty state (no wallet)
@@ -77,7 +79,9 @@ const WalletBalance = React.forwardRef<HTMLDivElement, WalletBalanceProps>(
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
             <div className="flex items-center gap-2">
-              {showIcon && <WalletIcon className="h-5 w-5 text-muted-foreground" />}
+              {showIcon && (
+                <WalletIcon className="h-5 w-5 text-muted-foreground" />
+              )}
               <CardTitle>{getDefaultTitle()}</CardTitle>
             </div>
             <CardDescription>{getDefaultDescription()}</CardDescription>
@@ -91,7 +95,7 @@ const WalletBalance = React.forwardRef<HTMLDivElement, WalletBalanceProps>(
             </div>
           </CardContent>
         </Card>
-      )
+      );
     }
 
     // Normal state with wallet data
@@ -99,7 +103,9 @@ const WalletBalance = React.forwardRef<HTMLDivElement, WalletBalanceProps>(
       <Card ref={ref} className={cn("w-full", className)} {...props}>
         <CardHeader>
           <div className="flex items-center gap-2">
-            {showIcon && <WalletIcon className="h-5 w-5 text-muted-foreground" />}
+            {showIcon && (
+              <WalletIcon className="h-5 w-5 text-muted-foreground" />
+            )}
             <CardTitle>{getDefaultTitle()}</CardTitle>
           </div>
           <CardDescription>{getDefaultDescription()}</CardDescription>
@@ -118,9 +124,9 @@ const WalletBalance = React.forwardRef<HTMLDivElement, WalletBalanceProps>(
           </div>
         </CardContent>
       </Card>
-    )
-  }
-)
-WalletBalance.displayName = "WalletBalance"
+    );
+  },
+);
+WalletBalance.displayName = "WalletBalance";
 
-export { WalletBalance }
+export { WalletBalance };

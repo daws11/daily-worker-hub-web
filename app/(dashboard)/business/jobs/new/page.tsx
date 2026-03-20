@@ -1,10 +1,10 @@
-import JobForm from '@/components/business/JobForm'
+import JobForm from "@/components/business/JobForm";
 
 export default function NewJobPage() {
-  return <JobForm />
+  return <JobForm />;
 }
 
 export const metadata = {
-  title: 'Create New Job - Daily Worker Hub',
-  description: 'Post a new job on Daily Worker Hub'
-}
+  title: "Create New Job - Daily Worker Hub",
+  description: "Post a new job on Daily Worker Hub",
+};

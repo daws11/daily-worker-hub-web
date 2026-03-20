@@ -1,25 +1,25 @@
 /**
  * Xendit Webhook Handler
- * 
+ *
  * Handles payment callbacks from Xendit payment gateway.
  * Updates payment transaction status and wallet balance upon successful payment.
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { xenditGateway, type WebhookPayload } from '@/lib/payments'
-import { logger } from '@/lib/logger'
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { xenditGateway, type WebhookPayload } from "@/lib/payments";
+import { logger } from "@/lib/logger";
 
-const routeLogger = logger.createApiLogger('webhooks/xendit')
+const routeLogger = logger.createApiLogger("webhooks/xendit");
 
 /**
  * POST /api/webhooks/xendit
- * 
+ *
  * Handle Xendit payment callback
- * 
+ *
  * Headers:
  * - X-Callback-Token: Webhook verification token
- * 
+ *
  * Body:
  * - id: Payment ID
  * - external_id: External transaction ID
@@ -30,49 +30,57 @@ const routeLogger = logger.createApiLogger('webhooks/xendit')
  * - payment_channel: Payment channel used
  */
 export async function POST(request: NextRequest) {
-  const { startTime, requestId } = logger.requestStart(request, { route: 'webhooks/xendit' })
-  
+  const { startTime, requestId } = logger.requestStart(request, {
+    route: "webhooks/xendit",
+  });
+
   try {
     // Get callback token from header
-    const callbackToken = request.headers.get('X-Callback-Token')
+    const callbackToken = request.headers.get("X-Callback-Token");
 
     // Parse webhook payload
-    const payload = await request.json()
-    
+    const payload = await request.json();
+
     // Audit log for all incoming webhook requests
-    logger.audit('xendit_webhook_received', {
+    logger.audit("xendit_webhook_received", {
       requestId,
       id: payload.id,
       external_id: payload.external_id,
       status: payload.status,
       amount: payload.amount,
-    })
-    
-    routeLogger.info('Received Xendit webhook callback', {
+    });
+
+    routeLogger.info("Received Xendit webhook callback", {
       requestId,
       id: payload.id,
       external_id: payload.external_id,
       status: payload.status,
       amount: payload.amount,
-    })
+    });
 
     // Verify webhook signature
     if (!xenditGateway.verifyWebhookSignature(callbackToken)) {
-      routeLogger.warn('Invalid callback token', { requestId })
-      
+      routeLogger.warn("Invalid callback token", { requestId });
+
       // Audit log for invalid token
-      logger.audit('xendit_webhook_invalid_token', {
+      logger.audit("xendit_webhook_invalid_token", {
         requestId,
         orderId: payload.external_id,
-        reason: 'Invalid callback token',
-      })
-      
-      logger.requestError(request, new Error('Invalid callback token'), 401, startTime, { requestId })
-      
+        reason: "Invalid callback token",
+      });
+
+      logger.requestError(
+        request,
+        new Error("Invalid callback token"),
+        401,
+        startTime,
+        { requestId },
+      );
+
       return NextResponse.json(
-        { error: 'Invalid callback token' },
-        { status: 401 }
-      )
+        { error: "Invalid callback token" },
+        { status: 401 },
+      );
     }
 
     // Extract relevant data
@@ -85,80 +93,83 @@ export async function POST(request: NextRequest) {
       payment_method: paymentMethod,
       payment_channel: paymentChannel,
       failure_reason: failureReason,
-    } = payload
+    } = payload;
 
     // Map Xendit status to internal status
-    const internalStatus = mapXenditStatus(status)
+    const internalStatus = mapXenditStatus(status);
 
     // Create standardized webhook payload
     const webhookPayload: WebhookPayload = {
       id: paymentId,
       externalId: transactionId,
-      provider: 'xendit',
+      provider: "xendit",
       amount,
       status: internalStatus,
       paidAt,
       paymentMethod,
       paymentChannel,
       rawData: payload,
-    }
+    };
 
     // Process the webhook
-    const result = await processWebhook(webhookPayload, failureReason)
+    const result = await processWebhook(webhookPayload, failureReason);
 
     if (!result.success) {
-      routeLogger.error('Webhook processing failed', new Error(result.error), { requestId, transactionId })
-      
+      routeLogger.error("Webhook processing failed", new Error(result.error), {
+        requestId,
+        transactionId,
+      });
+
       // Audit log for processing failure
-      logger.audit('xendit_webhook_processing_failed', {
+      logger.audit("xendit_webhook_processing_failed", {
         requestId,
         transactionId,
         error: result.error,
-      })
-      
-      logger.requestError(request, new Error(result.error), 500, startTime, { requestId })
-      
-      return NextResponse.json(
-        { error: result.error },
-        { status: 500 }
-      )
+      });
+
+      logger.requestError(request, new Error(result.error), 500, startTime, {
+        requestId,
+      });
+
+      return NextResponse.json({ error: result.error }, { status: 500 });
     }
 
-    routeLogger.info('Xendit webhook processed successfully', {
+    routeLogger.info("Xendit webhook processed successfully", {
       requestId,
       transactionId,
       status: internalStatus,
-    })
-    
-    logger.requestSuccess(request, { status: 200 }, startTime, { requestId })
+    });
+
+    logger.requestSuccess(request, { status: 200 }, startTime, { requestId });
 
     // Audit log for successful processing
-    logger.audit('xendit_webhook_processed', {
+    logger.audit("xendit_webhook_processed", {
       requestId,
       transactionId,
       status: internalStatus,
-    })
+    });
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      message: 'Webhook processed successfully',
-    })
-
+      message: "Webhook processed successfully",
+    });
   } catch (error) {
-    routeLogger.error('Unexpected error in Xendit webhook', error, { requestId })
-    
-    // Audit log for unexpected error
-    logger.audit('xendit_webhook_error', {
+    routeLogger.error("Unexpected error in Xendit webhook", error, {
       requestId,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    })
-    
-    logger.requestError(request, error, 500, startTime, { requestId })
-    
+    });
+
+    // Audit log for unexpected error
+    logger.audit("xendit_webhook_error", {
+      requestId,
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+
+    logger.requestError(request, error, 500, startTime, { requestId });
+
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -167,27 +178,31 @@ export async function POST(request: NextRequest) {
  */
 async function processWebhook(
   payload: WebhookPayload,
-  failureReason?: string
+  failureReason?: string,
 ): Promise<{ success: boolean; error?: string }> {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   try {
     // Find the payment transaction
     const { data: transaction, error: txError } = await supabase
-      .from('payment_transactions')
-      .select('*')
-      .eq('id', payload.externalId)
-      .single()
+      .from("payment_transactions")
+      .select("*")
+      .eq("id", payload.externalId)
+      .single();
 
     if (txError || !transaction) {
-      routeLogger.warn('Transaction not found', { transactionId: payload.externalId })
-      return { success: false, error: 'Transaction not found' }
+      routeLogger.warn("Transaction not found", {
+        transactionId: payload.externalId,
+      });
+      return { success: false, error: "Transaction not found" };
     }
 
     // Skip if already processed
     if (transaction.status === payload.status) {
-      routeLogger.info('Transaction already processed', { transactionId: payload.externalId })
-      return { success: true }
+      routeLogger.info("Transaction already processed", {
+        transactionId: payload.externalId,
+      });
+      return { success: true };
     }
 
     // Update transaction status
@@ -195,14 +210,14 @@ async function processWebhook(
       status: payload.status,
       provider_payment_id: payload.id,
       updated_at: new Date().toISOString(),
-    }
+    };
 
     if (payload.paidAt) {
-      updateData.paid_at = payload.paidAt
+      updateData.paid_at = payload.paidAt;
     }
 
     if (failureReason) {
-      updateData.failure_reason = failureReason
+      updateData.failure_reason = failureReason;
     }
 
     if (payload.paymentMethod) {
@@ -210,48 +225,53 @@ async function processWebhook(
         ...(transaction.metadata || {}),
         payment_method: payload.paymentMethod,
         payment_channel: payload.paymentChannel,
-      }
+      };
     }
 
     const { error: updateError } = await supabase
-      .from('payment_transactions')
+      .from("payment_transactions")
       .update(updateData)
-      .eq('id', transaction.id)
+      .eq("id", transaction.id);
 
     if (updateError) {
-      routeLogger.error('Failed to update transaction', updateError, { transactionId: payload.externalId })
-      return { success: false, error: 'Failed to update transaction' }
+      routeLogger.error("Failed to update transaction", updateError, {
+        transactionId: payload.externalId,
+      });
+      return { success: false, error: "Failed to update transaction" };
     }
 
-    routeLogger.info('Transaction status updated', { 
-      transactionId: payload.externalId, 
+    routeLogger.info("Transaction status updated", {
+      transactionId: payload.externalId,
       oldStatus: transaction.status,
-      newStatus: payload.status 
-    })
+      newStatus: payload.status,
+    });
 
     // If payment is successful, credit the wallet
-    if (payload.status === 'success') {
+    if (payload.status === "success") {
       const creditResult = await creditWallet(
         supabase,
         transaction.business_id,
         transaction.amount - (transaction.fee_amount || 0),
-        transaction.id
-      )
+        transaction.id,
+      );
 
       if (!creditResult.success) {
-        routeLogger.error('Failed to credit wallet', new Error(creditResult.error), { transactionId: payload.externalId })
-        return { success: false, error: 'Failed to credit wallet' }
+        routeLogger.error(
+          "Failed to credit wallet",
+          new Error(creditResult.error),
+          { transactionId: payload.externalId },
+        );
+        return { success: false, error: "Failed to credit wallet" };
       }
     }
 
-    return { success: true }
-
+    return { success: true };
   } catch (error) {
-    routeLogger.error('Webhook processing error', error, {})
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    }
+    routeLogger.error("Webhook processing error", error, {});
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 
@@ -262,71 +282,93 @@ async function creditWallet(
   supabase: any,
   businessId: string,
   amount: number,
-  transactionId: string
+  transactionId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // Get current wallet
     const { data: wallet, error: walletError } = await supabase
-      .from('wallets')
-      .select('*')
-      .eq('business_id', businessId)
-      .maybeSingle()
+      .from("wallets")
+      .select("*")
+      .eq("business_id", businessId)
+      .maybeSingle();
 
     if (walletError) {
-      return { success: false, error: 'Failed to get wallet' }
+      return { success: false, error: "Failed to get wallet" };
     }
 
     if (!wallet) {
       // Create wallet if it doesn't exist
       const { data: newWallet, error: createError } = await supabase
-        .from('wallets')
+        .from("wallets")
         .insert({
           business_id: businessId,
           balance: amount,
-          currency: 'IDR',
+          currency: "IDR",
           is_active: true,
         })
         .select()
-        .single()
+        .single();
 
       if (createError) {
-        return { success: false, error: 'Failed to create wallet' }
+        return { success: false, error: "Failed to create wallet" };
       }
 
       // Record transaction
-      await recordWalletTransaction(supabase, newWallet.id, amount, transactionId, 'top_up')
-      
-      routeLogger.info('Wallet created and credited', { businessId, amount, transactionId })
-      return { success: true }
+      await recordWalletTransaction(
+        supabase,
+        newWallet.id,
+        amount,
+        transactionId,
+        "top_up",
+      );
+
+      routeLogger.info("Wallet created and credited", {
+        businessId,
+        amount,
+        transactionId,
+      });
+      return { success: true };
     }
 
     // Update existing wallet balance
-    const newBalance = wallet.balance + amount
+    const newBalance = wallet.balance + amount;
 
     const { error: updateError } = await supabase
-      .from('wallets')
+      .from("wallets")
       .update({
         balance: newBalance,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', wallet.id)
+      .eq("id", wallet.id);
 
     if (updateError) {
-      return { success: false, error: 'Failed to update wallet balance' }
+      return { success: false, error: "Failed to update wallet balance" };
     }
 
     // Record transaction
-    await recordWalletTransaction(supabase, wallet.id, amount, transactionId, 'top_up')
+    await recordWalletTransaction(
+      supabase,
+      wallet.id,
+      amount,
+      transactionId,
+      "top_up",
+    );
 
-    routeLogger.info('Wallet credited successfully', { businessId, amount, transactionId })
-    return { success: true }
-
+    routeLogger.info("Wallet credited successfully", {
+      businessId,
+      amount,
+      transactionId,
+    });
+    return { success: true };
   } catch (error) {
-    routeLogger.error('Credit wallet error', error, { businessId, transactionId })
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    }
+    routeLogger.error("Credit wallet error", error, {
+      businessId,
+      transactionId,
+    });
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 
@@ -338,55 +380,64 @@ async function recordWalletTransaction(
   walletId: string,
   amount: number,
   referenceId: string,
-  type: 'top_up' | 'payment' | 'refund' | 'payout'
+  type: "top_up" | "payment" | "refund" | "payout",
 ): Promise<void> {
   try {
-    await supabase
-      .from('wallet_transactions')
-      .insert({
-        wallet_id: walletId,
-        type,
-        amount,
-        reference_id: referenceId,
-        description: `Payment via Xendit - ${type}`,
-        created_at: new Date().toISOString(),
-      })
+    await supabase.from("wallet_transactions").insert({
+      wallet_id: walletId,
+      type,
+      amount,
+      reference_id: referenceId,
+      description: `Payment via Xendit - ${type}`,
+      created_at: new Date().toISOString(),
+    });
   } catch (error) {
     // Log but don't fail - transaction is already complete
-    routeLogger.warn('Failed to record wallet transaction', { walletId, referenceId, type })
+    routeLogger.warn("Failed to record wallet transaction", {
+      walletId,
+      referenceId,
+      type,
+    });
   }
 }
 
 /**
  * Map Xendit status to internal status
  */
-function mapXenditStatus(status: string): 'pending' | 'success' | 'failed' | 'expired' | 'cancelled' {
-  const statusMap: Record<string, 'pending' | 'success' | 'failed' | 'expired' | 'cancelled'> = {
-    'PENDING': 'pending',
-    'PAID': 'success',
-    'COMPLETED': 'success',
-    'EXPIRED': 'expired',
-    'CANCELLED': 'cancelled',
-    'FAILED': 'failed',
-  }
+function mapXenditStatus(
+  status: string,
+): "pending" | "success" | "failed" | "expired" | "cancelled" {
+  const statusMap: Record<
+    string,
+    "pending" | "success" | "failed" | "expired" | "cancelled"
+  > = {
+    PENDING: "pending",
+    PAID: "success",
+    COMPLETED: "success",
+    EXPIRED: "expired",
+    CANCELLED: "cancelled",
+    FAILED: "failed",
+  };
 
-  return statusMap[status] || 'pending'
+  return statusMap[status] || "pending";
 }
 
 /**
  * GET /api/webhooks/xendit
- * 
+ *
  * Health check endpoint
  */
 export async function GET(request: Request) {
-  const { startTime, requestId } = logger.requestStart(request, { route: 'webhooks/xendit' })
-  
-  routeLogger.info('Health check for Xendit webhook', { requestId })
-  logger.requestSuccess(request, { status: 200 }, startTime, { requestId })
-  
+  const { startTime, requestId } = logger.requestStart(request, {
+    route: "webhooks/xendit",
+  });
+
+  routeLogger.info("Health check for Xendit webhook", { requestId });
+  logger.requestSuccess(request, { status: 200 }, startTime, { requestId });
+
   return NextResponse.json({
-    status: 'ok',
-    provider: 'xendit',
+    status: "ok",
+    provider: "xendit",
     timestamp: new Date().toISOString(),
-  })
+  });
 }

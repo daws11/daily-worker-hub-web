@@ -1,26 +1,26 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Wallet, Clock, TrendingUp, AlertCircle } from "lucide-react"
+import * as React from "react";
+import { Wallet, Clock, TrendingUp, AlertCircle } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export interface PendingPayment {
-  booking_id: string
-  job_title: string
-  amount: number
-  review_deadline: string
-  hours_until_release: number
+  booking_id: string;
+  job_title: string;
+  amount: number;
+  review_deadline: string;
+  hours_until_release: number;
 }
 
 export interface WalletSummaryProps {
-  totalEarnings?: number
-  pendingPayments?: PendingPayment[] | null
-  isLoading?: boolean
-  error?: string | null
-  className?: string
-  showLabel?: boolean
+  totalEarnings?: number;
+  pendingPayments?: PendingPayment[] | null;
+  isLoading?: boolean;
+  error?: string | null;
+  className?: string;
+  showLabel?: boolean;
 }
 
 /**
@@ -34,7 +34,7 @@ function formatCurrency(amount: number): string {
     currency: "IDR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount)
+  }).format(amount);
 }
 
 /**
@@ -44,34 +44,34 @@ function formatCurrency(amount: number): string {
  */
 function formatCountdown(hours: number): string {
   if (hours <= 0) {
-    return "Sekarang"
+    return "Sekarang";
   }
 
-  const h = Math.floor(hours)
-  const m = Math.round((hours - h) * 60)
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
 
   if (h > 24) {
-    const days = Math.floor(h / 24)
-    const remainingHours = h % 24
+    const days = Math.floor(h / 24);
+    const remainingHours = h % 24;
     if (remainingHours > 0) {
-      return `${days} hari ${remainingHours} jam`
+      return `${days} hari ${remainingHours} jam`;
     }
-    return `${days} hari`
+    return `${days} hari`;
   }
 
   if (h > 0 && m > 0) {
-    return `${h} jam ${m} menit`
+    return `${h} jam ${m} menit`;
   }
 
   if (h > 0) {
-    return `${h} jam`
+    return `${h} jam`;
   }
 
   if (m > 0) {
-    return `${m} menit`
+    return `${m} menit`;
   }
 
-  return "Sekarang"
+  return "Sekarang";
 }
 
 /**
@@ -79,14 +79,18 @@ function formatCountdown(hours: number): string {
  * @param pendingPayments - Array of pending payment info
  * @returns The next payment to be released, or null if none
  */
-function getNextRelease(pendingPayments?: PendingPayment[] | null): PendingPayment | null {
+function getNextRelease(
+  pendingPayments?: PendingPayment[] | null,
+): PendingPayment | null {
   if (!pendingPayments || pendingPayments.length === 0) {
-    return null
+    return null;
   }
 
   // Sort by hours_until_release ascending (soonest first)
-  const sorted = [...pendingPayments].sort((a, b) => a.hours_until_release - b.hours_until_release)
-  return sorted[0]
+  const sorted = [...pendingPayments].sort(
+    (a, b) => a.hours_until_release - b.hours_until_release,
+  );
+  return sorted[0];
 }
 
 export function WalletSummary({
@@ -97,10 +101,11 @@ export function WalletSummary({
   className,
   showLabel = true,
 }: WalletSummaryProps) {
-  const nextRelease = getNextRelease(pendingPayments)
+  const nextRelease = getNextRelease(pendingPayments);
 
   // Calculate pending total
-  const pendingTotal = pendingPayments?.reduce((sum, p) => sum + p.amount, 0) ?? 0
+  const pendingTotal =
+    pendingPayments?.reduce((sum, p) => sum + p.amount, 0) ?? 0;
 
   return (
     <Card className={cn("overflow-hidden", className)}>
@@ -115,7 +120,9 @@ export function WalletSummary({
           {!isLoading && !error && (
             <div className="text-right">
               <p className="text-xs text-muted-foreground">Total Pendapatan</p>
-              <p className="text-lg font-bold">{formatCurrency(totalEarnings ?? 0)}</p>
+              <p className="text-lg font-bold">
+                {formatCurrency(totalEarnings ?? 0)}
+              </p>
             </div>
           )}
         </div>
@@ -202,5 +209,5 @@ export function WalletSummary({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

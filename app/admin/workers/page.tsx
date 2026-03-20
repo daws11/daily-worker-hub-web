@@ -1,11 +1,21 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
+import * as React from "react";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 
-import { WorkerCard } from "@/components/admin/worker-card"
-import { getWorkersForManagement } from "@/lib/supabase/queries/admin"
-import type { WorkerManagementFilters, WorkerManagementItem, PaginatedAdminResponse } from "@/lib/types/admin"
+import { WorkerCard } from "@/components/admin/worker-card";
+import { getWorkersForManagement } from "@/lib/supabase/queries/admin";
+import type {
+  WorkerManagementFilters,
+  WorkerManagementItem,
+  PaginatedAdminResponse,
+} from "@/lib/types/admin";
 
 import {
   Select,
@@ -13,87 +23,93 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface WorkersPageProps extends React.HTMLAttributes<HTMLDivElement> {
-  className?: string
+  className?: string;
 }
 
 export default function WorkersPage({ className, ...props }: WorkersPageProps) {
-  const [workers, setWorkers] = React.useState<WorkerManagementItem[]>([])
-  const [loading, setLoading] = React.useState<boolean>(true)
-  const [error, setError] = React.useState<string | null>(null)
+  const [workers, setWorkers] = React.useState<WorkerManagementItem[]>([]);
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<string | null>(null);
   const [pagination, setPagination] = React.useState({
     page: 1,
     limit: 12,
     total: 0,
     totalPages: 0,
-  })
+  });
 
   const [filters, setFilters] = React.useState<WorkerManagementFilters>({
     sortBy: "created_at",
     sortOrder: "desc",
-  })
-  const [searchInput, setSearchInput] = React.useState("")
+  });
+  const [searchInput, setSearchInput] = React.useState("");
 
   const fetchWorkers = React.useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     const response = await getWorkersForManagement(
       filters,
       pagination.page,
-      pagination.limit
-    )
+      pagination.limit,
+    );
 
     if (response) {
-      setWorkers(response.items || [])
+      setWorkers(response.items || []);
       setPagination((prev) => ({
         ...prev,
         total: response.total || 0,
         totalPages: response.totalPages || 1,
-      }))
+      }));
     } else {
-      setWorkers([])
-      setError("Failed to load workers")
+      setWorkers([]);
+      setError("Failed to load workers");
     }
 
-    setLoading(false)
-  }, [filters, pagination.page, pagination.limit])
+    setLoading(false);
+  }, [filters, pagination.page, pagination.limit]);
 
   React.useEffect(() => {
-    fetchWorkers()
-  }, [fetchWorkers])
+    fetchWorkers();
+  }, [fetchWorkers]);
 
   const handleSearch = React.useCallback(
     (value: string) => {
-      setSearchInput(value)
-      setFilters((prev) => ({ ...prev, search: value || undefined }))
-      setPagination((prev) => ({ ...prev, page: 1 }))
+      setSearchInput(value);
+      setFilters((prev) => ({ ...prev, search: value || undefined }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     },
-    [setFilters, setPagination]
-  )
+    [setFilters, setPagination],
+  );
 
   const handleKycStatusFilter = React.useCallback(
     (value: string) => {
       setFilters((prev) => ({
         ...prev,
-        kycStatus: value === "all" ? undefined : (value as "unverified" | "pending" | "verified" | "rejected"),
-      }))
-      setPagination((prev) => ({ ...prev, page: 1 }))
+        kycStatus:
+          value === "all"
+            ? undefined
+            : (value as "unverified" | "pending" | "verified" | "rejected"),
+      }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     },
-    [setFilters, setPagination]
-  )
+    [setFilters, setPagination],
+  );
 
   const goToPage = React.useCallback(
     (page: number) => {
-      setPagination((prev) => ({ ...prev, page: Math.max(1, Math.min(page, pagination.totalPages)) }))
+      setPagination((prev) => ({
+        ...prev,
+        page: Math.max(1, Math.min(page, pagination.totalPages)),
+      }));
     },
-    [pagination.totalPages, setPagination]
-  )
+    [pagination.totalPages, setPagination],
+  );
 
   return (
     <div className={cn("space-y-6", className)} {...props}>
@@ -136,7 +152,10 @@ export default function WorkersPage({ className, ...props }: WorkersPageProps) {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-80 rounded-xl border bg-muted/20 animate-pulse" />
+            <div
+              key={i}
+              className="h-80 rounded-xl border bg-muted/20 animate-pulse"
+            />
           ))}
         </div>
       ) : error ? (
@@ -151,18 +170,21 @@ export default function WorkersPage({ className, ...props }: WorkersPageProps) {
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {workers.map((worker) => (
-              <WorkerCard
-                key={worker.id}
-                worker={worker}
-              />
+              <WorkerCard key={worker.id} worker={worker} />
             ))}
           </div>
 
           {pagination.totalPages > 1 && (
             <div className="flex items-center justify-between px-2">
               <div className="text-sm text-muted-foreground">
-                Showing {Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} workers
+                Showing{" "}
+                {Math.min(
+                  (pagination.page - 1) * pagination.limit + 1,
+                  pagination.total,
+                )}{" "}
+                to{" "}
+                {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
+                of {pagination.total} workers
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -207,5 +229,5 @@ export default function WorkersPage({ className, ...props }: WorkersPageProps) {
         </>
       )}
     </div>
-  )
+  );
 }

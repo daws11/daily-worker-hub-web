@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { LogOut, Banknote, Clock, MapPin } from "lucide-react"
+import * as React from "react";
+import { LogOut, Banknote, Clock, MapPin } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,34 +12,40 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { cn } from "@/lib/utils"
-import { checkoutBooking } from "@/lib/actions/bookings"
-import { toast } from "sonner"
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+import { checkoutBooking } from "@/lib/actions/bookings";
+import { toast } from "sonner";
 
-type BookingStatus = "pending" | "accepted" | "rejected" | "in_progress" | "completed" | "cancelled"
+type BookingStatus =
+  | "pending"
+  | "accepted"
+  | "rejected"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
 
 export interface JobDetails {
-  id: string
-  title: string
-  description?: string
-  budget_max?: number
-  address?: string
+  id: string;
+  title: string;
+  description?: string;
+  budget_max?: number;
+  address?: string;
 }
 
 export interface CheckoutDialogProps {
-  bookingId: string
-  workerId: string
-  status: BookingStatus
-  job: JobDetails
-  finalPrice?: number
-  startDate?: string
-  endDate?: string
-  onCheckoutComplete?: (bookingId: string) => void
-  trigger?: React.ReactNode
-  triggerClassName?: string
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
+  bookingId: string;
+  workerId: string;
+  status: BookingStatus;
+  job: JobDetails;
+  finalPrice?: number;
+  startDate?: string;
+  endDate?: string;
+  onCheckoutComplete?: (bookingId: string) => void;
+  trigger?: React.ReactNode;
+  triggerClassName?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function CheckoutDialog({
@@ -56,69 +62,70 @@ export function CheckoutDialog({
   open: controlledOpen,
   onOpenChange,
 }: CheckoutDialogProps) {
-  const [internalOpen, setInternalOpen] = React.useState(false)
-  const [isCheckingOut, setIsCheckingOut] = React.useState(false)
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const [isCheckingOut, setIsCheckingOut] = React.useState(false);
 
-  const isControlled = controlledOpen !== undefined
-  const open = isControlled ? controlledOpen : internalOpen
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
 
-  const canCheckout = status === "in_progress"
+  const canCheckout = status === "in_progress";
 
   const handleOpenChange = React.useCallback(
     (newOpen: boolean) => {
       if (isControlled && onOpenChange) {
-        onOpenChange(newOpen)
+        onOpenChange(newOpen);
       } else {
-        setInternalOpen(newOpen)
+        setInternalOpen(newOpen);
       }
     },
-    [isControlled, onOpenChange]
-  )
+    [isControlled, onOpenChange],
+  );
 
   const handleCheckout = async () => {
-    if (!canCheckout || isCheckingOut) return
+    if (!canCheckout || isCheckingOut) return;
 
-    setIsCheckingOut(true)
+    setIsCheckingOut(true);
     try {
-      const result = await checkoutBooking(bookingId, workerId)
+      const result = await checkoutBooking(bookingId, workerId);
 
       if (result.success) {
         toast.success("Pekerjaan berhasil selesai!", {
-          description: "Pembayaran sedang diproses dan akan tersedia dalam 24 jam.",
-        })
-        handleOpenChange(false)
-        onCheckoutComplete?.(bookingId)
+          description:
+            "Pembayaran sedang diproses dan akan tersedia dalam 24 jam.",
+        });
+        handleOpenChange(false);
+        onCheckoutComplete?.(bookingId);
       } else {
         toast.error("Gagal checkout", {
           description: result.error || "Terjadi kesalahan saat checkout.",
-        })
+        });
       }
     } catch {
       toast.error("Gagal checkout", {
         description: "Terjadi kesalahan tak terduga. Silakan coba lagi.",
-      })
+      });
     } finally {
-      setIsCheckingOut(false)
+      setIsCheckingOut(false);
     }
-  }
+  };
 
   const formatCurrency = (amount?: number) => {
-    if (!amount) return "Rp 0"
+    if (!amount) return "Rp 0";
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
       minimumFractionDigits: 0,
-    }).format(amount)
-  }
+    }).format(amount);
+  };
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return "-"
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("id-ID", {
       day: "numeric",
       month: "short",
       year: "numeric",
-    })
-  }
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -132,7 +139,8 @@ export function CheckoutDialog({
         <DialogHeader>
           <DialogTitle>Checkout dari Pekerjaan</DialogTitle>
           <DialogDescription>
-            Konfirmasi bahwa Anda telah menyelesaikan pekerjaan ini. Pembayaran akan diproses setelah checkout.
+            Konfirmasi bahwa Anda telah menyelesaikan pekerjaan ini. Pembayaran
+            akan diproses setelah checkout.
           </DialogDescription>
         </DialogHeader>
 
@@ -155,7 +163,9 @@ export function CheckoutDialog({
                 <Banknote className="h-4 w-4 text-primary" />
               </div>
               <div className="flex-1 space-y-0.5">
-                <p className="text-xs font-medium text-muted-foreground">Estimasi Pembayaran</p>
+                <p className="text-xs font-medium text-muted-foreground">
+                  Estimasi Pembayaran
+                </p>
                 <p className="text-sm font-semibold">
                   {formatCurrency(finalPrice || job.budget_max)}
                 </p>
@@ -169,9 +179,12 @@ export function CheckoutDialog({
                   <Clock className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex-1 space-y-0.5">
-                  <p className="text-xs font-medium text-muted-foreground">Periode Kerja</p>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Periode Kerja
+                  </p>
                   <p className="text-sm">
-                    {formatDate(startDate)} {endDate && ` - ${formatDate(endDate)}`}
+                    {formatDate(startDate)}{" "}
+                    {endDate && ` - ${formatDate(endDate)}`}
                   </p>
                 </div>
               </div>
@@ -184,7 +197,9 @@ export function CheckoutDialog({
                   <MapPin className="h-4 w-4 text-primary" />
                 </div>
                 <div className="flex-1 space-y-0.5">
-                  <p className="text-xs font-medium text-muted-foreground">Lokasi</p>
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Lokasi
+                  </p>
                   <p className="text-sm line-clamp-2">{job.address}</p>
                 </div>
               </div>
@@ -194,10 +209,10 @@ export function CheckoutDialog({
           {/* Review Period Notice */}
           <div className="rounded-md border border-blue-200 bg-blue-50 p-3 dark:border-blue-900 dark:bg-blue-950/30">
             <p className="text-xs text-blue-800 dark:text-blue-200">
-              <span className="font-semibold">Periode Review 24 Jam:</span> Pembayaran akan
-              ditahan selama 24 jam untuk memberikan kesempatan kepada bisnis untuk
-              meninjau pekerjaan. Setelah periode ini, pembayaran akan otomatis
-              tersedia di dompet Anda.
+              <span className="font-semibold">Periode Review 24 Jam:</span>{" "}
+              Pembayaran akan ditahan selama 24 jam untuk memberikan kesempatan
+              kepada bisnis untuk meninjau pekerjaan. Setelah periode ini,
+              pembayaran akan otomatis tersedia di dompet Anda.
             </p>
           </div>
 
@@ -238,5 +253,5 @@ export function CheckoutDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

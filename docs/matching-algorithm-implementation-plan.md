@@ -9,6 +9,7 @@ This document tracks the implementation of the 5-phase Matching Algorithm for Da
 ## Phase 1: Database Schema Updates ✅
 
 ### Migrations Created:
+
 1. **`supabase/migrations/20260227_add_worker_tiers.sql`**
    - Added `worker_tier` enum type (classic, pro, elite, champion)
    - Added `jobs_completed` column to workers table
@@ -25,6 +26,7 @@ This document tracks the implementation of the 5-phase Matching Algorithm for Da
    - Created index for sorting by matching score
 
 ### TypeScript Types Updated:
+
 - Updated `lib/supabase/types.ts` to include:
   - `worker_tier` enum in Constants
   - `jobs_needed`, `overtime_multiplier` in jobs table
@@ -61,6 +63,7 @@ This document tracks the implementation of the 5-phase Matching Algorithm for Da
    - Color-coded by tier (Champion=gold, Elite=purple, Pro=blue, Classic=gray)
 
 ### Integration:
+
 - Updated `app/(dashboard)/worker/settings/page.tsx`
   - Added worker tier data fetching
   - Display `TierBadgeDetailed` with progress info
@@ -159,32 +162,33 @@ This document tracks the implementation of the 5-phase Matching Algorithm for Da
 
 ## Tier System Summary
 
-| Tier | Jobs | Rating | Punctuality | Bonus | Interview |
-|------|------|--------|-------------|-------|-----------|
-| Champion | 300+ | 4.8+ | 98%+ | +20 | Instant (no interview) |
-| Elite | 100+ | 4.6+ | 95%+ | +15 | Instant (no interview) |
-| Pro | 20+ | 4.0+ | 90%+ | +10 | Chat interview (5-10 min) |
-| Classic | 0-19 | <4.0 | <90% | +5 | Chat + Voice (10-15 min) |
+| Tier     | Jobs | Rating | Punctuality | Bonus | Interview                 |
+| -------- | ---- | ------ | ----------- | ----- | ------------------------- |
+| Champion | 300+ | 4.8+   | 98%+        | +20   | Instant (no interview)    |
+| Elite    | 100+ | 4.6+   | 95%+        | +15   | Instant (no interview)    |
+| Pro      | 20+  | 4.0+   | 90%+        | +10   | Chat interview (5-10 min) |
+| Classic  | 0-19 | <4.0   | <90%        | +5    | Chat + Voice (10-15 min)  |
 
 ---
 
 ## Matching Algorithm Scoring
 
-| Factor | Max Points | Criteria |
-|--------|-----------|----------|
-| Skill Compatibility | 30 | Exact match: +30, Partial: +15, None: 0 |
-| Distance | 30 | 0-5km: +30, 5-10km: +20, 10-20km: +10, 20+km: 0 |
-| Availability | 20 | Full: +20, Partial: +10, None: 0 |
-| Rating | 15 | 4.8-5.0: +15, 4.5-4.7: +12, 4.0-4.4: +8, <4.0: 0 |
-| Compliance | 5 | Compliant: +5, Non-compliant: 0 |
-| Tier Bonus | 20 | Champion: +20, Elite: +15, Pro: +10, Classic: +5 |
-| **Total** | **115** | Max possible score |
+| Factor              | Max Points | Criteria                                         |
+| ------------------- | ---------- | ------------------------------------------------ |
+| Skill Compatibility | 30         | Exact match: +30, Partial: +15, None: 0          |
+| Distance            | 30         | 0-5km: +30, 5-10km: +20, 10-20km: +10, 20+km: 0  |
+| Availability        | 20         | Full: +20, Partial: +10, None: 0                 |
+| Rating              | 15         | 4.8-5.0: +15, 4.5-4.7: +12, 4.0-4.4: +8, <4.0: 0 |
+| Compliance          | 5          | Compliant: +5, Non-compliant: 0                  |
+| Tier Bonus          | 20         | Champion: +20, Elite: +15, Pro: +10, Classic: +5 |
+| **Total**           | **115**    | Max possible score                               |
 
 ---
 
 ## Wage Calculation
 
 ### Formula
+
 ```
 totalWage = hoursWorked × hourlyRate × overtimeMultiplier
 
@@ -195,20 +199,22 @@ Where:
 ```
 
 ### Hourly Rates (IDR/hour)
-| Category | Denpasar | Gianyar | Badung | Other |
-|----------|----------|---------|--------|-------|
-| Housekeeping | 20,000 | 19,000 | 18,500 | 18,000 |
-| Waiter | 22,000 | 21,000 | 20,500 | 20,000 |
-| Cook Helper | 21,000 | 20,000 | 19,500 | 19,000 |
-| Cook (Line) | 25,000 | 24,000 | 23,500 | 23,000 |
-| Cook (Head) | 35,000+ | 34,000+ | 33,000+ | 32,000+ |
-| Steward | 23,000 | 22,000 | 21,500 | 21,000 |
-| Driver | 24,000 | 23,000 | 22,500 | 22,000 |
-| Bellman | 21,000 | 20,000 | 19,500 | 19,000 |
-| Front Desk | 28,000 | 27,000 | 26,000 | 26,000 |
-| Spa/Therapist | 30,000 | 29,000 | 28,000 | 28,000 |
+
+| Category      | Denpasar | Gianyar | Badung  | Other   |
+| ------------- | -------- | ------- | ------- | ------- |
+| Housekeeping  | 20,000   | 19,000  | 18,500  | 18,000  |
+| Waiter        | 22,000   | 21,000  | 20,500  | 20,000  |
+| Cook Helper   | 21,000   | 20,000  | 19,500  | 19,000  |
+| Cook (Line)   | 25,000   | 24,000  | 23,500  | 23,000  |
+| Cook (Head)   | 35,000+  | 34,000+ | 33,000+ | 32,000+ |
+| Steward       | 23,000   | 22,000  | 21,500  | 21,000  |
+| Driver        | 24,000   | 23,000  | 22,500  | 22,000  |
+| Bellman       | 21,000   | 20,000  | 19,500  | 19,000  |
+| Front Desk    | 28,000   | 27,000  | 26,000  | 26,000  |
+| Spa/Therapist | 30,000   | 29,000  | 28,000  | 28,000  |
 
 ### Fees
+
 - Platform Fee: 6% of total wage
 - Community Fund: 1% of worker's wage
 - Worker Receives: Total wage - 1%
@@ -219,6 +225,7 @@ Where:
 ## Next Steps / TODO
 
 ### Pending (Not in this implementation):
+
 - [ ] Run database migrations on local Supabase instance
 - [ ] Run `supabase gen types typescript --local` to regenerate types from schema
 - [ ] Test each phase with sample data
@@ -229,6 +236,7 @@ Where:
 - [ ] Add worker skill matching UI to business job posting
 
 ### Optional Enhancements:
+
 - [ ] Real-time wage preview during job posting
 - [ ] Worker shortlist visualization on job detail page
 - [ ] Tier upgrade/downgrade notifications
@@ -281,30 +289,35 @@ daily-worker-hub-clean/
 ## Testing Checklist
 
 ### Phase 1: Database
+
 - [ ] Run migrations locally
 - [ ] Verify new columns exist
 - [ ] Verify constraints work correctly
 - [ ] Regenerate types
 
 ### Phase 2: Tier System
+
 - [ ] Test tier classification with different worker profiles
 - [ ] Test tier progression logic
 - [ ] Verify TierBadge renders correctly
 - [ ] Test worker settings page
 
 ### Phase 3: Matching Algorithm
+
 - [ ] Test Haversine distance calculation
 - [ ] Test skill matching scoring
 - [ ] Test full matching algorithm
 - [ ] Verify shortlist generation
 
 ### Phase 4: Wage Calculator
+
 - [ ] Test regular hours (4-8h) calculation
 - [ ] Test overtime hours (9-12h) calculation
 - [ ] Test hour selection slider
 - [ ] Verify wage display formatting
 
 ### Phase 5: Integration
+
 - [ ] Test job posting with hours selection
 - [ ] Test wage calculation in job form
 - [ ] Verify worker shortlist displays

@@ -1,25 +1,42 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { CheckCircle2, XCircle, AlertCircle, Activity, Server, Database } from "lucide-react"
-import { cn } from "@/lib/utils"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Activity,
+  Server,
+  Database,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface HealthMetric {
-  name: string
-  status: "healthy" | "warning" | "critical"
-  value?: string | number
-  description?: string
+  name: string;
+  status: "healthy" | "warning" | "critical";
+  value?: string | number;
+  description?: string;
 }
 
 export interface HealthStatusProps {
-  metrics: HealthMetric[]
-  loading?: boolean
-  className?: string
+  metrics: HealthMetric[];
+  loading?: boolean;
+  className?: string;
 }
 
-export function HealthStatus({ metrics, loading = false, className }: HealthStatusProps) {
+export function HealthStatus({
+  metrics,
+  loading = false,
+  className,
+}: HealthStatusProps) {
   if (loading) {
     return (
       <Card className={className}>
@@ -33,30 +50,38 @@ export function HealthStatus({ metrics, loading = false, className }: HealthStat
           ))}
         </CardContent>
       </Card>
-    )
+    );
   }
 
   const getStatusIcon = (status: HealthMetric["status"]) => {
     switch (status) {
       case "healthy":
-        return <CheckCircle2 className="h-5 w-5 text-green-600" />
+        return <CheckCircle2 className="h-5 w-5 text-green-600" />;
       case "warning":
-        return <AlertCircle className="h-5 w-5 text-yellow-600" />
+        return <AlertCircle className="h-5 w-5 text-yellow-600" />;
       case "critical":
-        return <XCircle className="h-5 w-5 text-red-600" />
+        return <XCircle className="h-5 w-5 text-red-600" />;
     }
-  }
+  };
 
   const getStatusBadge = (status: HealthMetric["status"]) => {
     switch (status) {
       case "healthy":
-        return <Badge variant="default" className="bg-green-600">Healthy</Badge>
+        return (
+          <Badge variant="default" className="bg-green-600">
+            Healthy
+          </Badge>
+        );
       case "warning":
-        return <Badge variant="secondary" className="bg-yellow-600 text-white">Warning</Badge>
+        return (
+          <Badge variant="secondary" className="bg-yellow-600 text-white">
+            Warning
+          </Badge>
+        );
       case "critical":
-        return <Badge variant="destructive">Critical</Badge>
+        return <Badge variant="destructive">Critical</Badge>;
     }
-  }
+  };
 
   return (
     <Card className={className}>
@@ -98,32 +123,36 @@ export function HealthStatus({ metrics, loading = false, className }: HealthStat
         ))}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export interface SystemOverviewProps {
   system: {
     cpu: {
-      usage: number
-      cores: number
-      model: string
-    }
+      usage: number;
+      cores: number;
+      model: string;
+    };
     memory: {
-      usagePercent: number
-      used: number
-      total: number
-    }
+      usagePercent: number;
+      used: number;
+      total: number;
+    };
     uptime: {
-      formatted: string
-    }
-    platform: string
-    nodeVersion: string
-  }
-  loading?: boolean
-  className?: string
+      formatted: string;
+    };
+    platform: string;
+    nodeVersion: string;
+  };
+  loading?: boolean;
+  className?: string;
 }
 
-export function SystemOverview({ system, loading = false, className }: SystemOverviewProps) {
+export function SystemOverview({
+  system,
+  loading = false,
+  className,
+}: SystemOverviewProps) {
   if (loading) {
     return (
       <Card className={className}>
@@ -135,25 +164,27 @@ export function SystemOverview({ system, loading = false, className }: SystemOve
           <Skeleton className="h-32 w-full" />
         </CardContent>
       </Card>
-    )
+    );
   }
 
   const formatBytes = (bytes: number) => {
-    const gb = bytes / (1024 * 1024 * 1024)
-    return `${gb.toFixed(2)} GB`
-  }
+    const gb = bytes / (1024 * 1024 * 1024);
+    return `${gb.toFixed(2)} GB`;
+  };
 
   const getCpuStatus = (usage: number): "healthy" | "warning" | "critical" => {
-    if (usage < 70) return "healthy"
-    if (usage < 90) return "warning"
-    return "critical"
-  }
+    if (usage < 70) return "healthy";
+    if (usage < 90) return "warning";
+    return "critical";
+  };
 
-  const getMemoryStatus = (usage: number): "healthy" | "warning" | "critical" => {
-    if (usage < 70) return "healthy"
-    if (usage < 90) return "warning"
-    return "critical"
-  }
+  const getMemoryStatus = (
+    usage: number,
+  ): "healthy" | "warning" | "critical" => {
+    if (usage < 70) return "healthy";
+    if (usage < 90) return "warning";
+    return "critical";
+  };
 
   return (
     <Card className={className}>
@@ -172,7 +203,13 @@ export function SystemOverview({ system, loading = false, className }: SystemOve
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">CPU Usage</span>
-              <Badge variant={getCpuStatus(system.cpu.usage) === "healthy" ? "default" : "secondary"}>
+              <Badge
+                variant={
+                  getCpuStatus(system.cpu.usage) === "healthy"
+                    ? "default"
+                    : "secondary"
+                }
+              >
                 {system.cpu.usage}%
               </Badge>
             </div>
@@ -185,8 +222,10 @@ export function SystemOverview({ system, loading = false, className }: SystemOve
               className={cn(
                 "h-2 rounded-full transition-all",
                 system.cpu.usage < 70 && "bg-green-600",
-                system.cpu.usage >= 70 && system.cpu.usage < 90 && "bg-yellow-600",
-                system.cpu.usage >= 90 && "bg-red-600"
+                system.cpu.usage >= 70 &&
+                  system.cpu.usage < 90 &&
+                  "bg-yellow-600",
+                system.cpu.usage >= 90 && "bg-red-600",
               )}
               style={{ width: `${system.cpu.usage}%` }}
             />
@@ -198,12 +237,19 @@ export function SystemOverview({ system, loading = false, className }: SystemOve
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">Memory Usage</span>
-              <Badge variant={getMemoryStatus(system.memory.usagePercent) === "healthy" ? "default" : "secondary"}>
+              <Badge
+                variant={
+                  getMemoryStatus(system.memory.usagePercent) === "healthy"
+                    ? "default"
+                    : "secondary"
+                }
+              >
                 {system.memory.usagePercent}%
               </Badge>
             </div>
             <span className="text-xs text-muted-foreground">
-              {formatBytes(system.memory.used)} / {formatBytes(system.memory.total)}
+              {formatBytes(system.memory.used)} /{" "}
+              {formatBytes(system.memory.total)}
             </span>
           </div>
           <div className="w-full bg-muted rounded-full h-2">
@@ -211,8 +257,10 @@ export function SystemOverview({ system, loading = false, className }: SystemOve
               className={cn(
                 "h-2 rounded-full transition-all",
                 system.memory.usagePercent < 70 && "bg-green-600",
-                system.memory.usagePercent >= 70 && system.memory.usagePercent < 90 && "bg-yellow-600",
-                system.memory.usagePercent >= 90 && "bg-red-600"
+                system.memory.usagePercent >= 70 &&
+                  system.memory.usagePercent < 90 &&
+                  "bg-yellow-600",
+                system.memory.usagePercent >= 90 && "bg-red-600",
               )}
               style={{ width: `${system.memory.usagePercent}%` }}
             />
@@ -236,21 +284,25 @@ export function SystemOverview({ system, loading = false, className }: SystemOve
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export interface DatabaseStatusProps {
   database: {
-    connectionCount: number
-    maxConnections: number
-    averageQueryTime: number
-    slowQueries: Array<{ query: string; duration: number; timestamp: number }>
-  }
-  loading?: boolean
-  className?: string
+    connectionCount: number;
+    maxConnections: number;
+    averageQueryTime: number;
+    slowQueries: Array<{ query: string; duration: number; timestamp: number }>;
+  };
+  loading?: boolean;
+  className?: string;
 }
 
-export function DatabaseStatus({ database, loading = false, className }: DatabaseStatusProps) {
+export function DatabaseStatus({
+  database,
+  loading = false,
+  className,
+}: DatabaseStatusProps) {
   if (loading) {
     return (
       <Card className={className}>
@@ -262,16 +314,19 @@ export function DatabaseStatus({ database, loading = false, className }: Databas
           <Skeleton className="h-32 w-full" />
         </CardContent>
       </Card>
-    )
+    );
   }
 
-  const connectionUsage = (database.connectionCount / database.maxConnections) * 100
-  
-  const getConnectionStatus = (usage: number): "healthy" | "warning" | "critical" => {
-    if (usage < 70) return "healthy"
-    if (usage < 90) return "warning"
-    return "critical"
-  }
+  const connectionUsage =
+    (database.connectionCount / database.maxConnections) * 100;
+
+  const getConnectionStatus = (
+    usage: number,
+  ): "healthy" | "warning" | "critical" => {
+    if (usage < 70) return "healthy";
+    if (usage < 90) return "warning";
+    return "critical";
+  };
 
   return (
     <Card className={className}>
@@ -280,16 +335,20 @@ export function DatabaseStatus({ database, loading = false, className }: Databas
           <Database className="h-5 w-5" />
           Database Status
         </CardTitle>
-        <CardDescription>
-          Connection pool and query performance
-        </CardDescription>
+        <CardDescription>Connection pool and query performance</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Connection Pool */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Connection Pool</span>
-            <Badge variant={getConnectionStatus(connectionUsage) === "healthy" ? "default" : "secondary"}>
+            <Badge
+              variant={
+                getConnectionStatus(connectionUsage) === "healthy"
+                  ? "default"
+                  : "secondary"
+              }
+            >
               {database.connectionCount} / {database.maxConnections}
             </Badge>
           </div>
@@ -298,8 +357,10 @@ export function DatabaseStatus({ database, loading = false, className }: Databas
               className={cn(
                 "h-2 rounded-full transition-all",
                 connectionUsage < 70 && "bg-green-600",
-                connectionUsage >= 70 && connectionUsage < 90 && "bg-yellow-600",
-                connectionUsage >= 90 && "bg-red-600"
+                connectionUsage >= 70 &&
+                  connectionUsage < 90 &&
+                  "bg-yellow-600",
+                connectionUsage >= 90 && "bg-red-600",
               )}
               style={{ width: `${connectionUsage}%` }}
             />
@@ -319,8 +380,12 @@ export function DatabaseStatus({ database, loading = false, className }: Databas
             {database.slowQueries.slice(0, 3).map((query, index) => (
               <div key={index} className="p-2 rounded-lg bg-muted space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono truncate flex-1">{query.query}</span>
-                  <Badge variant="outline" className="ml-2">{query.duration}ms</Badge>
+                  <span className="text-xs font-mono truncate flex-1">
+                    {query.query}
+                  </span>
+                  <Badge variant="outline" className="ml-2">
+                    {query.duration}ms
+                  </Badge>
                 </div>
               </div>
             ))}
@@ -328,5 +393,5 @@ export function DatabaseStatus({ database, loading = false, className }: Databas
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

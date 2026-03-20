@@ -1,13 +1,15 @@
-'use client'
+"use client";
 
-import { createContext, useContext } from 'react'
-import type { I18nContextValue } from './types'
+import { createContext, useContext } from "react";
+import type { I18nContextValue } from "./types";
 
 /**
  * I18n Context for managing translations across the app
  * This context is provided by I18nProvider component
  */
-export const I18nContext = createContext<I18nContextValue | undefined>(undefined)
+export const I18nContext = createContext<I18nContextValue | undefined>(
+  undefined,
+);
 
 /**
  * Hook to access translations and locale management
@@ -33,13 +35,13 @@ export const I18nContext = createContext<I18nContextValue | undefined>(undefined
  * ```
  */
 export function useTranslation(): I18nContextValue {
-  const context = useContext(I18nContext)
+  const context = useContext(I18nContext);
 
   if (context === undefined) {
-    throw new Error('useTranslation must be used within an I18nProvider')
+    throw new Error("useTranslation must be used within an I18nProvider");
   }
 
-  return context
+  return context;
 }
 
 /**
@@ -59,28 +61,30 @@ export function useTranslation(): I18nContextValue {
  * ```
  */
 export function useTranslationSafe(): {
-  t: (key: string, params?: Record<string, string | number>) => string
+  t: (key: string, params?: Record<string, string | number>) => string;
 } {
   try {
-    const context = useContext(I18nContext)
+    const context = useContext(I18nContext);
 
     if (context === undefined) {
       // Return a safe fallback that returns the key itself
       return {
         t: (key: string) => {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn(`[i18n] useTranslationSafe: No I18nContext available, returning key: ${key}`)
+          if (process.env.NODE_ENV === "development") {
+            console.warn(
+              `[i18n] useTranslationSafe: No I18nContext available, returning key: ${key}`,
+            );
           }
-          return key
+          return key;
         },
-      }
+      };
     }
 
-    return { t: context.t }
+    return { t: context.t };
   } catch {
     // Handle any errors gracefully
     return {
       t: (key: string) => key,
-    }
+    };
   }
 }

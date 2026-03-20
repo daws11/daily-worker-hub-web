@@ -1,24 +1,30 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { toast } from "sonner"
-import { 
-  LogIn, 
-  LogOut, 
-  Clock, 
+import * as React from "react";
+import { toast } from "sonner";
+import {
+  LogIn,
+  LogOut,
+  Clock,
   Timer,
   AlertCircle,
   CheckCircle,
   MapPin,
   FileText,
-  Loader2
-} from "lucide-react"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Badge } from "@/components/ui/badge"
+  Loader2,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -26,52 +32,68 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-type BookingStatus = "pending" | "accepted" | "rejected" | "in_progress" | "completed" | "cancelled"
+type BookingStatus =
+  | "pending"
+  | "accepted"
+  | "rejected"
+  | "in_progress"
+  | "completed"
+  | "cancelled";
 
 export interface BookingCheckInOutProps {
-  bookingId: string
-  bookingStatus: BookingStatus
-  checkInAt: string | null
-  checkOutAt: string | null
-  jobTitle?: string
-  businessName?: string
-  onCheckIn?: (bookingId: string, location?: { lat: number; lng: number }) => Promise<void>
-  onCheckOut?: (bookingId: string, data: { actualHours?: number; notes?: string }) => Promise<void>
-  className?: string
+  bookingId: string;
+  bookingStatus: BookingStatus;
+  checkInAt: string | null;
+  checkOutAt: string | null;
+  jobTitle?: string;
+  businessName?: string;
+  onCheckIn?: (
+    bookingId: string,
+    location?: { lat: number; lng: number },
+  ) => Promise<void>;
+  onCheckOut?: (
+    bookingId: string,
+    data: { actualHours?: number; notes?: string },
+  ) => Promise<void>;
+  className?: string;
 }
 
-type AttendanceState = "can_check_in" | "can_check_out" | "completed" | "not_available"
+type AttendanceState =
+  | "can_check_in"
+  | "can_check_out"
+  | "completed"
+  | "not_available";
 
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
 function formatDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  const secs = seconds % 60
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
 
   if (hours > 0) {
-    return `${hours}h ${minutes}m ${secs}s`
+    return `${hours}h ${minutes}m ${secs}s`;
   }
   if (minutes > 0) {
-    return `${minutes}m ${secs}s`
+    return `${minutes}m ${secs}s`;
   }
-  return `${secs}s`
+  return `${secs}s`;
 }
 
 function formatTime(dateString: string): string {
-  const date = new Date(dateString)
+  const date = new Date(dateString);
   return date.toLocaleTimeString("id-ID", {
     hour: "2-digit",
     minute: "2-digit",
-  })
+  });
 }
 
 // ============================================================================
@@ -79,28 +101,28 @@ function formatTime(dateString: string): string {
 // ============================================================================
 
 function WorkTimer({ startTime }: { startTime: string }) {
-  const [elapsed, setElapsed] = React.useState(0)
+  const [elapsed, setElapsed] = React.useState(0);
 
   React.useEffect(() => {
-    const start = new Date(startTime).getTime()
-    
+    const start = new Date(startTime).getTime();
+
     const updateElapsed = () => {
-      const now = Date.now()
-      setElapsed(Math.floor((now - start) / 1000))
-    }
+      const now = Date.now();
+      setElapsed(Math.floor((now - start) / 1000));
+    };
 
-    updateElapsed()
-    const interval = setInterval(updateElapsed, 1000)
+    updateElapsed();
+    const interval = setInterval(updateElapsed, 1000);
 
-    return () => clearInterval(interval)
-  }, [startTime])
+    return () => clearInterval(interval);
+  }, [startTime]);
 
   return (
     <div className="flex items-center gap-2 text-2xl font-mono font-bold text-blue-600">
       <Timer className="h-6 w-6" />
       <span>{formatDuration(elapsed)}</span>
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -108,32 +130,34 @@ function WorkTimer({ startTime }: { startTime: string }) {
 // ============================================================================
 
 interface CheckOutDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onConfirm: (data: { actualHours?: number; notes?: string }) => Promise<void>
-  isLoading?: boolean
-  suggestedHours?: number
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: (data: { actualHours?: number; notes?: string }) => Promise<void>;
+  isLoading?: boolean;
+  suggestedHours?: number;
 }
 
-function CheckOutDialog({ 
-  open, 
-  onOpenChange, 
-  onConfirm, 
+function CheckOutDialog({
+  open,
+  onOpenChange,
+  onConfirm,
   isLoading,
-  suggestedHours 
+  suggestedHours,
 }: CheckOutDialogProps) {
-  const [actualHours, setActualHours] = React.useState<string>(suggestedHours?.toString() || "")
-  const [notes, setNotes] = React.useState("")
+  const [actualHours, setActualHours] = React.useState<string>(
+    suggestedHours?.toString() || "",
+  );
+  const [notes, setNotes] = React.useState("");
 
   const handleConfirm = async () => {
-    const hours = actualHours ? parseFloat(actualHours) : undefined
-    await onConfirm({ 
-      actualHours: hours, 
-      notes: notes.trim() || undefined 
-    })
-    setActualHours("")
-    setNotes("")
-  }
+    const hours = actualHours ? parseFloat(actualHours) : undefined;
+    await onConfirm({
+      actualHours: hours,
+      notes: notes.trim() || undefined,
+    });
+    setActualHours("");
+    setNotes("");
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -157,7 +181,11 @@ function CheckOutDialog({
               step="0.5"
               min="0"
               max="24"
-              placeholder={suggestedHours ? `Saran: ${suggestedHours.toFixed(1)} jam` : "Masukkan jam kerja"}
+              placeholder={
+                suggestedHours
+                  ? `Saran: ${suggestedHours.toFixed(1)} jam`
+                  : "Masukkan jam kerja"
+              }
               value={actualHours}
               onChange={(e) => setActualHours(e.target.value)}
             />
@@ -179,17 +207,14 @@ function CheckOutDialog({
         </div>
 
         <DialogFooter>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
           >
             Batal
           </Button>
-          <Button 
-            onClick={handleConfirm}
-            disabled={isLoading}
-          >
+          <Button onClick={handleConfirm} disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -205,7 +230,7 @@ function CheckOutDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // ============================================================================
@@ -223,81 +248,89 @@ export function BookingCheckInOut({
   onCheckOut,
   className,
 }: BookingCheckInOutProps) {
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [showCheckOutDialog, setShowCheckOutDialog] = React.useState(false)
-  const [currentLocation, setCurrentLocation] = React.useState<{ lat: number; lng: number } | null>(null)
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [showCheckOutDialog, setShowCheckOutDialog] = React.useState(false);
+  const [currentLocation, setCurrentLocation] = React.useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   // Determine attendance state
   const getAttendanceState = (): AttendanceState => {
-    if (checkOutAt) return "completed"
-    if (checkInAt) return "can_check_out"
-    if (bookingStatus === "accepted") return "can_check_in"
-    if (bookingStatus === "in_progress") return "can_check_out"
-    if (bookingStatus === "completed") return "completed"
-    return "not_available"
-  }
+    if (checkOutAt) return "completed";
+    if (checkInAt) return "can_check_out";
+    if (bookingStatus === "accepted") return "can_check_in";
+    if (bookingStatus === "in_progress") return "can_check_out";
+    if (bookingStatus === "completed") return "completed";
+    return "not_available";
+  };
 
-  const attendanceState = getAttendanceState()
+  const attendanceState = getAttendanceState();
 
   // Calculate suggested hours based on check-in time
   const getSuggestedHours = (): number | undefined => {
-    if (!checkInAt) return undefined
-    const start = new Date(checkInAt).getTime()
-    const now = Date.now()
-    return Math.round((now - start) / 3600000 * 10) / 10 // Round to 1 decimal
-  }
+    if (!checkInAt) return undefined;
+    const start = new Date(checkInAt).getTime();
+    const now = Date.now();
+    return Math.round(((now - start) / 3600000) * 10) / 10; // Round to 1 decimal
+  };
 
   // Handle check-in
   const handleCheckIn = async () => {
-    if (!onCheckIn) return
+    if (!onCheckIn) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       // Try to get location
-      let location: { lat: number; lng: number } | undefined
+      let location: { lat: number; lng: number } | undefined;
       if (navigator.geolocation) {
         try {
-          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-              timeout: 5000,
-              enableHighAccuracy: true,
-            })
-          })
+          const position = await new Promise<GeolocationPosition>(
+            (resolve, reject) => {
+              navigator.geolocation.getCurrentPosition(resolve, reject, {
+                timeout: 5000,
+                enableHighAccuracy: true,
+              });
+            },
+          );
           location = {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
-          }
-          setCurrentLocation(location)
+          };
+          setCurrentLocation(location);
         } catch (geoError) {
-          console.warn("Could not get location:", geoError)
+          console.warn("Could not get location:", geoError);
           // Continue without location
         }
       }
 
-      await onCheckIn(bookingId, location)
-      toast.success("Check-in berhasil / Check-in successful")
+      await onCheckIn(bookingId, location);
+      toast.success("Check-in berhasil / Check-in successful");
     } catch (error: any) {
-      toast.error(error.message || "Gagal check-in / Check-in failed")
+      toast.error(error.message || "Gagal check-in / Check-in failed");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Handle check-out confirmation
-  const handleCheckOutConfirm = async (data: { actualHours?: number; notes?: string }) => {
-    if (!onCheckOut) return
+  const handleCheckOutConfirm = async (data: {
+    actualHours?: number;
+    notes?: string;
+  }) => {
+    if (!onCheckOut) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await onCheckOut(bookingId, data)
-      toast.success("Check-out berhasil / Check-out successful")
-      setShowCheckOutDialog(false)
+      await onCheckOut(bookingId, data);
+      toast.success("Check-out berhasil / Check-out successful");
+      setShowCheckOutDialog(false);
     } catch (error: any) {
-      toast.error(error.message || "Gagal check-out / Check-out failed")
+      toast.error(error.message || "Gagal check-out / Check-out failed");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Render based on state
   if (attendanceState === "not_available") {
@@ -310,7 +343,7 @@ export function BookingCheckInOut({
           </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (attendanceState === "completed") {
@@ -326,11 +359,15 @@ export function BookingCheckInOut({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-muted-foreground">Check In</span>
-              <p className="font-medium">{checkInAt ? formatTime(checkInAt) : "-"}</p>
+              <p className="font-medium">
+                {checkInAt ? formatTime(checkInAt) : "-"}
+              </p>
             </div>
             <div>
               <span className="text-muted-foreground">Check Out</span>
-              <p className="font-medium">{checkOutAt ? formatTime(checkOutAt) : "-"}</p>
+              <p className="font-medium">
+                {checkOutAt ? formatTime(checkOutAt) : "-"}
+              </p>
             </div>
           </div>
           <Badge variant="secondary" className="w-full justify-center py-2">
@@ -339,7 +376,7 @@ export function BookingCheckInOut({
           </Badge>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   if (attendanceState === "can_check_out") {
@@ -393,7 +430,7 @@ export function BookingCheckInOut({
           suggestedHours={getSuggestedHours()}
         />
       </>
-    )
+    );
   }
 
   // can_check_in
@@ -445,7 +482,7 @@ export function BookingCheckInOut({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // ============================================================================
@@ -459,50 +496,53 @@ export function BookingCheckInOutCompact({
   checkOutAt,
   onCheckIn,
   onCheckOut,
-}: Omit<BookingCheckInOutProps, 'jobTitle' | 'businessName' | 'className'>) {
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [showCheckOutDialog, setShowCheckOutDialog] = React.useState(false)
+}: Omit<BookingCheckInOutProps, "jobTitle" | "businessName" | "className">) {
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [showCheckOutDialog, setShowCheckOutDialog] = React.useState(false);
 
   const getAttendanceState = (): AttendanceState => {
-    if (checkOutAt) return "completed"
-    if (checkInAt) return "can_check_out"
-    if (bookingStatus === "accepted") return "can_check_in"
-    if (bookingStatus === "in_progress") return "can_check_out"
-    if (bookingStatus === "completed") return "completed"
-    return "not_available"
-  }
+    if (checkOutAt) return "completed";
+    if (checkInAt) return "can_check_out";
+    if (bookingStatus === "accepted") return "can_check_in";
+    if (bookingStatus === "in_progress") return "can_check_out";
+    if (bookingStatus === "completed") return "completed";
+    return "not_available";
+  };
 
-  const attendanceState = getAttendanceState()
+  const attendanceState = getAttendanceState();
 
   const handleCheckIn = async () => {
-    if (!onCheckIn) return
-    setIsLoading(true)
+    if (!onCheckIn) return;
+    setIsLoading(true);
     try {
-      await onCheckIn(bookingId)
-      toast.success("Check-in berhasil / Check-in successful")
+      await onCheckIn(bookingId);
+      toast.success("Check-in berhasil / Check-in successful");
     } catch (error: any) {
-      toast.error(error.message || "Gagal check-in / Check-in failed")
+      toast.error(error.message || "Gagal check-in / Check-in failed");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  const handleCheckOutConfirm = async (data: { actualHours?: number; notes?: string }) => {
-    if (!onCheckOut) return
-    setIsLoading(true)
+  const handleCheckOutConfirm = async (data: {
+    actualHours?: number;
+    notes?: string;
+  }) => {
+    if (!onCheckOut) return;
+    setIsLoading(true);
     try {
-      await onCheckOut(bookingId, data)
-      toast.success("Check-out berhasil / Check-out successful")
-      setShowCheckOutDialog(false)
+      await onCheckOut(bookingId, data);
+      toast.success("Check-out berhasil / Check-out successful");
+      setShowCheckOutDialog(false);
     } catch (error: any) {
-      toast.error(error.message || "Gagal check-out / Check-out failed")
+      toast.error(error.message || "Gagal check-out / Check-out failed");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   if (attendanceState === "not_available") {
-    return null
+    return null;
   }
 
   if (attendanceState === "completed") {
@@ -511,7 +551,7 @@ export function BookingCheckInOutCompact({
         <CheckCircle className="h-3 w-3" />
         Selesai
       </Badge>
-    )
+    );
   }
 
   if (attendanceState === "can_check_out") {
@@ -532,10 +572,16 @@ export function BookingCheckInOutCompact({
           onOpenChange={setShowCheckOutDialog}
           onConfirm={handleCheckOutConfirm}
           isLoading={isLoading}
-          suggestedHours={checkInAt ? Math.round((Date.now() - new Date(checkInAt).getTime()) / 3600000 * 10) / 10 : undefined}
+          suggestedHours={
+            checkInAt
+              ? Math.round(
+                  ((Date.now() - new Date(checkInAt).getTime()) / 3600000) * 10,
+                ) / 10
+              : undefined
+          }
         />
       </>
-    )
+    );
   }
 
   return (
@@ -554,5 +600,5 @@ export function BookingCheckInOutCompact({
         </>
       )}
     </Button>
-  )
+  );
 }

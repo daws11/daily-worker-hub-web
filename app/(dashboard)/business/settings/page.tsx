@@ -1,15 +1,21 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useAuth } from "@/app/providers/auth-provider"
-import { NotificationSettings, NotificationPreference } from "@/components/notification-settings"
-import { getUserNotificationPreferences, updateUserNotificationPreferences } from "@/lib/actions/push-notifications"
-import { Settings } from "lucide-react"
-import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
+import { useState, useEffect } from "react";
+import { useAuth } from "@/app/providers/auth-provider";
+import {
+  NotificationSettings,
+  NotificationPreference,
+} from "@/components/notification-settings";
+import {
+  getUserNotificationPreferences,
+  updateUserNotificationPreferences,
+} from "@/lib/actions/push-notifications";
+import { Settings } from "lucide-react";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 export default function BusinessSettingsPage() {
-  const { user } = useAuth()
+  const { user } = useAuth();
   const [preferences, setPreferences] = useState<NotificationPreference>({
     pushEnabled: false,
     newApplications: false,
@@ -17,18 +23,18 @@ export default function BusinessSettingsPage() {
     paymentConfirmation: false,
     newJobMatches: false,
     shiftReminders: false,
-  })
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Fetch user notification preferences on mount
   useEffect(() => {
     const fetchPreferences = async () => {
-      if (!user?.id) return
+      if (!user?.id) return;
 
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        const result = await getUserNotificationPreferences(user.id)
+        const result = await getUserNotificationPreferences(user.id);
         if (result.success && result.data) {
           setPreferences({
             pushEnabled: result.data.push_enabled ?? false,
@@ -37,25 +43,27 @@ export default function BusinessSettingsPage() {
             paymentConfirmation: result.data.payment_confirmation ?? true,
             newJobMatches: result.data.new_job_matches ?? true,
             shiftReminders: result.data.shift_reminders ?? true,
-          })
+          });
         }
       } catch (error) {
-        console.error("Failed to fetch notification preferences:", error)
-        toast.error("Gagal memuat pengaturan notifikasi")
+        console.error("Failed to fetch notification preferences:", error);
+        toast.error("Gagal memuat pengaturan notifikasi");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchPreferences()
-  }, [user?.id])
+    fetchPreferences();
+  }, [user?.id]);
 
   // Handle preferences change
-  const handlePreferencesChange = async (newPreferences: NotificationPreference) => {
-    if (!user?.id) return
+  const handlePreferencesChange = async (
+    newPreferences: NotificationPreference,
+  ) => {
+    if (!user?.id) return;
 
-    setPreferences(newPreferences)
-    setIsSaving(true)
+    setPreferences(newPreferences);
+    setIsSaving(true);
 
     try {
       const result = await updateUserNotificationPreferences(user.id, {
@@ -65,20 +73,20 @@ export default function BusinessSettingsPage() {
         payment_confirmation: newPreferences.paymentConfirmation,
         new_job_matches: newPreferences.newJobMatches,
         shift_reminders: newPreferences.shiftReminders,
-      })
+      });
 
       if (result.success) {
-        toast.success("Pengaturan notifikasi berhasil disimpan")
+        toast.success("Pengaturan notifikasi berhasil disimpan");
       } else {
-        toast.error(result.error || "Gagal menyimpan pengaturan notifikasi")
+        toast.error(result.error || "Gagal menyimpan pengaturan notifikasi");
       }
     } catch (error) {
-      console.error("Failed to update notification preferences:", error)
-      toast.error("Gagal menyimpan pengaturan notifikasi")
+      console.error("Failed to update notification preferences:", error);
+      toast.error("Gagal menyimpan pengaturan notifikasi");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-6">
@@ -109,5 +117,5 @@ export default function BusinessSettingsPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

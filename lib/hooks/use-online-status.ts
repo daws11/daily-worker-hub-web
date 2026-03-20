@@ -1,78 +1,80 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from "react"
-import { toast } from "sonner"
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 
 type UseOnlineStatusOptions = {
-  showToast?: boolean
-  onlineMessage?: string
-  offlineMessage?: string
-  autoDetect?: boolean
-}
+  showToast?: boolean;
+  onlineMessage?: string;
+  offlineMessage?: string;
+  autoDetect?: boolean;
+};
 
 type UseOnlineStatusReturn = {
-  isOnline: boolean
-  wasOffline: boolean
-  checkStatus: () => boolean
-}
+  isOnline: boolean;
+  wasOffline: boolean;
+  checkStatus: () => boolean;
+};
 
-export function useOnlineStatus(options: UseOnlineStatusOptions = {}): UseOnlineStatusReturn {
+export function useOnlineStatus(
+  options: UseOnlineStatusOptions = {},
+): UseOnlineStatusReturn {
   const {
     showToast = false,
     onlineMessage = "Koneksi internet tersambung kembali",
     offlineMessage = "Koneksi internet terputus",
     autoDetect = true,
-  } = options
+  } = options;
 
   const [isOnline, setIsOnline] = useState<boolean>(
-    typeof window !== "undefined" ? navigator.onLine : true
-  )
+    typeof window !== "undefined" ? navigator.onLine : true,
+  );
   const [wasOffline, setWasOffline] = useState<boolean>(
-    typeof window !== "undefined" ? !navigator.onLine : false
-  )
+    typeof window !== "undefined" ? !navigator.onLine : false,
+  );
 
   const checkStatus = useCallback((): boolean => {
-    const status = typeof window !== "undefined" ? navigator.onLine : true
-    setIsOnline(status)
+    const status = typeof window !== "undefined" ? navigator.onLine : true;
+    setIsOnline(status);
 
     if (!status) {
-      setWasOffline(true)
+      setWasOffline(true);
     }
 
-    return status
-  }, [])
+    return status;
+  }, []);
 
   // Handle online event
   useEffect(() => {
     const handleOnline = () => {
-      setIsOnline(true)
+      setIsOnline(true);
       if (showToast && wasOffline) {
-        toast.success(onlineMessage)
+        toast.success(onlineMessage);
       }
-    }
+    };
 
     const handleOffline = () => {
-      setIsOnline(false)
-      setWasOffline(true)
+      setIsOnline(false);
+      setWasOffline(true);
       if (showToast) {
-        toast.error(offlineMessage)
+        toast.error(offlineMessage);
       }
-    }
+    };
 
     if (autoDetect && typeof window !== "undefined") {
-      window.addEventListener("online", handleOnline)
-      window.addEventListener("offline", handleOffline)
+      window.addEventListener("online", handleOnline);
+      window.addEventListener("offline", handleOffline);
 
       return () => {
-        window.removeEventListener("online", handleOnline)
-        window.removeEventListener("offline", handleOffline)
-      }
+        window.removeEventListener("online", handleOnline);
+        window.removeEventListener("offline", handleOffline);
+      };
     }
-  }, [showToast, onlineMessage, offlineMessage, wasOffline, autoDetect])
+  }, [showToast, onlineMessage, offlineMessage, wasOffline, autoDetect]);
 
   return {
     isOnline,
     wasOffline,
     checkStatus,
-  }
+  };
 }

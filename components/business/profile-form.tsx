@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
-import { Camera, FileText, User, AlertCircle, Loader2 } from "lucide-react"
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { Camera, FileText, User, AlertCircle, Loader2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -15,37 +15,33 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import {
-  Avatar,
-  AvatarImage,
-  AvatarFallback,
-} from "@/components/ui/avatar"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+} from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import {
   businessProfileSchema,
   type BusinessProfileInput,
   type BusinessType,
   type Area,
-} from "@/lib/schemas/business"
-import { uploadAvatar, uploadBusinessLicense } from "@/lib/supabase/storage"
+} from "@/lib/schemas/business";
+import { uploadAvatar, uploadBusinessLicense } from "@/lib/supabase/storage";
 
 // Business type options in Indonesian
 const businessTypeOptions: { value: BusinessType; label: string }[] = [
@@ -54,7 +50,7 @@ const businessTypeOptions: { value: BusinessType; label: string }[] = [
   { value: "restaurant", label: "Restoran" },
   { value: "event_company", label: "Perusahaan Event" },
   { value: "other", label: "Lainnya" },
-]
+];
 
 // Area options (Bali regencies)
 const areaOptions: { value: Area; label: string }[] = [
@@ -67,26 +63,26 @@ const areaOptions: { value: Area; label: string }[] = [
   { value: "Karangasem", label: "Karangasem" },
   { value: "Bangli", label: "Bangli" },
   { value: "Jembrana", label: "Jembrana" },
-]
+];
 
 interface BusinessProfile {
-  id?: string
-  name: string
-  business_type: BusinessType
-  address: string
-  area: Area
-  phone?: string
-  email?: string
-  website?: string
-  description?: string
-  avatar_url?: string
-  business_license_url?: string
+  id?: string;
+  name: string;
+  business_type: BusinessType;
+  address: string;
+  area: Area;
+  phone?: string;
+  email?: string;
+  website?: string;
+  description?: string;
+  avatar_url?: string;
+  business_license_url?: string;
 }
 
 interface ProfileFormProps {
-  mode?: "create" | "edit"
-  initialData?: BusinessProfile
-  onSubmit?: (data: BusinessProfileInput) => Promise<{ error?: string }>
+  mode?: "create" | "edit";
+  initialData?: BusinessProfile;
+  onSubmit?: (data: BusinessProfileInput) => Promise<{ error?: string }>;
 }
 
 export function ProfileForm({
@@ -94,19 +90,19 @@ export function ProfileForm({
   initialData,
   onSubmit,
 }: ProfileFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [hasSubmitted, setHasSubmitted] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | undefined>(
-    initialData?.avatar_url
-  )
-  const [avatarError, setAvatarError] = useState<string | null>(null)
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
-  const [licenseFile, setLicenseFile] = useState<File | null>(null)
-  const [licenseFileName, setLicenseFileName] = useState<string | undefined>()
-  const [licenseError, setLicenseError] = useState<string | null>(null)
-  const [isUploadingLicense, setIsUploadingLicense] = useState(false)
+    initialData?.avatar_url,
+  );
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [licenseFile, setLicenseFile] = useState<File | null>(null);
+  const [licenseFileName, setLicenseFileName] = useState<string | undefined>();
+  const [licenseError, setLicenseError] = useState<string | null>(null);
+  const [isUploadingLicense, setIsUploadingLicense] = useState(false);
 
   const form = useForm<BusinessProfileInput>({
     resolver: zodResolver(businessProfileSchema),
@@ -123,88 +119,95 @@ export function ProfileForm({
       avatar_url: "",
       business_license_url: "",
     },
-  })
+  });
 
   const {
     formState: { errors, isValid, isDirty },
-  } = form
+  } = form;
 
   // Focus on first error field when form is submitted with errors
   useEffect(() => {
     if (hasSubmitted && Object.keys(errors).length > 0) {
-      const firstErrorField = Object.keys(errors)[0] as keyof BusinessProfileInput
+      const firstErrorField = Object.keys(
+        errors,
+      )[0] as keyof BusinessProfileInput;
       const fieldElement = document.querySelector(
-        `[name="${firstErrorField}"]`
-      ) as HTMLElement
-      fieldElement?.focus()
+        `[name="${firstErrorField}"]`,
+      ) as HTMLElement;
+      fieldElement?.focus();
     }
-  }, [hasSubmitted, errors])
+  }, [hasSubmitted, errors]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     // Clear previous error
-    setAvatarError(null)
+    setAvatarError(null);
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      const errorMsg = "File harus berupa gambar"
-      setAvatarError(errorMsg)
-      toast.error(errorMsg)
-      return
+      const errorMsg = "File harus berupa gambar";
+      setAvatarError(errorMsg);
+      toast.error(errorMsg);
+      return;
     }
 
     // Validate file size (max 5MB)
-    const MAX_SIZE = 5 * 1024 * 1024
+    const MAX_SIZE = 5 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      const errorMsg = "Ukuran file maksimal 5MB"
-      setAvatarError(errorMsg)
-      toast.error(errorMsg)
-      return
+      const errorMsg = "Ukuran file maksimal 5MB";
+      setAvatarError(errorMsg);
+      toast.error(errorMsg);
+      return;
     }
 
-    setAvatarFile(file)
+    setAvatarFile(file);
 
     // Create preview URL
-    const previewUrl = URL.createObjectURL(file)
-    setAvatarPreview(previewUrl)
-    toast.success("Foto berhasil dipilih")
-  }
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarPreview(previewUrl);
+    toast.success("Foto berhasil dipilih");
+  };
 
   const handleLicenseChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     // Clear previous error
-    setLicenseError(null)
+    setLicenseError(null);
 
     // Validate file type
-    const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/jpg"]
+    const allowedTypes = [
+      "application/pdf",
+      "image/jpeg",
+      "image/png",
+      "image/jpg",
+    ];
     if (!allowedTypes.includes(file.type)) {
-      const errorMsg = "File harus berupa PDF atau gambar (JPEG, PNG)"
-      setLicenseError(errorMsg)
-      toast.error(errorMsg)
-      return
+      const errorMsg = "File harus berupa PDF atau gambar (JPEG, PNG)";
+      setLicenseError(errorMsg);
+      toast.error(errorMsg);
+      return;
     }
 
     // Validate file size (max 10MB)
-    const MAX_SIZE = 10 * 1024 * 1024
+    const MAX_SIZE = 10 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      const errorMsg = "Ukuran file maksimal 10MB"
-      setLicenseError(errorMsg)
-      toast.error(errorMsg)
-      return
+      const errorMsg = "Ukuran file maksimal 10MB";
+      setLicenseError(errorMsg);
+      toast.error(errorMsg);
+      return;
     }
 
-    setLicenseFile(file)
-    setLicenseFileName(file.name)
-    toast.success("Lisensi berhasil dipilih")
-  }
+    setLicenseFile(file);
+    setLicenseFileName(file.name);
+    toast.success("Lisensi berhasil dipilih");
+  };
 
   const handleSubmit = async (data: BusinessProfileInput) => {
-    setHasSubmitted(true)
-    setSubmitError(null)
+    setHasSubmitted(true);
+    setSubmitError(null);
 
     // Validate optional fields properly - convert empty strings to undefined
     const sanitizedData: BusinessProfileInput = {
@@ -215,71 +218,74 @@ export function ProfileForm({
       description: data.description?.trim() || undefined,
       avatar_url: data.avatar_url?.trim() || undefined,
       business_license_url: data.business_license_url?.trim() || undefined,
-    }
+    };
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
-      let avatarUrl = sanitizedData.avatar_url || initialData?.avatar_url
-      let licenseUrl = sanitizedData.business_license_url || initialData?.business_license_url
+      let avatarUrl = sanitizedData.avatar_url || initialData?.avatar_url;
+      let licenseUrl =
+        sanitizedData.business_license_url || initialData?.business_license_url;
 
       // Upload avatar if a new file was selected
       if (avatarFile) {
-        setIsUploadingAvatar(true)
+        setIsUploadingAvatar(true);
         try {
           const uploadResult = await uploadAvatar(
             initialData?.id || "temp",
             avatarFile,
-            initialData?.avatar_url
-          )
+            initialData?.avatar_url,
+          );
 
           if (uploadResult.error) {
-            setAvatarError(uploadResult.error)
-            toast.error(`Gagal upload foto: ${uploadResult.error}`)
-            setIsUploadingAvatar(false)
-            setIsSubmitting(false)
-            return
+            setAvatarError(uploadResult.error);
+            toast.error(`Gagal upload foto: ${uploadResult.error}`);
+            setIsUploadingAvatar(false);
+            setIsSubmitting(false);
+            return;
           }
 
-          avatarUrl = uploadResult.url
-          setIsUploadingAvatar(false)
+          avatarUrl = uploadResult.url;
+          setIsUploadingAvatar(false);
         } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : "Gagal upload foto"
-          setAvatarError(errorMsg)
-          toast.error(errorMsg)
-          setIsUploadingAvatar(false)
-          setIsSubmitting(false)
-          return
+          const errorMsg =
+            error instanceof Error ? error.message : "Gagal upload foto";
+          setAvatarError(errorMsg);
+          toast.error(errorMsg);
+          setIsUploadingAvatar(false);
+          setIsSubmitting(false);
+          return;
         }
       }
 
       // Upload business license if a new file was selected
       if (licenseFile) {
-        setIsUploadingLicense(true)
+        setIsUploadingLicense(true);
         try {
           const uploadResult = await uploadBusinessLicense(
             initialData?.id || "temp",
             licenseFile,
-            initialData?.business_license_url
-          )
+            initialData?.business_license_url,
+          );
 
           if (uploadResult.error) {
-            setLicenseError(uploadResult.error)
-            toast.error(`Gagal upload lisensi: ${uploadResult.error}`)
-            setIsUploadingLicense(false)
-            setIsSubmitting(false)
-            return
+            setLicenseError(uploadResult.error);
+            toast.error(`Gagal upload lisensi: ${uploadResult.error}`);
+            setIsUploadingLicense(false);
+            setIsSubmitting(false);
+            return;
           }
 
-          licenseUrl = uploadResult.url
-          setIsUploadingLicense(false)
+          licenseUrl = uploadResult.url;
+          setIsUploadingLicense(false);
         } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : "Gagal upload lisensi"
-          setLicenseError(errorMsg)
-          toast.error(errorMsg)
-          setIsUploadingLicense(false)
-          setIsSubmitting(false)
-          return
+          const errorMsg =
+            error instanceof Error ? error.message : "Gagal upload lisensi";
+          setLicenseError(errorMsg);
+          toast.error(errorMsg);
+          setIsUploadingLicense(false);
+          setIsSubmitting(false);
+          return;
         }
       }
 
@@ -288,35 +294,39 @@ export function ProfileForm({
         ...sanitizedData,
         avatar_url: avatarUrl,
         business_license_url: licenseUrl,
-      }
+      };
 
       if (onSubmit) {
         try {
-          const result = await onSubmit(formData)
+          const result = await onSubmit(formData);
           if (result.error) {
-            setSubmitError(result.error)
-            toast.error(result.error)
-            setIsSubmitting(false)
-            return
+            setSubmitError(result.error);
+            toast.error(result.error);
+            setIsSubmitting(false);
+            return;
           }
         } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : "Gagal menyimpan profil"
-          setSubmitError(errorMsg)
-          toast.error(errorMsg)
-          setIsSubmitting(false)
-          return
+          const errorMsg =
+            error instanceof Error ? error.message : "Gagal menyimpan profil";
+          setSubmitError(errorMsg);
+          toast.error(errorMsg);
+          setIsSubmitting(false);
+          return;
         }
       }
 
       // Success toast is handled by parent component (page.tsx)
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Terjadi kesalahan tak terduga"
-      setSubmitError(errorMsg)
-      toast.error(errorMsg)
+      const errorMsg =
+        error instanceof Error
+          ? error.message
+          : "Terjadi kesalahan tak terduga";
+      setSubmitError(errorMsg);
+      toast.error(errorMsg);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Card>
@@ -385,9 +395,9 @@ export function ProfileForm({
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      setAvatarFile(null)
-                      setAvatarPreview(undefined)
-                      setAvatarError(null)
+                      setAvatarFile(null);
+                      setAvatarPreview(undefined);
+                      setAvatarError(null);
                     }}
                     disabled={isSubmitting || isUploadingAvatar}
                   >
@@ -540,7 +550,8 @@ export function ProfileForm({
                     />
                   </FormControl>
                   <FormDescription>
-                    Nomor telepon yang bisa dihubungi (opsional, max 20 karakter)
+                    Nomor telepon yang bisa dihubungi (opsional, max 20
+                    karakter)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -588,7 +599,8 @@ export function ProfileForm({
                     />
                   </FormControl>
                   <FormDescription>
-                    Website resmi bisnis jika ada (opsional, harus diawali https://)
+                    Website resmi bisnis jika ada (opsional, harus diawali
+                    https://)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -612,7 +624,8 @@ export function ProfileForm({
                     />
                   </FormControl>
                   <FormDescription>
-                    Jelaskan tentang bisnis, layanan, atau fasilitas yang Anda tawarkan (opsional, max 2000 karakter)
+                    Jelaskan tentang bisnis, layanan, atau fasilitas yang Anda
+                    tawarkan (opsional, max 2000 karakter)
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -646,9 +659,9 @@ export function ProfileForm({
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      setLicenseFile(null)
-                      setLicenseFileName(undefined)
-                      setLicenseError(null)
+                      setLicenseFile(null);
+                      setLicenseFileName(undefined);
+                      setLicenseError(null);
                     }}
                     disabled={isSubmitting || isUploadingLicense}
                   >
@@ -680,11 +693,11 @@ export function ProfileForm({
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  form.reset()
-                  setHasSubmitted(false)
-                  setSubmitError(null)
-                  setAvatarError(null)
-                  setLicenseError(null)
+                  form.reset();
+                  setHasSubmitted(false);
+                  setSubmitError(null);
+                  setAvatarError(null);
+                  setLicenseError(null);
                 }}
                 disabled={isSubmitting}
               >
@@ -692,7 +705,9 @@ export function ProfileForm({
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting || isUploadingAvatar || isUploadingLicense}
+                disabled={
+                  isSubmitting || isUploadingAvatar || isUploadingLicense
+                }
               >
                 {isSubmitting || isUploadingAvatar || isUploadingLicense ? (
                   <>
@@ -710,5 +725,5 @@ export function ProfileForm({
         </Form>
       </CardContent>
     </Card>
-  )
+  );
 }

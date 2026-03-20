@@ -1,17 +1,17 @@
 import withPWA from "next-pwa";
 import { withSentryConfig } from "@sentry/nextjs";
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const config = {
   reactStrictMode: true,
-  pageExtensions: ['tsx', 'ts', 'jsx', 'js'],
+  pageExtensions: ["tsx", "ts", "jsx", "js"],
   allowedDevOrigins: [
-    'frisky-unformalistic-isabell.ngrok-free.dev',
-    '.ngrok-free.dev',
+    "frisky-unformalistic-isabell.ngrok-free.dev",
+    ".ngrok-free.dev",
   ],
   turbopack: {
     root: __dirname,
@@ -19,13 +19,13 @@ const config = {
   async redirects() {
     return [
       {
-        source: '/business/applicants',
-        destination: '/business/workers',
+        source: "/business/applicants",
+        destination: "/business/workers",
         permanent: true, // 301 redirect for SEO
       },
       {
-        source: '/business/attendance',
-        destination: '/business/job-attendance',
+        source: "/business/attendance",
+        destination: "/business/job-attendance",
         permanent: true, // 301 redirect for SEO
       },
     ];

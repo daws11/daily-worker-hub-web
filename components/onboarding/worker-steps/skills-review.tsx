@@ -1,42 +1,61 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { useState, useEffect } from "react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Briefcase, Award, FileText, CheckCircle2, User, MapPin, Phone, Calendar } from "lucide-react"
-import { OnboardingDraft } from "@/lib/utils/draft-storage"
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Briefcase,
+  Award,
+  FileText,
+  CheckCircle2,
+  User,
+  MapPin,
+  Phone,
+  Calendar,
+} from "lucide-react";
+import { OnboardingDraft } from "@/lib/utils/draft-storage";
 
 interface Category {
-  id: string
-  name: string
-  slug: string
+  id: string;
+  name: string;
+  slug: string;
 }
 
 interface SkillsReviewProps {
-  value: Pick<OnboardingDraft, 'primaryCategory' | 'experienceLevel' | 'bio'>
-  personalInfo: Pick<OnboardingDraft, 'fullName' | 'phone' | 'dob'>
-  locationInfo: Pick<OnboardingDraft, 'address' | 'lat' | 'lng'>
-  onChange: (data: Pick<OnboardingDraft, 'primaryCategory' | 'experienceLevel' | 'bio'>) => void
-  onValidChange: (isValid: boolean) => void
-  onTermsChange: (accepted: boolean) => void
+  value: Pick<OnboardingDraft, "primaryCategory" | "experienceLevel" | "bio">;
+  personalInfo: Pick<OnboardingDraft, "fullName" | "phone" | "dob">;
+  locationInfo: Pick<OnboardingDraft, "address" | "lat" | "lng">;
+  onChange: (
+    data: Pick<OnboardingDraft, "primaryCategory" | "experienceLevel" | "bio">,
+  ) => void;
+  onValidChange: (isValid: boolean) => void;
+  onTermsChange: (accepted: boolean) => void;
 }
 
 const EXPERIENCE_LEVELS = [
-  { value: 'Beginner' as const, label: 'Beginner', description: 'Less than 1 year' },
-  { value: 'Intermediate' as const, label: 'Intermediate', description: '1-3 years' },
-  { value: 'Advanced' as const, label: 'Advanced', description: '3-5 years' },
-  { value: 'Expert' as const, label: 'Expert', description: '5+ years' },
-]
+  {
+    value: "Beginner" as const,
+    label: "Beginner",
+    description: "Less than 1 year",
+  },
+  {
+    value: "Intermediate" as const,
+    label: "Intermediate",
+    description: "1-3 years",
+  },
+  { value: "Advanced" as const, label: "Advanced", description: "3-5 years" },
+  { value: "Expert" as const, label: "Expert", description: "5+ years" },
+];
 
 export function SkillsReview({
   value,
@@ -46,77 +65,93 @@ export function SkillsReview({
   onValidChange,
   onTermsChange,
 }: SkillsReviewProps) {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [categoriesLoading, setCategoriesLoading] = useState(true)
-  const [primaryCategory, setPrimaryCategory] = useState(value.primaryCategory || "")
-  const [experienceLevel, setExperienceLevel] = useState<"" | "Beginner" | "Intermediate" | "Advanced" | "Expert">(value.experienceLevel || "")
-  const [bio, setBio] = useState(value.bio || "")
-  const [termsAccepted, setTermsAccepted] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [primaryCategory, setPrimaryCategory] = useState(
+    value.primaryCategory || "",
+  );
+  const [experienceLevel, setExperienceLevel] = useState<
+    "" | "Beginner" | "Intermediate" | "Advanced" | "Expert"
+  >(value.experienceLevel || "");
+  const [bio, setBio] = useState(value.bio || "");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Fetch categories
   useEffect(() => {
     async function fetchCategories() {
       try {
-        const response = await fetch('/api/categories')
-        const data = await response.json()
+        const response = await fetch("/api/categories");
+        const data = await response.json();
         if (data.data) {
-          setCategories(data.data)
+          setCategories(data.data);
         }
       } catch (error) {
-        console.error('Failed to fetch categories:', error)
+        console.error("Failed to fetch categories:", error);
       } finally {
-        setCategoriesLoading(false)
+        setCategoriesLoading(false);
       }
     }
-    fetchCategories()
-  }, [])
+    fetchCategories();
+  }, []);
 
   // Validate form
   useEffect(() => {
-    const newErrors: Record<string, string> = {}
+    const newErrors: Record<string, string> = {};
 
     if (!primaryCategory) {
-      newErrors.primaryCategory = "Please select your primary skill category"
+      newErrors.primaryCategory = "Please select your primary skill category";
     }
     if (!experienceLevel) {
-      newErrors.experienceLevel = "Please select your experience level"
+      newErrors.experienceLevel = "Please select your experience level";
     }
 
-    setErrors(newErrors)
-    const isValid = Object.keys(newErrors).length === 0 && termsAccepted
-    onValidChange(isValid)
+    setErrors(newErrors);
+    const isValid = Object.keys(newErrors).length === 0 && termsAccepted;
+    onValidChange(isValid);
 
     // Notify parent of changes
     onChange({
       primaryCategory,
-      experienceLevel: (experienceLevel || undefined) as "Beginner" | "Intermediate" | "Advanced" | "Expert" | undefined,
-      bio
-    })
-  }, [primaryCategory, experienceLevel, bio, termsAccepted, onValidChange, onChange])
+      experienceLevel: (experienceLevel || undefined) as
+        | "Beginner"
+        | "Intermediate"
+        | "Advanced"
+        | "Expert"
+        | undefined,
+      bio,
+    });
+  }, [
+    primaryCategory,
+    experienceLevel,
+    bio,
+    termsAccepted,
+    onValidChange,
+    onChange,
+  ]);
 
   const handleTermsChange = (checked: boolean | "indeterminate") => {
-    const isChecked = checked === true
-    setTermsAccepted(isChecked)
-    onTermsChange(isChecked)
-  }
+    const isChecked = checked === true;
+    setTermsAccepted(isChecked);
+    onTermsChange(isChecked);
+  };
 
   // Format date for display
   const formatDate = (dateString: string) => {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    return date.toLocaleDateString('id-ID', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("id-ID", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   // Get category name by ID
   const getCategoryName = (categoryId: string) => {
-    const category = categories.find(c => c.id === categoryId)
-    return category?.name || categoryId
-  }
+    const category = categories.find((c) => c.id === categoryId);
+    return category?.name || categoryId;
+  };
 
   return (
     <div className="space-y-6">
@@ -142,7 +177,13 @@ export function SkillsReview({
               disabled={categoriesLoading}
             >
               <SelectTrigger className="pl-9">
-                <SelectValue placeholder={categoriesLoading ? "Loading..." : "Select your primary skill"} />
+                <SelectValue
+                  placeholder={
+                    categoriesLoading
+                      ? "Loading..."
+                      : "Select your primary skill"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((category) => (
@@ -171,12 +212,14 @@ export function SkillsReview({
                 onClick={() => setExperienceLevel(level.value)}
                 className={`flex flex-col items-start p-3 rounded-lg border transition-all text-left ${
                   experienceLevel === level.value
-                    ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                    : 'border-border hover:border-primary/50'
+                    ? "border-primary bg-primary/5 ring-1 ring-primary"
+                    : "border-border hover:border-primary/50"
                 }`}
               >
                 <span className="font-medium">{level.label}</span>
-                <span className="text-xs text-muted-foreground">{level.description}</span>
+                <span className="text-xs text-muted-foreground">
+                  {level.description}
+                </span>
               </button>
             ))}
           </div>
@@ -239,7 +282,9 @@ export function SkillsReview({
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Date of Birth</span>
-                <span className="font-medium">{formatDate(personalInfo.dob || '')}</span>
+                <span className="font-medium">
+                  {formatDate(personalInfo.dob || "")}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -274,14 +319,14 @@ export function SkillsReview({
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Experience Level</span>
-                <Badge variant="outline">
-                  {experienceLevel}
-                </Badge>
+                <Badge variant="outline">{experienceLevel}</Badge>
               </div>
               {bio && (
                 <div className="pt-2">
                   <span className="text-muted-foreground">Bio</span>
-                  <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{bio}</p>
+                  <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
+                    {bio}
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -298,19 +343,31 @@ export function SkillsReview({
             onCheckedChange={handleTermsChange}
             className="mt-0.5"
           />
-          <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
-            I agree to the{' '}
-            <a href="/terms" className="text-primary hover:underline" target="_blank">
+          <Label
+            htmlFor="terms"
+            className="text-sm leading-relaxed cursor-pointer"
+          >
+            I agree to the{" "}
+            <a
+              href="/terms"
+              className="text-primary hover:underline"
+              target="_blank"
+            >
               Terms of Service
-            </a>{' '}
-            and{' '}
-            <a href="/privacy" className="text-primary hover:underline" target="_blank">
+            </a>{" "}
+            and{" "}
+            <a
+              href="/privacy"
+              className="text-primary hover:underline"
+              target="_blank"
+            >
               Privacy Policy
             </a>
-            . I understand that my information will be used to match me with job opportunities.
+            . I understand that my information will be used to match me with job
+            opportunities.
           </Label>
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,42 +1,42 @@
-import { supabase } from '../client'
-import type { Database } from '../types'
+import { supabase } from "../client";
+import type { Database } from "../types";
 
-export type JobsRow = Database['public']['Tables']['jobs']['Row']
-type JobsInsert = Database['public']['Tables']['jobs']['Insert']
-type JobsUpdate = Database['public']['Tables']['jobs']['Update']
-type JobStatus = 'open' | 'in_progress' | 'completed' | 'cancelled'
+export type JobsRow = Database["public"]["Tables"]["jobs"]["Row"];
+type JobsInsert = Database["public"]["Tables"]["jobs"]["Insert"];
+type JobsUpdate = Database["public"]["Tables"]["jobs"]["Update"];
+type JobStatus = "open" | "in_progress" | "completed" | "cancelled";
 
 type JobWithRelations = JobsRow & {
   category?: {
-    name: string
-    slug: string
-  }
+    name: string;
+    slug: string;
+  };
   business?: {
-    id: string
-    name: string
-  }
+    id: string;
+    name: string;
+  };
   // QR code fields (may not be in current DB schema but needed for feature)
-  qr_code?: string | null
-  qr_generated_at?: string | null
-}
+  qr_code?: string | null;
+  qr_generated_at?: string | null;
+};
 
 /**
  * Create a new job posting
  */
 export async function createJob(
-  jobData: Omit<JobsInsert, 'id' | 'created_at' | 'updated_at'>
+  jobData: Omit<JobsInsert, "id" | "created_at" | "updated_at">,
 ): Promise<JobsRow> {
   const { data, error } = await supabase
-    .from('jobs')
+    .from("jobs")
     .insert(jobData)
     .select()
-    .single()
+    .single();
 
   if (error) {
-    throw new Error(`Failed to create job: ${error.message}`)
+    throw new Error(`Failed to create job: ${error.message}`);
   }
 
-  return data
+  return data;
 }
 
 /**
@@ -44,47 +44,51 @@ export async function createJob(
  */
 export async function updateJob(
   jobId: string,
-  updates: JobsUpdate
+  updates: JobsUpdate,
 ): Promise<JobsRow> {
   const { data, error } = await supabase
-    .from('jobs')
+    .from("jobs")
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', jobId)
+    .eq("id", jobId)
     .select()
-    .single()
+    .single();
 
   if (error) {
-    throw new Error(`Failed to update job: ${error.message}`)
+    throw new Error(`Failed to update job: ${error.message}`);
   }
 
-  return data
+  return data;
 }
 
 /**
  * Get a single job by ID
  */
-export async function getJobById(jobId: string): Promise<JobWithRelations | null> {
+export async function getJobById(
+  jobId: string,
+): Promise<JobWithRelations | null> {
   const { data, error } = await supabase
-    .from('jobs')
-    .select(`
+    .from("jobs")
+    .select(
+      `
       *,
       category:categories(name, slug),
       business:businesses(id, name)
-    `)
-    .eq('id', jobId)
-    .single()
+    `,
+    )
+    .eq("id", jobId)
+    .single();
 
   if (error) {
-    if (error.code === 'PGRST116') {
-      return null
+    if (error.code === "PGRST116") {
+      return null;
     }
-    throw new Error(`Failed to fetch job: ${error.message}`)
+    throw new Error(`Failed to fetch job: ${error.message}`);
   }
 
-  return data
+  return data;
 }
 
 /**
@@ -92,25 +96,25 @@ export async function getJobById(jobId: string): Promise<JobWithRelations | null
  */
 export async function getBusinessJobs(
   businessId: string,
-  status?: JobStatus
+  status?: JobStatus,
 ): Promise<JobsRow[]> {
   let query = supabase
-    .from('jobs')
-    .select('*')
-    .eq('business_id', businessId)
-    .order('created_at', { ascending: false })
+    .from("jobs")
+    .select("*")
+    .eq("business_id", businessId)
+    .order("created_at", { ascending: false });
 
   if (status) {
-    query = query.eq('status', status)
+    query = query.eq("status", status);
   }
 
-  const { data, error } = await query
+  const { data, error } = await query;
 
   if (error) {
-    throw new Error(`Failed to fetch business jobs: ${error.message}`)
+    throw new Error(`Failed to fetch business jobs: ${error.message}`);
   }
 
-  return data || []
+  return data || [];
 }
 
 /**
@@ -118,43 +122,40 @@ export async function getBusinessJobs(
  */
 export async function saveDraft(
   businessId: string,
-  jobData: Omit<JobsInsert, 'id' | 'created_at' | 'updated_at'> & {
-    id?: string
-  }
+  jobData: Omit<JobsInsert, "id" | "created_at" | "updated_at"> & {
+    id?: string;
+  },
 ): Promise<JobsRow> {
   const draftData = {
     ...jobData,
-    status: 'draft' as JobStatus,
-  }
+    status: "draft" as JobStatus,
+  };
 
   if (jobData.id) {
-    return updateJob(jobData.id, draftData)
+    return updateJob(jobData.id, draftData);
   }
 
   return createJob({
     ...draftData,
     business_id: businessId,
-  })
+  });
 }
 
 /**
  * Publish a draft job (change status from 'draft' to 'open')
  */
 export async function publishJob(jobId: string): Promise<JobsRow> {
-  return updateJob(jobId, { status: 'open' })
+  return updateJob(jobId, { status: "open" });
 }
 
 /**
  * Delete a job
  */
 export async function deleteJob(jobId: string): Promise<void> {
-  const { error } = await supabase
-    .from('jobs')
-    .delete()
-    .eq('id', jobId)
+  const { error } = await supabase.from("jobs").delete().eq("id", jobId);
 
   if (error) {
-    throw new Error(`Failed to delete job: ${error.message}`)
+    throw new Error(`Failed to delete job: ${error.message}`);
   }
 }
 
@@ -163,26 +164,28 @@ export async function deleteJob(jobId: string): Promise<void> {
  */
 export async function getOpenJobs(limit?: number): Promise<JobWithRelations[]> {
   let query = supabase
-    .from('jobs')
-    .select(`
+    .from("jobs")
+    .select(
+      `
       *,
       category:categories(name, slug),
       business:businesses(id, name)
-    `)
-    .eq('status', 'open')
-    .order('created_at', { ascending: false })
+    `,
+    )
+    .eq("status", "open")
+    .order("created_at", { ascending: false });
 
   if (limit) {
-    query = query.limit(limit)
+    query = query.limit(limit);
   }
 
-  const { data, error } = await query
+  const { data, error } = await query;
 
   if (error) {
-    throw new Error(`Failed to fetch open jobs: ${error.message}`)
+    throw new Error(`Failed to fetch open jobs: ${error.message}`);
   }
 
-  return data || []
+  return data || [];
 }
 
 /**
@@ -190,25 +193,29 @@ export async function getOpenJobs(limit?: number): Promise<JobWithRelations[]> {
  */
 export async function searchJobs(
   searchTerm: string,
-  limit: number = 20
+  limit: number = 20,
 ): Promise<JobWithRelations[]> {
   const { data, error } = await supabase
-    .from('jobs')
-    .select(`
+    .from("jobs")
+    .select(
+      `
       *,
       category:categories(name, slug),
       business:businesses(id, name)
-    `)
-    .eq('status', 'open')
-    .or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,address.ilike.%${searchTerm}%`)
-    .order('created_at', { ascending: false })
-    .limit(limit)
+    `,
+    )
+    .eq("status", "open")
+    .or(
+      `title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,address.ilike.%${searchTerm}%`,
+    )
+    .order("created_at", { ascending: false })
+    .limit(limit);
 
   if (error) {
-    throw new Error(`Failed to search jobs: ${error.message}`)
+    throw new Error(`Failed to search jobs: ${error.message}`);
   }
 
-  return data || []
+  return data || [];
 }
 
 /**
@@ -216,97 +223,100 @@ export async function searchJobs(
  * The QR code contains the job ID for attendance tracking
  */
 export async function generateJobQRCode(
-  jobId: string
+  jobId: string,
 ): Promise<{ qr_code: string; generated_at: string }> {
   // Check if job exists
-  const job = await getJobById(jobId)
+  const job = await getJobById(jobId);
   if (!job) {
-    throw new Error('Job not found')
+    throw new Error("Job not found");
   }
 
   // Generate unique QR code data
   const qrData = JSON.stringify({
     jobId,
-    type: 'attendance',
+    type: "attendance",
     generatedAt: new Date().toISOString(),
-  })
+  });
 
   // Encode to base64 for compact storage
-  const qrCode = Buffer.from(qrData).toString('base64')
-  const generatedAt = new Date().toISOString()
+  const qrCode = Buffer.from(qrData).toString("base64");
+  const generatedAt = new Date().toISOString();
 
   // Update job with QR code
   const { error } = await supabase
-    .from('jobs')
+    .from("jobs")
     .update({
       qr_code: qrCode,
       qr_generated_at: generatedAt,
       updated_at: generatedAt,
     })
-    .eq('id', jobId)
+    .eq("id", jobId);
 
   if (error) {
-    throw new Error(`Failed to generate QR code: ${error.message}`)
+    throw new Error(`Failed to generate QR code: ${error.message}`);
   }
 
-  return { qr_code: qrCode, generated_at: generatedAt }
+  return { qr_code: qrCode, generated_at: generatedAt };
 }
 
 /**
  * Get job QR code data
  */
 export async function getJobQRCode(
-  jobId: string
+  jobId: string,
 ): Promise<{ qr_code: string | null; generated_at: string | null } | null> {
   const { data, error } = await (supabase as any)
-    .from('jobs')
-    .select('qr_code, qr_generated_at')
-    .eq('id', jobId)
-    .single()
+    .from("jobs")
+    .select("qr_code, qr_generated_at")
+    .eq("id", jobId)
+    .single();
 
   if (error) {
-    if (error.code === 'PGRST116') {
-      return null
+    if (error.code === "PGRST116") {
+      return null;
     }
-    throw new Error(`Failed to fetch job QR code: ${error.message}`)
+    throw new Error(`Failed to fetch job QR code: ${error.message}`);
   }
 
-  const typedData = data as { qr_code: string | null; qr_generated_at: string | null } | null
+  const typedData = data as {
+    qr_code: string | null;
+    qr_generated_at: string | null;
+  } | null;
   return {
     qr_code: typedData?.qr_code ?? null,
     generated_at: typedData?.qr_generated_at ?? null,
-  }
+  };
 }
 
 /**
  * Validate and decode a job QR code
  */
 export async function validateJobQRCode(
-  qrCode: string
+  qrCode: string,
 ): Promise<{ isValid: boolean; jobId?: string; error?: string }> {
   try {
     // Decode base64
-    const decoded = Buffer.from(qrCode, 'base64').toString('utf-8')
-    const data = JSON.parse(decoded)
+    const decoded = Buffer.from(qrCode, "base64").toString("utf-8");
+    const data = JSON.parse(decoded);
 
     // Validate structure
-    if (!data.jobId || data.type !== 'attendance') {
-      return { isValid: false, error: 'Invalid QR code format' }
+    if (!data.jobId || data.type !== "attendance") {
+      return { isValid: false, error: "Invalid QR code format" };
     }
 
     // Verify job exists
-    const job = await getJobById(data.jobId)
+    const job = await getJobById(data.jobId);
     if (!job) {
-      return { isValid: false, error: 'Job not found' }
+      return { isValid: false, error: "Job not found" };
     }
 
     // Verify QR code matches the job's stored QR code
     if (job.qr_code !== qrCode) {
-      return { isValid: false, error: 'QR code mismatch' }
+      return { isValid: false, error: "QR code mismatch" };
     }
 
-    return { isValid: true, jobId: data.jobId }
+    return { isValid: true, jobId: data.jobId };
   } catch {
-    return { isValid: false, error: 'Failed to decode QR code' }
+    return { isValid: false, error: "Failed to decode QR code" };
   }
 }

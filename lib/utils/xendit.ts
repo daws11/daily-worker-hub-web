@@ -10,19 +10,19 @@
  */
 
 // Xendit API Configuration
-const XENDIT_API_URL = 'https://api.xendit.co'
-const XENDIT_API_VERSION = 'v2'
+const XENDIT_API_URL = "https://api.xendit.co";
+const XENDIT_API_VERSION = "v2";
 
 /**
  * Get Xendit secret API key from environment
  * @throws {Error} If XENDIT_SECRET_KEY is not set
  */
 function getApiKey(): string {
-  const apiKey = process.env.XENDIT_SECRET_KEY
+  const apiKey = process.env.XENDIT_SECRET_KEY;
   if (!apiKey) {
-    throw new Error('XENDIT_SECRET_KEY environment variable is not set')
+    throw new Error("XENDIT_SECRET_KEY environment variable is not set");
   }
-  return apiKey
+  return apiKey;
 }
 
 /**
@@ -30,11 +30,11 @@ function getApiKey(): string {
  * @throws {Error} If XENDIT_WEBHOOK_TOKEN is not set
  */
 function getWebhookToken(): string {
-  const token = process.env.XENDIT_WEBHOOK_TOKEN
+  const token = process.env.XENDIT_WEBHOOK_TOKEN;
   if (!token) {
-    throw new Error('XENDIT_WEBHOOK_TOKEN environment variable is not set')
+    throw new Error("XENDIT_WEBHOOK_TOKEN environment variable is not set");
   }
-  return token
+  return token;
 }
 
 /**
@@ -47,26 +47,26 @@ function getWebhookToken(): string {
  */
 async function xenditRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
-  const apiKey = getApiKey()
-  const url = `${XENDIT_API_URL}/${XENDIT_API_VERSION}${endpoint}`
+  const apiKey = getApiKey();
+  const url = `${XENDIT_API_URL}/${XENDIT_API_VERSION}${endpoint}`;
 
   const response = await fetch(url, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Basic ${btoa(apiKey + ':')}`,
+      "Content-Type": "application/json",
+      Authorization: `Basic ${btoa(apiKey + ":")}`,
       ...options.headers,
     },
-  })
+  });
 
   if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`Xendit API error (${response.status}): ${errorText}`)
+    const errorText = await response.text();
+    throw new Error(`Xendit API error (${response.status}): ${errorText}`);
   }
 
-  return response.json() as Promise<T>
+  return response.json() as Promise<T>;
 }
 
 /**
@@ -74,13 +74,13 @@ async function xenditRequest<T>(
  */
 export interface CreateQrisPaymentInput {
   /** Unique identifier for the payment (e.g., transaction ID) */
-  external_id: string
+  external_id: string;
   /** Payment amount in IDR */
-  amount: number
+  amount: number;
   /** Payment description */
-  description: string
+  description: string;
   /** QRIS expiry time in minutes (default: 60) */
-  expiry_minutes?: number
+  expiry_minutes?: number;
 }
 
 /**
@@ -88,21 +88,21 @@ export interface CreateQrisPaymentInput {
  */
 export interface QrisPaymentResponse {
   /** Xendit payment ID */
-  id: string
+  id: string;
   /** External ID provided in request */
-  external_id: string
+  external_id: string;
   /** Payment amount in IDR */
-  amount: number
+  amount: number;
   /** Payment status */
-  status: 'PENDING' | 'COMPLETED' | 'EXPIRED' | 'FAILED'
+  status: "PENDING" | "COMPLETED" | "EXPIRED" | "FAILED";
   /** QRIS payment URL (contains QR code) */
-  payment_url: string
+  payment_url: string;
   /** QR code string for display */
-  qr_string: string
+  qr_string: string;
   /** Payment expiry timestamp */
-  expires_at: string
+  expires_at: string;
   /** Payment creation timestamp */
-  created: string
+  created: string;
 }
 
 /**
@@ -124,41 +124,41 @@ export interface QrisPaymentResponse {
  * ```
  */
 export async function createQrisPayment(
-  input: CreateQrisPaymentInput
+  input: CreateQrisPaymentInput,
 ): Promise<QrisPaymentResponse> {
   try {
     const response = await xenditRequest<QrisPaymentResponse>(
-      '/payments/create',
+      "/payments/create",
       {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify({
-          'payment_method': {
-            'type': 'QRIS',
-            'reusability': 'ONE_TIME_USE',
-            'qr_string': `DM-${input.external_id}`,
-            'amount': input.amount,
-            'currency': 'IDR',
-            'expires_at': new Date(
-              Date.now() + (input.expiry_minutes || 60) * 60000
+          payment_method: {
+            type: "QRIS",
+            reusability: "ONE_TIME_USE",
+            qr_string: `DM-${input.external_id}`,
+            amount: input.amount,
+            currency: "IDR",
+            expires_at: new Date(
+              Date.now() + (input.expiry_minutes || 60) * 60000,
             ).toISOString(),
           },
-          'customer': {
-            'given_names': input.description,
+          customer: {
+            given_names: input.description,
           },
-          'description': input.description,
-          'external_id': input.external_id,
-          'amount': input.amount,
-          'invoice_duration': (input.expiry_minutes || 60) * 60, // Convert to seconds
+          description: input.description,
+          external_id: input.external_id,
+          amount: input.amount,
+          invoice_duration: (input.expiry_minutes || 60) * 60, // Convert to seconds
         }),
-      }
-    )
+      },
+    );
 
-    return response
+    return response;
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Failed to create QRIS payment: ${error.message}`)
+      throw new Error(`Failed to create QRIS payment: ${error.message}`);
     }
-    throw new Error('Failed to create QRIS payment: Unknown error')
+    throw new Error("Failed to create QRIS payment: Unknown error");
   }
 }
 
@@ -167,19 +167,19 @@ export async function createQrisPayment(
  */
 export interface CreatePayoutInput {
   /** Unique identifier for the payout (e.g., payout request ID) */
-  external_id: string
+  external_id: string;
   /** Payout amount in IDR */
-  amount: number
+  amount: number;
   /** Bank code (BCA, BRI, MANDIRI, BNI) */
-  bank_code: string
+  bank_code: string;
   /** Bank account number */
-  account_number: string
+  account_number: string;
   /** Bank account holder name */
-  account_holder_name: string
+  account_holder_name: string;
   /** Description for the payout */
-  description?: string
+  description?: string;
   /** Email for notification */
-  email_to?: string
+  email_to?: string;
 }
 
 /**
@@ -187,23 +187,23 @@ export interface CreatePayoutInput {
  */
 export interface PayoutResponse {
   /** Xendit payout ID */
-  id: string
+  id: string;
   /** External ID provided in request */
-  external_id: string
+  external_id: string;
   /** Payout amount in IDR */
-  amount: number
+  amount: number;
   /** Bank code */
-  bank_code: string
+  bank_code: string;
   /** Bank account number (masked) */
-  account_number: string
+  account_number: string;
   /** Payout status */
-  status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REJECTED'
+  status: "PENDING" | "COMPLETED" | "FAILED" | "REJECTED";
   /** Payout creation timestamp */
-  created: string
+  created: string;
   /** Estimated arrival date */
-  estimated_arrival_date?: string
+  estimated_arrival_date?: string;
   /** Failure reason (if failed) */
-  failure_reason?: string
+  failure_reason?: string;
 }
 
 /**
@@ -227,31 +227,28 @@ export interface PayoutResponse {
  * ```
  */
 export async function createPayout(
-  input: CreatePayoutInput
+  input: CreatePayoutInput,
 ): Promise<PayoutResponse> {
   try {
-    const response = await xenditRequest<PayoutResponse>(
-      '/disbursements',
-      {
-        method: 'POST',
-        body: JSON.stringify({
-          external_id: input.external_id,
-          amount: input.amount,
-          bank_code: input.bank_code,
-          account_number: input.account_number,
-          account_holder_name: input.account_holder_name,
-          description: input.description || 'Worker withdrawal',
-          email_to: input.email_to,
-        }),
-      }
-    )
+    const response = await xenditRequest<PayoutResponse>("/disbursements", {
+      method: "POST",
+      body: JSON.stringify({
+        external_id: input.external_id,
+        amount: input.amount,
+        bank_code: input.bank_code,
+        account_number: input.account_number,
+        account_holder_name: input.account_holder_name,
+        description: input.description || "Worker withdrawal",
+        email_to: input.email_to,
+      }),
+    });
 
-    return response
+    return response;
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Failed to create payout: ${error.message}`)
+      throw new Error(`Failed to create payout: ${error.message}`);
     }
-    throw new Error('Failed to create payout: Unknown error')
+    throw new Error("Failed to create payout: Unknown error");
   }
 }
 
@@ -269,18 +266,18 @@ export async function createPayout(
  * ```
  */
 export async function getPayoutStatus(
-  payoutId: string
+  payoutId: string,
 ): Promise<PayoutResponse> {
   try {
     const response = await xenditRequest<PayoutResponse>(
-      `/disbursements/${payoutId}`
-    )
-    return response
+      `/disbursements/${payoutId}`,
+    );
+    return response;
   } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Failed to get payout status: ${error.message}`)
+      throw new Error(`Failed to get payout status: ${error.message}`);
     }
-    throw new Error('Failed to get payout status: Unknown error')
+    throw new Error("Failed to get payout status: Unknown error");
   }
 }
 
@@ -305,17 +302,17 @@ export async function getPayoutStatus(
  */
 export function verifyWebhookSignature(
   signature: string | null,
-  token?: string
+  token?: string,
 ): boolean {
   if (!signature) {
-    return false
+    return false;
   }
 
-  const webhookToken = token || getWebhookToken()
+  const webhookToken = token || getWebhookToken();
 
   // Xendit webhook token verification is a direct string comparison
   // The webhook token should match the callback token header
-  return signature === webhookToken
+  return signature === webhookToken;
 }
 
 /**
@@ -338,10 +335,10 @@ export function verifyWebhookSignature(
 export function calculatePaymentFee(
   amount: number,
   feePercentage: number = 0.007,
-  fixedFee: number = 500
+  fixedFee: number = 500,
 ): number {
-  const variableFee = Math.floor(amount * feePercentage)
-  return variableFee + fixedFee
+  const variableFee = Math.floor(amount * feePercentage);
+  return variableFee + fixedFee;
 }
 
 /**
@@ -359,26 +356,23 @@ export function calculatePaymentFee(
  * console.log(fee) // Fee amount varies by bank
  * ```
  */
-export function calculatePayoutFee(
-  amount: number,
-  bankCode: string
-): number {
+export function calculatePayoutFee(amount: number, bankCode: string): number {
   // Xendit payout fees (as of 2024):
   // - BCA, BNI, BRI: Rp 4.000 for amounts <= Rp 250.000, Rp 6.000 for larger amounts
   // - Mandiri: Rp 5.000 for amounts <= Rp 250.000, Rp 7.500 for larger amounts
 
-  const isLargeAmount = amount > 250000
+  const isLargeAmount = amount > 250000;
 
   switch (bankCode.toUpperCase()) {
-    case 'BCA':
-    case 'BNI':
-    case 'BRI':
-      return isLargeAmount ? 6000 : 4000
-    case 'MANDIRI':
-      return isLargeAmount ? 7500 : 5000
+    case "BCA":
+    case "BNI":
+    case "BRI":
+      return isLargeAmount ? 6000 : 4000;
+    case "MANDIRI":
+      return isLargeAmount ? 7500 : 5000;
     default:
       // Default to higher fee for unknown banks
-      return isLargeAmount ? 7500 : 5000
+      return isLargeAmount ? 7500 : 5000;
   }
 }
 
@@ -400,10 +394,10 @@ export function calculatePayoutFee(
 export async function validateCredentials(): Promise<boolean> {
   try {
     // Try to get balance as a simple validation check
-    await xenditRequest<{ balance: number }>('/balances')
-    return true
+    await xenditRequest<{ balance: number }>("/balances");
+    return true;
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -421,17 +415,19 @@ export async function validateCredentials(): Promise<boolean> {
  * ```
  */
 export function mapPaymentStatus(
-  xenditStatus: string
-): 'pending' | 'success' | 'failed' | 'expired' {
-  const statusMap: Record<string, 'pending' | 'success' | 'failed' | 'expired'> =
-    {
-      'PENDING': 'pending',
-      'COMPLETED': 'success',
-      'FAILED': 'failed',
-      'EXPIRED': 'expired',
-    }
+  xenditStatus: string,
+): "pending" | "success" | "failed" | "expired" {
+  const statusMap: Record<
+    string,
+    "pending" | "success" | "failed" | "expired"
+  > = {
+    PENDING: "pending",
+    COMPLETED: "success",
+    FAILED: "failed",
+    EXPIRED: "expired",
+  };
 
-  return statusMap[xenditStatus] || 'pending'
+  return statusMap[xenditStatus] || "pending";
 }
 
 /**
@@ -448,17 +444,17 @@ export function mapPaymentStatus(
  * ```
  */
 export function mapPayoutStatus(
-  xenditStatus: string
-): 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' {
+  xenditStatus: string,
+): "pending" | "processing" | "completed" | "failed" | "cancelled" {
   const statusMap: Record<
     string,
-    'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+    "pending" | "processing" | "completed" | "failed" | "cancelled"
   > = {
-    'PENDING': 'processing',
-    'COMPLETED': 'completed',
-    'FAILED': 'failed',
-    'REJECTED': 'failed',
-  }
+    PENDING: "processing",
+    COMPLETED: "completed",
+    FAILED: "failed",
+    REJECTED: "failed",
+  };
 
-  return statusMap[xenditStatus] || 'pending'
+  return statusMap[xenditStatus] || "pending";
 }

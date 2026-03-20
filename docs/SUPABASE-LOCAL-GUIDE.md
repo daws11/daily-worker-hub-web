@@ -12,12 +12,12 @@ Sebelum memulai, pastikan sistem Anda memiliki:
 
 ### Software Wajib
 
-| Software | Versi Minimum | Cara Install |
-|----------|---------------|--------------|
-| **Docker** | 20.10+ | `curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh` |
-| **Docker Compose** | 2.0+ | Biasanya bundled dengan Docker |
-| **Node.js** | 20+ | `nvm install 20` |
-| **Supabase CLI** | Latest | `npm install -g supabase` |
+| Software           | Versi Minimum | Cara Install                                                                  |
+| ------------------ | ------------- | ----------------------------------------------------------------------------- |
+| **Docker**         | 20.10+        | `curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh` |
+| **Docker Compose** | 2.0+          | Biasanya bundled dengan Docker                                                |
+| **Node.js**        | 20+           | `nvm install 20`                                                              |
+| **Supabase CLI**   | Latest        | `npm install -g supabase`                                                     |
 
 ### Verify Prerequisites
 
@@ -46,6 +46,7 @@ supabase --version
 ```
 
 Script ini akan:
+
 - Mengecek ketersediaan Docker
 - Verifikasi Supabase CLI
 - Validasi konfigurasi
@@ -85,13 +86,13 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 
 File konfigurasi ada di `supabase/config.toml`:
 
-| Service | Port | URL |
-|---------|------|-----|
-| **API** | 54321 | http://127.0.0.1:54321 |
-| **Database** | 54322 | postgresql://postgres:postgres@localhost:54322/postgres |
-| **Studio** | 54323 | http://localhost:54323 |
-| **Inbucket** (Email) | 54324 | http://localhost:54324 |
-| **Analytics** | 54327 | http://localhost:54327 |
+| Service              | Port  | URL                                                     |
+| -------------------- | ----- | ------------------------------------------------------- |
+| **API**              | 54321 | http://127.0.0.1:54321                                  |
+| **Database**         | 54322 | postgresql://postgres:postgres@localhost:54322/postgres |
+| **Studio**           | 54323 | http://localhost:54323                                  |
+| **Inbucket** (Email) | 54324 | http://localhost:54324                                  |
+| **Analytics**        | 54327 | http://localhost:54327                                  |
 
 ---
 
@@ -109,12 +110,12 @@ supabase db push
 
 ### Migrations yang Sudah Dibuat
 
-| File | Deskripsi |
-|------|-----------|
-| `001_initial_schema.sql` | Tabel core: users, workers, businesses, jobs, bookings, dll |
-| `002_rls_policies.sql` | Row Level Security policies untuk semua tabel |
-| `003_seed_data.sql` | Data test untuk development |
-| `004_storage_buckets.sql` | Storage buckets: avatars, documents, images |
+| File                      | Deskripsi                                                   |
+| ------------------------- | ----------------------------------------------------------- |
+| `001_initial_schema.sql`  | Tabel core: users, workers, businesses, jobs, bookings, dll |
+| `002_rls_policies.sql`    | Row Level Security policies untuk semua tabel               |
+| `003_seed_data.sql`       | Data test untuk development                                 |
+| `004_storage_buckets.sql` | Storage buckets: avatars, documents, images                 |
 
 ### Verifikasi Migrations
 
@@ -135,6 +136,7 @@ supabase migration list
 **URL:** http://localhost:54323
 
 **Features:**
+
 - **Table Editor:** View/edit data di semua tabel
 - **SQL Editor:** Jalankan query SQL manual
 - **Database:** Cek database info, migrations, triggers
@@ -148,32 +150,33 @@ supabase migration list
 **Usage di Next.js:**
 
 ```typescript
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+);
 
 // Query example
-const { data, error } = await supabase
-  .from('workers')
-  .select('*, users(*)')
+const { data, error } = await supabase.from("workers").select("*, users(*)");
 ```
 
 ### 3. PostgreSQL Direct Connection
 
 **Connection String:**
+
 ```
 postgresql://postgres:postgres@localhost:54322/postgres
 ```
 
 **Connect via psql:**
+
 ```bash
 psql postgresql://postgres:postgres@localhost:54322/postgres
 ```
 
 **Usage di Prisma (opsional):**
+
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:54322/postgres"
 ```
@@ -183,6 +186,7 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:54322/postgres"
 **URL:** http://localhost:54324
 
 **Features:**
+
 - Lihat semua email yang "terkirim" selama development
 - Tidak ada email yang benar-benar dikirim (hanya simulasi)
 - Berguna untuk testing auth, notifications, dll
@@ -190,6 +194,7 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:54322/postgres"
 ### 5. Edge Functions
 
 **Deploy function:**
+
 ```bash
 # Deploy semua functions
 supabase functions deploy
@@ -199,6 +204,7 @@ supabase functions deploy reliability-score
 ```
 
 **Invoke function:**
+
 ```bash
 # Via curl
 curl -X POST http://localhost:54321/functions/v1/reliability-score \
@@ -218,24 +224,24 @@ const { data, error } = await supabase.functions.invoke('reliability-score', {
 
 ### Buckets yang Tersedia
 
-| Bucket | Public | Max Size | MIME Types |
-|--------|--------|----------|------------|
-| `avatars` | Yes | 5MB | image/jpeg, image/png, image/webp, image/gif |
-| `documents` | No | 10MB | application/pdf, image/jpeg, image/png |
-| `images` | Yes | 5MB | image/jpeg, image/png, image/webp, image/gif |
+| Bucket      | Public | Max Size | MIME Types                                   |
+| ----------- | ------ | -------- | -------------------------------------------- |
+| `avatars`   | Yes    | 5MB      | image/jpeg, image/png, image/webp, image/gif |
+| `documents` | No     | 10MB     | application/pdf, image/jpeg, image/png       |
+| `images`    | Yes    | 5MB      | image/jpeg, image/png, image/webp, image/gif |
 
 ### Upload File (via Client)
 
 ```typescript
 // Upload avatar
 const { data, error } = await supabase.storage
-  .from('avatars')
-  .upload(`${userId}/${fileName}`, file)
+  .from("avatars")
+  .upload(`${userId}/${fileName}`, file);
 
 // Get public URL
-const { data: { publicUrl } } = supabase.storage
-  .from('avatars')
-  .getPublicUrl(`${userId}/${fileName}`)
+const {
+  data: { publicUrl },
+} = supabase.storage.from("avatars").getPublicUrl(`${userId}/${fileName}`);
 ```
 
 ### Upload File (via Studio)
@@ -253,20 +259,20 @@ Seed data menyediakan data test untuk development:
 
 ### Data yang Tersedia
 
-| Entity | Jumlah | Deskripsi |
-|--------|--------|-----------|
-| **Users** | 15 | 5 business users + 10 worker users |
-| **Businesses** | 5 | Complete business profiles |
-| **Workers** | 10 | Complete worker profiles |
-| **Jobs** | 10 | Various categories dan statuses |
-| **Skills** | 15 | Technical skills untuk workers |
-| **Categories** | 10 | Job categories (Construction, Cleaning, dll) |
-| **Bookings** | 8 | Various statuses |
-| **Transactions** | 2 | Payment transactions |
-| **Messages** | 7 | User communications |
-| **Reviews** | 2 | Worker reviews |
-| **Notifications** | 6 | User notifications |
-| **Reports** | 3 | Various report types |
+| Entity            | Jumlah | Deskripsi                                    |
+| ----------------- | ------ | -------------------------------------------- |
+| **Users**         | 15     | 5 business users + 10 worker users           |
+| **Businesses**    | 5      | Complete business profiles                   |
+| **Workers**       | 10     | Complete worker profiles                     |
+| **Jobs**          | 10     | Various categories dan statuses              |
+| **Skills**        | 15     | Technical skills untuk workers               |
+| **Categories**    | 10     | Job categories (Construction, Cleaning, dll) |
+| **Bookings**      | 8      | Various statuses                             |
+| **Transactions**  | 2      | Payment transactions                         |
+| **Messages**      | 7      | User communications                          |
+| **Reviews**       | 2      | Worker reviews                               |
+| **Notifications** | 6      | User notifications                           |
+| **Reports**       | 3      | Various report types                         |
 
 ### Reset ke Seed Data
 
@@ -295,19 +301,20 @@ Service role key punya akses penuh ke database. Pastikan `.env.local` ada di `.g
 // ✅ CORRECT - Client-side
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!  // Anon key
-)
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, // Anon key
+);
 
 // ❌ WRONG - JANGAN gunakan service role key di client!
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!  // DANGER!
-)
+  process.env.SUPABASE_SERVICE_ROLE_KEY!, // DANGER!
+);
 ```
 
 ### 3. RLS Policies Selalu Aktif
 
 RLS policies di `002_rls_policies.sql` memastikan:
+
 - Users hanya bisa akses data mereka sendiri
 - Admins bisa akses semua data
 - Public users hanya bisa lihat data verified workers/businesses
@@ -321,6 +328,7 @@ RLS policies di `002_rls_policies.sql` memastikan:
 ### Docker Issues
 
 **Error: Docker daemon not running**
+
 ```bash
 # Start Docker
 sudo systemctl start docker
@@ -329,6 +337,7 @@ sudo systemctl start docker
 ```
 
 **Error: Port already in use**
+
 ```bash
 # Cek apa yang menggunakan port
 lsof -i :54322
@@ -340,6 +349,7 @@ supabase start
 ### Migration Issues
 
 **Error: Migration failed**
+
 ```bash
 # Cek log
 supabase db reset --debug
@@ -349,6 +359,7 @@ psql postgresql://postgres:postgres@localhost:54322/postgres -f supabase/migrati
 ```
 
 **Error: Permission denied**
+
 ```bash
 # Pastikan Anda punya akses ke Docker
 sudo usermod -aG docker $USER
@@ -358,6 +369,7 @@ sudo usermod -aG docker $USER
 ### Auth Issues
 
 **Error: Invalid JWT**
+
 - Pastikan `NEXT_PUBLIC_SUPABASE_ANON_KEY` di `.env.local` benar
 - Cek Supabase status: `supabase status`
 - Copy anon key dari output `supabase status`
@@ -365,10 +377,12 @@ sudo usermod -aG docker $USER
 ### Storage Issues
 
 **Error: Bucket not found**
+
 - Pastikan migration `004_storage_buckets.sql` sudah di-apply
 - Cek via Studio: http://localhost:54323 → Storage
 
 **Error: Upload failed**
+
 - Cek file size (max limit tergantung bucket)
 - Cek MIME type (harus sesuai dengan bucket config)
 - Cek RLS policies untuk storage
@@ -470,5 +484,5 @@ Setelah Supabase Local berjalan:
 
 ---
 
-*Last Updated: February 22, 2026*
-*Dokumentasi ini akan di-update seiring progress development.*
+_Last Updated: February 22, 2026_
+_Dokumentasi ini akan di-update seiring progress development._

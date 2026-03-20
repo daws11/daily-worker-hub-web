@@ -1,70 +1,85 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useCallback } from "react"
-import { useAuth } from '@/app/providers/auth-provider'
-import { toast } from "sonner"
-import { supabase } from "@/lib/supabase/client"
-import { Loader2, AlertCircle, TrendingUp, TrendingDown, DollarSign, Calendar, CreditCard, Wallet, ArrowUpRight, ArrowDownRight, Clock } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+import * as React from "react";
+import { useCallback } from "react";
+import { useAuth } from "@/app/providers/auth-provider";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase/client";
+import {
+  Loader2,
+  AlertCircle,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Calendar,
+  CreditCard,
+  Wallet,
+  ArrowUpRight,
+  ArrowDownRight,
+  Clock,
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export interface EarningsEntry {
-  id: string
-  booking_id: string
-  amount: number
-  status: "pending" | "processing" | "completed" | "failed"
-  payment_date: string | null
-  created_at: string
+  id: string;
+  booking_id: string;
+  amount: number;
+  status: "pending" | "processing" | "completed" | "failed";
+  payment_date: string | null;
+  created_at: string;
   booking?: {
-    id: string
+    id: string;
     job?: {
-      title: string
-    }
+      title: string;
+    };
     business?: {
-      name: string
-    }
-  }
+      name: string;
+    };
+  };
 }
 
 type EarningsStatusGroup = {
-  pending: EarningsEntry[]
-  processing: EarningsEntry[]
-  completed: EarningsEntry[]
-  failed: EarningsEntry[]
-}
+  pending: EarningsEntry[];
+  processing: EarningsEntry[];
+  completed: EarningsEntry[];
+  failed: EarningsEntry[];
+};
 
 const statusGroupLabels: Record<keyof EarningsStatusGroup, string> = {
   pending: "Pending Payments",
   processing: "Processing",
   completed: "Completed Payments",
   failed: "Failed Payments",
-}
+};
 
 const statusColors: Record<keyof EarningsStatusGroup, string> = {
-  pending: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20",
-  processing: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
-  completed: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
+  pending:
+    "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20",
+  processing:
+    "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
+  completed:
+    "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20",
   failed: "bg-destructive/10 text-destructive border-destructive/50",
-}
+};
 
 function groupEarningsByStatus(earnings: EarningsEntry[]): EarningsStatusGroup {
   return earnings.reduce<EarningsStatusGroup>(
     (groups, entry) => {
       if (entry.status === "pending") {
-        groups.pending.push(entry)
+        groups.pending.push(entry);
       } else if (entry.status === "processing") {
-        groups.processing.push(entry)
+        groups.processing.push(entry);
       } else if (entry.status === "completed") {
-        groups.completed.push(entry)
+        groups.completed.push(entry);
       } else if (entry.status === "failed") {
-        groups.failed.push(entry)
+        groups.failed.push(entry);
       }
-      return groups
+      return groups;
     },
-    { pending: [], processing: [], completed: [], failed: [] }
-  )
+    { pending: [], processing: [], completed: [], failed: [] },
+  );
 }
 
 function formatPrice(price: number): string {
@@ -72,28 +87,28 @@ function formatPrice(price: number): string {
     style: "currency",
     currency: "IDR",
     minimumFractionDigits: 0,
-  }).format(price)
+  }).format(price);
 }
 
 function formatDate(dateString: string | null): string {
-  if (!dateString) return "-"
-  const date = new Date(dateString)
+  if (!dateString) return "-";
+  const date = new Date(dateString);
   return date.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "short",
     year: "numeric",
-  })
+  });
 }
 
 function formatDateTime(dateString: string): string {
-  const date = new Date(dateString)
+  const date = new Date(dateString);
   return date.toLocaleDateString("id-ID", {
     day: "numeric",
     month: "short",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  })
+  });
 }
 
 async function fetchEarnings(workerId: string): Promise<EarningsEntry[]> {
@@ -101,7 +116,8 @@ async function fetchEarnings(workerId: string): Promise<EarningsEntry[]> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = await (supabase as any)
     .from("bookings")
-    .select(`
+    .select(
+      `
       id,
       total_amount,
       final_price,
@@ -110,15 +126,16 @@ async function fetchEarnings(workerId: string): Promise<EarningsEntry[]> {
       created_at,
       jobs!inner (title),
       businesses!inner (name)
-    `)
+    `,
+    )
     .eq("worker_id", workerId)
     .in("payment_status", ["pending", "processing", "paid", "failed"])
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false });
 
-  const { data, error } = result
+  const { data, error } = result;
 
   if (error) {
-    throw error
+    throw error;
   }
 
   // Transform bookings data to earnings format
@@ -126,81 +143,93 @@ async function fetchEarnings(workerId: string): Promise<EarningsEntry[]> {
     id: booking.id,
     booking_id: booking.id,
     amount: booking.total_amount || booking.final_price || 0,
-    status: (booking.payment_status === 'paid' ? 'completed' : booking.payment_status) as "pending" | "processing" | "completed" | "failed",
+    status: (booking.payment_status === "paid"
+      ? "completed"
+      : booking.payment_status) as
+      | "pending"
+      | "processing"
+      | "completed"
+      | "failed",
     payment_date: booking.check_out_at || null,
     created_at: booking.created_at,
     booking: {
       id: booking.id,
       job: {
-        title: booking.jobs?.title || "Job"
+        title: booking.jobs?.title || "Job",
       },
       business: {
-        name: booking.businesses?.name || "Business"
-      }
-    }
-  }))
+        name: booking.businesses?.name || "Business",
+      },
+    },
+  }));
 
-  return transformed
+  return transformed;
 }
 
 export default function WorkerEarningsPage() {
-  const { signOut, user, isLoading: authLoading } = useAuth()
-  const [earnings, setEarnings] = React.useState<EarningsEntry[]>([])
-  const [isLoading, setIsLoading] = React.useState(true)
-  const [error, setError] = React.useState<string | null>(null)
+  const { signOut, user, isLoading: authLoading } = useAuth();
+  const [earnings, setEarnings] = React.useState<EarningsEntry[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
   const fetchEarningsData = useCallback(async () => {
-    if (!user?.id) return
+    if (!user?.id) return;
 
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const earningsData = await fetchEarnings(user.id)
-      setEarnings(earningsData)
+      const earningsData = await fetchEarnings(user.id);
+      setEarnings(earningsData);
     } catch (err: any) {
-      const message = err.message || "Gagal memuat data penghasilan"
-      setError(message)
-      toast.error(message)
+      const message = err.message || "Gagal memuat data penghasilan";
+      setError(message);
+      toast.error(message);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [user?.id])
+  }, [user?.id]);
 
   React.useEffect(() => {
-    fetchEarningsData()
-  }, [fetchEarningsData])
+    fetchEarningsData();
+  }, [fetchEarningsData]);
 
   const handleLogout = async () => {
-    await signOut()
-  }
+    await signOut();
+  };
 
   // Calculate statistics
   const totalEarnings = earnings
-    .filter(e => e.status === "completed")
-    .reduce((sum, e) => sum + e.amount, 0)
+    .filter((e) => e.status === "completed")
+    .reduce((sum, e) => sum + e.amount, 0);
 
   const pendingEarnings = earnings
-    .filter(e => e.status === "pending" || e.status === "processing")
-    .reduce((sum, e) => sum + e.amount, 0)
+    .filter((e) => e.status === "pending" || e.status === "processing")
+    .reduce((sum, e) => sum + e.amount, 0);
 
-  const completedPayments = earnings.filter(e => e.status === "completed").length
-  const pendingPayments = earnings.filter(e => e.status === "pending" || e.status === "processing").length
+  const completedPayments = earnings.filter(
+    (e) => e.status === "completed",
+  ).length;
+  const pendingPayments = earnings.filter(
+    (e) => e.status === "pending" || e.status === "processing",
+  ).length;
 
   // Get recent completed payments (last 5)
   const recentPayments = earnings
-    .filter(e => e.status === "completed")
-    .slice(0, 5)
+    .filter((e) => e.status === "completed")
+    .slice(0, 5);
 
-  const groupedEarnings = groupEarningsByStatus(earnings)
-  const hasEarnings = Object.values(groupedEarnings).some((group) => group.length > 0)
+  const groupedEarnings = groupEarningsByStatus(earnings);
+  const hasEarnings = Object.values(groupedEarnings).some(
+    (group) => group.length > 0,
+  );
 
   if (authLoading) {
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <Loader2 className="h-8 w-8 text-primary animate-spin" />
       </div>
-    )
+    );
   }
 
   if (!user) {
@@ -209,11 +238,12 @@ export default function WorkerEarningsPage() {
         <div className="bg-destructive/10 border border-destructive/50 rounded-lg p-6 flex items-center gap-3">
           <AlertCircle className="h-5 w-5 text-destructive" />
           <p className="text-destructive font-medium">
-            Error: Tidak dapat memuat informasi pengguna. Silakan refresh halaman.
+            Error: Tidak dapat memuat informasi pengguna. Silakan refresh
+            halaman.
           </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -222,9 +252,7 @@ export default function WorkerEarningsPage() {
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold mb-1">
-              Penghasilan
-            </h1>
+            <h1 className="text-2xl font-bold mb-1">Penghasilan</h1>
             <p className="text-sm text-muted-foreground m-0">
               Pantau penghasilan dan riwayat pembayaran Anda
             </p>
@@ -235,7 +263,7 @@ export default function WorkerEarningsPage() {
             variant="destructive"
             size="sm"
           >
-            {authLoading ? 'Memproses...' : 'Keluar'}
+            {authLoading ? "Memproses..." : "Keluar"}
           </Button>
         </div>
 
@@ -249,10 +277,7 @@ export default function WorkerEarningsPage() {
               </p>
               <p className="text-destructive text-sm">{error}</p>
             </div>
-            <Button
-              onClick={fetchEarningsData}
-              size="sm"
-            >
+            <Button onClick={fetchEarningsData} size="sm">
               <Loader2 className="h-4 w-4 mr-2" />
               Coba Lagi
             </Button>
@@ -270,7 +295,9 @@ export default function WorkerEarningsPage() {
               <Wallet className="h-4 w-4 text-blue-100" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatPrice(totalEarnings)}</div>
+              <div className="text-2xl font-bold">
+                {formatPrice(totalEarnings)}
+              </div>
               <p className="text-xs text-blue-100 mt-1">
                 {completedPayments} pembayaran berhasil
               </p>
@@ -286,7 +313,9 @@ export default function WorkerEarningsPage() {
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">{formatPrice(pendingEarnings)}</div>
+              <div className="text-2xl font-bold text-yellow-600">
+                {formatPrice(pendingEarnings)}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
                 {pendingPayments} pembayaran dalam proses
               </p>
@@ -302,7 +331,9 @@ export default function WorkerEarningsPage() {
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{completedPayments}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {completedPayments}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Transaksi berhasil
               </p>
@@ -318,7 +349,9 @@ export default function WorkerEarningsPage() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{earnings.length}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {earnings.length}
+              </div>
               <p className="text-xs text-muted-foreground mt-1">
                 Semua transaksi
               </p>
@@ -331,7 +364,9 @@ export default function WorkerEarningsPage() {
           <Card>
             <CardContent className="py-12 flex flex-col items-center justify-center text-center">
               <Loader2 className="h-8 w-8 text-blue-600 mb-4 animate-spin" />
-              <p className="text-muted-foreground">Memuat data penghasilan...</p>
+              <p className="text-muted-foreground">
+                Memuat data penghasilan...
+              </p>
             </CardContent>
           </Card>
         )}
@@ -345,7 +380,8 @@ export default function WorkerEarningsPage() {
                 Belum Ada Penghasilan
               </h3>
               <p className="text-muted-foreground">
-                Penghasilan akan muncul di sini setelah Anda menyelesaikan pekerjaan
+                Penghasilan akan muncul di sini setelah Anda menyelesaikan
+                pekerjaan
               </p>
             </CardContent>
           </Card>
@@ -372,7 +408,8 @@ export default function WorkerEarningsPage() {
                         {entry.booking?.job?.title || "Unknown Job"}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {entry.booking?.business?.name || "Unknown Business"} • {formatDateTime(entry.payment_date || entry.created_at)}
+                        {entry.booking?.business?.name || "Unknown Business"} •{" "}
+                        {formatDateTime(entry.payment_date || entry.created_at)}
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
@@ -396,97 +433,113 @@ export default function WorkerEarningsPage() {
         {/* Earnings List by Status */}
         {!isLoading && !error && hasEarnings && (
           <div className="space-y-8">
-            {(Object.keys(groupedEarnings) as Array<keyof EarningsStatusGroup>).map(
-              (status) => {
-                const groupEarnings = groupedEarnings[status]
-                if (groupEarnings.length === 0) return null
+            {(
+              Object.keys(groupedEarnings) as Array<keyof EarningsStatusGroup>
+            ).map((status) => {
+              const groupEarnings = groupedEarnings[status];
+              if (groupEarnings.length === 0) return null;
 
-                const totalAmount = groupEarnings.reduce((sum, e) => sum + e.amount, 0)
+              const totalAmount = groupEarnings.reduce(
+                (sum, e) => sum + e.amount,
+                0,
+              );
 
-                return (
-                  <Card key={status}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg">
-                          {statusGroupLabels[status]}
-                        </CardTitle>
-                        <Badge className={statusColors[status]}>
-                          {groupEarnings.length} transaksi • {formatPrice(totalAmount)}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {groupEarnings.map((entry) => (
-                          <div
-                            key={entry.id}
-                            className="flex items-center justify-between p-4 bg-muted rounded-lg border hover:bg-background transition-colors"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start gap-3">
-                                <div className={`p-2 rounded-lg ${
-                                  status === 'completed' ? 'bg-green-500/10' :
-                                  status === 'processing' ? 'bg-primary/10' :
-                                  status === 'pending' ? 'bg-yellow-500/10' :
-                                  'bg-destructive/10'
-                                }`}>
-                                  {status === 'completed' ? (
-                                    <CreditCard className="h-4 w-4 text-green-600" />
-                                  ) : status === 'processing' ? (
-                                    <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
-                                  ) : status === 'pending' ? (
-                                    <Clock className="h-4 w-4 text-yellow-600" />
-                                  ) : (
-                                    <AlertCircle className="h-4 w-4 text-red-600" />
-                                  )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-sm mb-1">
-                                    {entry.booking?.job?.title || "Unknown Job"}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground mb-1">
-                                    {entry.booking?.business?.name || "Unknown Business"}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {formatDateTime(entry.created_at)}
-                                  </p>
-                                </div>
+              return (
+                <Card key={status}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">
+                        {statusGroupLabels[status]}
+                      </CardTitle>
+                      <Badge className={statusColors[status]}>
+                        {groupEarnings.length} transaksi •{" "}
+                        {formatPrice(totalAmount)}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {groupEarnings.map((entry) => (
+                        <div
+                          key={entry.id}
+                          className="flex items-center justify-between p-4 bg-muted rounded-lg border hover:bg-background transition-colors"
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start gap-3">
+                              <div
+                                className={`p-2 rounded-lg ${
+                                  status === "completed"
+                                    ? "bg-green-500/10"
+                                    : status === "processing"
+                                      ? "bg-primary/10"
+                                      : status === "pending"
+                                        ? "bg-yellow-500/10"
+                                        : "bg-destructive/10"
+                                }`}
+                              >
+                                {status === "completed" ? (
+                                  <CreditCard className="h-4 w-4 text-green-600" />
+                                ) : status === "processing" ? (
+                                  <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
+                                ) : status === "pending" ? (
+                                  <Clock className="h-4 w-4 text-yellow-600" />
+                                ) : (
+                                  <AlertCircle className="h-4 w-4 text-red-600" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm mb-1">
+                                  {entry.booking?.job?.title || "Unknown Job"}
+                                </p>
+                                <p className="text-xs text-muted-foreground mb-1">
+                                  {entry.booking?.business?.name ||
+                                    "Unknown Business"}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatDateTime(entry.created_at)}
+                                </p>
                               </div>
                             </div>
-                            <div className="text-right ml-4">
-                              <p className={`font-bold ${
-                                status === 'completed' ? 'text-green-600' :
-                                status === 'processing' ? 'text-blue-600' :
-                                status === 'pending' ? 'text-yellow-600' :
-                                'text-red-600'
-                              }`}>
-                                {formatPrice(entry.amount)}
-                              </p>
-                              {entry.payment_date && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Dibayar: {formatDate(entry.payment_date)}
-                                </p>
-                              )}
-                              <Badge
-                                className={`mt-2 ${statusColors[status]}`}
-                              >
-                                {status === 'pending' ? 'Menunggu' :
-                                 status === 'processing' ? 'Memproses' :
-                                 status === 'completed' ? 'Selesai' :
-                                 'Gagal'}
-                              </Badge>
-                            </div>
                           </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              }
-            )}
+                          <div className="text-right ml-4">
+                            <p
+                              className={`font-bold ${
+                                status === "completed"
+                                  ? "text-green-600"
+                                  : status === "processing"
+                                    ? "text-blue-600"
+                                    : status === "pending"
+                                      ? "text-yellow-600"
+                                      : "text-red-600"
+                              }`}
+                            >
+                              {formatPrice(entry.amount)}
+                            </p>
+                            {entry.payment_date && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Dibayar: {formatDate(entry.payment_date)}
+                              </p>
+                            )}
+                            <Badge className={`mt-2 ${statusColors[status]}`}>
+                              {status === "pending"
+                                ? "Menunggu"
+                                : status === "processing"
+                                  ? "Memproses"
+                                  : status === "completed"
+                                    ? "Selesai"
+                                    : "Gagal"}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

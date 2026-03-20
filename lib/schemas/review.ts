@@ -1,9 +1,9 @@
-import { z } from "zod"
+import { z } from "zod";
 
 // Reviewer type enum
 export const reviewerTypeEnum = z.enum(["business", "worker"], {
   message: "Tipe penulis ulasan harus dipilih",
-})
+});
 
 // Rating validation (1-5 stars)
 export const ratingSchema = z
@@ -12,16 +12,16 @@ export const ratingSchema = z
   })
   .int({ message: "Rating harus berupa bilangan bulat" })
   .min(1, { message: "Rating minimal 1 bintang" })
-  .max(5, { message: "Rating maksimal 5 bintang" })
+  .max(5, { message: "Rating maksimal 5 bintang" });
 
 // Comment validation
 export const commentSchema = z
   .string()
   .max(1000, { message: "Komentar maksimal 1000 karakter" })
-  .optional()
+  .optional();
 
 // Would rehire validation
-export const wouldRehireSchema = z.boolean().optional()
+export const wouldRehireSchema = z.boolean().optional();
 
 // Review schema for creation
 export const createReviewSchema = z.object({
@@ -32,7 +32,7 @@ export const createReviewSchema = z.object({
   rating: ratingSchema,
   comment: commentSchema,
   would_rehire: wouldRehireSchema,
-})
+});
 
 // Review schema for partial updates
 export const updateReviewSchema = z
@@ -56,12 +56,12 @@ export const updateReviewSchema = z
         data.rating !== undefined ||
         data.comment !== undefined ||
         data.would_rehire !== undefined
-      )
+      );
     },
-    { message: "Minimal satu field harus diisi untuk update" }
-  )
+    { message: "Minimal satu field harus diisi untuk update" },
+  );
 
 // Type exports
-export type CreateReviewInput = z.infer<typeof createReviewSchema>
-export type UpdateReviewInput = z.infer<typeof updateReviewSchema>
-export type ReviewerType = z.infer<typeof reviewerTypeEnum>
+export type CreateReviewInput = z.infer<typeof createReviewSchema>;
+export type UpdateReviewInput = z.infer<typeof updateReviewSchema>;
+export type ReviewerType = z.infer<typeof reviewerTypeEnum>;

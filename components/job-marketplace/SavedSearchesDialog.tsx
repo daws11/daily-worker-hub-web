@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,15 +8,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import { Badge } from '@/components/ui/badge'
-import { SavedSearch, JobFilters } from '@/lib/types/job'
-import { getSavedSearches, createSavedSearch, deleteSavedSearch, toggleSavedSearchFavorite } from '@/lib/api/saved-searches'
-import { toast } from 'sonner'
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import { SavedSearch, JobFilters } from "@/lib/types/job";
+import {
+  getSavedSearches,
+  createSavedSearch,
+  deleteSavedSearch,
+  toggleSavedSearchFavorite,
+} from "@/lib/api/saved-searches";
+import { toast } from "sonner";
 import {
   Search,
   Bookmark,
@@ -28,19 +33,19 @@ import {
   Briefcase,
   Loader2,
   X,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SavedSearchesDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  currentFilters: JobFilters
-  onLoadSearch: (filters: JobFilters) => void
-  workerId?: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentFilters: JobFilters;
+  onLoadSearch: (filters: JobFilters) => void;
+  workerId?: string;
 }
 
 interface SavedSearchWithFilters extends SavedSearch {
-  filterCount: number
+  filterCount: number;
 }
 
 export function SavedSearchesDialog({
@@ -50,163 +55,177 @@ export function SavedSearchesDialog({
   onLoadSearch,
   workerId,
 }: SavedSearchesDialogProps) {
-  const [savedSearches, setSavedSearches] = useState<SavedSearchWithFilters[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [isDeleting, setIsDeleting] = useState<string | null>(null)
-  const [newSearchName, setNewSearchName] = useState('')
-  const [showSaveForm, setShowSaveForm] = useState(false)
+  const [savedSearches, setSavedSearches] = useState<SavedSearchWithFilters[]>(
+    [],
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [newSearchName, setNewSearchName] = useState("");
+  const [showSaveForm, setShowSaveForm] = useState(false);
 
   // Fetch saved searches when dialog opens
   useEffect(() => {
     if (open && workerId) {
-      fetchSavedSearches()
+      fetchSavedSearches();
     }
-  }, [open, workerId])
+  }, [open, workerId]);
 
   const fetchSavedSearches = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const { data, error } = await getSavedSearches(workerId)
+      const { data, error } = await getSavedSearches(workerId);
       if (error) {
-        toast.error('Failed to load saved searches')
-        return
+        toast.error("Failed to load saved searches");
+        return;
       }
 
-      const searchesWithCount = (data || []).map(search => ({
+      const searchesWithCount = (data || []).map((search) => ({
         ...search,
         filterCount: Object.keys(search.filters || {}).filter(
-          key => search.filters[key as keyof JobFilters] !== undefined && search.filters[key as keyof JobFilters] !== ''
+          (key) =>
+            search.filters[key as keyof JobFilters] !== undefined &&
+            search.filters[key as keyof JobFilters] !== "",
         ).length,
-      }))
+      }));
 
-      setSavedSearches(searchesWithCount)
+      setSavedSearches(searchesWithCount);
     } catch (err) {
-      toast.error('Failed to load saved searches')
+      toast.error("Failed to load saved searches");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleSaveSearch = async () => {
     if (!newSearchName.trim()) {
-      toast.error('Please enter a name for your search')
-      return
+      toast.error("Please enter a name for your search");
+      return;
     }
 
     if (!workerId) {
-      toast.error('You must be logged in to save searches')
-      return
+      toast.error("You must be logged in to save searches");
+      return;
     }
 
-    setIsSaving(true)
+    setIsSaving(true);
     try {
       const { data, error } = await createSavedSearch(workerId, {
         name: newSearchName.trim(),
         filters: currentFilters,
-      })
+      });
 
       if (error) {
-        toast.error('Failed to save search')
-        return
+        toast.error("Failed to save search");
+        return;
       }
 
-      toast.success('Search saved successfully')
-      setNewSearchName('')
-      setShowSaveForm(false)
-      await fetchSavedSearches()
+      toast.success("Search saved successfully");
+      setNewSearchName("");
+      setShowSaveForm(false);
+      await fetchSavedSearches();
     } catch (err) {
-      toast.error('Failed to save search')
+      toast.error("Failed to save search");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   const handleLoadSearch = (search: SavedSearch) => {
-    onLoadSearch(search.filters)
-    onOpenChange(false)
-    toast.success(`Loaded search: ${search.name}`)
-  }
+    onLoadSearch(search.filters);
+    onOpenChange(false);
+    toast.success(`Loaded search: ${search.name}`);
+  };
 
   const handleDeleteSearch = async (id: string) => {
-    setIsDeleting(id)
+    setIsDeleting(id);
     try {
-      const { error } = await deleteSavedSearch(id)
+      const { error } = await deleteSavedSearch(id);
       if (error) {
-        toast.error('Failed to delete search')
-        return
+        toast.error("Failed to delete search");
+        return;
       }
 
-      toast.success('Search deleted')
-      await fetchSavedSearches()
+      toast.success("Search deleted");
+      await fetchSavedSearches();
     } catch (err) {
-      toast.error('Failed to delete search')
+      toast.error("Failed to delete search");
     } finally {
-      setIsDeleting(null)
+      setIsDeleting(null);
     }
-  }
+  };
 
   const handleToggleFavorite = async (id: string) => {
     try {
-      const { error } = await toggleSavedSearchFavorite(id)
+      const { error } = await toggleSavedSearchFavorite(id);
       if (error) {
-        toast.error('Failed to update favorite')
-        return
+        toast.error("Failed to update favorite");
+        return;
       }
 
-      await fetchSavedSearches()
+      await fetchSavedSearches();
     } catch (err) {
-      toast.error('Failed to update favorite')
+      toast.error("Failed to update favorite");
     }
-  }
+  };
 
   const getFilterSummary = (filters: JobFilters): string[] => {
-    const summary: string[] = []
+    const summary: string[] = [];
 
     if (filters.search) {
-      summary.push(`Search: "${filters.search}"`)
+      summary.push(`Search: "${filters.search}"`);
     }
 
     if (filters.positionType) {
-      summary.push(`Position: ${filters.positionType.replace('_', ' ')}`)
+      summary.push(`Position: ${filters.positionType.replace("_", " ")}`);
     }
 
     if (filters.area) {
-      summary.push(`Area: ${filters.area}`)
+      summary.push(`Area: ${filters.area}`);
     }
 
     if (filters.radius) {
-      summary.push(`Within ${filters.radius}km`)
+      summary.push(`Within ${filters.radius}km`);
     }
 
     if (filters.wageMin !== undefined || filters.wageMax !== undefined) {
-      const min = filters.wageMin ? `Rp${(filters.wageMin / 1000).toFixed(0)}k` : 'Any'
-      const max = filters.wageMax ? `Rp${(filters.wageMax / 1000).toFixed(0)}k` : 'Any'
-      summary.push(`Wage: ${min} - ${max}`)
+      const min = filters.wageMin
+        ? `Rp${(filters.wageMin / 1000).toFixed(0)}k`
+        : "Any";
+      const max = filters.wageMax
+        ? `Rp${(filters.wageMax / 1000).toFixed(0)}k`
+        : "Any";
+      summary.push(`Wage: ${min} - ${max}`);
     }
 
     if (filters.isUrgent) {
-      summary.push('Urgent only')
+      summary.push("Urgent only");
     }
 
     if (filters.verifiedOnly) {
-      summary.push('Verified only')
+      summary.push("Verified only");
     }
 
     if (filters.deadlineAfter) {
-      summary.push(`After: ${new Date(filters.deadlineAfter).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`)
+      summary.push(
+        `After: ${new Date(filters.deadlineAfter).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}`,
+      );
     }
 
     if (filters.deadlineBefore) {
-      summary.push(`Before: ${new Date(filters.deadlineBefore).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}`)
+      summary.push(
+        `Before: ${new Date(filters.deadlineBefore).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}`,
+      );
     }
 
-    return summary
-  }
+    return summary;
+  };
 
   const hasCurrentFilters = Object.keys(currentFilters).some(
-    key => currentFilters[key as keyof JobFilters] !== undefined && currentFilters[key as keyof JobFilters] !== ''
-  )
+    (key) =>
+      currentFilters[key as keyof JobFilters] !== undefined &&
+      currentFilters[key as keyof JobFilters] !== "",
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -244,8 +263,8 @@ export function SavedSearchesDialog({
                       value={newSearchName}
                       onChange={(e) => setNewSearchName(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleSaveSearch()
+                        if (e.key === "Enter") {
+                          handleSaveSearch();
                         }
                       }}
                     />
@@ -271,8 +290,8 @@ export function SavedSearchesDialog({
                     <Button
                       variant="outline"
                       onClick={() => {
-                        setShowSaveForm(false)
-                        setNewSearchName('')
+                        setShowSaveForm(false);
+                        setNewSearchName("");
                       }}
                     >
                       Cancel
@@ -292,7 +311,9 @@ export function SavedSearchesDialog({
             ) : savedSearches.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center p-8">
                 <Bookmark className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-2">No saved searches yet</p>
+                <p className="text-muted-foreground mb-2">
+                  No saved searches yet
+                </p>
                 <p className="text-sm text-muted-foreground">
                   Save your current filters to access them quickly later
                 </p>
@@ -303,35 +324,45 @@ export function SavedSearchesDialog({
                   {savedSearches
                     .sort((a, b) => {
                       // Favorites first
-                      if (a.is_favorite && !b.is_favorite) return -1
-                      if (!a.is_favorite && b.is_favorite) return 1
+                      if (a.is_favorite && !b.is_favorite) return -1;
+                      if (!a.is_favorite && b.is_favorite) return 1;
                       // Then by date (newest first)
-                      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                      return (
+                        new Date(b.created_at).getTime() -
+                        new Date(a.created_at).getTime()
+                      );
                     })
                     .map((search) => (
                       <div
                         key={search.id}
                         className={cn(
                           "group relative rounded-lg border p-4 transition-all hover:shadow-md",
-                          search.is_favorite && "border-primary/50 bg-primary/5"
+                          search.is_favorite &&
+                            "border-primary/50 bg-primary/5",
                         )}
                       >
                         {/* Header */}
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <h3 className="font-medium truncate">{search.name}</h3>
+                              <h3 className="font-medium truncate">
+                                {search.name}
+                              </h3>
                               {search.is_favorite && (
                                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 shrink-0" />
                               )}
                             </div>
                             <p className="text-xs text-muted-foreground mt-1">
-                              {search.filterCount} filter{search.filterCount !== 1 ? 's' : ''} • Saved{' '}
-                              {new Date(search.created_at).toLocaleDateString('id-ID', {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric',
-                              })}
+                              {search.filterCount} filter
+                              {search.filterCount !== 1 ? "s" : ""} • Saved{" "}
+                              {new Date(search.created_at).toLocaleDateString(
+                                "id-ID",
+                                {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                },
+                              )}
                             </p>
                           </div>
 
@@ -342,7 +373,11 @@ export function SavedSearchesDialog({
                               size="icon"
                               className="h-8 w-8"
                               onClick={() => handleToggleFavorite(search.id)}
-                              title={search.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
+                              title={
+                                search.is_favorite
+                                  ? "Remove from favorites"
+                                  : "Add to favorites"
+                              }
                             >
                               {search.is_favorite ? (
                                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -369,13 +404,21 @@ export function SavedSearchesDialog({
 
                         {/* Filter Summary */}
                         <div className="flex flex-wrap gap-1.5 mt-3">
-                          {getFilterSummary(search.filters).map((summary, idx) => (
-                            <Badge key={idx} variant="secondary" className="text-xs">
-                              {summary}
-                            </Badge>
-                          ))}
+                          {getFilterSummary(search.filters).map(
+                            (summary, idx) => (
+                              <Badge
+                                key={idx}
+                                variant="secondary"
+                                className="text-xs"
+                              >
+                                {summary}
+                              </Badge>
+                            ),
+                          )}
                           {getFilterSummary(search.filters).length === 0 && (
-                            <span className="text-sm text-muted-foreground">No filters set</span>
+                            <span className="text-sm text-muted-foreground">
+                              No filters set
+                            </span>
                           )}
                         </div>
 
@@ -404,5 +447,5 @@ export function SavedSearchesDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
 import {
   Dialog,
@@ -9,14 +9,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export interface CancelBookingDialogProps {
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
-  onConfirm?: () => void
-  isLoading?: boolean
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onConfirm?: () => void;
+  isLoading?: boolean;
 }
 
 function CancelBookingDialog({
@@ -53,7 +53,7 @@ function CancelBookingDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
-export { CancelBookingDialog }
+export { CancelBookingDialog };

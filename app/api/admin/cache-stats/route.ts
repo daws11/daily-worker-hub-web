@@ -1,33 +1,40 @@
 /**
  * Cache Stats API Route
- * 
+ *
  * Admin endpoint to view cache statistics and manage cache.
  * Requires admin authentication.
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { cache, invalidateJobCache, invalidateWorkerCache, invalidateUserCache, invalidateBadgeCache, invalidateCategoryCache } from '@/lib/cache'
-import { logger } from '@/lib/logger'
+import { NextRequest, NextResponse } from "next/server";
+import {
+  cache,
+  invalidateJobCache,
+  invalidateWorkerCache,
+  invalidateUserCache,
+  invalidateBadgeCache,
+  invalidateCategoryCache,
+} from "@/lib/cache";
+import { logger } from "@/lib/logger";
 
-const routeLogger = logger.createApiLogger('cache-stats')
+const routeLogger = logger.createApiLogger("cache-stats");
 
 /**
  * Verify admin authentication
  * TODO: Implement proper admin auth check
  */
 async function verifyAdminAuth(request: NextRequest): Promise<boolean> {
-  const authHeader = request.headers.get('authorization')
-  
+  const authHeader = request.headers.get("authorization");
+
   // For now, check for a simple admin secret
   // In production, this should use proper admin authentication
-  const adminSecret = process.env.ADMIN_API_SECRET
-  
+  const adminSecret = process.env.ADMIN_API_SECRET;
+
   if (!adminSecret) {
     // If no admin secret is configured, deny access
-    return false
+    return false;
   }
-  
-  return authHeader === `Bearer ${adminSecret}`
+
+  return authHeader === `Bearer ${adminSecret}`;
 }
 
 /**
@@ -82,34 +89,31 @@ async function verifyAdminAuth(request: NextRequest): Promise<boolean> {
 export async function GET(request: NextRequest) {
   try {
     // Verify admin auth
-    const isAuthorized = await verifyAdminAuth(request)
-    
+    const isAuthorized = await verifyAdminAuth(request);
+
     if (!isAuthorized) {
-      routeLogger.warn('Unauthorized cache stats access attempt')
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      routeLogger.warn("Unauthorized cache stats access attempt");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get cache stats
-    const stats = cache.getStats()
-    
+    const stats = cache.getStats();
+
     // Group entries by namespace for better readability
-    const entriesByNamespace: Record<string, typeof stats.entries> = {}
-    
+    const entriesByNamespace: Record<string, typeof stats.entries> = {};
+
     for (const entry of stats.entries) {
-      const namespace = entry.key.split(':')[0] || 'other'
+      const namespace = entry.key.split(":")[0] || "other";
       if (!entriesByNamespace[namespace]) {
-        entriesByNamespace[namespace] = []
+        entriesByNamespace[namespace] = [];
       }
-      entriesByNamespace[namespace].push(entry)
+      entriesByNamespace[namespace].push(entry);
     }
 
-    routeLogger.info('Cache stats retrieved', { 
-      size: stats.size, 
-      hitRate: stats.hitRate 
-    })
+    routeLogger.info("Cache stats retrieved", {
+      size: stats.size,
+      hitRate: stats.hitRate,
+    });
 
     return NextResponse.json({
       stats: {
@@ -118,18 +122,18 @@ export async function GET(request: NextRequest) {
         size: stats.size,
         maxSize: stats.maxSize,
         hitRate: stats.hitRate,
-        hitRatePercent: `${Math.round(stats.hitRate * 100)}%`
+        hitRatePercent: `${Math.round(stats.hitRate * 100)}%`,
       },
       entriesByNamespace,
       totalEntries: stats.entries.length,
-      timestamp: new Date().toISOString()
-    })
+      timestamp: new Date().toISOString(),
+    });
   } catch (error) {
-    routeLogger.error('Error getting cache stats', error)
+    routeLogger.error("Error getting cache stats", error);
     return NextResponse.json(
-      { error: 'Internal server error', details: (error as Error).message },
-      { status: 500 }
-    )
+      { error: "Internal server error", details: (error as Error).message },
+      { status: 500 },
+    );
   }
 }
 
@@ -180,83 +184,87 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // Verify admin auth
-    const isAuthorized = await verifyAdminAuth(request)
-    
+    const isAuthorized = await verifyAdminAuth(request);
+
     if (!isAuthorized) {
-      routeLogger.warn('Unauthorized cache clear attempt')
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      routeLogger.warn("Unauthorized cache clear attempt");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url)
-    const namespace = searchParams.get('namespace')
-    const key = searchParams.get('key')
-    const workerId = searchParams.get('workerId')
-    const jobId = searchParams.get('jobId')
-    const userId = searchParams.get('userId')
+    const { searchParams } = new URL(request.url);
+    const namespace = searchParams.get("namespace");
+    const key = searchParams.get("key");
+    const workerId = searchParams.get("workerId");
+    const jobId = searchParams.get("jobId");
+    const userId = searchParams.get("userId");
 
-    let cleared = 0
-    let message = ''
+    let cleared = 0;
+    let message = "";
 
     // Handle specific invalidation
     if (workerId) {
-      cleared = invalidateWorkerCache(workerId)
-      message = `Cleared ${cleared} cache entries for worker ${workerId}`
+      cleared = invalidateWorkerCache(workerId);
+      message = `Cleared ${cleared} cache entries for worker ${workerId}`;
     } else if (jobId) {
-      cleared = invalidateJobCache(jobId)
-      message = `Cleared ${cleared} cache entries for job ${jobId}`
+      cleared = invalidateJobCache(jobId);
+      message = `Cleared ${cleared} cache entries for job ${jobId}`;
     } else if (userId) {
-      cleared = invalidateUserCache(userId)
-      message = `Cleared ${cleared} cache entries for user ${userId}`
+      cleared = invalidateUserCache(userId);
+      message = `Cleared ${cleared} cache entries for user ${userId}`;
     } else if (key) {
-      cleared = cache.del(key) ? 1 : 0
-      message = `Cleared cache key: ${key}`
+      cleared = cache.del(key) ? 1 : 0;
+      message = `Cleared cache key: ${key}`;
     } else if (namespace) {
       // Clear by namespace
       switch (namespace) {
-        case 'jobs':
-          cleared = cache.delPattern('jobs:*')
-          break
-        case 'workers':
-          cleared = cache.delPattern('workers:*')
-          break
-        case 'badges':
-          cleared = invalidateBadgeCache()
-          break
-        case 'categories':
-          cleared = invalidateCategoryCache()
-          break
-        case 'sessions':
-          cleared = cache.delPattern('sessions:*')
-          break
+        case "jobs":
+          cleared = cache.delPattern("jobs:*");
+          break;
+        case "workers":
+          cleared = cache.delPattern("workers:*");
+          break;
+        case "badges":
+          cleared = invalidateBadgeCache();
+          break;
+        case "categories":
+          cleared = invalidateCategoryCache();
+          break;
+        case "sessions":
+          cleared = cache.delPattern("sessions:*");
+          break;
         default:
-          cleared = cache.delPattern(`${namespace}:*`)
+          cleared = cache.delPattern(`${namespace}:*`);
       }
-      message = `Cleared ${cleared} cache entries for namespace: ${namespace}`
+      message = `Cleared ${cleared} cache entries for namespace: ${namespace}`;
     } else {
       // Clear all
-      const statsBefore = cache.getStats()
-      cache.flush()
-      cleared = statsBefore.size
-      message = `Cleared all ${cleared} cache entries`
+      const statsBefore = cache.getStats();
+      cache.flush();
+      cleared = statsBefore.size;
+      message = `Cleared all ${cleared} cache entries`;
     }
 
-    routeLogger.info('Cache cleared', { cleared, namespace, key, workerId, jobId, userId })
+    routeLogger.info("Cache cleared", {
+      cleared,
+      namespace,
+      key,
+      workerId,
+      jobId,
+      userId,
+    });
 
     return NextResponse.json({
       success: true,
       message,
       cleared,
-      timestamp: new Date().toISOString()
-    })
+      timestamp: new Date().toISOString(),
+    });
   } catch (error) {
-    routeLogger.error('Error clearing cache', error)
+    routeLogger.error("Error clearing cache", error);
     return NextResponse.json(
-      { error: 'Internal server error', details: (error as Error).message },
-      { status: 500 }
-    )
+      { error: "Internal server error", details: (error as Error).message },
+      { status: 500 },
+    );
   }
 }
 
@@ -292,64 +300,64 @@ export async function DELETE(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Verify admin auth
-    const isAuthorized = await verifyAdminAuth(request)
-    
+    const isAuthorized = await verifyAdminAuth(request);
+
     if (!isAuthorized) {
-      routeLogger.warn('Unauthorized cache warmup attempt')
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      routeLogger.warn("Unauthorized cache warmup attempt");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json().catch(() => ({}))
-    const { warmup = [] } = body
+    const body = await request.json().catch(() => ({}));
+    const { warmup = [] } = body;
 
-    const results: Record<string, { success: boolean; message: string }> = {}
+    const results: Record<string, { success: boolean; message: string }> = {};
 
     // Note: Cache warmup would typically involve pre-fetching data
     // This is a placeholder for future implementation
     for (const item of warmup) {
       switch (item) {
-        case 'jobs':
-          results.jobs = { 
-            success: true, 
-            message: 'Job cache warmup scheduled - next GET request will populate cache' 
-          }
-          break
-        case 'categories':
-          results.categories = { 
-            success: true, 
-            message: 'Category cache warmup scheduled - next GET request will populate cache' 
-          }
-          break
-        case 'badges':
-          results.badges = { 
-            success: true, 
-            message: 'Badge cache warmup scheduled - next GET request will populate cache' 
-          }
-          break
+        case "jobs":
+          results.jobs = {
+            success: true,
+            message:
+              "Job cache warmup scheduled - next GET request will populate cache",
+          };
+          break;
+        case "categories":
+          results.categories = {
+            success: true,
+            message:
+              "Category cache warmup scheduled - next GET request will populate cache",
+          };
+          break;
+        case "badges":
+          results.badges = {
+            success: true,
+            message:
+              "Badge cache warmup scheduled - next GET request will populate cache",
+          };
+          break;
         default:
-          results[item] = { 
-            success: false, 
-            message: `Unknown warmup target: ${item}` 
-          }
+          results[item] = {
+            success: false,
+            message: `Unknown warmup target: ${item}`,
+          };
       }
     }
 
-    routeLogger.info('Cache warmup requested', { warmup })
+    routeLogger.info("Cache warmup requested", { warmup });
 
     return NextResponse.json({
       success: true,
-      message: 'Cache warmup completed',
+      message: "Cache warmup completed",
       results,
-      timestamp: new Date().toISOString()
-    })
+      timestamp: new Date().toISOString(),
+    });
   } catch (error) {
-    routeLogger.error('Error warming up cache', error)
+    routeLogger.error("Error warming up cache", error);
     return NextResponse.json(
-      { error: 'Internal server error', details: (error as Error).message },
-      { status: 500 }
-    )
+      { error: "Internal server error", details: (error as Error).message },
+      { status: 500 },
+    );
   }
 }

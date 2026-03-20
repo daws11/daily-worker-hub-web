@@ -1,6 +1,6 @@
-"use server"
+"use server";
 
-import { createClient } from "../supabase/server"
+import { createClient } from "../supabase/server";
 import {
   getUserGrowthMetrics,
   getJobCompletionMetrics,
@@ -15,7 +15,7 @@ import {
   refreshDailyActiveUsers as refreshDailyActiveUsersQuery,
   refreshMonthlyActiveUsers as refreshMonthlyActiveUsersQuery,
   getAnalyticsDashboard as getAnalyticsDashboardQuery,
-} from "../supabase/queries/analytics"
+} from "../supabase/queries/analytics";
 import type {
   UserGrowthMetrics,
   JobCompletionMetrics,
@@ -29,54 +29,59 @@ import type {
   MonthlyActiveUsers,
   AnalyticsDashboardData,
   DateRangeFilter,
-} from "../types/analytics"
-import { ANALYTICS_CONSTANTS } from "../types/analytics"
+} from "../types/analytics";
+import { ANALYTICS_CONSTANTS } from "../types/analytics";
 
 // ============================================================================
 // RESULT TYPES
 // ============================================================================
 
 export type AnalyticsResult<T> = {
-  success: boolean
-  error?: string
-  data?: T
-}
+  success: boolean;
+  error?: string;
+  data?: T;
+};
 
-export type UserGrowthResult = AnalyticsResult<UserGrowthMetrics[]>
+export type UserGrowthResult = AnalyticsResult<UserGrowthMetrics[]>;
 
-export type JobCompletionResult = AnalyticsResult<JobCompletionMetrics[]>
+export type JobCompletionResult = AnalyticsResult<JobCompletionMetrics[]>;
 
-export type TransactionVolumeResult = AnalyticsResult<TransactionVolumeMetrics[]>
+export type TransactionVolumeResult = AnalyticsResult<
+  TransactionVolumeMetrics[]
+>;
 
-export type GeographicDistributionResult = AnalyticsResult<GeographicDistribution[]>
+export type GeographicDistributionResult = AnalyticsResult<
+  GeographicDistribution[]
+>;
 
-export type TrendingCategoriesResult = AnalyticsResult<TrendingCategory[]>
+export type TrendingCategoriesResult = AnalyticsResult<TrendingCategory[]>;
 
-export type ComplianceMetricsResult = AnalyticsResult<ComplianceMetrics[]>
+export type ComplianceMetricsResult = AnalyticsResult<ComplianceMetrics[]>;
 
-export type RevenueMetricsResult = AnalyticsResult<RevenueMetrics[]>
+export type RevenueMetricsResult = AnalyticsResult<RevenueMetrics[]>;
 
-export type BookingMetricsResult = AnalyticsResult<BookingMetrics[]>
+export type BookingMetricsResult = AnalyticsResult<BookingMetrics[]>;
 
-export type DailyActiveUsersResult = AnalyticsResult<DailyActiveUsers[]>
+export type DailyActiveUsersResult = AnalyticsResult<DailyActiveUsers[]>;
 
-export type MonthlyActiveUsersResult = AnalyticsResult<MonthlyActiveUsers[]>
+export type MonthlyActiveUsersResult = AnalyticsResult<MonthlyActiveUsers[]>;
 
 // Type for what the dashboard query actually returns (without summaries)
 type AnalyticsDashboardQueryResult = {
-  user_growth: { metrics: UserGrowthMetrics[] }
-  job_completion: { metrics: JobCompletionMetrics[] }
-  transaction_volume: { metrics: TransactionVolumeMetrics[] }
-  geographic_distribution: { data: GeographicDistribution[] }
-  trending_categories: { data: TrendingCategory[] }
-  compliance: { metrics: ComplianceMetrics[] }
-  revenue: { metrics: RevenueMetrics[] }
-  bookings: { metrics: BookingMetrics[] }
-}
+  user_growth: { metrics: UserGrowthMetrics[] };
+  job_completion: { metrics: JobCompletionMetrics[] };
+  transaction_volume: { metrics: TransactionVolumeMetrics[] };
+  geographic_distribution: { data: GeographicDistribution[] };
+  trending_categories: { data: TrendingCategory[] };
+  compliance: { metrics: ComplianceMetrics[] };
+  revenue: { metrics: RevenueMetrics[] };
+  bookings: { metrics: BookingMetrics[] };
+};
 
-export type AnalyticsDashboardResult = AnalyticsResult<AnalyticsDashboardQueryResult>
+export type AnalyticsDashboardResult =
+  AnalyticsResult<AnalyticsDashboardQueryResult>;
 
-export type RefreshResult = AnalyticsResult<{ message: string }>
+export type RefreshResult = AnalyticsResult<{ message: string }>;
 
 // ============================================================================
 // ADMIN VERIFICATION
@@ -86,33 +91,43 @@ export type RefreshResult = AnalyticsResult<{ message: string }>
  * Verify that the current user has admin role
  * @returns true if user is admin, false otherwise
  */
-async function verifyAdminAccess(): Promise<{ isAdmin: boolean; userId?: string; error?: string }> {
+async function verifyAdminAccess(): Promise<{
+  isAdmin: boolean;
+  userId?: string;
+  error?: string;
+}> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return { isAdmin: false, error: "User tidak terautentikasi" }
+      return { isAdmin: false, error: "User tidak terautentikasi" };
     }
 
     const { data: profile, error: profileError } = await (supabase as any)
       .from("profiles")
       .select("id, role")
       .eq("id", user.id)
-      .single()
+      .single();
 
     if (profileError || !profile) {
-      return { isAdmin: false, error: "Profil tidak ditemukan" }
+      return { isAdmin: false, error: "Profil tidak ditemukan" };
     }
 
     if (profile.role !== "admin") {
-      return { isAdmin: false, error: "Akses ditolak. Hanya admin yang dapat mengakses analytics" }
+      return {
+        isAdmin: false,
+        error: "Akses ditolak. Hanya admin yang dapat mengakses analytics",
+      };
     }
 
-    return { isAdmin: true, userId: profile.id }
+    return { isAdmin: true, userId: profile.id };
   } catch (error) {
-    return { isAdmin: false, error: "Gagal memverifikasi akses admin" }
+    return { isAdmin: false, error: "Gagal memverifikasi akses admin" };
   }
 }
 
@@ -124,21 +139,25 @@ async function verifyAdminAccess(): Promise<{ isAdmin: boolean; userId?: string;
  * Validate and parse date range filter
  * Returns ISO date strings or defaults to last 30 days
  */
-function validateDateRange(dateRange?: DateRangeFilter): { start_date: string; end_date: string; error?: string } {
-  const now = new Date()
-  let startDate: Date
-  let endDate: Date = new Date(now.setHours(23, 59, 59, 999))
+function validateDateRange(dateRange?: DateRangeFilter): {
+  start_date: string;
+  end_date: string;
+  error?: string;
+} {
+  const now = new Date();
+  let startDate: Date;
+  let endDate: Date = new Date(now.setHours(23, 59, 59, 999));
 
   if (dateRange?.start_date && dateRange?.end_date) {
-    startDate = new Date(dateRange.start_date)
-    endDate = new Date(dateRange.end_date)
+    startDate = new Date(dateRange.start_date);
+    endDate = new Date(dateRange.end_date);
 
     if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       return {
         start_date: "",
         end_date: "",
         error: "Format tanggal tidak valid",
-      }
+      };
     }
 
     if (startDate > endDate) {
@@ -146,95 +165,101 @@ function validateDateRange(dateRange?: DateRangeFilter): { start_date: string; e
         start_date: "",
         end_date: "",
         error: "Tanggal mulai tidak boleh lebih besar dari tanggal selesai",
-      }
+      };
     }
 
-    const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+    const daysDiff = Math.ceil(
+      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+    );
     if (daysDiff > ANALYTICS_CONSTANTS.MAX_DATE_RANGE_DAYS) {
       return {
         start_date: "",
         end_date: "",
         error: `Rentang tanggal maksimal adalah ${ANALYTICS_CONSTANTS.MAX_DATE_RANGE_DAYS} hari`,
-      }
+      };
     }
   } else if (dateRange?.preset) {
-    const preset = dateRange.preset
+    const preset = dateRange.preset;
 
     switch (preset) {
       case "today":
-        startDate = new Date()
-        startDate.setHours(0, 0, 0, 0)
-        endDate = new Date()
-        endDate.setHours(23, 59, 59, 999)
-        break
+        startDate = new Date();
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date();
+        endDate.setHours(23, 59, 59, 999);
+        break;
       case "yesterday":
-        startDate = new Date()
-        startDate.setDate(startDate.getDate() - 1)
-        startDate.setHours(0, 0, 0, 0)
-        endDate = new Date()
-        endDate.setDate(endDate.getDate() - 1)
-        endDate.setHours(23, 59, 59, 999)
-        break
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date();
+        endDate.setDate(endDate.getDate() - 1);
+        endDate.setHours(23, 59, 59, 999);
+        break;
       case "last_7_days":
-        startDate = new Date()
-        startDate.setDate(startDate.getDate() - 7)
-        startDate.setHours(0, 0, 0, 0)
-        break
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7);
+        startDate.setHours(0, 0, 0, 0);
+        break;
       case "last_30_days":
-        startDate = new Date()
-        startDate.setDate(startDate.getDate() - 30)
-        startDate.setHours(0, 0, 0, 0)
-        break
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 30);
+        startDate.setHours(0, 0, 0, 0);
+        break;
       case "last_90_days":
-        startDate = new Date()
-        startDate.setDate(startDate.getDate() - 90)
-        startDate.setHours(0, 0, 0, 0)
-        break
+        startDate = new Date();
+        startDate.setDate(startDate.getDate() - 90);
+        startDate.setHours(0, 0, 0, 0);
+        break;
       case "this_month":
-        startDate = new Date()
-        startDate.setDate(1)
-        startDate.setHours(0, 0, 0, 0)
-        break
+        startDate = new Date();
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+        break;
       case "last_month":
-        startDate = new Date()
-        startDate.setMonth(startDate.getMonth() - 1)
-        startDate.setDate(1)
-        startDate.setHours(0, 0, 0, 0)
-        endDate = new Date()
-        endDate.setDate(0)
-        endDate.setHours(23, 59, 59, 999)
-        break
+        startDate = new Date();
+        startDate.setMonth(startDate.getMonth() - 1);
+        startDate.setDate(1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date();
+        endDate.setDate(0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
       case "this_year":
-        startDate = new Date()
-        startDate.setMonth(0, 1)
-        startDate.setHours(0, 0, 0, 0)
-        break
+        startDate = new Date();
+        startDate.setMonth(0, 1);
+        startDate.setHours(0, 0, 0, 0);
+        break;
       case "custom":
         if (!dateRange.start_date || !dateRange.end_date) {
           return {
             start_date: "",
             end_date: "",
             error: "Tanggal mulai dan selesai harus diisi untuk preset custom",
-          }
+          };
         }
-        startDate = new Date(dateRange.start_date)
-        endDate = new Date(dateRange.end_date)
-        break
+        startDate = new Date(dateRange.start_date);
+        endDate = new Date(dateRange.end_date);
+        break;
       default:
-        startDate = new Date()
-        startDate.setDate(startDate.getDate() - ANALYTICS_CONSTANTS.DEFAULT_DATE_RANGE_DAYS)
-        startDate.setHours(0, 0, 0, 0)
+        startDate = new Date();
+        startDate.setDate(
+          startDate.getDate() - ANALYTICS_CONSTANTS.DEFAULT_DATE_RANGE_DAYS,
+        );
+        startDate.setHours(0, 0, 0, 0);
     }
   } else {
-    startDate = new Date()
-    startDate.setDate(startDate.getDate() - ANALYTICS_CONSTANTS.DEFAULT_DATE_RANGE_DAYS)
-    startDate.setHours(0, 0, 0, 0)
+    startDate = new Date();
+    startDate.setDate(
+      startDate.getDate() - ANALYTICS_CONSTANTS.DEFAULT_DATE_RANGE_DAYS,
+    );
+    startDate.setHours(0, 0, 0, 0);
   }
 
   return {
     start_date: startDate.toISOString(),
     end_date: endDate.toISOString(),
-  }
+  };
 }
 
 // ============================================================================
@@ -246,30 +271,30 @@ function validateDateRange(dateRange?: DateRangeFilter): { start_date: string; e
  * Requires admin role
  */
 export async function getAnalyticsUserGrowth(
-  dateRange?: DateRangeFilter
+  dateRange?: DateRangeFilter,
 ): Promise<UserGrowthResult> {
   try {
-    const adminCheck = await verifyAdminAccess()
+    const adminCheck = await verifyAdminAccess();
     if (!adminCheck.isAdmin) {
-      return { success: false, error: adminCheck.error }
+      return { success: false, error: adminCheck.error };
     }
 
-    const validation = validateDateRange(dateRange)
+    const validation = validateDateRange(dateRange);
     if (validation.error) {
-      return { success: false, error: validation.error }
+      return { success: false, error: validation.error };
     }
 
     const data = await getUserGrowthMetrics({
       start_date: validation.start_date,
       end_date: validation.end_date,
-    })
+    });
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
     return {
       success: false,
       error: `Gagal mengambil data user growth: ${error instanceof Error ? error.message : "Unknown error"}`,
-    }
+    };
   }
 }
 
@@ -279,19 +304,19 @@ export async function getAnalyticsUserGrowth(
  */
 export async function getAnalyticsDailyActiveUsers(): Promise<DailyActiveUsersResult> {
   try {
-    const adminCheck = await verifyAdminAccess()
+    const adminCheck = await verifyAdminAccess();
     if (!adminCheck.isAdmin) {
-      return { success: false, error: adminCheck.error }
+      return { success: false, error: adminCheck.error };
     }
 
-    const data = await getDailyActiveUsers()
+    const data = await getDailyActiveUsers();
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
     return {
       success: false,
       error: `Gagal mengambil data daily active users: ${error instanceof Error ? error.message : "Unknown error"}`,
-    }
+    };
   }
 }
 
@@ -301,19 +326,19 @@ export async function getAnalyticsDailyActiveUsers(): Promise<DailyActiveUsersRe
  */
 export async function getAnalyticsMonthlyActiveUsers(): Promise<MonthlyActiveUsersResult> {
   try {
-    const adminCheck = await verifyAdminAccess()
+    const adminCheck = await verifyAdminAccess();
     if (!adminCheck.isAdmin) {
-      return { success: false, error: adminCheck.error }
+      return { success: false, error: adminCheck.error };
     }
 
-    const data = await getMonthlyActiveUsers()
+    const data = await getMonthlyActiveUsers();
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
     return {
       success: false,
       error: `Gagal mengambil data monthly active users: ${error instanceof Error ? error.message : "Unknown error"}`,
-    }
+    };
   }
 }
 
@@ -326,30 +351,30 @@ export async function getAnalyticsMonthlyActiveUsers(): Promise<MonthlyActiveUse
  * Requires admin role
  */
 export async function getAnalyticsJobCompletion(
-  dateRange?: DateRangeFilter
+  dateRange?: DateRangeFilter,
 ): Promise<JobCompletionResult> {
   try {
-    const adminCheck = await verifyAdminAccess()
+    const adminCheck = await verifyAdminAccess();
     if (!adminCheck.isAdmin) {
-      return { success: false, error: adminCheck.error }
+      return { success: false, error: adminCheck.error };
     }
 
-    const validation = validateDateRange(dateRange)
+    const validation = validateDateRange(dateRange);
     if (validation.error) {
-      return { success: false, error: validation.error }
+      return { success: false, error: validation.error };
     }
 
     const data = await getJobCompletionMetrics({
       start_date: validation.start_date,
       end_date: validation.end_date,
-    })
+    });
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
     return {
       success: false,
       error: `Gagal mengambil data job completion: ${error instanceof Error ? error.message : "Unknown error"}`,
-    }
+    };
   }
 }
 
@@ -362,30 +387,30 @@ export async function getAnalyticsJobCompletion(
  * Requires admin role
  */
 export async function getAnalyticsTransactionVolume(
-  dateRange?: DateRangeFilter
+  dateRange?: DateRangeFilter,
 ): Promise<TransactionVolumeResult> {
   try {
-    const adminCheck = await verifyAdminAccess()
+    const adminCheck = await verifyAdminAccess();
     if (!adminCheck.isAdmin) {
-      return { success: false, error: adminCheck.error }
+      return { success: false, error: adminCheck.error };
     }
 
-    const validation = validateDateRange(dateRange)
+    const validation = validateDateRange(dateRange);
     if (validation.error) {
-      return { success: false, error: validation.error }
+      return { success: false, error: validation.error };
     }
 
     const data = await getTransactionVolumeMetrics({
       start_date: validation.start_date,
       end_date: validation.end_date,
-    })
+    });
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
     return {
       success: false,
       error: `Gagal mengambil data transaction volume: ${error instanceof Error ? error.message : "Unknown error"}`,
-    }
+    };
   }
 }
 
@@ -399,19 +424,19 @@ export async function getAnalyticsTransactionVolume(
  */
 export async function getAnalyticsGeographicDistribution(): Promise<GeographicDistributionResult> {
   try {
-    const adminCheck = await verifyAdminAccess()
+    const adminCheck = await verifyAdminAccess();
     if (!adminCheck.isAdmin) {
-      return { success: false, error: adminCheck.error }
+      return { success: false, error: adminCheck.error };
     }
 
-    const data = await getGeographicDistribution()
+    const data = await getGeographicDistribution();
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
     return {
       success: false,
       error: `Gagal mengambil data geographic distribution: ${error instanceof Error ? error.message : "Unknown error"}`,
-    }
+    };
   }
 }
 
@@ -425,19 +450,19 @@ export async function getAnalyticsGeographicDistribution(): Promise<GeographicDi
  */
 export async function getAnalyticsTrendingCategories(): Promise<TrendingCategoriesResult> {
   try {
-    const adminCheck = await verifyAdminAccess()
+    const adminCheck = await verifyAdminAccess();
     if (!adminCheck.isAdmin) {
-      return { success: false, error: adminCheck.error }
+      return { success: false, error: adminCheck.error };
     }
 
-    const data = await getTrendingCategories()
+    const data = await getTrendingCategories();
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
     return {
       success: false,
       error: `Gagal mengambil data trending categories: ${error instanceof Error ? error.message : "Unknown error"}`,
-    }
+    };
   }
 }
 
@@ -450,30 +475,30 @@ export async function getAnalyticsTrendingCategories(): Promise<TrendingCategori
  * Requires admin role
  */
 export async function getAnalyticsCompliance(
-  dateRange?: DateRangeFilter
+  dateRange?: DateRangeFilter,
 ): Promise<ComplianceMetricsResult> {
   try {
-    const adminCheck = await verifyAdminAccess()
+    const adminCheck = await verifyAdminAccess();
     if (!adminCheck.isAdmin) {
-      return { success: false, error: adminCheck.error }
+      return { success: false, error: adminCheck.error };
     }
 
-    const validation = validateDateRange(dateRange)
+    const validation = validateDateRange(dateRange);
     if (validation.error) {
-      return { success: false, error: validation.error }
+      return { success: false, error: validation.error };
     }
 
     const data = await getComplianceMetrics({
       start_date: validation.start_date,
       end_date: validation.end_date,
-    })
+    });
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
     return {
       success: false,
       error: `Gagal mengambil data compliance: ${error instanceof Error ? error.message : "Unknown error"}`,
-    }
+    };
   }
 }
 
@@ -486,30 +511,30 @@ export async function getAnalyticsCompliance(
  * Requires admin role
  */
 export async function getAnalyticsRevenue(
-  dateRange?: DateRangeFilter
+  dateRange?: DateRangeFilter,
 ): Promise<RevenueMetricsResult> {
   try {
-    const adminCheck = await verifyAdminAccess()
+    const adminCheck = await verifyAdminAccess();
     if (!adminCheck.isAdmin) {
-      return { success: false, error: adminCheck.error }
+      return { success: false, error: adminCheck.error };
     }
 
-    const validation = validateDateRange(dateRange)
+    const validation = validateDateRange(dateRange);
     if (validation.error) {
-      return { success: false, error: validation.error }
+      return { success: false, error: validation.error };
     }
 
     const data = await getRevenueMetrics({
       start_date: validation.start_date,
       end_date: validation.end_date,
-    })
+    });
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
     return {
       success: false,
       error: `Gagal mengambil data revenue: ${error instanceof Error ? error.message : "Unknown error"}`,
-    }
+    };
   }
 }
 
@@ -522,30 +547,30 @@ export async function getAnalyticsRevenue(
  * Requires admin role
  */
 export async function getAnalyticsBookings(
-  dateRange?: DateRangeFilter
+  dateRange?: DateRangeFilter,
 ): Promise<BookingMetricsResult> {
   try {
-    const adminCheck = await verifyAdminAccess()
+    const adminCheck = await verifyAdminAccess();
     if (!adminCheck.isAdmin) {
-      return { success: false, error: adminCheck.error }
+      return { success: false, error: adminCheck.error };
     }
 
-    const validation = validateDateRange(dateRange)
+    const validation = validateDateRange(dateRange);
     if (validation.error) {
-      return { success: false, error: validation.error }
+      return { success: false, error: validation.error };
     }
 
     const data = await getBookingMetrics({
       start_date: validation.start_date,
       end_date: validation.end_date,
-    })
+    });
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
     return {
       success: false,
       error: `Gagal mengambil data bookings: ${error instanceof Error ? error.message : "Unknown error"}`,
-    }
+    };
   }
 }
 
@@ -559,30 +584,30 @@ export async function getAnalyticsBookings(
  * Requires admin role
  */
 export async function getAnalyticsDashboard(
-  dateRange?: DateRangeFilter
+  dateRange?: DateRangeFilter,
 ): Promise<AnalyticsDashboardResult> {
   try {
-    const adminCheck = await verifyAdminAccess()
+    const adminCheck = await verifyAdminAccess();
     if (!adminCheck.isAdmin) {
-      return { success: false, error: adminCheck.error }
+      return { success: false, error: adminCheck.error };
     }
 
-    const validation = validateDateRange(dateRange)
+    const validation = validateDateRange(dateRange);
     if (validation.error) {
-      return { success: false, error: validation.error }
+      return { success: false, error: validation.error };
     }
 
     const data = await getAnalyticsDashboardQuery({
       start_date: validation.start_date,
       end_date: validation.end_date,
-    })
+    });
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
     return {
       success: false,
       error: `Gagal mengambil data analytics dashboard: ${error instanceof Error ? error.message : "Unknown error"}`,
-    }
+    };
   }
 }
 
@@ -596,19 +621,22 @@ export async function getAnalyticsDashboard(
  */
 export async function refreshAnalyticsDailyActiveUsers(): Promise<RefreshResult> {
   try {
-    const adminCheck = await verifyAdminAccess()
+    const adminCheck = await verifyAdminAccess();
     if (!adminCheck.isAdmin) {
-      return { success: false, error: adminCheck.error }
+      return { success: false, error: adminCheck.error };
     }
 
-    await refreshDailyActiveUsersQuery()
+    await refreshDailyActiveUsersQuery();
 
-    return { success: true, data: { message: "Daily active users berhasil di-refresh" } }
+    return {
+      success: true,
+      data: { message: "Daily active users berhasil di-refresh" },
+    };
   } catch (error) {
     return {
       success: false,
       error: `Gagal me-refresh daily active users: ${error instanceof Error ? error.message : "Unknown error"}`,
-    }
+    };
   }
 }
 
@@ -618,19 +646,22 @@ export async function refreshAnalyticsDailyActiveUsers(): Promise<RefreshResult>
  */
 export async function refreshAnalyticsMonthlyActiveUsers(): Promise<RefreshResult> {
   try {
-    const adminCheck = await verifyAdminAccess()
+    const adminCheck = await verifyAdminAccess();
     if (!adminCheck.isAdmin) {
-      return { success: false, error: adminCheck.error }
+      return { success: false, error: adminCheck.error };
     }
 
-    await refreshMonthlyActiveUsersQuery()
+    await refreshMonthlyActiveUsersQuery();
 
-    return { success: true, data: { message: "Monthly active users berhasil di-refresh" } }
+    return {
+      success: true,
+      data: { message: "Monthly active users berhasil di-refresh" },
+    };
   } catch (error) {
     return {
       success: false,
       error: `Gagal me-refresh monthly active users: ${error instanceof Error ? error.message : "Unknown error"}`,
-    }
+    };
   }
 }
 
@@ -640,21 +671,26 @@ export async function refreshAnalyticsMonthlyActiveUsers(): Promise<RefreshResul
  */
 export async function refreshAllAnalytics(): Promise<RefreshResult> {
   try {
-    const adminCheck = await verifyAdminAccess()
+    const adminCheck = await verifyAdminAccess();
     if (!adminCheck.isAdmin) {
-      return { success: false, error: adminCheck.error }
+      return { success: false, error: adminCheck.error };
     }
 
     await Promise.all([
       refreshDailyActiveUsersQuery(),
       refreshMonthlyActiveUsersQuery(),
-    ])
+    ]);
 
-    return { success: true, data: { message: "Semua analytics materialized views berhasil di-refresh" } }
+    return {
+      success: true,
+      data: {
+        message: "Semua analytics materialized views berhasil di-refresh",
+      },
+    };
   } catch (error) {
     return {
       success: false,
       error: `Gagal me-refresh analytics: ${error instanceof Error ? error.message : "Unknown error"}`,
-    }
+    };
   }
 }

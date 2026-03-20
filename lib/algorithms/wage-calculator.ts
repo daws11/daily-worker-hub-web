@@ -14,10 +14,10 @@ import {
   getOvertimeMultiplier,
   getHoursBreakdown,
   formatRupiah,
-} from '@/lib/constants/rate-bali';
+} from "@/lib/constants/rate-bali";
 
 // Re-export formatRupiah for external use
-export { formatRupiah } from '@/lib/constants/rate-bali';
+export { formatRupiah } from "@/lib/constants/rate-bali";
 
 /**
  * Wage calculation result
@@ -49,7 +49,7 @@ export interface WageCalculation {
 export function calculateWage(
   category: string,
   regency: string,
-  hoursNeeded: number
+  hoursNeeded: number,
 ): WageCalculation {
   // Validate hours
   const validHours = Math.max(4, Math.min(12, hoursNeeded));
@@ -114,37 +114,37 @@ export function getWageBreakdown(calculation: WageCalculation): {
     highlighted?: boolean;
   }> = [
     {
-      label: 'Hourly Rate',
-      value: formatRupiah(calculation.hourlyRate) + '/jam',
+      label: "Hourly Rate",
+      value: formatRupiah(calculation.hourlyRate) + "/jam",
     },
     {
-      label: 'Regular Hours',
+      label: "Regular Hours",
       value: `${calculation.regularHours}h × ${formatRupiah(calculation.hourlyRate)}/jam = ${formatRupiah(calculation.baseWage)}`,
     },
   ];
 
   if (calculation.overtimeHours > 0) {
     items.push({
-      label: 'Overtime',
+      label: "Overtime",
       value: `${calculation.overtimeHours}h × ${formatRupiah(calculation.hourlyRate)}/jam × ${calculation.overtimeMultiplier}x = ${formatRupiah(calculation.overtimeWage)}`,
     });
   }
 
   items.push(
     {
-      label: 'Total Wage',
+      label: "Total Wage",
       value: formatRupiah(calculation.totalWage),
       highlighted: true,
     },
     {
-      label: 'Platform Fee (6%)',
+      label: "Platform Fee (6%)",
       value: formatRupiah(calculation.platformFee),
     },
     {
-      label: 'You Pay',
+      label: "You Pay",
       value: formatRupiah(calculation.businessPays),
       highlighted: true,
-    }
+    },
   );
 
   return {
@@ -169,7 +169,7 @@ export interface FormatWageDisplayOptions {
 
 export function formatWageDisplay(
   calculation: WageCalculation,
-  options: FormatWageDisplayOptions = {}
+  options: FormatWageDisplayOptions = {},
 ): string {
   const {
     showBreakdown = false,
@@ -178,14 +178,14 @@ export function formatWageDisplay(
     showPlatformFee = true,
   } = options;
 
-  let result = '';
+  let result = "";
 
   if (showBreakdown) {
     result += `Base: ${formatRupiah(calculation.baseWage)}`;
     if (calculation.overtimeWage > 0) {
       result += ` + OT: ${formatRupiah(calculation.overtimeWage)}`;
     }
-    result += '\n';
+    result += "\n";
   }
 
   result += `Total: ${formatRupiah(calculation.totalWage)}`;
@@ -231,7 +231,7 @@ export function calculateMultipleWorkersWage(
   category: string,
   regency: string,
   hoursNeeded: number,
-  workerCount: number
+  workerCount: number,
 ): WageCalculation & { workerCount: number } {
   const singleWorkerWage = calculateWage(category, regency, hoursNeeded);
 
@@ -261,7 +261,7 @@ export function calculateMultipleWorkersWage(
 export function getWageEstimate(
   category: string,
   regency: string,
-  hoursNeeded: number
+  hoursNeeded: number,
 ): number {
   const calculation = calculateWage(category, regency, hoursNeeded);
   return calculation.businessPays;

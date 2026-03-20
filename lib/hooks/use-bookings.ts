@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from "react"
-import { toast } from "sonner"
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import {
   getJobBookings,
   getWorkerBookings,
@@ -13,253 +13,310 @@ import {
   createBooking,
   deleteBooking,
   type JobBookingWithDetails,
-} from "../supabase/queries/bookings"
-import type { Database } from "../supabase/types"
-import { useTranslation } from "../i18n/hooks"
+} from "../supabase/queries/bookings";
+import type { Database } from "../supabase/types";
+import { useTranslation } from "../i18n/hooks";
 
-type BookingRow = Database["public"]["Tables"]["bookings"]["Row"]
-type BookingStatus = BookingRow["status"]
+type BookingRow = Database["public"]["Tables"]["bookings"]["Row"];
+type BookingStatus = BookingRow["status"];
 
 type UseBookingsOptions = {
-  jobId?: string
-  workerId?: string
-  businessId?: string
-  bookingId?: string
-  autoFetch?: boolean
-}
+  jobId?: string;
+  workerId?: string;
+  businessId?: string;
+  bookingId?: string;
+  autoFetch?: boolean;
+};
 
 type UseBookingsReturn = {
-  bookings: JobBookingWithDetails[] | null
-  booking: JobBookingWithDetails | null
-  isLoading: boolean
-  error: string | null
-  fetchBookings: () => Promise<void>
-  fetchBooking: () => Promise<void>
-  updateStatus: (bookingId: string, status: BookingStatus) => Promise<void>
-  bulkUpdateStatus: (bookingIds: string[], status: BookingStatus) => Promise<void>
-  addNotes: (bookingId: string, notes: string) => Promise<void>
-  createNewBooking: (booking: Omit<BookingRow, "id" | "created_at" | "updated_at">) => Promise<void>
-  removeBooking: (bookingId: string) => Promise<void>
-  refreshBookings: () => Promise<void>
-}
+  bookings: JobBookingWithDetails[] | null;
+  booking: JobBookingWithDetails | null;
+  isLoading: boolean;
+  error: string | null;
+  fetchBookings: () => Promise<void>;
+  fetchBooking: () => Promise<void>;
+  updateStatus: (bookingId: string, status: BookingStatus) => Promise<void>;
+  bulkUpdateStatus: (
+    bookingIds: string[],
+    status: BookingStatus,
+  ) => Promise<void>;
+  addNotes: (bookingId: string, notes: string) => Promise<void>;
+  createNewBooking: (
+    booking: Omit<BookingRow, "id" | "created_at" | "updated_at">,
+  ) => Promise<void>;
+  removeBooking: (bookingId: string) => Promise<void>;
+  refreshBookings: () => Promise<void>;
+};
 
-export function useBookings(options: UseBookingsOptions = {}): UseBookingsReturn {
-  const { jobId, workerId, businessId, bookingId, autoFetch = true } = options
-  const { t } = useTranslation()
+export function useBookings(
+  options: UseBookingsOptions = {},
+): UseBookingsReturn {
+  const { jobId, workerId, businessId, bookingId, autoFetch = true } = options;
+  const { t } = useTranslation();
 
-  const [bookings, setBookings] = useState<JobBookingWithDetails[] | null>(null)
-  const [booking, setBooking] = useState<JobBookingWithDetails | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [bookings, setBookings] = useState<JobBookingWithDetails[] | null>(
+    null,
+  );
+  const [booking, setBooking] = useState<JobBookingWithDetails | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchBookings = useCallback(async () => {
     if (!jobId && !workerId && !businessId) {
-      return
+      return;
     }
 
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      let result
+      let result;
 
       if (jobId) {
-        result = await getJobBookings(jobId)
+        result = await getJobBookings(jobId);
       } else if (workerId) {
-        result = await getWorkerBookings(workerId)
+        result = await getWorkerBookings(workerId);
       } else if (businessId) {
-        result = await getBusinessBookings(businessId)
+        result = await getBusinessBookings(businessId);
       } else {
-        return
+        return;
       }
 
       if (result.error) {
-        setError(result.error.message)
-        toast.error(t('bookings.fetchBookingsFailed', { message: result.error.message }))
-        return
+        setError(result.error.message);
+        toast.error(
+          t("bookings.fetchBookingsFailed", { message: result.error.message }),
+        );
+        return;
       }
 
-      setBookings(result.data as JobBookingWithDetails[] | null)
+      setBookings(result.data as JobBookingWithDetails[] | null);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
-      setError(errorMessage)
-      toast.error(t('bookings.fetchBookingsFailed', { message: errorMessage }))
+      const errorMessage =
+        err instanceof Error ? err.message : t("errors.generic");
+      setError(errorMessage);
+      toast.error(t("bookings.fetchBookingsFailed", { message: errorMessage }));
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [jobId, workerId, businessId])
+  }, [jobId, workerId, businessId]);
 
   const fetchBooking = useCallback(async () => {
     if (!bookingId) {
-      return
+      return;
     }
 
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const result = await getBookingById(bookingId)
+      const result = await getBookingById(bookingId);
 
       if (result.error) {
-        setError(result.error.message)
-        toast.error(t('bookings.fetchBookingFailed', { message: result.error.message }))
-        return
+        setError(result.error.message);
+        toast.error(
+          t("bookings.fetchBookingFailed", { message: result.error.message }),
+        );
+        return;
       }
 
-      setBooking(result.data as JobBookingWithDetails | null)
+      setBooking(result.data as JobBookingWithDetails | null);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
-      setError(errorMessage)
-      toast.error(t('bookings.fetchBookingFailed', { message: errorMessage }))
+      const errorMessage =
+        err instanceof Error ? err.message : t("errors.generic");
+      setError(errorMessage);
+      toast.error(t("bookings.fetchBookingFailed", { message: errorMessage }));
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [bookingId])
+  }, [bookingId]);
 
-  const updateStatus = useCallback(async (bookingId: string, status: BookingStatus) => {
-    setIsLoading(true)
-    setError(null)
+  const updateStatus = useCallback(
+    async (bookingId: string, status: BookingStatus) => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const result = await updateBookingStatus(bookingId, status)
+      try {
+        const result = await updateBookingStatus(bookingId, status);
 
-      if (result.error) {
-        setError(result.error.message)
-        toast.error(t('bookings.updateStatusFailed', { message: result.error.message }))
-        return
+        if (result.error) {
+          setError(result.error.message);
+          toast.error(
+            t("bookings.updateStatusFailed", { message: result.error.message }),
+          );
+          return;
+        }
+
+        toast.success(t("bookings.updateStatusSuccess"));
+
+        // Refresh bookings after update
+        await fetchBookings();
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : t("errors.generic");
+        setError(errorMessage);
+        toast.error(
+          t("bookings.updateStatusFailed", { message: errorMessage }),
+        );
+      } finally {
+        setIsLoading(false);
       }
+    },
+    [fetchBookings],
+  );
 
-      toast.success(t('bookings.updateStatusSuccess'))
+  const bulkUpdateStatus = useCallback(
+    async (bookingIds: string[], status: BookingStatus) => {
+      setIsLoading(true);
+      setError(null);
 
-      // Refresh bookings after update
-      await fetchBookings()
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
-      setError(errorMessage)
-      toast.error(t('bookings.updateStatusFailed', { message: errorMessage }))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [fetchBookings])
+      try {
+        const result = await updateMultipleBookingStatuses(bookingIds, status);
 
-  const bulkUpdateStatus = useCallback(async (bookingIds: string[], status: BookingStatus) => {
-    setIsLoading(true)
-    setError(null)
+        if (result.error) {
+          setError(result.error.message);
+          toast.error(
+            t("bookings.bulkUpdateFailed", { message: result.error.message }),
+          );
+          return;
+        }
 
-    try {
-      const result = await updateMultipleBookingStatuses(bookingIds, status)
+        toast.success(
+          t("bookings.bulkUpdateSuccess", { count: bookingIds.length }),
+        );
 
-      if (result.error) {
-        setError(result.error.message)
-        toast.error(t('bookings.bulkUpdateFailed', { message: result.error.message }))
-        return
+        // Refresh bookings after update
+        await fetchBookings();
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : t("errors.generic");
+        setError(errorMessage);
+        toast.error(t("bookings.bulkUpdateFailed", { message: errorMessage }));
+      } finally {
+        setIsLoading(false);
       }
+    },
+    [fetchBookings],
+  );
 
-      toast.success(t('bookings.bulkUpdateSuccess', { count: bookingIds.length }))
+  const addNotes = useCallback(
+    async (bookingId: string, notes: string) => {
+      setIsLoading(true);
+      setError(null);
 
-      // Refresh bookings after update
-      await fetchBookings()
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
-      setError(errorMessage)
-      toast.error(t('bookings.bulkUpdateFailed', { message: errorMessage }))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [fetchBookings])
+      try {
+        const result = await addBookingNotes(bookingId, notes);
 
-  const addNotes = useCallback(async (bookingId: string, notes: string) => {
-    setIsLoading(true)
-    setError(null)
+        if (result.error) {
+          setError(result.error.message);
+          toast.error(
+            t("bookings.addNotesFailed", { message: result.error.message }),
+          );
+          return;
+        }
 
-    try {
-      const result = await addBookingNotes(bookingId, notes)
+        toast.success(t("bookings.addNotesSuccess"));
 
-      if (result.error) {
-        setError(result.error.message)
-        toast.error(t('bookings.addNotesFailed', { message: result.error.message }))
-        return
+        // Refresh bookings after update
+        await fetchBookings();
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : t("errors.generic");
+        setError(errorMessage);
+        toast.error(t("bookings.addNotesFailed", { message: errorMessage }));
+      } finally {
+        setIsLoading(false);
       }
+    },
+    [fetchBookings],
+  );
 
-      toast.success(t('bookings.addNotesSuccess'))
+  const createNewBooking = useCallback(
+    async (booking: Omit<BookingRow, "id" | "created_at" | "updated_at">) => {
+      setIsLoading(true);
+      setError(null);
 
-      // Refresh bookings after update
-      await fetchBookings()
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
-      setError(errorMessage)
-      toast.error(t('bookings.addNotesFailed', { message: errorMessage }))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [fetchBookings])
+      try {
+        const result = await createBooking(booking);
 
-  const createNewBooking = useCallback(async (booking: Omit<BookingRow, "id" | "created_at" | "updated_at">) => {
-    setIsLoading(true)
-    setError(null)
+        if (result.error) {
+          setError(result.error.message);
+          toast.error(
+            t("bookings.createBookingFailed", {
+              message: result.error.message,
+            }),
+          );
+          return;
+        }
 
-    try {
-      const result = await createBooking(booking)
+        toast.success(t("bookings.createBookingSuccess"));
 
-      if (result.error) {
-        setError(result.error.message)
-        toast.error(t('bookings.createBookingFailed', { message: result.error.message }))
-        return
+        // Refresh bookings after creation
+        await fetchBookings();
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : t("errors.generic");
+        setError(errorMessage);
+        toast.error(
+          t("bookings.createBookingFailed", { message: errorMessage }),
+        );
+      } finally {
+        setIsLoading(false);
       }
+    },
+    [fetchBookings],
+  );
 
-      toast.success(t('bookings.createBookingSuccess'))
+  const removeBooking = useCallback(
+    async (bookingId: string) => {
+      setIsLoading(true);
+      setError(null);
 
-      // Refresh bookings after creation
-      await fetchBookings()
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
-      setError(errorMessage)
-      toast.error(t('bookings.createBookingFailed', { message: errorMessage }))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [fetchBookings])
+      try {
+        const result = await deleteBooking(bookingId);
 
-  const removeBooking = useCallback(async (bookingId: string) => {
-    setIsLoading(true)
-    setError(null)
+        if (result.error) {
+          setError(result.error.message);
+          toast.error(
+            t("bookings.deleteBookingFailed", {
+              message: result.error.message,
+            }),
+          );
+          return;
+        }
 
-    try {
-      const result = await deleteBooking(bookingId)
+        toast.success(t("bookings.deleteBookingSuccess"));
 
-      if (result.error) {
-        setError(result.error.message)
-        toast.error(t('bookings.deleteBookingFailed', { message: result.error.message }))
-        return
+        // Refresh bookings after deletion
+        await fetchBookings();
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : t("errors.generic");
+        setError(errorMessage);
+        toast.error(
+          t("bookings.deleteBookingFailed", { message: errorMessage }),
+        );
+      } finally {
+        setIsLoading(false);
       }
-
-      toast.success(t('bookings.deleteBookingSuccess'))
-
-      // Refresh bookings after deletion
-      await fetchBookings()
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : t('errors.generic')
-      setError(errorMessage)
-      toast.error(t('bookings.deleteBookingFailed', { message: errorMessage }))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [fetchBookings])
+    },
+    [fetchBookings],
+  );
 
   const refreshBookings = useCallback(async () => {
-    await fetchBookings()
-  }, [fetchBookings])
+    await fetchBookings();
+  }, [fetchBookings]);
 
   // Auto-fetch on mount and when options change
   useEffect(() => {
     if (autoFetch) {
       if (bookingId) {
-        fetchBooking()
+        fetchBooking();
       } else {
-        fetchBookings()
+        fetchBookings();
       }
     }
-  }, [autoFetch, bookingId, fetchBookings, fetchBooking])
+  }, [autoFetch, bookingId, fetchBookings, fetchBooking]);
 
   return {
     bookings,
@@ -274,5 +331,5 @@ export function useBookings(options: UseBookingsOptions = {}): UseBookingsReturn
     createNewBooking,
     removeBooking,
     refreshBookings,
-  }
+  };
 }

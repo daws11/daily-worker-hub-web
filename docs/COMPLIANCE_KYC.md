@@ -12,12 +12,12 @@ Daily Worker Hub implements a tiered worker verification system with KYC (Know Y
 
 ## Worker Tiers
 
-| Tier | Badge Color | Interview Required | KYC Required | Benefits |
-|------|-------------|-------------------|--------------|----------|
-| **Classic** | Gray | ✅ Chat + Voice | Basic ID | Access to basic jobs |
-| **Pro** | Blue | ✅ Chat only | Basic ID | Higher pay rates, priority matching |
-| **Elite** | Gold | ❌ None | Full KYC + Selfie | Premium jobs, instant dispatch |
-| **Champion** | Purple | ❌ None | Full KYC + References | Top-tier jobs, exclusive access |
+| Tier         | Badge Color | Interview Required | KYC Required          | Benefits                            |
+| ------------ | ----------- | ------------------ | --------------------- | ----------------------------------- |
+| **Classic**  | Gray        | ✅ Chat + Voice    | Basic ID              | Access to basic jobs                |
+| **Pro**      | Blue        | ✅ Chat only       | Basic ID              | Higher pay rates, priority matching |
+| **Elite**    | Gold        | ❌ None            | Full KYC + Selfie     | Premium jobs, instant dispatch      |
+| **Champion** | Purple      | ❌ None            | Full KYC + References | Top-tier jobs, exclusive access     |
 
 ### Tier Progression
 
@@ -41,21 +41,23 @@ pending → in_review → approved
 
 ### KYC Status Definitions
 
-| Status | Description | Next Step |
-|--------|-------------|-----------|
-| `pending` | Documents submitted, awaiting review | Admin reviews documents |
-| `in_review` | Admin is reviewing documents | Decision pending |
-| `approved` | Verification complete | Worker can accept jobs |
-| `rejected` | Documents rejected | Worker must resubmit |
+| Status      | Description                          | Next Step               |
+| ----------- | ------------------------------------ | ----------------------- |
+| `pending`   | Documents submitted, awaiting review | Admin reviews documents |
+| `in_review` | Admin is reviewing documents         | Decision pending        |
+| `approved`  | Verification complete                | Worker can accept jobs  |
+| `rejected`  | Documents rejected                   | Worker must resubmit    |
 
 ### Required Documents
 
 #### Basic KYC (All Tiers)
+
 - **Document Type:** KTP (Indonesian ID Card) or Passport
 - **Document URL:** Photo/scan of ID document
 - **Validation:** Must be valid, not expired, readable
 
 #### Enhanced KYC (Elite/Champion)
+
 - **Selfie URL:** Selfie holding ID document
 - **Validation:** Face must match ID photo
 - **Additional:** May require references or work history
@@ -97,12 +99,12 @@ kyc_status VARCHAR(20)
 
 ### Interview Requirements by Tier
 
-| Tier | Interview Type | Chat Required | Voice Required | Duration |
-|------|---------------|---------------|----------------|----------|
-| Classic | `chat_and_voice` | ✅ Yes | ✅ Yes | 10-30 min |
-| Pro | `chat` | ✅ Yes | ❌ No | 5-15 min |
-| Elite | `none` | ❌ No | ❌ No | 0 min |
-| Champion | `none` | ❌ No | ❌ No | 0 min |
+| Tier     | Interview Type   | Chat Required | Voice Required | Duration  |
+| -------- | ---------------- | ------------- | -------------- | --------- |
+| Classic  | `chat_and_voice` | ✅ Yes        | ✅ Yes         | 10-30 min |
+| Pro      | `chat`           | ✅ Yes        | ❌ No          | 5-15 min  |
+| Elite    | `none`           | ❌ No         | ❌ No          | 0 min     |
+| Champion | `none`           | ❌ No         | ❌ No          | 0 min     |
 
 ### Interview Flow
 
@@ -118,13 +120,13 @@ kyc_status VARCHAR(20)
 
 ### Interview Status
 
-| Status | Description |
-|--------|-------------|
-| `pending` | Interview not started |
-| `in_progress` | Interview ongoing |
-| `completed` | Successfully finished |
-| `skipped` | Not required (Elite/Champion) |
-| `failed` | Interview declined/failed |
+| Status        | Description                   |
+| ------------- | ----------------------------- |
+| `pending`     | Interview not started         |
+| `in_progress` | Interview ongoing             |
+| `completed`   | Successfully finished         |
+| `skipped`     | Not required (Elite/Champion) |
+| `failed`      | Interview declined/failed     |
 
 ---
 
@@ -191,15 +193,15 @@ POST /api/admin/kycs/:id/reject
 ```typescript
 function canAcceptJobs(worker: Worker): boolean {
   // Must have approved KYC
-  if (worker.kyc_status !== 'approved') return false
+  if (worker.kyc_status !== "approved") return false;
 
   // Must have complete profile
-  if (!worker.profile_complete) return false
+  if (!worker.profile_complete) return false;
 
   // Must be active
-  if (worker.status !== 'active') return false
+  if (worker.status !== "active") return false;
 
-  return true
+  return true;
 }
 ```
 
@@ -210,28 +212,28 @@ const TIER_REQUIREMENTS = {
   classic: {
     minJobs: 0,
     minRating: 0,
-    kycRequired: 'basic',
-    interviewType: 'chat_and_voice'
+    kycRequired: "basic",
+    interviewType: "chat_and_voice",
   },
   pro: {
     minJobs: 10,
     minRating: 4.0,
-    kycRequired: 'basic',
-    interviewType: 'chat'
+    kycRequired: "basic",
+    interviewType: "chat",
   },
   elite: {
     minJobs: 50,
     minRating: 4.5,
-    kycRequired: 'enhanced',
-    interviewType: 'none'
+    kycRequired: "enhanced",
+    interviewType: "none",
   },
   champion: {
     minJobs: 100,
     minRating: 4.8,
-    kycRequired: 'enhanced',
-    interviewType: 'none'
-  }
-}
+    kycRequired: "enhanced",
+    interviewType: "none",
+  },
+};
 ```
 
 ---
@@ -239,11 +241,13 @@ const TIER_REQUIREMENTS = {
 ## Security Considerations
 
 ### Document Storage
+
 - Documents stored in Supabase Storage (private bucket)
 - Signed URLs with expiration for secure access
 - No direct public URLs
 
 ### Data Privacy
+
 - KYC data only accessible to:
   - Worker (own data)
   - Admin (review purposes)
@@ -252,6 +256,7 @@ const TIER_REQUIREMENTS = {
 - Automatic deletion after account closure (30 days)
 
 ### Fraud Prevention
+
 - Selfie matching for enhanced KYC
 - Document validation checks
 - Admin review for suspicious submissions
@@ -262,14 +267,17 @@ const TIER_REQUIREMENTS = {
 ## UI Components
 
 ### Worker KYC Submission
+
 - `app/(dashboard)/worker/settings/page.tsx` - KYC upload form
 - `components/worker/kyc-upload.tsx` - Document upload component
 
 ### Admin KYC Review
+
 - `app/admin/kycs/page.tsx` - KYC management dashboard
 - `components/admin/kyc-review-dialog.tsx` - Review modal
 
 ### Status Badges
+
 - `components/worker/tier-badge.tsx` - Tier display
 - Status badges: pending (yellow), in_review (blue), approved (green), rejected (red)
 
@@ -278,6 +286,7 @@ const TIER_REQUIREMENTS = {
 ## Testing Checklist
 
 ### KYC Flow Testing
+
 - [ ] Submit basic KYC (ID document only)
 - [ ] Submit enhanced KYC (ID + selfie)
 - [ ] Admin approve flow
@@ -286,6 +295,7 @@ const TIER_REQUIREMENTS = {
 - [ ] Status badge updates correctly
 
 ### Tier Progression Testing
+
 - [ ] Classic worker interview flow
 - [ ] Pro worker interview flow
 - [ ] Elite worker (no interview)

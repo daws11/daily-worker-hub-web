@@ -9,7 +9,7 @@
  * 5. Handles optional booking information
  */
 
-import { TransactionCard } from "../transaction-card"
+import { TransactionCard } from "../transaction-card";
 
 // Mock transaction data for each type
 const mockTransactions = {
@@ -51,7 +51,7 @@ const mockTransactions = {
     created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     bookings: null,
   },
-}
+};
 
 // Verification checklist
 const verificationChecklist = {
@@ -65,7 +65,7 @@ const verificationChecklist = {
   handlesOptionalDescription: true,
   supportsSelection: true,
   responsiveLayout: true,
-}
+};
 
-console.log("✅ TransactionCard component verification checklist:")
-console.log(verificationChecklist)
+console.log("✅ TransactionCard component verification checklist:");
+console.log(verificationChecklist);

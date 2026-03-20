@@ -10,7 +10,8 @@
 import { supabase } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/types";
 
-type WorkerAvailability = Database["public"]["Tables"]["worker_availabilities"]["Row"];
+type WorkerAvailability =
+  Database["public"]["Tables"]["worker_availabilities"]["Row"];
 
 /**
  * Day of week constants
@@ -53,7 +54,7 @@ export const MAX_BLOCK_HOURS = 12;
  */
 export function validateAvailabilityBlock(
   startHour: number,
-  endHour: number
+  endHour: number,
 ): { valid: boolean; error?: string } {
   // Check hours are valid
   if (startHour < 0 || startHour > 23) {
@@ -93,7 +94,7 @@ export function validateAvailabilityBlock(
  * @returns Array of availability records for all days
  */
 export async function getWorkerAvailability(
-  workerId: string
+  workerId: string,
 ): Promise<WorkerAvailability[]> {
   const { data, error } = await supabase
     .from("worker_availabilities")
@@ -118,7 +119,7 @@ export async function getWorkerAvailability(
  */
 export async function getWorkerAvailabilityForDay(
   workerId: string,
-  dayOfWeek: number
+  dayOfWeek: number,
 ): Promise<WorkerAvailability | null> {
   const { data, error } = await supabase
     .from("worker_availabilities")
@@ -148,7 +149,7 @@ export async function isWorkerAvailable(
   workerId: string,
   date: Date,
   jobStartHour: number,
-  jobEndHour: number
+  jobEndHour: number,
 ): Promise<boolean> {
   // Get day of week (0=Sunday, 1=Monday, ..., 6=Saturday)
   const jsDay = date.getDay();
@@ -156,10 +157,7 @@ export async function isWorkerAvailable(
   const dayOfWeek = jsDay === 0 ? 7 : jsDay;
 
   // Get worker's availability for this day
-  const availability = await getWorkerAvailabilityForDay(
-    workerId,
-    dayOfWeek
-  );
+  const availability = await getWorkerAvailabilityForDay(workerId, dayOfWeek);
 
   if (!availability || !availability.is_available) {
     return false;
@@ -187,13 +185,13 @@ export async function calculateAvailabilityScore(
   workerId: string,
   date: Date,
   jobStartHour: number,
-  jobEndHour: number
+  jobEndHour: number,
 ): Promise<number> {
   const isAvailable = await isWorkerAvailable(
     workerId,
     date,
     jobStartHour,
-    jobEndHour
+    jobEndHour,
   );
 
   return isAvailable ? 20 : 0;
@@ -212,7 +210,7 @@ export async function checkWorkerAvailabilityForDates(
   workerId: string,
   dates: Date[],
   jobStartHour: number,
-  jobEndHour: number
+  jobEndHour: number,
 ): Promise<{ date: Date; available: boolean }[]> {
   const results = await Promise.all(
     dates.map(async (date) => ({
@@ -221,9 +219,9 @@ export async function checkWorkerAvailabilityForDates(
         workerId,
         date,
         jobStartHour,
-        jobEndHour
+        jobEndHour,
       ),
-    }))
+    })),
   );
 
   return results;
@@ -240,7 +238,7 @@ export async function checkWorkerAvailabilityForDates(
 export async function getAvailableWorkers(
   dayOfWeek: number,
   jobStartHour: number,
-  jobEndHour: number
+  jobEndHour: number,
 ): Promise<string[]> {
   // Get all workers with availability for this day
   const { data, error } = await supabase
@@ -260,7 +258,7 @@ export async function getAvailableWorkers(
       (a) =>
         a.start_hour <= jobStartHour &&
         a.end_hour >= jobEndHour &&
-        jobStartHour < jobEndHour
+        jobStartHour < jobEndHour,
     )
     .map((a) => a.worker_id);
 
@@ -282,7 +280,7 @@ export async function setWorkerAvailability(
   dayOfWeek: number,
   startHour: number,
   endHour: number,
-  isAvailable: boolean = true
+  isAvailable: boolean = true,
 ): Promise<{ success: boolean; error?: string }> {
   // Validate the availability block
   if (isAvailable) {
@@ -293,20 +291,18 @@ export async function setWorkerAvailability(
   }
 
   // Upsert the availability record
-  const { error } = await supabase
-    .from("worker_availabilities")
-    .upsert(
-      {
-        worker_id: workerId,
-        day_of_week: dayOfWeek,
-        start_hour: isAvailable ? startHour : 9, // Default if not available
-        end_hour: isAvailable ? endHour : 17, // Default if not available
-        is_available: isAvailable,
-      },
-      {
-        onConflict: "worker_id,day_of_week",
-      }
-    );
+  const { error } = await supabase.from("worker_availabilities").upsert(
+    {
+      worker_id: workerId,
+      day_of_week: dayOfWeek,
+      start_hour: isAvailable ? startHour : 9, // Default if not available
+      end_hour: isAvailable ? endHour : 17, // Default if not available
+      is_available: isAvailable,
+    },
+    {
+      onConflict: "worker_id,day_of_week",
+    },
+  );
 
   if (error) {
     console.error("Error setting worker availability:", error);
@@ -330,21 +326,16 @@ export async function setWorkerAvailabilityForWeek(
     startHour: number;
     endHour: number;
     isAvailable: boolean;
-  }[]
+  }[],
 ): Promise<{ success: boolean; errors?: string[] }> {
   const errors: string[] = [];
 
   // Validate all availabilities first
   for (const av of availabilities) {
     if (av.isAvailable) {
-      const validation = validateAvailabilityBlock(
-        av.startHour,
-        av.endHour
-      );
+      const validation = validateAvailabilityBlock(av.startHour, av.endHour);
       if (!validation.valid) {
-        errors.push(
-          `Day ${DAY_NAMES[av.dayOfWeek]}: ${validation.error}`
-        );
+        errors.push(`Day ${DAY_NAMES[av.dayOfWeek]}: ${validation.error}`);
       }
     }
   }

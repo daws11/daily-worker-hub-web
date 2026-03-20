@@ -1,25 +1,25 @@
-import * as React from "react"
+import * as React from "react";
 
 export interface PaymentReceiptProps {
-  workerName: string
-  businessName: string
-  jobTitle: string
-  paymentId: string
-  paymentDate: string
-  amount: number
-  paymentMethod?: string
-  workPeriod: string
-  totalDays: number
-  dailyRate: number
+  workerName: string;
+  businessName: string;
+  jobTitle: string;
+  paymentId: string;
+  paymentDate: string;
+  amount: number;
+  paymentMethod?: string;
+  workPeriod: string;
+  totalDays: number;
+  dailyRate: number;
   deductions?: {
-    description: string
-    amount: number
-  }[]
+    description: string;
+    amount: number;
+  }[];
   bonuses?: {
-    description: string
-    amount: number
-  }[]
-  dashboardUrl: string
+    description: string;
+    amount: number;
+  }[];
+  dashboardUrl: string;
 }
 
 export function PaymentReceiptEmail({
@@ -42,11 +42,12 @@ export function PaymentReceiptEmail({
       style: "currency",
       currency: "IDR",
       minimumFractionDigits: 0,
-    }).format(value)
+    }).format(value);
 
-  const grossAmount = dailyRate * totalDays
-  const totalDeductions = deductions?.reduce((sum, d) => sum + d.amount, 0) || 0
-  const totalBonuses = bonuses?.reduce((sum, b) => sum + b.amount, 0) || 0
+  const grossAmount = dailyRate * totalDays;
+  const totalDeductions =
+    deductions?.reduce((sum, d) => sum + d.amount, 0) || 0;
+  const totalBonuses = bonuses?.reduce((sum, b) => sum + b.amount, 0) || 0;
 
   return (
     <div style={styles.container}>
@@ -54,25 +55,27 @@ export function PaymentReceiptEmail({
         <h1 style={styles.logo}>Daily Worker Hub</h1>
         <p style={styles.subtitle}>Bukti Pembayaran</p>
       </div>
-      
+
       <div style={styles.content}>
         <div style={styles.successBanner}>
           <span style={styles.checkmark}>✓</span>
           <p style={styles.successText}>Pembayaran Berhasil!</p>
         </div>
-        
+
         <p style={styles.greeting}>Halo {workerName},</p>
-        
+
         <p style={styles.text}>
-          Pembayaran dari <strong>{businessName}</strong> telah berhasil diproses.
-          Berikut adalah rincian pembayaran Anda:
+          Pembayaran dari <strong>{businessName}</strong> telah berhasil
+          diproses. Berikut adalah rincian pembayaran Anda:
         </p>
 
         <div style={styles.receiptCard}>
           <div style={styles.receiptHeader}>
             <div>
               <p style={styles.receiptLabel}>ID Pembayaran</p>
-              <p style={styles.receiptId}>#{paymentId.slice(0, 8).toUpperCase()}</p>
+              <p style={styles.receiptId}>
+                #{paymentId.slice(0, 8).toUpperCase()}
+              </p>
             </div>
             <div style={{ textAlign: "right" as const }}>
               <p style={styles.receiptLabel}>Tanggal</p>
@@ -100,12 +103,12 @@ export function PaymentReceiptEmail({
 
           <div style={styles.section}>
             <p style={styles.sectionLabel}>Rincian Pembayaran</p>
-            
+
             <div style={styles.row}>
               <span style={styles.rowLabel}>Upah per Hari:</span>
               <span style={styles.rowValue}>{formatCurrency(dailyRate)}</span>
             </div>
-            
+
             <div style={styles.row}>
               <span style={styles.rowLabel}>Subtotal ({totalDays} hari):</span>
               <span style={styles.rowValue}>{formatCurrency(grossAmount)}</span>
@@ -130,7 +133,9 @@ export function PaymentReceiptEmail({
                 <p style={styles.subLabel}>Potongan:</p>
                 {deductions.map((deduction, index) => (
                   <div key={index} style={styles.row}>
-                    <span style={styles.rowLabel}>- {deduction.description}:</span>
+                    <span style={styles.rowLabel}>
+                      - {deduction.description}:
+                    </span>
                     <span style={{ ...styles.rowValue, color: "#ef4444" }}>
                       -{formatCurrency(deduction.amount)}
                     </span>
@@ -165,7 +170,10 @@ export function PaymentReceiptEmail({
         </div>
 
         <div style={styles.buttonContainer}>
-          <a href={`${dashboardUrl}/payments/${paymentId}`} style={styles.button}>
+          <a
+            href={`${dashboardUrl}/payments/${paymentId}`}
+            style={styles.button}
+          >
             Lihat Riwayat Pembayaran
           </a>
         </div>
@@ -180,7 +188,7 @@ export function PaymentReceiptEmail({
         </p>
       </div>
     </div>
-  )
+  );
 }
 
 const styles: Record<string, React.CSSProperties> = {
@@ -391,6 +399,6 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#9ca3af",
     margin: "4px 0",
   },
-}
+};
 
-export default PaymentReceiptEmail
+export default PaymentReceiptEmail;

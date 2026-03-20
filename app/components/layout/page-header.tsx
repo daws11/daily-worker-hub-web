@@ -1,17 +1,17 @@
-import * as React from "react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import * as React from "react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /**
  * Breadcrumb item type
  */
 export interface BreadcrumbItem {
   /** Label to display */
-  label: string
+  label: string;
   /** Link href (optional for current page) */
-  href?: string
+  href?: string;
   /** Whether this is the current page */
-  current?: boolean
+  current?: boolean;
 }
 
 /**
@@ -19,17 +19,17 @@ export interface BreadcrumbItem {
  */
 export interface PageAction {
   /** Button label */
-  label: string
+  label: string;
   /** Click handler */
-  onClick: () => void
+  onClick: () => void;
   /** Button variant */
-  variant?: "primary" | "secondary" | "ghost" | "outline"
+  variant?: "primary" | "secondary" | "ghost" | "outline";
   /** Button icon */
-  icon?: React.ReactNode
+  icon?: React.ReactNode;
   /** Whether the button is loading */
-  isLoading?: boolean
+  isLoading?: boolean;
   /** Whether to hide on mobile */
-  hideOnMobile?: boolean
+  hideOnMobile?: boolean;
 }
 
 /**
@@ -37,31 +37,31 @@ export interface PageAction {
  */
 export interface PageHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Page title */
-  title: string
+  title: string;
   /** Page subtitle/description */
-  subtitle?: string
+  subtitle?: string;
   /** Breadcrumb navigation items */
-  breadcrumbs?: BreadcrumbItem[]
+  breadcrumbs?: BreadcrumbItem[];
   /** Primary action button */
-  primaryAction?: PageAction
+  primaryAction?: PageAction;
   /** Secondary action buttons */
-  secondaryActions?: PageAction[]
+  secondaryActions?: PageAction[];
   /** Back button configuration */
   backButton?: {
-    onClick: () => void
-    label?: string
-  }
+    onClick: () => void;
+    label?: string;
+  };
   /** Whether to show a border below the header */
-  bordered?: boolean
+  bordered?: boolean;
   /** Whether the header is sticky */
-  sticky?: boolean
+  sticky?: boolean;
   /** Size variant */
-  size?: "sm" | "md" | "lg"
+  size?: "sm" | "md" | "lg";
 }
 
 /**
  * PageHeader component for page titles and actions
- * 
+ *
  * @example
  * ```tsx
  * <PageHeader
@@ -105,7 +105,7 @@ export function PageHeader({
       subtitle: "text-base md:text-lg",
       padding: "py-8",
     },
-  }
+  };
 
   return (
     <header
@@ -113,7 +113,7 @@ export function PageHeader({
         sizes[size].padding,
         bordered && "border-b border-slate-200 dark:border-slate-800",
         sticky && "sticky top-0 z-30 bg-white dark:bg-slate-900",
-        className
+        className,
       )}
       {...props}
     >
@@ -148,7 +148,8 @@ export function PageHeader({
                 ) : (
                   <span
                     className={cn(
-                      item.current && "text-slate-900 dark:text-slate-100 font-medium"
+                      item.current &&
+                        "text-slate-900 dark:text-slate-100 font-medium",
                     )}
                     aria-current={item.current ? "page" : undefined}
                   >
@@ -174,7 +175,7 @@ export function PageHeader({
                 "h-10 w-10 rounded-lg",
                 "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200",
                 "hover:bg-slate-100 dark:hover:bg-slate-800",
-                "transition-colors"
+                "transition-colors",
               )}
               aria-label={backButton.label || "Kembali"}
             >
@@ -199,7 +200,7 @@ export function PageHeader({
             <h1
               className={cn(
                 "font-semibold text-slate-900 dark:text-slate-100",
-                sizes[size].title
+                sizes[size].title,
               )}
             >
               {title}
@@ -208,7 +209,7 @@ export function PageHeader({
               <p
                 className={cn(
                   "mt-1 text-slate-500 dark:text-slate-400",
-                  sizes[size].subtitle
+                  sizes[size].subtitle,
                 )}
               >
                 {subtitle}
@@ -243,7 +244,9 @@ export function PageHeader({
                 onClick={primaryAction.onClick}
                 isLoading={primaryAction.isLoading}
               >
-                {primaryAction.icon && <span className="mr-2">{primaryAction.icon}</span>}
+                {primaryAction.icon && (
+                  <span className="mr-2">{primaryAction.icon}</span>
+                )}
                 {primaryAction.label}
               </Button>
             )}
@@ -251,7 +254,7 @@ export function PageHeader({
         )}
       </div>
     </header>
-  )
+  );
 }
 
 /**
@@ -259,9 +262,9 @@ export function PageHeader({
  */
 export interface PageTitleProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Page title */
-  title: string
+  title: string;
   /** Optional badge */
-  badge?: React.ReactNode
+  badge?: React.ReactNode;
 }
 
 /**
@@ -280,5 +283,5 @@ export function PageTitle({
       </h1>
       {badge}
     </div>
-  )
+  );
 }

@@ -1,431 +1,530 @@
-"use client"
+"use client";
 
-import { useState, useCallback, useMemo } from 'react'
-import { useAuth } from '@/app/providers/auth-provider'
-import { useTranslation } from '@/lib/i18n/hooks'
-import { JobSearch } from '@/components/job-marketplace/JobSearch'
-import { JobFilters } from '@/components/job-marketplace/JobFilters'
-import { JobSort } from '@/components/job-marketplace/JobSort'
-import { JobListWithHeader } from '@/components/job-marketplace/JobList'
-import { CheckInOutButton } from '@/components/attendance/check-in-out-button'
-import dynamic from 'next/dynamic'
-import { Loader2 } from 'lucide-react'
+import { useState, useCallback, useMemo } from "react";
+import { useAuth } from "@/app/providers/auth-provider";
+import { useTranslation } from "@/lib/i18n/hooks";
+import { JobSearch } from "@/components/job-marketplace/JobSearch";
+import { JobFilters } from "@/components/job-marketplace/JobFilters";
+import { JobSort } from "@/components/job-marketplace/JobSort";
+import { JobListWithHeader } from "@/components/job-marketplace/JobList";
+import { CheckInOutButton } from "@/components/attendance/check-in-out-button";
+import dynamic from "next/dynamic";
+import { Loader2 } from "lucide-react";
 
 const JobDetailDialog = dynamic(
-  () => import('@/components/job-marketplace/JobDetailDialog').then(mod => ({ default: mod.JobDetailDialog })),
+  () =>
+    import("@/components/job-marketplace/JobDetailDialog").then((mod) => ({
+      default: mod.JobDetailDialog,
+    })),
   {
-    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>,
-    ssr: false
-  }
-)
+    loading: () => (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin" />
+      </div>
+    ),
+    ssr: false,
+  },
+);
 
 const ApplyJobModal = dynamic(
-  () => import('@/components/booking/apply-job-modal').then(mod => ({ default: mod.ApplyJobModal })),
+  () =>
+    import("@/components/booking/apply-job-modal").then((mod) => ({
+      default: mod.ApplyJobModal,
+    })),
   {
-    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>,
-    ssr: false
-  }
-)
+    loading: () => (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin" />
+      </div>
+    ),
+    ssr: false,
+  },
+);
 
 const QRCodeScanner = dynamic(
-  () => import('@/components/attendance/qr-code-scanner').then(mod => ({ default: mod.QRCodeScanner })),
+  () =>
+    import("@/components/attendance/qr-code-scanner").then((mod) => ({
+      default: mod.QRCodeScanner,
+    })),
   {
-    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>,
-    ssr: false
-  }
-)
-import { useJobs } from '@/lib/hooks/useJobs'
-import { useBookings } from '@/lib/hooks/use-bookings'
-import { useAttendance } from '@/lib/hooks/use-attendance'
-import { useGeolocation } from '@/lib/hooks/use-geolocation'
-import { JobWithRelations, JobFilters as JobFiltersType, JobSortOption } from '@/lib/types/job'
-import type { JobBookingWithDetails } from '@/lib/supabase/queries/bookings'
-import { toast } from 'sonner'
-import { Briefcase, Calendar, Clock, MapPin, CheckCircle } from 'lucide-react'
+    loading: () => (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin" />
+      </div>
+    ),
+    ssr: false,
+  },
+);
+import { useJobs } from "@/lib/hooks/useJobs";
+import { useBookings } from "@/lib/hooks/use-bookings";
+import { useAttendance } from "@/lib/hooks/use-attendance";
+import { useGeolocation } from "@/lib/hooks/use-geolocation";
+import {
+  JobWithRelations,
+  JobFilters as JobFiltersType,
+  JobSortOption,
+} from "@/lib/types/job";
+import type { JobBookingWithDetails } from "@/lib/supabase/queries/bookings";
+import { toast } from "sonner";
+import { Briefcase, Calendar, Clock, MapPin, CheckCircle } from "lucide-react";
 
 export default function WorkerJobsPage() {
-  const { user } = useAuth()
-  const { t, locale } = useTranslation()
+  const { user } = useAuth();
+  const { t, locale } = useTranslation();
 
   // State for filters and search
-  const [search, setSearch] = useState<string>('')
-  const [filters, setFilters] = useState<JobFiltersType>({})
-  const [sort, setSort] = useState<JobSortOption>('newest')
+  const [search, setSearch] = useState<string>("");
+  const [filters, setFilters] = useState<JobFiltersType>({});
+  const [sort, setSort] = useState<JobSortOption>("newest");
 
   // State for job detail dialog
-  const [selectedJob, setSelectedJob] = useState<JobWithRelations | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedJob, setSelectedJob] = useState<JobWithRelations | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // State for apply job modal
-  const [applyJob, setApplyJob] = useState<JobWithRelations | null>(null)
-  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false)
+  const [applyJob, setApplyJob] = useState<JobWithRelations | null>(null);
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false);
 
   // State for QR scanner
-  const [scannerOpen, setScannerOpen] = useState(false)
-  const [scannerMode, setScannerMode] = useState<'check-in' | 'check-out'>('check-in')
-  const [selectedBooking, setSelectedBooking] = useState<JobBookingWithDetails | null>(null)
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerMode, setScannerMode] = useState<"check-in" | "check-out">(
+    "check-in",
+  );
+  const [selectedBooking, setSelectedBooking] =
+    useState<JobBookingWithDetails | null>(null);
 
   // Memoize filters to prevent infinite re-renders
-  const jobsFilters = useMemo(() => ({ ...filters, search }), [filters, search])
+  const jobsFilters = useMemo(
+    () => ({ ...filters, search }),
+    [filters, search],
+  );
 
   // Debug logging
-  console.log('[WorkerJobsPage] Rendering with filters:', jobsFilters, 'sort:', sort)
+  console.log(
+    "[WorkerJobsPage] Rendering with filters:",
+    jobsFilters,
+    "sort:",
+    sort,
+  );
 
   // Fetch jobs with filters and sorting
   const { jobs, loading, error, refetch } = useJobs({
     filters: jobsFilters,
     sort,
     enabled: true,
-  })
+  });
 
-  console.log('[WorkerJobsPage] useJobs result:', { jobsCount: jobs?.length, loading, error })
+  console.log("[WorkerJobsPage] useJobs result:", {
+    jobsCount: jobs?.length,
+    loading,
+    error,
+  });
 
   // Fetch worker bookings for attendance
-  const { bookings, isLoading: bookingsLoading, refreshBookings } = useBookings({
+  const {
+    bookings,
+    isLoading: bookingsLoading,
+    refreshBookings,
+  } = useBookings({
     workerId: user?.id,
     autoFetch: true,
-  })
+  });
 
   // Attendance and geolocation hooks
-  const { workerCheckIn, workerCheckOut, isLoading: attendanceLoading } = useAttendance({
+  const {
+    workerCheckIn,
+    workerCheckOut,
+    isLoading: attendanceLoading,
+  } = useAttendance({
     workerId: user?.id,
     autoFetch: false,
-  })
+  });
 
-  const { location, isLoading: locationLoading, getCurrentPosition } = useGeolocation({
+  const {
+    location,
+    isLoading: locationLoading,
+    getCurrentPosition,
+  } = useGeolocation({
     autoFetch: false,
-  })
+  });
 
   // Filter active bookings (accepted, in_progress, or with check-in)
-  const activeBookings = bookings?.filter(booking =>
-    booking.status === 'accepted' ||
-    booking.status === 'in_progress' ||
-    booking.check_in_at
-  ) ?? []
+  const activeBookings =
+    bookings?.filter(
+      (booking) =>
+        booking.status === "accepted" ||
+        booking.status === "in_progress" ||
+        booking.check_in_at,
+    ) ?? [];
 
   // Handle job click - open detail dialog
   const handleJobClick = useCallback((job: JobWithRelations) => {
-    setSelectedJob(job)
-    setIsDialogOpen(true)
-  }, [])
+    setSelectedJob(job);
+    setIsDialogOpen(true);
+  }, []);
 
   // Handle dialog close
   const handleDialogClose = useCallback(() => {
-    setIsDialogOpen(false)
+    setIsDialogOpen(false);
     // Delay clearing selected job to allow animation to complete
-    setTimeout(() => setSelectedJob(null), 300)
-  }, [])
+    setTimeout(() => setSelectedJob(null), 300);
+  }, []);
 
   // Handle job application - open apply modal
   const handleApply = useCallback((job: JobWithRelations) => {
-    setApplyJob(job)
-    setIsApplyModalOpen(true)
-  }, [])
+    setApplyJob(job);
+    setIsApplyModalOpen(true);
+  }, []);
 
   // Handle apply modal close
   const handleApplyModalClose = useCallback(() => {
-    setIsApplyModalOpen(false)
+    setIsApplyModalOpen(false);
     // Delay clearing apply job to allow animation to complete
-    setTimeout(() => setApplyJob(null), 300)
-  }, [])
+    setTimeout(() => setApplyJob(null), 300);
+  }, []);
 
   // Handle successful application
   const handleApplicationSuccess = useCallback(() => {
     // Refresh jobs to update applied status
-    refetch()
-  }, [refetch])
+    refetch();
+  }, [refetch]);
 
   // Handle check-in button click
-  const handleCheckInClick = useCallback(async (bookingId: string) => {
-    const booking = bookings?.find(b => b.id === bookingId)
-    if (!booking) return
+  const handleCheckInClick = useCallback(
+    async (bookingId: string) => {
+      const booking = bookings?.find((b) => b.id === bookingId);
+      if (!booking) return;
 
-    setSelectedBooking(booking)
-    setScannerMode('check-in')
+      setSelectedBooking(booking);
+      setScannerMode("check-in");
 
-    // Try to get GPS location first
-    const position = await getCurrentPosition()
-    if (position) {
-      // We have location, proceed with check-in
-      await workerCheckIn(bookingId, position.lat, position.lng)
-      await refreshBookings()
-    } else {
-      // No location available, open QR scanner
-      setScannerOpen(true)
-    }
-  }, [bookings, getCurrentPosition, workerCheckIn, refreshBookings])
+      // Try to get GPS location first
+      const position = await getCurrentPosition();
+      if (position) {
+        // We have location, proceed with check-in
+        await workerCheckIn(bookingId, position.lat, position.lng);
+        await refreshBookings();
+      } else {
+        // No location available, open QR scanner
+        setScannerOpen(true);
+      }
+    },
+    [bookings, getCurrentPosition, workerCheckIn, refreshBookings],
+  );
 
   // Handle check-out button click
-  const handleCheckOutClick = useCallback(async (bookingId: string) => {
-    const booking = bookings?.find(b => b.id === bookingId)
-    if (!booking) return
+  const handleCheckOutClick = useCallback(
+    async (bookingId: string) => {
+      const booking = bookings?.find((b) => b.id === bookingId);
+      if (!booking) return;
 
-    setSelectedBooking(booking)
-    setScannerMode('check-out')
+      setSelectedBooking(booking);
+      setScannerMode("check-out");
 
-    // Try to get GPS location first
-    const position = await getCurrentPosition()
-    if (position) {
-      // We have location, proceed with check-out
-      await workerCheckOut(bookingId, position.lat, position.lng)
-      await refreshBookings()
-    } else {
-      // No location available, open QR scanner
-      setScannerOpen(true)
-    }
-  }, [bookings, getCurrentPosition, workerCheckOut, refreshBookings])
+      // Try to get GPS location first
+      const position = await getCurrentPosition();
+      if (position) {
+        // We have location, proceed with check-out
+        await workerCheckOut(bookingId, position.lat, position.lng);
+        await refreshBookings();
+      } else {
+        // No location available, open QR scanner
+        setScannerOpen(true);
+      }
+    },
+    [bookings, getCurrentPosition, workerCheckOut, refreshBookings],
+  );
 
   // Handle QR scanner success
-  const handleScannerSuccess = useCallback(async (jobId: string, lat?: number, lng?: number) => {
-    if (!selectedBooking) return
+  const handleScannerSuccess = useCallback(
+    async (jobId: string, lat?: number, lng?: number) => {
+      if (!selectedBooking) return;
 
-    try {
-      if (scannerMode === 'check-in') {
-        await workerCheckIn(selectedBooking.id, lat, lng)
-      } else {
-        await workerCheckOut(selectedBooking.id, lat, lng)
+      try {
+        if (scannerMode === "check-in") {
+          await workerCheckIn(selectedBooking.id, lat, lng);
+        } else {
+          await workerCheckOut(selectedBooking.id, lat, lng);
+        }
+        await refreshBookings();
+        setSelectedBooking(null);
+      } catch (err) {
+        toast.error(t("errors.checkInFailed"));
       }
-      await refreshBookings()
-      setSelectedBooking(null)
-    } catch (err) {
-      toast.error(t('errors.checkInFailed'))
-    }
-  }, [selectedBooking, scannerMode, workerCheckIn, workerCheckOut, refreshBookings, t])
+    },
+    [
+      selectedBooking,
+      scannerMode,
+      workerCheckIn,
+      workerCheckOut,
+      refreshBookings,
+      t,
+    ],
+  );
 
   // Handle scanner close
   const handleScannerClose = useCallback(() => {
-    setScannerOpen(false)
-    setSelectedBooking(null)
-  }, [])
+    setScannerOpen(false);
+    setSelectedBooking(null);
+  }, []);
 
   // Handle search change
   const handleSearchChange = useCallback((value: string) => {
-    setSearch(value)
-  }, [])
+    setSearch(value);
+  }, []);
 
   // Handle filters change
   const handleFiltersChange = useCallback((newFilters: JobFiltersType) => {
-    setFilters(newFilters)
-  }, [])
+    setFilters(newFilters);
+  }, []);
 
   // Handle sort change
   const handleSortChange = useCallback((newSort: JobSortOption) => {
-    setSort(newSort)
-  }, [])
+    setSort(newSort);
+  }, []);
 
   // Handle retry on error
   const handleRetry = useCallback(() => {
-    refetch()
-  }, [refetch])
+    refetch();
+  }, [refetch]);
 
   // Format date based on current locale
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    })
-  }
+    return new Date(dateString).toLocaleDateString(
+      locale === "id" ? "id-ID" : "en-US",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      },
+    );
+  };
 
   // Format time based on current locale
   const formatTime = (dateString: string | null) => {
-    if (!dateString) return '-'
-    return new Date(dateString).toLocaleTimeString(locale === 'id' ? 'id-ID' : 'en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-  }
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleTimeString(
+      locale === "id" ? "id-ID" : "en-US",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+      },
+    );
+  };
 
   // Get status badge color
-  const getStatusBadgeColor = (status: string, checkInAt: string | null, checkOutAt: string | null) => {
-    if (checkOutAt) return 'bg-green-100 text-green-800 border-green-200'
-    if (checkInAt) return 'bg-blue-100 text-blue-800 border-blue-200'
-    if (status === 'accepted') return 'bg-amber-100 text-amber-800 border-amber-200'
-    return 'bg-background text-gray-800 border-gray-200'
-  }
+  const getStatusBadgeColor = (
+    status: string,
+    checkInAt: string | null,
+    checkOutAt: string | null,
+  ) => {
+    if (checkOutAt) return "bg-green-100 text-green-800 border-green-200";
+    if (checkInAt) return "bg-blue-100 text-blue-800 border-blue-200";
+    if (status === "accepted")
+      return "bg-amber-100 text-amber-800 border-amber-200";
+    return "bg-background text-gray-800 border-gray-200";
+  };
 
   // Get status text
-  const getStatusText = (status: string, checkInAt: string | null, checkOutAt: string | null) => {
-    if (checkOutAt) return t('bookings.completed')
-    if (checkInAt) return t('bookings.working')
-    if (status === 'accepted') return t('bookings.accepted')
-    return status
-  }
+  const getStatusText = (
+    status: string,
+    checkInAt: string | null,
+    checkOutAt: string | null,
+  ) => {
+    if (checkOutAt) return t("bookings.completed");
+    if (checkInAt) return t("bookings.working");
+    if (status === "accepted") return t("bookings.accepted");
+    return status;
+  };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-        {/* Page Header */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
-            <h1 className="text-xl sm:text-2xl font-bold">{t('jobs.jobMarketplace')}</h1>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {t('jobs.subtitle')}
-          </p>
+      {/* Page Header */}
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          <Briefcase className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
+          <h1 className="text-xl sm:text-2xl font-bold">
+            {t("jobs.jobMarketplace")}
+          </h1>
         </div>
+        <p className="text-sm text-muted-foreground">{t("jobs.subtitle")}</p>
+      </div>
 
-        {/* Error State */}
-        {error && (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
-            <p className="text-destructive font-medium mb-2">{t('errors.loadFailed')}</p>
-            <p className="text-sm text-muted-foreground mb-4">{error.message}</p>
-            <button
-              onClick={handleRetry}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              <Loader2 className="h-4 w-4 animate-spin" />
-              {t('common.tryAgain')}
-            </button>
-          </div>
-        )}
+      {/* Error State */}
+      {error && (
+        <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-6 text-center">
+          <p className="text-destructive font-medium mb-2">
+            {t("errors.loadFailed")}
+          </p>
+          <p className="text-sm text-muted-foreground mb-4">{error.message}</p>
+          <button
+            onClick={handleRetry}
+            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {t("common.tryAgain")}
+          </button>
+        </div>
+      )}
 
-        {/* My Bookings Section */}
-        {activeBookings.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="text-lg font-semibold">{t('bookings.myBookings')}</h2>
-            {bookingsLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
-                {activeBookings.map((booking) => (
-                  <div
-                    key={booking.id}
-                    className="rounded-lg border bg-card p-4 space-y-3"
-                  >
-                    {/* Header: Job Title and Status */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium line-clamp-1">{booking.job?.title || t('jobs.title')}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-1">
-                          {booking.business?.name || t('bookings.business')}
-                        </p>
-                      </div>
-                      <span
-                        className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full border shrink-0 ${getStatusBadgeColor(
-                          booking.status,
-                          booking.check_in_at,
-                          booking.check_out_at
-                        )}`}
-                      >
-                        {getStatusText(booking.status, booking.check_in_at, booking.check_out_at)}
+      {/* My Bookings Section */}
+      {activeBookings.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">{t("bookings.myBookings")}</h2>
+          {bookingsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {activeBookings.map((booking) => (
+                <div
+                  key={booking.id}
+                  className="rounded-lg border bg-card p-4 space-y-3"
+                >
+                  {/* Header: Job Title and Status */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium line-clamp-1">
+                        {booking.job?.title || t("jobs.title")}
+                      </h3>
+                      <p className="text-sm text-muted-foreground line-clamp-1">
+                        {booking.business?.name || t("bookings.business")}
+                      </p>
+                    </div>
+                    <span
+                      className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full border shrink-0 ${getStatusBadgeColor(
+                        booking.status,
+                        booking.check_in_at,
+                        booking.check_out_at,
+                      )}`}
+                    >
+                      {getStatusText(
+                        booking.status,
+                        booking.check_in_at,
+                        booking.check_out_at,
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Date and Time */}
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      <span>{formatDate(booking.start_date)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      <span>
+                        {formatTime(booking.start_date)} -{" "}
+                        {formatTime(booking.end_date)}
                       </span>
                     </div>
-
-                    {/* Date and Time */}
-                    <div className="space-y-2 text-sm">
+                    {booking.job?.address && (
                       <div className="flex items-center gap-2 text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        <span>{formatDate(booking.start_date)}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        <span>
-                          {formatTime(booking.start_date)} - {formatTime(booking.end_date)}
+                        <MapPin className="h-3 w-3" />
+                        <span className="line-clamp-1">
+                          {booking.job.address}
                         </span>
                       </div>
-                      {booking.job?.address && (
+                    )}
+                  </div>
+
+                  {/* Check-in/out Times */}
+                  {(booking.check_in_at || booking.check_out_at) && (
+                    <div className="pt-2 border-t space-y-1 text-sm">
+                      {booking.check_in_at && (
                         <div className="flex items-center gap-2 text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
-                          <span className="line-clamp-1">{booking.job.address}</span>
+                          <CheckCircle className="h-3 w-3 text-green-600" />
+                          <span>{t("bookings.checkInAt")}</span>
+                          <span className="font-medium text-foreground">
+                            {formatTime(booking.check_in_at)}
+                          </span>
+                        </div>
+                      )}
+                      {booking.check_out_at && (
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <CheckCircle className="h-3 w-3 text-green-600" />
+                          <span>{t("bookings.checkOutAt")}</span>
+                          <span className="font-medium text-foreground">
+                            {formatTime(booking.check_out_at)}
+                          </span>
                         </div>
                       )}
                     </div>
+                  )}
 
-                    {/* Check-in/out Times */}
-                    {(booking.check_in_at || booking.check_out_at) && (
-                      <div className="pt-2 border-t space-y-1 text-sm">
-                        {booking.check_in_at && (
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <CheckCircle className="h-3 w-3 text-green-600" />
-                            <span>{t('bookings.checkInAt')}</span>
-                            <span className="font-medium text-foreground">
-                              {formatTime(booking.check_in_at)}
-                            </span>
-                          </div>
-                        )}
-                        {booking.check_out_at && (
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <CheckCircle className="h-3 w-3 text-green-600" />
-                            <span>{t('bookings.checkOutAt')}</span>
-                            <span className="font-medium text-foreground">
-                              {formatTime(booking.check_out_at)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Check In/Out Button */}
-                    <CheckInOutButton
-                      bookingId={booking.id}
-                      status={booking.status}
-                      checkInAt={booking.check_in_at}
-                      checkOutAt={booking.check_out_at}
-                      onCheckIn={handleCheckInClick}
-                      onCheckOut={handleCheckOutClick}
-                      isLoading={locationLoading || attendanceLoading}
-                      className="w-full"
-                      showLabel={true}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Main Content */}
-        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-          {/* Sidebar - Filters */}
-          <aside className="lg:col-span-1 order-2 lg:order-1">
-            <JobFilters
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-              className="lg:sticky lg:top-6"
-            />
-          </aside>
-
-          {/* Main Column - Search, Sort, and Job List */}
-          <div className="lg:col-span-1 space-y-4 order-1 lg:order-2">
-            {/* Search and Sort Bar */}
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex-1">
-                <JobSearch
-                  value={search}
-                  onSearchChange={handleSearchChange}
-                  placeholder={t('jobs.searchJobs')}
-                  className="w-full sm:max-w-md"
-                />
-              </div>
-              <div className="flex-shrink-0">
-                <JobSort
-                  value={sort}
-                  onSortChange={handleSortChange}
-                />
-              </div>
+                  {/* Check In/Out Button */}
+                  <CheckInOutButton
+                    bookingId={booking.id}
+                    status={booking.status}
+                    checkInAt={booking.check_in_at}
+                    checkOutAt={booking.check_out_at}
+                    onCheckIn={handleCheckInClick}
+                    onCheckOut={handleCheckOutClick}
+                    isLoading={locationLoading || attendanceLoading}
+                    className="w-full"
+                    showLabel={true}
+                  />
+                </div>
+              ))}
             </div>
-
-            {/* Job List */}
-            <JobListWithHeader
-              jobs={jobs}
-              loading={loading}
-              onJobClick={handleJobClick}
-              title={t('jobs.availableJobs')}
-              subtitle={search || Object.keys(filters).length > 0
-                ? t('jobs.filteredResults')
-                : t('jobs.browseAll')}
-              emptyTitle={search || Object.keys(filters).length > 0
-                ? t('jobs.noJobsMatchCriteria')
-                : t('jobs.noJobsAvailable')}
-              emptyDescription={search || Object.keys(filters).length > 0
-                ? t('jobs.tryAdjustingFilters')
-                : t('jobs.checkBackLater')}
-            />
-          </div>
+          )}
         </div>
+      )}
+
+      {/* Main Content */}
+      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+        {/* Sidebar - Filters */}
+        <aside className="lg:col-span-1 order-2 lg:order-1">
+          <JobFilters
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            className="lg:sticky lg:top-6"
+          />
+        </aside>
+
+        {/* Main Column - Search, Sort, and Job List */}
+        <div className="lg:col-span-1 space-y-4 order-1 lg:order-2">
+          {/* Search and Sort Bar */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex-1">
+              <JobSearch
+                value={search}
+                onSearchChange={handleSearchChange}
+                placeholder={t("jobs.searchJobs")}
+                className="w-full sm:max-w-md"
+              />
+            </div>
+            <div className="flex-shrink-0">
+              <JobSort value={sort} onSortChange={handleSortChange} />
+            </div>
+          </div>
+
+          {/* Job List */}
+          <JobListWithHeader
+            jobs={jobs}
+            loading={loading}
+            onJobClick={handleJobClick}
+            title={t("jobs.availableJobs")}
+            subtitle={
+              search || Object.keys(filters).length > 0
+                ? t("jobs.filteredResults")
+                : t("jobs.browseAll")
+            }
+            emptyTitle={
+              search || Object.keys(filters).length > 0
+                ? t("jobs.noJobsMatchCriteria")
+                : t("jobs.noJobsAvailable")
+            }
+            emptyDescription={
+              search || Object.keys(filters).length > 0
+                ? t("jobs.tryAdjustingFilters")
+                : t("jobs.checkBackLater")
+            }
+          />
+        </div>
+      </div>
       {/* Job Detail Dialog */}
       <JobDetailDialog
         job={selectedJob}
@@ -454,5 +553,5 @@ export default function WorkerJobsPage() {
         workerId={user?.id}
       />
     </div>
-  )
+  );
 }

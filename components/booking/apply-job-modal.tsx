@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
-import { Loader2, Calendar, Clock, Plus, X } from "lucide-react"
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { Loader2, Calendar, Clock, Plus, X } from "lucide-react";
 
 import {
   Dialog,
@@ -13,11 +13,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Form,
   FormControl,
@@ -26,26 +26,26 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
-import type { JobWithRelations } from "@/lib/types/job"
-import { createJobApplication } from "@/lib/actions/job-applications"
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import type { JobWithRelations } from "@/lib/types/job";
+import { createJobApplication } from "@/lib/actions/job-applications";
 
 // ============================================================================
 // AVAILABILITY TYPES
 // ============================================================================
 
 export interface AvailabilitySlot {
-  day: string
-  startTime: string
-  endTime: string
+  day: string;
+  startTime: string;
+  endTime: string;
 }
 
 const DAYS_OF_WEEK = [
@@ -56,13 +56,27 @@ const DAYS_OF_WEEK = [
   { value: "friday", label: "Jumat" },
   { value: "saturday", label: "Sabtu" },
   { value: "sunday", label: "Minggu" },
-]
+];
 
 const TIME_SLOTS = [
-  "06:00", "07:00", "08:00", "09:00", "10:00", "11:00",
-  "12:00", "13:00", "14:00", "15:00", "16:00", "17:00",
-  "18:00", "19:00", "20:00", "21:00", "22:00"
-]
+  "06:00",
+  "07:00",
+  "08:00",
+  "09:00",
+  "10:00",
+  "11:00",
+  "12:00",
+  "13:00",
+  "14:00",
+  "15:00",
+  "16:00",
+  "17:00",
+  "18:00",
+  "19:00",
+  "20:00",
+  "21:00",
+  "22:00",
+];
 
 // Form schema
 const applyJobFormSchema = (budgetMin: number, budgetMax: number) => ({
@@ -76,20 +90,20 @@ const applyJobFormSchema = (budgetMin: number, budgetMax: number) => ({
     min: budgetMin,
     max: budgetMax,
   },
-})
+});
 
 export type ApplyJobFormValues = {
-  coverLetter?: string
-  proposedWage?: number
-  availability?: AvailabilitySlot[]
-}
+  coverLetter?: string;
+  proposedWage?: number;
+  availability?: AvailabilitySlot[];
+};
 
 export interface ApplyJobModalProps {
-  job: JobWithRelations | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSuccess?: () => void
-  workerId?: string
+  job: JobWithRelations | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+  workerId?: string;
 }
 
 // ============================================================================
@@ -97,50 +111,54 @@ export interface ApplyJobModalProps {
 // ============================================================================
 
 interface AvailabilitySelectorProps {
-  value: AvailabilitySlot[]
-  onChange: (slots: AvailabilitySlot[]) => void
-  disabled?: boolean
+  value: AvailabilitySlot[];
+  onChange: (slots: AvailabilitySlot[]) => void;
+  disabled?: boolean;
 }
 
-function AvailabilitySelector({ value, onChange, disabled }: AvailabilitySelectorProps) {
+function AvailabilitySelector({
+  value,
+  onChange,
+  disabled,
+}: AvailabilitySelectorProps) {
   const [newSlot, setNewSlot] = React.useState<Partial<AvailabilitySlot>>({
     day: "monday",
     startTime: "08:00",
     endTime: "17:00",
-  })
+  });
 
   const addSlot = () => {
     if (newSlot.day && newSlot.startTime && newSlot.endTime) {
       // Check for duplicate
       const isDuplicate = value.some(
-        (slot) => 
-          slot.day === newSlot.day && 
-          slot.startTime === newSlot.startTime && 
-          slot.endTime === newSlot.endTime
-      )
+        (slot) =>
+          slot.day === newSlot.day &&
+          slot.startTime === newSlot.startTime &&
+          slot.endTime === newSlot.endTime,
+      );
 
       if (isDuplicate) {
-        toast.error("Slot waktu ini sudah ditambahkan")
-        return
+        toast.error("Slot waktu ini sudah ditambahkan");
+        return;
       }
 
       // Validate end time is after start time
       if (newSlot.startTime >= newSlot.endTime) {
-        toast.error("Waktu selesai harus lebih dari waktu mulai")
-        return
+        toast.error("Waktu selesai harus lebih dari waktu mulai");
+        return;
       }
 
-      onChange([...value, newSlot as AvailabilitySlot])
+      onChange([...value, newSlot as AvailabilitySlot]);
     }
-  }
+  };
 
   const removeSlot = (index: number) => {
-    onChange(value.filter((_, i) => i !== index))
-  }
+    onChange(value.filter((_, i) => i !== index));
+  };
 
   const getDayLabel = (day: string) => {
-    return DAYS_OF_WEEK.find((d) => d.value === day)?.label || day
-  }
+    return DAYS_OF_WEEK.find((d) => d.value === day)?.label || day;
+  };
 
   return (
     <div className="space-y-3">
@@ -190,7 +208,9 @@ function AvailabilitySelector({ value, onChange, disabled }: AvailabilitySelecto
 
         <Select
           value={newSlot.startTime}
-          onValueChange={(val) => setNewSlot((prev) => ({ ...prev, startTime: val }))}
+          onValueChange={(val) =>
+            setNewSlot((prev) => ({ ...prev, startTime: val }))
+          }
           disabled={disabled}
         >
           <SelectTrigger>
@@ -207,7 +227,9 @@ function AvailabilitySelector({ value, onChange, disabled }: AvailabilitySelecto
 
         <Select
           value={newSlot.endTime}
-          onValueChange={(val) => setNewSlot((prev) => ({ ...prev, endTime: val }))}
+          onValueChange={(val) =>
+            setNewSlot((prev) => ({ ...prev, endTime: val }))
+          }
           disabled={disabled}
         >
           <SelectTrigger>
@@ -235,7 +257,7 @@ function AvailabilitySelector({ value, onChange, disabled }: AvailabilitySelecto
         Tambah Waktu Ketersediaan
       </Button>
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -249,8 +271,10 @@ export function ApplyJobModal({
   onSuccess,
   workerId,
 }: ApplyJobModalProps) {
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [availability, setAvailability] = React.useState<AvailabilitySlot[]>([])
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [availability, setAvailability] = React.useState<AvailabilitySlot[]>(
+    [],
+  );
 
   const form = useForm<ApplyJobFormValues>({
     defaultValues: {
@@ -258,47 +282,53 @@ export function ApplyJobModal({
       proposedWage: undefined,
       availability: [],
     },
-  })
+  });
 
   // Reset availability when dialog opens/closes
   React.useEffect(() => {
     if (!open) {
-      setAvailability([])
+      setAvailability([]);
     }
-  }, [open])
+  }, [open]);
 
   const handleSubmit = async (values: ApplyJobFormValues) => {
-    if (!job) return
+    if (!job) return;
 
     if (!workerId) {
-      toast.error("Gagal mendapatkan data pekerja. Silakan login ulang.")
-      return
+      toast.error("Gagal mendapatkan data pekerja. Silakan login ulang.");
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
       const result = await createJobApplication(job.id, workerId, {
         coverLetter: values.coverLetter || undefined,
         proposedWage: values.proposedWage || undefined,
         availability: availability,
-      })
+      });
 
       if (result.success) {
-        toast.success("Berhasil melamar pekerjaan! Bisnis akan menghubungi Anda jika tertarik.")
-        form.reset()
-        setAvailability([])
-        onOpenChange(false)
-        onSuccess?.()
+        toast.success(
+          "Berhasil melamar pekerjaan! Bisnis akan menghubungi Anda jika tertarik.",
+        );
+        form.reset();
+        setAvailability([]);
+        onOpenChange(false);
+        onSuccess?.();
       } else {
-        toast.error(result.error || "Gagal melamar pekerjaan. Silakan coba lagi.")
+        toast.error(
+          result.error || "Gagal melamar pekerjaan. Silakan coba lagi.",
+        );
       }
     } catch (error) {
-      console.error("Error applying for job:", error)
-      toast.error("Terjadi kesalahan saat melamar pekerjaan. Silakan coba lagi.")
+      console.error("Error applying for job:", error);
+      toast.error(
+        "Terjadi kesalahan saat melamar pekerjaan. Silakan coba lagi.",
+      );
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const formatBudget = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -306,8 +336,8 @@ export function ApplyJobModal({
       currency: "IDR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount)
-  }
+    }).format(amount);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -317,7 +347,8 @@ export function ApplyJobModal({
           <DialogDescription>
             {job ? (
               <>
-                Anda akan melamar untuk posisi <strong>{job.title}</strong> di <strong>{job.business.name}</strong>
+                Anda akan melamar untuk posisi <strong>{job.title}</strong> di{" "}
+                <strong>{job.business.name}</strong>
               </>
             ) : (
               "Lamar pekerjaan yang tersedia"
@@ -326,14 +357,19 @@ export function ApplyJobModal({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             {/* Job Information */}
             {job && (
               <div className="rounded-lg border p-4 space-y-2 bg-muted/50">
                 <div className="flex justify-between items-start">
                   <div>
                     <h4 className="font-semibold">{job.title}</h4>
-                    <p className="text-sm text-muted-foreground">{job.business.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {job.business.name}
+                    </p>
                   </div>
                 </div>
                 <div className="text-sm">
@@ -362,7 +398,11 @@ export function ApplyJobModal({
                       type="number"
                       placeholder="0"
                       {...field}
-                      onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
+                      onChange={(e) =>
+                        field.onChange(
+                          e.target.value ? Number(e.target.value) : undefined,
+                        )
+                      }
                       min={job?.budget_min}
                       max={job?.budget_max}
                     />
@@ -434,5 +474,5 @@ export function ApplyJobModal({
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

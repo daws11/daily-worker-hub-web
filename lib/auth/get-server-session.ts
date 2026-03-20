@@ -1,15 +1,18 @@
-import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
+import { createClient } from "@/lib/supabase/server";
+import { cookies } from "next/headers";
 
 export async function getServerSession() {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
-  const { data: { session }, error } = await supabase.auth.getSession()
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
 
   if (error) {
-    console.error('Error getting session:', error)
-    return null
+    console.error("Error getting session:", error);
+    return null;
   }
 
-  return session
+  return session;
 }

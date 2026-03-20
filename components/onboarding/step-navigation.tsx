@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 
 interface StepNavigationProps {
-  currentStep: number
-  totalSteps?: number
-  onBack: () => void
-  onNext: () => void
-  isLoading?: boolean
-  isFormValid?: boolean
-  isLastStep?: boolean
+  currentStep: number;
+  totalSteps?: number;
+  onBack: () => void;
+  onNext: () => void;
+  isLoading?: boolean;
+  isFormValid?: boolean;
+  isLastStep?: boolean;
 }
 
 export function StepNavigation({
@@ -20,11 +20,11 @@ export function StepNavigation({
   onNext,
   isLoading = false,
   isFormValid = true,
-  isLastStep = false
+  isLastStep = false,
 }: StepNavigationProps) {
-  const isFirstStep = currentStep === 1
-  const buttonText = isLastStep ? "Complete Profile" : "Continue"
-  const ButtonIcon = isLastStep ? null : ChevronRight
+  const isFirstStep = currentStep === 1;
+  const buttonText = isLastStep ? "Complete Profile" : "Continue";
+  const ButtonIcon = isLastStep ? null : ChevronRight;
 
   return (
     <div className="flex items-center justify-between pt-6 border-t">
@@ -34,10 +34,7 @@ export function StepNavigation({
         variant="outline"
         onClick={onBack}
         disabled={isFirstStep || isLoading}
-        className={cn(
-          "gap-2",
-          isFirstStep && "invisible"
-        )}
+        className={cn("gap-2", isFirstStep && "invisible")}
       >
         <ChevronLeft className="w-4 h-4" />
         Back
@@ -63,8 +60,8 @@ export function StepNavigation({
         )}
       </Button>
     </div>
-  )
+  );
 }
 
 // Helper import for cn
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";

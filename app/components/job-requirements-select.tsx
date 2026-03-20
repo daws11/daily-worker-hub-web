@@ -1,10 +1,10 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { X, Check } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Label } from "@/components/ui/label"
+import * as React from "react";
+import { X, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -13,8 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 export type JobRequirement =
   | "experience_required"
@@ -31,7 +31,7 @@ export type JobRequirement =
   | "team_player"
   | "reliable_transportation"
   | "able_to_stand_long_hours"
-  | "able_to_lift_heavy"
+  | "able_to_lift_heavy";
 
 const REQUIREMENT_LABELS: Record<JobRequirement, string> = {
   experience_required: "Experience Required",
@@ -49,25 +49,38 @@ const REQUIREMENT_LABELS: Record<JobRequirement, string> = {
   reliable_transportation: "Reliable Transportation",
   able_to_stand_long_hours: "Able to Stand Long Hours",
   able_to_lift_heavy: "Able to Lift Heavy Items",
-}
+};
 
 const REQUIREMENT_CATEGORIES: Record<string, JobRequirement[]> = {
-  "Language & Communication": ["english_fluent", "indonesian_fluent", "customer_service_skills"],
-  "Certifications": ["swimming_certified", "food_safety_cert", "first_aid_cert", "drivers_license"],
-  "Availability": ["flexible_schedule", "weekend_availability"],
-  "Physical Requirements": ["physical_stamina", "able_to_stand_long_hours", "able_to_lift_heavy"],
+  "Language & Communication": [
+    "english_fluent",
+    "indonesian_fluent",
+    "customer_service_skills",
+  ],
+  Certifications: [
+    "swimming_certified",
+    "food_safety_cert",
+    "first_aid_cert",
+    "drivers_license",
+  ],
+  Availability: ["flexible_schedule", "weekend_availability"],
+  "Physical Requirements": [
+    "physical_stamina",
+    "able_to_stand_long_hours",
+    "able_to_lift_heavy",
+  ],
   "Soft Skills": ["team_player", "reliable_transportation"],
-}
+};
 
 export interface JobRequirementsSelectProps {
-  value?: JobRequirement[]
-  onChange?: (value: JobRequirement[]) => void
-  error?: string
-  label?: string
-  placeholder?: string
-  disabled?: boolean
-  required?: boolean
-  className?: string
+  value?: JobRequirement[];
+  onChange?: (value: JobRequirement[]) => void;
+  error?: string;
+  label?: string;
+  placeholder?: string;
+  disabled?: boolean;
+  required?: boolean;
+  className?: string;
 }
 
 export const JobRequirementsSelect = React.forwardRef<
@@ -86,35 +99,36 @@ export const JobRequirementsSelect = React.forwardRef<
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const [open, setOpen] = React.useState(false)
-    const [tempSelection, setTempSelection] = React.useState<JobRequirement[]>(value)
+    const [open, setOpen] = React.useState(false);
+    const [tempSelection, setTempSelection] =
+      React.useState<JobRequirement[]>(value);
 
     const handleToggleRequirement = (requirement: JobRequirement) => {
       setTempSelection((prev) => {
         if (prev.includes(requirement)) {
-          return prev.filter((r) => r !== requirement)
+          return prev.filter((r) => r !== requirement);
         }
-        return [...prev, requirement]
-      })
-    }
+        return [...prev, requirement];
+      });
+    };
 
     const handleSave = () => {
-      onChange?.(tempSelection)
-      setOpen(false)
-    }
+      onChange?.(tempSelection);
+      setOpen(false);
+    };
 
     const handleCancel = () => {
-      setTempSelection(value)
-      setOpen(false)
-    }
+      setTempSelection(value);
+      setOpen(false);
+    };
 
     const handleRemove = (requirement: JobRequirement) => {
-      onChange?.(value.filter((r) => r !== requirement))
-    }
+      onChange?.(value.filter((r) => r !== requirement));
+    };
 
-    const selectedCount = value.length
+    const selectedCount = value.length;
 
     return (
       <div className={cn("space-y-2", className)}>
@@ -134,13 +148,14 @@ export const JobRequirementsSelect = React.forwardRef<
               className={cn(
                 "w-full justify-start text-left font-normal",
                 !value || value.length === 0 ? "text-muted-foreground" : "",
-                error && "border-destructive"
+                error && "border-destructive",
               )}
               {...props}
             >
               {selectedCount > 0 ? (
                 <span className="truncate">
-                  {selectedCount} requirement{selectedCount !== 1 ? "s" : ""} selected
+                  {selectedCount} requirement{selectedCount !== 1 ? "s" : ""}{" "}
+                  selected
                 </span>
               ) : (
                 placeholder
@@ -151,49 +166,53 @@ export const JobRequirementsSelect = React.forwardRef<
             <DialogHeader>
               <DialogTitle>Select Job Requirements</DialogTitle>
               <DialogDescription>
-                Choose the requirements for this position. Selected requirements will appear as
-                badges.
+                Choose the requirements for this position. Selected requirements
+                will appear as badges.
               </DialogDescription>
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto space-y-4 py-4">
-              {Object.entries(REQUIREMENT_CATEGORIES).map(([category, requirements]) => (
-                <div key={category} className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">{category}</h4>
-                  <div className="space-y-1">
-                    {requirements.map((requirement) => {
-                      const isSelected = tempSelection.includes(requirement)
-                      return (
-                        <button
-                          key={requirement}
-                          type="button"
-                          onClick={() => handleToggleRequirement(requirement)}
-                          className={cn(
-                            "w-full flex items-center gap-3 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-accent",
-                            isSelected
-                              ? "border-primary bg-primary/5"
-                              : "border-input bg-background"
-                          )}
-                        >
-                          <div
+              {Object.entries(REQUIREMENT_CATEGORIES).map(
+                ([category, requirements]) => (
+                  <div key={category} className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground">
+                      {category}
+                    </h4>
+                    <div className="space-y-1">
+                      {requirements.map((requirement) => {
+                        const isSelected = tempSelection.includes(requirement);
+                        return (
+                          <button
+                            key={requirement}
+                            type="button"
+                            onClick={() => handleToggleRequirement(requirement)}
                             className={cn(
-                              "flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border",
+                              "w-full flex items-center gap-3 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-accent",
                               isSelected
-                                ? "border-primary bg-primary text-primary-foreground"
-                                : "border-input"
+                                ? "border-primary bg-primary/5"
+                                : "border-input bg-background",
                             )}
                           >
-                            {isSelected && <Check className="h-3 w-3" />}
-                          </div>
-                          <span className="flex-1 text-left">
-                            {REQUIREMENT_LABELS[requirement]}
-                          </span>
-                        </button>
-                      )
-                    })}
+                            <div
+                              className={cn(
+                                "flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border",
+                                isSelected
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : "border-input",
+                              )}
+                            >
+                              {isSelected && <Check className="h-3 w-3" />}
+                            </div>
+                            <span className="flex-1 text-left">
+                              {REQUIREMENT_LABELS[requirement]}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ),
+              )}
             </div>
 
             <DialogFooter>
@@ -231,13 +250,11 @@ export const JobRequirementsSelect = React.forwardRef<
         )}
 
         {error && (
-          <p className="text-[0.8rem] font-medium text-destructive">
-            {error}
-          </p>
+          <p className="text-[0.8rem] font-medium text-destructive">{error}</p>
         )}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-JobRequirementsSelect.displayName = "JobRequirementsSelect"
+JobRequirementsSelect.displayName = "JobRequirementsSelect";

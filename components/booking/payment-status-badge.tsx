@@ -1,7 +1,7 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 const paymentStatusVariants = cva(
   "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -21,13 +21,14 @@ const paymentStatusVariants = cva(
     defaultVariants: {
       status: "pending",
     },
-  }
-)
+  },
+);
 
 export interface PaymentStatusBadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof paymentStatusVariants> {
-  status: "pending" | "review" | "available" | "released"
+  status: "pending" | "review" | "available" | "released";
 }
 
 const statusLabels: Record<PaymentStatusBadgeProps["status"], string> = {
@@ -35,7 +36,7 @@ const statusLabels: Record<PaymentStatusBadgeProps["status"], string> = {
   review: "In Review",
   available: "Available",
   released: "Released",
-}
+};
 
 export function PaymentStatusBadge({
   status,
@@ -49,5 +50,5 @@ export function PaymentStatusBadge({
     >
       {statusLabels[status]}
     </div>
-  )
+  );
 }

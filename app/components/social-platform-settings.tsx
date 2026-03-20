@@ -1,35 +1,41 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import {
   getSocialConnections,
   updatePlatformSettings,
   getPlatformSettings,
   type SocialConnectionListResult,
-} from "@/lib/actions/social"
+} from "@/lib/actions/social";
 import type {
   BusinessSocialConnectionWithPlatform,
   ConnectionSettings,
   SocialPlatformType,
-} from "@/lib/types/social"
-import { SOCIAL_PLATFORMS } from "./social-platform-connect"
+} from "@/lib/types/social";
+import { SOCIAL_PLATFORMS } from "./social-platform-connect";
 
 export interface SocialPlatformSettingsProps {
-  businessId: string
-  className?: string
+  businessId: string;
+  className?: string;
 }
 
 export function SocialPlatformSettings({
@@ -38,60 +44,68 @@ export function SocialPlatformSettings({
 }: SocialPlatformSettingsProps) {
   const [connections, setConnections] = React.useState<
     BusinessSocialConnectionWithPlatform[]
-  >([])
-  const [isLoading, setIsLoading] = React.useState(true)
-  const [isSaving, setIsSaving] = React.useState<string | null>(null)
-  const [error, setError] = React.useState<string | null>(null)
-  const [successMessage, setSuccessMessage] = React.useState<string | null>(null)
+  >([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [isSaving, setIsSaving] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = React.useState<string | null>(
+    null,
+  );
 
   // Settings state for each connection
   const [settingsMap, setSettingsMap] = React.useState<
     Record<string, ConnectionSettings>
-  >({})
+  >({});
 
   // Fetch connections and settings on mount
   React.useEffect(() => {
     const fetchConnections = async () => {
-      setIsLoading(true)
-      setError(null)
+      setIsLoading(true);
+      setError(null);
 
-      const result: SocialConnectionListResult = await getSocialConnections(businessId, {
-        status: "active",
-      })
+      const result: SocialConnectionListResult = await getSocialConnections(
+        businessId,
+        {
+          status: "active",
+        },
+      );
 
       if (result.success && result.data) {
-        setConnections(result.data)
+        setConnections(result.data);
 
         // Fetch settings for each connection
         const settingsPromises = result.data.map(async (connection) => {
-          const settingsResult = await getPlatformSettings(connection.id, businessId)
+          const settingsResult = await getPlatformSettings(
+            connection.id,
+            businessId,
+          );
           return {
             connectionId: connection.id,
             settings: (settingsResult.data as ConnectionSettings) || {},
-          }
-        })
+          };
+        });
 
-        const settingsResults = await Promise.all(settingsPromises)
-        const settingsMap: Record<string, ConnectionSettings> = {}
+        const settingsResults = await Promise.all(settingsPromises);
+        const settingsMap: Record<string, ConnectionSettings> = {};
         for (const result of settingsResults) {
-          settingsMap[result.connectionId] = result.settings
+          settingsMap[result.connectionId] = result.settings;
         }
-        setSettingsMap(settingsMap)
+        setSettingsMap(settingsMap);
       } else if (result.error) {
-        setError(result.error)
+        setError(result.error);
       }
 
-      setIsLoading(false)
-    }
+      setIsLoading(false);
+    };
 
-    fetchConnections()
-  }, [businessId])
+    fetchConnections();
+  }, [businessId]);
 
   // Update a specific setting for a connection
   const updateSetting = (
     connectionId: string,
     key: keyof ConnectionSettings,
-    value: unknown
+    value: unknown,
   ) => {
     setSettingsMap((prev) => ({
       ...prev,
@@ -99,36 +113,41 @@ export function SocialPlatformSettings({
         ...prev[connectionId],
         [key]: value as never,
       },
-    }))
-  }
+    }));
+  };
 
   // Save settings for a connection
   const saveSettings = async (connectionId: string) => {
-    setIsSaving(connectionId)
-    setError(null)
-    setSuccessMessage(null)
+    setIsSaving(connectionId);
+    setError(null);
+    setSuccessMessage(null);
 
-    const settings = settingsMap[connectionId]
-    const result = await updatePlatformSettings(connectionId, businessId, settings)
+    const settings = settingsMap[connectionId];
+    const result = await updatePlatformSettings(
+      connectionId,
+      businessId,
+      settings,
+    );
 
     if (result.success) {
-      setSuccessMessage("Pengaturan berhasil disimpan")
-      setTimeout(() => setSuccessMessage(null), 3000)
+      setSuccessMessage("Pengaturan berhasil disimpan");
+      setTimeout(() => setSuccessMessage(null), 3000);
     } else {
-      setError(result.error || "Gagal menyimpan pengaturan")
+      setError(result.error || "Gagal menyimpan pengaturan");
     }
 
-    setIsSaving(null)
-  }
+    setIsSaving(null);
+  };
 
   // Get connection for a specific platform
   const getConnectionForPlatform = (
-    platformType: SocialPlatformType
+    platformType: SocialPlatformType,
   ): BusinessSocialConnectionWithPlatform | undefined => {
     return connections.find(
-      (c) => c.platform?.platform_type === platformType && c.status === "active"
-    )
-  }
+      (c) =>
+        c.platform?.platform_type === platformType && c.status === "active",
+    );
+  };
 
   if (isLoading) {
     return (
@@ -150,7 +169,7 @@ export function SocialPlatformSettings({
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -170,13 +189,15 @@ export function SocialPlatformSettings({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {(Object.keys(SOCIAL_PLATFORMS) as SocialPlatformType[]).map(
           (platformType) => {
-            const platform = SOCIAL_PLATFORMS[platformType]
-            const connection = getConnectionForPlatform(platformType)
-            const settings = connection ? settingsMap[connection.id] : undefined
+            const platform = SOCIAL_PLATFORMS[platformType];
+            const connection = getConnectionForPlatform(platformType);
+            const settings = connection
+              ? settingsMap[connection.id]
+              : undefined;
 
             // Only show settings for connected platforms
             if (!connection) {
-              return null
+              return null;
             }
 
             return (
@@ -184,7 +205,7 @@ export function SocialPlatformSettings({
                 key={platformType}
                 className={cn(
                   "transition-all hover:shadow-md",
-                  platform.borderColor
+                  platform.borderColor,
                 )}
               >
                 <CardHeader>
@@ -221,7 +242,11 @@ export function SocialPlatformSettings({
                         id={`auto-post-${connection.id}`}
                         checked={settings?.autoPostEnabled ?? false}
                         onCheckedChange={(checked) =>
-                          updateSetting(connection.id, "autoPostEnabled", checked)
+                          updateSetting(
+                            connection.id,
+                            "autoPostEnabled",
+                            checked,
+                          )
                         }
                       />
                     </div>
@@ -238,7 +263,7 @@ export function SocialPlatformSettings({
                             updateSetting(
                               connection.id,
                               "defaultPostTiming",
-                              value
+                              value,
                             )
                           }
                         >
@@ -249,9 +274,7 @@ export function SocialPlatformSettings({
                             <SelectItem value="immediate">
                               Segera (setelah publish)
                             </SelectItem>
-                            <SelectItem value="scheduled">
-                              Terjadwal
-                            </SelectItem>
+                            <SelectItem value="scheduled">Terjadwal</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -262,7 +285,7 @@ export function SocialPlatformSettings({
                       settings?.defaultPostTiming === "scheduled" && (
                         <div className="space-y-2">
                           <Label htmlFor={`schedule-${connection.id}`}>
-                                Jadwal Posting
+                            Jadwal Posting
                           </Label>
                           <input
                             id={`schedule-${connection.id}`}
@@ -270,14 +293,14 @@ export function SocialPlatformSettings({
                             className={cn(
                               "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
                               "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                              "disabled:cursor-not-allowed disabled:opacity-50"
+                              "disabled:cursor-not-allowed disabled:opacity-50",
                             )}
                             value={settings?.scheduledTime || ""}
                             onChange={(e) =>
                               updateSetting(
                                 connection.id,
                                 "scheduledTime",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           />
@@ -298,7 +321,11 @@ export function SocialPlatformSettings({
                         id={`custom-${connection.id}`}
                         checked={settings?.customFormatting ?? false}
                         onCheckedChange={(checked) =>
-                          updateSetting(connection.id, "customFormatting", checked)
+                          updateSetting(
+                            connection.id,
+                            "customFormatting",
+                            checked,
+                          )
                         }
                       />
                     </div>
@@ -317,8 +344,8 @@ export function SocialPlatformSettings({
                   </div>
                 </CardContent>
               </Card>
-            )
-          }
+            );
+          },
         )}
       </div>
 
@@ -326,12 +353,12 @@ export function SocialPlatformSettings({
         <Card>
           <CardContent className="py-8 text-center">
             <p className="text-muted-foreground">
-              Tidak ada platform social media yang terhubung. Hubungkan
-              platform terlebih dahulu untuk mengatur pengaturan posting.
+              Tidak ada platform social media yang terhubung. Hubungkan platform
+              terlebih dahulu untuk mengatur pengaturan posting.
             </p>
           </CardContent>
         </Card>
       )}
     </div>
-  )
+  );
 }

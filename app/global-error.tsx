@@ -33,9 +33,7 @@ export default function GlobalError({
         <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-background">
           <div className="max-w-md w-full bg-card border rounded-lg p-8 text-center">
             <AlertTriangle className="h-16 w-16 text-destructive mx-auto mb-6" />
-            <h1 className="text-2xl font-bold mb-3">
-              Something went wrong!
-            </h1>
+            <h1 className="text-2xl font-bold mb-3">Something went wrong!</h1>
             <p className="text-muted-foreground mb-6">
               We encountered an unexpected error. Our team has been notified and
               is working to fix it.

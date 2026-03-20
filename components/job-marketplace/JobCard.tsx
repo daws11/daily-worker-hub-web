@@ -1,43 +1,54 @@
-"use client"
+"use client";
 
-import React from 'react'
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { JobWithRelations } from '@/lib/types/job'
-import { formatIDR } from '@/lib/utils/currency'
-import { formatDate } from '@/lib/utils/date'
-import { isUMKCompliant } from '@/lib/constants/wage'
-import { MapPin, Calendar, Banknote, Building2, CheckCircle2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useTranslation } from '@/lib/i18n/hooks'
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { JobWithRelations } from "@/lib/types/job";
+import { formatIDR } from "@/lib/utils/currency";
+import { formatDate } from "@/lib/utils/date";
+import { isUMKCompliant } from "@/lib/constants/wage";
+import {
+  MapPin,
+  Calendar,
+  Banknote,
+  Building2,
+  CheckCircle2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/hooks";
 
 interface JobCardProps {
-  job: JobWithRelations
-  onClick?: () => void
-  className?: string
+  job: JobWithRelations;
+  onClick?: () => void;
+  className?: string;
 }
 
 export function JobCard({ job, onClick, className }: JobCardProps) {
-  const { t, locale } = useTranslation()
+  const { t, locale } = useTranslation();
 
   // Check if job is Rate Bali compliant (using minimum wage)
-  const isRateBaliCompliant = isUMKCompliant(job.budget_min, job.address)
+  const isRateBaliCompliant = isUMKCompliant(job.budget_min, job.address);
 
   // Format wage range
   const formatWageRange = () => {
     if (job.budget_min === job.budget_max) {
-      return formatIDR(job.budget_min)
+      return formatIDR(job.budget_min);
     }
-    return `${formatIDR(job.budget_min)} - ${formatIDR(job.budget_max)}`
-  }
+    return `${formatIDR(job.budget_min)} - ${formatIDR(job.budget_max)}`;
+  };
 
   return (
     <Card
       data-testid={`job-card-${job.id}`}
       className={cn(
-        'cursor-pointer transition-all hover:shadow-lg hover:border-primary/50',
-        onClick && 'group',
-        className
+        "cursor-pointer transition-all hover:shadow-lg hover:border-primary/50",
+        onClick && "group",
+        className,
       )}
       onClick={onClick}
     >
@@ -53,7 +64,7 @@ export function JobCard({ job, onClick, className }: JobCardProps) {
                   variant="default"
                   className="bg-green-600 hover:bg-green-700 text-[10px] sm:text-xs"
                 >
-                  {t('jobs.rateBali')}
+                  {t("jobs.rateBali")}
                 </Badge>
               )}
             </div>
@@ -90,7 +101,11 @@ export function JobCard({ job, onClick, className }: JobCardProps) {
         {job.distance !== undefined && (
           <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
             <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-            <span>{job.distance < 1 ? `${(job.distance * 1000).toFixed(0)} m` : `${job.distance.toFixed(1)} km`}</span>
+            <span>
+              {job.distance < 1
+                ? `${(job.distance * 1000).toFixed(0)} m`
+                : `${job.distance.toFixed(1)} km`}
+            </span>
           </div>
         )}
       </CardContent>
@@ -98,9 +113,11 @@ export function JobCard({ job, onClick, className }: JobCardProps) {
       <CardFooter className="pt-2 sm:pt-3 border-t px-3 sm:px-6">
         <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
           <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-          <span className="line-clamp-1">{t('jobs.deadlineLabel')} {formatDate(job.deadline, locale)}</span>
+          <span className="line-clamp-1">
+            {t("jobs.deadlineLabel")} {formatDate(job.deadline, locale)}
+          </span>
         </div>
       </CardFooter>
     </Card>
-  )
+  );
 }

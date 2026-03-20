@@ -1,29 +1,29 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useEffect, useRef } from "react"
+import * as React from "react";
+import { useEffect, useRef } from "react";
 
-import { cn } from "@/lib/utils"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { MessageBubble } from "@/components/messaging/message-bubble"
-import { MessageWithRelations } from "@/lib/types/message"
+import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { MessageBubble } from "@/components/messaging/message-bubble";
+import { MessageWithRelations } from "@/lib/types/message";
 
 export interface MessageThreadProps extends React.HTMLAttributes<HTMLDivElement> {
-  messages: MessageWithRelations[]
-  currentUserId: string
-  isLoading?: boolean
-  loadingComponent?: React.ReactNode
-  emptyComponent?: React.ReactNode
-  autoScroll?: boolean
-  scrollBehavior?: "auto" | "smooth"
-  groupConsecutive?: boolean
-  showAvatar?: boolean
-  showSenderName?: boolean
+  messages: MessageWithRelations[];
+  currentUserId: string;
+  isLoading?: boolean;
+  loadingComponent?: React.ReactNode;
+  emptyComponent?: React.ReactNode;
+  autoScroll?: boolean;
+  scrollBehavior?: "auto" | "smooth";
+  groupConsecutive?: boolean;
+  showAvatar?: boolean;
+  showSenderName?: boolean;
 }
 
 interface MessageGroup {
-  senderId: string
-  messages: MessageWithRelations[]
+  senderId: string;
+  messages: MessageWithRelations[];
 }
 
 const MessageThread = React.forwardRef<HTMLDivElement, MessageThreadProps>(
@@ -42,48 +42,50 @@ const MessageThread = React.forwardRef<HTMLDivElement, MessageThreadProps>(
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const scrollAreaRef = useRef<HTMLDivElement>(null)
-    const prevMessagesLengthRef = useRef(0)
+    const scrollAreaRef = useRef<HTMLDivElement>(null);
+    const prevMessagesLengthRef = useRef(0);
 
     // Group consecutive messages from the same sender
     const groupedMessages = React.useMemo(() => {
       if (!groupConsecutive) {
-        return messages.map((msg) => [{ senderId: msg.sender_id, messages: [msg] }])
+        return messages.map((msg) => [
+          { senderId: msg.sender_id, messages: [msg] },
+        ]);
       }
 
-      const groups: MessageGroup[] = []
+      const groups: MessageGroup[] = [];
       for (const message of messages) {
-        const lastGroup = groups[groups.length - 1]
+        const lastGroup = groups[groups.length - 1];
         if (lastGroup && lastGroup.senderId === message.sender_id) {
-          lastGroup.messages.push(message)
+          lastGroup.messages.push(message);
         } else {
-          groups.push({ senderId: message.sender_id, messages: [message] })
+          groups.push({ senderId: message.sender_id, messages: [message] });
         }
       }
-      return groups
-    }, [messages, groupConsecutive])
+      return groups;
+    }, [messages, groupConsecutive]);
 
     // Auto-scroll to bottom when new messages arrive
     useEffect(() => {
-      if (!autoScroll) return
+      if (!autoScroll) return;
 
-      const messagesLength = messages.length
-      const hasNewMessages = messagesLength > prevMessagesLengthRef.current
+      const messagesLength = messages.length;
+      const hasNewMessages = messagesLength > prevMessagesLengthRef.current;
 
       if (hasNewMessages && messagesLength > 0) {
-        const scrollElement = scrollAreaRef.current
+        const scrollElement = scrollAreaRef.current;
         if (scrollElement) {
           scrollElement.scrollTo({
             top: scrollElement.scrollHeight,
             behavior: scrollBehavior,
-          })
+          });
         }
       }
 
-      prevMessagesLengthRef.current = messagesLength
-    }, [messages, autoScroll, scrollBehavior])
+      prevMessagesLengthRef.current = messagesLength;
+    }, [messages, autoScroll, scrollBehavior]);
 
     // Render empty state
     if (!isLoading && messages.length === 0) {
@@ -97,7 +99,7 @@ const MessageThread = React.forwardRef<HTMLDivElement, MessageThreadProps>(
             <p className="text-sm text-muted-foreground">No messages yet</p>
           )}
         </div>
-      )
+      );
     }
 
     return (
@@ -109,19 +111,20 @@ const MessageThread = React.forwardRef<HTMLDivElement, MessageThreadProps>(
         <div className="flex flex-col gap-4 p-4">
           {groupConsecutive
             ? groupedMessages.map((group, groupIndex) => {
-                const isOwnGroup = group.senderId === currentUserId
+                const isOwnGroup = group.senderId === currentUserId;
 
                 return (
                   <div
                     key={`group-${groupIndex}-${group.messages[0].id}`}
                     className={cn(
                       "flex flex-col gap-1",
-                      isOwnGroup ? "items-end" : "items-start"
+                      isOwnGroup ? "items-end" : "items-start",
                     )}
                   >
                     {group.messages.map((message, messageIndex) => {
-                      const isFirstInGroup = messageIndex === 0
-                      const isLastInGroup = messageIndex === group.messages.length - 1
+                      const isFirstInGroup = messageIndex === 0;
+                      const isLastInGroup =
+                        messageIndex === group.messages.length - 1;
 
                       return (
                         <MessageBubble
@@ -130,20 +133,18 @@ const MessageThread = React.forwardRef<HTMLDivElement, MessageThreadProps>(
                           currentUserId={currentUserId}
                           showAvatar={showAvatar && isFirstInGroup}
                           showSenderName={
-                            showSenderName &&
-                            !isOwnGroup &&
-                            isFirstInGroup
+                            showSenderName && !isOwnGroup && isFirstInGroup
                           }
                           className={cn(
                             isFirstInGroup && "mt-2",
                             isLastInGroup && "mb-2",
-                            !isFirstInGroup && !isLastInGroup && "my-0.5"
+                            !isFirstInGroup && !isLastInGroup && "my-0.5",
                           )}
                         />
-                      )
+                      );
                     })}
                   </div>
-                )
+                );
               })
             : messages.map((message) => (
                 <MessageBubble
@@ -151,7 +152,9 @@ const MessageThread = React.forwardRef<HTMLDivElement, MessageThreadProps>(
                   message={message}
                   currentUserId={currentUserId}
                   showAvatar={showAvatar}
-                  showSenderName={showSenderName && message.sender_id !== currentUserId}
+                  showSenderName={
+                    showSenderName && message.sender_id !== currentUserId
+                  }
                 />
               ))}
 
@@ -168,9 +171,9 @@ const MessageThread = React.forwardRef<HTMLDivElement, MessageThreadProps>(
           )}
         </div>
       </ScrollArea>
-    )
-  }
-)
-MessageThread.displayName = "MessageThread"
+    );
+  },
+);
+MessageThread.displayName = "MessageThread";
 
-export { MessageThread }
+export { MessageThread };

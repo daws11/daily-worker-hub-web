@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { toast } from "sonner"
+import * as React from "react";
+import { toast } from "sonner";
 
-import { ConversationCard } from "@/components/messaging/conversation-card"
-import { useMessages } from "@/lib/hooks/use-messages"
-import { useRealtimeMessages } from "@/lib/hooks/use-realtime-messages"
-import type { MessageWithRelations } from "@/lib/types/message"
+import { ConversationCard } from "@/components/messaging/conversation-card";
+import { useMessages } from "@/lib/hooks/use-messages";
+import { useRealtimeMessages } from "@/lib/hooks/use-realtime-messages";
+import type { MessageWithRelations } from "@/lib/types/message";
 
 export interface ConversationListProps {
-  userId: string
+  userId: string;
 }
 
 export function ConversationList({ userId }: ConversationListProps) {
@@ -22,7 +22,7 @@ export function ConversationList({ userId }: ConversationListProps) {
   } = useMessages({
     userId,
     autoFetch: true,
-  })
+  });
 
   // Subscribe to realtime message updates
   // Use receiverId to listen for incoming messages
@@ -31,24 +31,24 @@ export function ConversationList({ userId }: ConversationListProps) {
     {
       onMessageChange: async () => {
         // Refresh conversations when any message change occurs
-        await refreshMessages()
+        await refreshMessages();
       },
-    }
-  )
+    },
+  );
 
   // Load conversations on mount
   React.useEffect(() => {
     if (userId) {
-      fetchConversations()
+      fetchConversations();
     }
-  }, [userId, fetchConversations])
+  }, [userId, fetchConversations]);
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -56,7 +56,7 @@ export function ConversationList({ userId }: ConversationListProps) {
       <div className="text-center py-12">
         <p className="text-muted-foreground">Error: {error}</p>
       </div>
-    )
+    );
   }
 
   if (!conversations || conversations.length === 0) {
@@ -67,7 +67,7 @@ export function ConversationList({ userId }: ConversationListProps) {
           Pesan akan muncul di sini setelah Anda memiliki booking dengan bisnis.
         </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -80,5 +80,5 @@ export function ConversationList({ userId }: ConversationListProps) {
         />
       ))}
     </div>
-  )
+  );
 }

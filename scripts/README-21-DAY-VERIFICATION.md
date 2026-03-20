@@ -130,6 +130,7 @@ After the automated verification passes, complete the verification by checking t
 ### ComplianceWarningBanner (components/booking/compliance-warning-banner.tsx)
 
 At 21 days, the banner should render with:
+
 - **Status**: `"blocked"`
 - **Title**: `"PP 35/2021 Limit Reached (21/21 days)"`
 - **Description**: `"Worker has reached the monthly limit. Cannot accept more bookings this month."`
@@ -140,6 +141,7 @@ At 21 days, the banner should render with:
 ### BookingActions (components/booking/booking-actions.tsx)
 
 At 21 days, the accept button should:
+
 - **isComplianceBlocked**: `true` (because `complianceStatus?.status === "blocked"`)
 - **isAcceptDisabled**: `true` (combines `isActionDisabled || isComplianceBlocked`)
 - **Button state**: Disabled (grayed out, not clickable)
@@ -149,6 +151,7 @@ At 21 days, the accept button should:
 ### ComplianceStatusBadge (components/booking/compliance-status-badge.tsx)
 
 At 21 days, the badge should show:
+
 - **Status**: `"blocked"`
 - **Variant**: `"destructive"` (red)
 - **Icon**: `XCircle` (red)
@@ -157,6 +160,7 @@ At 21 days, the badge should show:
 ### AlternativeWorkersSuggestion (components/booking/alternative-workers-suggestion.tsx)
 
 At 21 days, this component should:
+
 - **Render**: YES (when `complianceIssue.status === "blocked"`)
 - **Show**: Grid of available workers (those with <21 days)
 - **Allow**: Clicking on alternative workers to select them
@@ -167,12 +171,14 @@ At 21 days, this component should:
 ### "Failed to create business/worker" error
 
 Make sure your Supabase instance is running and accessible:
+
 - Local: `supabase status`
 - Remote: Check your `DATABASE_URL` and API keys
 
 ### "No compliance tracking record found" error
 
 This means the database trigger is not firing. Check:
+
 1. Does the `compliance_tracking` table exist? Run: `\d compliance_tracking`
 2. Is the trigger set up on the `bookings` table?
 3. Check Supabase logs for trigger errors
@@ -180,6 +186,7 @@ This means the database trigger is not firing. Check:
 ### "calculate_days_worked returned X, expected 21"
 
 The trigger might be counting incorrectly. Check:
+
 1. The booking statuses (should be 'accepted', not 'pending')
 2. The booking dates (should be in the current month)
 3. The trigger logic in the migration file
@@ -187,6 +194,7 @@ The trigger might be counting incorrectly. Check:
 ### "Expected compliance status to be 'blocked', but got 'warning'"
 
 The compliance logic might be incorrect. Check:
+
 1. `lib/supabase/queries/compliance.ts` - `getComplianceStatus` function
 2. The condition should be: `if (days >= 21) status = 'blocked'`
 3. Make sure the logic is: `days >= 21` (not `days > 21`)
@@ -194,6 +202,7 @@ The compliance logic might be incorrect. Check:
 ### "checkComplianceBeforeAccept should return canAccept=false"
 
 The server action logic might be incorrect. Check:
+
 1. `lib/actions/compliance.ts` - `checkComplianceBeforeAccept` function
 2. The condition should be: `canAccept = status !== 'blocked'`
 3. When status is "blocked", canAccept should be false

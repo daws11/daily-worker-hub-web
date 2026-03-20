@@ -7,6 +7,7 @@ The Daily Worker Hub now implements a tier-based interview process that scales t
 ## Interview Flow by Tier
 
 ### Champion (Tier 4) & Elite (Tier 3)
+
 - **Type:** Instant Dispatch
 - **Interview Required:** No
 - **Time-to-Hire:** <5 minutes
@@ -14,6 +15,7 @@ The Daily Worker Hub now implements a tier-based interview process that scales t
 - **Badge:** "Instant Dispatch" badge displayed
 
 ### Pro (Tier 2)
+
 - **Type:** Chat Interview
 - **Interview Required:** Yes (Chat)
 - **Voice Call:** Optional (3-5 min)
@@ -22,6 +24,7 @@ The Daily Worker Hub now implements a tier-based interview process that scales t
 - **Process:** Click → Chat (5-10 min) → Optional Voice → Booking
 
 ### Classic (Tier 1)
+
 - **Type:** Chat + Voice Interview
 - **Interview Required:** Yes (Chat + Voice)
 - **Voice Call:** Required (3-5 min)
@@ -34,6 +37,7 @@ The Daily Worker Hub now implements a tier-based interview process that scales t
 ## Components
 
 ### Core Logic (`lib/algorithms/interview-flow.ts`)
+
 Main algorithms for interview flow:
 
 - `getInterviewConfig(tier)` - Get interview requirements for a tier
@@ -52,7 +56,9 @@ Main algorithms for interview flow:
 ### UI Components
 
 #### `components/messaging/interview-chat.tsx`
+
 Main interview chat interface with:
+
 - Real-time messaging
 - Voice call integration
 - Interview timer
@@ -60,7 +66,9 @@ Main interview chat interface with:
 - Completion controls
 
 #### `components/messaging/voice-call-button.tsx`
+
 Voice call button with states:
+
 - Idle
 - Calling
 - Incoming
@@ -68,14 +76,18 @@ Voice call button with states:
 - Ended
 
 #### `components/messaging/interview-timer.tsx`
+
 Interview timer component with:
+
 - Real-time countdown
 - Minimum duration requirement display
 - Progress bar
 - Multiple variants (default, compact, minimal)
 
 #### `components/business/instant-dispatch-badge.tsx`
+
 Badge for instant dispatch workers:
+
 - Green with lightning icon
 - Size variants (sm, md, lg)
 - Outline/default variants
@@ -83,7 +95,9 @@ Badge for instant dispatch workers:
 ### Updated Components
 
 #### `components/matching/worker-shortlist.tsx`
+
 Updated to show:
+
 - Interview type per worker tier
 - Instant Dispatch badge for Elite/Champion
 - "Instant Book" button for high-tier workers
@@ -91,6 +105,7 @@ Updated to show:
 ## Server Actions (`lib/actions/bookings.ts`)
 
 ### Interview Session Management
+
 - `createInterviewSession(bookingId, businessId, workerId, workerTier)` - Create new session
 - `startInterviewSession(interviewSessionId, userId)` - Start interview
 - `startChatInterview(interviewSessionId, userId)` - Start chat phase
@@ -101,6 +116,7 @@ Updated to show:
 - `cancelInterviewSession(interviewSessionId, userId)` - Cancel interview
 
 ### Analytics
+
 - `getInterviewSessionByBooking(bookingId)` - Get session by booking
 - `incrementInterviewMessageCount(interviewSessionId)` - Track messages sent
 - `calculateBookingTimeToHire(bookingId)` - Calculate time-to-hire metric
@@ -137,6 +153,7 @@ CREATE TABLE interview_sessions (
 ### `bookings` Table (Updated)
 
 Added columns:
+
 - `interview_status` - Interview status
 - `interview_duration` - Duration in seconds
 - `time_to_hire` - Time-to-hire in minutes
@@ -146,28 +163,28 @@ Added columns:
 ### Creating a Booking with Interview
 
 ```typescript
-import { createInterviewSession } from '@/lib/actions/bookings'
-import { canInstantDispatch } from '@/lib/algorithms/interview-flow'
+import { createInterviewSession } from "@/lib/actions/bookings";
+import { canInstantDispatch } from "@/lib/algorithms/interview-flow";
 
 async function selectWorker(worker: WorkerWithScore, job: Job) {
   // Create booking
-  const booking = await createBooking(job.id, worker.id, businessId)
+  const booking = await createBooking(job.id, worker.id, businessId);
 
   // Create interview session
   const { data: session } = await createInterviewSession(
     booking.id,
     businessId,
     worker.id,
-    worker.tier
-  )
+    worker.tier,
+  );
 
   // If instant dispatch, complete immediately
   if (canInstantDispatch(worker.tier)) {
-    await completeInterviewSession(session.id, businessId)
+    await completeInterviewSession(session.id, businessId);
     // Navigate to booking confirmation
   } else {
     // Navigate to interview chat interface
-    router.push(`/interview/${session.id}`)
+    router.push(`/interview/${session.id}`);
   }
 }
 ```
@@ -210,6 +227,7 @@ pending → in_progress → completed
 ```
 
 For instant dispatch workers:
+
 ```
 skipped (created as skipped)
 ```

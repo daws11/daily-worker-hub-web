@@ -1,6 +1,6 @@
 /**
  * Rate Limiting Middleware for Daily Worker Hub
- * 
+ *
  * Implements in-memory sliding window rate limiting with:
  * - IP-based and user-based rate limiting
  * - Configurable limits per endpoint type
@@ -9,24 +9,28 @@
  * - Retry-After header on 429 responses
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from '@/lib/auth/get-server-session'
-import { createClient } from '@/lib/supabase/server'
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "@/lib/auth/get-server-session";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * Rate limit configuration types
  */
-export type RateLimitType = 'auth' | 'api-authenticated' | 'api-public' | 'payment'
+export type RateLimitType =
+  | "auth"
+  | "api-authenticated"
+  | "api-public"
+  | "payment";
 
 export interface RateLimitConfig {
   /** Maximum requests allowed in the window */
-  maxRequests: number
+  maxRequests: number;
   /** Window duration in milliseconds */
-  windowMs: number
+  windowMs: number;
   /** Type of rate limit for logging */
-  type: RateLimitType
+  type: RateLimitType;
   /** Message to return when rate limited */
-  message?: string
+  message?: string;
 }
 
 /**
@@ -36,35 +40,37 @@ export const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
   auth: {
     maxRequests: 5,
     windowMs: 60 * 1000, // 5 requests per minute
-    type: 'auth',
-    message: 'Terlalu banyak percobaan login/register. Silakan coba lagi dalam beberapa menit.',
+    type: "auth",
+    message:
+      "Terlalu banyak percobaan login/register. Silakan coba lagi dalam beberapa menit.",
   },
-  'api-authenticated': {
+  "api-authenticated": {
     maxRequests: 100,
     windowMs: 60 * 1000, // 100 requests per minute
-    type: 'api-authenticated',
-    message: 'Terlalu banyak permintaan. Silakan coba lagi nanti.',
+    type: "api-authenticated",
+    message: "Terlalu banyak permintaan. Silakan coba lagi nanti.",
   },
-  'api-public': {
+  "api-public": {
     maxRequests: 30,
     windowMs: 60 * 1000, // 30 requests per minute
-    type: 'api-public',
-    message: 'Terlalu banyak permintaan. Silakan coba lagi nanti.',
+    type: "api-public",
+    message: "Terlalu banyak permintaan. Silakan coba lagi nanti.",
   },
   payment: {
     maxRequests: 10,
     windowMs: 60 * 1000, // 10 requests per minute
-    type: 'payment',
-    message: 'Terlalu banyak permintaan pembayaran. Silakan coba lagi dalam beberapa menit.',
+    type: "payment",
+    message:
+      "Terlalu banyak permintaan pembayaran. Silakan coba lagi dalam beberapa menit.",
   },
-}
+};
 
 /**
  * Request record for tracking rate limits
  */
 interface RequestRecord {
-  count: number
-  resetTime: number
+  count: number;
+  resetTime: number;
 }
 
 /**
@@ -72,44 +78,47 @@ interface RequestRecord {
  * Key format: `${identifier}:${type}`
  * Exported for admin metrics access
  */
-export const rateLimitStore = new Map<string, RequestRecord>()
+export const rateLimitStore = new Map<string, RequestRecord>();
 
 /**
  * Clean up expired entries periodically (every 5 minutes)
  */
-setInterval(() => {
-  const now = Date.now()
-  for (const [key, record] of rateLimitStore.entries()) {
-    if (now > record.resetTime) {
-      rateLimitStore.delete(key)
+setInterval(
+  () => {
+    const now = Date.now();
+    for (const [key, record] of rateLimitStore.entries()) {
+      if (now > record.resetTime) {
+        rateLimitStore.delete(key);
+      }
     }
-  }
-}, 5 * 60 * 1000)
+  },
+  5 * 60 * 1000,
+);
 
 /**
  * Get client IP address from request
  */
 function getClientIP(request: NextRequest): string {
   // Check various headers for IP address
-  const forwarded = request.headers.get('x-forwarded-for')
-  const realIP = request.headers.get('x-real-ip')
-  const cfIP = request.headers.get('cf-connecting-ip') // Cloudflare
-  
+  const forwarded = request.headers.get("x-forwarded-for");
+  const realIP = request.headers.get("x-real-ip");
+  const cfIP = request.headers.get("cf-connecting-ip"); // Cloudflare
+
   if (forwarded) {
     // x-forwarded-for can contain multiple IPs, take the first one
-    return forwarded.split(',')[0].trim()
+    return forwarded.split(",")[0].trim();
   }
-  
+
   if (realIP) {
-    return realIP.trim()
+    return realIP.trim();
   }
-  
+
   if (cfIP) {
-    return cfIP.trim()
+    return cfIP.trim();
   }
-  
+
   // Fallback to a default (shouldn't happen in production)
-  return 'unknown'
+  return "unknown";
 }
 
 /**
@@ -117,27 +126,27 @@ function getClientIP(request: NextRequest): string {
  */
 async function isAdminUser(): Promise<boolean> {
   try {
-    const session = await getServerSession()
-    
+    const session = await getServerSession();
+
     if (!session?.user?.id) {
-      return false
+      return false;
     }
-    
-    const supabase = await createClient()
-    
+
+    const supabase = await createClient();
+
     const { data: user, error } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', session.user.id)
-      .single()
-    
+      .from("users")
+      .select("role")
+      .eq("id", session.user.id)
+      .single();
+
     if (error || !user) {
-      return false
+      return false;
     }
-    
-    return user.role === 'admin'
+
+    return user.role === "admin";
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -147,62 +156,67 @@ async function isAdminUser(): Promise<boolean> {
  */
 function checkRateLimit(
   identifier: string,
-  config: RateLimitConfig
-): { allowed: boolean; remaining: number; resetTime: number; retryAfter: number } {
-  const now = Date.now()
-  const key = `${identifier}:${config.type}`
-  
-  const record = rateLimitStore.get(key)
-  
+  config: RateLimitConfig,
+): {
+  allowed: boolean;
+  remaining: number;
+  resetTime: number;
+  retryAfter: number;
+} {
+  const now = Date.now();
+  const key = `${identifier}:${config.type}`;
+
+  const record = rateLimitStore.get(key);
+
   if (!record || now > record.resetTime) {
     // No record or window expired - create new entry
     const newRecord: RequestRecord = {
       count: 1,
       resetTime: now + config.windowMs,
-    }
-    rateLimitStore.set(key, newRecord)
-    
+    };
+    rateLimitStore.set(key, newRecord);
+
     return {
       allowed: true,
       remaining: config.maxRequests - 1,
       resetTime: newRecord.resetTime,
       retryAfter: 0,
-    }
+    };
   }
-  
+
   // Window is still active
   if (record.count < config.maxRequests) {
     // Increment count
-    record.count++
-    rateLimitStore.set(key, record)
-    
+    record.count++;
+    rateLimitStore.set(key, record);
+
     return {
       allowed: true,
       remaining: config.maxRequests - record.count,
       resetTime: record.resetTime,
       retryAfter: 0,
-    }
+    };
   }
-  
+
   // Rate limit exceeded
-  const retryAfter = Math.ceil((record.resetTime - now) / 1000) // Convert to seconds
-  
+  const retryAfter = Math.ceil((record.resetTime - now) / 1000); // Convert to seconds
+
   return {
     allowed: false,
     remaining: 0,
     resetTime: record.resetTime,
     retryAfter,
-  }
+  };
 }
 
 /**
  * Rate limit response headers
  */
 interface RateLimitHeaders {
-  'X-RateLimit-Limit': string
-  'X-RateLimit-Remaining': string
-  'X-RateLimit-Reset': string
-  'Retry-After'?: string
+  "X-RateLimit-Limit": string;
+  "X-RateLimit-Remaining": string;
+  "X-RateLimit-Reset": string;
+  "Retry-After"?: string;
 }
 
 /**
@@ -212,19 +226,19 @@ function createRateLimitHeaders(
   config: RateLimitConfig,
   remaining: number,
   resetTime: number,
-  retryAfter?: number
+  retryAfter?: number,
 ): RateLimitHeaders {
   const headers: RateLimitHeaders = {
-    'X-RateLimit-Limit': config.maxRequests.toString(),
-    'X-RateLimit-Remaining': Math.max(0, remaining).toString(),
-    'X-RateLimit-Reset': Math.ceil(resetTime / 1000).toString(), // Unix timestamp in seconds
-  }
-  
+    "X-RateLimit-Limit": config.maxRequests.toString(),
+    "X-RateLimit-Remaining": Math.max(0, remaining).toString(),
+    "X-RateLimit-Reset": Math.ceil(resetTime / 1000).toString(), // Unix timestamp in seconds
+  };
+
   if (retryAfter && retryAfter > 0) {
-    headers['Retry-After'] = retryAfter.toString()
+    headers["Retry-After"] = retryAfter.toString();
   }
-  
-  return headers
+
+  return headers;
 }
 
 /**
@@ -232,19 +246,19 @@ function createRateLimitHeaders(
  */
 export interface RateLimitOptions {
   /** Rate limit type (uses predefined config) */
-  type?: RateLimitType
+  type?: RateLimitType;
   /** Custom rate limit config (overrides type) */
-  config?: RateLimitConfig
+  config?: RateLimitConfig;
   /** Whether to use user-based rate limiting (default: true for authenticated routes) */
-  userBased?: boolean
+  userBased?: boolean;
   /** Whether to also apply IP-based rate limiting alongside user-based */
-  alsoIpBased?: boolean
+  alsoIpBased?: boolean;
   /** Skip rate limiting for admin users (default: true) */
-  skipAdmin?: boolean
+  skipAdmin?: boolean;
   /** Custom key prefix for rate limit identifier */
-  keyPrefix?: string
+  keyPrefix?: string;
   /** HTTP methods to apply rate limiting to (default: all) */
-  methods?: ('GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH')[]
+  methods?: ("GET" | "POST" | "PUT" | "DELETE" | "PATCH")[];
 }
 
 /**
@@ -252,16 +266,16 @@ export interface RateLimitOptions {
  */
 async function getUserId(): Promise<string | null> {
   try {
-    const session = await getServerSession()
-    return session?.user?.id || null
+    const session = await getServerSession();
+    return session?.user?.id || null;
   } catch {
-    return null
+    return null;
   }
 }
 
 /**
  * Rate limiting middleware wrapper
- * 
+ *
  * Usage:
  * ```typescript
  * export const POST = withRateLimit(
@@ -274,71 +288,75 @@ async function getUserId(): Promise<string | null> {
  */
 export function withRateLimit<T extends NextRequest>(
   handler: (request: T) => Promise<NextResponse>,
-  options: RateLimitOptions = {}
+  options: RateLimitOptions = {},
 ): (request: T) => Promise<NextResponse> {
   const {
-    type = 'api-public',
+    type = "api-public",
     config,
     userBased = true,
     alsoIpBased = false,
     skipAdmin = true,
-    keyPrefix = '',
+    keyPrefix = "",
     methods,
-  } = options
+  } = options;
 
-  const rateLimitConfig = config || RATE_LIMIT_CONFIGS[type]
+  const rateLimitConfig = config || RATE_LIMIT_CONFIGS[type];
 
   return async (request: T): Promise<NextResponse> => {
     // Check if method should be rate limited
     if (methods && methods.length > 0) {
-      const method = request.method.toUpperCase() as typeof methods[number]
+      const method = request.method.toUpperCase() as (typeof methods)[number];
       if (!methods.includes(method)) {
-        return handler(request)
+        return handler(request);
       }
     }
 
     // Check for admin bypass
     if (skipAdmin) {
-      const isAdmin = await isAdminUser()
+      const isAdmin = await isAdminUser();
       if (isAdmin) {
         // Add rate limit headers but don't enforce
-        const ip = getClientIP(request)
-        const headers = createRateLimitHeaders(rateLimitConfig, rateLimitConfig.maxRequests, Date.now() + rateLimitConfig.windowMs)
-        const response = await handler(request)
-        
+        const ip = getClientIP(request);
+        const headers = createRateLimitHeaders(
+          rateLimitConfig,
+          rateLimitConfig.maxRequests,
+          Date.now() + rateLimitConfig.windowMs,
+        );
+        const response = await handler(request);
+
         // Add headers to response
         Object.entries(headers).forEach(([key, value]) => {
-          response.headers.set(key, value)
-        })
-        
-        return response
+          response.headers.set(key, value);
+        });
+
+        return response;
       }
     }
 
-    const ip = getClientIP(request)
-    const userId = userBased ? await getUserId() : null
+    const ip = getClientIP(request);
+    const userId = userBased ? await getUserId() : null;
 
     // Build identifier
     // Priority: userId > ip
-    let identifier: string
-    
+    let identifier: string;
+
     if (userId) {
-      identifier = keyPrefix ? `${keyPrefix}:user:${userId}` : `user:${userId}`
+      identifier = keyPrefix ? `${keyPrefix}:user:${userId}` : `user:${userId}`;
     } else {
-      identifier = keyPrefix ? `${keyPrefix}:ip:${ip}` : `ip:${ip}`
+      identifier = keyPrefix ? `${keyPrefix}:ip:${ip}` : `ip:${ip}`;
     }
 
     // Check rate limit
-    const result = checkRateLimit(identifier, rateLimitConfig)
+    const result = checkRateLimit(identifier, rateLimitConfig);
 
     // If also IP-based, check that too (stricter limit wins)
     if (alsoIpBased && userId) {
-      const ipIdentifier = keyPrefix ? `${keyPrefix}:ip:${ip}` : `ip:${ip}`
-      const ipResult = checkRateLimit(ipIdentifier, rateLimitConfig)
-      
+      const ipIdentifier = keyPrefix ? `${keyPrefix}:ip:${ip}` : `ip:${ip}`;
+      const ipResult = checkRateLimit(ipIdentifier, rateLimitConfig);
+
       // Use the stricter result
       if (!ipResult.allowed || ipResult.remaining < result.remaining) {
-        Object.assign(result, ipResult)
+        Object.assign(result, ipResult);
       }
     }
 
@@ -348,42 +366,42 @@ export function withRateLimit<T extends NextRequest>(
         rateLimitConfig,
         result.remaining,
         result.resetTime,
-        result.retryAfter
-      )
+        result.retryAfter,
+      );
 
       return NextResponse.json(
         {
-          error: rateLimitConfig.message || 'Too many requests',
+          error: rateLimitConfig.message || "Too many requests",
           retryAfter: result.retryAfter,
         },
         {
           status: 429,
           headers: headers as Record<string, string>,
-        }
-      )
+        },
+      );
     }
 
     // Process request and add rate limit headers to response
-    const response = await handler(request)
-    
+    const response = await handler(request);
+
     // Add rate limit headers
     const headers = createRateLimitHeaders(
       rateLimitConfig,
       result.remaining,
-      result.resetTime
-    )
-    
-    Object.entries(headers).forEach(([key, value]) => {
-      response.headers.set(key, value)
-    })
+      result.resetTime,
+    );
 
-    return response
-  }
+    Object.entries(headers).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+
+    return response;
+  };
 }
 
 /**
  * Higher-order function for rate limiting specific HTTP methods
- * 
+ *
  * Usage:
  * ```typescript
  * export const POST = withRateLimitForMethod(
@@ -396,30 +414,38 @@ export function withRateLimit<T extends NextRequest>(
 export function withRateLimitForMethod<T extends NextRequest>(
   handler: (request: T) => Promise<NextResponse>,
   options: RateLimitOptions = {},
-  methods: ('GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH')[] = ['POST', 'PUT', 'DELETE', 'PATCH']
+  methods: ("GET" | "POST" | "PUT" | "DELETE" | "PATCH")[] = [
+    "POST",
+    "PUT",
+    "DELETE",
+    "PATCH",
+  ],
 ): (request: T) => Promise<NextResponse> {
-  return withRateLimit(handler, { ...options, methods })
+  return withRateLimit(handler, { ...options, methods });
 }
 
 /**
  * Clear rate limit for a specific identifier (useful for testing)
  */
 export function clearRateLimit(identifier: string, type: RateLimitType): void {
-  const key = `${identifier}:${type}`
-  rateLimitStore.delete(key)
+  const key = `${identifier}:${type}`;
+  rateLimitStore.delete(key);
 }
 
 /**
  * Clear all rate limits (useful for testing)
  */
 export function clearAllRateLimits(): void {
-  rateLimitStore.clear()
+  rateLimitStore.clear();
 }
 
 /**
  * Get current rate limit stats for an identifier (useful for debugging)
  */
-export function getRateLimitStats(identifier: string, type: RateLimitType): RequestRecord | undefined {
-  const key = `${identifier}:${type}`
-  return rateLimitStore.get(key)
+export function getRateLimitStats(
+  identifier: string,
+  type: RateLimitType,
+): RequestRecord | undefined {
+  const key = `${identifier}:${type}`;
+  return rateLimitStore.get(key);
 }

@@ -17,47 +17,47 @@ A Vercel-inspired design system built with shadcn/ui. Clean, minimal, monochrome
 
 ### Light Mode
 
-| Token | HSL Value | Usage |
-|-------|-----------|-------|
-| `--background` | `0 0% 100%` | Page background (white) |
-| `--foreground` | `0 0% 3.9%` | Primary text (near black) |
-| `--card` | `0 0% 100%` | Card backgrounds |
-| `--card-foreground` | `0 0% 3.9%` | Card text |
-| `--primary` | `0 0% 9%` | Primary buttons, important elements |
-| `--primary-foreground` | `0 0% 98%` | Text on primary |
-| `--secondary` | `0 0% 96.1%` | Secondary backgrounds |
-| `--secondary-foreground` | `0 0% 9%` | Text on secondary |
-| `--muted` | `0 0% 96.1%` | Muted backgrounds |
-| `--muted-foreground` | `0 0% 45.1%` | Muted text, placeholders |
-| `--accent` | `0 0% 96.1%` | Accent backgrounds |
-| `--accent-foreground` | `0 0% 9%` | Text on accent |
-| `--destructive` | `0 84.2% 60.2%` | Error states, delete actions |
-| `--border` | `0 0% 89.8%` | Border color |
-| `--input` | `0 0% 89.8%` | Input borders |
-| `--ring` | `0 0% 3.9%` | Focus ring |
+| Token                    | HSL Value       | Usage                               |
+| ------------------------ | --------------- | ----------------------------------- |
+| `--background`           | `0 0% 100%`     | Page background (white)             |
+| `--foreground`           | `0 0% 3.9%`     | Primary text (near black)           |
+| `--card`                 | `0 0% 100%`     | Card backgrounds                    |
+| `--card-foreground`      | `0 0% 3.9%`     | Card text                           |
+| `--primary`              | `0 0% 9%`       | Primary buttons, important elements |
+| `--primary-foreground`   | `0 0% 98%`      | Text on primary                     |
+| `--secondary`            | `0 0% 96.1%`    | Secondary backgrounds               |
+| `--secondary-foreground` | `0 0% 9%`       | Text on secondary                   |
+| `--muted`                | `0 0% 96.1%`    | Muted backgrounds                   |
+| `--muted-foreground`     | `0 0% 45.1%`    | Muted text, placeholders            |
+| `--accent`               | `0 0% 96.1%`    | Accent backgrounds                  |
+| `--accent-foreground`    | `0 0% 9%`       | Text on accent                      |
+| `--destructive`          | `0 84.2% 60.2%` | Error states, delete actions        |
+| `--border`               | `0 0% 89.8%`    | Border color                        |
+| `--input`                | `0 0% 89.8%`    | Input borders                       |
+| `--ring`                 | `0 0% 3.9%`     | Focus ring                          |
 
 ### Dark Mode
 
-| Token | HSL Value | Usage |
-|-------|-----------|-------|
-| `--background` | `0 0% 3.9%` | Page background (near black) |
-| `--foreground` | `0 0% 98%` | Primary text (white) |
-| `--card` | `0 0% 3.9%` | Card backgrounds |
-| `--primary` | `0 0% 98%` | Primary buttons (white) |
-| `--primary-foreground` | `0 0% 9%` | Text on primary (black) |
-| `--secondary` | `0 0% 14.9%` | Secondary backgrounds |
-| `--muted` | `0 0% 14.9%` | Muted backgrounds |
-| `--muted-foreground` | `0 0% 63.9%` | Muted text |
-| `--border` | `0 0% 14.9%` | Border color |
-| `--ring` | `0 0% 83.1%` | Focus ring |
+| Token                  | HSL Value    | Usage                        |
+| ---------------------- | ------------ | ---------------------------- |
+| `--background`         | `0 0% 3.9%`  | Page background (near black) |
+| `--foreground`         | `0 0% 98%`   | Primary text (white)         |
+| `--card`               | `0 0% 3.9%`  | Card backgrounds             |
+| `--primary`            | `0 0% 98%`   | Primary buttons (white)      |
+| `--primary-foreground` | `0 0% 9%`    | Text on primary (black)      |
+| `--secondary`          | `0 0% 14.9%` | Secondary backgrounds        |
+| `--muted`              | `0 0% 14.9%` | Muted backgrounds            |
+| `--muted-foreground`   | `0 0% 63.9%` | Muted text                   |
+| `--border`             | `0 0% 14.9%` | Border color                 |
+| `--ring`               | `0 0% 83.1%` | Focus ring                   |
 
 ### Semantic Colors
 
-| Token | Usage |
-|-------|-------|
+| Token       | Usage                                         |
+| ----------- | --------------------------------------------- |
 | `--success` | `142 76% 36%` - Success states, confirmations |
-| `--warning` | `38 92% 50%` - Warning states, cautions |
-| `--info` | `217 91% 60%` - Information states |
+| `--warning` | `38 92% 50%` - Warning states, cautions       |
+| `--info`    | `217 91% 60%` - Information states            |
 
 ---
 
@@ -73,16 +73,16 @@ Inter is loaded via `next/font/google` for optimal performance.
 
 ### Type Scale
 
-| Class | Size | Usage |
-|-------|------|-------|
-| `text-xs` | 12px | Captions, labels |
-| `text-sm` | 14px | Body small, secondary text |
-| `text-base` | 16px | Body text |
-| `text-lg` | 18px | Large body, lead text |
-| `text-xl` | 20px | Headings level 4 |
-| `text-2xl` | 24px | Headings level 3 |
-| `text-3xl` | 30px | Headings level 2 |
-| `text-4xl` | 36px | Headings level 1 |
+| Class       | Size | Usage                      |
+| ----------- | ---- | -------------------------- |
+| `text-xs`   | 12px | Captions, labels           |
+| `text-sm`   | 14px | Body small, secondary text |
+| `text-base` | 16px | Body text                  |
+| `text-lg`   | 18px | Large body, lead text      |
+| `text-xl`   | 20px | Headings level 4           |
+| `text-2xl`  | 24px | Headings level 3           |
+| `text-3xl`  | 30px | Headings level 2           |
+| `text-4xl`  | 36px | Headings level 1           |
 
 ### Font Weights
 
@@ -98,17 +98,17 @@ Inter is loaded via `next/font/google` for optimal performance.
 Based on a 4px grid system:
 
 | Token | Value |
-|-------|-------|
-| `1` | 4px |
-| `2` | 8px |
-| `3` | 12px |
-| `4` | 16px |
-| `5` | 20px |
-| `6` | 24px |
-| `8` | 32px |
-| `10` | 40px |
-| `12` | 48px |
-| `16` | 64px |
+| ----- | ----- |
+| `1`   | 4px   |
+| `2`   | 8px   |
+| `3`   | 12px  |
+| `4`   | 16px  |
+| `5`   | 20px  |
+| `6`   | 24px  |
+| `8`   | 32px  |
+| `10`  | 40px  |
+| `12`  | 48px  |
+| `16`  | 64px  |
 
 ---
 
@@ -116,12 +116,12 @@ Based on a 4px grid system:
 
 Uses CSS variable for consistency:
 
-| Token | Value |
-|-------|-------|
-| `--radius` | `0.5rem` (8px) |
+| Token        | Value                             |
+| ------------ | --------------------------------- |
+| `--radius`   | `0.5rem` (8px)                    |
 | `rounded-sm` | `calc(var(--radius) - 4px)` = 4px |
 | `rounded-md` | `calc(var(--radius) - 2px)` = 6px |
-| `rounded-lg` | `var(--radius)` = 8px |
+| `rounded-lg` | `var(--radius)` = 8px             |
 
 ---
 
@@ -150,34 +150,44 @@ import { Button } from "@/components/ui/button"
 ### Card
 
 ```tsx
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 
 <Card>
   <CardHeader>
     <CardTitle>Card Title</CardTitle>
     <CardDescription>Card description</CardDescription>
   </CardHeader>
-  <CardContent>
-    Content goes here
-  </CardContent>
-  <CardFooter>
-    Footer content
-  </CardFooter>
-</Card>
+  <CardContent>Content goes here</CardContent>
+  <CardFooter>Footer content</CardFooter>
+</Card>;
 ```
 
 ### Input
 
 ```tsx
-import { Input } from "@/components/ui/input"
+import { Input } from "@/components/ui/input";
 
-<Input type="text" placeholder="Enter text..." />
+<Input type="text" placeholder="Enter text..." />;
 ```
 
 ### Dialog
 
 ```tsx
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 <Dialog>
   <DialogTrigger>Open</DialogTrigger>
@@ -188,7 +198,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, Dialog
     </DialogHeader>
     {/* Content */}
   </DialogContent>
-</Dialog>
+</Dialog>;
 ```
 
 ### Badge
@@ -205,18 +215,18 @@ import { Badge } from "@/components/ui/badge"
 ### Avatar
 
 ```tsx
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 <Avatar>
   <AvatarImage src="/avatar.png" />
   <AvatarFallback>JD</AvatarFallback>
-</Avatar>
+</Avatar>;
 ```
 
 ### Tabs
 
 ```tsx
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 <Tabs defaultValue="tab1">
   <TabsList>
@@ -225,13 +235,18 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
   </TabsList>
   <TabsContent value="tab1">Content 1</TabsContent>
   <TabsContent value="tab2">Content 2</TabsContent>
-</Tabs>
+</Tabs>;
 ```
 
 ### Dropdown Menu
 
 ```tsx
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 <DropdownMenu>
   <DropdownMenuTrigger>Open</DropdownMenuTrigger>
@@ -239,29 +254,33 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
     <DropdownMenuItem>Item 1</DropdownMenuItem>
     <DropdownMenuItem>Item 2</DropdownMenuItem>
   </DropdownMenuContent>
-</DropdownMenu>
+</DropdownMenu>;
 ```
 
 ### Tooltip
 
 ```tsx
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 
 // Wrap app with TooltipProvider in layout.tsx
 <Tooltip>
   <TooltipTrigger>Hover me</TooltipTrigger>
   <TooltipContent>Tooltip content</TooltipContent>
-</Tooltip>
+</Tooltip>;
 ```
 
 ### Toast (Sonner)
 
 ```tsx
-import { toast } from "sonner"
+import { toast } from "sonner";
 
-toast.success("Success message")
-toast.error("Error message")
-toast.info("Info message")
+toast.success("Success message");
+toast.error("Error message");
+toast.info("Info message");
 ```
 
 ---
@@ -273,30 +292,30 @@ Dark mode is handled via `next-themes`. The theme is controlled by adding/removi
 ### Theme Toggle
 
 ```tsx
-import { useTheme } from "next-themes"
+import { useTheme } from "next-themes";
 
 function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
-  
+  const { theme, setTheme } = useTheme();
+
   return (
     <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
       Toggle Theme
     </button>
-  )
+  );
 }
 ```
 
 ### Theme Provider Setup
 
 ```tsx
-import { ThemeProvider } from "next-themes"
+import { ThemeProvider } from "next-themes";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark">
       {children}
     </ThemeProvider>
-  )
+  );
 }
 ```
 

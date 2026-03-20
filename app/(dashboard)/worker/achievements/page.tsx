@@ -1,115 +1,116 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
-import { useAuth } from "@/app/providers/auth-provider"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { 
-  Award, 
-  Loader2, 
-  Trophy, 
-  Target, 
-  Lock,
-  Star
-} from "lucide-react"
-import { supabase } from "@/lib/supabase/client"
-import type { Database } from "@/lib/supabase/types"
-import { 
-  getWorkerAchievements, 
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useAuth } from "@/app/providers/auth-provider";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Award, Loader2, Trophy, Target, Lock, Star } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
+import type { Database } from "@/lib/supabase/types";
+import {
+  getWorkerAchievements,
   checkAndAwardBadges,
-  type BadgeWithProgress 
-} from "@/lib/badges"
-import { 
-  AchievementBadgeGrid, 
-  AchievementBadgeMiniGrid
-} from "@/components/worker/achievement-badge-grid"
-import { 
+  type BadgeWithProgress,
+} from "@/lib/badges";
+import {
+  AchievementBadgeGrid,
+  AchievementBadgeMiniGrid,
+} from "@/components/worker/achievement-badge-grid";
+import {
   AchievementBadgeProgress,
-  BadgeProgressList 
-} from "@/components/worker/achievement-badge-progress"
+  BadgeProgressList,
+} from "@/components/worker/achievement-badge-progress";
 
-type WorkersRow = Database["public"]["Tables"]["workers"]["Row"]
+type WorkersRow = Database["public"]["Tables"]["workers"]["Row"];
 
 export default function WorkerAchievementsPage() {
-  const { user } = useAuth()
-  const router = useRouter()
-  const [worker, setWorker] = useState<WorkersRow | null>(null)
-  const [badges, setBadges] = useState<BadgeWithProgress[]>([])
-  const [isLoadingWorker, setIsLoadingWorker] = useState(true)
-  const [isLoadingBadges, setIsLoadingBadges] = useState(true)
-  const [isCheckingBadges, setIsCheckingBadges] = useState(false)
+  const { user } = useAuth();
+  const router = useRouter();
+  const [worker, setWorker] = useState<WorkersRow | null>(null);
+  const [badges, setBadges] = useState<BadgeWithProgress[]>([]);
+  const [isLoadingWorker, setIsLoadingWorker] = useState(true);
+  const [isLoadingBadges, setIsLoadingBadges] = useState(true);
+  const [isCheckingBadges, setIsCheckingBadges] = useState(false);
   const [stats, setStats] = useState<{
-    completedJobs: number
-    averageRating: number | null
-    totalReviews: number
-    attendanceRate: number
-  } | null>(null)
+    completedJobs: number;
+    averageRating: number | null;
+    totalReviews: number;
+    attendanceRate: number;
+  } | null>(null);
 
   // Fetch worker profile
   useEffect(() => {
     async function fetchWorker() {
       if (!user) {
-        router.push("/login")
-        return
+        router.push("/login");
+        return;
       }
 
-      setIsLoadingWorker(true)
-      
+      setIsLoadingWorker(true);
+
       const { data, error } = await supabase
         .from("workers")
         .select("*")
         .eq("user_id", user.id)
-        .single()
+        .single();
 
       if (error || !data) {
-        toast.error("Profil worker tidak ditemukan")
-        setIsLoadingWorker(false)
-        return
+        toast.error("Profil worker tidak ditemukan");
+        setIsLoadingWorker(false);
+        return;
       }
 
-      setWorker(data)
-      setIsLoadingWorker(false)
+      setWorker(data);
+      setIsLoadingWorker(false);
     }
 
-    fetchWorker()
-  }, [user, router])
+    fetchWorker();
+  }, [user, router]);
 
   // Fetch badges
   useEffect(() => {
     async function fetchBadges() {
-      if (!worker) return
+      if (!worker) return;
 
-      setIsLoadingBadges(true)
+      setIsLoadingBadges(true);
       try {
-        const allBadges = await getWorkerAchievements(worker.id)
-        setBadges(allBadges)
+        const allBadges = await getWorkerAchievements(worker.id);
+        setBadges(allBadges);
 
         // Check for new badges
-        setIsCheckingBadges(true)
-        const result = await checkAndAwardBadges(worker.id)
+        setIsCheckingBadges(true);
+        const result = await checkAndAwardBadges(worker.id);
         if (result.awarded.length > 0) {
-          toast.success(`Selamat! Anda mendapatkan ${result.awarded.length} badge baru!`)
+          toast.success(
+            `Selamat! Anda mendapatkan ${result.awarded.length} badge baru!`,
+          );
           // Refresh badges
-          const updatedBadges = await getWorkerAchievements(worker.id)
-          setBadges(updatedBadges)
+          const updatedBadges = await getWorkerAchievements(worker.id);
+          setBadges(updatedBadges);
         }
       } catch (error) {
-        console.error('Error fetching badges:', error)
+        console.error("Error fetching badges:", error);
       } finally {
-        setIsLoadingBadges(false)
-        setIsCheckingBadges(false)
+        setIsLoadingBadges(false);
+        setIsCheckingBadges(false);
       }
     }
 
-    fetchBadges()
-  }, [worker])
+    fetchBadges();
+  }, [worker]);
 
   // Calculate stats
   useEffect(() => {
     async function fetchStats() {
-      if (!worker) return
+      if (!worker) return;
 
       try {
         // Get completed bookings count
@@ -117,59 +118,72 @@ export default function WorkerAchievementsPage() {
           .from("bookings")
           .select("*", { count: "exact", head: true })
           .eq("worker_id", worker.id)
-          .eq("status", "completed")
+          .eq("status", "completed");
 
         // Get reviews
         const { data: reviews } = await supabase
           .from("reviews")
           .select("rating")
-          .eq("worker_id", worker.id)
+          .eq("worker_id", worker.id);
 
-        const validRatings = reviews?.filter(r => r.rating !== null).map(r => r.rating) || []
-        const averageRating = validRatings.length > 0 
-          ? validRatings.reduce((a, b) => a + b, 0) / validRatings.length 
-          : null
+        const validRatings =
+          reviews?.filter((r) => r.rating !== null).map((r) => r.rating) || [];
+        const averageRating =
+          validRatings.length > 0
+            ? validRatings.reduce((a, b) => a + b, 0) / validRatings.length
+            : null;
 
         // Get attendance
         const { data: bookings } = await supabase
           .from("bookings")
           .select("id, check_in_at")
           .eq("worker_id", worker.id)
-          .eq("status", "completed")
+          .eq("status", "completed");
 
-        const completedBookings = bookings || []
-        const bookingsWithCheckIn = completedBookings.filter(b => b.check_in_at)
-        const attendanceRate = completedBookings.length > 0 
-          ? Math.round((bookingsWithCheckIn.length / completedBookings.length) * 100)
-          : 0
+        const completedBookings = bookings || [];
+        const bookingsWithCheckIn = completedBookings.filter(
+          (b) => b.check_in_at,
+        );
+        const attendanceRate =
+          completedBookings.length > 0
+            ? Math.round(
+                (bookingsWithCheckIn.length / completedBookings.length) * 100,
+              )
+            : 0;
 
         setStats({
           completedJobs: completedJobs || 0,
           averageRating,
           totalReviews: validRatings.length,
-          attendanceRate
-        })
+          attendanceRate,
+        });
       } catch (error) {
-        console.error('Error fetching stats:', error)
+        console.error("Error fetching stats:", error);
       }
     }
 
-    fetchStats()
-  }, [worker])
+    fetchStats();
+  }, [worker]);
 
-  const earnedBadges = badges.filter(b => b.earned)
-  const inProgressBadges = badges.filter(b => !b.earned && b.progress && b.progress.percentage > 0)
-  const lockedBadges = badges.filter(b => !b.earned && (!b.progress || b.progress.percentage === 0))
+  const earnedBadges = badges.filter((b) => b.earned);
+  const inProgressBadges = badges.filter(
+    (b) => !b.earned && b.progress && b.progress.percentage > 0,
+  );
+  const lockedBadges = badges.filter(
+    (b) => !b.earned && (!b.progress || b.progress.percentage === 0),
+  );
 
   if (isLoadingWorker) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Memuat profil worker...</p>
+          <p className="text-sm text-muted-foreground">
+            Memuat profil worker...
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -182,7 +196,8 @@ export default function WorkerAchievementsPage() {
             Achievement Badges
           </h1>
           <p className="text-muted-foreground">
-            Kumpulkan badge dengan menyelesaikan pekerjaan dan mendapatkan review positif
+            Kumpulkan badge dengan menyelesaikan pekerjaan dan mendapatkan
+            review positif
           </p>
         </div>
 
@@ -197,8 +212,12 @@ export default function WorkerAchievementsPage() {
             <CardContent>
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-primary" />
-                <span className="text-2xl font-bold">{earnedBadges.length}</span>
-                <span className="text-sm text-muted-foreground">/ {badges.length}</span>
+                <span className="text-2xl font-bold">
+                  {earnedBadges.length}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  / {badges.length}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -212,7 +231,9 @@ export default function WorkerAchievementsPage() {
             <CardContent>
               <div className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-green-600" />
-                <span className="text-2xl font-bold">{stats?.completedJobs || 0}</span>
+                <span className="text-2xl font-bold">
+                  {stats?.completedJobs || 0}
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -227,7 +248,7 @@ export default function WorkerAchievementsPage() {
               <div className="flex items-center gap-2">
                 <Star className="h-5 w-5 text-yellow-500" />
                 <span className="text-2xl font-bold">
-                  {stats?.averageRating ? stats.averageRating.toFixed(1) : '-'}
+                  {stats?.averageRating ? stats.averageRating.toFixed(1) : "-"}
                 </span>
                 {stats?.totalReviews ? (
                   <span className="text-sm text-muted-foreground">
@@ -247,7 +268,9 @@ export default function WorkerAchievementsPage() {
             <CardContent>
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-blue-600" />
-                <span className="text-2xl font-bold">{stats?.attendanceRate || 0}%</span>
+                <span className="text-2xl font-bold">
+                  {stats?.attendanceRate || 0}%
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -265,9 +288,7 @@ export default function WorkerAchievementsPage() {
         {/* Badges Tabs */}
         <Tabs defaultValue="all" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-grid">
-            <TabsTrigger value="all">
-              Semua ({badges.length})
-            </TabsTrigger>
+            <TabsTrigger value="all">Semua ({badges.length})</TabsTrigger>
             <TabsTrigger value="earned">
               Diperoleh ({earnedBadges.length})
             </TabsTrigger>
@@ -309,9 +330,7 @@ export default function WorkerAchievementsPage() {
                   <Award className="h-5 w-5 text-green-600" />
                   Badge Diperoleh
                 </CardTitle>
-                <CardDescription>
-                  Badge yang telah kamu peroleh
-                </CardDescription>
+                <CardDescription>Badge yang telah kamu peroleh</CardDescription>
               </CardHeader>
               <CardContent>
                 <AchievementBadgeGrid
@@ -335,13 +354,14 @@ export default function WorkerAchievementsPage() {
                   <Target className="h-5 w-5 text-blue-600" />
                   Dalam Progres
                 </CardTitle>
-                <CardDescription>
-                  Badge yang sedang kamu kejar
-                </CardDescription>
+                <CardDescription>Badge yang sedang kamu kejar</CardDescription>
               </CardHeader>
               <CardContent>
                 {inProgressBadges.length > 0 ? (
-                  <BadgeProgressList badges={inProgressBadges} loading={isLoadingBadges} />
+                  <BadgeProgressList
+                    badges={inProgressBadges}
+                    loading={isLoadingBadges}
+                  />
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <Lock className="h-12 w-12 text-muted-foreground mb-4" />
@@ -389,5 +409,5 @@ export default function WorkerAchievementsPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

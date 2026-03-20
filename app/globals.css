@@ -78,7 +78,8 @@
 }
 
 @keyframes pulse-soft {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -96,7 +97,8 @@
 }
 
 @keyframes bounce-soft {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -113,7 +115,7 @@
   .text-balance {
     text-wrap: balance;
   }
-  
+
   /* Text pretty for better line breaks */
   .text-pretty {
     text-wrap: pretty;
@@ -124,9 +126,9 @@
     animation: shimmer 2s linear infinite;
     background: linear-gradient(
       90deg,
-      theme('colors.slate.200') 25%,
-      theme('colors.slate.100') 50%,
-      theme('colors.slate.200') 75%
+      theme("colors.slate.200") 25%,
+      theme("colors.slate.100") 50%,
+      theme("colors.slate.200") 75%
     );
     background-size: 200% 100%;
   }
@@ -134,9 +136,9 @@
   .dark .animate-shimmer {
     background: linear-gradient(
       90deg,
-      theme('colors.slate.800') 25%,
-      theme('colors.slate.700') 50%,
-      theme('colors.slate.800') 75%
+      theme("colors.slate.800") 25%,
+      theme("colors.slate.700") 50%,
+      theme("colors.slate.800") 75%
     );
     background-size: 200% 100%;
   }
@@ -173,7 +175,7 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-  
+
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
@@ -181,7 +183,7 @@
   /* Custom scrollbar styling */
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: theme('colors.slate.300') transparent;
+    scrollbar-color: theme("colors.slate.300") transparent;
   }
 
   .scrollbar-thin::-webkit-scrollbar {
@@ -194,16 +196,16 @@
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: theme('colors.slate.300');
+    background-color: theme("colors.slate.300");
     border-radius: 3px;
   }
 
   .dark .scrollbar-thin {
-    scrollbar-color: theme('colors.slate.700') transparent;
+    scrollbar-color: theme("colors.slate.700") transparent;
   }
 
   .dark .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: theme('colors.slate.700');
+    background-color: theme("colors.slate.700");
   }
 
   /* Gradient text */
@@ -274,7 +276,7 @@
 
 /* Fix for Leaflet marker icons */
 .leaflet-default-icon {
-  background-image: url('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png');
+  background-image: url("https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png");
 }
 
 /* ========================================
@@ -295,14 +297,14 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
   -webkit-text-fill-color: inherit;
-  -webkit-box-shadow: 0 0 0px 1000px theme('colors.white') inset;
+  -webkit-box-shadow: 0 0 0px 1000px theme("colors.white") inset;
   transition: background-color 5000s ease-in-out 0s;
 }
 
 .dark input:-webkit-autofill,
 .dark input:-webkit-autofill:hover,
 .dark input:-webkit-autofill:focus {
-  -webkit-box-shadow: 0 0 0px 1000px theme('colors.slate.900') inset;
+  -webkit-box-shadow: 0 0 0px 1000px theme("colors.slate.900") inset;
 }
 
 /* Button active state */
@@ -312,7 +314,9 @@ button:active:not(:disabled) {
 
 /* Smooth transitions for theme toggle */
 html {
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 /* Dialog backdrop styling */

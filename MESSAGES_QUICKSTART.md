@@ -1,15 +1,18 @@
 # Messages System - Quick Start Guide
 
 ## Overview
+
 Real-time messaging system for Daily Worker Hub enabling chat between workers and businesses.
 
 ## Architecture
 
 ### Tables
+
 1. **conversations** - Thread containers
 2. **messages** - Individual messages
 
 ### Key Features
+
 - ✅ Real-time updates via Supabase Realtime
 - ✅ Unread message counts per participant
 - ✅ Message previews for conversation lists
@@ -22,13 +25,13 @@ Real-time messaging system for Daily Worker Hub enabling chat between workers an
 ### Frontend Setup (Next.js)
 
 ```typescript
-import { createClient } from '@supabase/supabase-js'
-import { RealtimeChannel } from '@supabase/supabase-js'
+import { createClient } from "@supabase/supabase-js";
+import { RealtimeChannel } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+);
 ```
 
 ### 1. Create or Get Conversation
@@ -37,41 +40,41 @@ const supabase = createClient(
 async function getOrCreateConversation(
   participant1Id: string,
   participant2Id: string,
-  participant1Type: 'worker' | 'business',
-  participant2Type: 'worker' | 'business',
-  bookingId?: string
+  participant1Type: "worker" | "business",
+  participant2Type: "worker" | "business",
+  bookingId?: string,
 ) {
   // Ensure consistent ordering (smaller UUID first)
-  const [p1Id, p2Id, p1Type, p2Type] = 
-    participant1Id < participant2Id 
+  const [p1Id, p2Id, p1Type, p2Type] =
+    participant1Id < participant2Id
       ? [participant1Id, participant2Id, participant1Type, participant2Type]
-      : [participant2Id, participant1Id, participant2Type, participant1Type]
+      : [participant2Id, participant1Id, participant2Type, participant1Type];
 
   // Check if conversation exists
   const { data: existing } = await supabase
-    .from('conversations')
-    .select('*')
-    .eq('participant_1_id', p1Id)
-    .eq('participant_2_id', p2Id)
-    .single()
+    .from("conversations")
+    .select("*")
+    .eq("participant_1_id", p1Id)
+    .eq("participant_2_id", p2Id)
+    .single();
 
-  if (existing) return existing
+  if (existing) return existing;
 
   // Create new conversation
   const { data, error } = await supabase
-    .from('conversations')
+    .from("conversations")
     .insert({
       participant_1_id: p1Id,
       participant_2_id: p2Id,
       participant_1_type: p1Type,
       participant_2_type: p2Type,
-      booking_id: bookingId
+      booking_id: bookingId,
     })
     .select()
-    .single()
+    .single();
 
-  if (error) throw error
-  return data
+  if (error) throw error;
+  return data;
 }
 ```
 
@@ -83,24 +86,24 @@ async function sendMessage(
   senderId: string,
   receiverId: string,
   content: string,
-  messageType: 'text' | 'image' | 'file' = 'text',
-  mediaUrl?: string
+  messageType: "text" | "image" | "file" = "text",
+  mediaUrl?: string,
 ) {
   const { data, error } = await supabase
-    .from('messages')
+    .from("messages")
     .insert({
       conversation_id: conversationId,
       sender_id: senderId,
       receiver_id: receiverId,
       content,
       message_type: messageType,
-      media_url: mediaUrl
+      media_url: mediaUrl,
     })
     .select()
-    .single()
+    .single();
 
-  if (error) throw error
-  return data
+  if (error) throw error;
+  return data;
 }
 ```
 
@@ -109,31 +112,31 @@ async function sendMessage(
 ```typescript
 function subscribeToConversation(
   conversationId: string,
-  onNewMessage: (message: any) => void
+  onNewMessage: (message: any) => void,
 ): RealtimeChannel {
   return supabase
     .channel(`conversation:${conversationId}`)
     .on(
-      'postgres_changes',
+      "postgres_changes",
       {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `conversation_id=eq.${conversationId}`
+        event: "INSERT",
+        schema: "public",
+        table: "messages",
+        filter: `conversation_id=eq.${conversationId}`,
       },
-      (payload) => onNewMessage(payload.new)
+      (payload) => onNewMessage(payload.new),
     )
-    .subscribe()
+    .subscribe();
 }
 
 // Usage
 const channel = subscribeToConversation(convId, (message) => {
-  console.log('New message:', message)
+  console.log("New message:", message);
   // Update UI
-})
+});
 
 // Cleanup
-channel.unsubscribe()
+channel.unsubscribe();
 ```
 
 ### 4. Load Conversation Messages (Paginated)
@@ -142,20 +145,20 @@ channel.unsubscribe()
 async function loadMessages(
   conversationId: string,
   page: number = 1,
-  limit: number = 50
+  limit: number = 50,
 ) {
-  const from = (page - 1) * limit
-  const to = from + limit - 1
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
 
   const { data, error } = await supabase
-    .from('messages')
-    .select('*')
-    .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: false })
-    .range(from, to)
+    .from("messages")
+    .select("*")
+    .eq("conversation_id", conversationId)
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
-  if (error) throw error
-  return data.reverse() // Reverse to show oldest first
+  if (error) throw error;
+  return data.reverse(); // Reverse to show oldest first
 }
 ```
 
@@ -164,64 +167,64 @@ async function loadMessages(
 ```typescript
 async function getUserConversations(userId: string) {
   const { data, error } = await supabase
-    .from('conversations')
-    .select(`
+    .from("conversations")
+    .select(
+      `
       *,
       participant1:users!conversations_participant_1_id_fkey(id, full_name, avatar_url),
       participant2:users!conversations_participant_2_id_fkey(id, full_name, avatar_url)
-    `)
+    `,
+    )
     .or(`participant_1_id.eq.${userId},participant_2_id.eq.${userId}`)
-    .order('last_message_at', { ascending: false })
+    .order("last_message_at", { ascending: false });
 
-  if (error) throw error
-  
+  if (error) throw error;
+
   // Add computed field for "other participant"
-  return data.map(conv => ({
+  return data.map((conv) => ({
     ...conv,
-    otherParticipant: conv.participant_1_id === userId 
-      ? conv.participant2 
-      : conv.participant1,
-    unreadCount: conv.participant_1_id === userId
-      ? conv.unread_count_participant_1
-      : conv.unread_count_participant_2
-  }))
+    otherParticipant:
+      conv.participant_1_id === userId ? conv.participant2 : conv.participant1,
+    unreadCount:
+      conv.participant_1_id === userId
+        ? conv.unread_count_participant_1
+        : conv.unread_count_participant_2,
+  }));
 }
 ```
 
 ### 6. Mark Messages as Read
 
 ```typescript
-async function markMessagesAsRead(
-  conversationId: string,
-  userId: string
-) {
+async function markMessagesAsRead(conversationId: string, userId: string) {
   const { error } = await supabase
-    .from('messages')
-    .update({ 
-      is_read: true, 
-      read_at: new Date().toISOString() 
+    .from("messages")
+    .update({
+      is_read: true,
+      read_at: new Date().toISOString(),
     })
-    .eq('conversation_id', conversationId)
-    .eq('receiver_id', userId)
-    .eq('is_read', false)
+    .eq("conversation_id", conversationId)
+    .eq("receiver_id", userId)
+    .eq("is_read", false);
 
-  if (error) throw error
+  if (error) throw error;
 
   // Reset unread count in conversation
   const { data: conv } = await supabase
-    .from('conversations')
-    .select('participant_1_id, participant_2_id')
-    .eq('id', conversationId)
-    .single()
+    .from("conversations")
+    .select("participant_1_id, participant_2_id")
+    .eq("id", conversationId)
+    .single();
 
-  const updateField = conv.participant_1_id === userId
-    ? 'unread_count_participant_1'
-    : 'unread_count_participant_2'
+  const updateField =
+    conv.participant_1_id === userId
+      ? "unread_count_participant_1"
+      : "unread_count_participant_2";
 
   await supabase
-    .from('conversations')
+    .from("conversations")
     .update({ [updateField]: 0 })
-    .eq('id', conversationId)
+    .eq("id", conversationId);
 }
 ```
 
@@ -230,27 +233,34 @@ async function markMessagesAsRead(
 ```typescript
 async function uploadMessageMedia(
   file: File,
-  conversationId: string
+  conversationId: string,
 ): Promise<string> {
-  const fileName = `${conversationId}/${Date.now()}_${file.name}`
-  
-  const { data, error } = await supabase.storage
-    .from('message-attachments')
-    .upload(fileName, file)
+  const fileName = `${conversationId}/${Date.now()}_${file.name}`;
 
-  if (error) throw error
+  const { data, error } = await supabase.storage
+    .from("message-attachments")
+    .upload(fileName, file);
+
+  if (error) throw error;
 
   // Get public URL
-  const { data: { publicUrl } } = supabase.storage
-    .from('message-attachments')
-    .getPublicUrl(fileName)
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("message-attachments").getPublicUrl(fileName);
 
-  return publicUrl
+  return publicUrl;
 }
 
 // Usage
-const mediaUrl = await uploadMessageMedia(file, conversationId)
-await sendMessage(convId, senderId, receiverId, 'Sent an image', 'image', mediaUrl)
+const mediaUrl = await uploadMessageMedia(file, conversationId);
+await sendMessage(
+  convId,
+  senderId,
+  receiverId,
+  "Sent an image",
+  "image",
+  mediaUrl,
+);
 ```
 
 ## React Components Example
@@ -311,14 +321,14 @@ export function ConversationList({ userId }: { userId: string }) {
 ```typescript
 import { useEffect, useState, useRef } from 'react'
 
-export function ChatWindow({ 
-  conversationId, 
-  currentUserId, 
-  otherUserId 
-}: { 
+export function ChatWindow({
+  conversationId,
+  currentUserId,
+  otherUserId
+}: {
   conversationId: string
   currentUserId: string
-  otherUserId: string 
+  otherUserId: string
 }) {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
@@ -338,7 +348,7 @@ export function ChatWindow({
     const channel = subscribeToConversation(conversationId, (message) => {
       setMessages(prev => [...prev, message])
       scrollToBottom()
-      
+
       // Mark as read if we're the receiver
       if (message.receiver_id === currentUserId) {
         markMessagesAsRead(conversationId, currentUserId)
@@ -363,8 +373,8 @@ export function ChatWindow({
     <div className="chat-window">
       <div className="messages">
         {messages.map((msg: any) => (
-          <div 
-            key={msg.id} 
+          <div
+            key={msg.id}
             className={msg.sender_id === currentUserId ? 'sent' : 'received'}
           >
             {msg.message_type === 'text' && <p>{msg.content}</p>}
@@ -404,7 +414,7 @@ DECLARE
   total_unread INTEGER;
 BEGIN
   SELECT SUM(
-    CASE 
+    CASE
       WHEN participant_1_id = user_id THEN unread_count_participant_1
       WHEN participant_2_id = user_id THEN unread_count_participant_2
       ELSE 0
@@ -412,7 +422,7 @@ BEGIN
   ) INTO total_unread
   FROM conversations
   WHERE participant_1_id = user_id OR participant_2_id = user_id;
-  
+
   RETURN COALESCE(total_unread, 0);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -437,7 +447,7 @@ RETURNS TABLE (
 ) AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     m.id,
     m.content,
     m.sender_id,
@@ -445,7 +455,7 @@ BEGIN
     m.conversation_id
   FROM messages m
   INNER JOIN conversations c ON c.id = m.conversation_id
-  WHERE 
+  WHERE
     (c.participant_1_id = user_id OR c.participant_2_id = user_id)
     AND m.content ILIKE '%' || search_query || '%'
   ORDER BY m.created_at DESC
@@ -486,7 +496,7 @@ VALUES ('message-attachments', 'message-attachments', false);
 CREATE POLICY "Users can upload message attachments"
   ON storage.objects FOR INSERT
   WITH CHECK (
-    bucket_id = 'message-attachments' 
+    bucket_id = 'message-attachments'
     AND auth.uid()::text = (storage.foldername(name))[1]
   );
 
@@ -501,24 +511,24 @@ CREATE POLICY "Users can view message attachments"
 ```typescript
 // Test conversation creation
 const conv = await getOrCreateConversation(
-  'worker-uuid',
-  'business-uuid',
-  'worker',
-  'business'
-)
+  "worker-uuid",
+  "business-uuid",
+  "worker",
+  "business",
+);
 
 // Test message sending
-await sendMessage(conv.id, 'worker-uuid', 'business-uuid', 'Hello!')
+await sendMessage(conv.id, "worker-uuid", "business-uuid", "Hello!");
 
 // Test real-time subscription
 const channel = subscribeToConversation(conv.id, (msg) => {
-  console.log('Received:', msg)
-})
+  console.log("Received:", msg);
+});
 
 // Wait a moment, then send another message
 setTimeout(() => {
-  sendMessage(conv.id, 'business-uuid', 'worker-uuid', 'Hi there!')
-}, 2000)
+  sendMessage(conv.id, "business-uuid", "worker-uuid", "Hi there!");
+}, 2000);
 ```
 
 ---

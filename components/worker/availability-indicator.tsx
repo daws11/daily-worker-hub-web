@@ -4,15 +4,15 @@
  * Simple component to show worker availability status in profile cards
  */
 
-import { Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
+import { Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export interface AvailabilityIndicatorProps {
-  isAvailable: boolean
-  availableDays?: number // Number of days available per week
-  averageHours?: number // Average hours available per day
-  compact?: boolean // Show compact version
+  isAvailable: boolean;
+  availableDays?: number; // Number of days available per week
+  averageHours?: number; // Average hours available per day
+  compact?: boolean; // Show compact version
 }
 
 export function AvailabilityIndicator({
@@ -26,7 +26,7 @@ export function AvailabilityIndicator({
       <div
         className={cn(
           "flex items-center gap-1.5",
-          isAvailable ? "text-green-600" : "text-muted-foreground"
+          isAvailable ? "text-green-600" : "text-muted-foreground",
         )}
       >
         {isAvailable ? (
@@ -38,7 +38,7 @@ export function AvailabilityIndicator({
           {isAvailable ? "Available" : "Not Available"}
         </span>
       </div>
-    )
+    );
   }
 
   return (
@@ -59,16 +59,19 @@ export function AvailabilityIndicator({
       </div>
 
       {/* Detailed Availability Info */}
-      {isAvailable && (availableDays !== undefined || averageHours !== undefined) && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Clock className="h-4 w-4" />
-          <span>
-            {availableDays !== undefined && `${availableDays} days/week`}
-            {availableDays !== undefined && averageHours !== undefined && " • "}
-            {averageHours !== undefined && `${averageHours}h/day`}
-          </span>
-        </div>
-      )}
+      {isAvailable &&
+        (availableDays !== undefined || averageHours !== undefined) && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Clock className="h-4 w-4" />
+            <span>
+              {availableDays !== undefined && `${availableDays} days/week`}
+              {availableDays !== undefined &&
+                averageHours !== undefined &&
+                " • "}
+              {averageHours !== undefined && `${averageHours}h/day`}
+            </span>
+          </div>
+        )}
 
       {/* Low availability warning */}
       {isAvailable && availableDays !== undefined && availableDays < 3 && (
@@ -78,35 +81,35 @@ export function AvailabilityIndicator({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 /**
  * Get availability level based on days available
  */
 export function getAvailabilityLevel(daysAvailable: number): {
-  level: "high" | "medium" | "low"
-  label: string
-  color: string
+  level: "high" | "medium" | "low";
+  label: string;
+  color: string;
 } {
   if (daysAvailable >= 5) {
     return {
       level: "high",
       label: "High Availability",
       color: "text-green-600",
-    }
+    };
   } else if (daysAvailable >= 3) {
     return {
       level: "medium",
       label: "Medium Availability",
       color: "text-amber-600",
-    }
+    };
   } else {
     return {
       level: "low",
       label: "Low Availability",
       color: "text-red-600",
-    }
+    };
   }
 }
 
@@ -117,15 +120,15 @@ export function AvailabilityBadge({
   isAvailable,
   daysAvailable,
 }: {
-  isAvailable: boolean
-  daysAvailable?: number
+  isAvailable: boolean;
+  daysAvailable?: number;
 }) {
   if (!isAvailable) {
     return (
       <Badge variant="outline" className="text-muted-foreground">
         Not Available
       </Badge>
-    )
+    );
   }
 
   if (!daysAvailable) {
@@ -133,21 +136,21 @@ export function AvailabilityBadge({
       <Badge className="bg-green-600 hover:bg-green-700" variant="default">
         Available
       </Badge>
-    )
+    );
   }
 
-  const level = getAvailabilityLevel(daysAvailable)
+  const level = getAvailabilityLevel(daysAvailable);
 
   return (
     <Badge
       className={cn(
         level.level === "high" && "bg-green-600 hover:bg-green-700",
         level.level === "medium" && "bg-amber-600 hover:bg-amber-700",
-        level.level === "low" && "bg-red-600 hover:bg-red-700"
+        level.level === "low" && "bg-red-600 hover:bg-red-700",
       )}
       variant="default"
     >
       {level.label}
     </Badge>
-  )
+  );
 }

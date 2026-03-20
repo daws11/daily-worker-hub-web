@@ -1,22 +1,22 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Wallet, Clock, CheckCircle2, AlertCircle } from "lucide-react"
+import * as React from "react";
+import { Wallet, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export interface WalletBalance {
-  pending_balance: number
-  available_balance: number
+  pending_balance: number;
+  available_balance: number;
 }
 
 export interface WalletBalanceCardProps {
-  balance?: WalletBalance | null
-  isLoading?: boolean
-  error?: string | null
-  className?: string
-  showLabel?: boolean
+  balance?: WalletBalance | null;
+  isLoading?: boolean;
+  error?: string | null;
+  className?: string;
+  showLabel?: boolean;
 }
 
 /**
@@ -30,7 +30,7 @@ function formatCurrency(amount: number): string {
     currency: "IDR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount)
+  }).format(amount);
 }
 
 export function WalletBalanceCard({
@@ -40,9 +40,9 @@ export function WalletBalanceCard({
   className,
   showLabel = true,
 }: WalletBalanceCardProps) {
-  const pendingBalance = balance?.pending_balance ?? 0
-  const availableBalance = balance?.available_balance ?? 0
-  const totalBalance = pendingBalance + availableBalance
+  const pendingBalance = balance?.pending_balance ?? 0;
+  const availableBalance = balance?.available_balance ?? 0;
+  const totalBalance = pendingBalance + availableBalance;
 
   return (
     <Card className={cn("overflow-hidden", className)}>
@@ -57,7 +57,9 @@ export function WalletBalanceCard({
           {!isLoading && !error && (
             <div className="text-right">
               <p className="text-xs text-muted-foreground">Total Saldo</p>
-              <p className="text-lg font-bold">{formatCurrency(totalBalance)}</p>
+              <p className="text-lg font-bold">
+                {formatCurrency(totalBalance)}
+              </p>
             </div>
           )}
         </div>
@@ -121,5 +123,5 @@ export function WalletBalanceCard({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

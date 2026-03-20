@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,20 +11,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
-import { useTranslation } from "@/lib/i18n/hooks"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/hooks";
 
 export interface WorkerNotesDialogProps {
-  bookingId: string
-  workerName: string
-  existingNotes?: string
-  onSave: (bookingId: string, notes: string) => Promise<void> | void
-  trigger?: React.ReactNode
-  triggerClassName?: string
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
+  bookingId: string;
+  workerName: string;
+  existingNotes?: string;
+  onSave: (bookingId: string, notes: string) => Promise<void> | void;
+  trigger?: React.ReactNode;
+  triggerClassName?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function WorkerNotesDialog({
@@ -37,53 +37,58 @@ export function WorkerNotesDialog({
   open: controlledOpen,
   onOpenChange,
 }: WorkerNotesDialogProps) {
-  const { t } = useTranslation()
-  const [internalOpen, setInternalOpen] = React.useState(false)
-  const [notes, setNotes] = React.useState(existingNotes)
-  const [isSaving, setIsSaving] = React.useState(false)
+  const { t } = useTranslation();
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const [notes, setNotes] = React.useState(existingNotes);
+  const [isSaving, setIsSaving] = React.useState(false);
 
-  const isControlled = controlledOpen !== undefined
-  const open = isControlled ? controlledOpen : internalOpen
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
 
   const handleOpenChange = React.useCallback(
     (newOpen: boolean) => {
       if (isControlled && onOpenChange) {
-        onOpenChange(newOpen)
+        onOpenChange(newOpen);
       } else {
-        setInternalOpen(newOpen)
+        setInternalOpen(newOpen);
       }
 
       // Reset notes when dialog closes
       if (!newOpen) {
-        setNotes(existingNotes)
+        setNotes(existingNotes);
       }
     },
-    [isControlled, onOpenChange, existingNotes]
-  )
+    [isControlled, onOpenChange, existingNotes],
+  );
 
   React.useEffect(() => {
-    setNotes(existingNotes)
-  }, [existingNotes])
+    setNotes(existingNotes);
+  }, [existingNotes]);
 
   const handleSave = async () => {
-    setIsSaving(true)
+    setIsSaving(true);
     try {
-      await onSave(bookingId, notes.trim())
-      handleOpenChange(false)
+      await onSave(bookingId, notes.trim());
+      handleOpenChange(false);
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   const handleCancel = () => {
-    setNotes(existingNotes)
-    handleOpenChange(false)
-  }
+    setNotes(existingNotes);
+    handleOpenChange(false);
+  };
 
   // Get character count text with pluralization
   const getCharacterCountText = (count: number) => {
-    return t(count === 1 ? 'bookings.characterCount' : 'bookings.characterCount_plural', { count })
-  }
+    return t(
+      count === 1
+        ? "bookings.characterCount"
+        : "bookings.characterCount_plural",
+      { count },
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -95,23 +100,23 @@ export function WorkerNotesDialog({
 
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{t('bookings.workerNotes')}</DialogTitle>
+          <DialogTitle>{t("bookings.workerNotes")}</DialogTitle>
           <DialogDescription>
-            {t('bookings.workerNotesDescription', { workerName })}
+            {t("bookings.workerNotesDescription", { workerName })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="notes">{t('common.notes')}</Label>
+            <Label htmlFor="notes">{t("common.notes")}</Label>
             <textarea
               id="notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder={t('bookings.workerNotesDetailedPlaceholder')}
+              placeholder={t("bookings.workerNotesDetailedPlaceholder")}
               className={cn(
                 "flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-y",
-                "scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/30"
+                "scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/30",
               )}
               disabled={isSaving}
             />
@@ -128,17 +133,17 @@ export function WorkerNotesDialog({
             onClick={handleCancel}
             disabled={isSaving}
           >
-            {t('common.cancel')}
+            {t("common.cancel")}
           </Button>
           <Button
             type="button"
             onClick={handleSave}
             disabled={isSaving || notes.trim() === existingNotes.trim()}
           >
-            {isSaving ? t('common.saving') : t('bookings.saveNotes')}
+            {isSaving ? t("common.saving") : t("bookings.saveNotes")}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -15,22 +15,22 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
+} from "@/components/ui/form";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 // Zod schema for QRIS payment form validation
 export const qrisPaymentFormSchema = z.object({
   amount: z.number().min(500000, "Minimum top-up amount is Rp 500.000"),
-})
+});
 
-export type QrisPaymentFormValues = z.infer<typeof qrisPaymentFormSchema>
+export type QrisPaymentFormValues = z.infer<typeof qrisPaymentFormSchema>;
 
 // Format currency to IDR
 const formatCurrency = (amount: number): string => {
@@ -39,20 +39,20 @@ const formatCurrency = (amount: number): string => {
     currency: "IDR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount)
-}
+  }).format(amount);
+};
 
 // Quick amount presets
-const PRESET_AMOUNTS = [500000, 1000000, 2000000, 5000000, 10000000]
+const PRESET_AMOUNTS = [500000, 1000000, 2000000, 5000000, 10000000];
 
 export interface QrisPaymentFormProps {
-  onSubmit?: (values: QrisPaymentFormValues) => void | Promise<void>
-  currentBalance?: number
-  isLoading?: boolean
-  disabled?: boolean
-  submitButtonText?: string
-  className?: string
-  showWalletInfo?: boolean
+  onSubmit?: (values: QrisPaymentFormValues) => void | Promise<void>;
+  currentBalance?: number;
+  isLoading?: boolean;
+  disabled?: boolean;
+  submitButtonText?: string;
+  className?: string;
+  showWalletInfo?: boolean;
 }
 
 export function QrisPaymentForm({
@@ -69,25 +69,25 @@ export function QrisPaymentForm({
     defaultValues: {
       amount: 0,
     },
-  })
+  });
 
-  const watchedAmount = form.watch("amount")
+  const watchedAmount = form.watch("amount");
 
   const handleSubmit = async (values: QrisPaymentFormValues) => {
     if (onSubmit) {
-      await onSubmit(values)
+      await onSubmit(values);
     }
-  }
+  };
 
   const handlePresetAmount = (amount: number) => {
-    form.setValue("amount", amount, { shouldValidate: true })
-  }
+    form.setValue("amount", amount, { shouldValidate: true });
+  };
 
   const handleReset = () => {
-    form.reset()
-  }
+    form.reset();
+  };
 
-  const projectedBalance = currentBalance + watchedAmount
+  const projectedBalance = currentBalance + watchedAmount;
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -103,13 +103,21 @@ export function QrisPaymentForm({
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex items-baseline justify-between">
-                    <span className="text-sm text-muted-foreground">Current:</span>
-                    <span className="text-2xl font-semibold">{formatCurrency(currentBalance)}</span>
+                    <span className="text-sm text-muted-foreground">
+                      Current:
+                    </span>
+                    <span className="text-2xl font-semibold">
+                      {formatCurrency(currentBalance)}
+                    </span>
                   </div>
                   {watchedAmount > 0 && (
                     <div className="flex items-baseline justify-between text-sm">
-                      <span className="text-muted-foreground">After top-up:</span>
-                      <span className="font-medium text-primary">{formatCurrency(projectedBalance)}</span>
+                      <span className="text-muted-foreground">
+                        After top-up:
+                      </span>
+                      <span className="font-medium text-primary">
+                        {formatCurrency(projectedBalance)}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -133,8 +141,8 @@ export function QrisPaymentForm({
                     step={1000}
                     {...field}
                     onChange={(e) => {
-                      const value = parseFloat(e.target.value)
-                      field.onChange(isNaN(value) ? 0 : value)
+                      const value = parseFloat(e.target.value);
+                      field.onChange(isNaN(value) ? 0 : value);
                     }}
                   />
                 </FormControl>
@@ -190,8 +198,9 @@ export function QrisPaymentForm({
                 <div className="space-y-1 text-sm">
                   <p className="font-medium">About QRIS Payment</p>
                   <p className="text-muted-foreground">
-                    Scan the QR code with your mobile banking app (GoPay, OVO, Dana, ShopeePay, etc.)
-                    to complete the payment. Your wallet will be credited instantly after successful payment.
+                    Scan the QR code with your mobile banking app (GoPay, OVO,
+                    Dana, ShopeePay, etc.) to complete the payment. Your wallet
+                    will be credited instantly after successful payment.
                   </p>
                 </div>
               </div>
@@ -218,5 +227,5 @@ export function QrisPaymentForm({
         </form>
       </Form>
     </div>
-  )
+  );
 }

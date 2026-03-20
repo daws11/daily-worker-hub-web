@@ -5,6 +5,7 @@ This document explains the payment integration system for Daily Worker Hub, supp
 ## Overview
 
 The payment system provides a unified interface for processing payments through multiple payment gateways:
+
 - **Xendit**: QRIS payments, bank transfers, e-wallets
 - **Midtrans**: Bank transfers (VA), e-wallets (GoPay, ShopeePay), credit cards
 
@@ -37,6 +38,7 @@ components/payment/
 Create a `.env.local` file and add the following:
 
 #### Xendit Configuration
+
 ```bash
 # Xendit API credentials
 XENDIT_SECRET_KEY=your_xendit_secret_key_here
@@ -47,6 +49,7 @@ XENDIT_API_URL=https://api.xendit.co
 ```
 
 #### Midtrans Configuration
+
 ```bash
 # Midtrans API credentials
 MIDTRANS_SERVER_KEY=your_midtrans_server_key_here
@@ -63,6 +66,7 @@ MIDTRANS_SNAP_API_URL=https://app.midtrans.com/snap/v1
 ### How to Get API Keys
 
 #### Xendit
+
 1. Go to [Xendit Dashboard](https://dashboard.xendit.co/settings/developers#api-keys)
 2. Create API keys for production and/or development
 3. Copy the secret key
@@ -71,6 +75,7 @@ MIDTRANS_SNAP_API_URL=https://app.midtrans.com/snap/v1
 6. Copy the webhook token
 
 #### Midtrans
+
 1. Go to [Midtrans Dashboard](https://dashboard.midtrans.com/)
 2. Go to Settings > Access Keys
 3. Copy Server Key (backend) and Client Key (frontend)
@@ -86,64 +91,62 @@ MIDTRANS_SNAP_API_URL=https://app.midtrans.com/snap/v1
 #### Using Server Actions
 
 ```typescript
-import { initializeQrisPayment } from '@/lib/actions/payments'
+import { initializeQrisPayment } from "@/lib/actions/payments";
 
 const result = await initializeQrisPayment(
   businessId, // Business ID
-  500000,     // Amount in IDR
-  metadata,   // Optional metadata
-  'xendit'    // Provider: 'xendit' | 'midtrans'
-)
+  500000, // Amount in IDR
+  metadata, // Optional metadata
+  "xendit", // Provider: 'xendit' | 'midtrans'
+);
 
 if (result.success) {
-  console.log('Payment URL:', result.data.payment_url)
-  console.log('Transaction ID:', result.data.transaction.id)
+  console.log("Payment URL:", result.data.payment_url);
+  console.log("Transaction ID:", result.data.transaction.id);
 }
 ```
 
 #### Using API Directly
 
 ```typescript
-const response = await fetch('/api/payments/create', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+const response = await fetch("/api/payments/create", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    business_id: 'business_123',
+    business_id: "business_123",
     amount: 500000,
-    provider: 'xendit',
-    payment_method: 'qris',
-    customer_email: 'user@example.com',
-    customer_name: 'Business Name',
+    provider: "xendit",
+    payment_method: "qris",
+    customer_email: "user@example.com",
+    customer_name: "Business Name",
   }),
-})
+});
 
-const data = await response.json()
+const data = await response.json();
 ```
 
 ### Using Payment Modal Component
 
 ```tsx
-import { PaymentModal } from '@/components/payment/payment-modal'
+import { PaymentModal } from "@/components/payment/payment-modal";
 
 function BusinessWallet() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <>
-      <Button onClick={() => setIsModalOpen(true)}>
-        Top Up Wallet
-      </Button>
+      <Button onClick={() => setIsModalOpen(true)}>Top Up Wallet</Button>
 
       <PaymentModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         businessId={businessId}
         onSuccess={(transactionId) => {
-          console.log('Payment created:', transactionId)
+          console.log("Payment created:", transactionId);
         }}
       />
     </>
-  )
+  );
 }
 ```
 
@@ -153,33 +156,35 @@ function BusinessWallet() {
 
 ```typescript
 const response = await fetch(
-  `/api/payments/verify?transaction_id=${transactionId}&provider=xendit`
-)
-const data = await response.json()
+  `/api/payments/verify?transaction_id=${transactionId}&provider=xendit`,
+);
+const data = await response.json();
 
-console.log('Payment status:', data.data.status)
+console.log("Payment status:", data.data.status);
 ```
 
 #### Using Payment Status Component
 
 ```tsx
-import { PaymentStatus } from '@/components/payment/payment-status'
+import { PaymentStatus } from "@/components/payment/payment-status";
 
 <PaymentStatus
   transaction={paymentTransaction}
   onRefresh={() => refetch()}
   isRefreshing={isLoading}
-/>
+/>;
 ```
 
 ## Payment Methods
 
 ### Xendit
+
 - **QRIS**: 0.7% + Rp 500
 - **Bank Transfer**: 0.5% + Rp 4,000
 - **E-Wallet**: 1.5%
 
 ### Midtrans
+
 - **Bank Transfer (VA)**: Rp 4,000 flat
 - **Credit Card**: 2.9% + Rp 2,000
 - **QRIS**: 0.7% + Rp 500
@@ -195,6 +200,7 @@ failed / expired / cancelled
 ```
 
 ### Status Descriptions
+
 - `pending`: Payment waiting for user action
 - `success`: Payment completed successfully
 - `failed`: Payment processing failed
@@ -216,6 +222,7 @@ Both Xendit and Midtrans webhooks are handled automatically:
 ## Database Tables
 
 ### payment_transactions
+
 ```sql
 CREATE TABLE payment_transactions (
   id TEXT PRIMARY KEY,
@@ -236,6 +243,7 @@ CREATE TABLE payment_transactions (
 ```
 
 ### wallets
+
 ```sql
 CREATE TABLE wallets (
   id TEXT PRIMARY KEY,
@@ -250,6 +258,7 @@ CREATE TABLE wallets (
 ```
 
 ### wallet_transactions
+
 ```sql
 CREATE TABLE wallet_transactions (
   id TEXT PRIMARY KEY,
@@ -296,11 +305,13 @@ CREATE TABLE wallet_transactions (
 ### Test Payments
 
 #### Xendit (Sandbox)
+
 - Use Xendit test credentials
 - Test payments will appear in Xendit dashboard
 - Webhooks can be tested using Xendit's webhook simulator
 
 #### Midtrans (Sandbox)
+
 - Use Midtrans test credentials
 - Test card numbers: 4111 1111 1111 1111 (success), 4000 0000 0000 0002 (failure)
 - More test scenarios: [Midtrans Test Cards](https://docs.midtrans.com/en/test-credit-card)
@@ -314,17 +325,20 @@ CREATE TABLE wallet_transactions (
 ## Troubleshooting
 
 ### Payment Status Stuck on "Pending"
+
 - Check if webhook URL is accessible
 - Verify webhook token/key is correct
 - Check payment gateway dashboard for transaction details
 - Manually verify payment: `GET /api/payments/verify`
 
 ### Webhook Not Receiving
+
 - Ensure webhook URL is publicly accessible
 - Check firewall/security settings
 - Verify webhook configuration in payment gateway dashboard
 
 ### Wallet Not Credited
+
 - Check payment status in database
 - Review webhook logs for errors
 - Verify wallet exists for the business

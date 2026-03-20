@@ -1,46 +1,52 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { toast } from "sonner"
-import { 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  AlertCircle, 
+import * as React from "react";
+import { toast } from "sonner";
+import {
+  Clock,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
   ExternalLink,
   RefreshCw,
   QrCode,
-  Loader2
-} from "lucide-react"
+  Loader2,
+} from "lucide-react";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { formatIDR } from "@/lib/utils/currency"
-import type { PaymentProvider } from "@/lib/payments"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { formatIDR } from "@/lib/utils/currency";
+import type { PaymentProvider } from "@/lib/payments";
 
 export interface PaymentTransaction {
-  id: string
-  amount: number
-  status: "pending" | "success" | "failed" | "expired" | "cancelled"
-  payment_provider: PaymentProvider
-  payment_url?: string | null
-  qris_expires_at?: string | null
-  paid_at?: string | null
-  failure_reason?: string | null
-  fee_amount?: number
-  created_at: string
-  updated_at: string
-  metadata?: Record<string, unknown>
+  id: string;
+  amount: number;
+  status: "pending" | "success" | "failed" | "expired" | "cancelled";
+  payment_provider: PaymentProvider;
+  payment_url?: string | null;
+  qris_expires_at?: string | null;
+  paid_at?: string | null;
+  failure_reason?: string | null;
+  fee_amount?: number;
+  created_at: string;
+  updated_at: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface PaymentStatusProps {
-  transaction: PaymentTransaction
-  onRefresh?: () => void
-  isRefreshing?: boolean
-  showActions?: boolean
-  compact?: boolean
+  transaction: PaymentTransaction;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
+  showActions?: boolean;
+  compact?: boolean;
 }
 
 const STATUS_CONFIG = {
@@ -84,7 +90,7 @@ const STATUS_CONFIG = {
     label: "Payment Cancelled",
     description: "Payment was cancelled",
   },
-}
+};
 
 export function PaymentStatus({
   transaction,
@@ -93,46 +99,46 @@ export function PaymentStatus({
   showActions = true,
   compact = false,
 }: PaymentStatusProps) {
-  const config = STATUS_CONFIG[transaction.status]
-  const StatusIcon = config.icon
+  const config = STATUS_CONFIG[transaction.status];
+  const StatusIcon = config.icon;
 
   // Calculate remaining time for pending payments
-  const [timeRemaining, setTimeRemaining] = React.useState<string>("")
+  const [timeRemaining, setTimeRemaining] = React.useState<string>("");
 
   React.useEffect(() => {
     if (transaction.status === "pending" && transaction.qris_expires_at) {
       const updateRemaining = () => {
-        const now = new Date().getTime()
-        const expiry = new Date(transaction.qris_expires_at!).getTime()
-        const remaining = expiry - now
+        const now = new Date().getTime();
+        const expiry = new Date(transaction.qris_expires_at!).getTime();
+        const remaining = expiry - now;
 
         if (remaining <= 0) {
-          setTimeRemaining("Expired")
-          return
+          setTimeRemaining("Expired");
+          return;
         }
 
-        const minutes = Math.floor(remaining / 60000)
-        const seconds = Math.floor((remaining % 60000) / 1000)
-        setTimeRemaining(`${minutes}m ${seconds}s`)
-      }
+        const minutes = Math.floor(remaining / 60000);
+        const seconds = Math.floor((remaining % 60000) / 1000);
+        setTimeRemaining(`${minutes}m ${seconds}s`);
+      };
 
-      updateRemaining()
-      const interval = setInterval(updateRemaining, 1000)
-      return () => clearInterval(interval)
+      updateRemaining();
+      const interval = setInterval(updateRemaining, 1000);
+      return () => clearInterval(interval);
     }
-  }, [transaction.status, transaction.qris_expires_at])
+  }, [transaction.status, transaction.qris_expires_at]);
 
   const handlePayNow = () => {
     if (transaction.payment_url) {
-      window.open(transaction.payment_url, "_blank")
+      window.open(transaction.payment_url, "_blank");
     }
-  }
+  };
 
   const handleRefresh = () => {
     if (onRefresh) {
-      onRefresh()
+      onRefresh();
     }
-  }
+  };
 
   if (compact) {
     return (
@@ -148,7 +154,7 @@ export function PaymentStatus({
         </div>
         <Badge variant={config.badgeVariant}>{transaction.status}</Badge>
       </div>
-    )
+    );
   }
 
   return (
@@ -162,9 +168,7 @@ export function PaymentStatus({
               </span>
               Payment Status
             </CardTitle>
-            <CardDescription>
-              {config.description}
-            </CardDescription>
+            <CardDescription>{config.description}</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant={config.badgeVariant} className="font-medium">
@@ -192,25 +196,37 @@ export function PaymentStatus({
         {/* Transaction Details */}
         <div className="space-y-3">
           <div className="flex justify-between items-center py-2 border-b">
-            <span className="text-sm text-muted-foreground">Transaction ID</span>
-            <span className="text-sm font-mono">{transaction.id.substring(0, 8)}...</span>
+            <span className="text-sm text-muted-foreground">
+              Transaction ID
+            </span>
+            <span className="text-sm font-mono">
+              {transaction.id.substring(0, 8)}...
+            </span>
           </div>
 
           <div className="flex justify-between items-center py-2 border-b">
             <span className="text-sm text-muted-foreground">Amount</span>
-            <span className="text-sm font-semibold">{formatIDR(transaction.amount)}</span>
+            <span className="text-sm font-semibold">
+              {formatIDR(transaction.amount)}
+            </span>
           </div>
 
           {transaction.fee_amount && (
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-sm text-muted-foreground">Fee</span>
-              <span className="text-sm">{formatIDR(transaction.fee_amount)}</span>
+              <span className="text-sm">
+                {formatIDR(transaction.fee_amount)}
+              </span>
             </div>
           )}
 
           <div className="flex justify-between items-center py-2 border-b">
-            <span className="text-sm text-muted-foreground">Payment Method</span>
-            <span className="text-sm font-medium capitalize">{transaction.payment_provider}</span>
+            <span className="text-sm text-muted-foreground">
+              Payment Method
+            </span>
+            <span className="text-sm font-medium capitalize">
+              {transaction.payment_provider}
+            </span>
           </div>
 
           <div className="flex justify-between items-center py-2">
@@ -239,33 +255,35 @@ export function PaymentStatus({
         {/* Pending Payment Info */}
         {transaction.status === "pending" && (
           <div className="space-y-3 pt-4 border-t">
-            {transaction.qris_expires_at && timeRemaining && timeRemaining !== "Expired" && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Time Remaining</span>
-                  <span className="font-medium text-yellow-600 dark:text-yellow-400">
-                    {timeRemaining}
-                  </span>
+            {transaction.qris_expires_at &&
+              timeRemaining &&
+              timeRemaining !== "Expired" && (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      Time Remaining
+                    </span>
+                    <span className="font-medium text-yellow-600 dark:text-yellow-400">
+                      {timeRemaining}
+                    </span>
+                  </div>
+                  <Progress
+                    value={calculateProgress(transaction.qris_expires_at)}
+                  />
                 </div>
-                <Progress value={calculateProgress(transaction.qris_expires_at)} />
-              </div>
-            )}
+              )}
 
             {transaction.payment_url && showActions && (
               <div className="flex gap-2">
-                <Button
-                  onClick={handlePayNow}
-                  className="flex-1"
-                  size="sm"
-                >
+                <Button onClick={handlePayNow} className="flex-1" size="sm">
                   <QrCode className="mr-2 h-4 w-4" />
                   Pay Now
                 </Button>
                 <Button
                   variant="outline"
                   onClick={() => {
-                    navigator.clipboard.writeText(transaction.payment_url!)
-                    toast.success("Payment link copied to clipboard")
+                    navigator.clipboard.writeText(transaction.payment_url!);
+                    toast.success("Payment link copied to clipboard");
                   }}
                   size="sm"
                 >
@@ -278,7 +296,9 @@ export function PaymentStatus({
 
         {/* Failed/Expired/Cancelled Info */}
         {["failed", "expired", "cancelled"].includes(transaction.status) && (
-          <div className={`p-4 rounded-lg ${config.bgColor} border border-${config.color.split("-")[1]}-200`}>
+          <div
+            className={`p-4 rounded-lg ${config.bgColor} border border-${config.color.split("-")[1]}-200`}
+          >
             <div className="flex items-start gap-2">
               <StatusIcon className={`h-5 w-5 ${config.color} mt-0.5`} />
               <div className="flex-1">
@@ -311,47 +331,55 @@ export function PaymentStatus({
         )}
 
         {/* Metadata */}
-        {transaction.metadata && Object.keys(transaction.metadata).length > 0 && (
-          <details className="pt-4 border-t">
-            <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
-              View Details
-            </summary>
-            <div className="mt-3 space-y-2">
-              {Object.entries(transaction.metadata).map(([key, value]) => (
-                <div key={key} className="flex justify-between text-sm">
-                  <span className="text-muted-foreground capitalize">{key.replace(/_/g, " ")}</span>
-                  <span className="font-mono text-xs">
-                    {typeof value === "object" ? JSON.stringify(value) : String(value)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </details>
-        )}
+        {transaction.metadata &&
+          Object.keys(transaction.metadata).length > 0 && (
+            <details className="pt-4 border-t">
+              <summary className="text-sm text-muted-foreground cursor-pointer hover:text-foreground">
+                View Details
+              </summary>
+              <div className="mt-3 space-y-2">
+                {Object.entries(transaction.metadata).map(([key, value]) => (
+                  <div key={key} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground capitalize">
+                      {key.replace(/_/g, " ")}
+                    </span>
+                    <span className="font-mono text-xs">
+                      {typeof value === "object"
+                        ? JSON.stringify(value)
+                        : String(value)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function calculateProgress(expiresAt: string): number {
-  const now = new Date().getTime()
-  const expiry = new Date(expiresAt).getTime()
-  const total = 60 * 60 * 1000 // 1 hour in milliseconds (assuming standard expiry)
-  const elapsed = expiry - now
-  return Math.max(0, Math.min(100, (elapsed / total) * 100))
+  const now = new Date().getTime();
+  const expiry = new Date(expiresAt).getTime();
+  const total = 60 * 60 * 1000; // 1 hour in milliseconds (assuming standard expiry)
+  const elapsed = expiry - now;
+  return Math.max(0, Math.min(100, (elapsed / total) * 100));
 }
 
 /**
  * Payment History Item Component
  */
 export interface PaymentHistoryItemProps {
-  transaction: PaymentTransaction
-  onClick?: () => void
+  transaction: PaymentTransaction;
+  onClick?: () => void;
 }
 
-export function PaymentHistoryItem({ transaction, onClick }: PaymentHistoryItemProps) {
-  const config = STATUS_CONFIG[transaction.status]
-  const StatusIcon = config.icon
+export function PaymentHistoryItem({
+  transaction,
+  onClick,
+}: PaymentHistoryItemProps) {
+  const config = STATUS_CONFIG[transaction.status];
+  const StatusIcon = config.icon;
 
   return (
     <button
@@ -369,12 +397,14 @@ export function PaymentHistoryItem({ transaction, onClick }: PaymentHistoryItemP
           </Badge>
         </div>
         <div className="flex items-center justify-between gap-2 mt-1">
-          <p className="text-sm font-semibold">{formatIDR(transaction.amount)}</p>
+          <p className="text-sm font-semibold">
+            {formatIDR(transaction.amount)}
+          </p>
           <p className="text-xs text-muted-foreground">
             {new Date(transaction.created_at).toLocaleDateString("id-ID")}
           </p>
         </div>
       </div>
     </button>
-  )
+  );
 }

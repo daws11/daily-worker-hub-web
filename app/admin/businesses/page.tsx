@@ -1,11 +1,21 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
+import * as React from "react";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 
-import { BusinessCard } from "@/components/admin/business-card"
-import { getBusinessesForVerification } from "@/lib/supabase/queries/admin"
-import type { BusinessVerificationFilters, BusinessVerificationItem, PaginatedAdminResponse } from "@/lib/types/admin"
+import { BusinessCard } from "@/components/admin/business-card";
+import { getBusinessesForVerification } from "@/lib/supabase/queries/admin";
+import type {
+  BusinessVerificationFilters,
+  BusinessVerificationItem,
+  PaginatedAdminResponse,
+} from "@/lib/types/admin";
 
 import {
   Select,
@@ -13,100 +23,121 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface BusinessesPageProps extends React.HTMLAttributes<HTMLDivElement> {
-  className?: string
+  className?: string;
 }
 
-export default function BusinessesPage({ className, ...props }: BusinessesPageProps) {
-  const [businesses, setBusinesses] = React.useState<BusinessVerificationItem[]>([])
-  const [loading, setLoading] = React.useState<boolean>(true)
-  const [error, setError] = React.useState<string | null>(null)
+export default function BusinessesPage({
+  className,
+  ...props
+}: BusinessesPageProps) {
+  const [businesses, setBusinesses] = React.useState<
+    BusinessVerificationItem[]
+  >([]);
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<string | null>(null);
   const [pagination, setPagination] = React.useState({
     page: 1,
     limit: 12,
     total: 0,
     totalPages: 0,
-  })
+  });
 
   const [filters, setFilters] = React.useState<BusinessVerificationFilters>({
     sortBy: "submitted_at",
     sortOrder: "desc",
-  })
-  const [searchInput, setSearchInput] = React.useState("")
+  });
+  const [searchInput, setSearchInput] = React.useState("");
 
   const fetchBusinesses = React.useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       const response = await getBusinessesForVerification(
         filters,
         pagination.page,
-        pagination.limit
-      )
+        pagination.limit,
+      );
 
-      const { items, total, totalPages } = response
+      const { items, total, totalPages } = response;
 
-      setBusinesses(items)
+      setBusinesses(items);
       setPagination((prev) => ({
         ...prev,
         total,
         totalPages,
-      }))
+      }));
     } catch (fetchError) {
-      setError(fetchError instanceof Error ? fetchError.message : "Terjadi kesalahan")
-      setBusinesses([])
+      setError(
+        fetchError instanceof Error ? fetchError.message : "Terjadi kesalahan",
+      );
+      setBusinesses([]);
     }
 
-    setLoading(false)
-  }, [filters, pagination.page, pagination.limit])
+    setLoading(false);
+  }, [filters, pagination.page, pagination.limit]);
 
   React.useEffect(() => {
-    fetchBusinesses()
-  }, [fetchBusinesses])
+    fetchBusinesses();
+  }, [fetchBusinesses]);
 
   const handleSearch = React.useCallback(
     (value: string) => {
-      setSearchInput(value)
-      setFilters((prev) => ({ ...prev, search: value || undefined }))
-      setPagination((prev) => ({ ...prev, page: 1 }))
+      setSearchInput(value);
+      setFilters((prev) => ({ ...prev, search: value || undefined }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     },
-    [setFilters, setPagination]
-  )
+    [setFilters, setPagination],
+  );
 
   const handleStatusFilter = React.useCallback(
     (value: string) => {
       setFilters((prev) => ({
         ...prev,
-        verificationStatus: value === "all" ? undefined : (value as "pending" | "verified" | "rejected"),
-      }))
-      setPagination((prev) => ({ ...prev, page: 1 }))
+        verificationStatus:
+          value === "all"
+            ? undefined
+            : (value as "pending" | "verified" | "rejected"),
+      }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     },
-    [setFilters, setPagination]
-  )
+    [setFilters, setPagination],
+  );
 
   const handleBusinessTypeFilter = React.useCallback(
     (value: string) => {
       setFilters((prev) => ({
         ...prev,
-        businessType: value === "all" ? undefined : (value as "hotel" | "villa" | "restaurant" | "event_company" | "other"),
-      }))
-      setPagination((prev) => ({ ...prev, page: 1 }))
+        businessType:
+          value === "all"
+            ? undefined
+            : (value as
+                | "hotel"
+                | "villa"
+                | "restaurant"
+                | "event_company"
+                | "other"),
+      }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     },
-    [setFilters, setPagination]
-  )
+    [setFilters, setPagination],
+  );
 
   const goToPage = React.useCallback(
     (page: number) => {
-      setPagination((prev) => ({ ...prev, page: Math.max(1, Math.min(page, pagination.totalPages)) }))
+      setPagination((prev) => ({
+        ...prev,
+        page: Math.max(1, Math.min(page, pagination.totalPages)),
+      }));
     },
-    [pagination.totalPages, setPagination]
-  )
+    [pagination.totalPages, setPagination],
+  );
 
   return (
     <div className={cn("space-y-6", className)} {...props}>
@@ -161,7 +192,10 @@ export default function BusinessesPage({ className, ...props }: BusinessesPagePr
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-80 rounded-xl border bg-muted/20 animate-pulse" />
+            <div
+              key={i}
+              className="h-80 rounded-xl border bg-muted/20 animate-pulse"
+            />
           ))}
         </div>
       ) : error ? (
@@ -187,8 +221,14 @@ export default function BusinessesPage({ className, ...props }: BusinessesPagePr
           {pagination.totalPages > 1 && (
             <div className="flex items-center justify-between px-2">
               <div className="text-sm text-muted-foreground">
-                Showing {Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} businesses
+                Showing{" "}
+                {Math.min(
+                  (pagination.page - 1) * pagination.limit + 1,
+                  pagination.total,
+                )}{" "}
+                to{" "}
+                {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
+                of {pagination.total} businesses
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -233,5 +273,5 @@ export default function BusinessesPage({ className, ...props }: BusinessesPagePr
         </>
       )}
     </div>
-  )
+  );
 }

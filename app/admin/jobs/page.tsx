@@ -1,10 +1,30 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Briefcase, Building2, Calendar, MapPin, Wallet, Users, AlertTriangle } from "lucide-react"
+import * as React from "react";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Briefcase,
+  Building2,
+  Calendar,
+  MapPin,
+  Wallet,
+  Users,
+  AlertTriangle,
+} from "lucide-react";
 
-import { getJobsForModeration, moderateJob } from "@/lib/supabase/queries/admin"
-import type { JobModerationFilters, JobModerationItem, PaginatedAdminResponse } from "@/lib/types/admin"
+import {
+  getJobsForModeration,
+  moderateJob,
+} from "@/lib/supabase/queries/admin";
+import type {
+  JobModerationFilters,
+  JobModerationItem,
+  PaginatedAdminResponse,
+} from "@/lib/types/admin";
 
 import {
   Select,
@@ -12,11 +32,17 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -24,7 +50,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,105 +61,124 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { cn } from "@/lib/utils"
-import { toast } from "sonner"
+} from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface JobsPageProps extends React.HTMLAttributes<HTMLDivElement> {
-  className?: string
+  className?: string;
 }
 
 export default function JobsPage({ className, ...props }: JobsPageProps) {
-  const [jobs, setJobs] = React.useState<JobModerationItem[]>([])
-  const [loading, setLoading] = React.useState<boolean>(true)
-  const [actionLoading, setActionLoading] = React.useState<Record<string, boolean>>({})
-  const [error, setError] = React.useState<string | null>(null)
+  const [jobs, setJobs] = React.useState<JobModerationItem[]>([]);
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [actionLoading, setActionLoading] = React.useState<
+    Record<string, boolean>
+  >({});
+  const [error, setError] = React.useState<string | null>(null);
   const [pagination, setPagination] = React.useState({
     page: 1,
     limit: 20,
     total: 0,
     totalPages: 0,
-  })
+  });
 
   const [filters, setFilters] = React.useState<JobModerationFilters>({
     sortBy: "created_at",
     sortOrder: "desc",
-  })
-  const [searchInput, setSearchInput] = React.useState("")
+  });
+  const [searchInput, setSearchInput] = React.useState("");
 
   const fetchJobs = React.useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     const response = await getJobsForModeration(
       filters,
       pagination.page,
-      pagination.limit
-    )
+      pagination.limit,
+    );
 
-    setJobs(response.items)
+    setJobs(response.items);
     setPagination((prev) => ({
       ...prev,
       total: response.total,
       totalPages: response.totalPages,
-    }))
+    }));
 
-    setLoading(false)
-  }, [filters, pagination.page, pagination.limit])
+    setLoading(false);
+  }, [filters, pagination.page, pagination.limit]);
 
   React.useEffect(() => {
-    fetchJobs()
-  }, [fetchJobs])
+    fetchJobs();
+  }, [fetchJobs]);
 
   const handleSearch = React.useCallback(
     (value: string) => {
-      setSearchInput(value)
-      setFilters((prev) => ({ ...prev, search: value || undefined }))
-      setPagination((prev) => ({ ...prev, page: 1 }))
+      setSearchInput(value);
+      setFilters((prev) => ({ ...prev, search: value || undefined }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     },
-    [setFilters, setPagination]
-  )
+    [setFilters, setPagination],
+  );
 
   const handleStatusFilter = React.useCallback(
     (value: string) => {
       setFilters((prev) => ({
         ...prev,
-        status: value === "all" ? undefined : (value as "draft" | "open" | "in_progress" | "completed" | "cancelled"),
-      }))
-      setPagination((prev) => ({ ...prev, page: 1 }))
+        status:
+          value === "all"
+            ? undefined
+            : (value as
+                | "draft"
+                | "open"
+                | "in_progress"
+                | "completed"
+                | "cancelled"),
+      }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     },
-    [setFilters, setPagination]
-  )
+    [setFilters, setPagination],
+  );
 
   const goToPage = React.useCallback(
     (page: number) => {
-      setPagination((prev) => ({ ...prev, page: Math.max(1, Math.min(page, pagination.totalPages)) }))
+      setPagination((prev) => ({
+        ...prev,
+        page: Math.max(1, Math.min(page, pagination.totalPages)),
+      }));
     },
-    [pagination.totalPages, setPagination]
-  )
+    [pagination.totalPages, setPagination],
+  );
 
   const handleModerateJob = async (
     jobId: string,
-    action: "delete" | "suspend" | "restore"
+    action: "delete" | "suspend" | "restore",
   ) => {
-    setActionLoading((prev) => ({ ...prev, [jobId]: true }))
+    setActionLoading((prev) => ({ ...prev, [jobId]: true }));
     try {
-      await moderateJob(jobId, action, "")
+      await moderateJob(jobId, action, "");
 
-      toast.success(action === "delete" ? "Job deleted successfully" : action === "suspend" ? "Job suspended" : "Job restored")
-      await fetchJobs()
+      toast.success(
+        action === "delete"
+          ? "Job deleted successfully"
+          : action === "suspend"
+            ? "Job suspended"
+            : "Job restored",
+      );
+      await fetchJobs();
     } finally {
-      setActionLoading((prev) => ({ ...prev, [jobId]: false }))
+      setActionLoading((prev) => ({ ...prev, [jobId]: false }));
     }
-  }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("id-ID", {
       day: "2-digit",
       month: "short",
       year: "numeric",
-    })
-  }
+    });
+  };
 
   const formatBudget = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -141,42 +186,42 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
       currency: "IDR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(amount)
-  }
+    }).format(amount);
+  };
 
   const getStatusVariant = (
-    status: string
+    status: string,
   ): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
       case "open":
-        return "default"
+        return "default";
       case "in_progress":
-        return "secondary"
+        return "secondary";
       case "completed":
-        return "outline"
+        return "outline";
       case "cancelled":
-        return "destructive"
+        return "destructive";
       default:
-        return "outline"
+        return "outline";
     }
-  }
+  };
 
   const getStatusLabel = (status: string): string => {
     switch (status) {
       case "draft":
-        return "Draft"
+        return "Draft";
       case "open":
-        return "Buka"
+        return "Buka";
       case "in_progress":
-        return "Sedang Berjalan"
+        return "Sedang Berjalan";
       case "completed":
-        return "Selesai"
+        return "Selesai";
       case "cancelled":
-        return "Dibatalkan"
+        return "Dibatalkan";
       default:
-        return status
+        return status;
     }
-  }
+  };
 
   // Calculate stats
   const stats = {
@@ -185,14 +230,12 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
     inProgress: jobs.filter((j) => j.status === "in_progress").length,
     completed: jobs.filter((j) => j.status === "completed").length,
     reported: jobs.filter((j) => (j.reportCount || 0) > 0).length,
-  }
+  };
 
   return (
     <div className={cn("space-y-6", className)} {...props}>
       <div>
-        <h1 className="text-3xl font-bold text-foreground">
-          Job Moderation
-        </h1>
+        <h1 className="text-3xl font-bold text-foreground">Job Moderation</h1>
         <p className="text-muted-foreground mt-2">
           Monitor and moderate jobs posted on the platform
         </p>
@@ -203,7 +246,9 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Total Jobs</CardDescription>
-            <CardTitle className="text-2xl text-primary">{stats.total}</CardTitle>
+            <CardTitle className="text-2xl text-primary">
+              {stats.total}
+            </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
@@ -216,7 +261,9 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Open Jobs</CardDescription>
-            <CardTitle className="text-2xl text-green-600">{stats.open}</CardTitle>
+            <CardTitle className="text-2xl text-green-600">
+              {stats.open}
+            </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <span>Accepting applicants</span>
@@ -226,7 +273,9 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>In Progress</CardDescription>
-            <CardTitle className="text-2xl text-amber-600">{stats.inProgress}</CardTitle>
+            <CardTitle className="text-2xl text-amber-600">
+              {stats.inProgress}
+            </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <span>Active jobs</span>
@@ -236,7 +285,9 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Completed</CardDescription>
-            <CardTitle className="text-2xl text-purple-600">{stats.completed}</CardTitle>
+            <CardTitle className="text-2xl text-purple-600">
+              {stats.completed}
+            </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <span>Finished jobs</span>
@@ -246,7 +297,9 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
         <Card>
           <CardHeader className="pb-3">
             <CardDescription>Reported</CardDescription>
-            <CardTitle className="text-2xl text-red-600">{stats.reported}</CardTitle>
+            <CardTitle className="text-2xl text-red-600">
+              {stats.reported}
+            </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
@@ -338,7 +391,9 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Building2 className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm">{job.business?.name || "Unknown"}</span>
+                          <span className="text-sm">
+                            {job.business?.name || "Unknown"}
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell>
@@ -375,7 +430,9 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
                             {job.reportCount}
                           </Badge>
                         ) : (
-                          <span className="text-sm text-muted-foreground">None</span>
+                          <span className="text-sm text-muted-foreground">
+                            None
+                          </span>
                         )}
                       </TableCell>
                       <TableCell>
@@ -384,7 +441,9 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleModerateJob(job.id, "restore")}
+                              onClick={() =>
+                                handleModerateJob(job.id, "restore")
+                              }
                               disabled={actionLoading[job.id]}
                             >
                               {actionLoading[job.id] ? (
@@ -410,15 +469,21 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Suspend Job</AlertDialogTitle>
+                                  <AlertDialogTitle>
+                                    Suspend Job
+                                  </AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Are you sure you want to suspend &quot;{job.title}&quot;? This will cancel the job and prevent any further applications.
+                                    Are you sure you want to suspend &quot;
+                                    {job.title}&quot;? This will cancel the job
+                                    and prevent any further applications.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                                   <AlertDialogAction
-                                    onClick={() => handleModerateJob(job.id, "suspend")}
+                                    onClick={() =>
+                                      handleModerateJob(job.id, "suspend")
+                                    }
                                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                   >
                                     Suspend Job
@@ -441,13 +506,17 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Delete Job</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Are you sure you want to permanently delete &quot;{job.title}&quot;? This action cannot be undone.
+                                  Are you sure you want to permanently delete
+                                  &quot;{job.title}&quot;? This action cannot be
+                                  undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction
-                                  onClick={() => handleModerateJob(job.id, "delete")}
+                                  onClick={() =>
+                                    handleModerateJob(job.id, "delete")
+                                  }
                                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                 >
                                   Delete Job
@@ -467,8 +536,14 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
           {pagination.totalPages > 1 && (
             <div className="flex items-center justify-between px-2">
               <div className="text-sm text-muted-foreground">
-                Showing {Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)} to{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} jobs
+                Showing{" "}
+                {Math.min(
+                  (pagination.page - 1) * pagination.limit + 1,
+                  pagination.total,
+                )}{" "}
+                to{" "}
+                {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
+                of {pagination.total} jobs
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -513,5 +588,5 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
         </>
       )}
     </div>
-  )
+  );
 }

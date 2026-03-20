@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useRouter } from "next/navigation"
-import { 
-  User, 
-  Star, 
-  Award, 
-  Phone, 
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import {
+  User,
+  Star,
+  Award,
+  Phone,
   MessageSquare,
   Clock,
   DollarSign,
@@ -14,61 +14,71 @@ import {
   XCircle,
   Eye,
   Loader2,
-  Video
-} from "lucide-react"
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { TierBadge } from "@/components/worker/tier-badge"
-import { ReliabilityScore } from "@/components/worker/reliability-score"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+  Video,
+} from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { TierBadge } from "@/components/worker/tier-badge";
+import { ReliabilityScore } from "@/components/worker/reliability-score";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-type ApplicationStatus = 'pending' | 'reviewed' | 'accepted' | 'rejected' | 'withdrawn'
+type ApplicationStatus =
+  | "pending"
+  | "reviewed"
+  | "accepted"
+  | "rejected"
+  | "withdrawn";
 
 interface WorkerInfo {
-  id: string
-  full_name: string
-  phone: string | null
-  bio: string | null
-  avatar_url: string | null
-  tier: string
-  rating: number | null
-  reliability_score: number | null
-  jobs_completed: number | null
+  id: string;
+  full_name: string;
+  phone: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  tier: string;
+  rating: number | null;
+  reliability_score: number | null;
+  jobs_completed: number | null;
 }
 
 interface JobApplication {
-  id: string
-  job_id: string
-  worker_id: string
-  business_id: string
-  status: ApplicationStatus
-  cover_letter: string | null
-  proposed_wage: number | null
-  applied_at: string
-  workers: WorkerInfo | null
+  id: string;
+  job_id: string;
+  worker_id: string;
+  business_id: string;
+  status: ApplicationStatus;
+  cover_letter: string | null;
+  proposed_wage: number | null;
+  applied_at: string;
+  workers: WorkerInfo | null;
 }
 
 interface ApplicantCardProps {
-  application: JobApplication
-  budgetMin: number
-  budgetMax: number
-  onShortlist?: () => void
-  onAccept?: () => void
-  onReject?: () => void
-  isProcessing?: boolean
-  bookingId?: string | null
+  application: JobApplication;
+  budgetMin: number;
+  budgetMax: number;
+  onShortlist?: () => void;
+  onAccept?: () => void;
+  onReject?: () => void;
+  isProcessing?: boolean;
+  bookingId?: string | null;
 }
 
 // ============================================================================
@@ -80,30 +90,36 @@ function formatPrice(price: number): string {
     style: "currency",
     currency: "IDR",
     minimumFractionDigits: 0,
-  }).format(price)
+  }).format(price);
 }
 
 function formatTimeAgo(dateString: string): string {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMins / 60)
-  const diffDays = Math.floor(diffHours / 24)
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
 
-  if (diffDays > 0) return `${diffDays} hari lalu`
-  if (diffHours > 0) return `${diffHours} jam lalu`
-  if (diffMins > 0) return `${diffMins} menit lalu`
-  return "Baru saja"
+  if (diffDays > 0) return `${diffDays} hari lalu`;
+  if (diffHours > 0) return `${diffHours} jam lalu`;
+  if (diffMins > 0) return `${diffMins} menit lalu`;
+  return "Baru saja";
 }
 
-const statusConfig: Record<ApplicationStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const statusConfig: Record<
+  ApplicationStatus,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
+> = {
   pending: { label: "Menunggu", variant: "secondary" },
   reviewed: { label: "Dipilih", variant: "default" },
   accepted: { label: "Diterima", variant: "default" },
   rejected: { label: "Ditolak", variant: "destructive" },
   withdrawn: { label: "Ditarik", variant: "outline" },
-}
+};
 
 // ============================================================================
 // APPLICANT CARD COMPONENT
@@ -119,12 +135,13 @@ export function ApplicantCard({
   isProcessing = false,
   bookingId,
 }: ApplicantCardProps) {
-  const router = useRouter()
-  const [showDetails, setShowDetails] = React.useState(false)
-  const worker = application.workers
-  const config = statusConfig[application.status]
+  const router = useRouter();
+  const [showDetails, setShowDetails] = React.useState(false);
+  const worker = application.workers;
+  const config = statusConfig[application.status];
 
-  const canTakeAction = application.status === 'pending' || application.status === 'reviewed'
+  const canTakeAction =
+    application.status === "pending" || application.status === "reviewed";
 
   return (
     <>
@@ -133,7 +150,10 @@ export function ApplicantCard({
           <div className="flex items-start gap-3">
             {/* Avatar */}
             <Avatar className="h-12 w-12">
-              <AvatarImage src={worker?.avatar_url || undefined} alt={worker?.full_name} />
+              <AvatarImage
+                src={worker?.avatar_url || undefined}
+                alt={worker?.full_name}
+              />
               <AvatarFallback className="bg-blue-100 text-blue-600">
                 {worker?.full_name?.charAt(0)?.toUpperCase() || "?"}
               </AvatarFallback>
@@ -145,9 +165,13 @@ export function ApplicantCard({
                 <h3 className="font-semibold truncate">
                   {worker?.full_name || "Unknown Worker"}
                 </h3>
-                <Badge 
+                <Badge
                   variant={config.variant}
-                  className={application.status === 'accepted' ? 'bg-green-600 hover:bg-green-700' : ''}
+                  className={
+                    application.status === "accepted"
+                      ? "bg-green-600 hover:bg-green-700"
+                      : ""
+                  }
                 >
                   {config.label}
                 </Badge>
@@ -156,7 +180,11 @@ export function ApplicantCard({
               {/* Tier Badge */}
               {worker?.tier && (
                 <div className="mt-1">
-                  <TierBadge tier={worker.tier as any} size="sm" variant="minimal" />
+                  <TierBadge
+                    tier={worker.tier as any}
+                    size="sm"
+                    variant="minimal"
+                  />
                 </div>
               )}
             </div>
@@ -167,32 +195,38 @@ export function ApplicantCard({
           {/* Stats Row */}
           <div className="grid grid-cols-2 gap-3">
             {/* Reliability Score */}
-            {worker?.reliability_score !== null && worker?.reliability_score !== undefined && (
-              <div className="flex items-center gap-2">
-                <Star className="h-4 w-4 text-yellow-500" />
-                <div>
-                  <span className="text-xs text-muted-foreground">Skor</span>
-                  <div className="flex items-center gap-1">
-                    <ReliabilityScore 
-                      score={worker.reliability_score} 
-                      showValue 
-                      size="sm" 
-                    />
+            {worker?.reliability_score !== null &&
+              worker?.reliability_score !== undefined && (
+                <div className="flex items-center gap-2">
+                  <Star className="h-4 w-4 text-yellow-500" />
+                  <div>
+                    <span className="text-xs text-muted-foreground">Skor</span>
+                    <div className="flex items-center gap-1">
+                      <ReliabilityScore
+                        score={worker.reliability_score}
+                        showValue
+                        size="sm"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Jobs Completed */}
-            {worker?.jobs_completed !== null && worker?.jobs_completed !== undefined && (
-              <div className="flex items-center gap-2">
-                <Award className="h-4 w-4 text-purple-500" />
-                <div>
-                  <span className="text-xs text-muted-foreground">Pekerjaan</span>
-                  <p className="font-medium text-sm">{worker.jobs_completed} selesai</p>
+            {worker?.jobs_completed !== null &&
+              worker?.jobs_completed !== undefined && (
+                <div className="flex items-center gap-2">
+                  <Award className="h-4 w-4 text-purple-500" />
+                  <div>
+                    <span className="text-xs text-muted-foreground">
+                      Pekerjaan
+                    </span>
+                    <p className="font-medium text-sm">
+                      {worker.jobs_completed} selesai
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
 
           {/* Proposed Wage */}
@@ -201,11 +235,16 @@ export function ApplicantCard({
               <DollarSign className="h-4 w-4 text-blue-600" />
               <div>
                 <span className="text-xs text-blue-600">Penawaran Gaji</span>
-                <p className="font-semibold text-blue-700">{formatPrice(application.proposed_wage)}</p>
+                <p className="font-semibold text-blue-700">
+                  {formatPrice(application.proposed_wage)}
+                </p>
               </div>
-              {(application.proposed_wage < budgetMin || application.proposed_wage > budgetMax) && (
+              {(application.proposed_wage < budgetMin ||
+                application.proposed_wage > budgetMax) && (
                 <Badge variant="outline" className="ml-auto text-xs">
-                  {application.proposed_wage < budgetMin ? "Di bawah budget" : "Di atas budget"}
+                  {application.proposed_wage < budgetMin
+                    ? "Di bawah budget"
+                    : "Di atas budget"}
                 </Badge>
               )}
             </div>
@@ -237,7 +276,7 @@ export function ApplicantCard({
 
           {canTakeAction && (
             <div className="flex gap-2">
-              {application.status === 'pending' && onShortlist && (
+              {application.status === "pending" && onShortlist && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -254,7 +293,7 @@ export function ApplicantCard({
                   )}
                 </Button>
               )}
-              
+
               {onAccept && (
                 <Button
                   variant="default"
@@ -294,14 +333,16 @@ export function ApplicantCard({
             </div>
           )}
 
-          {application.status === 'accepted' && (
+          {application.status === "accepted" && (
             <div className="flex gap-2">
               <Badge className="bg-green-600">Diterima</Badge>
               {bookingId && (
                 <Button
                   variant="default"
                   size="sm"
-                  onClick={() => router.push(`/dashboard/business/interview/${bookingId}`)}
+                  onClick={() =>
+                    router.push(`/dashboard/business/interview/${bookingId}`)
+                  }
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   <Video className="h-4 w-4 mr-1" />
@@ -311,7 +352,7 @@ export function ApplicantCard({
             </div>
           )}
 
-          {application.status === 'rejected' && (
+          {application.status === "rejected" && (
             <Badge variant="destructive">Ditolak</Badge>
           )}
         </CardFooter>
@@ -331,7 +372,10 @@ export function ApplicantCard({
             {/* Worker Profile */}
             <div className="flex items-start gap-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={worker?.avatar_url || undefined} alt={worker?.full_name} />
+                <AvatarImage
+                  src={worker?.avatar_url || undefined}
+                  alt={worker?.full_name}
+                />
                 <AvatarFallback className="bg-blue-100 text-blue-600 text-xl">
                   {worker?.full_name?.charAt(0)?.toUpperCase() || "?"}
                 </AvatarFallback>
@@ -352,25 +396,33 @@ export function ApplicantCard({
 
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4">
-              {worker?.reliability_score !== null && worker?.reliability_score !== undefined && (
-                <div className="p-3 bg-muted rounded-lg">
-                  <span className="text-xs text-muted-foreground">Skor Reliabilitas</span>
-                  <div className="mt-1">
-                    <ReliabilityScore 
-                      score={worker.reliability_score} 
-                      showValue 
-                      showLabel
-                      size="md" 
-                    />
+              {worker?.reliability_score !== null &&
+                worker?.reliability_score !== undefined && (
+                  <div className="p-3 bg-muted rounded-lg">
+                    <span className="text-xs text-muted-foreground">
+                      Skor Reliabilitas
+                    </span>
+                    <div className="mt-1">
+                      <ReliabilityScore
+                        score={worker.reliability_score}
+                        showValue
+                        showLabel
+                        size="md"
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
-              {worker?.jobs_completed !== null && worker?.jobs_completed !== undefined && (
-                <div className="p-3 bg-muted rounded-lg">
-                  <span className="text-xs text-muted-foreground">Pekerjaan Selesai</span>
-                  <p className="text-xl font-bold mt-1">{worker.jobs_completed}</p>
-                </div>
-              )}
+                )}
+              {worker?.jobs_completed !== null &&
+                worker?.jobs_completed !== undefined && (
+                  <div className="p-3 bg-muted rounded-lg">
+                    <span className="text-xs text-muted-foreground">
+                      Pekerjaan Selesai
+                    </span>
+                    <p className="text-xl font-bold mt-1">
+                      {worker.jobs_completed}
+                    </p>
+                  </div>
+                )}
               {worker?.rating !== null && worker?.rating !== undefined && (
                 <div className="p-3 bg-muted rounded-lg">
                   <span className="text-xs text-muted-foreground">Rating</span>
@@ -418,19 +470,20 @@ export function ApplicantCard({
 
             {/* Applied Time */}
             <div className="text-xs text-muted-foreground">
-              Melamar pada {new Date(application.applied_at).toLocaleString("id-ID")}
+              Melamar pada{" "}
+              {new Date(application.applied_at).toLocaleString("id-ID")}
             </div>
           </div>
 
           {/* Action Buttons in Dialog */}
           {canTakeAction && (
             <div className="flex justify-end gap-2 pt-4 border-t">
-              {application.status === 'pending' && onShortlist && (
+              {application.status === "pending" && onShortlist && (
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setShowDetails(false)
-                    onShortlist()
+                    setShowDetails(false);
+                    onShortlist();
                   }}
                   disabled={isProcessing}
                 >
@@ -440,8 +493,8 @@ export function ApplicantCard({
               {onAccept && (
                 <Button
                   onClick={() => {
-                    setShowDetails(false)
-                    onAccept()
+                    setShowDetails(false);
+                    onAccept();
                   }}
                   disabled={isProcessing}
                   className="bg-green-600 hover:bg-green-700"
@@ -453,8 +506,8 @@ export function ApplicantCard({
                 <Button
                   variant="destructive"
                   onClick={() => {
-                    setShowDetails(false)
-                    onReject()
+                    setShowDetails(false);
+                    onReject();
                   }}
                   disabled={isProcessing}
                 >
@@ -465,12 +518,12 @@ export function ApplicantCard({
           )}
 
           {/* Interview Button for Accepted Applications */}
-          {application.status === 'accepted' && bookingId && (
+          {application.status === "accepted" && bookingId && (
             <div className="flex justify-end gap-2 pt-4 border-t">
               <Button
                 onClick={() => {
-                  setShowDetails(false)
-                  router.push(`/dashboard/business/interview/${bookingId}`)
+                  setShowDetails(false);
+                  router.push(`/dashboard/business/interview/${bookingId}`);
                 }}
                 className="bg-blue-600 hover:bg-blue-700"
               >
@@ -482,5 +535,5 @@ export function ApplicantCard({
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

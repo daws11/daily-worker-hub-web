@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import React from 'react'
+import React from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,14 +8,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
-import { JobWithRelations } from '@/lib/types/job'
-import { formatIDR } from '@/lib/utils/currency'
-import { formatDate } from '@/lib/utils/date'
-import { isUMKCompliant } from '@/lib/constants/wage'
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { JobWithRelations } from "@/lib/types/job";
+import { formatIDR } from "@/lib/utils/currency";
+import { formatDate } from "@/lib/utils/date";
+import { isUMKCompliant } from "@/lib/constants/wage";
 import {
   MapPin,
   Calendar,
@@ -25,16 +25,16 @@ import {
   Mail,
   Phone,
   Globe,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { useTranslation } from '@/lib/i18n/hooks'
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n/hooks";
 
 interface JobDetailDialogProps {
-  job: JobWithRelations | null
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onApply?: (job: JobWithRelations) => void
-  isApplying?: boolean
+  job: JobWithRelations | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onApply?: (job: JobWithRelations) => void;
+  isApplying?: boolean;
 }
 
 export function JobDetailDialog({
@@ -44,18 +44,18 @@ export function JobDetailDialog({
   onApply,
   isApplying = false,
 }: JobDetailDialogProps) {
-  const { t, locale } = useTranslation()
+  const { t, locale } = useTranslation();
 
-  if (!job) return null
+  if (!job) return null;
 
-  const isRateBaliCompliant = isUMKCompliant(job.budget_min, job.address)
+  const isRateBaliCompliant = isUMKCompliant(job.budget_min, job.address);
 
   const formatWageRange = () => {
     if (job.budget_min === job.budget_max) {
-      return formatIDR(job.budget_min)
+      return formatIDR(job.budget_min);
     }
-    return `${formatIDR(job.budget_min)} - ${formatIDR(job.budget_max)}`
-  }
+    return `${formatIDR(job.budget_min)} - ${formatIDR(job.budget_max)}`;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -69,7 +69,7 @@ export function JobDetailDialog({
                   variant="default"
                   className="bg-green-600 hover:bg-green-700 text-xs"
                 >
-                  {t('jobs.rateBali')}
+                  {t("jobs.rateBali")}
                 </Badge>
               )}
             </div>
@@ -93,7 +93,9 @@ export function JobDetailDialog({
           <div className="flex items-center gap-2">
             <Banknote className="h-5 w-5 text-muted-foreground" />
             <div>
-              <p className="text-sm text-muted-foreground">{t('jobs.wageRangeLabel')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t("jobs.wageRangeLabel")}
+              </p>
               <p className="font-semibold text-lg">{formatWageRange()}</p>
             </div>
           </div>
@@ -106,7 +108,7 @@ export function JobDetailDialog({
             <div className="flex items-start gap-3">
               <MapPin className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-sm font-medium">{t('common.location')}</p>
+                <p className="text-sm font-medium">{t("common.location")}</p>
                 <p className="text-sm text-muted-foreground">{job.address}</p>
               </div>
             </div>
@@ -115,8 +117,12 @@ export function JobDetailDialog({
             <div className="flex items-start gap-3">
               <Calendar className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-sm font-medium">{t('jobs.applicationDeadline')}</p>
-                <p className="text-sm text-muted-foreground">{formatDate(job.deadline, locale)}</p>
+                <p className="text-sm font-medium">
+                  {t("jobs.applicationDeadline")}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {formatDate(job.deadline, locale)}
+                </p>
               </div>
             </div>
           </div>
@@ -125,7 +131,7 @@ export function JobDetailDialog({
 
           {/* Job Description */}
           <div className="space-y-2">
-            <h3 className="font-semibold">{t('jobs.description')}</h3>
+            <h3 className="font-semibold">{t("jobs.description")}</h3>
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">
               {job.description}
             </p>
@@ -133,7 +139,7 @@ export function JobDetailDialog({
 
           {/* Requirements */}
           <div className="space-y-2">
-            <h3 className="font-semibold">{t('jobs.requirements')}</h3>
+            <h3 className="font-semibold">{t("jobs.requirements")}</h3>
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">
               {job.requirements}
             </p>
@@ -142,7 +148,7 @@ export function JobDetailDialog({
           {/* Skills */}
           {job.skills && job.skills.length > 0 && (
             <div className="space-y-2">
-              <h3 className="font-semibold">{t('jobs.requiredSkills')}</h3>
+              <h3 className="font-semibold">{t("jobs.requiredSkills")}</h3>
               <div className="flex flex-wrap gap-2">
                 {job.skills.map((skill) => (
                   <Badge key={skill.id} variant="outline">
@@ -157,7 +163,7 @@ export function JobDetailDialog({
 
           {/* Business Profile */}
           <div className="space-y-3">
-            <h3 className="font-semibold">{t('jobs.businessProfile')}</h3>
+            <h3 className="font-semibold">{t("jobs.businessProfile")}</h3>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -167,7 +173,9 @@ export function JobDetailDialog({
                 )}
               </div>
               {job.business.description && (
-                <p className="text-sm text-muted-foreground">{job.business.description}</p>
+                <p className="text-sm text-muted-foreground">
+                  {job.business.description}
+                </p>
               )}
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                 {job.business.email && (
@@ -206,7 +214,7 @@ export function JobDetailDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
           >
-            {t('common.close')}
+            {t("common.close")}
           </Button>
           {onApply && (
             <Button
@@ -214,11 +222,11 @@ export function JobDetailDialog({
               onClick={() => onApply(job)}
               disabled={isApplying}
             >
-              {isApplying ? t('jobs.applying') : t('jobs.applyForJob')}
+              {isApplying ? t("jobs.applying") : t("jobs.applyForJob")}
             </Button>
           )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

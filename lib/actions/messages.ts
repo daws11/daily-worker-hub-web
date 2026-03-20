@@ -1,49 +1,52 @@
-"use server"
+"use server";
 
-import { createClient } from "../supabase/server"
-import type { Database } from "../supabase/types"
-import { createNotification } from "./notifications"
-import type { MessageWithRelations } from "../types/message"
+import { createClient } from "../supabase/server";
+import type { Database } from "../supabase/types";
+import { createNotification } from "./notifications";
+import type { MessageWithRelations } from "../types/message";
 
-type Message = Database["public"]["Tables"]["messages"]["Row"]
+type Message = Database["public"]["Tables"]["messages"]["Row"];
 
 // Type for inserting a new message
-type MessageInsert = Pick<Message, 'sender_id' | 'receiver_id' | 'content' | 'booking_id' | 'is_read'>
+type MessageInsert = Pick<
+  Message,
+  "sender_id" | "receiver_id" | "content" | "booking_id" | "is_read"
+>;
 
 export type MessageResult = {
-  success: boolean
-  error?: string
-  data?: Message
-}
+  success: boolean;
+  error?: string;
+  data?: Message;
+};
 
 export type MessagesListResult = {
-  success: boolean
-  error?: string
-  data?: MessageWithRelations[]
-  count?: number
-}
+  success: boolean;
+  error?: string;
+  data?: MessageWithRelations[];
+  count?: number;
+};
 
 export type RawMessagesListResult = {
-  success: boolean
-  error?: string
-  data?: Message[]
-  count?: number
-}
+  success: boolean;
+  error?: string;
+  data?: Message[];
+  count?: number;
+};
 
 export type ConversationResult = {
-  success: boolean
-  error?: string
+  success: boolean;
+  error?: string;
   data?: Array<{
-    id: string
-    participant_id: string
-    participant_name: string
-    participant_avatar?: string
-    last_message: string
-    last_message_time: string
-    unread_count: number
-  }>
-  count?: number
-}
+    id: string;
+    participant_id: string;
+    participant_name: string;
+    participant_avatar?: string;
+    last_message: string;
+    last_message_time: string;
+    unread_count: number;
+  }>;
+  count?: number;
+};
 
 /**
  * Send a new message from one user to another
@@ -52,10 +55,10 @@ export async function sendMessage(
   senderId: string,
   receiverId: string,
   content: string,
-  bookingId?: string
+  bookingId?: string,
 ): Promise<MessageResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const newMessage: MessageInsert = {
       sender_id: senderId,
@@ -63,16 +66,19 @@ export async function sendMessage(
       content,
       booking_id: bookingId || null,
       is_read: false,
-    }
+    };
 
     const { data, error } = await supabase
       .from("messages")
       .insert(newMessage)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal mengirim pesan: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal mengirim pesan: ${error.message}`,
+      };
     }
 
     // Create notification for the receiver
@@ -82,25 +88,26 @@ export async function sendMessage(
         .from("users")
         .select("full_name")
         .eq("id", senderId)
-        .single()
+        .single();
 
-      const senderName = senderProfile?.full_name || "Seseorang"
-      const messagePreview = content.length > 50 ? content.substring(0, 50) + "..." : content
+      const senderName = senderProfile?.full_name || "Seseorang";
+      const messagePreview =
+        content.length > 50 ? content.substring(0, 50) + "..." : content;
 
       await createNotification(
         receiverId,
         `Pesan Baru dari ${senderName}`,
         messagePreview,
-        "/messages"
-      )
+        "/messages",
+      );
     } catch (notificationError) {
       // Don't fail the message send if notification creation fails
       // The message was already sent successfully
     }
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat mengirim pesan" }
+    return { success: false, error: "Terjadi kesalahan saat mengirim pesan" };
   }
 }
 
@@ -109,10 +116,10 @@ export async function sendMessage(
  */
 export async function markMessageAsRead(
   messageId: string,
-  userId: string
+  userId: string,
 ): Promise<MessageResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the message is sent to the user
     const { data: message, error: fetchError } = await supabase
@@ -120,10 +127,10 @@ export async function markMessageAsRead(
       .select("*")
       .eq("id", messageId)
       .eq("receiver_id", userId)
-      .single()
+      .single();
 
     if (fetchError || !message) {
-      return { success: false, error: "Pesan tidak ditemukan" }
+      return { success: false, error: "Pesan tidak ditemukan" };
     }
 
     // Update the message as read
@@ -133,62 +140,81 @@ export async function markMessageAsRead(
       .eq("id", messageId)
       .eq("receiver_id", userId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { success: false, error: `Gagal menandai pesan: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal menandai pesan: ${error.message}`,
+      };
     }
 
-    return { success: true, data }
+    return { success: true, data };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat menandai pesan" }
+    return { success: false, error: "Terjadi kesalahan saat menandai pesan" };
   }
 }
 
 /**
  * Mark all messages as read for a specific user (messages received by the user)
  */
-export async function markAllMessagesAsRead(userId: string): Promise<MessageResult> {
+export async function markAllMessagesAsRead(
+  userId: string,
+): Promise<MessageResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from("messages")
       .update({ is_read: true })
       .eq("receiver_id", userId)
       .eq("is_read", false)
-      .select()
+      .select();
 
     if (error) {
-      return { success: false, error: `Gagal menandai semua pesan: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal menandai semua pesan: ${error.message}`,
+      };
     }
 
-    return { success: true, data: data?.[0] }
+    return { success: true, data: data?.[0] };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat menandai semua pesan" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat menandai semua pesan",
+    };
   }
 }
 
 /**
  * Get unread message count for a user
  */
-export async function getUnreadMessageCount(userId: string): Promise<{ success: boolean; count?: number; error?: string }> {
+export async function getUnreadMessageCount(
+  userId: string,
+): Promise<{ success: boolean; count?: number; error?: string }> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { count, error } = await supabase
       .from("messages")
       .select("*", { count: "exact", head: true })
       .eq("receiver_id", userId)
-      .eq("is_read", false)
+      .eq("is_read", false);
 
     if (error) {
-      return { success: false, error: `Gagal mengambil jumlah pesan: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal mengambil jumlah pesan: ${error.message}`,
+      };
     }
 
-    return { success: true, count: count || 0 }
+    return { success: true, count: count || 0 };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat mengambil jumlah pesan" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat mengambil jumlah pesan",
+    };
   }
 }
 
@@ -198,43 +224,48 @@ export async function getUnreadMessageCount(userId: string): Promise<{ success: 
 export async function getMessages(
   userId: string,
   otherUserId: string,
-  limit: number = 50
+  limit: number = 50,
 ): Promise<MessagesListResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data: messages, error } = await supabase
       .from("messages")
       .select("*")
-      .or(`and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`)
+      .or(
+        `and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`,
+      )
       .order("created_at", { ascending: false })
-      .limit(limit)
+      .limit(limit);
 
     if (error) {
-      return { success: false, error: `Gagal mengambil pesan: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal mengambil pesan: ${error.message}`,
+      };
     }
 
     if (!messages || messages.length === 0) {
-      return { success: true, data: [], count: 0 }
+      return { success: true, data: [], count: 0 };
     }
 
     // Get unique user IDs from messages
-    const userIds = new Set<string>()
-    messages.forEach(msg => {
-      userIds.add(msg.sender_id)
-      userIds.add(msg.receiver_id)
-    })
+    const userIds = new Set<string>();
+    messages.forEach((msg) => {
+      userIds.add(msg.sender_id);
+      userIds.add(msg.receiver_id);
+    });
 
     // Fetch user data for all users involved
     const { data: users } = await supabase
       .from("users")
       .select("id, full_name, avatar_url, role")
-      .in("id", Array.from(userIds))
+      .in("id", Array.from(userIds));
 
-    const userMap = new Map(users?.map(u => [u.id, u]) || [])
+    const userMap = new Map(users?.map((u) => [u.id, u]) || []);
 
     // Enrich messages with user data
-    const enrichedMessages = messages.map(msg => ({
+    const enrichedMessages = messages.map((msg) => ({
       ...msg,
       sender: userMap.get(msg.sender_id) || {
         id: msg.sender_id,
@@ -248,11 +279,15 @@ export async function getMessages(
         avatar_url: null,
         role: "worker" as const,
       },
-    }))
+    }));
 
-    return { success: true, data: enrichedMessages, count: enrichedMessages.length }
+    return {
+      success: true,
+      data: enrichedMessages,
+      count: enrichedMessages.length,
+    };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat mengambil pesan" }
+    return { success: false, error: "Terjadi kesalahan saat mengambil pesan" };
   }
 }
 
@@ -261,43 +296,46 @@ export async function getMessages(
  */
 export async function getUserMessages(
   userId: string,
-  limit: number = 50
+  limit: number = 50,
 ): Promise<MessagesListResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data: messages, error } = await supabase
       .from("messages")
       .select("*")
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .order("created_at", { ascending: false })
-      .limit(limit)
+      .limit(limit);
 
     if (error) {
-      return { success: false, error: `Gagal mengambil pesan: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal mengambil pesan: ${error.message}`,
+      };
     }
 
     if (!messages || messages.length === 0) {
-      return { success: true, data: [], count: 0 }
+      return { success: true, data: [], count: 0 };
     }
 
     // Get unique user IDs from messages
-    const userIds = new Set<string>()
-    messages.forEach(msg => {
-      userIds.add(msg.sender_id)
-      userIds.add(msg.receiver_id)
-    })
+    const userIds = new Set<string>();
+    messages.forEach((msg) => {
+      userIds.add(msg.sender_id);
+      userIds.add(msg.receiver_id);
+    });
 
     // Fetch user data for all users involved
     const { data: users } = await supabase
       .from("users")
       .select("id, full_name, avatar_url, role")
-      .in("id", Array.from(userIds))
+      .in("id", Array.from(userIds));
 
-    const userMap = new Map(users?.map(u => [u.id, u]) || [])
+    const userMap = new Map(users?.map((u) => [u.id, u]) || []);
 
     // Enrich messages with user data
-    const enrichedMessages = messages.map(msg => ({
+    const enrichedMessages = messages.map((msg) => ({
       ...msg,
       sender: userMap.get(msg.sender_id) || {
         id: msg.sender_id,
@@ -311,53 +349,62 @@ export async function getUserMessages(
         avatar_url: null,
         role: "worker" as const,
       },
-    }))
+    }));
 
-    return { success: true, data: enrichedMessages, count: enrichedMessages.length }
+    return {
+      success: true,
+      data: enrichedMessages,
+      count: enrichedMessages.length,
+    };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat mengambil pesan" }
+    return { success: false, error: "Terjadi kesalahan saat mengambil pesan" };
   }
 }
 
 /**
  * Get unread messages for a user
  */
-export async function getUnreadMessages(userId: string): Promise<MessagesListResult> {
+export async function getUnreadMessages(
+  userId: string,
+): Promise<MessagesListResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data: messages, error } = await supabase
       .from("messages")
       .select("*")
       .eq("receiver_id", userId)
       .eq("is_read", false)
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: false });
 
     if (error) {
-      return { success: false, error: `Gagal mengambil pesan: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal mengambil pesan: ${error.message}`,
+      };
     }
 
     if (!messages || messages.length === 0) {
-      return { success: true, data: [], count: 0 }
+      return { success: true, data: [], count: 0 };
     }
 
     // Get unique user IDs from messages
-    const userIds = new Set<string>()
-    messages.forEach(msg => {
-      userIds.add(msg.sender_id)
-      userIds.add(msg.receiver_id)
-    })
+    const userIds = new Set<string>();
+    messages.forEach((msg) => {
+      userIds.add(msg.sender_id);
+      userIds.add(msg.receiver_id);
+    });
 
     // Fetch user data for all users involved
     const { data: users } = await supabase
       .from("users")
       .select("id, full_name, avatar_url, role")
-      .in("id", Array.from(userIds))
+      .in("id", Array.from(userIds));
 
-    const userMap = new Map(users?.map(u => [u.id, u]) || [])
+    const userMap = new Map(users?.map((u) => [u.id, u]) || []);
 
     // Enrich messages with user data
-    const enrichedMessages = messages.map(msg => ({
+    const enrichedMessages = messages.map((msg) => ({
       ...msg,
       sender: userMap.get(msg.sender_id) || {
         id: msg.sender_id,
@@ -371,11 +418,15 @@ export async function getUnreadMessages(userId: string): Promise<MessagesListRes
         avatar_url: null,
         role: "worker" as const,
       },
-    }))
+    }));
 
-    return { success: true, data: enrichedMessages, count: enrichedMessages.length }
+    return {
+      success: true,
+      data: enrichedMessages,
+      count: enrichedMessages.length,
+    };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat mengambil pesan" }
+    return { success: false, error: "Terjadi kesalahan saat mengambil pesan" };
   }
 }
 
@@ -384,43 +435,46 @@ export async function getUnreadMessages(userId: string): Promise<MessagesListRes
  */
 export async function getBookingMessages(
   bookingId: string,
-  limit: number = 50
+  limit: number = 50,
 ): Promise<MessagesListResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     const { data: messages, error } = await supabase
       .from("messages")
       .select("*")
       .eq("booking_id", bookingId)
       .order("created_at", { ascending: true })
-      .limit(limit)
+      .limit(limit);
 
     if (error) {
-      return { success: false, error: `Gagal mengambil pesan: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal mengambil pesan: ${error.message}`,
+      };
     }
 
     if (!messages || messages.length === 0) {
-      return { success: true, data: [], count: 0 }
+      return { success: true, data: [], count: 0 };
     }
 
     // Get unique user IDs from messages
-    const userIds = new Set<string>()
-    messages.forEach(msg => {
-      userIds.add(msg.sender_id)
-      userIds.add(msg.receiver_id)
-    })
+    const userIds = new Set<string>();
+    messages.forEach((msg) => {
+      userIds.add(msg.sender_id);
+      userIds.add(msg.receiver_id);
+    });
 
     // Fetch user data for all users involved
     const { data: users } = await supabase
       .from("users")
       .select("id, full_name, avatar_url, role")
-      .in("id", Array.from(userIds))
+      .in("id", Array.from(userIds));
 
-    const userMap = new Map(users?.map(u => [u.id, u]) || [])
+    const userMap = new Map(users?.map((u) => [u.id, u]) || []);
 
     // Enrich messages with user data
-    const enrichedMessages = messages.map(msg => ({
+    const enrichedMessages = messages.map((msg) => ({
       ...msg,
       sender: userMap.get(msg.sender_id) || {
         id: msg.sender_id,
@@ -434,11 +488,15 @@ export async function getBookingMessages(
         avatar_url: null,
         role: "worker" as const,
       },
-    }))
+    }));
 
-    return { success: true, data: enrichedMessages, count: enrichedMessages.length }
+    return {
+      success: true,
+      data: enrichedMessages,
+      count: enrichedMessages.length,
+    };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat mengambil pesan" }
+    return { success: false, error: "Terjadi kesalahan saat mengambil pesan" };
   }
 }
 
@@ -446,60 +504,71 @@ export async function getBookingMessages(
  * Get all conversations for a user
  * Returns a list of unique conversations with last message and unread count
  */
-export async function getConversations(userId: string): Promise<ConversationResult> {
+export async function getConversations(
+  userId: string,
+): Promise<ConversationResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Get all messages where user is sender or receiver
     const { data: messages, error } = await supabase
       .from("messages")
       .select("*")
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-      .order("created_at", { ascending: false })
+      .order("created_at", { ascending: false });
 
     if (error) {
-      return { success: false, error: `Gagal mengambil percakapan: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal mengambil percakapan: ${error.message}`,
+      };
     }
 
     if (!messages || messages.length === 0) {
-      return { success: true, data: [], count: 0 }
+      return { success: true, data: [], count: 0 };
     }
 
     // Group messages by conversation partner
-    const conversationMap = new Map<string, {
-      participant_id: string
-      last_message: Message
-      unread_count: number
-    }>()
+    const conversationMap = new Map<
+      string,
+      {
+        participant_id: string;
+        last_message: Message;
+        unread_count: number;
+      }
+    >();
 
     messages.forEach((msg) => {
-      const partnerId = msg.sender_id === userId ? msg.receiver_id : msg.sender_id
+      const partnerId =
+        msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
 
       if (!conversationMap.has(partnerId)) {
         conversationMap.set(partnerId, {
           participant_id: partnerId,
           last_message: msg,
           unread_count: msg.receiver_id === userId && !msg.is_read ? 1 : 0,
-        })
+        });
       } else {
-        const conv = conversationMap.get(partnerId)!
+        const conv = conversationMap.get(partnerId)!;
         // Count unread messages
         if (msg.receiver_id === userId && !msg.is_read) {
-          conv.unread_count++
+          conv.unread_count++;
         }
       }
-    })
+    });
 
     // Fetch participant details (users table)
-    const participantIds = Array.from(conversationMap.keys())
+    const participantIds = Array.from(conversationMap.keys());
     const { data: participants } = await supabase
       .from("users")
       .select("id, full_name, avatar_url")
-      .in("id", participantIds)
+      .in("id", participantIds);
 
     // Build conversation list with participant info
     const conversations = Array.from(conversationMap.values()).map((conv) => {
-      const participant = participants?.find(p => p.id === conv.participant_id)
+      const participant = participants?.find(
+        (p) => p.id === conv.participant_id,
+      );
       return {
         id: conv.participant_id, // Use participant ID as conversation ID
         participant_id: conv.participant_id,
@@ -508,12 +577,15 @@ export async function getConversations(userId: string): Promise<ConversationResu
         last_message: conv.last_message.content,
         last_message_time: conv.last_message.created_at,
         unread_count: conv.unread_count,
-      }
-    })
+      };
+    });
 
-    return { success: true, data: conversations, count: conversations.length }
+    return { success: true, data: conversations, count: conversations.length };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat mengambil percakapan" }
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat mengambil percakapan",
+    };
   }
 }
 
@@ -522,10 +594,10 @@ export async function getConversations(userId: string): Promise<ConversationResu
  */
 export async function deleteMessage(
   messageId: string,
-  userId: string
+  userId: string,
 ): Promise<MessageResult> {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
     // Verify the message belongs to the user (either sender or receiver)
     const { data: message, error: fetchError } = await supabase
@@ -533,10 +605,10 @@ export async function deleteMessage(
       .select("*")
       .eq("id", messageId)
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-      .single()
+      .single();
 
     if (fetchError || !message) {
-      return { success: false, error: "Pesan tidak ditemukan" }
+      return { success: false, error: "Pesan tidak ditemukan" };
     }
 
     // Delete the message
@@ -544,14 +616,17 @@ export async function deleteMessage(
       .from("messages")
       .delete()
       .eq("id", messageId)
-      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
 
     if (error) {
-      return { success: false, error: `Gagal menghapus pesan: ${error.message}` }
+      return {
+        success: false,
+        error: `Gagal menghapus pesan: ${error.message}`,
+      };
     }
 
-    return { success: true, data: message }
+    return { success: true, data: message };
   } catch (error) {
-    return { success: false, error: "Terjadi kesalahan saat menghapus pesan" }
+    return { success: false, error: "Terjadi kesalahan saat menghapus pesan" };
   }
 }

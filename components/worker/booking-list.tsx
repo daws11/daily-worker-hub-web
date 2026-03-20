@@ -1,50 +1,57 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { toast } from "sonner"
-import { supabase } from "@/lib/supabase/client"
-import { BookingCard, type Booking } from "@/components/worker/booking-card"
+import * as React from "react";
+import { toast } from "sonner";
+import { supabase } from "@/lib/supabase/client";
+import { BookingCard, type Booking } from "@/components/worker/booking-card";
 
 export interface BookingListProps {
-  workerId: string
+  workerId: string;
 }
 
 type BookingStatusGroup = {
-  pending: Booking[]
-  accepted: Booking[]
-  completed: Booking[]
-  cancelled: Booking[]
-}
+  pending: Booking[];
+  accepted: Booking[];
+  completed: Booking[];
+  cancelled: Booking[];
+};
 
 const statusGroupLabels: Record<keyof BookingStatusGroup, string> = {
   pending: "Pending Bookings",
   accepted: "Accepted & In Progress",
   completed: "Completed",
   cancelled: "Cancelled",
-}
+};
 
 function groupBookingsByStatus(bookings: Booking[]): BookingStatusGroup {
   return bookings.reduce<BookingStatusGroup>(
     (groups, booking) => {
       if (booking.status === "pending") {
-        groups.pending.push(booking)
-      } else if (booking.status === "accepted" || booking.status === "in_progress") {
-        groups.accepted.push(booking)
+        groups.pending.push(booking);
+      } else if (
+        booking.status === "accepted" ||
+        booking.status === "in_progress"
+      ) {
+        groups.accepted.push(booking);
       } else if (booking.status === "completed") {
-        groups.completed.push(booking)
-      } else if (booking.status === "cancelled" || booking.status === "rejected") {
-        groups.cancelled.push(booking)
+        groups.completed.push(booking);
+      } else if (
+        booking.status === "cancelled" ||
+        booking.status === "rejected"
+      ) {
+        groups.cancelled.push(booking);
       }
-      return groups
+      return groups;
     },
-    { pending: [], accepted: [], completed: [], cancelled: [] }
-  )
+    { pending: [], accepted: [], completed: [], cancelled: [] },
+  );
 }
 
 async function fetchBookings(workerId: string): Promise<Booking[]> {
   const { data, error } = await supabase
     .from("bookings")
-    .select(`
+    .select(
+      `
       id,
       job_id,
       business_id,
@@ -64,72 +71,79 @@ async function fetchBookings(workerId: string): Promise<Booking[]> {
         name,
         is_verified
       )
-    `)
+    `,
+    )
     .eq("worker_id", workerId)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: false });
 
   if (error) {
-    throw error
+    throw error;
   }
 
-  return (data as Booking[]) || []
+  return (data as Booking[]) || [];
 }
 
 function BookingList({ workerId }: BookingListProps) {
-  const [bookings, setBookings] = React.useState<Booking[]>([])
-  const [isLoading, setIsLoading] = React.useState(true)
+  const [bookings, setBookings] = React.useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   const loadBookings = React.useCallback(async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const data = await fetchBookings(workerId)
-      setBookings(data)
+      const data = await fetchBookings(workerId);
+      setBookings(data);
     } catch (error: any) {
-      toast.error("Gagal memuat booking / Failed to load bookings: " + error.message)
+      toast.error(
+        "Gagal memuat booking / Failed to load bookings: " + error.message,
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [workerId])
+  }, [workerId]);
 
   React.useEffect(() => {
-    loadBookings()
-  }, [loadBookings])
+    loadBookings();
+  }, [loadBookings]);
 
   const handleCancel = async (bookingId: string) => {
     // Refresh the bookings list after cancellation
     // The actual cancellation is handled by EmergencyCancellationDialog
-    await loadBookings()
-  }
+    await loadBookings();
+  };
 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
-    )
+    );
   }
 
-  const groupedBookings = groupBookingsByStatus(bookings)
-  const hasBookings = Object.values(groupedBookings).some((group) => group.length > 0)
+  const groupedBookings = groupBookingsByStatus(bookings);
+  const hasBookings = Object.values(groupedBookings).some(
+    (group) => group.length > 0,
+  );
 
   if (!hasBookings) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">Belum ada booking.</p>
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-8">
       {(Object.keys(groupedBookings) as Array<keyof BookingStatusGroup>).map(
         (status) => {
-          const groupBookings = groupedBookings[status]
-          if (groupBookings.length === 0) return null
+          const groupBookings = groupedBookings[status];
+          if (groupBookings.length === 0) return null;
 
           return (
             <div key={status} className="space-y-4">
-              <h2 className="text-xl font-semibold">{statusGroupLabels[status]}</h2>
+              <h2 className="text-xl font-semibold">
+                {statusGroupLabels[status]}
+              </h2>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {groupBookings.map((booking) => (
                   <BookingCard
@@ -141,11 +155,11 @@ function BookingList({ workerId }: BookingListProps) {
                 ))}
               </div>
             </div>
-          )
-        }
+          );
+        },
       )}
     </div>
-  )
+  );
 }
 
-export { BookingList }
+export { BookingList };

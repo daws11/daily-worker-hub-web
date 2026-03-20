@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import * as z from "zod"
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Form,
   FormControl,
@@ -16,139 +16,186 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { cn } from "@/lib/utils"
-import { PositionTypeSelect, type PositionType } from "@/app/components/position-type-select"
-import { AreaSelect, type AreaValue } from "@/app/components/area-select"
-import { WageRateInput } from "@/app/components/wage-rate-input"
-import { WorkersNeededCounter } from "@/app/components/workers-needed-counter"
-import { JobRequirementsSelect, type JobRequirement } from "@/app/components/job-requirements-select"
-import { JobDraftBanner } from "@/app/components/job-draft-banner"
-import { SocialPlatformSelector, type PlatformSelection } from "@/app/components/social-platform-selector"
-import { HourSelection } from "@/components/business/hour-selection"
-import { WageCalculator } from "@/components/business/wage-calculator"
-import { getHourlyRate } from "@/lib/constants/rate-bali"
+} from "@/components/ui/form";
+import { cn } from "@/lib/utils";
+import {
+  PositionTypeSelect,
+  type PositionType,
+} from "@/app/components/position-type-select";
+import { AreaSelect, type AreaValue } from "@/app/components/area-select";
+import { WageRateInput } from "@/app/components/wage-rate-input";
+import { WorkersNeededCounter } from "@/app/components/workers-needed-counter";
+import {
+  JobRequirementsSelect,
+  type JobRequirement,
+} from "@/app/components/job-requirements-select";
+import { JobDraftBanner } from "@/app/components/job-draft-banner";
+import {
+  SocialPlatformSelector,
+  type PlatformSelection,
+} from "@/app/components/social-platform-selector";
+import { HourSelection } from "@/components/business/hour-selection";
+import { WageCalculator } from "@/components/business/wage-calculator";
+import { getHourlyRate } from "@/lib/constants/rate-bali";
 
 // Zod schema for job posting form validation
-export const jobPostingFormSchema = z.object({
-  title: z.string().min(5, "Title must be at least 5 characters").max(100, "Title must be at most 100 characters"),
-  positionType: z.enum([
-    "housekeeping",
-    "kitchen_staff",
-    "driver",
-    "server",
-    "bartender",
-    "receptionist",
-    "concierge",
-    "security",
-    "maintenance",
-    "laundry_attendant",
-    "pool_attendant",
-    "spa_staff",
-    "event_staff",
-    "gardener",
-    "other",
-    "host_hostess",
-    "laundry_staff",
-    "public_area_attendant",
-    "chef",
-    "sous_chef",
-    "line_cook",
-    "dishwasher",
-    "steward",
-    "bellman",
-    "porter",
-    "spa_therapist",
-    "fitness_instructor",
-    "tour_guide",
-    "technician",
-    "setup_crew",
-    "supervisor",
-    "manager",
-  ]),
-  date: z.string().min(1, "Please select a date"),
-  startTime: z.string().min(1, "Please select a start time"),
-  endTime: z.string().min(1, "Please select an end time"),
-  area: z.string().min(1, "Please select an area"),
-  address: z.string().min(10, "Address must be at least 10 characters").max(200, "Address must be at most 200 characters"),
-  wageMin: z.number().min(1, "Minimum wage must be at least 1"),
-  wageMax: z.number().min(1, "Maximum wage must be at least 1"),
-  workersNeeded: z.number().min(1, "At least 1 worker is required").max(100, "Maximum 100 workers allowed"),
-  hoursNeeded: z.number().min(4, "Minimum 4 hours required").max(12, "Maximum 12 hours allowed").default(8),
-  requirements: z.array(z.string()).min(1, "Please select at least one requirement"),
-  description: z.string().min(20, "Description must be at least 20 characters").max(1000, "Description must be at most 1000 characters"),
-  socialPlatforms: z.array(z.object({
-    platformType: z.string(),
-    connectionId: z.string(),
-    enabled: z.boolean(),
-  })).optional(),
-}).refine((data) => data.wageMin <= data.wageMax, {
-  message: "Minimum wage cannot be greater than maximum wage",
-  path: ["wageMin"],
-}).refine((data) => {
-  if (!data.date) return true
-  const selectedDate = new Date(data.date)
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return selectedDate >= today
-}, {
-  message: "Date cannot be in the past",
-  path: ["date"],
-}).refine((data) => {
-  if (!data.startTime || !data.endTime) return true
-  return data.startTime < data.endTime
-}, {
-  message: "End time must be after start time",
-  path: ["endTime"],
-})
+export const jobPostingFormSchema = z
+  .object({
+    title: z
+      .string()
+      .min(5, "Title must be at least 5 characters")
+      .max(100, "Title must be at most 100 characters"),
+    positionType: z.enum([
+      "housekeeping",
+      "kitchen_staff",
+      "driver",
+      "server",
+      "bartender",
+      "receptionist",
+      "concierge",
+      "security",
+      "maintenance",
+      "laundry_attendant",
+      "pool_attendant",
+      "spa_staff",
+      "event_staff",
+      "gardener",
+      "other",
+      "host_hostess",
+      "laundry_staff",
+      "public_area_attendant",
+      "chef",
+      "sous_chef",
+      "line_cook",
+      "dishwasher",
+      "steward",
+      "bellman",
+      "porter",
+      "spa_therapist",
+      "fitness_instructor",
+      "tour_guide",
+      "technician",
+      "setup_crew",
+      "supervisor",
+      "manager",
+    ]),
+    date: z.string().min(1, "Please select a date"),
+    startTime: z.string().min(1, "Please select a start time"),
+    endTime: z.string().min(1, "Please select an end time"),
+    area: z.string().min(1, "Please select an area"),
+    address: z
+      .string()
+      .min(10, "Address must be at least 10 characters")
+      .max(200, "Address must be at most 200 characters"),
+    wageMin: z.number().min(1, "Minimum wage must be at least 1"),
+    wageMax: z.number().min(1, "Maximum wage must be at least 1"),
+    workersNeeded: z
+      .number()
+      .min(1, "At least 1 worker is required")
+      .max(100, "Maximum 100 workers allowed"),
+    hoursNeeded: z
+      .number()
+      .min(4, "Minimum 4 hours required")
+      .max(12, "Maximum 12 hours allowed")
+      .default(8),
+    requirements: z
+      .array(z.string())
+      .min(1, "Please select at least one requirement"),
+    description: z
+      .string()
+      .min(20, "Description must be at least 20 characters")
+      .max(1000, "Description must be at most 1000 characters"),
+    socialPlatforms: z
+      .array(
+        z.object({
+          platformType: z.string(),
+          connectionId: z.string(),
+          enabled: z.boolean(),
+        }),
+      )
+      .optional(),
+  })
+  .refine((data) => data.wageMin <= data.wageMax, {
+    message: "Minimum wage cannot be greater than maximum wage",
+    path: ["wageMin"],
+  })
+  .refine(
+    (data) => {
+      if (!data.date) return true;
+      const selectedDate = new Date(data.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return selectedDate >= today;
+    },
+    {
+      message: "Date cannot be in the past",
+      path: ["date"],
+    },
+  )
+  .refine(
+    (data) => {
+      if (!data.startTime || !data.endTime) return true;
+      return data.startTime < data.endTime;
+    },
+    {
+      message: "End time must be after start time",
+      path: ["endTime"],
+    },
+  );
 
-export type JobPostingFormValues = z.infer<typeof jobPostingFormSchema>
+export type JobPostingFormValues = z.infer<typeof jobPostingFormSchema>;
 
 // LocalStorage key for draft data
-const DRAFT_STORAGE_KEY = "job-posting-form-draft"
+const DRAFT_STORAGE_KEY = "job-posting-form-draft";
 
 // Helper functions for localStorage operations
 const saveDraft = (data: JobPostingFormValues) => {
   try {
-    if (typeof window === "undefined") return
-    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify({
-      data,
-      timestamp: Date.now(),
-    }))
+    if (typeof window === "undefined") return;
+    localStorage.setItem(
+      DRAFT_STORAGE_KEY,
+      JSON.stringify({
+        data,
+        timestamp: Date.now(),
+      }),
+    );
   } catch (error) {
     // Silently fail if localStorage is not available
   }
-}
+};
 
-const loadDraft = (): { data: JobPostingFormValues; timestamp: number } | null => {
+const loadDraft = (): {
+  data: JobPostingFormValues;
+  timestamp: number;
+} | null => {
   try {
-    if (typeof window === "undefined") return null
-    const draft = localStorage.getItem(DRAFT_STORAGE_KEY)
-    if (!draft) return null
-    return JSON.parse(draft)
+    if (typeof window === "undefined") return null;
+    const draft = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!draft) return null;
+    return JSON.parse(draft);
   } catch (error) {
     // Return null if localStorage is not available or data is corrupted
-    return null
+    return null;
   }
-}
+};
 
 const clearDraft = () => {
   try {
-    if (typeof window === "undefined") return
-    localStorage.removeItem(DRAFT_STORAGE_KEY)
+    if (typeof window === "undefined") return;
+    localStorage.removeItem(DRAFT_STORAGE_KEY);
   } catch (error) {
     // Silently fail if localStorage is not available
   }
-}
+};
 
 export interface JobPostingFormProps {
-  onSubmit?: (values: JobPostingFormValues) => void | Promise<void>
-  defaultValues?: Partial<JobPostingFormValues>
-  isLoading?: boolean
-  disabled?: boolean
-  submitButtonText?: string
-  className?: string
-  businessId?: string
+  onSubmit?: (values: JobPostingFormValues) => void | Promise<void>;
+  defaultValues?: Partial<JobPostingFormValues>;
+  isLoading?: boolean;
+  disabled?: boolean;
+  submitButtonText?: string;
+  className?: string;
+  businessId?: string;
 }
 
 export function JobPostingForm({
@@ -160,8 +207,12 @@ export function JobPostingForm({
   className,
   businessId,
 }: JobPostingFormProps) {
-  const [draftTimestamp, setDraftTimestamp] = React.useState<number | undefined>(undefined)
-  const [selectedSocialPlatforms, setSelectedSocialPlatforms] = React.useState<PlatformSelection[]>([])
+  const [draftTimestamp, setDraftTimestamp] = React.useState<
+    number | undefined
+  >(undefined);
+  const [selectedSocialPlatforms, setSelectedSocialPlatforms] = React.useState<
+    PlatformSelection[]
+  >([]);
 
   const form = useForm<JobPostingFormValues>({
     resolver: zodResolver(jobPostingFormSchema) as any,
@@ -182,46 +233,50 @@ export function JobPostingForm({
       socialPlatforms: [],
       ...defaultValues,
     },
-  })
+  });
 
-  const positionType = form.watch("positionType")
-  const area = form.watch("area")
+  const positionType = form.watch("positionType");
+  const area = form.watch("area");
 
   // Check for draft on mount (without auto-restoring)
   React.useEffect(() => {
-    const draft = loadDraft()
+    const draft = loadDraft();
     if (draft) {
-      setDraftTimestamp(draft.timestamp)
+      setDraftTimestamp(draft.timestamp);
     }
-  }, [])
+  }, []);
 
   // Auto-save form data to localStorage on changes
   React.useEffect(() => {
     const subscription = form.watch((value) => {
-      const formValues = form.getValues()
+      const formValues = form.getValues();
       // Only save if form has any meaningful data
-      const hasData = Object.values(formValues).some(v =>
-        v !== undefined && v !== null && v !== "" && (Array.isArray(v) ? v.length > 0 : true)
-      )
+      const hasData = Object.values(formValues).some(
+        (v) =>
+          v !== undefined &&
+          v !== null &&
+          v !== "" &&
+          (Array.isArray(v) ? v.length > 0 : true),
+      );
       if (hasData) {
-        saveDraft(formValues as JobPostingFormValues)
-        setDraftTimestamp(Date.now())
+        saveDraft(formValues as JobPostingFormValues);
+        setDraftTimestamp(Date.now());
       }
-    })
-    return () => subscription.unsubscribe()
-  }, [form])
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   const handleRestoreDraft = () => {
-    const draft = loadDraft()
+    const draft = loadDraft();
     if (draft) {
-      form.reset(draft.data)
+      form.reset(draft.data);
     }
-  }
+  };
 
   const handleDiscardDraft = () => {
-    clearDraft()
-    setDraftTimestamp(undefined)
-  }
+    clearDraft();
+    setDraftTimestamp(undefined);
+  };
 
   const handleSubmit = async (values: JobPostingFormValues) => {
     if (onSubmit) {
@@ -229,22 +284,25 @@ export function JobPostingForm({
       const valuesWithPlatforms = {
         ...values,
         socialPlatforms: selectedSocialPlatforms,
-      }
-      await onSubmit(valuesWithPlatforms)
-      clearDraft()
-      setDraftTimestamp(undefined)
+      };
+      await onSubmit(valuesWithPlatforms);
+      clearDraft();
+      setDraftTimestamp(undefined);
     }
-  }
+  };
 
   const handleReset = () => {
-    form.reset()
-    clearDraft()
-    setDraftTimestamp(undefined)
-  }
+    form.reset();
+    clearDraft();
+    setDraftTimestamp(undefined);
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit as any)} className={cn("space-y-6", className)}>
+      <form
+        onSubmit={form.handleSubmit(handleSubmit as any)}
+        className={cn("space-y-6", className)}
+      >
         {/* Draft Banner */}
         {draftTimestamp !== undefined && (
           <JobDraftBanner
@@ -311,7 +369,7 @@ export function JobPostingForm({
                   <Input
                     type="date"
                     disabled={disabled}
-                    min={new Date().toISOString().split('T')[0]}
+                    min={new Date().toISOString().split("T")[0]}
                     {...field}
                   />
                 </FormControl>
@@ -330,11 +388,7 @@ export function JobPostingForm({
               <FormItem>
                 <FormLabel>Start Time</FormLabel>
                 <FormControl>
-                  <Input
-                    type="time"
-                    disabled={disabled}
-                    {...field}
-                  />
+                  <Input type="time" disabled={disabled} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -348,11 +402,7 @@ export function JobPostingForm({
               <FormItem>
                 <FormLabel>End Time</FormLabel>
                 <FormControl>
-                  <Input
-                    type="time"
-                    disabled={disabled}
-                    {...field}
-                  />
+                  <Input type="time" disabled={disabled} {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -425,7 +475,8 @@ export function JobPostingForm({
                 />
               </FormControl>
               <FormDescription>
-                Set the hourly wage range. Use Rate Bali for UMK-compliant wages.
+                Set the hourly wage range. Use Rate Bali for UMK-compliant
+                wages.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -461,8 +512,8 @@ export function JobPostingForm({
           render={({ field }) => (
             <FormItem>
               <WageCalculator
-                category={getCategoryFromPositionType(positionType || '')}
-                regency={area || 'Denpasar'}
+                category={getCategoryFromPositionType(positionType || "")}
+                regency={area || "Denpasar"}
                 hoursNeeded={field.value}
                 onHoursChange={field.onChange}
                 readonly={false}
@@ -534,13 +585,14 @@ export function JobPostingForm({
                   disabled={disabled}
                   className={cn(
                     "flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-                    form.formState.errors.description && "border-destructive"
+                    form.formState.errors.description && "border-destructive",
                   )}
                   {...field}
                 />
               </FormControl>
               <FormDescription>
-                Provide detailed information about the job to help workers understand what to expect.
+                Provide detailed information about the job to help workers
+                understand what to expect.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -551,7 +603,9 @@ export function JobPostingForm({
         {businessId && (
           <SocialPlatformSelector
             businessId={businessId}
-            selectedPlatforms={selectedSocialPlatforms.map((p) => p.platformType)}
+            selectedPlatforms={selectedSocialPlatforms.map(
+              (p) => p.platformType,
+            )}
             onSelectionChange={setSelectedSocialPlatforms}
             disabled={disabled}
           />
@@ -567,16 +621,13 @@ export function JobPostingForm({
           >
             Reset
           </Button>
-          <Button
-            type="submit"
-            disabled={disabled || isLoading}
-          >
+          <Button type="submit" disabled={disabled || isLoading}>
             {isLoading ? "Submitting..." : submitButtonText}
           </Button>
         </div>
       </form>
     </Form>
-  )
+  );
 }
 
 /**
@@ -584,38 +635,38 @@ export function JobPostingForm({
  */
 function getCategoryFromPositionType(positionType: string): string {
   const mapping: Record<string, string> = {
-    'housekeeping': 'Housekeeping',
-    'kitchen_staff': 'Cook Helper',
-    'driver': 'Driver',
-    'server': 'Waiter',
-    'bartender': 'Waiter',
-    'receptionist': 'Front Desk',
-    'concierge': 'Front Desk',
-    'security': 'Steward',
-    'maintenance': 'Steward',
-    'laundry_attendant': 'Housekeeping',
-    'pool_attendant': 'Steward',
-    'spa_staff': 'Spa/Therapist',
-    'event_staff': 'Steward',
-    'gardener': 'Housekeeping',
-    'host_hostess': 'Front Desk',
-    'laundry_staff': 'Housekeeping',
-    'public_area_attendant': 'Housekeeping',
-    'chef': 'Cook (Head)',
-    'sous_chef': 'Cook (Line)',
-    'line_cook': 'Cook (Line)',
-    'dishwasher': 'Steward',
-    'steward': 'Steward',
-    'bellman': 'Bellman',
-    'porter': 'Bellman',
-    'spa_therapist': 'Spa/Therapist',
-    'fitness_instructor': 'Spa/Therapist',
-    'tour_guide': 'Waiter',
-    'technician': 'Steward',
-    'setup_crew': 'Steward',
-    'supervisor': 'Front Desk',
-    'manager': 'Front Desk',
-    'other': 'Housekeeping',
-  }
-  return mapping[positionType] || 'Housekeeping'
+    housekeeping: "Housekeeping",
+    kitchen_staff: "Cook Helper",
+    driver: "Driver",
+    server: "Waiter",
+    bartender: "Waiter",
+    receptionist: "Front Desk",
+    concierge: "Front Desk",
+    security: "Steward",
+    maintenance: "Steward",
+    laundry_attendant: "Housekeeping",
+    pool_attendant: "Steward",
+    spa_staff: "Spa/Therapist",
+    event_staff: "Steward",
+    gardener: "Housekeeping",
+    host_hostess: "Front Desk",
+    laundry_staff: "Housekeeping",
+    public_area_attendant: "Housekeeping",
+    chef: "Cook (Head)",
+    sous_chef: "Cook (Line)",
+    line_cook: "Cook (Line)",
+    dishwasher: "Steward",
+    steward: "Steward",
+    bellman: "Bellman",
+    porter: "Bellman",
+    spa_therapist: "Spa/Therapist",
+    fitness_instructor: "Spa/Therapist",
+    tour_guide: "Waiter",
+    technician: "Steward",
+    setup_crew: "Steward",
+    supervisor: "Front Desk",
+    manager: "Front Desk",
+    other: "Housekeeping",
+  };
+  return mapping[positionType] || "Housekeeping";
 }

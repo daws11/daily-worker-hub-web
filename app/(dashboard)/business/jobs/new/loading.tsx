@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function NewJobLoading() {
   return (
@@ -22,5 +22,5 @@ export default function NewJobLoading() {
         <Skeleton className="h-10 w-32" />
       </div>
     </div>
-  )
+  );
 }

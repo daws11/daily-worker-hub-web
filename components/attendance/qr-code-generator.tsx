@@ -1,36 +1,40 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { QRCodeSVG } from "qrcode.react"
-import { Download, Printer, RefreshCw, Calendar, MapPin, Building2 } from "lucide-react"
-import { toast } from "sonner"
+import * as React from "react";
+import { QRCodeSVG } from "qrcode.react";
+import {
+  Download,
+  Printer,
+  RefreshCw,
+  Calendar,
+  MapPin,
+  Building2,
+} from "lucide-react";
+import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-import { generateJobQRCode } from "@/lib/supabase/queries/jobs"
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { generateJobQRCode } from "@/lib/supabase/queries/jobs";
 
 export interface QRCodeGeneratorProps extends React.HTMLAttributes<HTMLDivElement> {
-  jobId: string
-  jobTitle: string
-  businessName: string
-  address?: string
-  startDate?: string
-  existingQRCode?: string | null
-  onRefresh?: () => void
+  jobId: string;
+  jobTitle: string;
+  businessName: string;
+  address?: string;
+  startDate?: string;
+  existingQRCode?: string | null;
+  onRefresh?: () => void;
 }
 
-const QRCodeGenerator = React.forwardRef<
-  HTMLDivElement,
-  QRCodeGeneratorProps
->(
+const QRCodeGenerator = React.forwardRef<HTMLDivElement, QRCodeGeneratorProps>(
   (
     {
       jobId,
@@ -43,84 +47,92 @@ const QRCodeGenerator = React.forwardRef<
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const [qrCode, setQrCode] = React.useState<string | null>(existingQRCode || null)
-    const [isRegenerating, setIsRegenerating] = React.useState(false)
-    const qrRef = React.useRef<HTMLDivElement>(null)
+    const [qrCode, setQrCode] = React.useState<string | null>(
+      existingQRCode || null,
+    );
+    const [isRegenerating, setIsRegenerating] = React.useState(false);
+    const qrRef = React.useRef<HTMLDivElement>(null);
 
     // Format date to Indonesian locale
     const formatDate = (dateString?: string) => {
-      if (!dateString) return null
+      if (!dateString) return null;
       return new Date(dateString).toLocaleDateString("id-ID", {
         day: "2-digit",
         month: "short",
         year: "numeric",
-      })
-    }
+      });
+    };
 
     // Generate QR code
     const handleGenerateQR = async () => {
-      setIsRegenerating(true)
+      setIsRegenerating(true);
       try {
-        const result = await generateJobQRCode(jobId)
-        setQrCode(result.qr_code)
-        toast.success("QR Code berhasil diperbarui")
-        onRefresh?.()
+        const result = await generateJobQRCode(jobId);
+        setQrCode(result.qr_code);
+        toast.success("QR Code berhasil diperbarui");
+        onRefresh?.();
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Gagal membuat QR Code")
+        toast.error(
+          error instanceof Error ? error.message : "Gagal membuat QR Code",
+        );
       } finally {
-        setIsRegenerating(false)
+        setIsRegenerating(false);
       }
-    }
+    };
 
     // Download QR code as image
     const handleDownload = () => {
-      const svgElement = qrRef.current?.querySelector("svg")
+      const svgElement = qrRef.current?.querySelector("svg");
       if (!svgElement) {
-        toast.error("QR Code tidak tersedia")
-        return
+        toast.error("QR Code tidak tersedia");
+        return;
       }
 
       try {
         // Serialize SVG
-        const serializer = new XMLSerializer()
-        const svgString = serializer.serializeToString(svgElement)
-        const svgBlob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" })
-        const url = URL.createObjectURL(svgBlob)
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svgElement);
+        const svgBlob = new Blob([svgString], {
+          type: "image/svg+xml;charset=utf-8",
+        });
+        const url = URL.createObjectURL(svgBlob);
 
         // Create download link
-        const link = document.createElement("a")
-        link.href = url
-        link.download = `qr-code-${jobId}.svg`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        URL.revokeObjectURL(url)
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `qr-code-${jobId}.svg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
 
-        toast.success("QR Code berhasil diunduh")
+        toast.success("QR Code berhasil diunduh");
       } catch {
-        toast.error("Gagal mengunduh QR Code")
+        toast.error("Gagal mengunduh QR Code");
       }
-    }
+    };
 
     // Print QR code
     const handlePrint = () => {
       if (!qrRef.current) {
-        toast.error("QR Code tidak tersedia")
-        return
+        toast.error("QR Code tidak tersedia");
+        return;
       }
 
       try {
-        const printWindow = window.open("", "_blank")
+        const printWindow = window.open("", "_blank");
         if (!printWindow) {
-          toast.error("Gagal membuka jendela cetak. Pastikan pop-up diizinkan.")
-          return
+          toast.error(
+            "Gagal membuka jendela cetak. Pastikan pop-up diizinkan.",
+          );
+          return;
         }
 
-        const svgElement = qrRef.current.querySelector("svg")
-        const serializer = new XMLSerializer()
-        const svgString = serializer.serializeToString(svgElement)
+        const svgElement = qrRef.current.querySelector("svg");
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svgElement);
 
         printWindow.document.write(`
           <!DOCTYPE html>
@@ -179,22 +191,22 @@ const QRCodeGenerator = React.forwardRef<
               </div>
             </body>
           </html>
-        `)
-        printWindow.document.close()
-        printWindow.print()
+        `);
+        printWindow.document.close();
+        printWindow.print();
       } catch {
-        toast.error("Gagal mencetak QR Code")
+        toast.error("Gagal mencetak QR Code");
       }
-    }
+    };
 
     // Generate QR code on mount if not exists
     React.useEffect(() => {
       if (!qrCode) {
-        handleGenerateQR()
+        handleGenerateQR();
       }
-    }, [])
+    }, []);
 
-    const formattedDate = formatDate(startDate)
+    const formattedDate = formatDate(startDate);
 
     return (
       <Card ref={ref} className={cn("w-full", className)} {...props}>
@@ -214,10 +226,7 @@ const QRCodeGenerator = React.forwardRef<
               title="Perbarui QR Code"
             >
               <RefreshCw
-                className={cn(
-                  "h-4 w-4",
-                  isRegenerating && "animate-spin"
-                )}
+                className={cn("h-4 w-4", isRegenerating && "animate-spin")}
               />
             </Button>
           </div>
@@ -298,9 +307,9 @@ const QRCodeGenerator = React.forwardRef<
           </div>
         </CardContent>
       </Card>
-    )
-  }
-)
-QRCodeGenerator.displayName = "QRCodeGenerator"
+    );
+  },
+);
+QRCodeGenerator.displayName = "QRCodeGenerator";
 
-export { QRCodeGenerator }
+export { QRCodeGenerator };

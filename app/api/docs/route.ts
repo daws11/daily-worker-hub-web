@@ -1,14 +1,14 @@
 /**
  * OpenAPI Specification Endpoint
- * 
+ *
  * GET /api/docs
- * 
+ *
  * Returns the OpenAPI specification as JSON.
  * This endpoint is public and does not require authentication.
  */
 
-import { NextResponse } from 'next/server';
-import { getOpenApiJson } from '@/lib/openapi';
+import { NextResponse } from "next/server";
+import { getOpenApiJson } from "@/lib/openapi";
 
 /**
  * @openapi
@@ -31,21 +31,21 @@ import { getOpenApiJson } from '@/lib/openapi';
 export async function GET() {
   try {
     const spec = getOpenApiJson();
-    
+
     return new NextResponse(spec, {
       status: 200,
       headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
-        'Access-Control-Allow-Origin': '*',
+        "Content-Type": "application/json",
+        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+        "Access-Control-Allow-Origin": "*",
       },
     });
   } catch (error) {
-    console.error('Error generating OpenAPI spec:', error);
-    
+    console.error("Error generating OpenAPI spec:", error);
+
     return NextResponse.json(
-      { error: 'Failed to generate OpenAPI specification' },
-      { status: 500 }
+      { error: "Failed to generate OpenAPI specification" },
+      { status: 500 },
     );
   }
 }

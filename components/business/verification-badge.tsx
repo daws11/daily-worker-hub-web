@@ -1,8 +1,8 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { Clock, ShieldCheck, XCircle } from "lucide-react"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { Clock, ShieldCheck, XCircle } from "lucide-react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 const verificationBadgeVariants = cva(
   "inline-flex items-center gap-1.5 rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -20,13 +20,14 @@ const verificationBadgeVariants = cva(
     defaultVariants: {
       status: "pending",
     },
-  }
-)
+  },
+);
 
 export interface VerificationBadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof verificationBadgeVariants> {
-  status: "pending" | "verified" | "rejected"
+  status: "pending" | "verified" | "rejected";
 }
 
 function VerificationBadge({
@@ -38,15 +39,15 @@ function VerificationBadge({
     pending: Clock,
     verified: ShieldCheck,
     rejected: XCircle,
-  }
+  };
 
   const labelMap = {
     pending: "Menunggu Verifikasi",
     verified: "Terverifikasi",
     rejected: "Ditolak",
-  }
+  };
 
-  const Icon = iconMap[status]
+  const Icon = iconMap[status];
 
   return (
     <div
@@ -56,7 +57,7 @@ function VerificationBadge({
       <Icon className="h-3.5 w-3.5" />
       <span>{labelMap[status]}</span>
     </div>
-  )
+  );
 }
 
-export { VerificationBadge, verificationBadgeVariants }
+export { VerificationBadge, verificationBadgeVariants };

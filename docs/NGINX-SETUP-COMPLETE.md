@@ -9,16 +9,16 @@
 
 ## ✅ Endpoints Terkonfigurasi
 
-| Service | URL | Status | Test |
-|---------|-----|--------|------|
-| **Auth** | https://supabase-dev.dailyworkerhub.com/auth/v1/ | ✅ 200 OK | Login works! |
-| **REST** | https://supabase-dev.dailyworkerhub.com/rest/v1/ | ✅ 200 OK | Queries work! |
-| **Storage** | https://supabase-dev.dailyworkerhub.com/storage/v1/ | ✅ 200 OK | Requires API key |
-| **Functions** | https://supabase-dev.dailyworkerhub.com/functions/v1/ | ⚠️ 404 | No functions yet |
-| **GraphQL** | https://supabase-dev.dailyworkerhub.com/graphql/v1/ | ✅ 200 OK | Ready |
-| **Studio** | https://supabase-dev.dailyworkerhub.com/studio/ | ✅ 200 OK | UI available |
-| **Health** | https://supabase-dev.dailyworkerhub.com/health | ✅ 200 OK | healthy |
-| **Root** | https://supabase-dev.dailyworkerhub.com/ | ✅ 200 OK | Status API |
+| Service       | URL                                                   | Status    | Test             |
+| ------------- | ----------------------------------------------------- | --------- | ---------------- |
+| **Auth**      | https://supabase-dev.dailyworkerhub.com/auth/v1/      | ✅ 200 OK | Login works!     |
+| **REST**      | https://supabase-dev.dailyworkerhub.com/rest/v1/      | ✅ 200 OK | Queries work!    |
+| **Storage**   | https://supabase-dev.dailyworkerhub.com/storage/v1/   | ✅ 200 OK | Requires API key |
+| **Functions** | https://supabase-dev.dailyworkerhub.com/functions/v1/ | ⚠️ 404    | No functions yet |
+| **GraphQL**   | https://supabase-dev.dailyworkerhub.com/graphql/v1/   | ✅ 200 OK | Ready            |
+| **Studio**    | https://supabase-dev.dailyworkerhub.com/studio/       | ✅ 200 OK | UI available     |
+| **Health**    | https://supabase-dev.dailyworkerhub.com/health        | ✅ 200 OK | healthy          |
+| **Root**      | https://supabase-dev.dailyworkerhub.com/              | ✅ 200 OK | Status API       |
 
 ---
 
@@ -40,6 +40,7 @@ DB_URL=postgresql://postgres:postgres@supabase-dev.dailyworkerhub.com:54322/post
 ## 🧪 Test Results
 
 ### ✅ Login Test (Auth)
+
 ```bash
 curl -X POST https://supabase-dev.dailyworkerhub.com/auth/v1/token?grant_type=password \
   -H "apikey: PUBLISHABLE_KEY_REMOVED" \
@@ -50,6 +51,7 @@ curl -X POST https://supabase-dev.dailyworkerhub.com/auth/v1/token?grant_type=pa
 **Result:** ✅ Success - Returns access_token + user data
 
 ### ✅ REST API Test
+
 ```bash
 curl https://supabase-dev.dailyworkerhub.com/rest/v1/profiles \
   -H "apikey: PUBLISHABLE_KEY_REMOVED"
@@ -58,6 +60,7 @@ curl https://supabase-dev.dailyworkerhub.com/rest/v1/profiles \
 **Result:** ✅ Success - Returns profiles data
 
 ### ✅ Storage Test
+
 ```bash
 curl https://supabase-dev.dailyworkerhub.com/storage/v1/bucket \
   -H "apikey: PUBLISHABLE_KEY_REMOVED"
@@ -92,6 +95,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=PUBLISHABLE_KEY_REMOVED
 **Location:** `/etc/nginx/sites-available/supabase-dev.dailyworkerhub.com.conf`
 
 **Key Features:**
+
 - ✅ SSL/TLS with Let's Encrypt
 - ✅ HTTP → HTTPS redirect
 - ✅ Security headers (HSTS, XSS, Frame protection)
@@ -105,15 +109,15 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=PUBLISHABLE_KEY_REMOVED
 
 All services running and healthy:
 
-| Service | Container | Status | Port |
-|---------|-----------|--------|------|
-| **Auth** | supabase_auth_workspace | ✅ Healthy | 9999 (via Kong) |
-| **REST** | supabase_rest_workspace | ✅ Running | 3000 (via Kong) |
-| **Storage** | supabase_storage_workspace | ✅ Healthy | 5000 (via Kong) |
+| Service      | Container                   | Status     | Port            |
+| ------------ | --------------------------- | ---------- | --------------- |
+| **Auth**     | supabase_auth_workspace     | ✅ Healthy | 9999 (via Kong) |
+| **REST**     | supabase_rest_workspace     | ✅ Running | 3000 (via Kong) |
+| **Storage**  | supabase_storage_workspace  | ✅ Healthy | 5000 (via Kong) |
 | **Realtime** | supabase_realtime_workspace | ✅ Healthy | 4000 (via Kong) |
-| **Studio** | supabase_studio_workspace | ✅ Healthy | 54323 (exposed) |
-| **Kong** | supabase_kong_workspace | ✅ Healthy | 54321 (exposed) |
-| **Database** | supabase_db_workspace | ✅ Healthy | 54322 (exposed) |
+| **Studio**   | supabase_studio_workspace   | ✅ Healthy | 54323 (exposed) |
+| **Kong**     | supabase_kong_workspace     | ✅ Healthy | 54321 (exposed) |
+| **Database** | supabase_db_workspace       | ✅ Healthy | 54322 (exposed) |
 
 ---
 

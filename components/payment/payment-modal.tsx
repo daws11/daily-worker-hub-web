@@ -1,11 +1,18 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
-import { Loader2, QrCode, Wallet, CreditCard, Smartphone, Landmark } from "lucide-react"
-import { initializeQrisPayment } from '@/lib/actions/payments'
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import {
+  Loader2,
+  QrCode,
+  Wallet,
+  CreditCard,
+  Smartphone,
+  Landmark,
+} from "lucide-react";
+import { initializeQrisPayment } from "@/lib/actions/payments";
 
 import {
   Dialog,
@@ -14,10 +21,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Form,
   FormControl,
@@ -26,43 +33,49 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { formatIDR } from "@/lib/utils/currency"
-import type { PaymentProvider } from "@/lib/payments"
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { formatIDR } from "@/lib/utils/currency";
+import type { PaymentProvider } from "@/lib/payments";
 
 // Form schema types
 export interface PaymentModalFormValues {
-  amount: number
-  provider: PaymentProvider
-  paymentMethod: string
+  amount: number;
+  provider: PaymentProvider;
+  paymentMethod: string;
 }
 
 export interface PaymentFeeCalculation {
-  amount: number
-  fee_amount: number
-  total_amount: number
-  fee_percentage?: number
+  amount: number;
+  fee_amount: number;
+  total_amount: number;
+  fee_percentage?: number;
 }
 
 export interface PaymentMethod {
-  id: string
-  name: string
-  description: string
-  icon: React.ReactNode
-  provider: PaymentProvider
-  supportedMethods: string[]
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  provider: PaymentProvider;
+  supportedMethods: string[];
 }
 
 export interface PaymentModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  businessId: string
-  onSuccess?: (transactionId: string) => void
-  minAmount?: number
-  maxAmount?: number
-  defaultProvider?: PaymentProvider
-  defaultPaymentMethod?: string
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  businessId: string;
+  onSuccess?: (transactionId: string) => void;
+  minAmount?: number;
+  maxAmount?: number;
+  defaultProvider?: PaymentProvider;
+  defaultPaymentMethod?: string;
 }
 
 const PAYMENT_METHODS: PaymentMethod[] = [
@@ -98,7 +111,7 @@ const PAYMENT_METHODS: PaymentMethod[] = [
     provider: "midtrans",
     supportedMethods: ["credit_card"],
   },
-]
+];
 
 export function PaymentModal({
   open,
@@ -110,12 +123,16 @@ export function PaymentModal({
   defaultProvider = "xendit",
   defaultPaymentMethod = "qris",
 }: PaymentModalProps) {
-  const [isSubmitting, setIsSubmitting] = React.useState(false)
-  const [isCalculatingFee, setIsCalculatingFee] = React.useState(false)
-  const [feeCalculation, setFeeCalculation] = React.useState<PaymentFeeCalculation | null>(null)
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = React.useState<PaymentMethod | null>(
-    PAYMENT_METHODS.find(m => m.supportedMethods.includes(defaultPaymentMethod)) || PAYMENT_METHODS[0]
-  )
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isCalculatingFee, setIsCalculatingFee] = React.useState(false);
+  const [feeCalculation, setFeeCalculation] =
+    React.useState<PaymentFeeCalculation | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] =
+    React.useState<PaymentMethod | null>(
+      PAYMENT_METHODS.find((m) =>
+        m.supportedMethods.includes(defaultPaymentMethod),
+      ) || PAYMENT_METHODS[0],
+    );
 
   const form = useForm<PaymentModalFormValues>({
     defaultValues: {
@@ -123,45 +140,45 @@ export function PaymentModal({
       provider: defaultProvider,
       paymentMethod: defaultPaymentMethod,
     },
-  })
+  });
 
-  const watchedAmount = form.watch("amount")
-  const watchedProvider = form.watch("provider")
+  const watchedAmount = form.watch("amount");
+  const watchedProvider = form.watch("provider");
 
   // Calculate fee when amount changes
   React.useEffect(() => {
     const calculateFee = async () => {
       if (watchedAmount > 0 && selectedPaymentMethod) {
-        setIsCalculatingFee(true)
+        setIsCalculatingFee(true);
         try {
-          const url = `/api/payments/create?amount=${watchedAmount}&provider=${selectedPaymentMethod.provider}&payment_method=${selectedPaymentMethod.supportedMethods[0]}`
-          const response = await fetch(url)
-          
+          const url = `/api/payments/create?amount=${watchedAmount}&provider=${selectedPaymentMethod.provider}&payment_method=${selectedPaymentMethod.supportedMethods[0]}`;
+          const response = await fetch(url);
+
           if (response.ok) {
-            const data = await response.json()
+            const data = await response.json();
             if (data.valid) {
-              setFeeCalculation(data.data)
+              setFeeCalculation(data.data);
             }
           }
         } catch (error) {
-          console.error("Error calculating fee:", error)
+          console.error("Error calculating fee:", error);
         } finally {
-          setIsCalculatingFee(false)
+          setIsCalculatingFee(false);
         }
       }
-    }
+    };
 
-    const timeoutId = setTimeout(calculateFee, 500)
-    return () => clearTimeout(timeoutId)
-  }, [watchedAmount, selectedPaymentMethod])
+    const timeoutId = setTimeout(calculateFee, 500);
+    return () => clearTimeout(timeoutId);
+  }, [watchedAmount, selectedPaymentMethod]);
 
   const handleSubmit = async (values: PaymentModalFormValues) => {
     if (!selectedPaymentMethod) {
-      toast.error("Please select a payment method")
-      return
+      toast.error("Please select a payment method");
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
       const result = await initializeQrisPayment(
         businessId,
@@ -170,42 +187,45 @@ export function PaymentModal({
           payment_method_name: selectedPaymentMethod.name,
           payment_method: selectedPaymentMethod.supportedMethods[0],
         },
-        selectedPaymentMethod.provider as PaymentProvider
-      )
+        selectedPaymentMethod.provider as PaymentProvider,
+      );
 
       if (result.success && result.data) {
-        toast.success("Payment invoice created successfully!")
+        toast.success("Payment invoice created successfully!");
 
         // Redirect to payment URL if available
         if (result.data.payment_url) {
-          window.open(result.data.payment_url, "_blank")
+          window.open(result.data.payment_url, "_blank");
         }
 
-        form.reset()
-        setFeeCalculation(null)
-        onOpenChange(false)
-        onSuccess?.(result.data.transaction.id)
+        form.reset();
+        setFeeCalculation(null);
+        onOpenChange(false);
+        onSuccess?.(result.data.transaction.id);
       } else {
-        toast.error(result.error || "Failed to create payment. Please try again.")
+        toast.error(
+          result.error || "Failed to create payment. Please try again.",
+        );
       }
     } catch (error) {
-      console.error("Error creating payment:", error)
-      toast.error("Failed to create payment. Please try again.")
+      console.error("Error creating payment:", error);
+      toast.error("Failed to create payment. Please try again.");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handlePaymentMethodChange = (methodId: string) => {
-    const method = PAYMENT_METHODS.find(m => m.id === methodId)
+    const method = PAYMENT_METHODS.find((m) => m.id === methodId);
     if (method) {
-      setSelectedPaymentMethod(method)
-      form.setValue("provider", method.provider)
-      form.setValue("paymentMethod", method.supportedMethods[0])
+      setSelectedPaymentMethod(method);
+      form.setValue("provider", method.provider);
+      form.setValue("paymentMethod", method.supportedMethods[0]);
     }
-  }
+  };
 
-  const isAmountValid = watchedAmount >= minAmount && watchedAmount <= maxAmount
+  const isAmountValid =
+    watchedAmount >= minAmount && watchedAmount <= maxAmount;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -221,7 +241,10 @@ export function PaymentModal({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-6"
+          >
             {/* Amount Input */}
             <FormField
               control={form.control}
@@ -230,7 +253,8 @@ export function PaymentModal({
                 <FormItem>
                   <FormLabel>Top-up Amount</FormLabel>
                   <FormDescription>
-                    Enter amount between {formatIDR(minAmount)} and {formatIDR(maxAmount)}
+                    Enter amount between {formatIDR(minAmount)} and{" "}
+                    {formatIDR(maxAmount)}
                   </FormDescription>
                   <FormControl>
                     <div className="relative">
@@ -242,7 +266,11 @@ export function PaymentModal({
                         step={1000}
                         className="text-2xl font-semibold"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : 0)}
+                        onChange={(e) =>
+                          field.onChange(
+                            e.target.value ? Number(e.target.value) : 0,
+                          )
+                        }
                       />
                       <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
                         IDR
@@ -252,7 +280,8 @@ export function PaymentModal({
                   <FormMessage />
                   {watchedAmount > 0 && !isAmountValid && (
                     <p className="text-sm text-destructive">
-                      Amount must be between {formatIDR(minAmount)} and {formatIDR(maxAmount)}
+                      Amount must be between {formatIDR(minAmount)} and{" "}
+                      {formatIDR(maxAmount)}
                     </p>
                   )}
                 </FormItem>
@@ -264,15 +293,27 @@ export function PaymentModal({
               <div className="rounded-lg border p-4 space-y-2 bg-muted/50">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Amount</span>
-                  <span className="font-medium">{formatIDR(feeCalculation.amount)}</span>
+                  <span className="font-medium">
+                    {formatIDR(feeCalculation.amount)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Fee ({feeCalculation.fee_percentage ? `${(feeCalculation.fee_percentage * 100).toFixed(2)}%` : 'Flat'})</span>
-                  <span className="font-medium">{formatIDR(feeCalculation.fee_amount)}</span>
+                  <span className="text-muted-foreground">
+                    Fee (
+                    {feeCalculation.fee_percentage
+                      ? `${(feeCalculation.fee_percentage * 100).toFixed(2)}%`
+                      : "Flat"}
+                    )
+                  </span>
+                  <span className="font-medium">
+                    {formatIDR(feeCalculation.fee_amount)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-lg font-semibold pt-2 border-t">
                   <span>Total</span>
-                  <span className="text-primary">{formatIDR(feeCalculation.total_amount)}</span>
+                  <span className="text-primary">
+                    {formatIDR(feeCalculation.total_amount)}
+                  </span>
                 </div>
               </div>
             )}
@@ -296,7 +337,9 @@ export function PaymentModal({
                       {method.icon}
                       <span className="font-medium">{method.name}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">{method.description}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {method.description}
+                    </p>
                   </button>
                 ))}
               </div>
@@ -348,7 +391,8 @@ export function PaymentModal({
                 ) : (
                   <>
                     Continue
-                    {feeCalculation && ` (${formatIDR(feeCalculation.total_amount)})`}
+                    {feeCalculation &&
+                      ` (${formatIDR(feeCalculation.total_amount)})`}
                   </>
                 )}
               </Button>
@@ -357,5 +401,5 @@ export function PaymentModal({
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

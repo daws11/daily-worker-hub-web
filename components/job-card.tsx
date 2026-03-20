@@ -1,8 +1,8 @@
-import * as React from "react"
-import { Calendar, MapPin, Building2, Briefcase, Wallet } from "lucide-react"
+import * as React from "react";
+import { Calendar, MapPin, Building2, Briefcase, Wallet } from "lucide-react";
 
-import { Button } from "./ui/button"
-import { Badge } from "./ui/badge"
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 import {
   Card,
   CardHeader,
@@ -10,15 +10,15 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from "./ui/card"
-import { cn } from "@/lib/utils"
-import type { JobWithDetails } from "@/lib/data/jobs"
+} from "./ui/card";
+import { cn } from "@/lib/utils";
+import type { JobWithDetails } from "@/lib/data/jobs";
 
 export interface JobCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  job: JobWithDetails
-  onApply?: (jobId: string) => void
-  isApplied?: boolean
-  showApplyButton?: boolean
+  job: JobWithDetails;
+  onApply?: (jobId: string) => void;
+  isApplied?: boolean;
+  showApplyButton?: boolean;
 }
 
 const JobCard = React.forwardRef<HTMLDivElement, JobCardProps>(
@@ -31,7 +31,7 @@ const JobCard = React.forwardRef<HTMLDivElement, JobCardProps>(
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
     const {
       id,
@@ -45,14 +45,14 @@ const JobCard = React.forwardRef<HTMLDivElement, JobCardProps>(
       businesses,
       categories,
       jobs_skills,
-    } = job
+    } = job;
 
     // Format deadline date (Indonesian locale)
     const formattedDeadline = new Date(deadline).toLocaleDateString("id-ID", {
       day: "2-digit",
       month: "short",
       year: "numeric",
-    })
+    });
 
     // Format budget to Indonesian Rupiah
     const formatBudget = (amount: number) => {
@@ -61,57 +61,53 @@ const JobCard = React.forwardRef<HTMLDivElement, JobCardProps>(
         currency: "IDR",
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
-      }).format(amount)
-    }
+      }).format(amount);
+    };
 
     // Get status badge variant
     const getStatusVariant = (
-      jobStatus: typeof status
+      jobStatus: typeof status,
     ): "default" | "secondary" | "destructive" | "outline" => {
       switch (jobStatus) {
         case "open":
-          return "default"
+          return "default";
         case "in_progress":
-          return "secondary"
+          return "secondary";
         case "completed":
-          return "outline"
+          return "outline";
         case "cancelled":
-          return "destructive"
+          return "destructive";
         default:
-          return "outline"
+          return "outline";
       }
-    }
+    };
 
     // Get status label in Indonesian
     const getStatusLabel = (jobStatus: typeof status): string => {
       switch (jobStatus) {
         case "open":
-          return "Buka"
+          return "Buka";
         case "in_progress":
-          return "Sedang Berjalan"
+          return "Sedang Berjalan";
         case "completed":
-          return "Selesai"
+          return "Selesai";
         case "cancelled":
-          return "Dibatalkan"
+          return "Dibatalkan";
         default:
-          return jobStatus
+          return jobStatus;
       }
-    }
+    };
 
     // Truncate description if too long
     const truncateDescription = (text: string, maxLength: number = 120) => {
-      if (text.length <= maxLength) return text
-      return text.slice(0, maxLength) + "..."
-    }
+      if (text.length <= maxLength) return text;
+      return text.slice(0, maxLength) + "...";
+    };
 
-    const isJobOpen = status === "open"
+    const isJobOpen = status === "open";
 
     return (
-      <Card
-        ref={ref}
-        className={cn("flex flex-col", className)}
-        {...props}
-      >
+      <Card ref={ref} className={cn("flex flex-col", className)} {...props}>
         <CardHeader className="flex-shrink-0">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 space-y-1">
@@ -208,9 +204,9 @@ const JobCard = React.forwardRef<HTMLDivElement, JobCardProps>(
           </CardFooter>
         )}
       </Card>
-    )
-  }
-)
-JobCard.displayName = "JobCard"
+    );
+  },
+);
+JobCard.displayName = "JobCard";
 
-export { JobCard }
+export { JobCard };

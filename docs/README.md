@@ -8,36 +8,36 @@ Official documentation repository for **Daily Worker Hub** - Web MVP.
 
 ### Tech Stack
 
-| Component | Technology |
-|-----------|-------------|
-| **Frontend** | Next.js 14 + TypeScript |
-| **Backend** | Supabase Local (Self-hosted via Docker on VPS) |
-| **Infrastructure** | VPS (DigitalOcean) + Hostinger MCP (DNS) |
-| **Database** | PostgreSQL (Supabase Local) |
-| **Authentication** | Supabase Auth (Email + Google OAuth) |
-| **Styling** | Tailwind CSS + shadcn/ui |
-| **State Management** | TanStack Query + Zustand |
-| **Validation** | Zod |
-| **Payments** | Xendit / Midtrans (QRIS + Bank Payouts) |
+| Component            | Technology                                     |
+| -------------------- | ---------------------------------------------- |
+| **Frontend**         | Next.js 14 + TypeScript                        |
+| **Backend**          | Supabase Local (Self-hosted via Docker on VPS) |
+| **Infrastructure**   | VPS (DigitalOcean) + Hostinger MCP (DNS)       |
+| **Database**         | PostgreSQL (Supabase Local)                    |
+| **Authentication**   | Supabase Auth (Email + Google OAuth)           |
+| **Styling**          | Tailwind CSS + shadcn/ui                       |
+| **State Management** | TanStack Query + Zustand                       |
+| **Validation**       | Zod                                            |
+| **Payments**         | Xendit / Midtrans (QRIS + Bank Payouts)        |
 
 ### Documentation Structure
 
-| File | Description | Status |
-|------|-------------|--------|
-| **PRD.md** | Product Requirements Document (User Stories, Features, Out of Scope) | ✅ Complete |
-| **Architecture.md** | System Architecture, Database Schema (16 tables), Data Flow, Deployment | ✅ Complete |
-| **AI_Rules.md** | Coding Standards, Naming Conventions, Error Handling Guidelines | ✅ Complete |
-| **Plan.md** | Development Roadmap (12 Phases, 150+ Tasks) | ✅ Complete |
-| **SECURITY.md** | Security & Compliance (Authentication, Data Protection, API Security, Payment Security, PKHL Compliance, Data Privacy) | ✅ Complete |
-| **OPERATIONS.md** | Operational Plan (Team Structure, Infrastructure, Cost Projections) | ✅ Complete |
-| **business-model.md** | Financial Analysis, UMK Bali, Compliance (PP 35/2021) | ✅ Complete |
-| **matching-algorithm.md** | Worker-Job Matching Algorithm | ✅ Complete |
-| **analysis-bali-competitor-deep-dive.md** | Competitor Analysis (@balijobs, FB Groups, etc.) | ✅ Complete |
-| **analysis-bali-daily-worker-social-media.md** | Social Media Recruitment Trends | ✅ Complete |
-| **whitepaper.md** | Project Whitepaper | ✅ Complete |
-| **SETUP.md** | Development Setup Guide (Supabase, Android, Web Environment) | ✅ Complete |
-| **SOCIAL_PLATFORM_SETUP.md** | Social Platform Integration Guide (Instagram/Facebook OAuth, API Setup) | ✅ Complete |
-| **README.md** | This file | ✅ Complete |
+| File                                           | Description                                                                                                            | Status      |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------- |
+| **PRD.md**                                     | Product Requirements Document (User Stories, Features, Out of Scope)                                                   | ✅ Complete |
+| **Architecture.md**                            | System Architecture, Database Schema (16 tables), Data Flow, Deployment                                                | ✅ Complete |
+| **AI_Rules.md**                                | Coding Standards, Naming Conventions, Error Handling Guidelines                                                        | ✅ Complete |
+| **Plan.md**                                    | Development Roadmap (12 Phases, 150+ Tasks)                                                                            | ✅ Complete |
+| **SECURITY.md**                                | Security & Compliance (Authentication, Data Protection, API Security, Payment Security, PKHL Compliance, Data Privacy) | ✅ Complete |
+| **OPERATIONS.md**                              | Operational Plan (Team Structure, Infrastructure, Cost Projections)                                                    | ✅ Complete |
+| **business-model.md**                          | Financial Analysis, UMK Bali, Compliance (PP 35/2021)                                                                  | ✅ Complete |
+| **matching-algorithm.md**                      | Worker-Job Matching Algorithm                                                                                          | ✅ Complete |
+| **analysis-bali-competitor-deep-dive.md**      | Competitor Analysis (@balijobs, FB Groups, etc.)                                                                       | ✅ Complete |
+| **analysis-bali-daily-worker-social-media.md** | Social Media Recruitment Trends                                                                                        | ✅ Complete |
+| **whitepaper.md**                              | Project Whitepaper                                                                                                     | ✅ Complete |
+| **SETUP.md**                                   | Development Setup Guide (Supabase, Android, Web Environment)                                                           | ✅ Complete |
+| **SOCIAL_PLATFORM_SETUP.md**                   | Social Platform Integration Guide (Instagram/Facebook OAuth, API Setup)                                                | ✅ Complete |
+| **README.md**                                  | This file                                                                                                              | ✅ Complete |
 
 ### Setup & Deployment
 
@@ -77,26 +77,26 @@ See `SETUP.md`, `SOCIAL_PLATFORM_SETUP.md`, and `Architecture.md` for detailed s
 
 ### Branch Strategy
 
-| Branch | Purpose |
-|--------|---------|
-| `main` | Production code |
-| `develop` | Development work |
+| Branch      | Purpose                                        |
+| ----------- | ---------------------------------------------- |
+| `main`      | Production code                                |
+| `develop`   | Development work                               |
 | `feature/*` | Feature branches (e.g., `feature/job-posting`) |
-| `bugfix/*` | Bug fixes (e.g., `bugfix/payment-error`) |
+| `bugfix/*`  | Bug fixes (e.g., `bugfix/payment-error`)       |
 
 ### Commit Message Conventions
 
 Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
-| Type | Description | Examples |
-|------|-------------|----------|
-| `feat` | New feature | `feat(job-posting): add job form validation` |
-| `fix` | Bug fix | `fix(wallet): resolve balance calculation error` |
-| `refactor` | Code improvement without feature change | `refactor(auth): simplify user session logic` |
-| `style` | Code style changes (formatting, missing semicolons) | `style(components): format with Prettier` |
-| `docs` | Documentation changes | `docs(readme): update architecture section` |
-| `test` | Adding or updating tests | `test(job-form): add unit tests for validation` |
-| `chore` | Maintenance tasks, updates to build process | `chore(deps): update dependencies` |
+| Type       | Description                                         | Examples                                         |
+| ---------- | --------------------------------------------------- | ------------------------------------------------ |
+| `feat`     | New feature                                         | `feat(job-posting): add job form validation`     |
+| `fix`      | Bug fix                                             | `fix(wallet): resolve balance calculation error` |
+| `refactor` | Code improvement without feature change             | `refactor(auth): simplify user session logic`    |
+| `style`    | Code style changes (formatting, missing semicolons) | `style(components): format with Prettier`        |
+| `docs`     | Documentation changes                               | `docs(readme): update architecture section`      |
+| `test`     | Adding or updating tests                            | `test(job-form): add unit tests for validation`  |
+| `chore`    | Maintenance tasks, updates to build process         | `chore(deps): update dependencies`               |
 
 ### Contributing Guidelines
 
@@ -130,11 +130,11 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ### Testing
 
-| Type | Tool | Status |
-|------|------|--------|
-| Unit Testing | Jest + React Testing Library | 📋 Planned |
-| Integration Testing | Supabase Test Utils | 📋 Planned |
-| E2E Testing | Playwright | 📋 Planned |
+| Type                | Tool                         | Status     |
+| ------------------- | ---------------------------- | ---------- |
+| Unit Testing        | Jest + React Testing Library | 📋 Planned |
+| Integration Testing | Supabase Test Utils          | 📋 Planned |
+| E2E Testing         | Playwright                   | 📋 Planned |
 
 ### Deployment
 
@@ -145,12 +145,12 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ### Cost Analysis
 
-| Component | Monthly Cost | Annual Cost |
-|-----------|--------------|-------------|
-| **VPS (DigitalOcean)** | $24.00 | $288.00 |
-| **Domain (Hostinger)** | ~$10.00 | ~$120.00 |
-| **SSL (Let's Encrypt)** | $0.00 | $0.00 |
-| **Total** | **~$34.00** | **~$408.00** |
+| Component               | Monthly Cost | Annual Cost  |
+| ----------------------- | ------------ | ------------ |
+| **VPS (DigitalOcean)**  | $24.00       | $288.00      |
+| **Domain (Hostinger)**  | ~$10.00      | ~$120.00     |
+| **SSL (Let's Encrypt)** | $0.00        | $0.00        |
+| **Total**               | **~$34.00**  | **~$408.00** |
 
 ### Support
 

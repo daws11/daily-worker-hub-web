@@ -1,9 +1,9 @@
-import { supabase } from './client'
-import type { Database } from './types'
+import { supabase } from "./client";
+import type { Database } from "./types";
 
-type BusinessRow = Database['public']['Tables']['businesses']['Row']
-type BusinessInsert = any
-type BusinessUpdate = any
+type BusinessRow = Database["public"]["Tables"]["businesses"]["Row"];
+type BusinessInsert = any;
+type BusinessUpdate = any;
 
 /**
  * Get a business profile by user ID
@@ -11,25 +11,28 @@ type BusinessUpdate = any
  * @returns The business profile or error
  */
 export async function getBusinessProfile(
-  userId: string
+  userId: string,
 ): Promise<{ data: BusinessRow | null; error?: string }> {
   try {
     const { data, error } = await supabase
-      .from('businesses')
-      .select('*')
-      .eq('user_id', userId)
-      .single()
+      .from("businesses")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
 
     if (error) {
-      return { data: null, error: error.message }
+      return { data: null, error: error.message };
     }
 
-    return { data, error: undefined }
+    return { data, error: undefined };
   } catch (error) {
     return {
       data: null,
-      error: error instanceof Error ? error.message : 'Failed to get business profile',
-    }
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get business profile",
+    };
   }
 }
 
@@ -39,25 +42,28 @@ export async function getBusinessProfile(
  * @returns The business profile or error
  */
 export async function getBusinessProfileById(
-  businessId: string
+  businessId: string,
 ): Promise<{ data: BusinessRow | null; error?: string }> {
   try {
     const { data, error } = await supabase
-      .from('businesses')
-      .select('*')
-      .eq('id', businessId)
-      .single()
+      .from("businesses")
+      .select("*")
+      .eq("id", businessId)
+      .single();
 
     if (error) {
-      return { data: null, error: error.message }
+      return { data: null, error: error.message };
     }
 
-    return { data, error: undefined }
+    return { data, error: undefined };
   } catch (error) {
     return {
       data: null,
-      error: error instanceof Error ? error.message : 'Failed to get business profile',
-    }
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to get business profile",
+    };
   }
 }
 
@@ -67,25 +73,28 @@ export async function getBusinessProfileById(
  * @returns The created business profile or error
  */
 export async function createBusinessProfile(
-  businessData: BusinessInsert
+  businessData: BusinessInsert,
 ): Promise<{ data: BusinessRow | null; error?: string }> {
   try {
     const { data, error } = await supabase
-      .from('businesses')
+      .from("businesses")
       .insert(businessData)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { data: null, error: error.message }
+      return { data: null, error: error.message };
     }
 
-    return { data, error: undefined }
+    return { data, error: undefined };
   } catch (error) {
     return {
       data: null,
-      error: error instanceof Error ? error.message : 'Failed to create business profile',
-    }
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to create business profile",
+    };
   }
 }
 
@@ -97,26 +106,28 @@ export async function createBusinessProfile(
  */
 export async function updateBusinessProfile(
   businessId: string,
-  businessData: BusinessUpdate
+  businessData: BusinessUpdate,
 ): Promise<{ data: BusinessRow | null; error?: string }> {
   try {
-    const { data, error } = await (supabase
-      .from('businesses') as any)
+    const { data, error } = await (supabase.from("businesses") as any)
       .update(businessData)
-      .eq('id', businessId)
+      .eq("id", businessId)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      return { data: null, error: error.message }
+      return { data: null, error: error.message };
     }
 
-    return { data, error: undefined }
+    return { data, error: undefined };
   } catch (error) {
     return {
       data: null,
-      error: error instanceof Error ? error.message : 'Failed to update business profile',
-    }
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to update business profile",
+    };
   }
 }
 
@@ -126,22 +137,25 @@ export async function updateBusinessProfile(
  * @returns Success or error
  */
 export async function deleteBusinessProfile(
-  businessId: string
+  businessId: string,
 ): Promise<{ error?: string }> {
   try {
     const { error } = await supabase
-      .from('businesses')
+      .from("businesses")
       .delete()
-      .eq('id', businessId)
+      .eq("id", businessId);
 
     if (error) {
-      return { error: error.message }
+      return { error: error.message };
     }
 
-    return {}
+    return {};
   } catch (error) {
     return {
-      error: error instanceof Error ? error.message : 'Failed to delete business profile',
-    }
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to delete business profile",
+    };
   }
 }

@@ -1,8 +1,15 @@
-import * as React from "react"
-import { Calendar, Building2, MapPin, Wallet, X, MoreVertical } from "lucide-react"
+import * as React from "react";
+import {
+  Calendar,
+  Building2,
+  MapPin,
+  Wallet,
+  X,
+  MoreVertical,
+} from "lucide-react";
 
-import { Button } from "./ui/button"
-import { Badge } from "./ui/badge"
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 import {
   Table,
   TableBody,
@@ -10,21 +17,21 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./ui/table"
+} from "./ui/table";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card"
-import { cn } from "@/lib/utils"
-import type { ApplicationWithDetails } from "@/lib/data/jobs"
+} from "./ui/card";
+import { cn } from "@/lib/utils";
+import type { ApplicationWithDetails } from "@/lib/data/jobs";
 
 export interface ApplicationListProps extends React.HTMLAttributes<HTMLDivElement> {
-  applications: ApplicationWithDetails[]
-  onCancel?: (applicationId: string) => void
-  isLoading?: boolean
+  applications: ApplicationWithDetails[];
+  onCancel?: (applicationId: string) => void;
+  isLoading?: boolean;
 }
 
 const ApplicationList = React.forwardRef<HTMLDivElement, ApplicationListProps>(
@@ -37,8 +44,8 @@ const ApplicationList = React.forwardRef<HTMLDivElement, ApplicationListProps>(
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
-      })
-    }
+      });
+    };
 
     // Format budget to Indonesian Rupiah
     const formatBudget = (amount: number) => {
@@ -47,55 +54,57 @@ const ApplicationList = React.forwardRef<HTMLDivElement, ApplicationListProps>(
         currency: "IDR",
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
-      }).format(amount)
-    }
+      }).format(amount);
+    };
 
     // Get status badge variant
     const getStatusVariant = (
-      status: ApplicationWithDetails["status"]
+      status: ApplicationWithDetails["status"],
     ): "default" | "secondary" | "destructive" | "outline" => {
       switch (status) {
         case "pending":
-          return "outline"
+          return "outline";
         case "accepted":
-          return "default"
+          return "default";
         case "rejected":
-          return "destructive"
+          return "destructive";
         case "in_progress":
-          return "secondary"
+          return "secondary";
         case "completed":
-          return "default"
+          return "default";
         case "cancelled":
-          return "destructive"
+          return "destructive";
         default:
-          return "outline"
+          return "outline";
       }
-    }
+    };
 
     // Get status label in Indonesian
-    const getStatusLabel = (status: ApplicationWithDetails["status"]): string => {
+    const getStatusLabel = (
+      status: ApplicationWithDetails["status"],
+    ): string => {
       switch (status) {
         case "pending":
-          return "Menunggu"
+          return "Menunggu";
         case "accepted":
-          return "Diterima"
+          return "Diterima";
         case "rejected":
-          return "Ditolak"
+          return "Ditolak";
         case "in_progress":
-          return "Sedang Berjalan"
+          return "Sedang Berjalan";
         case "completed":
-          return "Selesai"
+          return "Selesai";
         case "cancelled":
-          return "Dibatalkan"
+          return "Dibatalkan";
         default:
-          return status
+          return status;
       }
-    }
+    };
 
     // Check if application can be cancelled
     const canCancel = (application: ApplicationWithDetails) => {
-      return application.status === "pending" && onCancel
-    }
+      return application.status === "pending" && onCancel;
+    };
 
     if (isLoading) {
       return (
@@ -110,7 +119,7 @@ const ApplicationList = React.forwardRef<HTMLDivElement, ApplicationListProps>(
             </div>
           </CardContent>
         </Card>
-      )
+      );
     }
 
     if (!applications || applications.length === 0) {
@@ -131,7 +140,7 @@ const ApplicationList = React.forwardRef<HTMLDivElement, ApplicationListProps>(
             </div>
           </CardContent>
         </Card>
-      )
+      );
     }
 
     return (
@@ -159,12 +168,15 @@ const ApplicationList = React.forwardRef<HTMLDivElement, ApplicationListProps>(
                   <TableRow key={application.id}>
                     <TableCell className="font-medium">
                       <div className="space-y-1">
-                        <div className="font-medium">{application.jobs.title}</div>
+                        <div className="font-medium">
+                          {application.jobs.title}
+                        </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Wallet className="h-3 w-3" />
                           <span>
                             {formatBudget(application.jobs.budget_min)}
-                            {application.jobs.budget_max > application.jobs.budget_min &&
+                            {application.jobs.budget_max >
+                              application.jobs.budget_min &&
                               ` - ${formatBudget(application.jobs.budget_max)}`}
                           </span>
                         </div>
@@ -226,10 +238,10 @@ const ApplicationList = React.forwardRef<HTMLDivElement, ApplicationListProps>(
           </div>
         </CardContent>
       </Card>
-    )
-  }
-)
-ApplicationList.displayName = "ApplicationList"
+    );
+  },
+);
+ApplicationList.displayName = "ApplicationList";
 
 // Helper component for the empty state icon
 function BriefcaseIcon({ className }: { className?: string }) {
@@ -247,7 +259,7 @@ function BriefcaseIcon({ className }: { className?: string }) {
       <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
       <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
     </svg>
-  )
+  );
 }
 
-export { ApplicationList }
+export { ApplicationList };

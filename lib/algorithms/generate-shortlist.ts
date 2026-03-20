@@ -4,11 +4,15 @@
  * Generates a ranked list of workers for a job based on matching algorithm
  */
 
-import { calculateMatchingScore, MatchingScoreParams, getMatchingScoreBreakdown } from './matching-score';
-import { getTierRank } from './tier-classifier';
-import { WorkerTier } from '@/lib/supabase/types';
-import { supabase } from '@/lib/supabase/client';
-import { isWorkerAvailable } from './availability-checker';
+import {
+  calculateMatchingScore,
+  MatchingScoreParams,
+  getMatchingScoreBreakdown,
+} from "./matching-score";
+import { getTierRank } from "./tier-classifier";
+import { WorkerTier } from "@/lib/supabase/types";
+import { supabase } from "@/lib/supabase/client";
+import { isWorkerAvailable } from "./availability-checker";
 
 /**
  * Worker with matching score
@@ -61,7 +65,7 @@ export interface ShortlistParams {
  * @returns Sorted list of workers with matching scores
  */
 export async function generateWorkerShortlist(
-  params: ShortlistParams
+  params: ShortlistParams,
 ): Promise<WorkerWithScore[]> {
   const {
     jobSkills,
@@ -78,8 +82,9 @@ export async function generateWorkerShortlist(
   try {
     // Fetch available workers with their data
     const { data: workers, error } = await supabase
-      .from('workers')
-      .select(`
+      .from("workers")
+      .select(
+        `
         id,
         user_id,
         full_name,
@@ -94,12 +99,13 @@ export async function generateWorkerShortlist(
         worker_skills (
           skill_id
         )
-      `)
-      .not('lat', 'is', null)
-      .not('lng', 'is', null);
+      `,
+      )
+      .not("lat", "is", null)
+      .not("lng", "is", null);
 
     if (error) {
-      console.error('Error fetching workers:', error);
+      console.error("Error fetching workers:", error);
       return [];
     }
 
@@ -114,14 +120,15 @@ export async function generateWorkerShortlist(
       workersList
         .filter((worker: any) => !excludeWorkerIds.includes(worker.id))
         .map(async (worker: any) => {
-          const workerSkills = worker.worker_skills?.map((ws: any) => ws.skill_id) || [];
+          const workerSkills =
+            worker.worker_skills?.map((ws: any) => ws.skill_id) || [];
 
           // Check actual worker availability
           const isAvailable = await isWorkerAvailable(
             worker.id,
             jobDate,
             jobStartHour,
-            jobEndHour
+            jobEndHour,
           );
 
           const matchingParams: MatchingScoreParams = {
@@ -163,12 +170,12 @@ export async function generateWorkerShortlist(
               tierBonus: breakdown.tierBonus,
             },
           };
-        })
+        }),
     );
 
     // Filter by minimum score and sort
     return workersWithScores
-      .filter(worker => worker.matchingScore >= minScore)
+      .filter((worker) => worker.matchingScore >= minScore)
       .sort((a, b) => {
         // Primary sort: Total score (descending)
         if (b.matchingScore !== a.matchingScore) {
@@ -187,7 +194,7 @@ export async function generateWorkerShortlist(
       })
       .slice(0, requiredWorkers * 2); // Return top workers (2x required workers for options)
   } catch (error) {
-    console.error('Error generating worker shortlist:', error);
+    console.error("Error generating worker shortlist:", error);
     return [];
   }
 }
@@ -202,15 +209,24 @@ export async function generateWorkerShortlist(
  */
 export async function generateWorkerShortlistFromIds(
   workerIds: string[],
-  params: ShortlistParams
+  params: ShortlistParams,
 ): Promise<WorkerWithScore[]> {
-  const { jobSkills, jobLat, jobLng, jobDate, jobStartHour, jobEndHour, requiredWorkers } = params;
+  const {
+    jobSkills,
+    jobLat,
+    jobLng,
+    jobDate,
+    jobStartHour,
+    jobEndHour,
+    requiredWorkers,
+  } = params;
 
   try {
     // Fetch workers by IDs
     const { data: workers, error } = await supabase
-      .from('workers')
-      .select(`
+      .from("workers")
+      .select(
+        `
         id,
         user_id,
         full_name,
@@ -225,11 +241,12 @@ export async function generateWorkerShortlistFromIds(
         worker_skills (
           skill_id
         )
-      `)
-      .in('id', workerIds);
+      `,
+      )
+      .in("id", workerIds);
 
     if (error || !workers) {
-      console.error('Error fetching workers:', error);
+      console.error("Error fetching workers:", error);
       return [];
     }
 
@@ -238,14 +255,15 @@ export async function generateWorkerShortlistFromIds(
     const workersList = workers as any[];
     const workersWithScores = await Promise.all(
       workersList.map(async (worker: any) => {
-        const workerSkills = worker.worker_skills?.map((ws: any) => ws.skill_id) || [];
+        const workerSkills =
+          worker.worker_skills?.map((ws: any) => ws.skill_id) || [];
 
         // Check actual worker availability
         const isAvailable = await isWorkerAvailable(
           worker.id,
           jobDate,
           jobStartHour,
-          jobEndHour
+          jobEndHour,
         );
 
         const matchingParams: MatchingScoreParams = {
@@ -287,7 +305,7 @@ export async function generateWorkerShortlistFromIds(
             tierBonus: breakdown.tierBonus,
           },
         };
-      })
+      }),
     );
 
     // Sort and return top workers
@@ -305,7 +323,7 @@ export async function generateWorkerShortlistFromIds(
       })
       .slice(0, requiredWorkers * 2);
   } catch (error) {
-    console.error('Error generating worker shortlist from IDs:', error);
+    console.error("Error generating worker shortlist from IDs:", error);
     return [];
   }
 }
@@ -316,7 +334,9 @@ export async function generateWorkerShortlistFromIds(
  * @param shortlist - Worker shortlist
  * @returns Object with workers grouped by tier
  */
-export function groupWorkersByTier(shortlist: WorkerWithScore[]): Record<WorkerTier, WorkerWithScore[]> {
+export function groupWorkersByTier(
+  shortlist: WorkerWithScore[],
+): Record<WorkerTier, WorkerWithScore[]> {
   const grouped: Record<WorkerTier, WorkerWithScore[]> = {
     champion: [],
     elite: [],
@@ -339,32 +359,32 @@ export function groupWorkersByTier(shortlist: WorkerWithScore[]): Record<WorkerT
  */
 export function getInterviewRecommendation(tier: WorkerTier): {
   required: boolean;
-  type: 'none' | 'chat' | 'chat_and_voice';
+  type: "none" | "chat" | "chat_and_voice";
   estimatedTime: string;
   description: string;
 } {
   switch (tier) {
-    case 'champion':
-    case 'elite':
+    case "champion":
+    case "elite":
       return {
         required: false,
-        type: 'none',
-        estimatedTime: '<5 minutes',
-        description: 'Instant dispatch - no interview needed',
+        type: "none",
+        estimatedTime: "<5 minutes",
+        description: "Instant dispatch - no interview needed",
       };
-    case 'pro':
+    case "pro":
       return {
         required: true,
-        type: 'chat',
-        estimatedTime: '15-30 minutes',
-        description: 'In-app chat interview (5-10 min)',
+        type: "chat",
+        estimatedTime: "15-30 minutes",
+        description: "In-app chat interview (5-10 min)",
       };
-    case 'classic':
+    case "classic":
       return {
         required: true,
-        type: 'chat_and_voice',
-        estimatedTime: '30-60 minutes',
-        description: 'In-app chat + voice call (10-15 min)',
+        type: "chat_and_voice",
+        estimatedTime: "30-60 minutes",
+        description: "In-app chat + voice call (10-15 min)",
       };
   }
 }

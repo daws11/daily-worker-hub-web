@@ -1,5 +1,5 @@
-import * as React from "react"
-import { TrendingUp } from "lucide-react"
+import * as React from "react";
+import { TrendingUp } from "lucide-react";
 
 import {
   Card,
@@ -7,21 +7,24 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { formatIDR } from "@/lib/utils/currency"
-import type { EarningsSummary } from "@/lib/types/earnings"
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { formatIDR } from "@/lib/utils/currency";
+import type { EarningsSummary } from "@/lib/types/earnings";
 
 export interface EarningsSummaryCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  summary?: EarningsSummary | null
-  isLoading?: boolean
-  title?: string
-  description?: string
-  showIcon?: boolean
-  periodLabel?: string
+  summary?: EarningsSummary | null;
+  isLoading?: boolean;
+  title?: string;
+  description?: string;
+  showIcon?: boolean;
+  periodLabel?: string;
 }
 
-const EarningsSummaryCard = React.forwardRef<HTMLDivElement, EarningsSummaryCardProps>(
+const EarningsSummaryCard = React.forwardRef<
+  HTMLDivElement,
+  EarningsSummaryCardProps
+>(
   (
     {
       summary,
@@ -33,7 +36,7 @@ const EarningsSummaryCard = React.forwardRef<HTMLDivElement, EarningsSummaryCard
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
     // Loading state
     if (isLoading) {
@@ -41,7 +44,12 @@ const EarningsSummaryCard = React.forwardRef<HTMLDivElement, EarningsSummaryCard
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
             <div className="flex items-center gap-2">
-              {showIcon && <TrendingUp className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
+              {showIcon && (
+                <TrendingUp
+                  className="h-5 w-5 text-muted-foreground"
+                  aria-hidden="true"
+                />
+              )}
               <CardTitle>{title}</CardTitle>
             </div>
             <CardDescription>{description}</CardDescription>
@@ -52,7 +60,7 @@ const EarningsSummaryCard = React.forwardRef<HTMLDivElement, EarningsSummaryCard
             </div>
           </CardContent>
         </Card>
-      )
+      );
     }
 
     // Empty state (no summary)
@@ -61,7 +69,12 @@ const EarningsSummaryCard = React.forwardRef<HTMLDivElement, EarningsSummaryCard
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
             <div className="flex items-center gap-2">
-              {showIcon && <TrendingUp className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
+              {showIcon && (
+                <TrendingUp
+                  className="h-5 w-5 text-muted-foreground"
+                  aria-hidden="true"
+                />
+              )}
               <CardTitle>{title}</CardTitle>
             </div>
             <CardDescription>{description}</CardDescription>
@@ -75,20 +88,25 @@ const EarningsSummaryCard = React.forwardRef<HTMLDivElement, EarningsSummaryCard
             </div>
           </CardContent>
         </Card>
-      )
+      );
     }
 
     // Calculate change color and icon
-    const isPositiveChange = summary.month_over_month_change >= 0
-    const changeColor = isPositiveChange ? "text-green-600" : "text-red-600"
-    const changePrefix = isPositiveChange ? "+" : ""
+    const isPositiveChange = summary.month_over_month_change >= 0;
+    const changeColor = isPositiveChange ? "text-green-600" : "text-red-600";
+    const changePrefix = isPositiveChange ? "+" : "";
 
     // Normal state with summary data
     return (
       <Card ref={ref} className={cn("w-full", className)} {...props}>
         <CardHeader>
           <div className="flex items-center gap-2">
-            {showIcon && <TrendingUp className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
+            {showIcon && (
+              <TrendingUp
+                className="h-5 w-5 text-muted-foreground"
+                aria-hidden="true"
+              />
+            )}
             <CardTitle>{title}</CardTitle>
           </div>
           <CardDescription>{description}</CardDescription>
@@ -105,18 +123,23 @@ const EarningsSummaryCard = React.forwardRef<HTMLDivElement, EarningsSummaryCard
             {/* Month over Month Change */}
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Bulan ini:</span>
-              <span className="text-sm font-medium">{formatIDR(summary.current_month_earnings)}</span>
+              <span className="text-sm font-medium">
+                {formatIDR(summary.current_month_earnings)}
+              </span>
             </div>
 
             {/* Change indicator */}
             {summary.month_over_month_change !== 0 && (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Perubahan:</span>
+                <span className="text-sm text-muted-foreground">
+                  Perubahan:
+                </span>
                 <span
                   className={cn("text-sm font-medium", changeColor)}
                   aria-label={`${isPositiveChange ? "Kenaikan" : "Penurunan"} ${Math.abs(summary.month_over_month_change).toFixed(1)}%`}
                 >
-                  {changePrefix}{summary.month_over_month_change.toFixed(1)}%
+                  {changePrefix}
+                  {summary.month_over_month_change.toFixed(1)}%
                 </span>
               </div>
             )}
@@ -124,12 +147,18 @@ const EarningsSummaryCard = React.forwardRef<HTMLDivElement, EarningsSummaryCard
             {/* Additional stats */}
             <div className="flex items-center justify-between pt-2 border-t">
               <div>
-                <p className="text-xs text-muted-foreground">Pekerjaan Selesai</p>
-                <p className="text-sm font-semibold">{summary.total_bookings_completed}</p>
+                <p className="text-xs text-muted-foreground">
+                  Pekerjaan Selesai
+                </p>
+                <p className="text-sm font-semibold">
+                  {summary.total_bookings_completed}
+                </p>
               </div>
               <div className="text-right">
                 <p className="text-xs text-muted-foreground">Rata-rata</p>
-                <p className="text-sm font-semibold">{formatIDR(summary.average_earnings_per_booking)}</p>
+                <p className="text-sm font-semibold">
+                  {formatIDR(summary.average_earnings_per_booking)}
+                </p>
               </div>
             </div>
 
@@ -141,9 +170,9 @@ const EarningsSummaryCard = React.forwardRef<HTMLDivElement, EarningsSummaryCard
           </div>
         </CardContent>
       </Card>
-    )
-  }
-)
-EarningsSummaryCard.displayName = "EarningsSummaryCard"
+    );
+  },
+);
+EarningsSummaryCard.displayName = "EarningsSummaryCard";
 
-export { EarningsSummaryCard }
+export { EarningsSummaryCard };

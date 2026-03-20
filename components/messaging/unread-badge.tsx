@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 const unreadBadgeVariants = cva(
   "inline-flex items-center justify-center rounded-full font-semibold transition-all",
@@ -29,17 +29,18 @@ const unreadBadgeVariants = cva(
       variant: "default",
       pulse: false,
     },
-  }
-)
+  },
+);
 
 export interface UnreadBadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof unreadBadgeVariants> {
-  count: number
-  maxCount?: number
-  showZero?: boolean
-  hideWhenZero?: boolean
-  ariaLabel?: string
+  count: number;
+  maxCount?: number;
+  showZero?: boolean;
+  hideWhenZero?: boolean;
+  ariaLabel?: string;
 }
 
 const UnreadBadge = React.forwardRef<HTMLDivElement, UnreadBadgeProps>(
@@ -56,24 +57,24 @@ const UnreadBadge = React.forwardRef<HTMLDivElement, UnreadBadgeProps>(
       ariaLabel,
       ...props
     },
-    ref
+    ref,
   ) => {
     // Don't render if count is 0 and hideWhenZero is true
     if (count === 0 && hideWhenZero) {
-      return null
+      return null;
     }
 
     // Format the count (e.g., 99+ for counts over maxCount)
-    const displayCount = count > maxCount ? `${maxCount}+` : count.toString()
+    const displayCount = count > maxCount ? `${maxCount}+` : count.toString();
 
     // Generate aria label for accessibility
     const defaultAriaLabel =
-      count === 1 ? "1 unread message" : `${count} unread messages`
-    const badgeAriaLabel = ariaLabel || defaultAriaLabel
+      count === 1 ? "1 unread message" : `${count} unread messages`;
+    const badgeAriaLabel = ariaLabel || defaultAriaLabel;
 
     // Show zero if showZero is true, otherwise show the count
-    const shouldShowZero = count === 0 && showZero
-    const finalDisplayCount = shouldShowZero ? "0" : displayCount
+    const shouldShowZero = count === 0 && showZero;
+    const finalDisplayCount = shouldShowZero ? "0" : displayCount;
 
     return (
       <div
@@ -81,7 +82,7 @@ const UnreadBadge = React.forwardRef<HTMLDivElement, UnreadBadgeProps>(
         className={cn(
           unreadBadgeVariants({ size, variant, pulse }),
           count > 9 && "min-w-fit px-2",
-          className
+          className,
         )}
         aria-label={badgeAriaLabel}
         role="status"
@@ -90,10 +91,10 @@ const UnreadBadge = React.forwardRef<HTMLDivElement, UnreadBadgeProps>(
       >
         {finalDisplayCount}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-UnreadBadge.displayName = "UnreadBadge"
+UnreadBadge.displayName = "UnreadBadge";
 
-export { UnreadBadge, unreadBadgeVariants }
+export { UnreadBadge, unreadBadgeVariants };

@@ -1,6 +1,6 @@
-import 'server-only'
-import { initializeApp, getApps, cert, App } from 'firebase-admin/app'
-import { getMessaging, Messaging } from 'firebase-admin/messaging'
+import "server-only";
+import { initializeApp, getApps, cert, App } from "firebase-admin/app";
+import { getMessaging, Messaging } from "firebase-admin/messaging";
 
 /**
  * Firebase Admin SDK configuration for server-side messaging
@@ -11,12 +11,12 @@ import { getMessaging, Messaging } from 'firebase-admin/messaging'
 const firebaseAdminConfig = {
   projectId: process.env.FIREBASE_PROJECT_ID,
   clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-}
+  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+};
 
 // Singleton pattern for Firebase Admin app
-let firebaseAdminApp: App | null = null
-let messagingInstance: Messaging | null = null
+let firebaseAdminApp: App | null = null;
+let messagingInstance: Messaging | null = null;
 
 /**
  * Check if Firebase Admin is configured
@@ -26,7 +26,7 @@ export function isFirebaseAdminConfigured(): boolean {
     process.env.FIREBASE_PROJECT_ID &&
     process.env.FIREBASE_CLIENT_EMAIL &&
     process.env.FIREBASE_PRIVATE_KEY
-  )
+  );
 }
 
 /**
@@ -34,26 +34,28 @@ export function isFirebaseAdminConfigured(): boolean {
  */
 export function getFirebaseAdminApp(): App {
   if (firebaseAdminApp) {
-    return firebaseAdminApp
+    return firebaseAdminApp;
   }
 
   // Check if already initialized
-  const existingApps = getApps()
+  const existingApps = getApps();
   if (existingApps.length > 0) {
-    firebaseAdminApp = existingApps[0]
-    return firebaseAdminApp
+    firebaseAdminApp = existingApps[0];
+    return firebaseAdminApp;
   }
 
   if (!isFirebaseAdminConfigured()) {
-    throw new Error('Firebase Admin SDK is not configured. Please set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY environment variables.')
+    throw new Error(
+      "Firebase Admin SDK is not configured. Please set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY environment variables.",
+    );
   }
 
   firebaseAdminApp = initializeApp({
     credential: cert(firebaseAdminConfig as any),
     projectId: firebaseAdminConfig.projectId,
-  })
+  });
 
-  return firebaseAdminApp
+  return firebaseAdminApp;
 }
 
 /**
@@ -61,12 +63,12 @@ export function getFirebaseAdminApp(): App {
  */
 export function getFirebaseMessaging(): Messaging {
   if (messagingInstance) {
-    return messagingInstance
+    return messagingInstance;
   }
 
-  const app = getFirebaseAdminApp()
-  messagingInstance = getMessaging(app)
-  return messagingInstance
+  const app = getFirebaseAdminApp();
+  messagingInstance = getMessaging(app);
+  return messagingInstance;
 }
 
 /**
@@ -75,28 +77,31 @@ export function getFirebaseMessaging(): Messaging {
  */
 export async function verifyFcmToken(token: string): Promise<boolean> {
   try {
-    const messaging = getFirebaseMessaging()
+    const messaging = getFirebaseMessaging();
     // Try to send a dry-run message to verify the token
-    await messaging.send({
-      token,
-      notification: { title: 'Verification', body: 'Token verification' },
-    }, true) // dry run
-    
-    return true
+    await messaging.send(
+      {
+        token,
+        notification: { title: "Verification", body: "Token verification" },
+      },
+      true,
+    ); // dry run
+
+    return true;
   } catch (error: any) {
     // Token is invalid if error contains specific codes
     if (
-      error.code === 'messaging/invalid-registration-token' ||
-      error.code === 'messaging/registration-token-not-registered'
+      error.code === "messaging/invalid-registration-token" ||
+      error.code === "messaging/registration-token-not-registered"
     ) {
-      return false
+      return false;
     }
     // For other errors, assume token might be valid (e.g., network issues)
-    console.error('Token verification error:', error.message)
-    return false
+    console.error("Token verification error:", error.message);
+    return false;
   }
 }
 
 // Export types
-export type { App as FirebaseApp } from 'firebase-admin/app'
-export type { Messaging } from 'firebase-admin/messaging'
+export type { App as FirebaseApp } from "firebase-admin/app";
+export type { Messaging } from "firebase-admin/messaging";

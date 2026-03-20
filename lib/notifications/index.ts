@@ -1,20 +1,20 @@
 // Notifications Module
 
 // Email Notifications
-export { sendEmail, sendTextEmail, isEmailConfigured } from './email'
-export type { EmailResult, EmailOptions } from './email'
+export { sendEmail, sendTextEmail, isEmailConfigured } from "./email";
+export type { EmailResult, EmailOptions } from "./email";
 
 // Email Templates
-export * from './templates'
+export * from "./templates";
 
 // FCM Push Notifications
-export { 
+export {
   NotificationService,
   notificationService,
   sendToUser,
   sendToUsers,
   sendToTopic,
-} from './service'
+} from "./service";
 
 // FCM Types
 export type {
@@ -29,4 +29,4 @@ export type {
   FcmMessagePayload,
   NotificationTemplate,
   NotificationEvent,
-} from './types'
+} from "./types";

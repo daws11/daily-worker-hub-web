@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
 import {
   Select,
@@ -8,22 +8,22 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
-import { POSITION_TYPES } from "@/lib/constants/position-types"
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { POSITION_TYPES } from "@/lib/constants/position-types";
 
-export type PositionType = typeof POSITION_TYPES[number]['value']
+export type PositionType = (typeof POSITION_TYPES)[number]["value"];
 
 export interface PositionTypeSelectProps {
-  value?: PositionType
-  onChange?: (value: PositionType) => void
-  error?: string
-  label?: string
-  placeholder?: string
-  disabled?: boolean
-  required?: boolean
-  className?: string
+  value?: PositionType;
+  onChange?: (value: PositionType) => void;
+  error?: string;
+  label?: string;
+  placeholder?: string;
+  disabled?: boolean;
+  required?: boolean;
+  className?: string;
 }
 
 export const PositionTypeSelect = React.forwardRef<
@@ -42,20 +42,18 @@ export const PositionTypeSelect = React.forwardRef<
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
     const handleValueChange = (newValue: string) => {
       if (onChange) {
-        onChange(newValue as PositionType)
+        onChange(newValue as PositionType);
       }
-    }
+    };
 
     return (
       <div className={cn("space-y-2", className)}>
         {label && (
-          <Label
-            className={cn(error && "text-destructive")}
-          >
+          <Label className={cn(error && "text-destructive")}>
             {label}
             {required && <span className="text-destructive ml-1">*</span>}
           </Label>
@@ -81,13 +79,11 @@ export const PositionTypeSelect = React.forwardRef<
           </SelectContent>
         </Select>
         {error && (
-          <p className="text-[0.8rem] font-medium text-destructive">
-            {error}
-          </p>
+          <p className="text-[0.8rem] font-medium text-destructive">{error}</p>
         )}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-PositionTypeSelect.displayName = "PositionTypeSelect"
+PositionTypeSelect.displayName = "PositionTypeSelect";

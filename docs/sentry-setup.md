@@ -56,6 +56,7 @@ For Vercel deployments, set these environment variables in your project settings
 Configures Sentry for client-side (browser) error tracking.
 
 Features:
+
 - Error capture with stack traces
 - Session replay (10% sample rate, 100% on errors)
 - Automatic breadcrumbs
@@ -65,6 +66,7 @@ Features:
 Configures Sentry for server-side (Node.js) error tracking.
 
 Features:
+
 - Server-side error capture
 - API route error tracking
 - Server component error tracking
@@ -74,6 +76,7 @@ Features:
 Configures Sentry for edge runtime (middleware, edge functions).
 
 Features:
+
 - Middleware error tracking
 - Edge function error tracking
 
@@ -205,7 +208,6 @@ const SafeComponent = withErrorBoundary(MyComponent, <FallbackUI />);
 
 1. Go to Alerts in your Sentry project
 2. Create alert rules for:
-
    - **High Priority Errors**: Any error with tag `fatalError: true`
    - **Payment Errors**: Errors with tag `component: payment`
    - **API Errors**: Errors with tag `component: api` and status 5xx
@@ -213,12 +215,12 @@ const SafeComponent = withErrorBoundary(MyComponent, <FallbackUI />);
 
 ### Recommended Alert Rules
 
-| Rule | Condition | Action |
-|------|-----------|--------|
-| Fatal Errors | `tags.fatalError = true` | Email + Slack |
-| Payment Failures | `tags.component = payment` | Email + Slack |
-| High Error Rate | > 10 errors/minute | Slack |
-| API 5xx Errors | `tags.statusCode starts with 5` | Email |
+| Rule             | Condition                       | Action        |
+| ---------------- | ------------------------------- | ------------- |
+| Fatal Errors     | `tags.fatalError = true`        | Email + Slack |
+| Payment Failures | `tags.component = payment`      | Email + Slack |
+| High Error Rate  | > 10 errors/minute              | Slack         |
+| API 5xx Errors   | `tags.statusCode starts with 5` | Email         |
 
 ### Dashboards
 

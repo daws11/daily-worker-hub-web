@@ -1,28 +1,28 @@
-import * as React from "react"
-import { cn } from "../../lib/utils"
+import * as React from "react";
+import { cn } from "../../lib/utils";
 
 /**
  * Container size variants
  */
-export type ContainerSize = "sm" | "md" | "lg" | "xl" | "full"
+export type ContainerSize = "sm" | "md" | "lg" | "xl" | "full";
 
 /**
  * Props for the Container component
  */
 export interface ContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Max width constraint */
-  size?: ContainerSize
+  size?: ContainerSize;
   /** Whether to center the container */
-  centered?: boolean
+  centered?: boolean;
   /** Whether to add horizontal padding */
-  padded?: boolean
+  padded?: boolean;
   /** Whether to center text content */
-  textCenter?: boolean
+  textCenter?: boolean;
 }
 
 /**
  * Container component for consistent page layouts
- * 
+ *
  * @example
  * ```tsx
  * <Container size="lg" padded>
@@ -45,7 +45,7 @@ export function Container({
     lg: "max-w-6xl", // 1152px
     xl: "max-w-7xl", // 1280px
     full: "max-w-full",
-  }
+  };
 
   return (
     <div
@@ -55,13 +55,13 @@ export function Container({
         centered && "mx-auto",
         padded && "px-4 sm:px-6 lg:px-8",
         textCenter && "text-center",
-        className
+        className,
       )}
       {...props}
     >
       {children}
     </div>
-  )
+  );
 }
 
 /**
@@ -69,14 +69,14 @@ export function Container({
  */
 export interface SectionProps extends React.HTMLAttributes<HTMLElement> {
   /** Section size variant (controls padding) */
-  size?: "sm" | "md" | "lg" | "xl"
+  size?: "sm" | "md" | "lg" | "xl";
   /** Background variant */
-  background?: "default" | "muted" | "accent" | "transparent"
+  background?: "default" | "muted" | "accent" | "transparent";
 }
 
 /**
  * Section component for page sections
- * 
+ *
  * @example
  * ```tsx
  * <Section size="lg" background="muted">
@@ -98,27 +98,23 @@ export function Section({
     md: "py-12 md:py-16",
     lg: "py-16 md:py-24",
     xl: "py-24 md:py-32",
-  }
+  };
 
   const backgrounds = {
     default: "bg-white dark:bg-slate-900",
     muted: "bg-slate-50 dark:bg-slate-800/50",
     accent: "bg-teal-50 dark:bg-teal-900/20",
     transparent: "bg-transparent",
-  }
+  };
 
   return (
     <section
-      className={cn(
-        sizes[size],
-        backgrounds[background],
-        className
-      )}
+      className={cn(sizes[size], backgrounds[background], className)}
       {...props}
     >
       {children}
     </section>
-  )
+  );
 }
 
 /**
@@ -126,18 +122,18 @@ export function Section({
  */
 export interface StackProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Direction of the stack */
-  direction?: "horizontal" | "vertical"
+  direction?: "horizontal" | "vertical";
   /** Gap size between items */
-  gap?: "none" | "xs" | "sm" | "md" | "lg" | "xl"
+  gap?: "none" | "xs" | "sm" | "md" | "lg" | "xl";
   /** Align items */
-  align?: "start" | "center" | "end" | "stretch" | "baseline"
+  align?: "start" | "center" | "end" | "stretch" | "baseline";
   /** Justify content */
-  justify?: "start" | "center" | "end" | "between" | "around" | "evenly"
+  justify?: "start" | "center" | "end" | "between" | "around" | "evenly";
 }
 
 /**
  * Stack component for flex layouts
- * 
+ *
  * @example
  * ```tsx
  * <Stack direction="horizontal" gap="md" align="center">
@@ -162,7 +158,7 @@ export function Stack({
     md: "gap-4",
     lg: "gap-6",
     xl: "gap-8",
-  }
+  };
 
   const aligns = {
     start: "items-start",
@@ -170,7 +166,7 @@ export function Stack({
     end: "items-end",
     stretch: "items-stretch",
     baseline: "items-baseline",
-  }
+  };
 
   const justifies = {
     start: "justify-start",
@@ -179,7 +175,7 @@ export function Stack({
     between: "justify-between",
     around: "justify-around",
     evenly: "justify-evenly",
-  }
+  };
 
   return (
     <div
@@ -189,13 +185,13 @@ export function Stack({
         gaps[gap],
         aligns[align],
         justifies[justify],
-        className
+        className,
       )}
       {...props}
     >
       {children}
     </div>
-  )
+  );
 }
 
 /**
@@ -203,14 +199,14 @@ export function Stack({
  */
 export interface GridProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Number of columns */
-  cols?: 1 | 2 | 3 | 4 | 5 | 6 | 12
+  cols?: 1 | 2 | 3 | 4 | 5 | 6 | 12;
   /** Gap size between items */
-  gap?: "none" | "xs" | "sm" | "md" | "lg" | "xl"
+  gap?: "none" | "xs" | "sm" | "md" | "lg" | "xl";
 }
 
 /**
  * Grid component for grid layouts
- * 
+ *
  * @example
  * ```tsx
  * <Grid cols={3} gap="md">
@@ -235,7 +231,7 @@ export function Grid({
     5: "grid-cols-1 md:grid-cols-2 lg:grid-cols-5",
     6: "grid-cols-2 md:grid-cols-3 lg:grid-cols-6",
     12: "grid-cols-12",
-  }
+  };
 
   const gaps = {
     none: "gap-0",
@@ -244,19 +240,14 @@ export function Grid({
     md: "gap-4",
     lg: "gap-6",
     xl: "gap-8",
-  }
+  };
 
   return (
     <div
-      className={cn(
-        "grid",
-        colClasses[cols],
-        gaps[gap],
-        className
-      )}
+      className={cn("grid", colClasses[cols], gaps[gap], className)}
       {...props}
     >
       {children}
     </div>
-  )
+  );
 }

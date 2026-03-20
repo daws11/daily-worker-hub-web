@@ -1,27 +1,27 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Controller, type ControllerProps } from "react-hook-form"
-import { X } from "lucide-react"
+import * as React from "react";
+import { Controller, type ControllerProps } from "react-hook-form";
+import { X } from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
-import type { Badge as BadgeType } from "@/lib/types/badge"
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import type { Badge as BadgeType } from "@/lib/types/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 
 interface BadgeFilterSelectProps {
-  badges: BadgeType[]
-  selectedBadges: string[]
-  onBadgesChange: (badgeIds: string[]) => void
-  placeholder?: string
-  disabled?: boolean
-  className?: string
+  badges: BadgeType[];
+  selectedBadges: string[];
+  onBadgesChange: (badgeIds: string[]) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
 }
 
 export function BadgeFilterSelect({
@@ -32,29 +32,29 @@ export function BadgeFilterSelect({
   disabled = false,
   className,
 }: BadgeFilterSelectProps) {
-  const [isOpen, setIsOpen] = React.useState(false)
-  const triggerRef = React.useRef<HTMLButtonElement>(null)
+  const [isOpen, setIsOpen] = React.useState(false);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
 
   const selectedBadgesMap = React.useMemo(
     () => new Set(selectedBadges),
-    [selectedBadges]
-  )
+    [selectedBadges],
+  );
 
   const availableBadges = React.useMemo(
     () => badges.filter((badge) => !selectedBadgesMap.has(badge.id)),
-    [badges, selectedBadgesMap]
-  )
+    [badges, selectedBadgesMap],
+  );
 
   const handleSelectBadge = (badgeId: string) => {
-    onBadgesChange([...selectedBadges, badgeId])
-    setIsOpen(false)
-    triggerRef.current?.focus()
-  }
+    onBadgesChange([...selectedBadges, badgeId]);
+    setIsOpen(false);
+    triggerRef.current?.focus();
+  };
 
   const handleRemoveBadge = (badgeId: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    onBadgesChange(selectedBadges.filter((id) => id !== badgeId))
-  }
+    e.stopPropagation();
+    onBadgesChange(selectedBadges.filter((id) => id !== badgeId));
+  };
 
   return (
     <div className={cn("space-y-2", className)}>
@@ -86,15 +86,11 @@ export function BadgeFilterSelect({
       {selectedBadges.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {selectedBadges.map((badgeId) => {
-            const badge = badges.find((b) => b.id === badgeId)
-            if (!badge) return null
+            const badge = badges.find((b) => b.id === badgeId);
+            if (!badge) return null;
 
             return (
-              <Badge
-                key={badge.id}
-                variant="secondary"
-                className="gap-1 pr-1"
-              >
+              <Badge key={badge.id} variant="secondary" className="gap-1 pr-1">
                 {badge.name}
                 {!disabled && (
                   <button
@@ -107,36 +103,39 @@ export function BadgeFilterSelect({
                   </button>
                 )}
               </Badge>
-            )
+            );
           })}
         </div>
       )}
     </div>
-  )
+  );
 }
 
 interface FormBadgeFilterSelectProps<
   TFieldValues extends Record<string, any> = Record<string, any>,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 > {
-  name: TName
-  badges: BadgeType[]
-  placeholder?: string
-  disabled?: boolean
-  className?: string
+  name: TName;
+  badges: BadgeType[];
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
 }
 
 function FormBadgeFilterSelectInner<
   TFieldValues extends Record<string, any> = Record<string, any>,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >({
   field,
   badges,
   placeholder,
   disabled,
   className,
-}: Pick<FormBadgeFilterSelectProps<TFieldValues, TName>, "badges" | "placeholder" | "disabled" | "className"> & {
-  field: { value: string[]; onChange: (value: string[]) => void }
+}: Pick<
+  FormBadgeFilterSelectProps<TFieldValues, TName>,
+  "badges" | "placeholder" | "disabled" | "className"
+> & {
+  field: { value: string[]; onChange: (value: string[]) => void };
 }) {
   return (
     <BadgeFilterSelect
@@ -147,14 +146,14 @@ function FormBadgeFilterSelectInner<
       disabled={disabled}
       className={className}
     />
-  )
+  );
 }
 
-import type { FieldPath } from "react-hook-form"
+import type { FieldPath } from "react-hook-form";
 
 export function FormBadgeFilterSelect<
   TFieldValues extends Record<string, any> = Record<string, any>,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >({
   control,
   name,
@@ -163,7 +162,10 @@ export function FormBadgeFilterSelect<
   disabled,
   className,
 }: Omit<ControllerProps<TFieldValues, TName>, "render"> &
-  Pick<FormBadgeFilterSelectProps<TFieldValues, TName>, "badges" | "placeholder" | "disabled" | "className">) {
+  Pick<
+    FormBadgeFilterSelectProps<TFieldValues, TName>,
+    "badges" | "placeholder" | "disabled" | "className"
+  >) {
   return (
     <Controller
       control={control}
@@ -178,5 +180,5 @@ export function FormBadgeFilterSelect<
         />
       )}
     />
-  )
+  );
 }

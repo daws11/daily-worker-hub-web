@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { AlertTriangle } from "lucide-react"
+import * as React from "react";
+import { AlertTriangle } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,18 +12,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export interface WorkerCancellationDialogProps {
-  bookingId: string
-  workerName: string
-  onCancel: (bookingId: string, notes: string) => Promise<void> | void
-  trigger?: React.ReactNode
-  triggerClassName?: string
-  open?: boolean
-  onOpenChange?: (open: boolean) => void
+  bookingId: string;
+  workerName: string;
+  onCancel: (bookingId: string, notes: string) => Promise<void> | void;
+  trigger?: React.ReactNode;
+  triggerClassName?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function WorkerCancellationDialog({
@@ -35,47 +35,47 @@ export function WorkerCancellationDialog({
   open: controlledOpen,
   onOpenChange,
 }: WorkerCancellationDialogProps) {
-  const [internalOpen, setInternalOpen] = React.useState(false)
-  const [notes, setNotes] = React.useState("")
-  const [isCancelling, setIsCancelling] = React.useState(false)
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const [notes, setNotes] = React.useState("");
+  const [isCancelling, setIsCancelling] = React.useState(false);
 
-  const isControlled = controlledOpen !== undefined
-  const open = isControlled ? controlledOpen : internalOpen
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
 
   const handleOpenChange = React.useCallback(
     (newOpen: boolean) => {
       if (isControlled && onOpenChange) {
-        onOpenChange(newOpen)
+        onOpenChange(newOpen);
       } else {
-        setInternalOpen(newOpen)
+        setInternalOpen(newOpen);
       }
 
       // Reset notes when dialog closes
       if (!newOpen) {
-        setNotes("")
+        setNotes("");
       }
     },
-    [isControlled, onOpenChange]
-  )
+    [isControlled, onOpenChange],
+  );
 
   const handleCancel = async () => {
     if (notes.trim().length === 0) {
-      return
+      return;
     }
 
-    setIsCancelling(true)
+    setIsCancelling(true);
     try {
-      await onCancel(bookingId, notes.trim())
-      handleOpenChange(false)
+      await onCancel(bookingId, notes.trim());
+      handleOpenChange(false);
     } finally {
-      setIsCancelling(false)
+      setIsCancelling(false);
     }
-  }
+  };
 
   const handleDismiss = () => {
-    setNotes("")
-    handleOpenChange(false)
-  }
+    setNotes("");
+    handleOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -92,7 +92,8 @@ export function WorkerCancellationDialog({
             Cancel Booking
           </DialogTitle>
           <DialogDescription>
-            Are you sure you want to cancel the booking with {workerName}? This action cannot be undone.
+            Are you sure you want to cancel the booking with {workerName}? This
+            action cannot be undone.
           </DialogDescription>
         </DialogHeader>
 
@@ -108,7 +109,7 @@ export function WorkerCancellationDialog({
               placeholder="Please provide a reason for cancelling this booking (e.g., emergency, schedule conflict, worker no longer needed...)"
               className={cn(
                 "flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-y",
-                "scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/30"
+                "scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground/20 hover:scrollbar-thumb-muted-foreground/30",
               )}
               disabled={isCancelling}
             />
@@ -138,5 +139,5 @@ export function WorkerCancellationDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

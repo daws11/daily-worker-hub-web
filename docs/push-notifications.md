@@ -259,49 +259,49 @@ Send a push notification (admin/business/worker).
 ### Basic Usage
 
 ```tsx
-import { useFcmNotifications } from '@/hooks/use-fcm-notifications'
+import { useFcmNotifications } from "@/hooks/use-fcm-notifications";
 
 function NotificationSettings() {
-  const { 
-    permission, 
-    isRegistered, 
-    isLoading, 
+  const {
+    permission,
+    isRegistered,
+    isLoading,
     error,
-    register, 
+    register,
     unregister,
-    requestPermission 
+    requestPermission,
   } = useFcmNotifications({
     userId: currentUser.id,
     autoRegister: false,
     onMessageReceived: (payload) => {
-      console.log('Notification received:', payload)
-    }
-  })
+      console.log("Notification received:", payload);
+    },
+  });
 
   return (
     <div>
       <p>Permission: {permission}</p>
-      <p>Registered: {isRegistered ? 'Yes' : 'No'}</p>
-      
+      <p>Registered: {isRegistered ? "Yes" : "No"}</p>
+
       {error && <p className="error">{error}</p>}
-      
-      {permission === 'default' && (
+
+      {permission === "default" && (
         <button onClick={requestPermission}>Enable Notifications</button>
       )}
-      
-      {permission === 'granted' && !isRegistered && (
+
+      {permission === "granted" && !isRegistered && (
         <button onClick={register} disabled={isLoading}>
-          {isLoading ? 'Registering...' : 'Register Device'}
+          {isLoading ? "Registering..." : "Register Device"}
         </button>
       )}
-      
+
       {isRegistered && (
         <button onClick={unregister} disabled={isLoading}>
           Unregister
         </button>
       )}
     </div>
-  )
+  );
 }
 ```
 
@@ -312,8 +312,8 @@ function NotificationSettings() {
 const { isRegistered } = useFcmNotifications({
   userId: currentUser.id,
   autoRegister: true,
-  enabled: true
-})
+  enabled: true,
+});
 ```
 
 ### Handling Foreground Messages
@@ -323,8 +323,8 @@ const { register } = useFcmNotifications({
   userId: currentUser.id,
   onMessageReceived: (payload) => {
     // Show toast notification
-    toast.success(payload.notification?.title || 'New notification')
-    
+    toast.success(payload.notification?.title || "New notification");
+
     // Or use a custom notification component
     showNotification({
       title: payload.notification?.title,
@@ -333,12 +333,12 @@ const { register } = useFcmNotifications({
       onClick: () => {
         // Handle click
         if (payload.data?.bookingId) {
-          router.push(`/bookings/${payload.data.bookingId}`)
+          router.push(`/bookings/${payload.data.bookingId}`);
         }
-      }
-    })
-  }
-})
+      },
+    });
+  },
+});
 ```
 
 ## Server-Side Usage
@@ -346,66 +346,56 @@ const { register } = useFcmNotifications({
 ### Using the Notification Service
 
 ```typescript
-import { notificationService } from '@/lib/notifications/service'
+import { notificationService } from "@/lib/notifications/service";
 
 // Send to a single user
 await notificationService.sendToUser(
-  'user-id',
+  "user-id",
   {
-    title: 'Booking Confirmed',
-    body: 'Your booking has been confirmed',
-    data: { bookingId: '123' },
-    clickAction: '/bookings/123'
+    title: "Booking Confirmed",
+    body: "Your booking has been confirmed",
+    data: { bookingId: "123" },
+    clickAction: "/bookings/123",
   },
-  'booking_confirmed'
-)
+  "booking_confirmed",
+);
 
 // Send to multiple users
 await notificationService.sendToUsers(
-  ['user-1', 'user-2', 'user-3'],
+  ["user-1", "user-2", "user-3"],
   {
-    title: 'New Job Available',
-    body: 'A new job matching your skills is available',
-    clickAction: '/jobs'
+    title: "New Job Available",
+    body: "A new job matching your skills is available",
+    clickAction: "/jobs",
   },
-  'booking_created'
-)
+  "booking_created",
+);
 
 // Send to a topic (for broadcasts)
 await notificationService.sendToTopic(
-  'all-workers',
+  "all-workers",
   {
-    title: 'Maintenance Notice',
-    body: 'The app will be under maintenance tonight'
+    title: "Maintenance Notice",
+    body: "The app will be under maintenance tonight",
   },
-  'booking_created'
-)
+  "booking_created",
+);
 ```
 
 ### Using Convenience Functions
 
 ```typescript
-import { 
+import {
   sendBookingConfirmed,
   sendPaymentReceived,
-  sendJobReminder 
-} from '@/lib/notifications/service'
+  sendJobReminder,
+} from "@/lib/notifications/service";
 
 // Booking confirmed
-await sendBookingConfirmed(
-  workerUserId,
-  businessName,
-  jobTitle,
-  bookingId
-)
+await sendBookingConfirmed(workerUserId, businessName, jobTitle, bookingId);
 
 // Payment received
-await sendPaymentReceived(
-  workerUserId,
-  amount,
-  businessName,
-  paymentId
-)
+await sendPaymentReceived(workerUserId, amount, businessName, paymentId);
 
 // Job reminder
 await sendJobReminder(
@@ -413,35 +403,35 @@ await sendJobReminder(
   jobTitle,
   businessName,
   startTime,
-  bookingId
-)
+  bookingId,
+);
 ```
 
 ### Topic Subscriptions
 
 ```typescript
 // Subscribe a user to a topic
-await notificationService.subscribeToTopic('user-id', 'all-workers')
+await notificationService.subscribeToTopic("user-id", "all-workers");
 
 // Unsubscribe from a topic
-await notificationService.unsubscribeFromTopic('user-id', 'all-workers')
+await notificationService.unsubscribeFromTopic("user-id", "all-workers");
 ```
 
 ## Notification Types
 
-| Type | Description | Priority |
-|------|-------------|----------|
-| `booking_created` | New booking created | Normal |
-| `booking_confirmed` | Booking confirmed | Normal |
-| `booking_cancelled` | Booking cancelled | High |
-| `job_reminder` | Job shift reminder | High |
-| `payment_received` | Payment received | Normal |
-| `payment_failed` | Payment failed | High |
-| `new_message` | New chat message | Normal |
-| `review_request` | Request for review | Low |
-| `worker_application` | New worker application | Normal |
-| `application_accepted` | Application accepted | Normal |
-| `application_rejected` | Application rejected | Normal |
+| Type                   | Description            | Priority |
+| ---------------------- | ---------------------- | -------- |
+| `booking_created`      | New booking created    | Normal   |
+| `booking_confirmed`    | Booking confirmed      | Normal   |
+| `booking_cancelled`    | Booking cancelled      | High     |
+| `job_reminder`         | Job shift reminder     | High     |
+| `payment_received`     | Payment received       | Normal   |
+| `payment_failed`       | Payment failed         | High     |
+| `new_message`          | New chat message       | Normal   |
+| `review_request`       | Request for review     | Low      |
+| `worker_application`   | New worker application | Normal   |
+| `application_accepted` | Application accepted   | Normal   |
+| `application_rejected` | Application rejected   | Normal   |
 
 ## Troubleshooting
 
@@ -474,12 +464,14 @@ echo $FIREBASE_CLIENT_EMAIL
 #### 4. Notifications not received in browser
 
 **Possible causes:**
+
 - Browser doesn't support FCM
 - Notification permission denied
 - Service worker not registered
 - App not in foreground (background notifications need service worker)
 
 **Solutions:**
+
 - Check browser compatibility
 - Reset notification permission in browser settings
 - Ensure service worker is registered (`/sw.js`)
@@ -505,9 +497,9 @@ Enable debug logging in development:
 useFcmNotifications({
   userId: currentUser.id,
   onMessageReceived: (payload) => {
-    console.log('[FCM Debug] Message received:', payload)
-  }
-})
+    console.log("[FCM Debug] Message received:", payload);
+  },
+});
 ```
 
 ### Testing Notifications

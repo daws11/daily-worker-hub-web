@@ -1,63 +1,73 @@
-import * as React from "react"
-import { Award, Loader2 } from "lucide-react"
+import * as React from "react";
+import { Award, Loader2 } from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { SkillBadgeIcon } from "./skill-badge-display"
-import type { Badge, BadgeVerificationStatus } from "@/lib/types/badge"
+import { cn } from "@/lib/utils";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { SkillBadgeIcon } from "./skill-badge-display";
+import type { Badge, BadgeVerificationStatus } from "@/lib/types/badge";
 
 export interface BadgeWithStatus extends Badge {
-  verificationStatus?: BadgeVerificationStatus
-  verifiedAt?: string | null
+  verificationStatus?: BadgeVerificationStatus;
+  verifiedAt?: string | null;
 }
 
 export interface BadgeGridProps extends React.HTMLAttributes<HTMLDivElement> {
-  badges: BadgeWithStatus[]
-  loading?: boolean
-  emptyMessage?: string
-  emptyDescription?: string
-  showVerificationStatus?: boolean
-  onBadgeClick?: (badge: BadgeWithStatus) => void
-  cardClassName?: string
+  badges: BadgeWithStatus[];
+  loading?: boolean;
+  emptyMessage?: string;
+  emptyDescription?: string;
+  showVerificationStatus?: boolean;
+  onBadgeClick?: (badge: BadgeWithStatus) => void;
+  cardClassName?: string;
 }
 
 const gridVariants = {
   sm: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5",
   md: "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
   lg: "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5",
-}
+};
 
-export type BadgeGridSize = keyof typeof gridVariants
+export type BadgeGridSize = keyof typeof gridVariants;
 
 export interface BadgeGridWithSizeProps extends BadgeGridProps {
-  size?: BadgeGridSize
+  size?: BadgeGridSize;
 }
 
-const categoryColors: Record<Badge['category'], string> = {
-  skill: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800",
-  training: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800",
-  certification: "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800",
-  specialization: "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800",
-}
+const categoryColors: Record<Badge["category"], string> = {
+  skill:
+    "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800",
+  training:
+    "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800",
+  certification:
+    "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800",
+  specialization:
+    "bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800",
+};
 
-const categoryLabels: Record<Badge['category'], string> = {
+const categoryLabels: Record<Badge["category"], string> = {
   skill: "Skill",
   training: "Training",
   certification: "Certification",
   specialization: "Specialization",
-}
+};
 
 function BadgeGridCard({
   badge,
   onClick,
   cardClassName,
 }: {
-  badge: BadgeWithStatus
-  onClick?: () => void
-  cardClassName?: string
+  badge: BadgeWithStatus;
+  onClick?: () => void;
+  cardClassName?: string;
 }) {
-  const CardWrapper = onClick ? "button" : "div"
-  const isInteractive = !!onClick
+  const CardWrapper = onClick ? "button" : "div";
+  const isInteractive = !!onClick;
 
   return (
     <CardWrapper
@@ -72,9 +82,12 @@ function BadgeGridCard({
         className={cn(
           "transition-all hover:shadow-md",
           isInteractive && "cursor-pointer hover:border-primary/50",
-          badge.verificationStatus === "verified" && "border-green-200 dark:border-green-800",
-          badge.verificationStatus === "pending" && "border-yellow-200 dark:border-yellow-800",
-          badge.verificationStatus === "rejected" && "border-red-200 dark:border-red-800"
+          badge.verificationStatus === "verified" &&
+            "border-green-200 dark:border-green-800",
+          badge.verificationStatus === "pending" &&
+            "border-yellow-200 dark:border-yellow-800",
+          badge.verificationStatus === "rejected" &&
+            "border-red-200 dark:border-red-800",
         )}
       >
         <CardHeader className="pb-3">
@@ -96,7 +109,7 @@ function BadgeGridCard({
               <div
                 className={cn(
                   "rounded-full border px-2 py-0.5 text-xs font-medium",
-                  categoryColors[badge.category]
+                  categoryColors[badge.category],
                 )}
               >
                 {categoryLabels[badge.category]}
@@ -105,7 +118,9 @@ function BadgeGridCard({
           </div>
         </CardHeader>
         <CardContent className="space-y-2">
-          <CardTitle className="text-base leading-tight">{badge.name}</CardTitle>
+          <CardTitle className="text-base leading-tight">
+            {badge.name}
+          </CardTitle>
           {badge.description && (
             <CardDescription className="line-clamp-2 text-xs">
               {badge.description}
@@ -119,15 +134,15 @@ function BadgeGridCard({
         </CardContent>
       </Card>
     </CardWrapper>
-  )
+  );
 }
 
 function EmptyState({
   message,
   description,
 }: {
-  message: string
-  description?: string
+  message: string;
+  description?: string;
 }) {
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border border-dashed p-12 text-center">
@@ -139,7 +154,7 @@ function EmptyState({
         </p>
       )}
     </div>
-  )
+  );
 }
 
 function LoadingState() {
@@ -150,7 +165,7 @@ function LoadingState() {
         <p className="text-sm text-muted-foreground">Loading badges...</p>
       </div>
     </div>
-  )
+  );
 }
 
 export function BadgeGrid({
@@ -166,22 +181,15 @@ export function BadgeGrid({
   ...props
 }: BadgeGridWithSizeProps) {
   if (loading) {
-    return <LoadingState />
+    return <LoadingState />;
   }
 
   if (badges.length === 0) {
-    return <EmptyState message={emptyMessage} description={emptyDescription} />
+    return <EmptyState message={emptyMessage} description={emptyDescription} />;
   }
 
   return (
-    <div
-      className={cn(
-        "grid gap-4",
-        gridVariants[size],
-        className
-      )}
-      {...props}
-    >
+    <div className={cn("grid gap-4", gridVariants[size], className)} {...props}>
       {badges.map((badge) => (
         <BadgeGridCard
           key={badge.id}
@@ -191,7 +199,7 @@ export function BadgeGrid({
         />
       ))}
     </div>
-  )
+  );
 }
 
-BadgeGrid.displayName = "BadgeGrid"
+BadgeGrid.displayName = "BadgeGrid";

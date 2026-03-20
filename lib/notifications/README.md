@@ -1,11 +1,13 @@
 # Notification System Implementation
 
 ## Overview
+
 A comprehensive notification system for Daily Worker Hub supporting in-app notifications, email notifications, and push notifications.
 
 ## Features Implemented
 
 ### 1. Email Client (`lib/notifications/email.ts`)
+
 - Resend email client setup
 - `sendEmail()` - Send React-based email templates
 - `sendTextEmail()` - Send plain text emails
@@ -17,7 +19,9 @@ A comprehensive notification system for Daily Worker Hub supporting in-app notif
 All templates are fully responsive with professional styling.
 
 #### Application Received (`lib/notifications/templates/application-received.tsx`)
+
 Notifies business when a worker applies for a job.
+
 - Business name and logo
 - Worker details (name, skills, experience)
 - Job information
@@ -25,14 +29,18 @@ Notifies business when a worker applies for a job.
 - Tips for reviewing applications
 
 #### Application Status Update (`lib/notifications/templates/application-status-update.tsx`)
+
 Notifies worker when their application status changes.
+
 - Status indicators (accepted/rejected/pending/reviewing)
 - Business-provided message
 - Next steps for accepted applications
 - Encouragement for rejected applications
 
 #### Booking Confirmed (`lib/notifications/templates/booking-confirmed.tsx`)
+
 Notifies both parties when a booking is confirmed.
+
 - Job details and duration
 - Location information
 - Daily wage breakdown
@@ -41,7 +49,9 @@ Notifies both parties when a booking is confirmed.
 - Works for both workers and businesses
 
 #### Payment Receipt (`lib/notifications/templates/payment-receipt.tsx`)
+
 Sends payment confirmation with detailed receipt.
+
 - Professional receipt design
 - Payment ID and date
 - Work period breakdown
@@ -50,7 +60,9 @@ Sends payment confirmation with detailed receipt.
 - Payment method information
 
 #### Job Reminder (`lib/notifications/templates/job-reminder.tsx`)
+
 Reminds worker about upcoming job (sent 2 hours before).
+
 - Urgent reminder banner
 - Job details with time and location
 - Google Maps link
@@ -70,6 +82,7 @@ Added email notification triggers:
 - `notifyJobReminder()` - Triggered for job reminders
 
 All triggers create both:
+
 - In-app notification in database
 - Email notification via Resend
 
@@ -87,6 +100,7 @@ Added push notification trigger hooks that respect user preferences:
 ### 5. Notification Bell Component (`components/notifications/notification-bell.tsx`)
 
 React component with:
+
 - Bell icon with unread count badge
 - Dropdown showing recent notifications
 - Mark individual notifications as read
@@ -99,6 +113,7 @@ React component with:
 ### 6. Notification List Component (`components/notifications/notification-list.tsx`)
 
 Full-featured notification management:
+
 - Filter by: All / Unread / Read
 - Unread count badge
 - Mark individual as read
@@ -113,24 +128,29 @@ Full-featured notification management:
 ### 7. API Routes
 
 #### GET /api/notifications
+
 - List all notifications for authenticated user
 - Query params: `filter` (all/unread/read), `limit`, `offset`
 - Returns unread count
 - Pagination support
 
 #### PATCH /api/notifications
+
 - Mark all notifications as read
 - Returns count of updated notifications
 
 #### PATCH /api/notifications/[id]/read
+
 - Mark specific notification as read
 - Verifies notification belongs to user
 
 #### GET /api/notifications/settings
+
 - Get user's notification preferences
 - Creates default preferences if not exist
 
 #### POST /api/notifications/settings
+
 - Update notification preferences
 - Supported fields:
   - `push_enabled` - Master switch
@@ -145,34 +165,34 @@ Full-featured notification management:
 ### Sending Email Notifications
 
 ```typescript
-import { notifyApplicationReceived } from '@/lib/actions/notifications'
+import { notifyApplicationReceived } from "@/lib/actions/notifications";
 
 // When a worker applies
 await notifyApplicationReceived({
-  businessUserId: 'user-123',
-  businessName: 'Hotel Bali',
-  businessEmail: 'contact@hotelbali.com',
-  workerName: 'Made Wayan',
-  workerEmail: 'made@example.com',
-  jobTitle: 'Housekeeping Staff',
-  applicationId: 'app-456',
-  workerSkills: ['Cleaning', 'Hospitality'],
-  workerExperience: '3 years experience',
-})
+  businessUserId: "user-123",
+  businessName: "Hotel Bali",
+  businessEmail: "contact@hotelbali.com",
+  workerName: "Made Wayan",
+  workerEmail: "made@example.com",
+  jobTitle: "Housekeeping Staff",
+  applicationId: "app-456",
+  workerSkills: ["Cleaning", "Hospitality"],
+  workerExperience: "3 years experience",
+});
 ```
 
 ### Sending Push Notifications
 
 ```typescript
-import { triggerApplicationReceivedPush } from '@/lib/actions/push-notifications'
+import { triggerApplicationReceivedPush } from "@/lib/actions/push-notifications";
 
 // Respects user preferences automatically
 await triggerApplicationReceivedPush({
-  businessUserId: 'user-123',
-  workerName: 'Made Wayan',
-  jobTitle: 'Housekeeping Staff',
-  applicationId: 'app-456',
-})
+  businessUserId: "user-123",
+  workerName: "Made Wayan",
+  jobTitle: "Housekeeping Staff",
+  applicationId: "app-456",
+});
 ```
 
 ### Using Notification Bell Component
@@ -232,11 +252,13 @@ RESEND_API_KEY=re_xxxxxxxxxxxxxx
 ## Dependencies
 
 Added to `package.json`:
+
 - `resend` ^4.0.1 - Email service integration
 
 ## Files Created/Modified
 
 ### Created:
+
 - `lib/notifications/email.ts`
 - `lib/notifications/templates/application-received.tsx`
 - `lib/notifications/templates/application-status-update.tsx`
@@ -253,6 +275,7 @@ Added to `package.json`:
 - `app/api/notifications/settings/route.ts`
 
 ### Modified:
+
 - `lib/actions/notifications.ts` - Added email triggers
 - `lib/actions/push-notifications.ts` - Added push hooks
 - `package.json` - Added resend dependency

@@ -1,30 +1,30 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   subscribeToPushNotifications as subscribeToPushDB,
   unsubscribeByEndpoint,
-} from "../actions/push-notifications"
+} from "../actions/push-notifications";
 
-type NotificationPermission = "granted" | "denied" | "default"
+type NotificationPermission = "granted" | "denied" | "default";
 
 type UsePushNotificationsOptions = {
-  userId: string
-  enabled?: boolean
-  autoSubscribe?: boolean
-}
+  userId: string;
+  enabled?: boolean;
+  autoSubscribe?: boolean;
+};
 
 type UsePushNotificationsReturn = {
-  permission: NotificationPermission
-  isSupported: boolean
-  isSubscribed: boolean
-  isLoading: boolean
-  subscription: PushSubscription | null
-  error: string | null
-  subscribe: () => Promise<void>
-  unsubscribe: () => Promise<void>
-  requestPermission: () => Promise<void>
-}
+  permission: NotificationPermission;
+  isSupported: boolean;
+  isSubscribed: boolean;
+  isLoading: boolean;
+  subscription: PushSubscription | null;
+  error: string | null;
+  subscribe: () => Promise<void>;
+  unsubscribe: () => Promise<void>;
+  requestPermission: () => Promise<void>;
+};
 
 /**
  * Hook for managing push notification subscription in React components
@@ -63,18 +63,21 @@ type UsePushNotificationsReturn = {
  * ```
  */
 export function usePushNotifications(
-  options: UsePushNotificationsOptions
+  options: UsePushNotificationsOptions,
 ): UsePushNotificationsReturn {
-  const { userId, enabled = true, autoSubscribe = false } = options
+  const { userId, enabled = true, autoSubscribe = false } = options;
 
-  const [permission, setPermission] = useState<NotificationPermission>("default")
-  const [isSupported, setIsSupported] = useState(false)
-  const [isSubscribed, setIsSubscribed] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [subscription, setSubscription] = useState<PushSubscription | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [permission, setPermission] =
+    useState<NotificationPermission>("default");
+  const [isSupported, setIsSupported] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [subscription, setSubscription] = useState<PushSubscription | null>(
+    null,
+  );
+  const [error, setError] = useState<string | null>(null);
 
-  const initializationRef = useRef(false)
+  const initializationRef = useRef(false);
 
   /**
    * Check if push notifications are supported in the browser
@@ -83,49 +86,51 @@ export function usePushNotifications(
     const supported =
       "serviceWorker" in navigator &&
       "PushManager" in window &&
-      "Notification" in window
+      "Notification" in window;
 
-    setIsSupported(supported)
+    setIsSupported(supported);
 
     if (!supported) {
-      setError("Layanan notifikasi tidak didukung di browser ini")
+      setError("Layanan notifikasi tidak didukung di browser ini");
     }
 
-    return supported
-  }, [])
+    return supported;
+  }, []);
 
   /**
    * Get the service worker registration
    */
-  const getServiceWorkerRegistration = useCallback(async (): Promise<ServiceWorkerRegistration | null> => {
-    if (!("serviceWorker" in navigator)) {
-      return null
-    }
+  const getServiceWorkerRegistration =
+    useCallback(async (): Promise<ServiceWorkerRegistration | null> => {
+      if (!("serviceWorker" in navigator)) {
+        return null;
+      }
 
-    try {
-      const registration = await navigator.serviceWorker.getRegistration()
-      return registration
-    } catch {
-      return null
-    }
-  }, [])
+      try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        return registration;
+      } catch {
+        return null;
+      }
+    }, []);
 
   /**
    * Get current push subscription
    */
-  const getPushSubscription = useCallback(async (): Promise<PushSubscription | null> => {
-    const registration = await getServiceWorkerRegistration()
-    if (!registration) {
-      return null
-    }
+  const getPushSubscription =
+    useCallback(async (): Promise<PushSubscription | null> => {
+      const registration = await getServiceWorkerRegistration();
+      if (!registration) {
+        return null;
+      }
 
-    try {
-      const subscription = await registration.pushManager.getSubscription()
-      return subscription
-    } catch {
-      return null
-    }
-  }, [getServiceWorkerRegistration])
+      try {
+        const subscription = await registration.pushManager.getSubscription();
+        return subscription;
+      } catch {
+        return null;
+      }
+    }, [getServiceWorkerRegistration]);
 
   /**
    * Store push subscription in database
@@ -133,248 +138,268 @@ export function usePushNotifications(
   const storeSubscription = useCallback(
     async (sub: PushSubscription) => {
       if (!userId) {
-        setError("User ID diperlukan untuk berlangganan notifikasi")
-        return false
+        setError("User ID diperlukan untuk berlangganan notifikasi");
+        return false;
       }
 
-      const subscriptionJson = sub.toJSON()
+      const subscriptionJson = sub.toJSON();
       if (!subscriptionJson.endpoint || !subscriptionJson.keys) {
-        setError("Langganan tidak valid")
-        return false
+        setError("Langganan tidak valid");
+        return false;
       }
 
       const result = await subscribeToPushDB(
         userId,
         subscriptionJson.endpoint,
         subscriptionJson.keys.auth || "",
-        subscriptionJson.keys.p256dh || ""
-      )
+        subscriptionJson.keys.p256dh || "",
+      );
 
       if (!result.success) {
-        setError(result.error || "Gagal menyimpan langganan notifikasi")
-        return false
+        setError(result.error || "Gagal menyimpan langganan notifikasi");
+        return false;
       }
 
-      return true
+      return true;
     },
-    [userId]
-  )
+    [userId],
+  );
 
   /**
    * Request notification permission from the user
    */
   const requestPermission = useCallback(async () => {
     if (!checkSupport()) {
-      return
+      return;
     }
 
     if (!("Notification" in window)) {
-      setError("Layanan notifikasi tidak didukung di browser ini")
-      return
+      setError("Layanan notifikasi tidak didukung di browser ini");
+      return;
     }
 
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const result = await Notification.requestPermission()
-      setPermission(result)
+      const result = await Notification.requestPermission();
+      setPermission(result);
 
       if (result === "denied") {
-        setError("Izin notifikasi ditolak. Silakan aktifkan notifikasi di pengaturan browser.")
+        setError(
+          "Izin notifikasi ditolak. Silakan aktifkan notifikasi di pengaturan browser.",
+        );
       } else if (result === "default") {
-        setError("Izin notifikasi belum diberikan")
+        setError("Izin notifikasi belum diberikan");
       }
     } catch (err) {
-      setError("Gagal meminta izin notifikasi")
+      setError("Gagal meminta izin notifikasi");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [checkSupport])
+  }, [checkSupport]);
 
   /**
    * Subscribe to push notifications
    */
   const subscribe = useCallback(async () => {
     if (!enabled) {
-      return
+      return;
     }
 
     if (!checkSupport()) {
-      return
+      return;
     }
 
     if (!userId) {
-      setError("User ID diperlukan untuk berlangganan notifikasi")
-      return
+      setError("User ID diperlukan untuk berlangganan notifikasi");
+      return;
     }
 
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
       // Check current permission
-      const currentPermission = Notification.permission
-      setPermission(currentPermission)
+      const currentPermission = Notification.permission;
+      setPermission(currentPermission);
 
       if (currentPermission === "denied") {
-        setError("Izin notifikasi ditolak. Silakan aktifkan notifikasi di pengaturan browser.")
-        setIsLoading(false)
-        return
+        setError(
+          "Izin notifikasi ditolak. Silakan aktifkan notifikasi di pengaturan browser.",
+        );
+        setIsLoading(false);
+        return;
       }
 
       if (currentPermission === "default") {
         // Request permission first
-        await requestPermission()
-        const newPermission = Notification.permission
+        await requestPermission();
+        const newPermission = Notification.permission;
         if (newPermission !== "granted") {
-          setIsLoading(false)
-          return
+          setIsLoading(false);
+          return;
         }
       }
 
       // Get or register service worker
-      let registration = await getServiceWorkerRegistration()
+      let registration = await getServiceWorkerRegistration();
       if (!registration) {
         if (!("serviceWorker" in navigator)) {
-          setError("Service Worker tidak didukung di browser ini")
-          setIsLoading(false)
-          return
+          setError("Service Worker tidak didukung di browser ini");
+          setIsLoading(false);
+          return;
         }
-        registration = await navigator.serviceWorker.register("/sw.js")
+        registration = await navigator.serviceWorker.register("/sw.js");
       }
 
       // Check if already subscribed
-      const existingSubscription = await registration.pushManager.getSubscription()
+      const existingSubscription =
+        await registration.pushManager.getSubscription();
       if (existingSubscription) {
         // Verify subscription is stored in database
-        await storeSubscription(existingSubscription)
-        setSubscription(existingSubscription)
-        setIsSubscribed(true)
-        setIsLoading(false)
-        return
+        await storeSubscription(existingSubscription);
+        setSubscription(existingSubscription);
+        setIsSubscribed(true);
+        setIsLoading(false);
+        return;
       }
 
       // Get VAPID public key from environment
-      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_KEY
+      const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_KEY;
       if (!vapidPublicKey) {
-        setError("Kunci publik VAPID tidak dikonfigurasi")
-        setIsLoading(false)
-        return
+        setError("Kunci publik VAPID tidak dikonfigurasi");
+        setIsLoading(false);
+        return;
       }
 
       // Convert VAPID key to Uint8Array
-      const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey) as BufferSource
+      const convertedVapidKey = urlBase64ToUint8Array(
+        vapidPublicKey,
+      ) as BufferSource;
 
       // Subscribe to push notifications
       const newSubscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: convertedVapidKey,
-      })
+      });
 
       // Store subscription in database
-      const stored = await storeSubscription(newSubscription)
+      const stored = await storeSubscription(newSubscription);
       if (!stored) {
         // Rollback: unsubscribe if storage failed
-        await newSubscription.unsubscribe()
-        setIsLoading(false)
-        return
+        await newSubscription.unsubscribe();
+        setIsLoading(false);
+        return;
       }
 
-      setSubscription(newSubscription)
-      setIsSubscribed(true)
-      setError(null)
+      setSubscription(newSubscription);
+      setIsSubscribed(true);
+      setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal berlangganan notifikasi")
+      setError(
+        err instanceof Error ? err.message : "Gagal berlangganan notifikasi",
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [enabled, userId, checkSupport, getServiceWorkerRegistration, storeSubscription, requestPermission])
+  }, [
+    enabled,
+    userId,
+    checkSupport,
+    getServiceWorkerRegistration,
+    storeSubscription,
+    requestPermission,
+  ]);
 
   /**
    * Unsubscribe from push notifications
    */
   const unsubscribe = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
       // Get current subscription
-      const currentSubscription = await getPushSubscription()
+      const currentSubscription = await getPushSubscription();
 
       if (!currentSubscription) {
-        setIsSubscribed(false)
-        setSubscription(null)
-        setIsLoading(false)
-        return
+        setIsSubscribed(false);
+        setSubscription(null);
+        setIsLoading(false);
+        return;
       }
 
       // Remove from database
-      const subscriptionJson = currentSubscription.toJSON()
+      const subscriptionJson = currentSubscription.toJSON();
       if (subscriptionJson.endpoint) {
-        await unsubscribeByEndpoint(subscriptionJson.endpoint, userId)
+        await unsubscribeByEndpoint(subscriptionJson.endpoint, userId);
       }
 
       // Unsubscribe from push service
-      await currentSubscription.unsubscribe()
+      await currentSubscription.unsubscribe();
 
-      setSubscription(null)
-      setIsSubscribed(false)
-      setError(null)
+      setSubscription(null);
+      setIsSubscribed(false);
+      setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal berhenti berlangganan notifikasi")
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Gagal berhenti berlangganan notifikasi",
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [getPushSubscription, userId])
+  }, [getPushSubscription, userId]);
 
   /**
    * Initialize push notifications
    */
   const initialize = useCallback(async () => {
     if (initializationRef.current) {
-      return
+      return;
     }
 
-    initializationRef.current = true
+    initializationRef.current = true;
 
     if (!enabled) {
-      return
+      return;
     }
 
     if (!checkSupport()) {
-      return
+      return;
     }
 
     // Check current permission
-    const currentPermission = Notification.permission
-    setPermission(currentPermission)
+    const currentPermission = Notification.permission;
+    setPermission(currentPermission);
 
     // Check if already subscribed
-    const existingSubscription = await getPushSubscription()
+    const existingSubscription = await getPushSubscription();
     if (existingSubscription) {
-      setSubscription(existingSubscription)
-      setIsSubscribed(true)
-      return
+      setSubscription(existingSubscription);
+      setIsSubscribed(true);
+      return;
     }
 
     // Auto-subscribe if enabled and permission granted
     if (autoSubscribe && currentPermission === "granted") {
-      await subscribe()
+      await subscribe();
     }
-  }, [enabled, checkSupport, getPushSubscription, autoSubscribe, subscribe])
+  }, [enabled, checkSupport, getPushSubscription, autoSubscribe, subscribe]);
 
   // Initialize on mount
   useEffect(() => {
-    initialize()
-  }, [initialize])
+    initialize();
+  }, [initialize]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      initializationRef.current = false
-    }
-  }, [])
+      initializationRef.current = false;
+    };
+  }, []);
 
   return {
     permission,
@@ -386,7 +411,7 @@ export function usePushNotifications(
     subscribe,
     unsubscribe,
     requestPermission,
-  }
+  };
 }
 
 /**
@@ -400,15 +425,15 @@ export function usePushNotifications(
  * @returns VAPID public key as Uint8Array
  */
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4)
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/")
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
 
-  const rawData = window.atob(base64)
-  const outputArray = new Uint8Array(rawData.length)
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
 
   for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i)
+    outputArray[i] = rawData.charCodeAt(i);
   }
 
-  return outputArray
+  return outputArray;
 }

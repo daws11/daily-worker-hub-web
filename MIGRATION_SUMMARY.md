@@ -3,12 +3,14 @@
 ## ✅ Completed
 
 ### 1. Migration File Created
+
 - **Location:** `supabase/migrations/20260304125500_messages_system.sql`
 - **Status:** Ready to apply
 
 ### 2. Schema Design
 
 #### Conversations Table (NEW)
+
 ```sql
 CREATE TABLE conversations (
   id UUID PRIMARY KEY,
@@ -27,7 +29,9 @@ CREATE TABLE conversations (
 ```
 
 #### Messages Table (ENHANCED)
+
 Added new columns to existing table:
+
 - `conversation_id` - Links messages to conversations
 - `message_type` - 'text', 'image', or 'file'
 - `media_url` - URL for attachments
@@ -36,6 +40,7 @@ Added new columns to existing table:
 ### 3. Features Implemented
 
 #### Indexes
+
 - `idx_conversations_participants` - Fast conversation lookup
 - `idx_conversations_booking` - Filter by booking
 - `idx_conversations_last_message` - Sort by recent activity
@@ -43,24 +48,30 @@ Added new columns to existing table:
 - `idx_messages_sender/receiver` - User-specific queries
 
 #### Triggers & Functions
+
 - Auto-update conversation's `last_message_at` and `last_message_preview`
 - Auto-increment unread counts for receivers
 - Auto-update `updated_at` timestamps
 
 #### Row Level Security (RLS)
+
 **Conversations:**
+
 - Users can only view/create/update conversations where they are participants
 
 **Messages:**
+
 - Users can only view messages they sent or received
 - Users can only send messages as themselves
 - Users can only update (mark as read) messages they received
 
 #### Realtime
+
 - Both `messages` and `conversations` tables added to Supabase Realtime
 - Enables live updates for chat functionality
 
 ### 4. Constraints & Validation
+
 - Participant order constraint prevents duplicate conversations
 - Message type validation (text/image/file)
 - Proper foreign key relationships with appropriate ON DELETE actions
@@ -68,12 +79,15 @@ Added new columns to existing table:
 ## ⚠️ Issue Found
 
 ### Local Database Error
+
 The local Supabase database failed to start due to an existing error in:
+
 - **File:** `supabase/migrations/20260301000002_seed_test_data.sql`
 - **Error:** `INSERT has more target columns than expressions`
 - **Line:** Worker user seed data insertion
 
 **Error details:**
+
 ```
 ERROR: INSERT has more target columns than expressions at character 288
 ```
@@ -83,6 +97,7 @@ The seed data migration has a syntax error where the INSERT statement specifies 
 ## 📋 Next Steps
 
 ### Option 1: Fix Seed Data & Apply Migration
+
 ```bash
 # 1. Fix the seed data file (remove one column or add missing value)
 # 2. Reset local database
@@ -98,6 +113,7 @@ supabase migration list
 ```
 
 ### Option 2: Apply to Remote Database
+
 ```bash
 # 1. Link to remote project
 supabase link --project-ref <your-project-ref>
@@ -113,7 +129,9 @@ supabase db push
 ```
 
 ### Option 3: Manual SQL Execution
+
 If CLI issues persist, run the migration SQL directly:
+
 ```bash
 # Using psql
 psql $DATABASE_URL < supabase/migrations/20260304125500_messages_system.sql
@@ -143,7 +161,7 @@ conversations (NEW)
   ├─ participant_1_id → users.id
   ├─ participant_2_id → users.id
   └─ booking_id → bookings.id
-  
+
 messages (existing, enhanced)
   ├─ conversation_id → conversations.id (NEW)
   ├─ sender_id → users.id
@@ -155,6 +173,7 @@ messages (existing, enhanced)
 ## 💡 Usage Examples
 
 ### Create a conversation
+
 ```sql
 INSERT INTO conversations (
   participant_1_id,
@@ -172,6 +191,7 @@ INSERT INTO conversations (
 ```
 
 ### Send a message
+
 ```sql
 INSERT INTO messages (
   conversation_id,
@@ -189,6 +209,7 @@ INSERT INTO messages (
 ```
 
 ### Get user's conversations
+
 ```sql
 SELECT * FROM conversations
 WHERE participant_1_id = auth.uid()
@@ -197,6 +218,7 @@ ORDER BY last_message_at DESC;
 ```
 
 ### Get conversation messages (paginated)
+
 ```sql
 SELECT * FROM messages
 WHERE conversation_id = 'conversation-uuid'
@@ -205,6 +227,7 @@ LIMIT 50;
 ```
 
 ### Mark messages as read
+
 ```sql
 UPDATE messages
 SET is_read = true, read_at = NOW()

@@ -1,31 +1,36 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Controller, type ControllerProps } from "react-hook-form"
-import { Upload, X, Image as ImageIcon } from "lucide-react"
+import * as React from "react";
+import { Controller, type ControllerProps } from "react-hook-form";
+import { Upload, X, Image as ImageIcon } from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 // File validation constants
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
-const ALLOWED_FILE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
-const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"]
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_FILE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
+const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
 
 export interface FileUploadValue {
-  file: File | null
-  preview: string | null
+  file: File | null;
+  preview: string | null;
 }
 
 interface FileUploadProps {
-  value: FileUploadValue | null
-  onChange: (value: FileUploadValue) => void
-  label: string
-  description?: string
-  accept?: string
-  disabled?: boolean
-  className?: string
-  error?: string
+  value: FileUploadValue | null;
+  onChange: (value: FileUploadValue) => void;
+  label: string;
+  description?: string;
+  accept?: string;
+  disabled?: boolean;
+  className?: string;
+  error?: string;
 }
 
 function validateFile(file: File): { valid: boolean; error?: string } {
@@ -34,7 +39,7 @@ function validateFile(file: File): { valid: boolean; error?: string } {
     return {
       valid: false,
       error: `Format file harus ${ALLOWED_EXTENSIONS.join(", ")}`,
-    }
+    };
   }
 
   // Check file size
@@ -42,19 +47,19 @@ function validateFile(file: File): { valid: boolean; error?: string } {
     return {
       valid: false,
       error: `Ukuran file maksimal 5MB`,
-    }
+    };
   }
 
-  return { valid: true }
+  return { valid: true };
 }
 
 function createPreview(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onloadend = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
-  })
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 export function FileUpload({
@@ -67,86 +72,86 @@ export function FileUpload({
   className,
   error,
 }: FileUploadProps) {
-  const [isDragging, setIsDragging] = React.useState(false)
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
-  const dropZoneRef = React.useRef<HTMLDivElement>(null)
+  const [isDragging, setIsDragging] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const dropZoneRef = React.useRef<HTMLDivElement>(null);
 
   const handleFileSelect = async (selectedFile: File | null) => {
     if (!selectedFile) {
-      onChange({ file: null, preview: null })
-      return
+      onChange({ file: null, preview: null });
+      return;
     }
 
-    const validation = validateFile(selectedFile)
+    const validation = validateFile(selectedFile);
     if (!validation.valid) {
       // Set error will be handled by parent through the error prop
       // For now, we don't update the value if invalid
-      return
+      return;
     }
 
     try {
-      const preview = await createPreview(selectedFile)
-      onChange({ file: selectedFile, preview })
+      const preview = await createPreview(selectedFile);
+      onChange({ file: selectedFile, preview });
     } catch {
       // If preview fails, still set the file but without preview
-      onChange({ file: selectedFile, preview: null })
+      onChange({ file: selectedFile, preview: null });
     }
-  }
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
     if (!disabled) {
-      setIsDragging(true)
+      setIsDragging(true);
     }
-  }
+  };
 
   const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
 
-    if (disabled) return
+    if (disabled) return;
 
-    const droppedFile = e.dataTransfer.files?.[0]
+    const droppedFile = e.dataTransfer.files?.[0];
     if (droppedFile) {
-      handleFileSelect(droppedFile)
+      handleFileSelect(droppedFile);
     }
-  }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0] ?? null
-    handleFileSelect(selectedFile)
+    const selectedFile = e.target.files?.[0] ?? null;
+    handleFileSelect(selectedFile);
     // Reset input value to allow selecting the same file again
     if (fileInputRef.current) {
-      fileInputRef.current.value = ""
+      fileInputRef.current.value = "";
     }
-  }
+  };
 
   const handleButtonClick = () => {
     if (!disabled) {
-      fileInputRef.current?.click()
+      fileInputRef.current?.click();
     }
-  }
+  };
 
   const handleRemove = () => {
     if (!disabled) {
-      onChange({ file: null, preview: null })
+      onChange({ file: null, preview: null });
     }
-  }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault()
-      handleButtonClick()
+      e.preventDefault();
+      handleButtonClick();
     }
-  }
+  };
 
   return (
     <div className={cn("space-y-2", className)}>
@@ -175,15 +180,17 @@ export function FileUpload({
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             isDragging && "border-primary bg-primary/5",
             disabled && "cursor-not-allowed opacity-50",
-            !disabled && !isDragging && "hover:border-primary/50 cursor-pointer",
+            !disabled &&
+              !isDragging &&
+              "hover:border-primary/50 cursor-pointer",
             error && "border-destructive",
-            !error && "border-input"
+            !error && "border-input",
           )}
         >
           <div
             className={cn(
               "rounded-full p-3",
-              isDragging ? "bg-primary/10" : "bg-muted"
+              isDragging ? "bg-primary/10" : "bg-muted",
             )}
           >
             <Upload className="h-6 w-6 text-muted-foreground" />
@@ -205,8 +212,8 @@ export function FileUpload({
             size="sm"
             disabled={disabled}
             onClick={(e) => {
-              e.stopPropagation()
-              handleButtonClick()
+              e.stopPropagation();
+              handleButtonClick();
             }}
           >
             Pilih File
@@ -216,7 +223,7 @@ export function FileUpload({
         <div
           className={cn(
             "relative overflow-hidden rounded-lg border border-input bg-muted/50",
-            disabled && "opacity-50"
+            disabled && "opacity-50",
           )}
         >
           <div className="flex items-start gap-4 p-4">
@@ -266,27 +273,27 @@ export function FileUpload({
         </p>
       )}
     </div>
-  )
+  );
 }
 
 // Form integration component
 interface FormFileUploadProps<
   TFieldValues extends Record<string, any> = Record<string, any>,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 > {
-  name: TName
-  label: string
-  description?: string
-  accept?: string
-  disabled?: boolean
-  className?: string
+  name: TName;
+  label: string;
+  description?: string;
+  accept?: string;
+  disabled?: boolean;
+  className?: string;
 }
 
-import type { FieldPath } from "react-hook-form"
+import type { FieldPath } from "react-hook-form";
 
 export function FormFileUpload<
   TFieldValues extends Record<string, any> = Record<string, any>,
-  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>
+  TName extends FieldPath<TFieldValues> = FieldPath<TFieldValues>,
 >({
   control,
   name,
@@ -296,7 +303,10 @@ export function FormFileUpload<
   disabled,
   className,
 }: Omit<ControllerProps<TFieldValues, TName>, "render"> &
-  Pick<FormFileUploadProps<TFieldValues, TName>, "label" | "description" | "accept" | "disabled" | "className">) {
+  Pick<
+    FormFileUploadProps<TFieldValues, TName>,
+    "label" | "description" | "accept" | "disabled" | "className"
+  >) {
   return (
     <Controller
       control={control}
@@ -314,5 +324,5 @@ export function FormFileUpload<
         />
       )}
     />
-  )
+  );
 }

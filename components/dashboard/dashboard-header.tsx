@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Menu } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { LanguageSwitcher } from "@/components/ui/language-switcher"
+import * as React from "react";
+import { Menu } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 interface DashboardHeaderProps {
-  onMenuClick: () => void
+  onMenuClick: () => void;
 }
 
 export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
@@ -31,5 +31,5 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
         <LanguageSwitcher />
       </div>
     </header>
-  )
+  );
 }

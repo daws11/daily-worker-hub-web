@@ -1,37 +1,49 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { TrendingUp, TrendingDown } from "lucide-react"
+import * as React from "react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface AnalyticsCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  title: string
-  value: string | number
-  description?: string
+  title: string;
+  value: string | number;
+  description?: string;
   trend?: {
-    value: number
-    label?: string
-  }
-  icon?: React.ReactNode
-  loading?: boolean
+    value: number;
+    label?: string;
+  };
+  icon?: React.ReactNode;
+  loading?: boolean;
 }
 
 const AnalyticsCard = React.forwardRef<HTMLDivElement, AnalyticsCardProps>(
-  ({ title, value, description, trend, icon, loading = false, className, ...props }, ref) => {
+  (
+    {
+      title,
+      value,
+      description,
+      trend,
+      icon,
+      loading = false,
+      className,
+      ...props
+    },
+    ref,
+  ) => {
     const formatValue = React.useCallback((val: string | number) => {
       if (typeof val === "number") {
-        return val.toLocaleString("en-US")
+        return val.toLocaleString("en-US");
       }
-      return val
-    }, [])
+      return val;
+    }, []);
 
     const formatTrend = React.useCallback((val: number) => {
-      const sign = val > 0 ? "+" : ""
-      return `${sign}${val.toFixed(1)}%`
-    }, [])
+      const sign = val > 0 ? "+" : "";
+      return `${sign}${val.toFixed(1)}%`;
+    }, []);
 
     return (
       <Card ref={ref} className={cn("", className)} {...props}>
@@ -47,7 +59,9 @@ const AnalyticsCard = React.forwardRef<HTMLDivElement, AnalyticsCardProps>(
             </div>
           ) : (
             <>
-              <div className="text-2xl font-bold tracking-tight">{formatValue(value)}</div>
+              <div className="text-2xl font-bold tracking-tight">
+                {formatValue(value)}
+              </div>
               {trend !== undefined && (
                 <div className="flex items-center gap-1 text-xs">
                   {trend.value > 0 ? (
@@ -59,13 +73,15 @@ const AnalyticsCard = React.forwardRef<HTMLDivElement, AnalyticsCardProps>(
                     className={cn(
                       "font-medium",
                       trend.value > 0 && "text-green-600 dark:text-green-500",
-                      trend.value < 0 && "text-red-600 dark:text-red-500"
+                      trend.value < 0 && "text-red-600 dark:text-red-500",
                     )}
                   >
                     {formatTrend(trend.value)}
                   </span>
                   {trend.label && (
-                    <span className="text-muted-foreground ml-1">{trend.label}</span>
+                    <span className="text-muted-foreground ml-1">
+                      {trend.label}
+                    </span>
                   )}
                 </div>
               )}
@@ -76,9 +92,9 @@ const AnalyticsCard = React.forwardRef<HTMLDivElement, AnalyticsCardProps>(
           )}
         </CardContent>
       </Card>
-    )
-  }
-)
-AnalyticsCard.displayName = "AnalyticsCard"
+    );
+  },
+);
+AnalyticsCard.displayName = "AnalyticsCard";
 
-export { AnalyticsCard }
+export { AnalyticsCard };

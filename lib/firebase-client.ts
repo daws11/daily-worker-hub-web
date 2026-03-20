@@ -3,8 +3,8 @@
  * Used for requesting permission and receiving FCM messages
  */
 
-import { initializeApp, FirebaseApp, getApps } from 'firebase/app'
-import { getMessaging, Messaging, isSupported } from 'firebase/messaging'
+import { initializeApp, FirebaseApp, getApps } from "firebase/app";
+import { getMessaging, Messaging, isSupported } from "firebase/messaging";
 
 // Firebase client configuration
 const firebaseConfig = {
@@ -14,7 +14,7 @@ const firebaseConfig = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-}
+};
 
 /**
  * Check if Firebase client is configured
@@ -24,35 +24,37 @@ export function isFirebaseClientConfigured(): boolean {
     process.env.NEXT_PUBLIC_FIREBASE_API_KEY &&
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID &&
     process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-  )
+  );
 }
 
 // Singleton instances
-let firebaseApp: FirebaseApp | null = null
-let messagingInstance: Messaging | null = null
+let firebaseApp: FirebaseApp | null = null;
+let messagingInstance: Messaging | null = null;
 
 /**
  * Get or initialize Firebase client app
  */
 export async function getFirebaseApp(): Promise<FirebaseApp | null> {
   if (firebaseApp) {
-    return firebaseApp
+    return firebaseApp;
   }
 
   // Check if already initialized
-  const existingApps = getApps()
+  const existingApps = getApps();
   if (existingApps.length > 0) {
-    firebaseApp = existingApps[0]
-    return firebaseApp
+    firebaseApp = existingApps[0];
+    return firebaseApp;
   }
 
   if (!isFirebaseClientConfigured()) {
-    console.warn('Firebase client is not configured. Push notifications will not work.')
-    return null
+    console.warn(
+      "Firebase client is not configured. Push notifications will not work.",
+    );
+    return null;
   }
 
-  firebaseApp = initializeApp(firebaseConfig)
-  return firebaseApp
+  firebaseApp = initializeApp(firebaseConfig);
+  return firebaseApp;
 }
 
 /**
@@ -60,23 +62,23 @@ export async function getFirebaseApp(): Promise<FirebaseApp | null> {
  */
 export async function getFirebaseMessaging(): Promise<Messaging | null> {
   if (messagingInstance) {
-    return messagingInstance
+    return messagingInstance;
   }
 
   // Check if messaging is supported in this browser
-  const supported = await isSupported()
+  const supported = await isSupported();
   if (!supported) {
-    console.warn('Firebase Messaging is not supported in this browser')
-    return null
+    console.warn("Firebase Messaging is not supported in this browser");
+    return null;
   }
 
-  const app = await getFirebaseApp()
+  const app = await getFirebaseApp();
   if (!app) {
-    return null
+    return null;
   }
 
-  messagingInstance = getMessaging(app)
-  return messagingInstance
+  messagingInstance = getMessaging(app);
+  return messagingInstance;
 }
 
 /**
@@ -84,8 +86,8 @@ export async function getFirebaseMessaging(): Promise<Messaging | null> {
  * This is used for subscribing to push notifications in the browser
  */
 export function getVapidKey(): string | null {
-  return process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || null
+  return process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || null;
 }
 
 // Re-export types for convenience
-export type { FirebaseApp, Messaging }
+export type { FirebaseApp, Messaging };

@@ -1,141 +1,170 @@
-"use client"
+"use client";
 
-import { useState, useCallback, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { toast } from "sonner"
-import { useAuth } from "@/app/providers/auth-provider"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Award, Loader2, CheckCircle2, XCircle, Clock, FileText, AlertCircle, Check, X } from "lucide-react"
-import { supabase } from "@/lib/supabase/client"
-import { verifyBadge } from "@/lib/supabase/queries/badges"
-import type { Database } from "@/lib/supabase/types"
+import { useState, useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { useAuth } from "@/app/providers/auth-provider";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Award,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  FileText,
+  AlertCircle,
+  Check,
+  X,
+} from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
+import { verifyBadge } from "@/lib/supabase/queries/badges";
+import type { Database } from "@/lib/supabase/types";
 
-type BusinessesRow = Database["public"]["Tables"]["businesses"]["Row"]
-type BadgeRow = Database["public"]["Tables"]["badges"]["Row"]
-type WorkersRow = Database["public"]["Tables"]["workers"]["Row"]
+type BusinessesRow = Database["public"]["Tables"]["businesses"]["Row"];
+type BadgeRow = Database["public"]["Tables"]["badges"]["Row"];
+type WorkersRow = Database["public"]["Tables"]["workers"]["Row"];
 
 type PendingWorkerBadge = {
-  id: string
-  worker_id: string
-  badge_id: string
-  verification_status: 'pending' | 'verified' | 'rejected'
-  verified_by: string | null
-  verified_at: string | null
-  created_at: string
-  badge: BadgeRow
-  worker: WorkersRow
-}
+  id: string;
+  worker_id: string;
+  badge_id: string;
+  verification_status: "pending" | "verified" | "rejected";
+  verified_by: string | null;
+  verified_at: string | null;
+  created_at: string;
+  badge: BadgeRow;
+  worker: WorkersRow;
+};
 
 export default function BusinessBadgeVerificationsPage() {
-  const { user } = useAuth()
-  const router = useRouter()
-  const [business, setBusiness] = useState<BusinessesRow | null>(null)
-  const [pendingVerifications, setPendingVerifications] = useState<PendingWorkerBadge[]>([])
-  const [isLoadingBusiness, setIsLoadingBusiness] = useState(true)
-  const [isLoadingVerifications, setIsLoadingVerifications] = useState(true)
-  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set())
+  const { user } = useAuth();
+  const router = useRouter();
+  const [business, setBusiness] = useState<BusinessesRow | null>(null);
+  const [pendingVerifications, setPendingVerifications] = useState<
+    PendingWorkerBadge[]
+  >([]);
+  const [isLoadingBusiness, setIsLoadingBusiness] = useState(true);
+  const [isLoadingVerifications, setIsLoadingVerifications] = useState(true);
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
 
   // Fetch business profile
   useEffect(() => {
     async function fetchBusiness() {
       if (!user) {
-        router.push("/login")
-        return
+        router.push("/login");
+        return;
       }
 
       const { data, error } = await supabase
         .from("businesses")
         .select("*")
         .eq("user_id", user.id)
-        .single()
+        .single();
 
       if (error || !data) {
-        toast.error("Profil bisnis tidak ditemukan")
-        return
+        toast.error("Profil bisnis tidak ditemukan");
+        return;
       }
 
-      setBusiness(data)
+      setBusiness(data);
     }
 
-    fetchBusiness()
-  }, [user, router])
+    fetchBusiness();
+  }, [user, router]);
 
   // Fetch pending badge verifications for this business's badges
   const fetchVerifications = useCallback(async () => {
-    if (!business) return
+    if (!business) return;
 
-    setIsLoadingVerifications(true)
+    setIsLoadingVerifications(true);
     try {
       // Get all badges provided by this business
       const { data: businessBadges, error: badgesError } = await supabase
         .from("badges")
         .select("id")
-        .eq("provider_id", business.id)
+        .eq("provider_id", business.id);
 
-      if (badgesError) throw badgesError
+      if (badgesError) throw badgesError;
 
       if (!businessBadges || businessBadges.length === 0) {
-        setPendingVerifications([])
-        return
+        setPendingVerifications([]);
+        return;
       }
 
-      const badgeIds = businessBadges.map(b => b.id)
+      const badgeIds = businessBadges.map((b) => b.id);
 
       // Get pending worker_badges for these badges
       const { data: workerBadges, error: workerBadgesError } = await supabase
         .from("worker_badges" as any)
-        .select(`
+        .select(
+          `
           *,
           badge:badges(*),
           worker:workers(*)
-        `)
+        `,
+        )
         .in("badge_id", badgeIds)
         .eq("verification_status", "pending")
-        .order("created_at", { ascending: false })
+        .order("created_at", { ascending: false });
 
-      if (workerBadgesError) throw workerBadgesError
+      if (workerBadgesError) throw workerBadgesError;
 
-      setPendingVerifications(workerBadges as unknown as PendingWorkerBadge[])
+      setPendingVerifications(workerBadges as unknown as PendingWorkerBadge[]);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Gagal memuat data verifikasi"
-      toast.error(message)
+      const message =
+        error instanceof Error ? error.message : "Gagal memuat data verifikasi";
+      toast.error(message);
     } finally {
-      setIsLoadingVerifications(false)
+      setIsLoadingVerifications(false);
     }
-  }, [business])
+  }, [business]);
 
   useEffect(() => {
     if (business) {
-      fetchVerifications()
+      fetchVerifications();
     }
-  }, [business, fetchVerifications])
+  }, [business, fetchVerifications]);
 
-  const handleVerify = async (workerBadgeId: string, status: 'verified' | 'rejected') => {
-    if (!business) return
+  const handleVerify = async (
+    workerBadgeId: string,
+    status: "verified" | "rejected",
+  ) => {
+    if (!business) return;
 
-    setProcessingIds(prev => new Set(prev).add(workerBadgeId))
+    setProcessingIds((prev) => new Set(prev).add(workerBadgeId));
 
     try {
-      await verifyBadge(workerBadgeId, business.id, status)
+      await verifyBadge(workerBadgeId, business.id, status);
 
-      toast.success(status === 'verified' ? 'Badge berhasil diverifikasi' : 'Badge ditolak')
+      toast.success(
+        status === "verified" ? "Badge berhasil diverifikasi" : "Badge ditolak",
+      );
 
       // Refresh the list
-      await fetchVerifications()
+      await fetchVerifications();
     } catch (error) {
-      const message = error instanceof Error ? error.message : `Gagal ${status === 'verified' ? 'memverifikasi' : 'menolak'} badge`
-      toast.error(message)
+      const message =
+        error instanceof Error
+          ? error.message
+          : `Gagal ${status === "verified" ? "memverifikasi" : "menolak"} badge`;
+      toast.error(message);
     } finally {
-      setProcessingIds(prev => {
-        const newSet = new Set(prev)
-        newSet.delete(workerBadgeId)
-        return newSet
-      })
+      setProcessingIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(workerBadgeId);
+        return newSet;
+      });
     }
-  }
+  };
 
   // Format date to Indonesian locale
   const formatDate = (dateString: string) => {
@@ -144,19 +173,21 @@ export default function BusinessBadgeVerificationsPage() {
       month: "short",
       year: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
-    })
-  }
+      minute: "2-digit",
+    });
+  };
 
   if (isLoadingBusiness) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Memuat profil bisnis...</p>
+          <p className="text-sm text-muted-foreground">
+            Memuat profil bisnis...
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -198,7 +229,7 @@ export default function BusinessBadgeVerificationsPage() {
               <div className="flex items-center gap-2">
                 <Award className="h-5 w-5 text-purple-600" />
                 <span className="text-2xl font-bold text-purple-600">
-                  {business ? (business.name || 'Bisnis') : '-'}
+                  {business ? business.name || "Bisnis" : "-"}
                 </span>
               </div>
             </CardContent>
@@ -221,7 +252,9 @@ export default function BusinessBadgeVerificationsPage() {
               <div className="flex items-center justify-center py-12">
                 <div className="flex flex-col items-center gap-3">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  <p className="text-sm text-muted-foreground">Memuat data verifikasi...</p>
+                  <p className="text-sm text-muted-foreground">
+                    Memuat data verifikasi...
+                  </p>
                 </div>
               </div>
             ) : pendingVerifications.length === 0 ? (
@@ -237,10 +270,13 @@ export default function BusinessBadgeVerificationsPage() {
             ) : (
               <div className="space-y-4">
                 {pendingVerifications.map((wb) => {
-                  const isProcessing = processingIds.has(wb.id)
+                  const isProcessing = processingIds.has(wb.id);
 
                   return (
-                    <Card key={wb.id} className="border-yellow-200 dark:border-yellow-800">
+                    <Card
+                      key={wb.id}
+                      className="border-yellow-200 dark:border-yellow-800"
+                    >
                       <CardContent className="pt-6">
                         <div className="space-y-4">
                           {/* Worker Info */}
@@ -248,7 +284,7 @@ export default function BusinessBadgeVerificationsPage() {
                             <div className="flex-1 space-y-2">
                               <div>
                                 <h3 className="font-semibold text-lg">
-                                  {wb.worker.full_name || 'Pekerja'}
+                                  {wb.worker.full_name || "Pekerja"}
                                 </h3>
                                 {wb.worker.bio && (
                                   <p className="text-sm text-muted-foreground mt-1">
@@ -259,7 +295,9 @@ export default function BusinessBadgeVerificationsPage() {
 
                               <div className="flex items-center gap-2">
                                 <Award className="h-4 w-4 text-purple-600" />
-                                <span className="font-medium">{wb.badge.name}</span>
+                                <span className="font-medium">
+                                  {wb.badge.name}
+                                </span>
                                 {wb.badge.is_certified && (
                                   <Badge variant="outline" className="text-xs">
                                     Certified
@@ -289,7 +327,7 @@ export default function BusinessBadgeVerificationsPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleVerify(wb.id, 'rejected')}
+                              onClick={() => handleVerify(wb.id, "rejected")}
                               disabled={isProcessing}
                               className="gap-1.5"
                             >
@@ -302,7 +340,7 @@ export default function BusinessBadgeVerificationsPage() {
                             </Button>
                             <Button
                               size="sm"
-                              onClick={() => handleVerify(wb.id, 'verified')}
+                              onClick={() => handleVerify(wb.id, "verified")}
                               disabled={isProcessing}
                               className="gap-1.5"
                             >
@@ -317,7 +355,7 @@ export default function BusinessBadgeVerificationsPage() {
                         </div>
                       </CardContent>
                     </Card>
-                  )
+                  );
                 })}
               </div>
             )}
@@ -325,5 +363,5 @@ export default function BusinessBadgeVerificationsPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

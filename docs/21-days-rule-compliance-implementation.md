@@ -18,6 +18,7 @@ Implementation of PP 35/2021 compliance for Daily Worker Hub, which limits daily
   - Triggers to auto-update warnings when booking status changes
 
 **Existing:** `compliance_tracking` table (already exists)
+
 - Tracks days worked per worker-business pair per month
 - Updated automatically via database triggers
 
@@ -26,18 +27,21 @@ Implementation of PP 35/2021 compliance for Daily Worker Hub, which limits daily
 **File:** `lib/algorithms/compliance-checker.ts`
 
 **Functions:**
+
 - `checkCompliance()` - Check if a worker can be booked based on days worked
 - `batchCheckCompliance()` - Check multiple workers at once
 - `getCompliantAlternativeWorkers()` - Get alternative workers who haven't reached the limit
 - `checkWorkerCanApply()` - Check if a worker can apply for a job
 
 **Warning Levels:**
+
 - 0-15 days: `none` (can book, no banner)
 - 16-18 days: `warning` (yellow banner, can still book)
 - 19-20 days: `warning` (orange banner, can still book)
 - 21+ days: `blocked` (red banner, cannot hire)
 
 **Banner Types:**
+
 - `success` - 0-15 days (compliant)
 - `warning-yellow` - 16-18 days (approaching limit)
 - `warning-orange` - 19-20 days (strong warning)
@@ -48,6 +52,7 @@ Implementation of PP 35/2021 compliance for Daily Worker Hub, which limits daily
 **File:** `lib/supabase/types-compliance.ts`
 
 **Types:**
+
 - `ComplianceWarningsRow`, `ComplianceWarningsInsert`, `ComplianceWarningsUpdate`
 - `ComplianceTrackingRow`
 - `ComplianceStatus`, `WarningLevel`, `BannerType`
@@ -61,6 +66,7 @@ Implementation of PP 35/2021 compliance for Daily Worker Hub, which limits daily
 **Updated:** `lib/supabase/queries/compliance.ts`
 
 **Added Functions:**
+
 - `getBusinessComplianceWarnings()` - Get warnings for a business in a month
 - `getWorkerComplianceWarnings()` - Get warnings for a worker in a month
 - `getBusinessComplianceSummary()` - Get summary with counts
@@ -68,6 +74,7 @@ Implementation of PP 35/2021 compliance for Daily Worker Hub, which limits daily
 - `getUnacknowledgedWarnings()` - Get unacknowledged warnings for dashboard
 
 **Updated Types:**
+
 - `WarningLevel` changed from `'none' | 'approaching' | 'limit'` to `'none' | 'warning' | 'blocked'`
 
 ### 5. Server Actions Integration
@@ -75,6 +82,7 @@ Implementation of PP 35/2021 compliance for Daily Worker Hub, which limits daily
 **Updated:** `lib/actions/bookings.ts`
 
 **Added Functions:**
+
 - `createBooking()` - Create booking with compliance check
 - `acceptBooking()` - Accept booking with compliance check
 - `rejectBooking()` - Reject a booking
@@ -82,6 +90,7 @@ Implementation of PP 35/2021 compliance for Daily Worker Hub, which limits daily
 **Updated:** `lib/actions/job-applications.ts`
 
 **Updated Functions:**
+
 - `applyForJob()` - Worker applies for job with compliance check
   - Checks PP 35/2021 compliance (21-day limit) BEFORE allowing application
   - Blocks workers who have already worked 21+ days for the business this month
@@ -92,6 +101,7 @@ Implementation of PP 35/2021 compliance for Daily Worker Hub, which limits daily
 ### 6. UI Components
 
 **Existing Components (No changes needed):**
+
 - `components/booking/compliance-warning-banner.tsx` - Warning banner for businesses
 - `components/booking/compliance-status-badge.tsx` - Status indicator badge
 - `components/booking/alternative-workers-suggestion.tsx` - Alternative worker suggestions
@@ -99,24 +109,30 @@ Implementation of PP 35/2021 compliance for Daily Worker Hub, which limits daily
 ## Integration Points
 
 ### Business Dashboard
+
 - Show compliance warnings for workers approaching or at the limit
 - Display `compliance-warning-banner` when showing worker applications
 - Show `compliance-status-badge` next to worker cards
 - Offer `alternative-workers-suggestion` when workers are blocked
 
 ### Worker Dashboard
+
 - Show remaining days with each business
 - Display compliance warnings when applying to jobs
 - Block application buttons if 21-day limit reached
 
 ### Job Application Flow
+
 **File:** `lib/actions/job-applications.ts`
+
 - Worker applies → `applyForJob()` checks compliance
 - Business accepts → `acceptApplication()` checks compliance
 - Auto-suggest alternative workers when blocked
 
 ### Booking Creation Flow
+
 **File:** `lib/actions/bookings.ts`
+
 - Create booking → `createBooking()` checks compliance
 - Accept booking → `acceptBooking()` checks compliance
 - Show compliance banner when accepting worker
@@ -145,6 +161,7 @@ Return compliance status:
 ### 2. Automatic Tracking
 
 When a booking status changes to `accepted` or `completed`:
+
 1. Database trigger `on_booking_status_change_for_compliance` fires
 2. Updates `compliance_tracking` table with new days_worked count
 3. Database trigger `on_booking_status_change_for_warnings` fires
@@ -152,19 +169,21 @@ When a booking status changes to `accepted` or `completed`:
 
 ### 3. Warning Levels
 
-| Days Worked | Status | Warning Level | Banner Color | Can Book? |
-|-------------|--------|---------------|--------------|-----------|
-| 0-15 | ok | none | Green/None | ✅ Yes |
-| 16-18 | warning | warning | Yellow | ✅ Yes |
-| 19-20 | warning | warning | Orange | ✅ Yes |
-| 21+ | blocked | blocked | Red | ❌ No |
+| Days Worked | Status  | Warning Level | Banner Color | Can Book? |
+| ----------- | ------- | ------------- | ------------ | --------- |
+| 0-15        | ok      | none          | Green/None   | ✅ Yes    |
+| 16-18       | warning | warning       | Yellow       | ✅ Yes    |
+| 19-20       | warning | warning       | Orange       | ✅ Yes    |
+| 21+         | blocked | blocked       | Red          | ❌ No     |
 
 ## Database Triggers
 
 ### Existing Triggers (from compliance_tracking migration)
+
 - `on_booking_status_change_for_compliance` - Updates compliance_tracking table
 
 ### New Triggers (from compliance_warnings migration)
+
 - `on_booking_status_change_for_warnings` - Updates compliance_warnings table
 - `set_compliance_warnings_updated_at` - Updates timestamp on record update
 
@@ -173,11 +192,13 @@ When a booking status changes to `accepted` or `completed`:
 ### RLS Policies
 
 **compliance_warnings table:**
+
 - Workers can view their own warnings
 - Businesses can view and acknowledge their warnings
 - Admins have full access for auditing
 
 **compliance_tracking table:**
+
 - Workers can view their own tracking records
 - Businesses can view their tracking records
 - Admins have full access
@@ -187,13 +208,13 @@ When a booking status changes to `accepted` or `completed`:
 ### Check compliance before accepting a worker
 
 ```typescript
-import { checkComplianceBeforeAccept } from '@/lib/actions/compliance'
+import { checkComplianceBeforeAccept } from "@/lib/actions/compliance";
 
-const result = await checkComplianceBeforeAccept(workerId, businessId)
+const result = await checkComplianceBeforeAccept(workerId, businessId);
 
 if (!result.canAccept) {
   // Show error or alternative workers
-  console.error(result.data?.message)
+  console.error(result.data?.message);
   // Show alternative workers suggestion
 }
 ```
@@ -201,14 +222,14 @@ if (!result.canAccept) {
 ### Get alternative workers
 
 ```typescript
-import { getCompliantAlternativeWorkers } from '@/lib/algorithms/compliance-checker'
+import { getCompliantAlternativeWorkers } from "@/lib/algorithms/compliance-checker";
 
 const alternatives = await getCompliantAlternativeWorkers(
   businessId,
   undefined, // current month
   [blockedWorkerId], // exclude blocked worker
-  10 // limit to 10 workers
-)
+  10, // limit to 10 workers
+);
 
 // alternatives is sorted by days worked (fewest first)
 ```
@@ -216,9 +237,9 @@ const alternatives = await getCompliantAlternativeWorkers(
 ### Get compliance warnings for dashboard
 
 ```typescript
-import { getUnacknowledgedWarnings } from '@/lib/supabase/queries/compliance'
+import { getUnacknowledgedWarnings } from "@/lib/supabase/queries/compliance";
 
-const { data: warnings } = await getUnacknowledgedWarnings(businessId)
+const { data: warnings } = await getUnacknowledgedWarnings(businessId);
 
 // Display warnings on business dashboard
 ```
@@ -226,17 +247,20 @@ const { data: warnings } = await getUnacknowledgedWarnings(businessId)
 ## Files Created/Modified
 
 ### Created:
+
 - `supabase/migrations/20260227_add_compliance_warnings.sql`
 - `lib/algorithms/compliance-checker.ts`
 - `lib/supabase/types-compliance.ts`
 - `docs/21-days-rule-compliance-implementation.md` (this file)
 
 ### Modified:
+
 - `lib/supabase/queries/compliance.ts` - Added warning queries
 - `lib/actions/bookings.ts` - Added compliance checks
 - `lib/actions/job-applications.ts` - Added compliance checks to apply/accept functions
 
 ### No Changes Needed (Already Implemented):
+
 - `components/booking/compliance-warning-banner.tsx`
 - `components/booking/compliance-status-badge.tsx`
 - `components/booking/alternative-workers-suggestion.tsx`
@@ -257,6 +281,7 @@ const { data: warnings } = await getUnacknowledgedWarnings(businessId)
 ## Compliance with PP 35/2021
 
 Per Indonesian labor law PP 35/2021:
+
 - Daily workers are limited to 21 days per month per business
 - System automatically tracks days worked per worker-business pair
 - Workers are blocked from applying after reaching 21 days

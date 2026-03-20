@@ -1,7 +1,14 @@
-import * as React from "react"
-import { Calendar, Wallet, ArrowUpCircle, AlertCircle, Briefcase, Building2 } from "lucide-react"
+import * as React from "react";
+import {
+  Calendar,
+  Wallet,
+  ArrowUpCircle,
+  AlertCircle,
+  Briefcase,
+  Building2,
+} from "lucide-react";
 
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -9,27 +16,30 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { formatIDR } from "@/lib/utils/currency"
-import type { EarningsTransaction } from "@/lib/types/earnings"
+} from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { formatIDR } from "@/lib/utils/currency";
+import type { EarningsTransaction } from "@/lib/types/earnings";
 
 export interface TransactionHistoryTableProps extends React.HTMLAttributes<HTMLDivElement> {
-  transactions?: EarningsTransaction[] | null
-  isLoading?: boolean
-  title?: string
-  description?: string
-  showEmptyState?: boolean
+  transactions?: EarningsTransaction[] | null;
+  isLoading?: boolean;
+  title?: string;
+  description?: string;
+  showEmptyState?: boolean;
 }
 
-const TransactionHistoryTable = React.forwardRef<HTMLDivElement, TransactionHistoryTableProps>(
+const TransactionHistoryTable = React.forwardRef<
+  HTMLDivElement,
+  TransactionHistoryTableProps
+>(
   (
     {
       transactions,
@@ -40,7 +50,7 @@ const TransactionHistoryTable = React.forwardRef<HTMLDivElement, TransactionHist
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
     // Format date to Indonesian locale
     const formatDate = (dateString: string) => {
@@ -50,86 +60,86 @@ const TransactionHistoryTable = React.forwardRef<HTMLDivElement, TransactionHist
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
-      })
-    }
+      });
+    };
 
     // Get status badge variant
     const getStatusVariant = (
-      status: EarningsTransaction["status"]
+      status: EarningsTransaction["status"],
     ): "default" | "secondary" | "destructive" | "outline" => {
       switch (status) {
         case "pending":
-          return "outline"
+          return "outline";
         case "success":
-          return "default"
+          return "default";
         case "failed":
-          return "destructive"
+          return "destructive";
         default:
-          return "outline"
+          return "outline";
       }
-    }
+    };
 
     // Get status label in Indonesian
     const getStatusLabel = (status: EarningsTransaction["status"]): string => {
       switch (status) {
         case "pending":
-          return "Menunggu"
+          return "Menunggu";
         case "success":
-          return "Berhasil"
+          return "Berhasil";
         case "failed":
-          return "Gagal"
+          return "Gagal";
         default:
-          return status
+          return status;
       }
-    }
+    };
 
     // Get transaction type label in Indonesian
     const getTypeLabel = (type: EarningsTransaction["type"]): string => {
       switch (type) {
         case "payment":
-          return "Pembayaran"
+          return "Pembayaran";
         case "refund":
-          return "Pengembalian Dana"
+          return "Pengembalian Dana";
         default:
-          return type
+          return type;
       }
-    }
+    };
 
     // Get transaction icon
     const getTransactionIcon = (type: EarningsTransaction["type"]) => {
       switch (type) {
         case "payment":
-          return <ArrowUpCircle className="h-4 w-4 text-green-600" />
+          return <ArrowUpCircle className="h-4 w-4 text-green-600" />;
         case "refund":
-          return <AlertCircle className="h-4 w-4 text-orange-600" />
+          return <AlertCircle className="h-4 w-4 text-orange-600" />;
         default:
-          return <Wallet className="h-4 w-4 text-muted-foreground" />
+          return <Wallet className="h-4 w-4 text-muted-foreground" />;
       }
-    }
+    };
 
     // Get amount text color based on transaction type
     const getAmountColor = (type: EarningsTransaction["type"]): string => {
       switch (type) {
         case "payment":
-          return "text-green-600"
+          return "text-green-600";
         case "refund":
-          return "text-orange-600"
+          return "text-orange-600";
         default:
-          return "text-foreground"
+          return "text-foreground";
       }
-    }
+    };
 
     // Get amount prefix based on transaction type
     const getAmountPrefix = (type: EarningsTransaction["type"]): string => {
       switch (type) {
         case "payment":
-          return "+"
+          return "+";
         case "refund":
-          return "-"
+          return "-";
         default:
-          return ""
+          return "";
       }
-    }
+    };
 
     // Loading state
     if (isLoading) {
@@ -145,7 +155,7 @@ const TransactionHistoryTable = React.forwardRef<HTMLDivElement, TransactionHist
             </div>
           </CardContent>
         </Card>
-      )
+      );
     }
 
     // Empty state
@@ -155,20 +165,23 @@ const TransactionHistoryTable = React.forwardRef<HTMLDivElement, TransactionHist
           <Card ref={ref} className={cn("w-full", className)} {...props}>
             <CardHeader>
               <CardTitle>{title}</CardTitle>
-              <CardDescription>Anda belum memiliki transaksi pendapatan</CardDescription>
+              <CardDescription>
+                Anda belum memiliki transaksi pendapatan
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <WalletIcon className="h-12 w-12 text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">
-                  Belum ada transaksi pendapatan. Pendapatan Anda akan muncul di sini setelah menyelesaikan pekerjaan.
+                  Belum ada transaksi pendapatan. Pendapatan Anda akan muncul di
+                  sini setelah menyelesaikan pekerjaan.
                 </p>
               </div>
             </CardContent>
           </Card>
-        )
+        );
       }
-      return null
+      return null;
     }
 
     return (
@@ -189,7 +202,9 @@ const TransactionHistoryTable = React.forwardRef<HTMLDivElement, TransactionHist
                   <TableHead scope="col">Bisnis</TableHead>
                   <TableHead scope="col">Tanggal</TableHead>
                   <TableHead scope="col">Status</TableHead>
-                  <TableHead scope="col" className="text-right">Jumlah</TableHead>
+                  <TableHead scope="col" className="text-right">
+                    Jumlah
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -197,20 +212,30 @@ const TransactionHistoryTable = React.forwardRef<HTMLDivElement, TransactionHist
                   <TableRow key={transaction.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center gap-2">
-                        <span aria-hidden="true">{getTransactionIcon(transaction.type)}</span>
+                        <span aria-hidden="true">
+                          {getTransactionIcon(transaction.type)}
+                        </span>
                         <span>{getTypeLabel(transaction.type)}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Briefcase className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                        <Briefcase
+                          className="h-3 w-3 text-muted-foreground"
+                          aria-hidden="true"
+                        />
                         <span className="text-sm">{transaction.job_title}</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Building2 className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
-                        <span className="text-sm text-muted-foreground">{transaction.business_name}</span>
+                        <Building2
+                          className="h-3 w-3 text-muted-foreground"
+                          aria-hidden="true"
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {transaction.business_name}
+                        </span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -224,8 +249,12 @@ const TransactionHistoryTable = React.forwardRef<HTMLDivElement, TransactionHist
                         {getStatusLabel(transaction.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell className={`text-right font-medium ${getAmountColor(transaction.type)}`}>
-                      <span aria-label={`${getTypeLabel(transaction.type)}: ${formatIDR(transaction.amount)}`}>
+                    <TableCell
+                      className={`text-right font-medium ${getAmountColor(transaction.type)}`}
+                    >
+                      <span
+                        aria-label={`${getTypeLabel(transaction.type)}: ${formatIDR(transaction.amount)}`}
+                      >
                         {getAmountPrefix(transaction.type)}
                         {formatIDR(transaction.amount)}
                       </span>
@@ -237,10 +266,10 @@ const TransactionHistoryTable = React.forwardRef<HTMLDivElement, TransactionHist
           </div>
         </CardContent>
       </Card>
-    )
-  }
-)
-TransactionHistoryTable.displayName = "TransactionHistoryTable"
+    );
+  },
+);
+TransactionHistoryTable.displayName = "TransactionHistoryTable";
 
 // Helper component for the empty state icon
 function WalletIcon({ className }: { className?: string }) {
@@ -258,7 +287,7 @@ function WalletIcon({ className }: { className?: string }) {
       <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
       <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
     </svg>
-  )
+  );
 }
 
-export { TransactionHistoryTable }
+export { TransactionHistoryTable };

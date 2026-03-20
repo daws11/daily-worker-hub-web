@@ -1,28 +1,28 @@
-"use client"
+"use client";
 
-import * as React from "react"
+import * as React from "react";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
-import { getWageRate, formatRupiah } from "@/lib/constants/rate-bali"
-import { getAreaByValue } from "@/lib/constants/areas"
-import type { PositionType } from "@/app/components/position-type-select"
-import type { AreaValue } from "@/app/components/area-select"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { getWageRate, formatRupiah } from "@/lib/constants/rate-bali";
+import { getAreaByValue } from "@/lib/constants/areas";
+import type { PositionType } from "@/app/components/position-type-select";
+import type { AreaValue } from "@/app/components/area-select";
 
 export interface WageRateInputProps {
-  minWage?: number
-  maxWage?: number
-  onMinWageChange?: (value: number) => void
-  onMaxWageChange?: (value: number) => void
-  positionType?: PositionType
-  area?: AreaValue
-  error?: string
-  label?: string
-  disabled?: boolean
-  required?: boolean
-  className?: string
+  minWage?: number;
+  maxWage?: number;
+  onMinWageChange?: (value: number) => void;
+  onMaxWageChange?: (value: number) => void;
+  positionType?: PositionType;
+  area?: AreaValue;
+  error?: string;
+  label?: string;
+  disabled?: boolean;
+  required?: boolean;
+  className?: string;
 }
 
 const formatPositionLabel = (positionType: string): string => {
@@ -42,14 +42,14 @@ const formatPositionLabel = (positionType: string): string => {
     event_staff: "Event Staff",
     gardener: "Gardener",
     other: "Other",
-  }
-  return labels[positionType] || positionType
-}
+  };
+  return labels[positionType] || positionType;
+};
 
 const getRegencyFromArea = (area: AreaValue): string | undefined => {
-  const areaData = getAreaByValue(area)
-  return areaData?.regency
-}
+  const areaData = getAreaByValue(area);
+  return areaData?.regency;
+};
 
 export const WageRateInput = React.forwardRef<
   HTMLDivElement,
@@ -70,70 +70,76 @@ export const WageRateInput = React.forwardRef<
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
-    const [isLoading, setIsLoading] = React.useState(false)
-    const [fetchError, setFetchError] = React.useState<string | null>(null)
+    const [isLoading, setIsLoading] = React.useState(false);
+    const [fetchError, setFetchError] = React.useState<string | null>(null);
 
-    const minWageDisplay = minWage ? formatRupiah(minWage) : ""
-    const maxWageDisplay = maxWage ? formatRupiah(maxWage) : ""
+    const minWageDisplay = minWage ? formatRupiah(minWage) : "";
+    const maxWageDisplay = maxWage ? formatRupiah(maxWage) : "";
 
     const handleUseRateBali = async () => {
       if (!positionType || !area) {
-        setFetchError("Please select both position type and area first")
-        return
+        setFetchError("Please select both position type and area first");
+        return;
       }
 
-      setIsLoading(true)
-      setFetchError(null)
+      setIsLoading(true);
+      setFetchError(null);
 
       try {
-        const regency = getRegencyFromArea(area)
+        const regency = getRegencyFromArea(area);
         if (!regency) {
-          setFetchError("Unable to determine regency from selected area")
-          setIsLoading(false)
-          return
+          setFetchError("Unable to determine regency from selected area");
+          setIsLoading(false);
+          return;
         }
 
-        const positionLabel = formatPositionLabel(positionType)
-        const wageRate = getWageRate(positionLabel, regency)
+        const positionLabel = formatPositionLabel(positionType);
+        const wageRate = getWageRate(positionLabel, regency);
 
         if (!wageRate) {
-          setFetchError(`No wage data found for ${positionLabel} in ${regency}`)
-          setIsLoading(false)
-          return
+          setFetchError(
+            `No wage data found for ${positionLabel} in ${regency}`,
+          );
+          setIsLoading(false);
+          return;
         }
 
         if (onMinWageChange) {
-          onMinWageChange(wageRate.hourlyMin)
+          onMinWageChange(wageRate.hourlyMin);
         }
         if (onMaxWageChange) {
-          onMaxWageChange(wageRate.hourlyRecommended)
+          onMaxWageChange(wageRate.hourlyRecommended);
         }
       } catch (err) {
-        setFetchError("Failed to fetch wage rates. Please try again.")
+        setFetchError("Failed to fetch wage rates. Please try again.");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    const handleMinWageInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value.replace(/[^\d]/g, "")
-      const numValue = value ? parseInt(value, 10) : 0
+    const handleMinWageInputChange = (
+      e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+      const value = e.target.value.replace(/[^\d]/g, "");
+      const numValue = value ? parseInt(value, 10) : 0;
       if (onMinWageChange && !isNaN(numValue)) {
-        onMinWageChange(numValue)
+        onMinWageChange(numValue);
       }
-    }
+    };
 
-    const handleMaxWageInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value.replace(/[^\d]/g, "")
-      const numValue = value ? parseInt(value, 10) : 0
+    const handleMaxWageInputChange = (
+      e: React.ChangeEvent<HTMLInputElement>,
+    ) => {
+      const value = e.target.value.replace(/[^\d]/g, "");
+      const numValue = value ? parseInt(value, 10) : 0;
       if (onMaxWageChange && !isNaN(numValue)) {
-        onMaxWageChange(numValue)
+        onMaxWageChange(numValue);
       }
-    }
+    };
 
-    const canUseRateBali = Boolean(positionType && area)
+    const canUseRateBali = Boolean(positionType && area);
 
     return (
       <div ref={ref} className={cn("space-y-2", className)} {...props}>
@@ -187,8 +193,8 @@ export const WageRateInput = React.forwardRef<
           </p>
         )}
       </div>
-    )
-  }
-)
+    );
+  },
+);
 
-WageRateInput.displayName = "WageRateInput"
+WageRateInput.displayName = "WageRateInput";

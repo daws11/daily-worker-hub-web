@@ -1,54 +1,55 @@
 /**
  * Admin Metrics API Route
- * 
+ *
  * Provides system metrics for the monitoring dashboard.
  * Collects data from cache, rate limiting, database, and logs.
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { cache } from '@/lib/cache'
-import { rateLimitStore } from '@/lib/rate-limit'
-import { logger } from '@/lib/logger'
-import os from 'os'
+import { NextRequest, NextResponse } from "next/server";
+import { cache } from "@/lib/cache";
+import { rateLimitStore } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
+import os from "os";
 
-const routeLogger = logger.createApiLogger('admin-metrics')
+const routeLogger = logger.createApiLogger("admin-metrics");
 
 /**
  * Verify admin authentication
  * TODO: Implement proper admin auth check
  */
 async function verifyAdminAuth(request: NextRequest): Promise<boolean> {
-  const authHeader = request.headers.get('authorization')
-  
+  const authHeader = request.headers.get("authorization");
+
   // For now, check for a simple admin secret
   // In production, this should use proper admin authentication
-  const adminSecret = process.env.ADMIN_API_SECRET
-  
+  const adminSecret = process.env.ADMIN_API_SECRET;
+
   if (!adminSecret) {
     // If no admin secret is configured, deny access
-    return false
+    return false;
   }
-  
-  return authHeader === `Bearer ${adminSecret}`
+
+  return authHeader === `Bearer ${adminSecret}`;
 }
 
 /**
  * Get system health metrics
  */
 function getSystemHealth() {
-  const cpus = os.cpus()
-  const totalMemory = os.totalmem()
-  const freeMemory = os.freemem()
-  const usedMemory = totalMemory - freeMemory
-  const uptime = os.uptime()
-  
+  const cpus = os.cpus();
+  const totalMemory = os.totalmem();
+  const freeMemory = os.freemem();
+  const usedMemory = totalMemory - freeMemory;
+  const uptime = os.uptime();
+
   // Calculate CPU usage (average across all cores)
-  const cpuUsage = cpus.reduce((acc, cpu) => {
-    const total = Object.values(cpu.times).reduce((a, b) => a + b, 0)
-    const idle = cpu.times.idle
-    return acc + ((total - idle) / total)
-  }, 0) / cpus.length
-  
+  const cpuUsage =
+    cpus.reduce((acc, cpu) => {
+      const total = Object.values(cpu.times).reduce((a, b) => a + b, 0);
+      const idle = cpu.times.idle;
+      return acc + (total - idle) / total;
+    }, 0) / cpus.length;
+
   return {
     cpu: {
       usage: Math.round(cpuUsage * 100),
@@ -67,31 +68,31 @@ function getSystemHealth() {
     },
     platform: os.platform(),
     nodeVersion: process.version,
-  }
+  };
 }
 
 /**
  * Format uptime to human-readable string
  */
 function formatUptime(seconds: number): string {
-  const days = Math.floor(seconds / 86400)
-  const hours = Math.floor((seconds % 86400) / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  
-  const parts = []
-  if (days > 0) parts.push(`${days}d`)
-  if (hours > 0) parts.push(`${hours}h`)
-  if (minutes > 0) parts.push(`${minutes}m`)
-  
-  return parts.join(' ') || '< 1m'
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+
+  const parts = [];
+  if (days > 0) parts.push(`${days}d`);
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+
+  return parts.join(" ") || "< 1m";
 }
 
 /**
  * Get cache performance metrics
  */
 function getCacheMetrics() {
-  const stats = cache.getStats()
-  
+  const stats = cache.getStats();
+
   return {
     hits: stats.hits,
     misses: stats.misses,
@@ -99,7 +100,7 @@ function getCacheMetrics() {
     maxSize: stats.maxSize,
     hitRate: Math.round(stats.hitRate * 100),
     entries: stats.entries.length,
-  }
+  };
 }
 
 /**
@@ -112,42 +113,46 @@ function getRateLimitMetrics() {
     activeLimiters: rateLimitStore.size,
     byType: {
       auth: { requests: 0, blocked: 0 },
-      'api-authenticated': { requests: 0, blocked: 0 },
-      'api-public': { requests: 0, blocked: 0 },
+      "api-authenticated": { requests: 0, blocked: 0 },
+      "api-public": { requests: 0, blocked: 0 },
       payment: { requests: 0, blocked: 0 },
     },
     topEndpoints: [] as Array<{ endpoint: string; count: number }>,
-  }
-  
+  };
+
   // Aggregate rate limit data
   for (const [key, record] of rateLimitStore.entries()) {
-    const type = key.split(':')[1] as keyof typeof stats.byType
-    
+    const type = key.split(":")[1] as keyof typeof stats.byType;
+
     if (type && stats.byType[type]) {
-      stats.byType[type].requests += record.count
-      stats.totalRequests += record.count
-      
+      stats.byType[type].requests += record.count;
+      stats.totalRequests += record.count;
+
       // If count equals max requests, consider it as potentially blocked
-      if (record.count >= 5) { // Assuming 5 is the minimum threshold
-        stats.byType[type].blocked++
-        stats.blockedRequests++
+      if (record.count >= 5) {
+        // Assuming 5 is the minimum threshold
+        stats.byType[type].blocked++;
+        stats.blockedRequests++;
       }
     }
   }
-  
+
   // Get top endpoints (simplified - would need better tracking in production)
-  const endpointCounts = new Map<string, number>()
+  const endpointCounts = new Map<string, number>();
   for (const [key, record] of rateLimitStore.entries()) {
-    const endpoint = key.split(':')[0] || 'unknown'
-    endpointCounts.set(endpoint, (endpointCounts.get(endpoint) || 0) + record.count)
+    const endpoint = key.split(":")[0] || "unknown";
+    endpointCounts.set(
+      endpoint,
+      (endpointCounts.get(endpoint) || 0) + record.count,
+    );
   }
-  
+
   stats.topEndpoints = Array.from(endpointCounts.entries())
     .map(([endpoint, count]) => ({ endpoint, count }))
     .sort((a, b) => b.count - a.count)
-    .slice(0, 10)
-  
-  return stats
+    .slice(0, 10);
+
+  return stats;
 }
 
 /**
@@ -156,9 +161,9 @@ function getRateLimitMetrics() {
  */
 function getApiResponseMetrics() {
   // Mock data - in production, this would come from APM tools or custom metrics
-  const now = Date.now()
-  const oneHourAgo = now - 3600000
-  
+  const now = Date.now();
+  const oneHourAgo = now - 3600000;
+
   return {
     average: 145, // ms
     p95: 280,
@@ -171,12 +176,12 @@ function getApiResponseMetrics() {
       total: 312,
     },
     dataPoints: Array.from({ length: 12 }, (_, i) => ({
-      timestamp: oneHourAgo + (i * 5 * 60 * 1000),
+      timestamp: oneHourAgo + i * 5 * 60 * 1000,
       average: 100 + Math.random() * 100,
       p95: 200 + Math.random() * 100,
       p99: 300 + Math.random() * 200,
     })),
-  }
+  };
 }
 
 /**
@@ -185,29 +190,29 @@ function getApiResponseMetrics() {
  */
 function getErrorMetrics() {
   // Mock data - in production, this would come from Sentry API
-  const now = Date.now()
-  const oneHourAgo = now - 3600000
-  const oneDayAgo = now - 86400000
-  
+  const now = Date.now();
+  const oneHourAgo = now - 3600000;
+  const oneDayAgo = now - 86400000;
+
   return {
     total24h: 23,
     errorsPerMinute: 0.016,
     byType: [
-      { type: 'NetworkError', count: 8 },
-      { type: 'ValidationError', count: 6 },
-      { type: 'AuthError', count: 5 },
-      { type: 'DatabaseError', count: 3 },
-      { type: 'Other', count: 1 },
+      { type: "NetworkError", count: 8 },
+      { type: "ValidationError", count: 6 },
+      { type: "AuthError", count: 5 },
+      { type: "DatabaseError", count: 3 },
+      { type: "Other", count: 1 },
     ],
     trend24h: Array.from({ length: 24 }, (_, i) => ({
-      hour: oneDayAgo + (i * 3600000),
+      hour: oneDayAgo + i * 3600000,
       count: Math.floor(Math.random() * 3),
     })),
     lastHour: {
       total: 2,
       errorsPerMinute: 0.033,
     },
-  }
+  };
 }
 
 /**
@@ -226,7 +231,7 @@ function getActiveUsersMetrics() {
       businesses: 18,
       admins: 1,
     },
-  }
+  };
 }
 
 /**
@@ -239,11 +244,19 @@ function getDatabaseMetrics() {
     connectionCount: 5,
     maxConnections: 20,
     slowQueries: [
-      { query: 'SELECT * FROM jobs WHERE...', duration: 1234, timestamp: Date.now() - 600000 },
-      { query: 'SELECT * FROM bookings...', duration: 987, timestamp: Date.now() - 1200000 },
+      {
+        query: "SELECT * FROM jobs WHERE...",
+        duration: 1234,
+        timestamp: Date.now() - 600000,
+      },
+      {
+        query: "SELECT * FROM bookings...",
+        duration: 987,
+        timestamp: Date.now() - 1200000,
+      },
     ],
     averageQueryTime: 45, // ms
-  }
+  };
 }
 
 /**
@@ -288,14 +301,11 @@ function getDatabaseMetrics() {
 export async function GET(request: NextRequest) {
   try {
     // Verify admin auth
-    const isAuthorized = await verifyAdminAuth(request)
-    
+    const isAuthorized = await verifyAdminAuth(request);
+
     if (!isAuthorized) {
-      routeLogger.warn('Unauthorized metrics access attempt')
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
+      routeLogger.warn("Unauthorized metrics access attempt");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Collect all metrics
@@ -308,16 +318,16 @@ export async function GET(request: NextRequest) {
       errors: getErrorMetrics(),
       users: getActiveUsersMetrics(),
       database: getDatabaseMetrics(),
-    }
+    };
 
-    routeLogger.info('Metrics retrieved successfully')
+    routeLogger.info("Metrics retrieved successfully");
 
-    return NextResponse.json(metrics)
+    return NextResponse.json(metrics);
   } catch (error) {
-    routeLogger.error('Error retrieving metrics', error)
+    routeLogger.error("Error retrieving metrics", error);
     return NextResponse.json(
-      { error: 'Internal server error', details: (error as Error).message },
-      { status: 500 }
-    )
+      { error: "Internal server error", details: (error as Error).message },
+      { status: 500 },
+    );
   }
 }

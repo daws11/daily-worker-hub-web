@@ -1,5 +1,5 @@
-import * as React from "react"
-import { Briefcase, Calendar, TrendingUp, TrendingDown } from "lucide-react"
+import * as React from "react";
+import { Briefcase, Calendar, TrendingUp, TrendingDown } from "lucide-react";
 
 import {
   Table,
@@ -8,30 +8,33 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
-import { formatIDR } from "@/lib/utils/currency"
-import type { PositionEarnings } from "@/lib/types/earnings"
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { formatIDR } from "@/lib/utils/currency";
+import type { PositionEarnings } from "@/lib/types/earnings";
 
 export interface EarningsByPositionTableProps extends React.HTMLAttributes<HTMLDivElement> {
-  data?: PositionEarnings[] | null
-  isLoading?: boolean
-  title?: string
-  description?: string
-  showIcon?: boolean
-  showEmptyState?: boolean
-  bestPerformingPosition?: PositionEarnings | null
+  data?: PositionEarnings[] | null;
+  isLoading?: boolean;
+  title?: string;
+  description?: string;
+  showIcon?: boolean;
+  showEmptyState?: boolean;
+  bestPerformingPosition?: PositionEarnings | null;
 }
 
-const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPositionTableProps>(
+const EarningsByPositionTable = React.forwardRef<
+  HTMLDivElement,
+  EarningsByPositionTableProps
+>(
   (
     {
       data,
@@ -44,34 +47,36 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
       className,
       ...props
     },
-    ref
+    ref,
   ) => {
     // Format date to Indonesian locale
     const formatDate = (dateString: string | null) => {
-      if (!dateString) return "-"
+      if (!dateString) return "-";
       return new Date(dateString).toLocaleDateString("id-ID", {
         day: "2-digit",
         month: "short",
         year: "numeric",
-      })
-    }
+      });
+    };
 
     // Get rank badge variant
-    const getRankBadgeVariant = (index: number): "default" | "secondary" | "outline" => {
-      if (index === 0) return "default" // Gold - first place
-      if (index === 1) return "secondary" // Silver - second place
-      if (index === 2) return "outline" // Bronze - third place
-      return "outline"
-    }
+    const getRankBadgeVariant = (
+      index: number,
+    ): "default" | "secondary" | "outline" => {
+      if (index === 0) return "default"; // Gold - first place
+      if (index === 1) return "secondary"; // Silver - second place
+      if (index === 2) return "outline"; // Bronze - third place
+      return "outline";
+    };
 
     // Get rank label
     const getRankLabel = (index: number): string => {
-      const rank = index + 1
-      if (rank === 1) return "🥇"
-      if (rank === 2) return "🥈"
-      if (rank === 3) return "🥉"
-      return `#${rank}`
-    }
+      const rank = index + 1;
+      if (rank === 1) return "🥇";
+      if (rank === 2) return "🥈";
+      if (rank === 3) return "🥉";
+      return `#${rank}`;
+    };
 
     // Loading state
     if (isLoading) {
@@ -79,7 +84,12 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
         <Card ref={ref} className={cn("w-full", className)} {...props}>
           <CardHeader>
             <div className="flex items-center gap-2">
-              {showIcon && <Briefcase className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
+              {showIcon && (
+                <Briefcase
+                  className="h-5 w-5 text-muted-foreground"
+                  aria-hidden="true"
+                />
+              )}
               <CardTitle>{title}</CardTitle>
             </div>
             <CardDescription>{description}</CardDescription>
@@ -90,7 +100,7 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
             </div>
           </CardContent>
         </Card>
-      )
+      );
     }
 
     // Empty state (no data)
@@ -100,33 +110,44 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
           <Card ref={ref} className={cn("w-full", className)} {...props}>
             <CardHeader>
               <div className="flex items-center gap-2">
-                {showIcon && <Briefcase className="h-5 w-5 text-muted-foreground" aria-hidden="true" />}
+                {showIcon && (
+                  <Briefcase
+                    className="h-5 w-5 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                )}
                 <CardTitle>{title}</CardTitle>
               </div>
               <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Briefcase className="h-12 w-12 text-muted-foreground/50 mb-3" aria-hidden="true" />
+                <Briefcase
+                  className="h-12 w-12 text-muted-foreground/50 mb-3"
+                  aria-hidden="true"
+                />
                 <p className="text-sm text-muted-foreground">
                   Belum ada data pendapatan berdasarkan posisi
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Data pendapatan per posisi akan muncul di sini setelah Anda menyelesaikan pekerjaan
+                  Data pendapatan per posisi akan muncul di sini setelah Anda
+                  menyelesaikan pekerjaan
                 </p>
               </div>
             </CardContent>
           </Card>
-        )
+        );
       }
-      return null
+      return null;
     }
 
     return (
       <Card ref={ref} className={cn("w-full", className)} {...props}>
         <CardHeader>
           <div className="flex items-center gap-2">
-            {showIcon && <Briefcase className="h-5 w-5 text-muted-foreground" />}
+            {showIcon && (
+              <Briefcase className="h-5 w-5 text-muted-foreground" />
+            )}
             <CardTitle>{title}</CardTitle>
           </div>
           <CardDescription>
@@ -139,12 +160,19 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
             {bestPerformingPosition && (
               <div className="bg-primary/5 rounded-lg p-4 border border-primary/20">
                 <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="h-4 w-4 text-primary" aria-hidden="true" />
-                  <span className="text-sm font-medium text-primary">Posisi Terbaik</span>
+                  <TrendingUp
+                    className="h-4 w-4 text-primary"
+                    aria-hidden="true"
+                  />
+                  <span className="text-sm font-medium text-primary">
+                    Posisi Terbaik
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-semibold">{bestPerformingPosition.position_title}</p>
+                    <p className="font-semibold">
+                      {bestPerformingPosition.position_title}
+                    </p>
                     {bestPerformingPosition.category_name && (
                       <p className="text-xs text-muted-foreground">
                         {bestPerformingPosition.category_name}
@@ -157,7 +185,9 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {bestPerformingPosition.bookings_count}{" "}
-                      {bestPerformingPosition.bookings_count === 1 ? "pekerjaan" : "pekerjaan"}
+                      {bestPerformingPosition.bookings_count === 1
+                        ? "pekerjaan"
+                        : "pekerjaan"}
                     </p>
                   </div>
                 </div>
@@ -169,12 +199,20 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead scope="col" className="w-[60px]">Peringkat</TableHead>
+                    <TableHead scope="col" className="w-[60px]">
+                      Peringkat
+                    </TableHead>
                     <TableHead scope="col">Posisi Pekerjaan</TableHead>
                     <TableHead scope="col">Kategori</TableHead>
-                    <TableHead scope="col" className="text-right">Total Pendapatan</TableHead>
-                    <TableHead scope="col" className="text-right">Pekerjaan</TableHead>
-                    <TableHead scope="col" className="text-right">Rata-rata</TableHead>
+                    <TableHead scope="col" className="text-right">
+                      Total Pendapatan
+                    </TableHead>
+                    <TableHead scope="col" className="text-right">
+                      Pekerjaan
+                    </TableHead>
+                    <TableHead scope="col" className="text-right">
+                      Rata-rata
+                    </TableHead>
                     <TableHead scope="col">Pekerjaan Terakhir</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -182,12 +220,15 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
                   {data.map((position, index) => {
                     const isBestPerforming =
                       bestPerformingPosition &&
-                      position.position_title === bestPerformingPosition.position_title
+                      position.position_title ===
+                        bestPerformingPosition.position_title;
 
                     return (
                       <TableRow
                         key={position.position_title}
-                        className={isBestPerforming ? "bg-primary/5" : undefined}
+                        className={
+                          isBestPerforming ? "bg-primary/5" : undefined
+                        }
                       >
                         <TableCell>
                           <Badge variant={getRankBadgeVariant(index)}>
@@ -197,7 +238,10 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
                         <TableCell className="font-medium">
                           <div className="flex items-center gap-2">
                             {isBestPerforming && (
-                              <TrendingUp className="h-4 w-4 text-primary" aria-hidden="true" />
+                              <TrendingUp
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                              />
                             )}
                             <span>{position.position_title}</span>
                           </div>
@@ -211,7 +255,9 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
                           {formatIDR(position.total_earnings)}
                         </TableCell>
                         <TableCell className="text-right">
-                          <span className="text-sm">{position.bookings_count}</span>
+                          <span className="text-sm">
+                            {position.bookings_count}
+                          </span>
                         </TableCell>
                         <TableCell className="text-right">
                           <span className="text-sm text-muted-foreground">
@@ -221,11 +267,13 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
                         <TableCell>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <Calendar className="h-3 w-3" aria-hidden="true" />
-                            <span>{formatDate(position.last_booking_date)}</span>
+                            <span>
+                              {formatDate(position.last_booking_date)}
+                            </span>
                           </div>
                         </TableCell>
                       </TableRow>
-                    )
+                    );
                   })}
                 </TableBody>
               </Table>
@@ -234,9 +282,13 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
             {/* Summary statistics */}
             <div className="flex items-center justify-between pt-2 border-t text-sm flex-wrap gap-2">
               <div className="text-center flex-1 min-w-[100px]">
-                <p className="text-xs text-muted-foreground">Total Pendapatan</p>
+                <p className="text-xs text-muted-foreground">
+                  Total Pendapatan
+                </p>
                 <p className="font-semibold">
-                  {formatIDR(data.reduce((sum, item) => sum + item.total_earnings, 0))}
+                  {formatIDR(
+                    data.reduce((sum, item) => sum + item.total_earnings, 0),
+                  )}
                 </p>
               </div>
               <div className="text-center flex-1 min-w-[100px] border-x px-4">
@@ -246,10 +298,13 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
                 </p>
               </div>
               <div className="text-center flex-1 min-w-[100px]">
-                <p className="text-xs text-muted-foreground">Rata-rata per Posisi</p>
+                <p className="text-xs text-muted-foreground">
+                  Rata-rata per Posisi
+                </p>
                 <p className="font-semibold">
                   {formatIDR(
-                    data.reduce((sum, item) => sum + item.total_earnings, 0) / data.length
+                    data.reduce((sum, item) => sum + item.total_earnings, 0) /
+                      data.length,
                   )}
                 </p>
               </div>
@@ -257,9 +312,9 @@ const EarningsByPositionTable = React.forwardRef<HTMLDivElement, EarningsByPosit
           </div>
         </CardContent>
       </Card>
-    )
-  }
-)
-EarningsByPositionTable.displayName = "EarningsByPositionTable"
+    );
+  },
+);
+EarningsByPositionTable.displayName = "EarningsByPositionTable";
 
-export { EarningsByPositionTable }
+export { EarningsByPositionTable };

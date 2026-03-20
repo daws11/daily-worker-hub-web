@@ -11,8 +11,8 @@
  * Total: 115 max
  */
 
-import { WorkerTier } from '@/lib/supabase/types';
-import { getTierBonus } from './tier-classifier';
+import { WorkerTier } from "@/lib/supabase/types";
+import { getTierBonus } from "./tier-classifier";
 
 /**
  * Calculate Haversine distance between two coordinates
@@ -27,7 +27,7 @@ export function calculateHaversineDistance(
   lat1: number,
   lon1: number,
   lat2: number,
-  lon2: number
+  lon2: number,
 ): number {
   const R = 6371; // Earth's radius in km
   const dLat = toRadians(lat2 - lat1);
@@ -57,7 +57,7 @@ function toRadians(degrees: number): number {
  */
 export function calculateSkillScore(
   workerSkills: string[],
-  jobSkills: string[]
+  jobSkills: string[],
 ): number {
   if (!jobSkills || jobSkills.length === 0) {
     return 30; // No skill requirements = full score
@@ -68,8 +68,8 @@ export function calculateSkillScore(
   }
 
   // Count matching skills
-  const matchingSkills = workerSkills.filter(skill =>
-    jobSkills.includes(skill)
+  const matchingSkills = workerSkills.filter((skill) =>
+    jobSkills.includes(skill),
   );
 
   // Calculate score based on match percentage
@@ -111,7 +111,7 @@ export function calculateDistanceScore(distance: number): number {
  */
 export function calculateAvailabilityScore(
   isAvailable: boolean,
-  partialAvailability: boolean = false
+  partialAvailability: boolean = false,
 ): number {
   if (isAvailable) {
     return 20; // Available for full duration
@@ -197,7 +197,7 @@ export function calculateMatchingScore(params: MatchingScoreParams): number {
     workerLat,
     workerLng,
     jobLat,
-    jobLng
+    jobLng,
   );
 
   // Calculate individual scores
@@ -226,9 +226,7 @@ export function calculateMatchingScore(params: MatchingScoreParams): number {
  * @param params - Matching parameters
  * @returns Score breakdown
  */
-export function getMatchingScoreBreakdown(
-  params: MatchingScoreParams
-): {
+export function getMatchingScoreBreakdown(params: MatchingScoreParams): {
   skillScore: number;
   distanceScore: number;
   distanceKm: number;
@@ -256,7 +254,7 @@ export function getMatchingScoreBreakdown(
     workerLat,
     workerLng,
     jobLat,
-    jobLng
+    jobLng,
   );
 
   // Calculate individual scores
@@ -301,33 +299,33 @@ export function getMatchQuality(score: number): {
 } {
   if (score >= 100) {
     return {
-      label: 'Perfect Match',
-      color: 'text-green-600',
-      description: 'Excellent fit for this job',
+      label: "Perfect Match",
+      color: "text-green-600",
+      description: "Excellent fit for this job",
     };
   } else if (score >= 85) {
     return {
-      label: 'Great Match',
-      color: 'text-blue-600',
-      description: 'Very good fit for this job',
+      label: "Great Match",
+      color: "text-blue-600",
+      description: "Very good fit for this job",
     };
   } else if (score >= 70) {
     return {
-      label: 'Good Match',
-      color: 'text-cyan-600',
-      description: 'Good fit for this job',
+      label: "Good Match",
+      color: "text-cyan-600",
+      description: "Good fit for this job",
     };
   } else if (score >= 55) {
     return {
-      label: 'Fair Match',
-      color: 'text-yellow-600',
-      description: 'Acceptable fit for this job',
+      label: "Fair Match",
+      color: "text-yellow-600",
+      description: "Acceptable fit for this job",
     };
   } else {
     return {
-      label: 'Poor Match',
-      color: 'text-red-600',
-      description: 'Not recommended for this job',
+      label: "Poor Match",
+      color: "text-red-600",
+      description: "Not recommended for this job",
     };
   }
 }

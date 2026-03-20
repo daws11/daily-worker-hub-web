@@ -1,30 +1,36 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useAuth } from "@/app/providers/auth-provider"
-import { NotificationSettings, NotificationPreference } from "@/components/notification-settings"
-import { getUserNotificationPreferences, updateUserNotificationPreferences } from "@/lib/actions/push-notifications"
-import { TierBadge, TierBadgeDetailed } from "@/components/worker/tier-badge"
-import { AvailabilitySlots } from "@/components/worker/availability-slots"
-import { Button } from "@/components/ui/button"
-import { Settings, Star, Clock, CheckCircle2 } from "lucide-react"
-import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
-import { supabase } from "@/lib/supabase/client"
-import { WorkerTier } from "@/lib/supabase/types"
-import { DAY_NAMES } from "@/lib/algorithms/availability-checker"
-import { setWorkerAvailabilityForWeek } from "@/lib/algorithms/availability-checker"
+import { useState, useEffect } from "react";
+import { useAuth } from "@/app/providers/auth-provider";
+import {
+  NotificationSettings,
+  NotificationPreference,
+} from "@/components/notification-settings";
+import {
+  getUserNotificationPreferences,
+  updateUserNotificationPreferences,
+} from "@/lib/actions/push-notifications";
+import { TierBadge, TierBadgeDetailed } from "@/components/worker/tier-badge";
+import { AvailabilitySlots } from "@/components/worker/availability-slots";
+import { Button } from "@/components/ui/button";
+import { Settings, Star, Clock, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
+import { WorkerTier } from "@/lib/supabase/types";
+import { DAY_NAMES } from "@/lib/algorithms/availability-checker";
+import { setWorkerAvailabilityForWeek } from "@/lib/algorithms/availability-checker";
 
 interface AvailabilitySlot {
-  dayOfWeek: number
-  dayName: string
-  isAvailable: boolean
-  startHour: number
-  endHour: number
+  dayOfWeek: number;
+  dayName: string;
+  isAvailable: boolean;
+  startHour: number;
+  endHour: number;
 }
 
 export default function WorkerSettingsPage() {
-  const { user } = useAuth()
+  const { user } = useAuth();
   const [preferences, setPreferences] = useState<NotificationPreference>({
     pushEnabled: false,
     newApplications: false,
@@ -32,39 +38,83 @@ export default function WorkerSettingsPage() {
     paymentConfirmation: false,
     newJobMatches: false,
     shiftReminders: false,
-  })
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Worker tier state
   const [workerData, setWorkerData] = useState<{
-    tier: WorkerTier
-    jobsCompleted: number
-    rating: number | null
-    punctuality: number | null
-  } | null>(null)
+    tier: WorkerTier;
+    jobsCompleted: number;
+    rating: number | null;
+    punctuality: number | null;
+  } | null>(null);
 
   // Availability state
-  const [availabilitySlots, setAvailabilitySlots] = useState<AvailabilitySlot[]>([
-    { dayOfWeek: 1, dayName: "Monday", isAvailable: false, startHour: 9, endHour: 17 },
-    { dayOfWeek: 2, dayName: "Tuesday", isAvailable: false, startHour: 9, endHour: 17 },
-    { dayOfWeek: 3, dayName: "Wednesday", isAvailable: false, startHour: 9, endHour: 17 },
-    { dayOfWeek: 4, dayName: "Thursday", isAvailable: false, startHour: 9, endHour: 17 },
-    { dayOfWeek: 5, dayName: "Friday", isAvailable: false, startHour: 9, endHour: 17 },
-    { dayOfWeek: 6, dayName: "Saturday", isAvailable: false, startHour: 9, endHour: 17 },
-    { dayOfWeek: 7, dayName: "Sunday", isAvailable: false, startHour: 9, endHour: 17 },
-  ])
-  const [isSavingAvailability, setIsSavingAvailability] = useState(false)
+  const [availabilitySlots, setAvailabilitySlots] = useState<
+    AvailabilitySlot[]
+  >([
+    {
+      dayOfWeek: 1,
+      dayName: "Monday",
+      isAvailable: false,
+      startHour: 9,
+      endHour: 17,
+    },
+    {
+      dayOfWeek: 2,
+      dayName: "Tuesday",
+      isAvailable: false,
+      startHour: 9,
+      endHour: 17,
+    },
+    {
+      dayOfWeek: 3,
+      dayName: "Wednesday",
+      isAvailable: false,
+      startHour: 9,
+      endHour: 17,
+    },
+    {
+      dayOfWeek: 4,
+      dayName: "Thursday",
+      isAvailable: false,
+      startHour: 9,
+      endHour: 17,
+    },
+    {
+      dayOfWeek: 5,
+      dayName: "Friday",
+      isAvailable: false,
+      startHour: 9,
+      endHour: 17,
+    },
+    {
+      dayOfWeek: 6,
+      dayName: "Saturday",
+      isAvailable: false,
+      startHour: 9,
+      endHour: 17,
+    },
+    {
+      dayOfWeek: 7,
+      dayName: "Sunday",
+      isAvailable: false,
+      startHour: 9,
+      endHour: 17,
+    },
+  ]);
+  const [isSavingAvailability, setIsSavingAvailability] = useState(false);
 
   // Fetch user notification preferences and availability on mount
   useEffect(() => {
     const fetchData = async () => {
-      if (!user?.id) return
+      if (!user?.id) return;
 
-      setIsLoading(true)
+      setIsLoading(true);
       try {
         // Fetch notification preferences
-        const prefResult = await getUserNotificationPreferences(user.id)
+        const prefResult = await getUserNotificationPreferences(user.id);
         if (prefResult.success && prefResult.data) {
           setPreferences({
             pushEnabled: prefResult.data.push_enabled ?? false,
@@ -73,15 +123,15 @@ export default function WorkerSettingsPage() {
             paymentConfirmation: prefResult.data.payment_confirmation ?? true,
             newJobMatches: prefResult.data.new_job_matches ?? true,
             shiftReminders: prefResult.data.shift_reminders ?? true,
-          })
+          });
         }
 
         // Fetch worker tier data
         const { data: worker, error: workerError } = await supabase
-          .from('workers')
-          .select('tier, jobs_completed, rating, punctuality')
-          .eq('user_id', user.id)
-          .single()
+          .from("workers")
+          .select("tier, jobs_completed, rating, punctuality")
+          .eq("user_id", user.id)
+          .single();
 
         if (!workerError && worker) {
           setWorkerData({
@@ -89,17 +139,18 @@ export default function WorkerSettingsPage() {
             jobsCompleted: (worker as any).jobs_completed || 0,
             rating: (worker as any).rating,
             punctuality: (worker as any).punctuality,
-          })
+          });
         }
 
         // Fetch worker availability
-        const workerId = (worker as any)?.id
+        const workerId = (worker as any)?.id;
         if (workerId) {
-          const { data: availability, error: availabilityError } = await supabase
-            .from('worker_availabilities')
-            .select('*')
-            .eq('worker_id', workerId)
-            .order('day_of_week')
+          const { data: availability, error: availabilityError } =
+            await supabase
+              .from("worker_availabilities")
+              .select("*")
+              .eq("worker_id", workerId)
+              .order("day_of_week");
 
           if (!availabilityError && availability && availability.length > 0) {
             setAvailabilitySlots(
@@ -109,27 +160,29 @@ export default function WorkerSettingsPage() {
                 isAvailable: av.is_available,
                 startHour: av.start_hour,
                 endHour: av.end_hour,
-              }))
-            )
+              })),
+            );
           }
         }
       } catch (error) {
-        console.error("Failed to fetch data:", error)
-        toast.error("Gagal memuat data")
+        console.error("Failed to fetch data:", error);
+        toast.error("Gagal memuat data");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchData()
-  }, [user?.id])
+    fetchData();
+  }, [user?.id]);
 
   // Handle preferences change
-  const handlePreferencesChange = async (newPreferences: NotificationPreference) => {
-    if (!user?.id) return
+  const handlePreferencesChange = async (
+    newPreferences: NotificationPreference,
+  ) => {
+    if (!user?.id) return;
 
-    setPreferences(newPreferences)
-    setIsSaving(true)
+    setPreferences(newPreferences);
+    setIsSaving(true);
 
     try {
       const result = await updateUserNotificationPreferences(user.id, {
@@ -139,20 +192,20 @@ export default function WorkerSettingsPage() {
         payment_confirmation: newPreferences.paymentConfirmation,
         new_job_matches: newPreferences.newJobMatches,
         shift_reminders: newPreferences.shiftReminders,
-      })
+      });
 
       if (result.success) {
-        toast.success("Pengaturan notifikasi berhasil disimpan")
+        toast.success("Pengaturan notifikasi berhasil disimpan");
       } else {
-        toast.error(result.error || "Gagal menyimpan pengaturan notifikasi")
+        toast.error(result.error || "Gagal menyimpan pengaturan notifikasi");
       }
     } catch (error) {
-      console.error("Failed to update notification preferences:", error)
-      toast.error("Gagal menyimpan pengaturan notifikasi")
+      console.error("Failed to update notification preferences:", error);
+      toast.error("Gagal menyimpan pengaturan notifikasi");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   // Handle availability slot toggle
   const handleAvailabilityToggle = (dayOfWeek: number) => {
@@ -160,27 +213,29 @@ export default function WorkerSettingsPage() {
       prev.map((slot) =>
         slot.dayOfWeek === dayOfWeek
           ? { ...slot, isAvailable: !slot.isAvailable }
-          : slot
-      )
-    )
-  }
+          : slot,
+      ),
+    );
+  };
 
   // Handle availability time change
-  const handleAvailabilityTimeChange = (dayOfWeek: number, startHour: number, endHour: number) => {
+  const handleAvailabilityTimeChange = (
+    dayOfWeek: number,
+    startHour: number,
+    endHour: number,
+  ) => {
     setAvailabilitySlots((prev) =>
       prev.map((slot) =>
-        slot.dayOfWeek === dayOfWeek
-          ? { ...slot, startHour, endHour }
-          : slot
-      )
-    )
-  }
+        slot.dayOfWeek === dayOfWeek ? { ...slot, startHour, endHour } : slot,
+      ),
+    );
+  };
 
   // Save availability settings
   const handleAvailabilitySave = async () => {
-    if (!workerData) return
+    if (!workerData) return;
 
-    setIsSavingAvailability(true)
+    setIsSavingAvailability(true);
 
     try {
       const result = await setWorkerAvailabilityForWeek(
@@ -190,21 +245,23 @@ export default function WorkerSettingsPage() {
           startHour: slot.startHour,
           endHour: slot.endHour,
           isAvailable: slot.isAvailable,
-        }))
-      )
+        })),
+      );
 
       if (result.success) {
-        toast.success("Ketersediaan berhasil disimpan")
+        toast.success("Ketersediaan berhasil disimpan");
       } else {
-        toast.error(result.errors?.join(", ") || "Gagal menyimpan ketersediaan")
+        toast.error(
+          result.errors?.join(", ") || "Gagal menyimpan ketersediaan",
+        );
       }
     } catch (error) {
-      console.error("Failed to save availability:", error)
-      toast.error("Gagal menyimpan ketersediaan")
+      console.error("Failed to save availability:", error);
+      toast.error("Gagal menyimpan ketersediaan");
     } finally {
-      setIsSavingAvailability(false)
+      setIsSavingAvailability(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-muted/30 p-4 md:p-6">
@@ -280,5 +337,5 @@ export default function WorkerSettingsPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

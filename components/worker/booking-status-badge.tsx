@@ -1,10 +1,10 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils"
-import { Badge } from "@/components/ui/badge"
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
-export type BookingStatus = "pending" | "accepted" | "completed" | "cancelled"
+export type BookingStatus = "pending" | "accepted" | "completed" | "cancelled";
 
 const bookingStatusVariants = cva(
   "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -24,13 +24,14 @@ const bookingStatusVariants = cva(
     defaultVariants: {
       status: "pending",
     },
-  }
-)
+  },
+);
 
 export interface BookingStatusBadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof bookingStatusVariants> {
-  status: BookingStatus
+  status: BookingStatus;
 }
 
 const statusLabels: Record<BookingStatus, string> = {
@@ -38,7 +39,7 @@ const statusLabels: Record<BookingStatus, string> = {
   accepted: "Accepted",
   completed: "Completed",
   cancelled: "Cancelled",
-}
+};
 
 function BookingStatusBadge({
   className,
@@ -52,7 +53,7 @@ function BookingStatusBadge({
     >
       {statusLabels[status]}
     </Badge>
-  )
+  );
 }
 
-export { BookingStatusBadge, bookingStatusVariants }
+export { BookingStatusBadge, bookingStatusVariants };

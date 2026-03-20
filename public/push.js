@@ -15,8 +15,8 @@
 // Constants
 // ============================================================================
 
-const SERVICE_WORKER_URL = '/sw.js'
-const VAPID_PUBLIC_KEY_ENV = 'NEXT_PUBLIC_VAPID_KEY'
+const SERVICE_WORKER_URL = "/sw.js";
+const VAPID_PUBLIC_KEY_ENV = "NEXT_PUBLIC_VAPID_KEY";
 
 // ============================================================================
 // Type Definitions (JSDoc for TypeScript compatibility)
@@ -53,19 +53,19 @@ const VAPID_PUBLIC_KEY_ENV = 'NEXT_PUBLIC_VAPID_KEY'
  * @private
  */
 function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
-    .replace(/_/g, '/')
+    .replace(/\-/g, "+")
+    .replace(/_/g, "/");
 
-  const rawData = window.atob(base64)
-  const outputArray = new Uint8Array(rawData.length)
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
 
   for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i)
+    outputArray[i] = rawData.charCodeAt(i);
   }
 
-  return outputArray
+  return outputArray;
 }
 
 /**
@@ -81,16 +81,16 @@ function urlBase64ToUint8Array(base64String) {
 function getVapidPublicKey() {
   // Try to get from window object (set by Next.js process.env)
   if (window.__NEXT_PUBLIC_VAPID_KEY__) {
-    return window.__NEXT_PUBLIC_VAPID_KEY__
+    return window.__NEXT_PUBLIC_VAPID_KEY__;
   }
 
   // Try to get from meta tag
-  const metaTag = document.querySelector('meta[name="vapid-public-key"]')
+  const metaTag = document.querySelector('meta[name="vapid-public-key"]');
   if (metaTag) {
-    return metaTag.getAttribute('content')
+    return metaTag.getAttribute("content");
   }
 
-  return null
+  return null;
 }
 
 // ============================================================================
@@ -118,30 +118,31 @@ function getVapidPublicKey() {
 export async function registerServiceWorker() {
   try {
     // Check if service workers are supported
-    if (!('serviceWorker' in navigator)) {
+    if (!("serviceWorker" in navigator)) {
       return {
         success: false,
-        error: 'Layanan Service Worker tidak didukung di browser ini',
+        error: "Layanan Service Worker tidak didukung di browser ini",
         registration: null,
-      }
+      };
     }
 
     // Register the service worker
-    const registration = await navigator.serviceWorker.register(SERVICE_WORKER_URL)
+    const registration =
+      await navigator.serviceWorker.register(SERVICE_WORKER_URL);
 
     // Wait for the service worker to be ready
-    await navigator.serviceWorker.ready
+    await navigator.serviceWorker.ready;
 
     return {
       success: true,
       registration,
-    }
+    };
   } catch (error) {
     return {
       success: false,
       error: `Gagal mendaftarkan service worker: ${error.message}`,
       registration: null,
-    }
+    };
   }
 }
 
@@ -163,14 +164,14 @@ export async function registerServiceWorker() {
  */
 export async function getServiceWorkerRegistration() {
   try {
-    if (!('serviceWorker' in navigator)) {
-      return null
+    if (!("serviceWorker" in navigator)) {
+      return null;
     }
 
-    const registration = await navigator.serviceWorker.getRegistration()
-    return registration
+    const registration = await navigator.serviceWorker.getRegistration();
+    return registration;
   } catch {
-    return null
+    return null;
   }
 }
 
@@ -199,35 +200,36 @@ export async function getServiceWorkerRegistration() {
 export async function requestNotificationPermission() {
   try {
     // Check if notifications are supported
-    if (!('Notification' in window)) {
+    if (!("Notification" in window)) {
       return {
         success: false,
-        error: 'Layanan notifikasi tidak didukung di browser ini',
-        permission: 'default',
+        error: "Layanan notifikasi tidak didukung di browser ini",
+        permission: "default",
         subscription: null,
-      }
+      };
     }
 
     // Request permission
-    const permission = await Notification.requestPermission()
+    const permission = await Notification.requestPermission();
 
     return {
-      success: permission === 'granted',
+      success: permission === "granted",
       permission,
       subscription: null,
-      error: permission === 'denied'
-        ? 'Izin notifikasi ditolak'
-        : permission === 'default'
-          ? 'Izin notifikasi belum diberikan'
-          : undefined,
-    }
+      error:
+        permission === "denied"
+          ? "Izin notifikasi ditolak"
+          : permission === "default"
+            ? "Izin notifikasi belum diberikan"
+            : undefined,
+    };
   } catch (error) {
     return {
       success: false,
       error: `Gagal meminta izin notifikasi: ${error.message}`,
-      permission: 'default',
+      permission: "default",
       subscription: null,
-    }
+    };
   }
 }
 
@@ -247,11 +249,11 @@ export async function requestNotificationPermission() {
  * ```
  */
 export function getNotificationPermission() {
-  if (!('Notification' in window)) {
-    return 'default'
+  if (!("Notification" in window)) {
+    return "default";
   }
 
-  return Notification.permission
+  return Notification.permission;
 }
 
 // ============================================================================
@@ -281,61 +283,63 @@ export function getNotificationPermission() {
 export async function subscribeToPushNotifications(registration = null) {
   try {
     // Check if permission is granted
-    const permission = getNotificationPermission()
-    if (permission !== 'granted') {
+    const permission = getNotificationPermission();
+    if (permission !== "granted") {
       return {
         success: false,
-        error: 'Izin notifikasi belum diberikan. Silakan minta izin terlebih dahulu.',
+        error:
+          "Izin notifikasi belum diberikan. Silakan minta izin terlebih dahulu.",
         permission,
         subscription: null,
-      }
+      };
     }
 
     // Get service worker registration if not provided
     if (!registration) {
-      registration = await getServiceWorkerRegistration()
+      registration = await getServiceWorkerRegistration();
       if (!registration) {
         return {
           success: false,
-          error: 'Service worker belum terdaftar. Silakan daftarkan service worker terlebih dahulu.',
+          error:
+            "Service worker belum terdaftar. Silakan daftarkan service worker terlebih dahulu.",
           permission,
           subscription: null,
-        }
+        };
       }
     }
 
     // Get VAPID public key
-    const vapidPublicKey = getVapidPublicKey()
+    const vapidPublicKey = getVapidPublicKey();
     if (!vapidPublicKey) {
       return {
         success: false,
-        error: 'Kunci publik VAPID tidak dikonfigurasi',
+        error: "Kunci publik VAPID tidak dikonfigurasi",
         permission,
         subscription: null,
-      }
+      };
     }
 
     // Convert VAPID key to Uint8Array
-    const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey)
+    const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
 
     // Subscribe to push notifications
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: convertedVapidKey,
-    })
+    });
 
     return {
       success: true,
       subscription,
       permission,
-    }
+    };
   } catch (error) {
     return {
       success: false,
       error: `Gagal berlangganan notifikasi: ${error.message}`,
       permission: getNotificationPermission(),
       subscription: null,
-    }
+    };
   }
 }
 
@@ -362,16 +366,16 @@ export async function getPushSubscription(registration = null) {
   try {
     // Get service worker registration if not provided
     if (!registration) {
-      registration = await getServiceWorkerRegistration()
+      registration = await getServiceWorkerRegistration();
       if (!registration) {
-        return null
+        return null;
       }
     }
 
-    const subscription = await registration.pushManager.getSubscription()
-    return subscription
+    const subscription = await registration.pushManager.getSubscription();
+    return subscription;
   } catch {
-    return null
+    return null;
   }
 }
 
@@ -395,25 +399,25 @@ export async function getPushSubscription(registration = null) {
 export async function unsubscribeFromPushNotifications(registration = null) {
   try {
     // Get existing subscription
-    const subscription = await getPushSubscription(registration)
+    const subscription = await getPushSubscription(registration);
 
     if (!subscription) {
       return {
         success: true, // Already unsubscribed
-      }
+      };
     }
 
     // Unsubscribe
-    await subscription.unsubscribe()
+    await subscription.unsubscribe();
 
     return {
       success: true,
-    }
+    };
   } catch (error) {
     return {
       success: false,
       error: `Gagal berhenti berlangganan notifikasi: ${error.message}`,
-    }
+    };
   }
 }
 
@@ -449,61 +453,66 @@ export async function unsubscribeFromPushNotifications(registration = null) {
 export async function initializePushNotifications() {
   try {
     // Step 1: Register service worker
-    const swResult = await registerServiceWorker()
+    const swResult = await registerServiceWorker();
     if (!swResult.success || !swResult.registration) {
       return {
         success: false,
-        error: swResult.error || 'Gagal mendaftarkan service worker',
+        error: swResult.error || "Gagal mendaftarkan service worker",
         subscription: null,
         permission: getNotificationPermission(),
-      }
+      };
     }
 
     // Step 2: Check/request notification permission
-    let permission = getNotificationPermission()
+    let permission = getNotificationPermission();
 
-    if (permission === 'default') {
-      const permissionResult = await requestNotificationPermission()
-      permission = permissionResult.permission
+    if (permission === "default") {
+      const permissionResult = await requestNotificationPermission();
+      permission = permissionResult.permission;
 
-      if (permission !== 'granted') {
+      if (permission !== "granted") {
         return {
           success: false,
-          error: permissionResult.error || 'Izin notifikasi tidak diberikan',
+          error: permissionResult.error || "Izin notifikasi tidak diberikan",
           subscription: null,
           permission,
-        }
+        };
       }
-    } else if (permission === 'denied') {
+    } else if (permission === "denied") {
       return {
         success: false,
-        error: 'Izin notifikasi ditolak. Silakan aktifkan notifikasi di pengaturan browser.',
+        error:
+          "Izin notifikasi ditolak. Silakan aktifkan notifikasi di pengaturan browser.",
         subscription: null,
         permission,
-      }
+      };
     }
 
     // Step 3: Check if already subscribed
-    const existingSubscription = await getPushSubscription(swResult.registration)
+    const existingSubscription = await getPushSubscription(
+      swResult.registration,
+    );
     if (existingSubscription) {
       return {
         success: true,
         subscription: existingSubscription,
         permission,
-      }
+      };
     }
 
     // Step 4: Subscribe to push notifications
-    const subscribeResult = await subscribeToPushNotifications(swResult.registration)
+    const subscribeResult = await subscribeToPushNotifications(
+      swResult.registration,
+    );
 
-    return subscribeResult
+    return subscribeResult;
   } catch (error) {
     return {
       success: false,
       error: `Gagal menginisialisasi notifikasi: ${error.message}`,
       subscription: null,
       permission: getNotificationPermission(),
-    }
+    };
   }
 }
 
@@ -525,9 +534,12 @@ export async function initializePushNotifications() {
  */
 export function checkPushNotificationSupport() {
   return {
-    supported: 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window,
+    supported:
+      "serviceWorker" in navigator &&
+      "PushManager" in window &&
+      "Notification" in window,
     permission: getNotificationPermission(),
-  }
+  };
 }
 
 // ============================================================================
@@ -535,7 +547,7 @@ export function checkPushNotificationSupport() {
 // ============================================================================
 
 // Export functions to window object for use in non-module scripts
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.PushNotificationUtils = {
     registerServiceWorker,
     getServiceWorkerRegistration,
@@ -546,5 +558,5 @@ if (typeof window !== 'undefined') {
     unsubscribeFromPushNotifications,
     initializePushNotifications,
     checkPushNotificationSupport,
-  }
+  };
 }

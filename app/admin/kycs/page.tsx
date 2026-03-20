@@ -1,12 +1,23 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useAuth } from "@/app/providers/auth-provider"
-import dynamic from 'next/dynamic'
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2 } from "lucide-react"
+import * as React from "react";
+import { useAuth } from "@/app/providers/auth-provider";
+import dynamic from "next/dynamic";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Loader2,
+} from "lucide-react";
 
-import { getKYCVerifications } from "@/lib/supabase/queries/admin"
-import type { KYCVerificationFilters, KYCVerificationItem, PaginatedAdminResponse } from "@/lib/types/admin"
+import { getKYCVerifications } from "@/lib/supabase/queries/admin";
+import type {
+  KYCVerificationFilters,
+  KYCVerificationItem,
+  PaginatedAdminResponse,
+} from "@/lib/types/admin";
 
 import {
   Select,
@@ -14,118 +25,134 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const KycReviewDialog = dynamic(
-  () => import('@/components/admin/kyc-review-dialog').then(mod => ({ default: mod.KycReviewDialog })),
+  () =>
+    import("@/components/admin/kyc-review-dialog").then((mod) => ({
+      default: mod.KycReviewDialog,
+    })),
   {
-    loading: () => <div className="flex items-center justify-center h-64"><Loader2 className="animate-spin" /></div>,
-    ssr: false
-  }
-)
+    loading: () => (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="animate-spin" />
+      </div>
+    ),
+    ssr: false,
+  },
+);
 
 interface KycsPageProps extends React.HTMLAttributes<HTMLDivElement> {
-  className?: string
+  className?: string;
 }
 
 export default function KycsPage({ className, ...props }: KycsPageProps) {
-  const { user } = useAuth()
-  const [kycs, setKycs] = React.useState<KYCVerificationItem[]>([])
-  const [loading, setLoading] = React.useState<boolean>(true)
-  const [error, setError] = React.useState<string | null>(null)
+  const { user } = useAuth();
+  const [kycs, setKycs] = React.useState<KYCVerificationItem[]>([]);
+  const [loading, setLoading] = React.useState<boolean>(true);
+  const [error, setError] = React.useState<string | null>(null);
   const [pagination, setPagination] = React.useState({
     page: 1,
     limit: 12,
     total: 0,
     totalPages: 0,
-  })
+  });
 
   const [filters, setFilters] = React.useState<KYCVerificationFilters>({
     sortBy: "submitted_at",
     sortOrder: "desc",
-  })
-  const [searchInput, setSearchInput] = React.useState("")
+  });
+  const [searchInput, setSearchInput] = React.useState("");
 
   // Dialog state
-  const [selectedKyc, setSelectedKyc] = React.useState<KYCVerificationItem | null>(null)
-  const [dialogOpen, setDialogOpen] = React.useState(false)
+  const [selectedKyc, setSelectedKyc] =
+    React.useState<KYCVerificationItem | null>(null);
+  const [dialogOpen, setDialogOpen] = React.useState(false);
 
   const fetchKycs = React.useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       const { items, total, totalPages } = await getKYCVerifications(
         filters,
         pagination.page,
-        pagination.limit
-      )
+        pagination.limit,
+      );
 
-      setKycs(items)
+      setKycs(items);
       setPagination((prev) => ({
         ...prev,
         total,
         totalPages,
-      }))
+      }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch KYC verifications")
-      setKycs([])
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch KYC verifications",
+      );
+      setKycs([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [filters, pagination.page, pagination.limit])
+  }, [filters, pagination.page, pagination.limit]);
 
   React.useEffect(() => {
-    fetchKycs()
-  }, [fetchKycs])
+    fetchKycs();
+  }, [fetchKycs]);
 
   const handleSearch = React.useCallback(
     (value: string) => {
-      setSearchInput(value)
-      setFilters((prev) => ({ ...prev, search: value || undefined }))
-      setPagination((prev) => ({ ...prev, page: 1 }))
+      setSearchInput(value);
+      setFilters((prev) => ({ ...prev, search: value || undefined }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     },
-    [setFilters, setPagination]
-  )
+    [setFilters, setPagination],
+  );
 
   const handleStatusFilter = React.useCallback(
     (value: string) => {
       setFilters((prev) => ({
         ...prev,
-        status: value === "all" ? undefined : (value as "pending" | "verified" | "rejected"),
-      }))
-      setPagination((prev) => ({ ...prev, page: 1 }))
+        status:
+          value === "all"
+            ? undefined
+            : (value as "pending" | "verified" | "rejected"),
+      }));
+      setPagination((prev) => ({ ...prev, page: 1 }));
     },
-    [setFilters, setPagination]
-  )
+    [setFilters, setPagination],
+  );
 
   const goToPage = React.useCallback(
     (page: number) => {
-      setPagination((prev) => ({ ...prev, page: Math.max(1, Math.min(page, pagination.totalPages)) }))
+      setPagination((prev) => ({
+        ...prev,
+        page: Math.max(1, Math.min(page, pagination.totalPages)),
+      }));
     },
-    [pagination.totalPages, setPagination]
-  )
+    [pagination.totalPages, setPagination],
+  );
 
   const handleReview = (kyc: KYCVerificationItem) => {
-    setSelectedKyc(kyc)
-    setDialogOpen(true)
-  }
+    setSelectedKyc(kyc);
+    setDialogOpen(true);
+  };
 
   const handleDialogUpdate = () => {
-    fetchKycs()
-    setSelectedKyc(null)
-    setDialogOpen(false)
-  }
+    fetchKycs();
+    setSelectedKyc(null);
+    setDialogOpen(false);
+  };
 
   return (
     <div className={cn("space-y-6", className)} {...props}>
       <div>
-        <h1 className="text-3xl font-bold text-foreground">
-          Verifikasi KYC
-        </h1>
+        <h1 className="text-3xl font-bold text-foreground">Verifikasi KYC</h1>
         <p className="text-muted-foreground mt-2">
           Review dan verifikasi dokumen KYC worker
         </p>
@@ -160,7 +187,10 @@ export default function KycsPage({ className, ...props }: KycsPageProps) {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-64 rounded-xl border bg-muted/20 animate-pulse" />
+            <div
+              key={i}
+              className="h-64 rounded-xl border bg-muted/20 animate-pulse"
+            />
           ))}
         </div>
       ) : error ? (
@@ -169,25 +199,29 @@ export default function KycsPage({ className, ...props }: KycsPageProps) {
         </div>
       ) : kycs.length === 0 ? (
         <div className="rounded-lg border border-dashed p-12 text-center">
-          <p className="text-muted-foreground">Tidak ada verifikasi KYC ditemukan</p>
+          <p className="text-muted-foreground">
+            Tidak ada verifikasi KYC ditemukan
+          </p>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {kycs.map((kyc) => (
-              <KycCard
-                key={kyc.id}
-                kyc={kyc}
-                onReview={handleReview}
-              />
+              <KycCard key={kyc.id} kyc={kyc} onReview={handleReview} />
             ))}
           </div>
 
           {pagination.totalPages > 1 && (
             <div className="flex items-center justify-between px-2">
               <div className="text-sm text-muted-foreground">
-                Menampilkan {Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)} hingga{" "}
-                {Math.min(pagination.page * pagination.limit, pagination.total)} dari {pagination.total} verifikasi
+                Menampilkan{" "}
+                {Math.min(
+                  (pagination.page - 1) * pagination.limit + 1,
+                  pagination.total,
+                )}{" "}
+                hingga{" "}
+                {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
+                dari {pagination.total} verifikasi
               </div>
               <div className="flex items-center space-x-2">
                 <Button
@@ -240,7 +274,7 @@ export default function KycsPage({ className, ...props }: KycsPageProps) {
         adminId={user?.id}
       />
     </div>
-  )
+  );
 }
 
 // ============================================================================
@@ -248,8 +282,8 @@ export default function KycsPage({ className, ...props }: KycsPageProps) {
 // ============================================================================
 
 interface KycCardProps {
-  kyc: KYCVerificationItem
-  onReview: (kyc: KYCVerificationItem) => void
+  kyc: KYCVerificationItem;
+  onReview: (kyc: KYCVerificationItem) => void;
 }
 
 function KycCard({ kyc, onReview }: KycCardProps) {
@@ -258,21 +292,23 @@ function KycCard({ kyc, onReview }: KycCardProps) {
       year: "numeric",
       month: "short",
       day: "numeric",
-    })
-  }, [])
+    });
+  }, []);
 
-  const isPending = kyc.status === "pending"
+  const isPending = kyc.status === "pending";
   const statusColors = {
-    pending: "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30",
-    verified: "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30",
+    pending:
+      "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30",
+    verified:
+      "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30",
     rejected: "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30",
-  }
+  };
 
   return (
     <div
       className={cn(
         "rounded-lg border bg-card p-5 space-y-4 transition-colors hover:bg-muted/20",
-        statusColors[kyc.status]
+        statusColors[kyc.status],
       )}
     >
       {/* Header */}
@@ -290,9 +326,7 @@ function KycCard({ kyc, onReview }: KycCardProps) {
       {/* KTP Number */}
       <div className="space-y-1">
         <p className="text-xs text-muted-foreground">Nomor KTP</p>
-        <p className="text-sm font-mono font-medium">
-          {kyc.ktp_number || "-"}
-        </p>
+        <p className="text-sm font-mono font-medium">{kyc.ktp_number || "-"}</p>
       </div>
 
       {/* Submitted Date & Pending Days */}
@@ -304,10 +338,14 @@ function KycCard({ kyc, onReview }: KycCardProps) {
         {isPending && kyc.pendingDays > 0 && (
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Menunggu</p>
-            <p className={cn(
-              "font-medium",
-              kyc.pendingDays > 3 ? "text-red-600 dark:text-red-400" : "text-amber-600 dark:text-amber-400"
-            )}>
+            <p
+              className={cn(
+                "font-medium",
+                kyc.pendingDays > 3
+                  ? "text-red-600 dark:text-red-400"
+                  : "text-amber-600 dark:text-amber-400",
+              )}
+            >
               {kyc.pendingDays} hari
             </p>
           </div>
@@ -317,19 +355,19 @@ function KycCard({ kyc, onReview }: KycCardProps) {
       {/* Rejection Reason */}
       {kyc.status === "rejected" && kyc.rejection_reason && (
         <div className="rounded-md bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 p-3">
-          <p className="text-xs font-medium text-red-800 dark:text-red-300 mb-1">Alasan Penolakan</p>
-          <p className="text-xs text-red-700 dark:text-red-400">{kyc.rejection_reason}</p>
+          <p className="text-xs font-medium text-red-800 dark:text-red-300 mb-1">
+            Alasan Penolakan
+          </p>
+          <p className="text-xs text-red-700 dark:text-red-400">
+            {kyc.rejection_reason}
+          </p>
         </div>
       )}
 
       {/* Actions */}
       <div className="flex gap-2 pt-2">
         {isPending ? (
-          <Button
-            onClick={() => onReview(kyc)}
-            className="flex-1"
-            size="sm"
-          >
+          <Button onClick={() => onReview(kyc)} className="flex-1" size="sm">
             Review
           </Button>
         ) : (
@@ -344,5 +382,5 @@ function KycCard({ kyc, onReview }: KycCardProps) {
         )}
       </div>
     </div>
-  )
+  );
 }

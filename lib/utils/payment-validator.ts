@@ -1,5 +1,5 @@
-import { z } from "zod"
-import { PAYMENT_CONSTANTS } from "../types/payment"
+import { z } from "zod";
+import { PAYMENT_CONSTANTS } from "../types/payment";
 
 /**
  * Zod validation schemas for payment transactions, bank accounts, and payouts
@@ -8,7 +8,7 @@ import { PAYMENT_CONSTANTS } from "../types/payment"
 // Bank code enum (supported Indonesian banks)
 export const bankCodeSchema = z.enum(["BCA", "BRI", "Mandiri", "BNI"], {
   message: "Bank harus dipilih (BCA, BRI, Mandiri, atau BNI)",
-})
+});
 
 // Bank account number validation with bank-specific length requirements
 export const bankAccountNumberSchema = z
@@ -20,10 +20,10 @@ export const bankAccountNumberSchema = z
     (accountNumber) => {
       // Additional validation: check for common invalid patterns
       // Reject all same digits (e.g., 1111111111, 0000000000)
-      return !/^(.)\1+$/.test(accountNumber)
+      return !/^(.)\1+$/.test(accountNumber);
     },
-    { message: "Nomor rekening tidak valid" }
-  )
+    { message: "Nomor rekening tidak valid" },
+  );
 
 // Bank account holder name validation
 export const bankAccountNameSchema = z
@@ -31,8 +31,9 @@ export const bankAccountNameSchema = z
   .min(3, { message: "Nama pemilik rekening minimal 3 karakter" })
   .max(100, { message: "Nama pemilik rekening maksimal 100 karakter" })
   .regex(/^[a-zA-Z\s.,'-]+$/, {
-    message: "Nama pemilik rekening hanya boleh mengandung huruf, spasi, dan karakter standar (.,'-)",
-  })
+    message:
+      "Nama pemilik rekening hanya boleh mengandung huruf, spasi, dan karakter standar (.,'-)",
+  });
 
 // Payment amount validation for business top-ups
 export const topUpAmountSchema = z
@@ -43,7 +44,7 @@ export const topUpAmountSchema = z
   })
   .max(PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT, {
     message: `Maksimal top up Rp ${PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT.toLocaleString("id-ID")}`,
-  })
+  });
 
 // Payout amount validation for worker withdrawals
 export const payoutAmountSchema = z
@@ -54,14 +55,14 @@ export const payoutAmountSchema = z
   })
   .max(PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT, {
     message: `Maksimal penarikan Rp ${PAYMENT_CONSTANTS.MAX_PAYOUT_AMOUNT.toLocaleString("id-ID")}`,
-  })
+  });
 
 // Fee amount validation (must be positive)
 export const feeAmountSchema = z
   .number()
   .int({ message: "Biaya admin harus berupa angka bulat" })
   .min(0, { message: "Biaya admin tidak boleh negatif" })
-  .max(100000, { message: "Biaya admin maksimal Rp 100.000" })
+  .max(100000, { message: "Biaya admin maksimal Rp 100.000" });
 
 // Bank account creation schema
 export const createBankAccountSchema = z.object({
@@ -69,9 +70,9 @@ export const createBankAccountSchema = z.object({
   bank_account_number: bankAccountNumberSchema,
   bank_account_name: bankAccountNameSchema,
   is_primary: z.boolean().optional().default(false),
-})
+});
 
-export type CreateBankAccountInput = z.infer<typeof createBankAccountSchema>
+export type CreateBankAccountInput = z.infer<typeof createBankAccountSchema>;
 
 // Bank account update schema (all fields optional)
 export const updateBankAccountSchema = z
@@ -87,12 +88,12 @@ export const updateBankAccountSchema = z
         data.bank_account_number !== undefined ||
         data.bank_account_name !== undefined ||
         data.is_primary !== undefined
-      )
+      );
     },
-    { message: "Minimal satu field harus diisi untuk update" }
-  )
+    { message: "Minimal satu field harus diisi untuk update" },
+  );
 
-export type UpdateBankAccountInput = z.infer<typeof updateBankAccountSchema>
+export type UpdateBankAccountInput = z.infer<typeof updateBankAccountSchema>;
 
 // Payment transaction creation schema (QRIS top-up)
 export const createPaymentTransactionSchema = z.object({
@@ -102,18 +103,25 @@ export const createPaymentTransactionSchema = z.object({
     message: "Payment provider harus dipilih",
   }),
   metadata: z.record(z.string(), z.unknown()).optional(),
-})
+});
 
-export type CreatePaymentTransactionInput = z.infer<typeof createPaymentTransactionSchema>
+export type CreatePaymentTransactionInput = z.infer<
+  typeof createPaymentTransactionSchema
+>;
 
 // Payout request creation schema
 export const createPayoutRequestSchema = z.object({
   worker_id: z.string().uuid({ message: "Worker ID tidak valid" }),
   amount: payoutAmountSchema,
-  bank_account_id: z.string().uuid({ message: "Bank account ID tidak valid" }).optional(),
-})
+  bank_account_id: z
+    .string()
+    .uuid({ message: "Bank account ID tidak valid" })
+    .optional(),
+});
 
-export type CreatePayoutRequestInput = z.infer<typeof createPayoutRequestSchema>
+export type CreatePayoutRequestInput = z.infer<
+  typeof createPayoutRequestSchema
+>;
 
 // Payout fee calculation validation
 export const payoutFeeCalculationSchema = z.object({
@@ -123,9 +131,11 @@ export const payoutFeeCalculationSchema = z.object({
     .min(0, { message: "Persentase biaya tidak boleh negatif" })
     .max(0.1, { message: "Persentase biaya maksimal 10%" })
     .optional(),
-})
+});
 
-export type PayoutFeeCalculationInput = z.infer<typeof payoutFeeCalculationSchema>
+export type PayoutFeeCalculationInput = z.infer<
+  typeof payoutFeeCalculationSchema
+>;
 
 // Payment fee calculation validation
 export const paymentFeeCalculationSchema = z.object({
@@ -135,9 +145,11 @@ export const paymentFeeCalculationSchema = z.object({
     .min(0, { message: "Persentase biaya tidak boleh negatif" })
     .max(0.05, { message: "Persentase biaya maksimal 5%" })
     .optional(),
-})
+});
 
-export type PaymentFeeCalculationInput = z.infer<typeof paymentFeeCalculationSchema>
+export type PaymentFeeCalculationInput = z.infer<
+  typeof paymentFeeCalculationSchema
+>;
 
 /**
  * Validate bank account number format for specific bank
@@ -147,25 +159,25 @@ export type PaymentFeeCalculationInput = z.infer<typeof paymentFeeCalculationSch
  */
 export function validateBankAccountFormat(
   accountNumber: string,
-  bankCode: string
+  bankCode: string,
 ): boolean {
-  const cleanNumber = accountNumber.replace(/\D/g, "")
+  const cleanNumber = accountNumber.replace(/\D/g, "");
 
   switch (bankCode.toUpperCase()) {
     case "BCA":
       // BCA: typically 10 digits
-      return cleanNumber.length >= 10 && cleanNumber.length <= 10
+      return cleanNumber.length >= 10 && cleanNumber.length <= 10;
     case "BRI":
       // BRI: typically 15 digits
-      return cleanNumber.length >= 15 && cleanNumber.length <= 15
+      return cleanNumber.length >= 15 && cleanNumber.length <= 15;
     case "MANDIRI":
       // Mandiri: typically 13 digits
-      return cleanNumber.length >= 13 && cleanNumber.length <= 13
+      return cleanNumber.length >= 13 && cleanNumber.length <= 13;
     case "BNI":
       // BNI: 10-16 digits
-      return cleanNumber.length >= 10 && cleanNumber.length <= 16
+      return cleanNumber.length >= 10 && cleanNumber.length <= 16;
     default:
-      return false
+      return false;
   }
 }
 
@@ -177,23 +189,23 @@ export function validateBankAccountFormat(
  */
 export function validatePaymentAmount(
   amount: number,
-  availableBalance: number
+  availableBalance: number,
 ): { valid: boolean; error?: string } {
   if (amount > availableBalance) {
     return {
       valid: false,
       error: `Saldo tidak mencukupi. Saldo tersedia: Rp ${availableBalance.toLocaleString("id-ID")}`,
-    }
+    };
   }
 
   if (amount < PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT) {
     return {
       valid: false,
       error: `Minimal penarikan Rp ${PAYMENT_CONSTANTS.MIN_PAYOUT_AMOUNT.toLocaleString("id-ID")}`,
-    }
+    };
   }
 
-  return { valid: true }
+  return { valid: true };
 }
 
 /**
@@ -201,24 +213,25 @@ export function validatePaymentAmount(
  * @param amount - Top-up amount
  * @returns Validation result with error message if invalid
  */
-export function validateTopUpAmount(
-  amount: number
-): { valid: boolean; error?: string } {
+export function validateTopUpAmount(amount: number): {
+  valid: boolean;
+  error?: string;
+} {
   if (amount < PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT) {
     return {
       valid: false,
       error: `Minimal top up Rp ${PAYMENT_CONSTANTS.MIN_TOP_UP_AMOUNT.toLocaleString("id-ID")}`,
-    }
+    };
   }
 
   if (amount > PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT) {
     return {
       valid: false,
       error: `Maksimal top up Rp ${PAYMENT_CONSTANTS.MAX_TOP_UP_AMOUNT.toLocaleString("id-ID")}`,
-    }
+    };
   }
 
-  return { valid: true }
+  return { valid: true };
 }
 
 /**
@@ -231,16 +244,16 @@ export function validateTopUpAmount(
 export function calculatePayoutFeeDetails(
   amount: number,
   bankCode: string,
-  feePercentage: number = 0.01
+  feePercentage: number = 0.01,
 ): { feeAmount: number; netAmount: number } {
   // Calculate percentage-based fee
-  const feeAmount = Math.max(Math.floor(amount * feePercentage), 0)
-  const netAmount = amount - feeAmount
+  const feeAmount = Math.max(Math.floor(amount * feePercentage), 0);
+  const netAmount = amount - feeAmount;
 
   return {
     feeAmount,
     netAmount,
-  }
+  };
 }
 
 /**
@@ -253,14 +266,14 @@ export function calculatePayoutFeeDetails(
 export function calculatePaymentFeeDetails(
   amount: number,
   feePercentage: number = 0.007,
-  fixedFee: number = 500
+  fixedFee: number = 500,
 ): { feeAmount: number; totalAmount: number } {
-  const variableFee = Math.floor(amount * feePercentage)
-  const feeAmount = variableFee + fixedFee
-  const totalAmount = amount + feeAmount
+  const variableFee = Math.floor(amount * feePercentage);
+  const feeAmount = variableFee + fixedFee;
+  const totalAmount = amount + feeAmount;
 
   return {
     feeAmount,
     totalAmount,
-  }
+  };
 }

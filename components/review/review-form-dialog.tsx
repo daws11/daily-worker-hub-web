@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { toast } from "sonner"
-import { Star, MessageSquare, AlertCircle } from "lucide-react"
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { Star, MessageSquare, AlertCircle } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -15,7 +15,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
+} from "@/components/ui/form";
 import {
   Dialog,
   DialogContent,
@@ -23,26 +23,26 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ReviewRatingInput } from "./review-rating-input"
+} from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ReviewRatingInput } from "./review-rating-input";
 
 import {
   createReviewSchema,
   type CreateReviewInput,
   type ReviewerType,
-} from "@/lib/schemas/review"
-import { createReview } from "@/lib/supabase/queries/reviews"
+} from "@/lib/schemas/review";
+import { createReview } from "@/lib/supabase/queries/reviews";
 
 interface ReviewFormDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  bookingId: string
-  workerId: string
-  businessId?: string
-  reviewer: ReviewerType
-  targetName: string
-  onSuccess?: () => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  bookingId: string;
+  workerId: string;
+  businessId?: string;
+  reviewer: ReviewerType;
+  targetName: string;
+  onSuccess?: () => void;
 }
 
 export function ReviewFormDialog({
@@ -55,12 +55,12 @@ export function ReviewFormDialog({
   targetName,
   onSuccess,
 }: ReviewFormDialogProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [hasSubmitted, setHasSubmitted] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [ratingValue, setRatingValue] = useState(0)
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [ratingValue, setRatingValue] = useState(0);
 
-  const isBusinessReview = reviewer === "business"
+  const isBusinessReview = reviewer === "business";
 
   const form = useForm<CreateReviewInput>({
     resolver: zodResolver(createReviewSchema),
@@ -74,34 +74,34 @@ export function ReviewFormDialog({
       comment: "",
       would_rehire: isBusinessReview ? false : undefined,
     },
-  })
+  });
 
   const {
     formState: { errors, isValid },
-  } = form
+  } = form;
 
   const handleRatingChange = (rating: number) => {
-    setRatingValue(rating)
-    form.setValue("rating", rating, { shouldValidate: true })
-  }
+    setRatingValue(rating);
+    form.setValue("rating", rating, { shouldValidate: true });
+  };
 
   const handleSubmit = async (data: CreateReviewInput) => {
-    setHasSubmitted(true)
-    setSubmitError(null)
+    setHasSubmitted(true);
+    setSubmitError(null);
 
     // Ensure rating is set from our state
     const formData = {
       ...data,
       rating: ratingValue,
-    }
+    };
 
     // Validate rating is provided
     if (formData.rating === 0) {
       form.setError("rating", {
         type: "manual",
         message: "Rating harus dipilih",
-      })
-      return
+      });
+      return;
     }
 
     // Sanitize optional fields - convert empty strings to undefined
@@ -109,9 +109,9 @@ export function ReviewFormDialog({
       ...formData,
       comment: formData.comment?.trim() || undefined,
       would_rehire: isBusinessReview ? formData.would_rehire : undefined,
-    }
+    };
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
       const result = await createReview({
@@ -122,47 +122,49 @@ export function ReviewFormDialog({
         rating: sanitizedData.rating,
         comment: sanitizedData.comment,
         would_rehire: sanitizedData.would_rehire,
-      })
+      });
 
       if (result.error) {
-        setSubmitError(result.error.message || "Gagal menyimpan ulasan")
-        toast.error(result.error.message || "Gagal menyimpan ulasan")
-        setIsSubmitting(false)
-        return
+        setSubmitError(result.error.message || "Gagal menyimpan ulasan");
+        toast.error(result.error.message || "Gagal menyimpan ulasan");
+        setIsSubmitting(false);
+        return;
       }
 
-      toast.success("Ulasan berhasil disimpan")
-      onOpenChange(false)
+      toast.success("Ulasan berhasil disimpan");
+      onOpenChange(false);
 
       // Reset form after successful submission
-      form.reset()
-      setRatingValue(0)
-      setHasSubmitted(false)
-      setSubmitError(null)
+      form.reset();
+      setRatingValue(0);
+      setHasSubmitted(false);
+      setSubmitError(null);
 
       if (onSuccess) {
-        onSuccess()
+        onSuccess();
       }
     } catch (error) {
       const errorMsg =
-        error instanceof Error ? error.message : "Terjadi kesalahan tak terduga"
-      setSubmitError(errorMsg)
-      toast.error(errorMsg)
+        error instanceof Error
+          ? error.message
+          : "Terjadi kesalahan tak terduga";
+      setSubmitError(errorMsg);
+      toast.error(errorMsg);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen && !isSubmitting) {
       // Reset form when dialog closes
-      form.reset()
-      setRatingValue(0)
-      setHasSubmitted(false)
-      setSubmitError(null)
+      form.reset();
+      setRatingValue(0);
+      setHasSubmitted(false);
+      setSubmitError(null);
     }
-    onOpenChange(newOpen)
-  }
+    onOpenChange(newOpen);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -200,7 +202,8 @@ export function ReviewFormDialog({
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Mohon perbaiki {Object.keys(errors).length} error pada formulir.
+                  Mohon perbaiki {Object.keys(errors).length} error pada
+                  formulir.
                 </AlertDescription>
               </Alert>
             )}
@@ -283,8 +286,8 @@ export function ReviewFormDialog({
                         Bersedia mempekerjakan kembali pekerja ini
                       </FormLabel>
                       <FormDescription>
-                        Centang jika Anda puas dengan kinerja pekerja dan bersedia
-                        mempekerjakan mereka lagi di masa depan
+                        Centang jika Anda puas dengan kinerja pekerja dan
+                        bersedia mempekerjakan mereka lagi di masa depan
                       </FormDescription>
                       <FormMessage />
                     </div>
@@ -313,5 +316,5 @@ export function ReviewFormDialog({
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,14 +1,14 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
-import type { NavItem } from "./navigation-config"
-import { UnreadBadge } from "@/components/messaging/unread-badge"
+import * as React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
+import type { NavItem } from "./navigation-config";
+import { UnreadBadge } from "@/components/messaging/unread-badge";
 
 interface SidebarItemProps extends NavItem {
-  onClose?: () => void
+  onClose?: () => void;
 }
 
 export function SidebarItem({
@@ -18,9 +18,9 @@ export function SidebarItem({
   badge,
   onClose,
 }: SidebarItemProps) {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
-  const isActive = pathname === href || pathname?.startsWith(href + "/")
+  const isActive = pathname === href || pathname?.startsWith(href + "/");
 
   return (
     <Link
@@ -30,7 +30,7 @@ export function SidebarItem({
         "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
         isActive
           ? "bg-accent text-accent-foreground"
-          : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"
+          : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
       )}
     >
       <Icon className={cn("h-4 w-4", isActive && "text-accent-foreground")} />
@@ -39,5 +39,5 @@ export function SidebarItem({
         <UnreadBadge count={badge} size="sm" />
       )}
     </Link>
-  )
+  );
 }

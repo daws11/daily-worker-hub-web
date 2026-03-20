@@ -1,4 +1,4 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function InterviewLoading() {
   return (
@@ -32,5 +32,5 @@ export default function InterviewLoading() {
         <Skeleton className="h-12 w-12 rounded-full bg-gray-700" />
       </div>
     </div>
-  )
+  );
 }

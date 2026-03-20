@@ -4,18 +4,21 @@
  * Displays a ranked list of workers for a job with matching scores
  */
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { TierBadge, TierBadgeCompact } from '@/components/worker/tier-badge';
-import { InstantDispatchBadge } from '@/components/business/instant-dispatch-badge';
-import { WorkerWithScore, getInterviewRecommendation } from '@/lib/algorithms/generate-shortlist';
-import { getMatchQuality } from '@/lib/algorithms/matching-score';
-import { canInstantDispatch } from '@/lib/algorithms/interview-flow';
-import { formatRupiah } from '@/lib/constants/rate-bali';
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { TierBadge, TierBadgeCompact } from "@/components/worker/tier-badge";
+import { InstantDispatchBadge } from "@/components/business/instant-dispatch-badge";
+import {
+  WorkerWithScore,
+  getInterviewRecommendation,
+} from "@/lib/algorithms/generate-shortlist";
+import { getMatchQuality } from "@/lib/algorithms/matching-score";
+import { canInstantDispatch } from "@/lib/algorithms/interview-flow";
+import { formatRupiah } from "@/lib/constants/rate-bali";
 import {
   MapPin,
   Star,
@@ -26,8 +29,8 @@ import {
   ChevronDown,
   ChevronUp,
   Users,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface WorkerShortlistProps {
   shortlist: WorkerWithScore[];
@@ -157,10 +160,10 @@ function WorkerCard({
   return (
     <div
       className={cn(
-        'border rounded-lg p-4 transition-all',
-        index < 3 && 'border-blue-200 bg-blue-50/50',
-        index >= 3 && 'border-border',
-        isExpanded && 'ring-2 ring-blue-200'
+        "border rounded-lg p-4 transition-all",
+        index < 3 && "border-blue-200 bg-blue-50/50",
+        index >= 3 && "border-border",
+        isExpanded && "ring-2 ring-blue-200",
       )}
     >
       {/* Header */}
@@ -190,7 +193,7 @@ function WorkerCard({
             </div>
 
             <div className="text-right">
-              <div className={cn('font-bold text-lg', matchQuality.color)}>
+              <div className={cn("font-bold text-lg", matchQuality.color)}>
                 {worker.matchingScore}/115
               </div>
               <div className="text-xs text-muted-foreground">
@@ -209,11 +212,11 @@ function WorkerCard({
         </div>
         <div className="flex items-center gap-1 text-muted-foreground">
           <Star className="h-4 w-4" />
-          <span>{worker.rating?.toFixed(1) || 'N/A'}</span>
+          <span>{worker.rating?.toFixed(1) || "N/A"}</span>
         </div>
         <div className="flex items-center gap-1 text-muted-foreground">
           <CheckCircle2 className="h-4 w-4" />
-          <span>{worker.punctuality?.toFixed(0) || 'N/A'}% punctual</span>
+          <span>{worker.punctuality?.toFixed(0) || "N/A"}% punctual</span>
         </div>
       </div>
 
@@ -225,7 +228,7 @@ function WorkerCard({
           <>
             <MessageSquare className="h-4 w-4 text-blue-600" />
             <span className="text-sm text-blue-700">
-              {interviewRec.type === 'chat_and_voice' && (
+              {interviewRec.type === "chat_and_voice" && (
                 <>
                   <Phone className="h-3 w-3 inline mr-1" />
                 </>
@@ -257,11 +260,7 @@ function WorkerCard({
           )}
         </Button>
         {onViewProfile && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onViewProfile}
-          >
+          <Button variant="outline" size="sm" onClick={onViewProfile}>
             Profile
           </Button>
         )}
@@ -269,7 +268,7 @@ function WorkerCard({
           size="sm"
           className={cn(
             "flex-1",
-            canDispatchInstant && "bg-green-600 hover:bg-green-700"
+            canDispatchInstant && "bg-green-600 hover:bg-green-700",
           )}
           onClick={onSelect}
         >
@@ -283,11 +282,31 @@ function WorkerCard({
           {/* Score Breakdown */}
           <div className="space-y-2">
             <h4 className="text-sm font-semibold">Score Breakdown</h4>
-            <ScoreBar label="Skills" value={worker.breakdown.skillScore} max={30} />
-            <ScoreBar label="Distance" value={worker.breakdown.distanceScore} max={30} />
-            <ScoreBar label="Availability" value={worker.breakdown.availabilityScore} max={20} />
-            <ScoreBar label="Rating" value={worker.breakdown.ratingScore} max={15} />
-            <ScoreBar label="Compliance" value={worker.breakdown.complianceScore} max={5} />
+            <ScoreBar
+              label="Skills"
+              value={worker.breakdown.skillScore}
+              max={30}
+            />
+            <ScoreBar
+              label="Distance"
+              value={worker.breakdown.distanceScore}
+              max={30}
+            />
+            <ScoreBar
+              label="Availability"
+              value={worker.breakdown.availabilityScore}
+              max={20}
+            />
+            <ScoreBar
+              label="Rating"
+              value={worker.breakdown.ratingScore}
+              max={15}
+            />
+            <ScoreBar
+              label="Compliance"
+              value={worker.breakdown.complianceScore}
+              max={5}
+            />
             <ScoreBar
               label={`${worker.tier} Bonus`}
               value={worker.breakdown.tierBonus}
@@ -322,19 +341,20 @@ function ScoreBar({ label, value, max, highlight = false }: ScoreBarProps) {
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-xs">
-        <span className={highlight ? 'font-medium text-blue-600' : 'text-muted-foreground'}>
+        <span
+          className={
+            highlight ? "font-medium text-blue-600" : "text-muted-foreground"
+          }
+        >
           {label}
         </span>
-        <span className={highlight ? 'font-medium text-blue-600' : ''}>
+        <span className={highlight ? "font-medium text-blue-600" : ""}>
           {value}/{max}
         </span>
       </div>
       <Progress
         value={percentage}
-        className={cn(
-          'h-1.5',
-          highlight && '[&>div]:bg-blue-500'
-        )}
+        className={cn("h-1.5", highlight && "[&>div]:bg-blue-500")}
       />
     </div>
   );
