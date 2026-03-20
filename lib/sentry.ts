@@ -8,7 +8,9 @@
  */
 
 import * as Sentry from "@sentry/nextjs";
-import type { SeverityLevel } from "@sentry/types";
+
+// SeverityLevel type definition (compatible with @sentry/types)
+type SeverityLevel = "fatal" | "error" | "warning" | "info" | "debug";
 
 /**
  * User context interface for Sentry user identification

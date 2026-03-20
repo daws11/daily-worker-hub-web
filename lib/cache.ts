@@ -156,14 +156,14 @@ class LRUCache<T = unknown> {
     fetcher: () => Promise<R>,
     ttl: number = CACHE_TTL.JOBS,
   ): Promise<R> {
-    const cached = this.get(key) as R | null;
+    const cached = this.get(key) as unknown as R | null;
 
     if (cached !== null) {
       return cached;
     }
 
     const value = await fetcher();
-    this.set(key, value, ttl);
+    this.set(key, value as unknown as T, ttl);
 
     return value;
   }

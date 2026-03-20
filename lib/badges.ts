@@ -700,7 +700,7 @@ export async function checkAndAwardBadges(workerId: string): Promise<{
 
   return {
     awarded,
-    progress: allProgress || [],
+    progress: (allProgress || []) as BadgeProgress[],
   };
 }
 

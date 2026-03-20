@@ -144,7 +144,7 @@ async function isAdminUser(): Promise<boolean> {
       return false;
     }
 
-    return user.role === "admin";
+    return (user as { role: string }).role === "admin";
   } catch {
     return false;
   }
@@ -376,7 +376,7 @@ export function withRateLimit<T extends NextRequest>(
         },
         {
           status: 429,
-          headers: headers as Record<string, string>,
+          headers: headers as unknown as Record<string, string>,
         },
       );
     }

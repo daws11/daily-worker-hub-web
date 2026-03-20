@@ -22,7 +22,7 @@ export function formatZodErrors(error: z.ZodError): {
     code: string;
   }>;
 } {
-  const details = error.errors.map((err) => ({
+  const details = error.issues.map((err) => ({
     field: err.path.join("."),
     message: err.message,
     code: err.code,
@@ -176,6 +176,6 @@ export function validateData<T extends z.ZodSchema>(
  */
 export function createPartialSchema<T extends z.ZodRawShape>(
   schema: z.ZodObject<T>,
-): z.ZodOptional<z.ZodObject<T>> {
+): z.ZodObject<{ [K in keyof T]: z.ZodOptional<T[K]> }> {
   return schema.partial();
 }

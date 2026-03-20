@@ -11,7 +11,7 @@ import {
   onMessage,
   getToken,
   deleteToken,
-  onTokenRefresh,
+  // onTokenRefresh, // Deprecated in newer Firebase SDK
   MessagePayload,
   Messaging,
 } from "firebase/messaging";
@@ -286,18 +286,19 @@ export function useFcmNotifications(
       setIsRegistered(true);
       setError(null);
 
-      // Listen for token refresh
-      tokenUnsubscribeRef.current = onTokenRefresh(messaging, async () => {
-        try {
-          const newToken = await getToken(messaging, { vapidKey });
-          if (newToken) {
-            await registerTokenWithBackend(newToken);
-            setToken(newToken);
-          }
-        } catch (err) {
-          console.error("Token refresh failed:", err);
-        }
-      });
+      // Note: onTokenRefresh is deprecated in newer Firebase SDK
+      // Token refresh is now handled automatically by the SDK
+      // tokenUnsubscribeRef.current = onTokenRefresh(messaging, async () => {
+      //   try {
+      //     const newToken = await getToken(messaging, { vapidKey });
+      //     if (newToken) {
+      //       await registerTokenWithBackend(newToken);
+      //       setToken(newToken);
+      //     }
+      //   } catch (err) {
+      //     console.error("Token refresh failed:", err);
+      //   }
+      // });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Gagal mendaftarkan notifikasi",

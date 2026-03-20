@@ -92,8 +92,8 @@ export class NotificationService {
       const results = await Promise.all(
         tokens.map(async ({ token }) => {
           try {
-            const fcmMessage = this.buildFcmMessage(token, payload) as any;
-            const response = await messaging.send(fcmMessage);
+            const fcmMessage = this.buildFcmMessage(token, payload);
+            const response = await messaging.send(fcmMessage as any);
             return { success: true, messageId: response, token };
           } catch (error: any) {
             if (
@@ -290,7 +290,7 @@ export class NotificationService {
 
       const messaging = getFirebaseMessaging();
       const fcmMessage = this.buildTopicMessage(topic, payload);
-      const messageId = await messaging.send(fcmMessage);
+      const messageId = await messaging.send(fcmMessage as any);
 
       routeLogger.info("Topic notification sent", {
         topic,
@@ -710,7 +710,7 @@ export class NotificationService {
         message: payload.body,
         data: payload.data || {},
         is_read: false,
-      });
+      } as any);
     } catch (error) {
       routeLogger.error("Failed to store notification", error, {
         userId,
