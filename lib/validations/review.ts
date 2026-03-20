@@ -36,7 +36,7 @@ export const createReviewSchema = z.object({
   
   rating: z
     .number({
-      invalid_type_error: 'Rating harus berupa angka',
+      message: 'Rating harus berupa angka',
     })
     .int('Rating harus berupa angka bulat')
     .min(1, 'Rating minimal 1')
@@ -44,7 +44,7 @@ export const createReviewSchema = z.object({
   
   punctuality_rating: z
     .number({
-      invalid_type_error: 'Rating ketepatan waktu harus berupa angka',
+      message: 'Rating ketepatan waktu harus berupa angka',
     })
     .int('Rating harus berupa angka bulat')
     .min(1, 'Rating minimal 1')
@@ -53,7 +53,7 @@ export const createReviewSchema = z.object({
   
   quality_rating: z
     .number({
-      invalid_type_error: 'Rating kualitas harus berupa angka',
+      message: 'Rating kualitas harus berupa angka',
     })
     .int('Rating harus berupa angka bulat')
     .min(1, 'Rating minimal 1')
@@ -62,7 +62,7 @@ export const createReviewSchema = z.object({
   
   communication_rating: z
     .number({
-      invalid_type_error: 'Rating komunikasi harus berupa angka',
+      message: 'Rating komunikasi harus berupa angka',
     })
     .int('Rating harus berupa angka bulat')
     .min(1, 'Rating minimal 1')
@@ -71,7 +71,7 @@ export const createReviewSchema = z.object({
   
   professionalism_rating: z
     .number({
-      invalid_type_error: 'Rating profesionalisme harus berupa angka',
+      message: 'Rating profesionalisme harus berupa angka',
     })
     .int('Rating harus berupa angka bulat')
     .min(1, 'Rating minimal 1')
@@ -130,7 +130,7 @@ export type CreateReviewInput = z.infer<typeof createReviewSchema>
 export const updateReviewSchema = z.object({
   rating: z
     .number({
-      invalid_type_error: 'Rating harus berupa angka',
+      message: 'Rating harus berupa angka',
     })
     .int('Rating harus berupa angka bulat')
     .min(1, 'Rating minimal 1')
@@ -139,7 +139,7 @@ export const updateReviewSchema = z.object({
   
   punctuality_rating: z
     .number({
-      invalid_type_error: 'Rating ketepatan waktu harus berupa angka',
+      message: 'Rating ketepatan waktu harus berupa angka',
     })
     .int('Rating harus berupa angka bulat')
     .min(1, 'Rating minimal 1')
@@ -148,7 +148,7 @@ export const updateReviewSchema = z.object({
   
   quality_rating: z
     .number({
-      invalid_type_error: 'Rating kualitas harus berupa angka',
+      message: 'Rating kualitas harus berupa angka',
     })
     .int('Rating harus berupa angka bulat')
     .min(1, 'Rating minimal 1')
@@ -157,7 +157,7 @@ export const updateReviewSchema = z.object({
   
   communication_rating: z
     .number({
-      invalid_type_error: 'Rating komunikasi harus berupa angka',
+      message: 'Rating komunikasi harus berupa angka',
     })
     .int('Rating harus berupa angka bulat')
     .min(1, 'Rating minimal 1')
@@ -166,7 +166,7 @@ export const updateReviewSchema = z.object({
   
   professionalism_rating: z
     .number({
-      invalid_type_error: 'Rating profesionalisme harus berupa angka',
+      message: 'Rating profesionalisme harus berupa angka',
     })
     .int('Rating harus berupa angka bulat')
     .min(1, 'Rating minimal 1')
@@ -282,7 +282,7 @@ export const reviewSearchSchema = z.object({
   
   sort: z
     .enum(['newest', 'oldest', 'rating_high', 'rating_low'], {
-      errorMap: () => ({ message: 'Sort tidak valid' }),
+      message: 'Sort tidak valid',
     })
     .optional(),
   
@@ -323,7 +323,7 @@ export const reportReviewSchema = z.object({
   
   category: z
     .enum(['spam', 'inappropriate', 'fake', 'harassment', 'other'], {
-      errorMap: () => ({ message: 'Kategori laporan tidak valid' }),
+      message: 'Kategori laporan tidak valid',
     }),
 })
 

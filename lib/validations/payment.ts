@@ -173,7 +173,7 @@ export const updateWithdrawalSchema = z.object({
   
   status: z
     .enum(['pending', 'processing', 'completed', 'failed', 'cancelled'], {
-      errorMap: () => ({ message: 'Status withdrawal tidak valid' }),
+      message: 'Status withdrawal tidak valid',
     }),
   
   failure_reason: z
@@ -242,7 +242,7 @@ export const paymentSearchSchema = z.object({
   
   sort: z
     .enum(['newest', 'oldest', 'amount_asc', 'amount_desc'], {
-      errorMap: () => ({ message: 'Sort tidak valid' }),
+      message: 'Sort tidak valid',
     })
     .optional(),
   

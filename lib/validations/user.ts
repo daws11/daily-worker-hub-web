@@ -115,13 +115,13 @@ export type NotificationSettingsInput = z.infer<typeof notificationSettingsSchem
 export const userPreferencesSchema = z.object({
   language: z
     .enum(['id', 'en'], {
-      errorMap: () => ({ message: 'Bahasa harus id (Indonesian) atau en (English)' }),
+      message: 'Bahasa harus id (Indonesian) atau en (English)',
     })
     .optional(),
   
   currency: z
     .enum(['IDR', 'USD'], {
-      errorMap: () => ({ message: 'Mata uang harus IDR atau USD' }),
+      message: 'Mata uang harus IDR atau USD',
     })
     .optional(),
   
@@ -132,7 +132,7 @@ export const userPreferencesSchema = z.object({
   
   theme: z
     .enum(['light', 'dark', 'system'], {
-      errorMap: () => ({ message: 'Theme harus light, dark, atau system' }),
+      message: 'Theme harus light, dark, atau system',
     })
     .optional(),
 })
@@ -159,13 +159,13 @@ export const userSearchSchema = z.object({
   
   role: z
     .enum(['worker', 'business', 'admin'], {
-      errorMap: () => ({ message: 'Role tidak valid' }),
+      message: 'Role tidak valid',
     })
     .optional(),
   
   status: z
     .enum(['active', 'inactive', 'suspended'], {
-      errorMap: () => ({ message: 'Status tidak valid' }),
+      message: 'Status tidak valid',
     })
     .optional(),
   
@@ -202,7 +202,7 @@ export const userSearchSchema = z.object({
   
   sort: z
     .enum(['newest', 'oldest', 'name_asc', 'name_desc'], {
-      errorMap: () => ({ message: 'Sort tidak valid' }),
+      message: 'Sort tidak valid',
     })
     .optional(),
 })

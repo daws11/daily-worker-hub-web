@@ -693,8 +693,11 @@ export async function getWorkerAchievements(workerId: string): Promise<BadgeWith
     console.error('Error fetching badge progress:', progressError)
   }
 
-  const earnedMap = new Map(achievements?.map(a => [a.badge_type, a]) || [])
-  const progressMap = new Map(progress?.map(p => [p.badge_type, p]) || [])
+  const earnedMap = new Map< AchievementBadgeType, any >()
+  achievements?.forEach(a => earnedMap.set(a.badge_type as AchievementBadgeType, a))
+
+  const progressMap = new Map< AchievementBadgeType, any >()
+  progress?.forEach(p => progressMap.set(p.badge_type as AchievementBadgeType, p))
 
   // Return all badges with earned status and progress
   return BADGE_DEFINITIONS.map(def => {
