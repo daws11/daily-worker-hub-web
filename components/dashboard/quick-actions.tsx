@@ -58,10 +58,10 @@ export function QuickActions({ role }: QuickActionsProps) {
           key={i}
           href={action.href}
           className={cn(
-            "flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all",
+            "flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 active:scale-[0.98]",
             action.primary
-              ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
-              : "bg-card border border-border hover:bg-muted"
+              ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md"
+              : "bg-card border border-border hover:bg-muted hover:shadow-md"
           )}
         >
           <action.icon className="h-5 w-5" />

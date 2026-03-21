@@ -25,7 +25,7 @@ function StatCard({ label, value, icon: Icon, trend, href }: StatCardProps) {
       className={cn(
         "relative overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm transition-all duration-200",
         "min-h-[44px] touch-manipulation",
-        href && "hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
+        href && "hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer"
       )}
     >
       {/* Gradient accent bar */}

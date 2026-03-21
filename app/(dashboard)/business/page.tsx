@@ -153,14 +153,22 @@ export default function BusinessDashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-6">
-      <DashboardGreeting name={userName} role="business" />
-      <QuickStats stats={stats} role="business" isLoading={isLoading} />
-      <QuickActions role="business" />
-      <UpcomingBookings
-        bookings={upcomingBookings}
-        role="business"
-        isLoading={isLoading}
-      />
+      <div className="animate-slide-up opacity-0 animation-delay-100">
+        <DashboardGreeting name={userName} role="business" />
+      </div>
+      <div className="animate-slide-up opacity-0 animation-delay-200">
+        <QuickStats stats={stats} role="business" isLoading={isLoading} />
+      </div>
+      <div className="animate-slide-up opacity-0 animation-delay-300">
+        <QuickActions role="business" />
+      </div>
+      <div className="animate-slide-up opacity-0 animation-delay-400">
+        <UpcomingBookings
+          bookings={upcomingBookings}
+          role="business"
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 }

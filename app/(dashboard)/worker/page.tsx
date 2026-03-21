@@ -168,14 +168,22 @@ export default function WorkerDashboardPage() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-6">
-      <DashboardGreeting name={userName} role="worker" />
-      <QuickStats stats={stats} role="worker" isLoading={isLoading} />
-      <QuickActions role="worker" />
-      <UpcomingBookings
-        bookings={upcomingBookings}
-        role="worker"
-        isLoading={isLoading}
-      />
+      <div className="animate-slide-up opacity-0 animation-delay-100">
+        <DashboardGreeting name={userName} role="worker" />
+      </div>
+      <div className="animate-slide-up opacity-0 animation-delay-200">
+        <QuickStats stats={stats} role="worker" isLoading={isLoading} />
+      </div>
+      <div className="animate-slide-up opacity-0 animation-delay-300">
+        <QuickActions role="worker" />
+      </div>
+      <div className="animate-slide-up opacity-0 animation-delay-400">
+        <UpcomingBookings
+          bookings={upcomingBookings}
+          role="worker"
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 }

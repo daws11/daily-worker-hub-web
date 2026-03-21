@@ -13,8 +13,9 @@ function Card({
       data-size={size}
       className={cn(
         "group/card flex flex-col gap-4 overflow-hidden rounded-xl bg-card py-4 text-sm text-card-foreground",
-        "shadow-sm hover:shadow-md transition-shadow duration-200",
+        "shadow-sm transition-all duration-200",
         "ring-1 ring-foreground/10",
+        "hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98]",
         "has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0",
         "data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0",
         "*:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
