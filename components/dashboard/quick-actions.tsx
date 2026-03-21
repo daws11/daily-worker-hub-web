@@ -10,6 +10,8 @@ interface QuickAction {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   primary: boolean;
+  gradient?: string;
+  iconBg?: string;
 }
 
 interface QuickActionsProps {
@@ -25,12 +27,15 @@ export function QuickActions({ role }: QuickActionsProps) {
       href: "/business/jobs/new",
       icon: Plus,
       primary: true,
+      gradient: "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600",
+      iconBg: "bg-white/20",
     },
     {
       label: t("actions.findWorkers", "Cari Pekerja"),
       href: "/business/workers",
       icon: Search,
       primary: false,
+      iconBg: "bg-blue-100 dark:bg-blue-900/30",
     },
   ];
 
@@ -40,12 +45,15 @@ export function QuickActions({ role }: QuickActionsProps) {
       href: "/worker/jobs",
       icon: Briefcase,
       primary: true,
+      gradient: "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600",
+      iconBg: "bg-white/20",
     },
     {
       label: t("actions.setAvailability", "Atur Ketersediaan"),
       href: "/worker/availability",
       icon: Calendar,
       primary: false,
+      iconBg: "bg-blue-100 dark:bg-blue-900/30",
     },
   ];
 
@@ -58,14 +66,27 @@ export function QuickActions({ role }: QuickActionsProps) {
           key={i}
           href={action.href}
           className={cn(
-            "flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 active:scale-[0.98]",
+            "group flex items-center gap-3 px-5 py-3.5 rounded-xl font-semibold transition-all duration-200 touch-manipulation",
+            "active:scale-[0.97] hover:shadow-lg hover:-translate-y-0.5",
             action.primary
-              ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md"
-              : "bg-card border border-border hover:bg-muted hover:shadow-md"
+              ? cn(
+                  action.gradient,
+                  "text-white shadow-md shadow-primary/25"
+                )
+              : "bg-card border border-border hover:bg-muted hover:border-primary/30"
           )}
         >
-          <action.icon className="h-5 w-5" />
-          {action.label}
+          <span
+            className={cn(
+              "flex items-center justify-center w-9 h-9 rounded-lg transition-transform duration-200 group-hover:scale-110",
+              action.primary
+                ? "bg-white/20"
+                : action.iconBg
+            )}
+          >
+            <action.icon className="h-5 w-5" />
+          </span>
+          <span className="text-sm">{action.label}</span>
         </Link>
       ))}
     </div>

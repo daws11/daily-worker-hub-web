@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Calendar, MapPin, Clock } from "lucide-react";
+import { Calendar, MapPin, Clock, Phone, MessageSquare, ChevronRight } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/hooks";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface Booking {
   id: string;
@@ -35,31 +36,36 @@ interface UpcomingBookingsProps {
   isLoading?: boolean;
 }
 
-const statusConfig: Record<string, { label: string; className: string }> = {
+const statusConfig: Record<string, { label: string; className: string; dot: string }> = {
   pending: {
     label: "Menunggu",
     className:
-      "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400",
+      "bg-amber-100/80 text-amber-700 border-amber-200/50 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800/30",
+    dot: "bg-amber-500",
   },
   accepted: {
     label: "Diterima",
     className:
-      "bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400",
+      "bg-blue-100/80 text-blue-700 border-blue-200/50 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800/30",
+    dot: "bg-blue-500",
   },
   in_progress: {
     label: "Berlangsung",
     className:
-      "bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400",
+      "bg-green-100/80 text-green-700 border-green-200/50 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800/30",
+    dot: "bg-green-500 animate-pulse",
   },
   completed: {
     label: "Selesai",
     className:
-      "bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-800/30 dark:text-gray-400",
+      "bg-gray-100/80 text-gray-700 border-gray-200/50 dark:bg-gray-800/30 dark:text-gray-400 dark:border-gray-700/30",
+    dot: "bg-gray-400",
   },
   cancelled: {
     label: "Dibatalkan",
     className:
-      "bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400",
+      "bg-red-100/80 text-red-700 border-red-200/50 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800/30",
+    dot: "bg-red-500",
   },
 };
 
@@ -69,10 +75,11 @@ function StatusBadge({ status }: { status: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border",
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border",
         config.className
       )}
     >
+      <span className={cn("w-1.5 h-1.5 rounded-full", config.dot)} />
       {config.label}
     </span>
   );
@@ -106,6 +113,35 @@ function formatBookingDate(dateStr: string | null): string {
   }
 }
 
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }) {
+  const initials = getInitials(name);
+  
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        className="w-10 h-10 rounded-full object-cover ring-2 ring-background"
+      />
+    );
+  }
+  
+  return (
+    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center text-white text-sm font-semibold ring-2 ring-background">
+      {initials}
+    </div>
+  );
+}
+
 function BookingCard({ booking, role }: { booking: Booking; role: "business" | "worker" }) {
   const name =
     role === "business"
@@ -114,34 +150,66 @@ function BookingCard({ booking, role }: { booking: Booking; role: "business" | "
   const jobTitle = booking.jobs?.title || "Pekerjaan";
   const address = booking.jobs?.address;
   const price = booking.final_price;
+  const avatarUrl = role === "business" ? booking.workers?.avatar_url : undefined;
 
   return (
-    <div className="p-4 bg-card rounded-lg border border-border">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold">{name}</h3>
+    <div className="group p-4 bg-card rounded-xl border border-border hover:border-primary/20 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 touch-manipulation">
+      <div className="flex items-start gap-3">
+        {role === "business" && (
+          <Avatar name={name} avatarUrl={avatarUrl} />
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <h3 className="font-semibold truncate">{name}</h3>
             <StatusBadge status={booking.status} />
           </div>
-          <p className="text-sm text-muted-foreground">{jobTitle}</p>
+          <p className="text-sm text-muted-foreground truncate">{jobTitle}</p>
         </div>
         {price != null && (
-          <p className="text-sm font-semibold text-primary">
+          <p className="text-sm font-bold text-primary whitespace-nowrap">
             {formatCurrency(price)}
           </p>
         )}
       </div>
-      <div className="mt-3 space-y-1">
+      
+      <div className="mt-3 pt-3 border-t border-border/50 space-y-2">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Clock className="h-3 w-3" />
+          <Clock className="h-3.5 w-3.5 text-primary/60" />
           <span>{formatBookingDate(booking.start_date)}</span>
         </div>
         {address && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <MapPin className="h-3 w-3" />
+            <MapPin className="h-3.5 w-3.5 text-primary/60" />
             <span className="truncate">{address}</span>
           </div>
         )}
+      </div>
+      
+      {/* Action buttons */}
+      <div className="mt-3 pt-3 border-t border-border/50 flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 px-3 text-xs gap-1.5 touch-manipulation"
+        >
+          <Phone className="h-3.5 w-3.5" />
+          Hubungi
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 px-3 text-xs gap-1.5 touch-manipulation"
+        >
+          <MessageSquare className="h-3.5 w-3.5" />
+          Chat
+        </Button>
+        <Link
+          href={role === "business" ? `/business/bookings/${booking.id}` : `/worker/bookings/${booking.id}`}
+          className="ml-auto flex items-center gap-1 text-xs text-primary hover:underline touch-manipulation"
+        >
+          Detail
+          <ChevronRight className="h-3.5 w-3.5" />
+        </Link>
       </div>
     </div>
   );
@@ -149,15 +217,16 @@ function BookingCard({ booking, role }: { booking: Booking; role: "business" | "
 
 function BookingCardSkeleton() {
   return (
-    <div className="p-4 bg-card rounded-lg border border-border animate-pulse">
-      <div className="flex items-start justify-between">
+    <div className="p-4 bg-card rounded-xl border border-border animate-pulse">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-full bg-muted" />
         <div className="flex-1">
           <div className="h-5 w-32 bg-muted rounded mb-1" />
           <div className="h-4 w-24 bg-muted rounded" />
         </div>
         <div className="h-5 w-16 bg-muted rounded" />
       </div>
-      <div className="mt-3 space-y-1">
+      <div className="mt-3 pt-3 border-t border-border/50 space-y-2">
         <div className="h-3 w-28 bg-muted rounded" />
         <div className="h-3 w-36 bg-muted rounded" />
       </div>
@@ -205,9 +274,11 @@ export function UpcomingBookings({
             {t("common.viewAll", "Lihat Semua")} →
           </Link>
         </div>
-        <div className="p-6 bg-card rounded-lg border border-border text-center">
-          <Calendar className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">
+        <div className="p-8 bg-card rounded-xl border border-border text-center">
+          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Calendar className="h-7 w-7 text-primary" />
+          </div>
+          <p className="text-muted-foreground font-medium">
             {t("dashboard.noUpcomingBookings", "Belum ada booking mendatang")}
           </p>
           <p className="text-sm text-muted-foreground mt-1">
@@ -224,13 +295,15 @@ export function UpcomingBookings({
     <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">
-          {t("dashboard.upcomingBookings", "Booking Mendatang")} ({upcomingCount})
+          {t("dashboard.upcomingBookings", "Booking Mendatang")} 
+          <span className="ml-2 text-sm font-normal text-muted-foreground">({upcomingCount})</span>
         </h2>
         <Link
           href={viewAllHref}
-          className="text-sm text-primary hover:underline"
+          className="text-sm text-primary hover:underline flex items-center gap-1 touch-manipulation"
         >
-          {t("common.viewAll", "Lihat Semua")} →
+          {t("common.viewAll", "Lihat Semua")}
+          <ChevronRight className="h-4 w-4" />
         </Link>
       </div>
       <div className="space-y-3">
