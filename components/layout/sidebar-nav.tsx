@@ -291,26 +291,27 @@ export function MobileSidebarNav({
   const [open, setOpen] = React.useState(false);
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden h-11 w-11 shrink-0 touch-manipulation"
-        >
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle menu</span>
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="left" className="w-[280px] sm:w-72 p-0">
-        <SheetHeader className="border-b px-4 py-3">
-          <SheetTitle className="text-left">Navigation</SheetTitle>
-        </SheetHeader>
-        <div className={cn("h-[calc(100vh-4rem)] overflow-y-auto", className)}>
-          <SidebarContent items={items} />
-        </div>
-      </SheetContent>
-    </Sheet>
+    <>
+      {/* Debug: visible button */}
+      <button
+        onClick={() => setOpen(true)}
+        className="md:hidden flex items-center justify-center h-11 w-11 rounded-md hover:bg-accent border border-border"
+        aria-label="Open navigation menu"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+      
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="left" className="w-[280px] sm:w-72 p-0 z-[100]">
+          <SheetHeader className="border-b px-4 py-3">
+            <SheetTitle className="text-left">Navigation</SheetTitle>
+          </SheetHeader>
+          <div className={cn("h-[calc(100vh-4rem)] overflow-y-auto", className)}>
+            <SidebarContent items={items} />
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
 
