@@ -19,6 +19,10 @@ const badgeVariants = cva(
         ghost:
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
+        // Gradient variants
+        gradient: "bg-gradient-primary text-white [a]:hover:opacity-90",
+        success: "bg-gradient-success text-white [a]:hover:opacity-90",
+        warning: "bg-gradient-warning text-white [a]:hover:opacity-90",
       },
     },
     defaultVariants: {
@@ -27,17 +31,32 @@ const badgeVariants = cva(
   },
 );
 
+interface BadgeProps
+  extends useRender.ComponentProps<"span">,
+    VariantProps<typeof badgeVariants> {
+  /** Enable pulse animation for notifications */
+  pulse?: boolean;
+}
+
 function Badge({
   className,
   variant = "default",
+  pulse = false,
   render,
   ...props
-}: useRender.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
+}: BadgeProps) {
   return useRender({
     defaultTagName: "span",
     props: mergeProps<"span">(
       {
-        className: cn(badgeVariants({ variant }), className),
+        className: cn(
+          badgeVariants({ variant }),
+          // Pulse animation for notifications
+          pulse && "animate-pulse-badge",
+          // Hover scale micro-interaction
+          "hover:scale-105 active:scale-95 transition-transform duration-150",
+          className,
+        ),
       },
       props,
     ),

@@ -22,6 +22,10 @@ export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   illustration?: React.ReactNode;
   /** Size variant */
   size?: "sm" | "md" | "lg";
+  /** Gradient accent variant */
+  gradient?: "primary" | "success" | "warning" | "destructive" | "none";
+  /** Enable entrance animation */
+  animated?: boolean;
 }
 
 /**
@@ -106,6 +110,17 @@ const defaultIcons = {
 };
 
 /**
+ * Gradient classes for icon backgrounds
+ */
+const gradientClasses = {
+  primary: "bg-gradient-primary",
+  success: "bg-gradient-success",
+  warning: "bg-gradient-warning",
+  destructive: "bg-gradient-destructive",
+  none: "bg-primary/10",
+};
+
+/**
  * EmptyState component for displaying empty or no-data states
  *
  * @example
@@ -114,6 +129,8 @@ const defaultIcons = {
  *   title="Belum ada pekerja"
  *   description="Tambahkan pekerja pertama Anda untuk memulai"
  *   action={{ label: "Tambah Pekerja", onClick: handleAdd }}
+ *   gradient="primary"
+ *   animated
  * />
  * ```
  */
@@ -125,78 +142,117 @@ export function EmptyState({
   action,
   illustration,
   size = "md",
+  gradient = "none",
+  animated = true,
   ...props
 }: EmptyStateProps) {
   const sizes = {
     sm: {
       container: "py-8 px-4",
       icon: "h-10 w-10",
+      iconWrapper: "p-3",
       title: "text-base",
       description: "text-sm",
     },
     md: {
       container: "py-12 px-6",
       icon: "h-12 w-12",
+      iconWrapper: "p-4",
       title: "text-lg",
       description: "text-base",
     },
     lg: {
       container: "py-16 px-8",
       icon: "h-16 w-16",
+      iconWrapper: "p-5",
       title: "text-xl",
       description: "text-lg",
     },
   };
+
+  const animationClass = animated ? "animate-empty-state" : "";
+  const staggerDelay = animated ? "opacity-0" : "";
 
   return (
     <div
       className={cn(
         "flex flex-col items-center justify-center text-center",
         sizes[size].container,
+        animationClass,
         className,
       )}
       {...props}
     >
+      {/* Illustration or Icon */}
       {illustration ? (
-        <div className="mb-4">{illustration}</div>
+        <div className={cn("mb-4 animate-icon-bounce stagger-1", staggerDelay)}>
+          {illustration}
+        </div>
       ) : (
         <div
           className={cn(
-            "mb-4 p-4 bg-primary/10 rounded-full",
-            sizes[size].icon,
+            "mb-4 rounded-full text-white",
+            gradientClasses[gradient],
+            sizes[size].iconWrapper,
+            animated && "animate-icon-bounce stagger-1 opacity-0",
+            gradient === "none" && "text-primary",
           )}
           aria-hidden="true"
         >
-          {icon || defaultIcons.empty}
+          <div className={sizes[size].icon}>
+            {icon || defaultIcons.empty}
+          </div>
         </div>
       )}
+
+      {/* Title with gradient option */}
       <h3
         className={cn(
           "font-semibold text-foreground",
           sizes[size].title,
+          animated && "stagger-2 opacity-0",
+          animated && "[animation:empty-state-enter_0.4s_ease-out_0.15s_forwards]",
         )}
       >
         {title}
       </h3>
+
+      {/* Description */}
       {description && (
         <p
           className={cn(
             "mt-2 text-muted-foreground max-w-sm",
             sizes[size].description,
+            animated && "stagger-3 opacity-0",
+            animated && "[animation:empty-state-enter_0.4s_ease-out_0.25s_forwards]",
           )}
         >
           {description}
         </p>
       )}
+
+      {/* Action Button with gradient styling */}
       {action && (
-        <Button
-          variant={action.variant || "primary"}
-          size="md"
-          onClick={action.onClick}
-          className="mt-6"
+        <div
+          className={cn(
+            "mt-6",
+            animated && "stagger-4 opacity-0",
+            animated && "[animation:empty-state-enter_0.4s_ease-out_0.35s_forwards]",
+          )}
         >
-          {action.label}
-        </Button>
+          <Button
+            variant={action.variant || "primary"}
+            size="md"
+            onClick={action.onClick}
+            className={cn(
+              "transition-all duration-200",
+              "hover:scale-105 active:scale-95",
+              gradient !== "none" && action.variant === "primary" && "bg-gradient-primary hover:opacity-90",
+            )}
+          >
+            {action.label}
+          </Button>
+        </div>
       )}
     </div>
   );
@@ -219,6 +275,8 @@ export interface EmptyStateCardProps extends EmptyStateProps {
  *   title="Tidak ada hasil"
  *   description="Coba ubah filter pencarian Anda"
  *   icon={defaultIcons.search}
+ *   gradient="primary"
+ *   animated
  * />
  * ```
  */
