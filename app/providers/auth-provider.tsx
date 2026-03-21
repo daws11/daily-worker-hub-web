@@ -185,7 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         "[AUTH signUp] Step 3: Creating wallet for user...",
       );
       if (role === 'worker' || role === 'business') {
-        const { error: walletError } = await supabase
+        const { error: walletError } = await (supabase as any)
           .from('wallets')
           .insert({
             user_id: user.id,
