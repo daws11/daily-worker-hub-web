@@ -23,32 +23,44 @@ function StatCard({ label, value, icon: Icon, trend, href }: StatCardProps) {
   const content = (
     <div
       className={cn(
-        "p-4 bg-card rounded-lg border border-border transition-shadow",
-        href && "hover:shadow-md cursor-pointer"
+        "relative overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm transition-all duration-200",
+        "min-h-[44px] touch-manipulation",
+        href && "hover:shadow-md hover:-translate-y-0.5 cursor-pointer"
       )}
     >
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className="h-4 w-4 text-muted-foreground" />
-        <span className="text-xs text-muted-foreground">{label}</span>
+      {/* Gradient accent bar */}
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary to-primary/50 rounded-l-xl" />
+      
+      <div className="flex items-center gap-2 mb-2 pl-2">
+        <Icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{label}</span>
       </div>
-      <p className="text-2xl font-bold">{value}</p>
+      <p className="text-2xl font-bold pl-2 tracking-tight">{value}</p>
       {trend && (
-        <p
-          className={cn(
-            "text-xs mt-1",
-            trend.value >= 0 ? "text-green-600" : "text-red-600"
-          )}
-        >
-          {trend.value >= 0 ? "+" : ""}
-          {trend.value}% {trend.label}
-        </p>
+        <div className={cn(
+          "flex items-center gap-1 mt-2 pl-2 text-xs font-semibold",
+          trend.value >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+        )}>
+          <span className={cn(
+            "inline-flex items-center justify-center rounded-full p-0.5",
+            trend.value >= 0 ? "bg-emerald-100 dark:bg-emerald-900/30" : "bg-red-100 dark:bg-red-900/30"
+          )}>
+            <TrendingUp className={cn(
+              "h-3 w-3",
+              trend.value >= 0 ? "" : "rotate-180"
+            )} />
+          </span>
+          <span>
+            {trend.value >= 0 ? "+" : ""}{trend.value}% {trend.label}
+          </span>
+        </div>
       )}
     </div>
   );
 
   if (href) {
     return (
-      <Link href={href} className="block">
+      <Link href={href} className="block min-h-[44px] touch-manipulation">
         {content}
       </Link>
     );

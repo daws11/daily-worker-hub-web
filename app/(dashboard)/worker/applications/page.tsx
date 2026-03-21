@@ -424,7 +424,7 @@ export default function WorkerApplicationsPage() {
             {activeTab === "all" && (
               <Link
                 href="/worker/jobs"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg text-sm font-semibold transition-all hover:bg-primary/90 shadow-sm hover:shadow-md"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg text-sm font-semibold transition-all duration-200 hover:bg-primary/90 shadow-sm hover:shadow-md min-h-[44px] touch-manipulation"
               >
                 <Briefcase className="w-5 h-5" />
                 Cari Pekerjaan

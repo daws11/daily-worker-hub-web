@@ -271,14 +271,14 @@ export default function BusinessMessagesPage() {
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
                 href="/business/bookings"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg text-sm font-semibold transition-all hover:bg-primary/90 shadow-sm hover:shadow-md"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg text-sm font-semibold transition-all duration-200 hover:bg-primary/90 shadow-sm hover:shadow-md min-h-[44px] touch-manipulation"
               >
                 <Calendar className="w-5 h-5" />
                 Lihat Booking Saya
               </Link>
               <Link
                 href="/business/jobs"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-muted text-foreground border border-border rounded-lg text-sm font-medium transition-all hover:bg-muted/80"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-muted text-foreground border border-border rounded-lg text-sm font-medium transition-all duration-200 hover:bg-muted/80 min-h-[44px] touch-manipulation"
               >
                 <Building2 className="w-5 h-5" />
                 Kelola Pekerjaan

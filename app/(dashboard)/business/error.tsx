@@ -45,7 +45,7 @@ export default function BusinessError({
               <RefreshCw className="h-4 w-4 mr-2" />
               Coba Lagi
             </Button>
-            <Link href="/business" className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+            <Link href="/business" className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 min-h-[44px] touch-manipulation transition-all duration-200">
               <Building2 className="h-4 w-4" />
               Kembali
             </Link>
