@@ -16,7 +16,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "./theme-toggle";
-import { MobileSidebarNav } from "./sidebar-nav";
 import {
   Bell,
   ChevronRight,
@@ -128,10 +127,19 @@ export function SiteHeader({
       {...props}
     >
       <div className="flex h-16 items-center justify-between px-4 md:px-6">
-        {/* Left: Mobile menu + Breadcrumbs */}
+        {/* Left: Logo for mobile, Breadcrumbs for desktop */}
         <div className="flex items-center gap-2">
-          <MobileSidebarNav items={sidebarItems} groups={sidebarGroups} />
+          {/* Mobile: Logo */}
+          <Link
+            href="/business"
+            className="flex items-center gap-2 md:hidden"
+          >
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <span className="text-sm font-bold text-primary-foreground">DW</span>
+            </div>
+          </Link>
 
+          {/* Desktop: Breadcrumbs */}
           {showBreadcrumbs && crumbs.length > 0 && (
             <nav className="hidden md:flex items-center gap-1 text-sm text-muted-foreground">
               {crumbs.map((crumb, index) => (

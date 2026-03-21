@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/app/providers/auth-provider";
 import { supabase } from "@/lib/supabase/client";
 import { DashboardGreeting } from "@/components/dashboard/greeting";
@@ -8,6 +9,20 @@ import { QuickStats, type WorkerStats } from "@/components/dashboard/quick-stats
 import { UpcomingBookings } from "@/components/dashboard/upcoming-bookings";
 import { QuickActions } from "@/components/dashboard/quick-actions";
 import { useTranslation } from "@/lib/i18n/hooks";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { 
+  Wallet, 
+  TrendingUp,
+  Clock,
+  ArrowRight,
+  Plus,
+  CheckCircle,
+  AlertCircle,
+  Briefcase,
+  Star
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Booking {
   id: string;
@@ -26,11 +41,50 @@ interface Booking {
   } | null;
 }
 
+interface WalletData {
+  balance: number;
+  pending_balance: number;
+}
+
+interface RecentActivity {
+  id: string;
+  type: "booking" | "payment" | "job";
+  title: string;
+  description: string;
+  time: string;
+  status?: string;
+  amount?: number;
+}
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function formatRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diff = now.getTime() - date.getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 60) return `${minutes}m lalu`;
+  if (hours < 24) return `${hours}j lalu`;
+  return `${days}h lalu`;
+}
+
 export default function WorkerDashboardPage() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user } = useAuth();
   const { t } = useTranslation();
   const [stats, setStats] = useState<WorkerStats | null>(null);
+  const [wallet, setWallet] = useState<WalletData | null>(null);
   const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
+  const [activities, setActivities] = useState<RecentActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -39,150 +93,208 @@ export default function WorkerDashboardPage() {
 
       setIsLoading(true);
       try {
-        // Get worker profile for this user
-        const { data: worker, error: workerError } = await supabase
+        // Get worker profile
+        const { data: worker } = await supabase
           .from("workers")
           .select("id, rating")
           .eq("user_id", user.id)
           .single();
 
-        // Fetch available jobs count
-        const { count: openJobs, error: jobsError } = await supabase
+        // Fetch wallet
+        const { data: walletData } = await supabase
+          .from("wallets")
+          .select("balance, pending_balance")
+          .eq("user_id", user.id)
+          .single();
+        
+        if (walletData) setWallet(walletData);
+
+        // Fetch open jobs count
+        const { count: openJobs } = await supabase
           .from("jobs")
           .select("*", { count: "exact", head: true })
           .eq("status", "open");
 
-        if (jobsError) {
-          console.error("Failed to fetch jobs count:", jobsError);
-        }
-
-        // Fetch bookings for this worker
-        let bookingsQuery = supabase
+        // Fetch worker bookings
+        const workerId = worker?.id || user.id;
+        
+        const { data: bookings } = await supabase
           .from("bookings")
-          .select(
-            `
-            id,
-            status,
-            start_date,
-            end_date,
-            final_price,
-            jobs (id, title, address),
-            businesses (id, name)
-          `
-          );
+          .select("id, status, start_date, end_date, final_price, jobs (id, title, address), businesses (id, name)")
+          .eq("worker_id", workerId)
+          .order("start_date", { ascending: true })
+          .limit(10);
 
-        if (worker?.id) {
-          bookingsQuery = bookingsQuery.eq("worker_id", worker.id);
-        } else {
-          // If no worker profile, try by user_id
-          bookingsQuery = bookingsQuery.eq("worker_id", user.id);
-        }
+        if (bookings) setUpcomingBookings(bookings);
 
-        const { data: bookings, error: bookingsError } = await bookingsQuery.order(
-          "start_date",
-          { ascending: true }
-        );
-
-        if (bookingsError) {
-          console.error("Failed to fetch bookings:", bookingsError);
-        }
-
-        // Fetch earnings for this month
+        // Calculate earnings this month
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        
-        let earningsQuery = supabase
-          .from("bookings")
-          .select("final_price")
-          .eq("status", "completed")
+
+        const { data: transactions } = await supabase
+          .from("wallet_transactions")
+          .select("amount, created_at")
+          .eq("user_id", user.id)
+          .eq("type", "credit")
           .gte("created_at", startOfMonth.toISOString());
 
-        if (worker?.id) {
-          earningsQuery = earningsQuery.eq("worker_id", worker.id);
-        } else {
-          earningsQuery = earningsQuery.eq("worker_id", user.id);
-        }
+        const earnedThisMonth = transactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
 
-        const { data: completedBookings, error: earningsError } = await earningsQuery;
-
-        if (earningsError) {
-          console.error("Failed to fetch earnings:", earningsError);
-        }
-
-        // Calculate stats
-        const activeBookings =
-          (bookings || []).filter(
-            (b) => b.status === "accepted" || b.status === "in_progress"
-          ).length || 0;
-
-        const earnedThisMonth =
-          completedBookings?.reduce(
-            (sum, b) => sum + (b.final_price || 0),
-            0
-          ) || 0;
-
-        const rating = worker?.rating || 0;
+        // Active bookings
+        const activeBookings = bookings?.filter(b => 
+          b.status === "accepted" || b.status === "in_progress"
+        ).length || 0;
 
         setStats({
           openJobs: openJobs || 0,
           activeBookings,
           earnedThisMonth,
-          rating,
+          rating: worker?.rating || 0,
         });
 
-        // Filter upcoming bookings (accepted and future dates)
-        const today = new Date();
-        const upcoming = (bookings || [])
-          .filter((b) => {
-            if (b.status !== "accepted" && b.status !== "in_progress")
-              return false;
-            if (!b.start_date) return false;
-            return new Date(b.start_date) >= today;
-          })
-          .slice(0, 3);
+        // Generate activities
+        const newActivities: RecentActivity[] = (bookings || []).slice(0, 5).map(b => ({
+          id: b.id,
+          type: "booking" as const,
+          title: b.jobs?.title || "Pekerjaan",
+          description: b.businesses?.name || "Usaha",
+          time: b.start_date || "",
+          status: b.status,
+          amount: b.final_price,
+        }));
+        setActivities(newActivities);
 
-        setUpcomingBookings(upcoming as Booking[]);
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        console.error("Error fetching dashboard:", error);
       } finally {
         setIsLoading(false);
       }
     }
 
-    if (!authLoading && user) {
-      fetchDashboardData();
-    }
-  }, [user, authLoading]);
-
-  const userName = user?.user_metadata?.full_name || "";
-
-  if (authLoading) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">
-          {t("common.loading", "Memuat...")}
-        </div>
-      </div>
-    );
-  }
+    fetchDashboardData();
+  }, [user]);
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-6">
-      <div className="animate-slide-up opacity-0 animation-delay-100">
-        <DashboardGreeting name={userName} role="worker" />
+    <div className="space-y-4 md:space-y-6 pb-20 md:pb-6 animate-fade-in">
+      {/* Greeting */}
+      <div className="animate-slide-up">
+        <DashboardGreeting role="worker" />
       </div>
-      <div className="animate-slide-up opacity-0 animation-delay-200">
+
+      {/* Wallet Card - Highlight */}
+      <div className="animate-slide-up animation-delay-100">
+        <Link href="/worker/wallet">
+          <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-emerald-100 text-sm font-medium">Saldo Earnings</p>
+                  <p className="text-2xl md:text-3xl font-bold mt-1">
+                    {wallet ? formatCurrency(wallet.balance) : "Rp 0"}
+                  </p>
+                  {wallet && wallet.pending_balance > 0 && (
+                    <p className="text-xs text-emerald-100 mt-1">
+                      +{formatCurrency(wallet.pending_balance)} pending
+                    </p>
+                  )}
+                </div>
+                <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
+                  <Wallet className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div className="flex gap-3 mt-4">
+                <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
+                  <ArrowRight className="h-4 w-4 mr-1" /> Tarik Dana
+                </Button>
+                <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
+                  Riwayat
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="animate-slide-up animation-delay-200">
         <QuickStats stats={stats} role="worker" isLoading={isLoading} />
       </div>
-      <div className="animate-slide-up opacity-0 animation-delay-300">
+
+      {/* Quick Actions */}
+      <div className="animate-slide-up animation-delay-300">
         <QuickActions role="worker" />
       </div>
-      <div className="animate-slide-up opacity-0 animation-delay-400">
-        <UpcomingBookings
-          bookings={upcomingBookings}
-          role="worker"
-          isLoading={isLoading}
-        />
+
+      {/* Recent Activity */}
+      <div className="animate-slide-up animation-delay-400">
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Aktivitas Terkini</CardTitle>
+              <Link href="/worker/bookings">
+                <Button variant="ghost" size="sm" className="text-primary">
+                  Lihat Semua <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {activities.length === 0 ? (
+              <div className="text-center py-6 text-muted-foreground">
+                <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Belum ada aktivitas</p>
+                <Link href="/worker/jobs">
+                  <Button variant="link" className="mt-2 text-primary">
+                    Cari Lowongan <ArrowRight className="h-4 w-4 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              activities.map((activity) => (
+                <Link 
+                  key={activity.id} 
+                  href={`/worker/bookings`}
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className={cn(
+                    "h-10 w-10 rounded-full flex items-center justify-center",
+                    activity.status === "completed" ? "bg-green-100 text-green-600" :
+                    activity.status === "in_progress" ? "bg-blue-100 text-blue-600" :
+                    activity.status === "accepted" ? "bg-yellow-100 text-yellow-600" :
+                    "bg-gray-100 text-gray-600"
+                  )}>
+                    {activity.status === "completed" ? (
+                      <CheckCircle className="h-5 w-5" />
+                    ) : activity.status === "in_progress" ? (
+                      <Clock className="h-5 w-5" />
+                    ) : (
+                      <Briefcase className="h-5 w-5" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{activity.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">{activity.description}</p>
+                  </div>
+                  <div className="text-right">
+                    {activity.amount && (
+                      <p className="text-sm font-medium text-green-600">
+                        +{formatCurrency(activity.amount)}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {activity.time ? formatRelativeTime(activity.time) : ""}
+                    </p>
+                  </div>
+                </Link>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Upcoming Bookings */}
+      <div className="animate-slide-up animation-delay-400">
+        <UpcomingBookings bookings={upcomingBookings} role="worker" isLoading={isLoading} />
       </div>
     </div>
   );

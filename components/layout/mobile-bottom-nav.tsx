@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import {
   Home,
   Briefcase,
-  CalendarCheck,
   MessageSquare,
   User,
 } from "lucide-react";
@@ -28,11 +27,6 @@ const businessMobileNav: MobileNavItem[] = [
     title: "Jobs",
     href: "/business/jobs",
     icon: Briefcase,
-  },
-  {
-    title: "Bookings",
-    href: "/business/bookings",
-    icon: CalendarCheck,
   },
   {
     title: "Messages",
@@ -56,11 +50,6 @@ const workerMobileNav: MobileNavItem[] = [
     title: "Jobs",
     href: "/worker/jobs",
     icon: Briefcase,
-  },
-  {
-    title: "Bookings",
-    href: "/worker/bookings",
-    icon: CalendarCheck,
   },
   {
     title: "Messages",
@@ -96,13 +85,13 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
               href={item.href}
               className={cn(
                 "flex flex-col items-center justify-center flex-1 h-full touch-manipulation",
-                "transition-colors",
+                "transition-all duration-200",
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-6 w-6" />
               <span className="text-xs mt-1 font-medium">{item.title}</span>
             </Link>
           );
