@@ -10,6 +10,7 @@ export default function WorkerLayout({
     <DashboardLayout
       sidebarGroups={workerNavGroups}
       headerProps={{ showBreadcrumbs: true }}
+      role="worker"
     >
       {children}
     </DashboardLayout>

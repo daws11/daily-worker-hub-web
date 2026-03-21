@@ -4,6 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 import { SiteHeader } from "./site-header";
 import { SidebarNav, businessNavItems, businessNavGroups, workerNavGroups } from "./sidebar-nav";
+import { MobileBottomNav } from "./mobile-bottom-nav";
 import { Button } from "@/components/ui/button";
 import { PanelLeftClose, PanelLeft } from "lucide-react";
 
@@ -13,6 +14,7 @@ interface DashboardLayoutProps extends React.HTMLAttributes<HTMLDivElement> {
   sidebarGroups?: typeof businessNavGroups;
   headerProps?: React.ComponentProps<typeof SiteHeader>;
   collapsible?: boolean;
+  role?: "business" | "worker";
 }
 
 export function DashboardLayout({
@@ -21,6 +23,7 @@ export function DashboardLayout({
   sidebarGroups,
   headerProps,
   collapsible = true,
+  role = "business",
   className,
   ...props
 }: DashboardLayoutProps) {
@@ -110,11 +113,14 @@ export function DashboardLayout({
           />
 
           {/* Main Content */}
-          <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
+          <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-20 md:pb-6">
             {children}
           </main>
         </div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav role={role} />
     </div>
   );
 }

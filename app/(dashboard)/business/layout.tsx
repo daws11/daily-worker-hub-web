@@ -7,7 +7,7 @@ export default function BusinessLayout({
   children: React.ReactNode;
 }) {
   return (
-    <DashboardLayout sidebarGroups={businessNavGroups}>
+    <DashboardLayout sidebarGroups={businessNavGroups} role="business">
       {children}
     </DashboardLayout>
   );
