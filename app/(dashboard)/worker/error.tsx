@@ -45,12 +45,10 @@ export default function WorkerError({
               <RefreshCw className="h-4 w-4 mr-2" />
               Coba Lagi
             </Button>
-            <Button asChild>
-              <Link href="/worker">
-                <User className="h-4 w-4 mr-2" />
-                Kembali
-              </Link>
-            </Button>
+            <Link href="/worker" className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+              <User className="h-4 w-4" />
+              Kembali
+            </Link>
           </div>
         </CardContent>
       </Card>

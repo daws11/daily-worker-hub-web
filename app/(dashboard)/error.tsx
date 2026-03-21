@@ -45,12 +45,10 @@ export default function DashboardError({
               <RefreshCw className="h-4 w-4 mr-2" />
               Coba Lagi
             </Button>
-            <Button asChild>
-              <Link href="/dashboard">
-                <LayoutDashboard className="h-4 w-4 mr-2" />
-                Ke Dashboard
-              </Link>
-            </Button>
+            <Link href="/dashboard" className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+              <LayoutDashboard className="h-4 w-4" />
+              Ke Dashboard
+            </Link>
           </div>
         </CardContent>
       </Card>

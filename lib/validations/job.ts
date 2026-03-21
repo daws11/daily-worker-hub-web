@@ -136,31 +136,142 @@ export const createJobSchema = z
     path: ["budget_max"],
   });
 
+/**
+ * Base job schema (without refinements - for extension)
+ */
+const baseJobSchema = z
+  .object({
+    business_id: z
+      .string()
+      .min(1, "Business ID wajib diisi")
+      .uuid("Business ID tidak valid"),
+
+    category_id: z
+      .string()
+      .min(1, "Kategori wajib dipilih")
+      .uuid("Category ID tidak valid"),
+
+    title: z
+      .string()
+      .min(1, "Judul job wajib diisi")
+      .min(5, "Judul job minimal 5 karakter")
+      .max(200, "Judul job maksimal 200 karakter"),
+
+    description: z
+      .string()
+      .min(1, "Deskripsi wajib diisi")
+      .min(20, "Deskripsi minimal 20 karakter")
+      .max(5000, "Deskripsi maksimal 5000 karakter"),
+
+    requirements: z
+      .string()
+      .max(3000, "Persyaratan maksimal 3000 karakter")
+      .optional()
+      .or(z.literal("")),
+
+    budget_min: z
+      .number({
+        message: "Budget minimum harus berupa angka",
+      })
+      .min(10000, "Budget minimum minimal Rp 10.000")
+      .max(100000000, "Budget maksimal Rp 100.000.000"),
+
+    budget_max: z
+      .number({
+        message: "Budget maksimum harus berupa angka",
+      })
+      .min(10000, "Budget maksimum minimal Rp 10.000")
+      .max(100000000, "Budget maksimal Rp 100.000.000"),
+
+    hours_needed: z
+      .number({
+        message: "Jam kerja harus berupa angka",
+      })
+      .min(1, "Jam kerja minimal 1 jam")
+      .max(24, "Jam kerja maksimal 24 jam per hari")
+      .refine((val) => Number.isInteger(val) || val % 0.5 === 0, {
+        message: "Jam kerja harus kelipatan 0.5 jam",
+      }),
+
+    address: z
+      .string()
+      .min(1, "Alamat wajib diisi")
+      .min(10, "Alamat minimal 10 karakter")
+      .max(500, "Alamat maksimal 500 karakter"),
+
+    lat: z
+      .number()
+      .min(-90, "Latitude tidak valid")
+      .max(90, "Latitude tidak valid")
+      .optional(),
+
+    lng: z
+      .number()
+      .min(-180, "Longitude tidak valid")
+      .max(180, "Longitude tidak valid")
+      .optional(),
+
+    deadline: z
+      .string()
+      .datetime("Format deadline tidak valid")
+      .refine(
+        (date) => {
+          const deadlineDate = new Date(date);
+          const now = new Date();
+          return deadlineDate > now;
+        },
+        { message: "Deadline harus lebih dari waktu sekarang" },
+      )
+      .optional()
+      .nullable(),
+
+    is_urgent: z.boolean().optional(),
+
+    overtime_multiplier: z
+      .number({
+        message: "Overtime multiplier harus berupa angka",
+      })
+      .min(1, "Overtime multiplier minimal 1.0")
+      .max(3, "Overtime multiplier maksimal 3.0")
+      .optional(),
+
+    workers_needed: z
+      .number({
+        message: "Jumlah worker harus berupa angka",
+      })
+      .int("Jumlah worker harus berupa angka bulat")
+      .min(1, "Minimal 1 worker")
+      .max(100, "Maksimal 100 worker")
+      .optional(),
+
+    skills_required: z
+      .array(z.string().uuid("Skill ID tidak valid"))
+      .min(1, "Pilih minimal 1 skill")
+      .max(20, "Maksimal 20 skill")
+      .optional(),
+  });
+
+/**
+ * Job creation schema
+ */
+export const createJobSchema = baseJobSchema
+  .refine((data) => data.budget_max >= data.budget_min, {
+    message:
+      "Budget maksimum harus lebih besar atau sama dengan budget minimum",
+    path: ["budget_max"],
+  });
+
 export type CreateJobInput = z.infer<typeof createJobSchema>;
 
 /**
  * Job update schema (partial)
  */
-export const updateJobSchema = createJobSchema
+export const updateJobSchema = baseJobSchema
   .omit({ business_id: true }) // Cannot change business_id
   .partial()
   .extend({
     status: jobStatusEnum.optional(),
-  })
-  .refine(
-    (data) => {
-      // If both budget_min and budget_max are provided, validate relationship
-      if (data.budget_min !== undefined && data.budget_max !== undefined) {
-        return data.budget_max >= data.budget_min;
-      }
-      return true;
-    },
-    {
-      message:
-        "Budget maksimum harus lebih besar atau sama dengan budget minimum",
-      path: ["budget_max"],
-    },
-  );
+  });
 
 export type UpdateJobInput = z.infer<typeof updateJobSchema>;
 

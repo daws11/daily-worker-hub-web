@@ -17,69 +17,73 @@ export const bookingStatusEnum = z.enum(
 );
 
 /**
+ * Base booking schema (without refinements - for extension)
+ */
+const baseBookingSchema = z.object({
+  job_id: z.string().min(1, "Job ID wajib diisi").uuid("Job ID tidak valid"),
+
+  worker_id: z
+    .string()
+    .min(1, "Worker ID wajib diisi")
+    .uuid("Worker ID tidak valid"),
+
+  business_id: z
+    .string()
+    .min(1, "Business ID wajib diisi")
+    .uuid("Business ID tidak valid"),
+
+  scheduled_date: z
+    .string()
+    .min(1, "Tanggal jadwal wajib diisi")
+    .datetime("Format tanggal tidak valid"),
+
+  scheduled_end_time: z
+    .string()
+    .datetime("Format tanggal tidak valid")
+    .optional(),
+
+  hourly_rate: z
+    .number({
+      message: "Rate per jam harus berupa angka",
+    })
+    .min(10000, "Rate per jam minimal Rp 10.000")
+    .max(1000000, "Rate per jam maksimal Rp 1.000.000"),
+
+  hours_worked: z
+    .number({
+      message: "Jam kerja harus berupa angka",
+    })
+    .min(1, "Jam kerja minimal 1 jam")
+    .max(24, "Jam kerja maksimal 24 jam")
+    .optional(),
+
+  notes: z
+    .string()
+    .max(1000, "Catatan maksimal 1000 karakter")
+    .optional()
+    .or(z.literal("")),
+
+  special_instructions: z
+    .string()
+    .max(500, "Instruksi khusus maksimal 500 karakter")
+    .optional()
+    .or(z.literal("")),
+});
+
+/**
  * Booking creation schema
  */
-export const createBookingSchema = z
-  .object({
-    job_id: z.string().min(1, "Job ID wajib diisi").uuid("Job ID tidak valid"),
-
-    worker_id: z
-      .string()
-      .min(1, "Worker ID wajib diisi")
-      .uuid("Worker ID tidak valid"),
-
-    business_id: z
-      .string()
-      .min(1, "Business ID wajib diisi")
-      .uuid("Business ID tidak valid"),
-
-    scheduled_date: z
-      .string()
-      .min(1, "Tanggal jadwal wajib diisi")
-      .datetime("Format tanggal tidak valid")
-      .refine(
-        (date) => {
-          const scheduledDate = new Date(date);
-          const now = new Date();
-          // Allow bookings at least 1 hour in advance
-          const minAdvance = new Date(now.getTime() + 60 * 60 * 1000);
-          return scheduledDate >= minAdvance;
-        },
-        { message: "Jadwal harus minimal 1 jam dari sekarang" },
-      ),
-
-    scheduled_end_time: z
-      .string()
-      .datetime("Format tanggal tidak valid")
-      .optional(),
-
-    hourly_rate: z
-      .number({
-        message: "Rate per jam harus berupa angka",
-      })
-      .min(10000, "Rate per jam minimal Rp 10.000")
-      .max(1000000, "Rate per jam maksimal Rp 1.000.000"),
-
-    hours_worked: z
-      .number({
-        message: "Jam kerja harus berupa angka",
-      })
-      .min(1, "Jam kerja minimal 1 jam")
-      .max(24, "Jam kerja maksimal 24 jam")
-      .optional(),
-
-    notes: z
-      .string()
-      .max(1000, "Catatan maksimal 1000 karakter")
-      .optional()
-      .or(z.literal("")),
-
-    special_instructions: z
-      .string()
-      .max(500, "Instruksi khusus maksimal 500 karakter")
-      .optional()
-      .or(z.literal("")),
-  })
+export const createBookingSchema = baseBookingSchema
+  .refine(
+    (date) => {
+      const scheduledDate = new Date(date.scheduled_date);
+      const now = new Date();
+      // Allow bookings at least 1 hour in advance
+      const minAdvance = new Date(now.getTime() + 60 * 60 * 1000);
+      return scheduledDate >= minAdvance;
+    },
+    { message: "Jadwal harus minimal 1 jam dari sekarang", path: ["scheduled_date"] },
+  )
   .refine(
     (data) => {
       // If scheduled_end_time is provided, validate it's after scheduled_date
@@ -101,7 +105,7 @@ export type CreateBookingInput = z.infer<typeof createBookingSchema>;
 /**
  * Booking update schema
  */
-export const updateBookingSchema = createBookingSchema
+export const updateBookingSchema = baseBookingSchema
   .omit({ job_id: true, worker_id: true, business_id: true })
   .partial()
   .extend({
