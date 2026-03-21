@@ -245,22 +245,39 @@ export default function BusinessJobsPage() {
       {/* Empty State */}
       {!loading && !error && jobs.jobsList?.length === 0 && (
         <div className="bg-card rounded-lg p-12 shadow-sm text-center border border-dashed border-border">
-          <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">
-            {t("business.noActiveJobs")}
-          </h3>
-          <p className="text-muted-foreground mb-6">
-            {t("business.noActiveJobsDescription")}
-          </p>
-          <button
-            onClick={() => {
-              window.location.href = "/business/jobs/new";
-            }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white border-none rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-primary/90"
-          >
-            <Plus className="w-4 h-4" />
-            Create Your First Job
-          </button>
+          <div className="flex flex-col items-center">
+            <div className="p-4 bg-primary/10 rounded-full mb-4">
+              <Building2 className="w-12 h-12 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">
+              {locale === "id" ? "Belum Ada Pekerjaan Aktif" : "No Active Jobs"}
+            </h3>
+            <p className="text-muted-foreground text-center max-w-md mb-6">
+              {locale === "id"
+                ? "Mulai dengan membuat pekerjaan pertama Anda. Pekerja yang cocok akan melamar dan Anda bisa mengelola mereka dari sini."
+                : "Start by creating your first job. Suitable workers will apply and you can manage them from here."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => {
+                  window.location.href = "/business/jobs/new";
+                }}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white border-none rounded-lg text-sm font-semibold cursor-pointer transition-all hover:bg-primary/90 shadow-sm hover:shadow-md"
+              >
+                <Plus className="w-5 h-5" />
+                {locale === "id" ? "Buat Pekerjaan Pertama" : "Create First Job"}
+              </button>
+              <button
+                onClick={() => {
+                  window.location.href = "/business/workers";
+                }}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-muted text-foreground border border-border rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-muted/80"
+              >
+                <Users className="w-5 h-5" />
+                {locale === "id" ? "Cari Pekerja" : "Browse Workers"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

@@ -653,12 +653,30 @@ export default function WorkerWalletPage() {
             </div>
           ) : payouts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Wallet className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
+              <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-full mb-4">
+                <Wallet className="h-12 w-12 text-green-600 dark:text-green-400" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">
+                {locale === "id" ? "Belum Ada Riwayat Penarikan" : "No Withdrawal History"}
+              </h3>
+              <p className="text-muted-foreground text-center max-w-md mb-6">
                 {locale === "id"
-                  ? "Belum ada riwayat penarikan"
-                  : "No withdrawal history yet"}
+                  ? "Riwayat penarikan saldo akan muncul di sini. Setelah saldo Anda mencukupi, Anda bisa menarik ke rekening bank."
+                  : "Your withdrawal history will appear here. Once you have enough balance, you can withdraw to your bank account."}
               </p>
+              {walletBalance && walletBalance.balance >= 100000 ? (
+                <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                  {locale === "id"
+                    ? "✨ Saldo Anda sudah bisa ditarik! Gunakan form di atas untuk menarik saldo."
+                    : "✨ Your balance is ready to withdraw! Use the form above to make a withdrawal."}
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {locale === "id"
+                    ? "Minimal penarikan: Rp 100.000. Terus bekerja dan tingkatkan saldo Anda!"
+                    : "Minimum withdrawal: Rp 100.000. Keep working and grow your balance!"}
+                </p>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">

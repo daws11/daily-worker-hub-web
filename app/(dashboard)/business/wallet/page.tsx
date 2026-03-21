@@ -492,9 +492,21 @@ export default function BusinessWalletPage() {
               </div>
             ) : transactions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <Wallet className="h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  {t("wallet.noTransactions")}
+                <div className="p-4 bg-green-100 dark:bg-green-900/30 rounded-full mb-4">
+                  <Wallet className="h-12 w-12 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">
+                  {locale === "id" ? "Belum Ada Transaksi" : "No Transactions Yet"}
+                </h3>
+                <p className="text-muted-foreground text-center max-w-md mb-6">
+                  {locale === "id"
+                    ? "Riwayat transaksi top up akan muncul di sini. Isi saldo untuk mulai membayar pekerja."
+                    : "Your top-up transaction history will appear here. Top up your balance to start paying workers."}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {locale === "id"
+                    ? "Gunakan form di atas untuk melakukan top up pertama Anda"
+                    : "Use the form above to make your first top up"}
                 </p>
               </div>
             ) : (

@@ -11,6 +11,8 @@ import {
   Send,
   Search,
   Bell,
+  Calendar,
+  Briefcase,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getConversations } from "@/lib/actions/messages";
+import Link from "next/link";
 
 export interface Message {
   id: string;
@@ -249,13 +252,33 @@ export default function WorkerMessagesPage() {
 
         {/* Empty State */}
         {!isLoading && !error && conversations.length === 0 && (
-          <Card>
-            <CardContent className="py-12 flex flex-col items-center justify-center text-center border-2 border-dashed border-gray-300">
-              <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Belum Ada Pesan</h3>
-              <p className="text-muted-foreground">
-                Percakapan dengan bisnis akan muncul di sini
+          <Card className="border-dashed">
+            <CardContent className="py-12 flex flex-col items-center justify-center text-center">
+              <div className="p-4 bg-violet-100 dark:bg-violet-900/30 rounded-full mb-4">
+                <MessageSquare className="h-12 w-12 text-violet-600 dark:text-violet-400" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Belum Ada Pesan</h3>
+              <p className="text-muted-foreground text-center max-w-md mb-6">
+                Percakapan dengan bisnis akan muncul di sini setelah Anda
+                memiliki booking aktif. Komunikasi penting untuk koordinasi
+                pekerjaan!
               </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link
+                  href="/worker/bookings"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg text-sm font-semibold transition-all hover:bg-primary/90 shadow-sm hover:shadow-md"
+                >
+                  <Calendar className="w-5 h-5" />
+                  Lihat Booking Saya
+                </Link>
+                <Link
+                  href="/worker/jobs"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-muted text-foreground border border-border rounded-lg text-sm font-medium transition-all hover:bg-muted/80"
+                >
+                  <Briefcase className="w-5 h-5" />
+                  Cari Pekerjaan
+                </Link>
+              </div>
             </CardContent>
           </Card>
         )}

@@ -24,7 +24,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { EmptyState } from "@/components/ui/empty-state";
 
 interface ConversationWithDetails extends MessageWithRelations {
   bookingDetails?: {
@@ -259,11 +258,34 @@ export default function BusinessMessagesPage() {
 
       {/* Empty State */}
       {!loading && !error && conversations.conversationsList?.length === 0 && (
-        <EmptyState
-          icon={<MessageCircle className="h-12 w-12" />}
-          title="Belum Ada Percakapan"
-          description="Pesan akan muncul di sini setelah Anda memiliki booking aktif dengan pekerja"
-        />
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="p-4 bg-violet-100 dark:bg-violet-900/30 rounded-full mb-4">
+              <MessageCircle className="h-12 w-12 text-violet-600 dark:text-violet-400" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Belum Ada Percakapan</h3>
+            <p className="text-muted-foreground text-center max-w-md mb-6">
+              Pesan akan muncul di sini setelah Anda memiliki booking aktif dengan pekerja. 
+              Komunikasi dengan pekerja untuk koordinasi pekerjaan.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/business/bookings"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg text-sm font-semibold transition-all hover:bg-primary/90 shadow-sm hover:shadow-md"
+              >
+                <Calendar className="w-5 h-5" />
+                Lihat Booking Saya
+              </Link>
+              <Link
+                href="/business/jobs"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-muted text-foreground border border-border rounded-lg text-sm font-medium transition-all hover:bg-muted/80"
+              >
+                <Building2 className="w-5 h-5" />
+                Kelola Pekerjaan
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Conversations List */}

@@ -17,6 +17,8 @@ import {
   Star,
   Video,
   ExternalLink,
+  Plus,
+  Calendar,
 } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -369,12 +371,32 @@ export default function BusinessBookingsPage() {
       {/* Empty State */}
       {!isLoading && !error && !hasBookings && (
         <div className="bg-card dark:bg-card rounded-lg p-12 shadow-sm text-center border border-dashed border-border">
-          <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Belum Ada Booking</h3>
-          <p className="text-muted-foreground">
-            Booking pekerja akan muncul di sini setelah pekerja melamar pada
-            pekerjaan Anda
-          </p>
+          <div className="flex flex-col items-center">
+            <div className="p-4 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-4">
+              <Building2 className="w-12 h-12 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Belum Ada Booking</h3>
+            <p className="text-muted-foreground text-center max-w-md mb-6">
+              Booking pekerja akan muncul di sini setelah pekerja melamar pada
+              pekerjaan yang Anda buat. Mulai dengan membuat pekerjaan baru.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/business/jobs/new"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg text-sm font-semibold transition-all hover:bg-primary/90 shadow-sm hover:shadow-md"
+              >
+                <Plus className="w-5 h-5" />
+                Buat Pekerjaan Baru
+              </Link>
+              <Link
+                href="/business/jobs"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-muted text-foreground border border-border rounded-lg text-sm font-medium transition-all hover:bg-muted/80"
+              >
+                <Calendar className="w-5 h-5" />
+                Lihat Pekerjaan Saya
+              </Link>
+            </div>
+          </div>
         </div>
       )}
 

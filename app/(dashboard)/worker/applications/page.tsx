@@ -406,18 +406,31 @@ export default function WorkerApplicationsPage() {
 
       {/* Empty State */}
       {!isLoading && !error && displayApplications.length === 0 && (
-        <div className="bg-card rounded-lg p-12 shadow-sm text-center border-2 border-dashed border-border">
-          <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">
-            {activeTab === "all"
-              ? "Belum Ada Lamaran"
-              : `Tidak Ada Lamaran ${statusGroupLabels[activeTab as keyof StatusGroup]}`}
-          </h3>
-          <p className="text-muted-foreground">
-            {activeTab === "all"
-              ? "Lamaran pekerjaan akan muncul di sini setelah Anda mengirimkan lamaran"
-              : "Tidak ada lamaran dengan status ini"}
-          </p>
+        <div className="bg-card rounded-lg p-12 shadow-sm text-center border border-dashed border-border">
+          <div className="flex flex-col items-center">
+            <div className="p-4 bg-amber-100 dark:bg-amber-900/30 rounded-full mb-4">
+              <Briefcase className="h-12 w-12 text-amber-600 dark:text-amber-400" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">
+              {activeTab === "all"
+                ? "Belum Ada Lamaran"
+                : `Tidak Ada Lamaran ${statusGroupLabels[activeTab as keyof StatusGroup]}`}
+            </h3>
+            <p className="text-muted-foreground text-center max-w-md mb-6">
+              {activeTab === "all"
+                ? "Lamaran pekerjaan akan muncul di sini setelah Anda mengirimkan lamaran. Jelajahi pekerjaan yang tersedia dan mulai melamar!"
+                : "Tidak ada lamaran dengan status ini. Teruslah melamar pekerjaan yang sesuai dengan keahlian Anda."}
+            </p>
+            {activeTab === "all" && (
+              <Link
+                href="/worker/jobs"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg text-sm font-semibold transition-all hover:bg-primary/90 shadow-sm hover:shadow-md"
+              >
+                <Briefcase className="w-5 h-5" />
+                Cari Pekerjaan
+              </Link>
+            )}
+          </div>
         </div>
       )}
 

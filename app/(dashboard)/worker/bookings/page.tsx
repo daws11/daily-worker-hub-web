@@ -19,6 +19,7 @@ import {
   Calendar,
   MapPin,
   DollarSign,
+  Briefcase,
 } from "lucide-react";
 import {
   Card,
@@ -27,6 +28,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -612,13 +614,34 @@ export default function WorkerBookingsPage() {
 
       {/* Empty State */}
       {!isLoading && !error && !hasBookings && (
-        <div className="bg-card rounded-lg p-12 shadow-sm text-center border-2 border-dashed border-gray-300">
-          <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Belum Ada Booking</h3>
-          <p className="text-muted-foreground">
-            Booking pekerjaan akan muncul di sini setelah Anda melamar pada
-            pekerjaan
-          </p>
+        <div className="bg-card rounded-lg p-12 shadow-sm text-center border border-dashed border-border">
+          <div className="flex flex-col items-center">
+            <div className="p-4 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-4">
+              <Building2 className="h-12 w-12 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Belum Ada Booking</h3>
+            <p className="text-muted-foreground text-center max-w-md mb-6">
+              Booking pekerjaan akan muncul di sini setelah Anda melamar dan
+              diterima untuk bekerja. Jelajahi pekerjaan yang tersedia dan mulai
+              melamar!
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Link
+                href="/worker/jobs"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg text-sm font-semibold transition-all hover:bg-primary/90 shadow-sm hover:shadow-md"
+              >
+                <Briefcase className="w-5 h-5" />
+                Cari Pekerjaan
+              </Link>
+              <Link
+                href="/worker/applications"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-muted text-foreground border border-border rounded-lg text-sm font-medium transition-all hover:bg-muted/80"
+              >
+                <Calendar className="w-5 h-5" />
+                Lihat Lamaran Saya
+              </Link>
+            </div>
+          </div>
         </div>
       )}
 
