@@ -4,10 +4,10 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertTriangle, RefreshCw, Building2 } from "lucide-react";
+import { AlertTriangle, RefreshCw, LayoutDashboard } from "lucide-react";
 import { captureException } from "@/lib/sentry";
 
-export default function BusinessError({
+export default function DashboardError({
   error,
   reset,
 }: {
@@ -16,10 +16,10 @@ export default function BusinessError({
 }) {
   useEffect(() => {
     // Log error to console and Sentry
-    console.error("Business dashboard error:", error);
+    console.error("Dashboard error:", error);
     captureException(error, {
       tags: {
-        section: "business",
+        section: "dashboard",
         errorDigest: error.digest,
       },
       extra: {
@@ -35,10 +35,10 @@ export default function BusinessError({
       <Card className="max-w-md w-full">
         <CardContent className="flex flex-col items-center py-12">
           <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
-          <h2 className="text-lg font-semibold mb-2">Gagal Memuat Dashboard Bisnis</h2>
+          <h2 className="text-lg font-semibold mb-2">Gagal Memuat Dashboard</h2>
           <p className="text-muted-foreground text-center mb-6">
-            Terjadi kesalahan saat memuat dashboard bisnis Anda. Data mungkin
-            tidak tersedia sementara. Silakan coba lagi.
+            Terjadi kesalahan saat memuat halaman dashboard. Silakan coba lagi
+            atau muat ulang halaman.
           </p>
           <div className="flex gap-3">
             <Button onClick={reset} variant="outline">
@@ -46,9 +46,9 @@ export default function BusinessError({
               Coba Lagi
             </Button>
             <Button asChild>
-              <Link href="/business">
-                <Building2 className="h-4 w-4 mr-2" />
-                Kembali
+              <Link href="/dashboard">
+                <LayoutDashboard className="h-4 w-4 mr-2" />
+                Ke Dashboard
               </Link>
             </Button>
           </div>

@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { AlertTriangle } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { AlertTriangle, RefreshCw, Shield } from "lucide-react";
 import { captureException } from "@/lib/sentry";
 
-export default function Error({
+export default function AdminError({
   error,
   reset,
 }: {
@@ -14,7 +15,8 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Report error to Sentry with additional context
+    // Log error to console and Sentry
+    console.error("Admin panel error:", error);
     captureException(error, {
       tags: {
         section: "admin",
@@ -29,17 +31,27 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex items-center justify-center min-h-[400px] p-6">
+    <div className="flex items-center justify-center min-h-[400px] p-4">
       <Card className="max-w-md w-full">
-        <CardContent className="pt-6 text-center">
-          <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
-          <p className="text-muted-foreground mb-4">
-            {error.message || "An unexpected error occurred"}
+        <CardContent className="flex flex-col items-center py-12">
+          <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+          <h2 className="text-lg font-semibold mb-2">Gagal Memuat Panel Admin</h2>
+          <p className="text-muted-foreground text-center mb-6">
+            Terjadi kesalahan saat memuat panel admin. Jika masalah berlanjut,
+            hubungi tim teknis.
           </p>
-          <Button onClick={reset} variant="default">
-            Try again
-          </Button>
+          <div className="flex gap-3">
+            <Button onClick={reset} variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Coba Lagi
+            </Button>
+            <Button asChild>
+              <Link href="/admin">
+                <Shield className="h-4 w-4 mr-2" />
+                Kembali
+              </Link>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>

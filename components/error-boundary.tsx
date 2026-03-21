@@ -1,6 +1,7 @@
 "use client";
 
 import { Component, type ReactNode } from "react";
+import { AlertTriangle, RefreshCw } from "lucide-react";
 import { captureException } from "@/lib/sentry";
 
 interface ErrorBoundaryProps {
@@ -65,33 +66,22 @@ export class ErrorBoundary extends Component<
         return this.props.fallback;
       }
 
-      // Default fallback UI
+      // Default fallback UI with Indonesian messages
       return (
         <div className="flex items-center justify-center min-h-[400px] p-6">
           <div className="max-w-md w-full bg-card border rounded-lg p-6 text-center">
-            <div className="h-12 w-12 text-destructive mx-auto mb-4">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
+            <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Terjadi Kesalahan</h2>
             <p className="text-muted-foreground mb-4">
-              {this.state.error?.message || "An unexpected error occurred"}
+              {this.state.error?.message ||
+                "Maaf, terjadi kesalahan yang tidak terduga. Silakan coba lagi."}
             </p>
             <button
               onClick={this.handleRetry}
-              className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
             >
-              Try again
+              <RefreshCw className="h-4 w-4" />
+              Coba Lagi
             </button>
           </div>
         </div>
