@@ -152,27 +152,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // 2. Create user profile in public.users table
-      console.log("[AUTH signUp] Step 2: Creating user profile...");
-      const { error: profileError } = await (
-        supabase.from("users") as any
-      ).insert({
-        id: user.id,
-        email: user.email!,
-        full_name: fullName,
-        role: role,
-        phone: "",
-        avatar_url: "",
+      // 2. Create user profile in public.users table via API (bypasses RLS)
+      console.log("[AUTH signUp] Step 2: Creating user profile via API...");
+      const response = await fetch('/api/auth/create-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: user.id,
+          email: user.email!,
+          full_name: fullName,
+          role: role,
+        }),
       });
 
-      console.log("[AUTH signUp] Profile insert response:", {
-        error: !!profileError,
+      const profileResult = await response.json();
+      console.log("[AUTH signUp] Profile API response:", { 
+        ok: response.ok, 
+        error: !profileResult.success 
       });
 
-      if (profileError) {
-        console.error("[AUTH signUp] Profile creation error:", profileError);
+      if (!response.ok || !profileResult.success) {
+        console.error("[AUTH signUp] Profile creation error:", profileResult);
         toast.error(t("auth.registrationProfileFailed"));
-        // Use window.location for reliable redirect even on error
         if (typeof window !== "undefined") {
           window.location.href = "/login";
         }
