@@ -292,14 +292,15 @@ export function MobileSidebarNav({
 
   return (
     <>
-      {/* Debug: visible button */}
-      <button
+      <Button
+        variant="ghost"
+        size="icon"
+        className="md:hidden h-11 w-11 shrink-0 touch-manipulation"
         onClick={() => setOpen(true)}
-        className="md:hidden flex items-center justify-center h-11 w-11 rounded-md hover:bg-accent border border-border"
         aria-label="Open navigation menu"
       >
         <Menu className="h-5 w-5" />
-      </button>
+      </Button>
       
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-[280px] sm:w-72 p-0 z-[100]">
