@@ -63,13 +63,13 @@ export function JobList({
     return (
       <Card className={cn("border-dashed", className)}>
         <CardContent className="flex flex-col items-center justify-center py-12 sm:py-16 px-4 text-center">
-          <div className="rounded-full bg-muted p-3 sm:p-4 mb-3 sm:mb-4">
-            <SearchX className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground" />
+          <div className="p-4 bg-primary/10 rounded-full mb-4">
+            <SearchX className="h-12 w-12 text-primary" />
           </div>
-          <h3 className="text-base sm:text-lg font-semibold mb-2">
+          <h3 className="text-xl font-semibold mb-2">
             {emptyTitleText}
           </h3>
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-sm">
+          <p className="text-sm text-muted-foreground text-center max-w-md mb-6">
             {emptyDescriptionText}
           </p>
         </CardContent>

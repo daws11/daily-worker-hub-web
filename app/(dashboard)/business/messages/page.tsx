@@ -260,8 +260,8 @@ export default function BusinessMessagesPage() {
       {!loading && !error && conversations.conversationsList?.length === 0 && (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="p-4 bg-violet-100 dark:bg-violet-900/30 rounded-full mb-4">
-              <MessageCircle className="h-12 w-12 text-violet-600 dark:text-violet-400" />
+            <div className="p-4 bg-primary/10 rounded-full mb-4">
+              <MessageCircle className="h-12 w-12 text-primary" />
             </div>
             <h3 className="text-xl font-semibold mb-2">Belum Ada Percakapan</h3>
             <p className="text-muted-foreground text-center max-w-md mb-6">

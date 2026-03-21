@@ -372,8 +372,8 @@ export default function BusinessBookingsPage() {
       {!isLoading && !error && !hasBookings && (
         <div className="bg-card dark:bg-card rounded-lg p-12 shadow-sm text-center border border-dashed border-border">
           <div className="flex flex-col items-center">
-            <div className="p-4 bg-blue-100 dark:bg-blue-900/30 rounded-full mb-4">
-              <Building2 className="w-12 h-12 text-blue-600 dark:text-blue-400" />
+            <div className="p-4 bg-primary/10 rounded-full mb-4">
+              <Building2 className="w-12 h-12 text-primary" />
             </div>
             <h3 className="text-xl font-semibold mb-2">Belum Ada Booking</h3>
             <p className="text-muted-foreground text-center max-w-md mb-6">

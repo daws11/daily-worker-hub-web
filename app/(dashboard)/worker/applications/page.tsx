@@ -408,8 +408,8 @@ export default function WorkerApplicationsPage() {
       {!isLoading && !error && displayApplications.length === 0 && (
         <div className="bg-card rounded-lg p-12 shadow-sm text-center border border-dashed border-border">
           <div className="flex flex-col items-center">
-            <div className="p-4 bg-amber-100 dark:bg-amber-900/30 rounded-full mb-4">
-              <Briefcase className="h-12 w-12 text-amber-600 dark:text-amber-400" />
+            <div className="p-4 bg-primary/10 rounded-full mb-4">
+              <Briefcase className="h-12 w-12 text-primary" />
             </div>
             <h3 className="text-xl font-semibold mb-2">
               {activeTab === "all"

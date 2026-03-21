@@ -162,7 +162,7 @@ export function EmptyState({
       ) : (
         <div
           className={cn(
-            "mb-4 text-slate-400 dark:text-slate-500",
+            "mb-4 p-4 bg-primary/10 rounded-full",
             sizes[size].icon,
           )}
           aria-hidden="true"
@@ -172,7 +172,7 @@ export function EmptyState({
       )}
       <h3
         className={cn(
-          "font-semibold text-slate-900 dark:text-slate-100",
+          "font-semibold text-foreground",
           sizes[size].title,
         )}
       >
@@ -181,7 +181,7 @@ export function EmptyState({
       {description && (
         <p
           className={cn(
-            "mt-2 text-slate-500 dark:text-slate-400 max-w-sm",
+            "mt-2 text-muted-foreground max-w-sm",
             sizes[size].description,
           )}
         >
