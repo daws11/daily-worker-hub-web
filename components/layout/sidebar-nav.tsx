@@ -46,131 +46,154 @@ interface NavItem {
   children?: NavItem[];
 }
 
+// Navigation Groups for Business Users
+const businessNavGroups = {
+  main: [
+    {
+      title: "Dashboard",
+      href: "/business",
+      icon: LayoutDashboard,
+    },
+    {
+      title: "Jobs",
+      href: "/business/jobs",
+      icon: Briefcase,
+    },
+    {
+      title: "Bookings",
+      href: "/business/bookings",
+      icon: CalendarCheck,
+    },
+    {
+      title: "Messages",
+      href: "/business/messages",
+      icon: MessageSquare,
+    },
+  ],
+  secondary: [
+    {
+      title: "Workers",
+      href: "/business/workers",
+      icon: Users,
+    },
+    {
+      title: "Attendance",
+      href: "/business/job-attendance",
+      icon: Users,
+    },
+    {
+      title: "Reviews",
+      href: "/business/reviews",
+      icon: Star,
+    },
+    {
+      title: "Badge Verifications",
+      href: "/business/badge-verifications",
+      icon: BadgeCheck,
+    },
+  ],
+  bottom: [
+    {
+      title: "Analytics",
+      href: "/business/analytics",
+      icon: BarChart3,
+    },
+    {
+      title: "Wallet",
+      href: "/business/wallet",
+      icon: Wallet,
+    },
+    {
+      title: "Settings",
+      href: "/business/settings",
+      icon: Settings,
+    },
+  ],
+};
+
+// Legacy flat array for backward compatibility
 const businessNavItems: NavItem[] = [
-  {
-    title: "Dashboard",
-    href: "/business",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Jobs",
-    href: "/business/jobs",
-    icon: Briefcase,
-  },
-  {
-    title: "Bookings",
-    href: "/business/bookings",
-    icon: CalendarCheck,
-  },
-  {
-    title: "Messages",
-    href: "/business/messages",
-    icon: MessageSquare,
-  },
-  {
-    title: "Attendance",
-    href: "/business/job-attendance",
-    icon: Users,
-  },
-  {
-    title: "Reviews",
-    href: "/business/reviews",
-    icon: Star,
-  },
-  {
-    title: "Workers",
-    href: "/business/workers",
-    icon: Users,
-  },
-  {
-    title: "Badge Verifications",
-    href: "/business/badge-verifications",
-    icon: BadgeCheck,
-  },
-  {
-    title: "Analytics",
-    href: "/business/analytics",
-    icon: BarChart3,
-  },
-  {
-    title: "Wallet",
-    href: "/business/wallet",
-    icon: Wallet,
-  },
-  {
-    title: "Settings",
-    href: "/business/settings",
-    icon: Settings,
-  },
+  ...businessNavGroups.main,
+  ...businessNavGroups.secondary,
+  ...businessNavGroups.bottom,
 ];
 
+// Navigation Groups for Worker Users
+const workerNavGroups = {
+  main: [
+    {
+      title: "Dashboard",
+      href: "/worker",
+      icon: LayoutDashboard,
+    },
+    {
+      title: "Jobs",
+      href: "/worker/jobs",
+      icon: Briefcase,
+    },
+    {
+      title: "Bookings",
+      href: "/worker/bookings",
+      icon: CalendarCheck,
+    },
+    {
+      title: "Messages",
+      href: "/worker/messages",
+      icon: MessageSquare,
+    },
+  ],
+  secondary: [
+    {
+      title: "Availability",
+      href: "/worker/availability",
+      icon: CalendarDays,
+    },
+    {
+      title: "Badges",
+      href: "/worker/badges",
+      icon: BadgeCheck,
+    },
+    {
+      title: "Achievements",
+      href: "/worker/achievements",
+      icon: Trophy,
+    },
+  ],
+  bottom: [
+    {
+      title: "Wallet",
+      href: "/worker/wallet",
+      icon: Wallet,
+    },
+    {
+      title: "Earnings",
+      href: "/worker/earnings",
+      icon: Wallet,
+    },
+    {
+      title: "Settings",
+      href: "/worker/settings",
+      icon: Settings,
+    },
+  ],
+};
+
+// Legacy flat array for backward compatibility
 const workerNavItems: NavItem[] = [
-  {
-    title: "My Profile",
-    href: "/worker/profile",
-    icon: Users,
-  },
-  {
-    title: "Jobs",
-    href: "/worker/jobs",
-    icon: Briefcase,
-  },
-  {
-    title: "My Applications",
-    href: "/worker/applications",
-    icon: Briefcase,
-  },
-  {
-    title: "My Bookings",
-    href: "/worker/bookings",
-    icon: CalendarCheck,
-  },
-  {
-    title: "Attendance",
-    href: "/worker/attendance",
-    icon: Calendar,
-  },
-  {
-    title: "Availability",
-    href: "/worker/availability",
-    icon: CalendarDays,
-  },
-  {
-    title: "Badges",
-    href: "/worker/badges",
-    icon: BadgeCheck,
-  },
-  {
-    title: "Achievements",
-    href: "/worker/achievements",
-    icon: Trophy,
-  },
-  {
-    title: "Wallet",
-    href: "/worker/wallet",
-    icon: Wallet,
-  },
-  {
-    title: "Earnings",
-    href: "/worker/earnings",
-    icon: Wallet,
-  },
-  {
-    title: "Messages",
-    href: "/worker/messages",
-    icon: MessageSquare,
-  },
-  {
-    title: "Settings",
-    href: "/worker/settings",
-    icon: Settings,
-  },
+  ...workerNavGroups.main,
+  ...workerNavGroups.secondary,
+  ...workerNavGroups.bottom,
 ];
 
 interface SidebarNavProps extends React.HTMLAttributes<HTMLElement> {
   items?: NavItem[];
   className?: string;
   collapsed?: boolean;
+  groups?: {
+    main: NavItem[];
+    secondary: NavItem[];
+    bottom: NavItem[];
+  };
 }
 
 function NavItemComponent({
@@ -271,15 +294,86 @@ function SidebarContent({
   );
 }
 
+// Grouped sidebar content with collapsible sections
+function GroupedSidebarContent({
+  groups,
+  collapsed,
+}: {
+  groups: {
+    main: NavItem[];
+    secondary: NavItem[];
+    bottom: NavItem[];
+  };
+  collapsed?: boolean;
+}) {
+  const [isSecondaryOpen, setIsSecondaryOpen] = React.useState(false);
+
+  return (
+    <nav className="flex flex-col h-full">
+      {/* Main Section - Always Visible */}
+      <div className="space-y-1 p-2">
+        {groups.main.map((item) => (
+          <NavItemComponent key={item.href} item={item} collapsed={collapsed} />
+        ))}
+      </div>
+
+      {/* Secondary Section - Collapsible */}
+      {groups.secondary.length > 0 && (
+        <div className="px-2 py-2 border-t border-border">
+          <Collapsible open={isSecondaryOpen} onOpenChange={setIsSecondaryOpen}>
+            <CollapsibleTrigger asChild>
+              <button
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors min-h-[44px] touch-manipulation",
+                  "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                )}
+              >
+                <ChevronRight
+                  className={cn(
+                    "h-4 w-4 shrink-0 transition-transform",
+                    isSecondaryOpen && "rotate-90",
+                  )}
+                />
+                {!collapsed && (
+                  <span className="flex-1 text-left">More</span>
+                )}
+              </button>
+            </CollapsibleTrigger>
+            {!collapsed && (
+              <CollapsibleContent className="space-y-1 pt-1">
+                {groups.secondary.map((item) => (
+                  <NavItemComponent key={item.href} item={item} collapsed={collapsed} />
+                ))}
+              </CollapsibleContent>
+            )}
+          </Collapsible>
+        </div>
+      )}
+
+      {/* Bottom Section - Always Visible */}
+      <div className="mt-auto border-t border-border p-2 space-y-1">
+        {groups.bottom.map((item) => (
+          <NavItemComponent key={item.href} item={item} collapsed={collapsed} />
+        ))}
+      </div>
+    </nav>
+  );
+}
+
 export function SidebarNav({
   items = businessNavItems,
   className,
   collapsed,
+  groups,
   ...props
 }: SidebarNavProps) {
   return (
     <ScrollArea className={cn("h-full", className)} {...props}>
-      <SidebarContent items={items} collapsed={collapsed} />
+      {groups ? (
+        <GroupedSidebarContent groups={groups} collapsed={collapsed} />
+      ) : (
+        <SidebarContent items={items} collapsed={collapsed} />
+      )}
     </ScrollArea>
   );
 }
@@ -287,6 +381,7 @@ export function SidebarNav({
 export function MobileSidebarNav({
   items = businessNavItems,
   className,
+  groups,
 }: Omit<SidebarNavProps, "collapsed">) {
   const [open, setOpen] = React.useState(false);
 
@@ -308,7 +403,11 @@ export function MobileSidebarNav({
             <SheetTitle className="text-left">Navigation</SheetTitle>
           </SheetHeader>
           <div className={cn("h-[calc(100vh-4rem)] overflow-y-auto", className)}>
-            <SidebarContent items={items} />
+            {groups ? (
+              <GroupedSidebarContent groups={groups} />
+            ) : (
+              <SidebarContent items={items} />
+            )}
           </div>
         </SheetContent>
       </Sheet>
@@ -316,4 +415,4 @@ export function MobileSidebarNav({
   );
 }
 
-export { businessNavItems, workerNavItems, type NavItem };
+export { businessNavItems, workerNavItems, businessNavGroups, workerNavGroups, type NavItem };

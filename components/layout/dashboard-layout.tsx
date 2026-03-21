@@ -3,13 +3,14 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { SiteHeader } from "./site-header";
-import { SidebarNav, businessNavItems } from "./sidebar-nav";
+import { SidebarNav, businessNavItems, businessNavGroups, workerNavGroups } from "./sidebar-nav";
 import { Button } from "@/components/ui/button";
 import { PanelLeftClose, PanelLeft } from "lucide-react";
 
 interface DashboardLayoutProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   sidebarItems?: typeof businessNavItems;
+  sidebarGroups?: typeof businessNavGroups;
   headerProps?: React.ComponentProps<typeof SiteHeader>;
   collapsible?: boolean;
 }
@@ -17,6 +18,7 @@ interface DashboardLayoutProps extends React.HTMLAttributes<HTMLDivElement> {
 export function DashboardLayout({
   children,
   sidebarItems = businessNavItems,
+  sidebarGroups,
   headerProps,
   collapsible = true,
   className,
@@ -67,7 +69,11 @@ export function DashboardLayout({
 
           {/* Sidebar Navigation */}
           <div className="flex-1 overflow-hidden">
-            <SidebarNav items={sidebarItems} collapsed={collapsed} />
+            <SidebarNav
+              items={sidebarItems}
+              groups={sidebarGroups}
+              collapsed={collapsed}
+            />
           </div>
 
           {/* Collapse Toggle */}
@@ -97,7 +103,11 @@ export function DashboardLayout({
         {/* Main Content Area */}
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Header */}
-          <SiteHeader {...headerProps} sidebarItems={sidebarItems} />
+          <SiteHeader
+            {...headerProps}
+            sidebarItems={sidebarItems}
+            sidebarGroups={sidebarGroups}
+          />
 
           {/* Main Content */}
           <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
