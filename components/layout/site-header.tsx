@@ -37,6 +37,7 @@ interface SiteHeaderProps extends React.HTMLAttributes<HTMLElement> {
   breadcrumbs?: BreadcrumbItem[];
   showBreadcrumbs?: boolean;
   showSearch?: boolean;
+  sidebarItems?: typeof import("./sidebar-nav").businessNavItems;
 }
 
 // Map path segments to readable labels
@@ -82,6 +83,7 @@ export function SiteHeader({
   breadcrumbs,
   showBreadcrumbs = true,
   showSearch = false,
+  sidebarItems,
   className,
   ...props
 }: SiteHeaderProps) {
@@ -126,7 +128,7 @@ export function SiteHeader({
       <div className="flex h-16 items-center justify-between px-4 md:px-6">
         {/* Left: Mobile menu + Breadcrumbs */}
         <div className="flex items-center gap-2">
-          <MobileSidebarNav />
+          <MobileSidebarNav items={sidebarItems} />
 
           {showBreadcrumbs && crumbs.length > 0 && (
             <nav className="hidden md:flex items-center gap-1 text-sm text-muted-foreground">
