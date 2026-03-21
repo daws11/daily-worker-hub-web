@@ -174,10 +174,21 @@ export async function getBusinessWallet(
 export async function getWorkerWallet(
   workerId: string,
 ): Promise<WalletsRow | null> {
+  // First get the worker's user_id
+  const { data: worker, error: workerError } = await (supabase as any)
+    .from("workers")
+    .select("user_id")
+    .eq("id", workerId)
+    .single();
+
+  if (workerError || !worker) {
+    throw new Error(`Failed to fetch worker: ${workerError?.message}`);
+  }
+
   const { data, error } = await (supabase as any)
     .from("wallets")
     .select("*")
-    .eq("worker_id", workerId)
+    .eq("user_id", worker.user_id)
     .maybeSingle();
 
   if (error) {

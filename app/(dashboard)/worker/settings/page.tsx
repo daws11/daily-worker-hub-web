@@ -129,7 +129,7 @@ export default function WorkerSettingsPage() {
         // Fetch worker tier data
         const { data: worker, error: workerError } = await supabase
           .from("workers")
-          .select("tier, jobs_completed, rating, punctuality")
+          .select("tier, jobs_completed, reliability_score")
           .eq("user_id", user.id)
           .single();
 
@@ -137,8 +137,8 @@ export default function WorkerSettingsPage() {
           setWorkerData({
             tier: worker.tier as WorkerTier,
             jobsCompleted: (worker as any).jobs_completed || 0,
-            rating: (worker as any).rating,
-            punctuality: (worker as any).punctuality,
+            rating: (worker as any).reliability_score,
+            punctuality: null, // Column doesn't exist
           });
         }
 

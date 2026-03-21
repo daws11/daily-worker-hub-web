@@ -33,7 +33,7 @@ async function fetchWorkerProfile(workerId: string) {
       avatar_url,
       bio,
       tier,
-      rating,
+      reliability_score,
       jobs_completed,
       created_at,
       kyc_status
@@ -141,7 +141,7 @@ async function fetchWorkerProfile(workerId: string) {
     .select("rating")
     .eq("worker_id", workerId);
 
-  let avgRating = worker.rating;
+  let avgRating = worker.reliability_score;
   if (ratingData && ratingData.length > 0) {
     avgRating =
       ratingData.reduce((sum, r) => sum + r.rating, 0) / ratingData.length;

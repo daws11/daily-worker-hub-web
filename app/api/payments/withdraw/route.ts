@@ -151,7 +151,7 @@ async function handlePOST(request: NextRequest) {
     const { data: wallet, error: walletError } = await (supabase as any)
       .from("wallets")
       .select("*")
-      .eq("worker_id", workerId)
+      .eq("user_id", worker.user_id)
       .maybeSingle();
 
     if (walletError) {

@@ -106,6 +106,11 @@ const businessNavItems: NavItem[] = [
 
 const workerNavItems: NavItem[] = [
   {
+    title: "My Profile",
+    href: "/worker/profile",
+    icon: Users,
+  },
+  {
     title: "Jobs",
     href: "/worker/jobs",
     icon: Briefcase,

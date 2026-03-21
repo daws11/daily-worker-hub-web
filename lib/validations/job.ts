@@ -251,16 +251,6 @@ const baseJobSchema = z
       .optional(),
   });
 
-/**
- * Job creation schema
- */
-export const createJobSchema = baseJobSchema
-  .refine((data) => data.budget_max >= data.budget_min, {
-    message:
-      "Budget maksimum harus lebih besar atau sama dengan budget minimum",
-    path: ["budget_max"],
-  });
-
 export type CreateJobInput = z.infer<typeof createJobSchema>;
 
 /**

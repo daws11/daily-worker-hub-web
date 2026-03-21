@@ -463,11 +463,22 @@ export async function requestPayout(
       };
     }
 
+    // Get worker's user_id first
+    const { data: worker, error: workerError } = await supabase
+      .from("workers")
+      .select("user_id")
+      .eq("id", workerId)
+      .single();
+
+    if (workerError || !worker) {
+      return { success: false, error: "Worker tidak ditemukan" };
+    }
+
     // Get worker's wallet to check balance
     const { data: wallet, error: walletError } = await (supabase as any)
       .from("wallets")
       .select("id, balance")
-      .eq("worker_id", workerId)
+      .eq("user_id", worker.user_id)
       .maybeSingle();
 
     if (walletError || !wallet) {

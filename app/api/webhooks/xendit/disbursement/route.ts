@@ -322,11 +322,27 @@ async function refundFailedPayout(
   failureReason?: string,
 ): Promise<void> {
   try {
+    // Get worker's user_id first
+    const { data: worker, error: workerError } = await supabase
+      .from("workers")
+      .select("user_id")
+      .eq("id", payoutRequest.worker_id)
+      .single();
+
+    if (workerError || !worker) {
+      routeLogger.error(
+        "Worker not found for refund",
+        workerError || new Error("Not found"),
+        { payoutRequestId: payoutRequest.id },
+      );
+      return;
+    }
+
     // Get worker's wallet
     const { data: wallet, error: walletError } = await (supabase as any)
       .from("wallets")
       .select("*")
-      .eq("worker_id", payoutRequest.worker_id)
+      .eq("user_id", worker.user_id)
       .single();
 
     if (walletError || !wallet) {
