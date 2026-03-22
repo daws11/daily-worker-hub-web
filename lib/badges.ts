@@ -45,17 +45,17 @@ export interface BadgeDefinition {
 
 export interface WorkerAchievement {
   id: string;
-  worker_id: string;
-  badge_type: AchievementBadgeType;
-  earned_at: string;
-  metadata: Record<string, any>;
-  created_at: string;
+  worker_id: string | null;
+  achievement_type: string;
+  title: string;
+  description: string | null;
+  awarded_at: string;
 }
 
 export interface BadgeProgress {
   id: string;
   worker_id: string;
-  badge_type: AchievementBadgeType;
+  achievement_type: string;
   current_value: number;
   target_value: number;
   last_updated: string;
@@ -726,15 +726,11 @@ export async function getWorkerAchievements(
   // TODO: Create worker_badge_progress table or implement badge tracking
   const progress = [];
 
-  const earnedMap = new Map<AchievementBadgeType, any>();
-  achievements?.forEach((a) =>
-    earnedMap.set(a.achievement_type as AchievementBadgeType, a),
-  );
+  const earnedMap = new Map<string, any>();
+  achievements?.forEach((a) => earnedMap.set(a.achievement_type, a));
 
-  const progressMap = new Map<AchievementBadgeType, any>();
-  progress?.forEach((p) =>
-    progressMap.set(p.achievement_type as AchievementBadgeType, p),
-  );
+  const progressMap = new Map<string, any>();
+  progress?.forEach((p) => progressMap.set(p.achievement_type, p));
 
   // Return all badges with earned status and progress
   return BADGE_DEFINITIONS.map((def) => {
@@ -744,7 +740,7 @@ export async function getWorkerAchievements(
     return {
       ...def,
       earned: !!earned,
-      earnedAt: earned?.earned_at,
+      earnedAt: earned?.awarded_at,
       progress: prog
         ? {
             current: prog.current_value,

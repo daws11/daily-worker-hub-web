@@ -13,8 +13,8 @@ type WorkerBadgesUpdate =
   Database["public"]["Tables"]["worker_badges"]["Update"];
 
 export type BadgeCategory = Database["public"]["Enums"]["badge_category"];
-export type BadgeVerificationStatus =
-  Database["public"]["Enums"]["badge_verification_status"];
+// BadgeVerificationStatus is not an enum in the database, define locally
+export type BadgeVerificationStatus = "pending" | "verified" | "rejected";
 
 type BadgeWithRelations = BadgesRow & {
   provider?: {

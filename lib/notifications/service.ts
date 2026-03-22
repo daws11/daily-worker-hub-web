@@ -40,7 +40,7 @@ export class NotificationService {
       const supabase = await createClient();
 
       // Check user's notification preferences
-      const { data: preferences } = await supabase
+      const { data: preferences } = await (supabase as any)
         .from("notification_preferences")
         .select("*")
         .eq("user_id", userId)
@@ -188,7 +188,7 @@ export class NotificationService {
       }
 
       // Get notification preferences for all users
-      const { data: preferencesData } = await supabase
+      const { data: preferencesData } = await (supabase as any)
         .from("notification_preferences")
         .select("*")
         .in("user_id", userIds);

@@ -397,23 +397,61 @@ export interface UserManagementItem {
   reportCount?: number;
 }
 
-export interface BusinessVerificationItem extends BusinessRow {
+export interface BusinessVerificationItem {
+  // From BusinessRow
+  id: string;
+  user_id: string;
+  name: string;
+  address: string | null;
+  area: string | null;
+  avatar_url: string | null;
+  business_license_url: string | null;
+  business_type: string | null;
+  created_at: string;
+  description: string | null;
+  email: string | null;
+  is_verified: boolean;
+  lat: number | null;
+  lng: number | null;
+  phone: string | null;
+  updated_at: string;
+  verification_status: string | null;
+  website: string | null;
+  // Additional fields
   user: UserRow;
   submittedAt: string;
   pendingDays: number;
-  business_type?: string;
-  verification_status?: "pending" | "verified" | "rejected";
-  area?: string;
-  business_license_url?: string | null;
 }
 
-export interface WorkerManagementItem extends WorkerRow {
+export interface WorkerManagementItem {
+  // From WorkerRow
+  id: string;
+  user_id: string;
+  full_name: string;
+  address: string | null;
+  area: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  created_at: string;
+  dob: string | null;
+  experience_years: number | null;
+  gender: string | null;
+  jobs_completed: number;
+  kyc_status: string;
+  lat: number | null;
+  lng: number | null;
+  location_name: string | null;
+  phone: string | null;
+  punctuality: number | null;
+  rating: number | null;
+  reliability_score: number;
+  tier: Database["public"]["Enums"]["worker_tier"];
+  updated_at: string;
+  // Additional fields
   user: UserRow;
   bookingCount?: number;
   reviewCount?: number;
   averageRating?: number;
-  experience_years?: number | null;
-  reliability_score?: number;
 }
 
 export interface KYCVerificationItem extends KYCVerificationRow {
