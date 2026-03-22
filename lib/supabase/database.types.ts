@@ -133,37 +133,52 @@ export type Database = {
       }
       badges: {
         Row: {
+          badge_type: string | null
           category: Database["public"]["Enums"]["badge_category"]
           created_at: string
+          criteria: Json | null
           description: string | null
           icon: string | null
+          icon_url: string | null
           id: string
           is_certified: boolean
           name: string
+          points: number | null
           provider_id: string | null
           slug: string
+          tier_requirement: string | null
         }
         Insert: {
+          badge_type?: string | null
           category: Database["public"]["Enums"]["badge_category"]
           created_at?: string
+          criteria?: Json | null
           description?: string | null
           icon?: string | null
+          icon_url?: string | null
           id?: string
           is_certified?: boolean
           name: string
+          points?: number | null
           provider_id?: string | null
           slug: string
+          tier_requirement?: string | null
         }
         Update: {
+          badge_type?: string | null
           category?: Database["public"]["Enums"]["badge_category"]
           created_at?: string
+          criteria?: Json | null
           description?: string | null
           icon?: string | null
+          icon_url?: string | null
           id?: string
           is_certified?: boolean
           name?: string
+          points?: number | null
           provider_id?: string | null
           slug?: string
+          tier_requirement?: string | null
         }
         Relationships: [
           {
@@ -1592,6 +1607,50 @@ export type Database = {
           },
         ]
       }
+      user_fcm_tokens: {
+        Row: {
+          created_at: string
+          device_type: string | null
+          id: string
+          is_active: boolean | null
+          last_used_at: string | null
+          push_enabled: boolean | null
+          token: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          push_enabled?: boolean | null
+          token: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used_at?: string | null
+          push_enabled?: boolean | null
+          token?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_fcm_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           avatar_url: string | null
@@ -1823,6 +1882,8 @@ export type Database = {
       worker_badges: {
         Row: {
           badge_id: string
+          badge_type: string | null
+          badge_verification_status: string | null
           created_at: string
           earned_at: string
           id: string
@@ -1833,6 +1894,8 @@ export type Database = {
         }
         Insert: {
           badge_id: string
+          badge_type?: string | null
+          badge_verification_status?: string | null
           created_at?: string
           earned_at?: string
           id?: string
@@ -1843,6 +1906,8 @@ export type Database = {
         }
         Update: {
           badge_id?: string
+          badge_type?: string | null
+          badge_verification_status?: string | null
           created_at?: string
           earned_at?: string
           id?: string

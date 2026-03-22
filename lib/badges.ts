@@ -644,18 +644,20 @@ export async function checkAndAwardBadges(workerId: string): Promise<{
   // Get existing achievements
   const { data: existingAchievements } = await supabase
     .from("worker_achievements")
-    .select("badge_type")
+    .select("achievement_type")
     .eq("worker_id", workerId);
 
   const existingBadgeTypes = new Set(
-    existingAchievements?.map((a) => a.badge_type) || [],
+    existingAchievements?.map((a) => a.achievement_type) || [],
   );
 
   // Check each badge type
   for (const badgeDef of BADGE_DEFINITIONS) {
     const check = checkBadgeCriteria(badgeDef.type, stats);
 
-    // Update progress
+    // Note: worker_badge_progress table doesn't exist - commenting out for now
+    // TODO: Create worker_badge_progress table or remove this functionality
+    /*
     const { error: progressError } = await supabase
       .from("worker_badge_progress")
       .upsert(
@@ -674,6 +676,7 @@ export async function checkAndAwardBadges(workerId: string): Promise<{
     if (progressError) {
       console.error("Error updating badge progress:", progressError);
     }
+    */
 
     // Award badge if qualified and not already earned
     if (check.qualifies && !existingBadgeTypes.has(badgeDef.type)) {
@@ -681,9 +684,10 @@ export async function checkAndAwardBadges(workerId: string): Promise<{
         .from("worker_achievements")
         .insert({
           worker_id: workerId,
-          badge_type: badgeDef.type,
-          earned_at: new Date().toISOString(),
-          metadata: { progress_value: check.progress },
+          achievement_type: badgeDef.type,
+          title: badgeDef.name,
+          description: JSON.stringify({ progress_value: check.progress }),
+          awarded_at: new Date().toISOString(),
         });
 
       if (!awardError) {
@@ -692,15 +696,11 @@ export async function checkAndAwardBadges(workerId: string): Promise<{
     }
   }
 
-  // Get all progress
-  const { data: allProgress } = await supabase
-    .from("worker_badge_progress")
-    .select("*")
-    .eq("worker_id", workerId);
-
+  // Note: worker_badge_progress table doesn't exist - returning empty progress
+  // TODO: Create worker_badge_progress table or implement badge tracking
   return {
     awarded,
-    progress: (allProgress || []) as BadgeProgress[],
+    progress: [],
   };
 }
 
@@ -722,15 +722,9 @@ export async function getWorkerAchievements(
     return [];
   }
 
-  // Get progress
-  const { data: progress, error: progressError } = await supabase
-    .from("worker_badge_progress")
-    .select("*")
-    .eq("worker_id", workerId);
-
-  if (progressError) {
-    console.error("Error fetching badge progress:", progressError);
-  }
+  // Note: worker_badge_progress table doesn't exist - returning empty progress
+  // TODO: Create worker_badge_progress table or implement badge tracking
+  const progress = [];
 
   const earnedMap = new Map<AchievementBadgeType, any>();
   achievements?.forEach((a) =>
