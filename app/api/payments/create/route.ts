@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getServerSession } from "@/lib/auth/get-server-session";
+import type { Json } from "@/lib/supabase/database.types";
 import {
   createInvoice,
   calculateFee,
@@ -171,22 +172,23 @@ async function handlePOST(request: NextRequest) {
     });
 
     // Create pending transaction in database
+    const txData = {
+      id: transactionId,
+      business_id,
+      amount: totalAmount,
+      status: "pending_review" as const,
+      payment_provider: paymentProvider,
+      provider_payment_id: null,
+      payment_url: null,
+      qris_expires_at: new Date(
+        Date.now() + PAYMENT_CONSTANTS.QRIS_EXPIRY_MINUTES * 60000,
+      ).toISOString(),
+      fee_amount: feeAmount,
+      metadata: (metadata || {}) as Json,
+    };
     const { data: transaction, error: txError } = await supabase
       .from("payment_transactions")
-      .insert({
-        id: transactionId,
-        business_id,
-        amount: totalAmount,
-        status: "pending",
-        payment_provider: paymentProvider,
-        provider_payment_id: null,
-        payment_url: null,
-        qris_expires_at: new Date(
-          Date.now() + PAYMENT_CONSTANTS.QRIS_EXPIRY_MINUTES * 60000,
-        ).toISOString(),
-        fee_amount: feeAmount,
-        metadata: metadata || {},
-      })
+      .insert(txData)
       .select()
       .single();
 

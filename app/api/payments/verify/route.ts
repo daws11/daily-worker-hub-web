@@ -126,8 +126,8 @@ export async function GET(request: NextRequest) {
           amount: transaction.amount,
           status: transaction.status,
           paid_at: transaction.paid_at,
-          payment_method: transaction.metadata?.payment_method,
-          payment_channel: transaction.metadata?.payment_channel,
+          payment_method: (transaction.metadata as Record<string, unknown> | null)?.payment_method,
+          payment_channel: (transaction.metadata as Record<string, unknown> | null)?.payment_channel,
           created_at: transaction.created_at,
           updated_at: transaction.updated_at,
         },
@@ -162,8 +162,9 @@ export async function GET(request: NextRequest) {
         }
 
         if (paymentStatus.paymentMethod) {
+          const existingMetadata = (transaction.metadata || {}) as Record<string, unknown>;
           updateData.metadata = {
-            ...(transaction.metadata || {}),
+            ...existingMetadata,
             payment_method: paymentStatus.paymentMethod,
             payment_channel: paymentStatus.paymentChannel,
           };
