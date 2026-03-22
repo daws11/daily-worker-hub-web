@@ -1,7 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Search, Calendar, Briefcase } from "lucide-react";
+import { 
+  Plus, 
+  Search, 
+  Calendar, 
+  Briefcase,
+  Wallet,
+  Users,
+  BarChart3,
+  Star,
+  Clock,
+  Award,
+  CreditCard,
+  FileText,
+  CheckCircle,
+  MessageSquare
+} from "lucide-react";
 import { useTranslation } from "@/lib/i18n/hooks";
 import { cn } from "@/lib/utils";
 
@@ -10,8 +25,6 @@ interface QuickAction {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   primary: boolean;
-  gradient?: string;
-  iconBg?: string;
 }
 
 interface QuickActionsProps {
@@ -23,70 +36,120 @@ export function QuickActions({ role }: QuickActionsProps) {
 
   const businessActions: QuickAction[] = [
     {
-      label: t("actions.postJob", "Buat Pekerjaan"),
+      label: "Buat Lowongan",
       href: "/business/jobs/new",
       icon: Plus,
       primary: true,
-      gradient: "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600",
-      iconBg: "bg-white/20",
     },
     {
-      label: t("actions.findWorkers", "Cari Pekerja"),
+      label: "Cari Pekerja",
       href: "/business/workers",
       icon: Search,
       primary: false,
-      iconBg: "bg-blue-100 dark:bg-blue-900/30",
+    },
+    {
+      label: "Wallet",
+      href: "/business/wallet",
+      icon: Wallet,
+      primary: false,
+    },
+    {
+      label: "Bookings",
+      href: "/business/bookings",
+      icon: Calendar,
+      primary: false,
+    },
+    {
+      label: "Analytics",
+      href: "/business/analytics",
+      icon: BarChart3,
+      primary: false,
+    },
+    {
+      label: "Reviews",
+      href: "/business/reviews",
+      icon: Star,
+      primary: false,
     },
   ];
 
   const workerActions: QuickAction[] = [
     {
-      label: t("actions.findJobs", "Cari Pekerjaan"),
+      label: "Cari Lowongan",
       href: "/worker/jobs",
       icon: Briefcase,
       primary: true,
-      gradient: "bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600",
-      iconBg: "bg-white/20",
     },
     {
-      label: t("actions.setAvailability", "Atur Ketersediaan"),
+      label: "Ketersediaan",
       href: "/worker/availability",
       icon: Calendar,
       primary: false,
-      iconBg: "bg-blue-100 dark:bg-blue-900/30",
+    },
+    {
+      label: "Wallet",
+      href: "/worker/wallet",
+      icon: Wallet,
+      primary: false,
+    },
+    {
+      label: "Bookings",
+      href: "/worker/bookings",
+      icon: Calendar,
+      primary: false,
+    },
+    {
+      label: "Earnings",
+      href: "/worker/earnings",
+      icon: CreditCard,
+      primary: false,
+    },
+    {
+      label: "Applications",
+      href: "/worker/applications",
+      icon: FileText,
+      primary: false,
+    },
+    {
+      label: "Badges",
+      href: "/worker/badges",
+      icon: Award,
+      primary: false,
+    },
+    {
+      label: "Attendance",
+      href: "/worker/attendance",
+      icon: Clock,
+      primary: false,
     },
   ];
 
   const actions = role === "business" ? businessActions : workerActions;
 
   return (
-    <div className="flex flex-wrap gap-3 mb-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
       {actions.map((action, i) => (
         <Link
           key={i}
           href={action.href}
           className={cn(
-            "group flex items-center gap-3 px-5 py-3.5 rounded-xl font-semibold transition-all duration-200 touch-manipulation",
-            "active:scale-[0.97] hover:shadow-lg hover:-translate-y-0.5",
+            "group flex flex-col items-center justify-center gap-2 p-4 rounded-xl font-medium transition-all duration-200 touch-manipulation",
+            "active:scale-[0.97] hover:shadow-md hover:-translate-y-0.5",
             action.primary
-              ? cn(
-                  action.gradient,
-                  "text-white shadow-md shadow-primary/25"
-                )
+              ? "bg-gradient-to-br from-primary to-primary/80 text-white shadow-lg shadow-primary/25"
               : "bg-card border border-border hover:bg-muted hover:border-primary/30"
           )}
         >
-          <span
-            className={cn(
-              "flex items-center justify-center w-9 h-9 rounded-lg transition-transform duration-200 group-hover:scale-110",
-              action.primary
-                ? "bg-white/20"
-                : action.iconBg
-            )}
-          >
-            <action.icon className="h-5 w-5" />
+          <action.icon className={cn(
+            "h-6 w-6",
+            action.primary ? "text-white" : "text-muted-foreground group-hover:text-primary"
+          )} />
+          <span className={cn(
+            "text-xs text-center",
+            action.primary ? "text-white" : "text-muted-foreground group-hover:text-foreground"
+          )}>
+            {action.label}
           </span>
-          <span className="text-sm">{action.label}</span>
         </Link>
       ))}
     </div>
