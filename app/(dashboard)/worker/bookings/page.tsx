@@ -589,15 +589,15 @@ export default function WorkerBookingsPage() {
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 flex items-center gap-3">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
           <AlertCircle className="h-5 w-5 text-destructive" />
           <div className="flex-1">
-            <p className="text-destructive font-medium mb-1">
+            <p className="text-destructive font-medium mb-1 text-sm md:text-base">
               Gagal memuat data
             </p>
-            <p className="text-destructive text-sm">{error}</p>
+            <p className="text-destructive text-xs md:text-sm">{error}</p>
           </div>
-          <Button onClick={fetchBookingsWithReviews} size="sm">
+          <Button onClick={fetchBookingsWithReviews} size="sm" className="min-h-[44px] touch-manipulation">
             <Loader2 className="h-4 w-4 mr-2" />
             Coba Lagi
           </Button>
@@ -686,6 +686,28 @@ export default function WorkerBookingsPage() {
                   })}
                 </div>
               </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Review Form Dialog */}
+      {selectedBooking && (
+        <ReviewFormDialog
+          open={reviewDialogOpen}
+          onOpenChange={setReviewDialogOpen}
+          bookingId={selectedBooking.id}
+          workerId={user.id}
+          businessId={selectedBooking.business_id}
+          reviewer="worker"
+          targetName={selectedBooking.business?.name || "Bisnis"}
+          onSuccess={handleReviewSuccess}
+        />
+      )}
+    </div>
+  );
+}
+div>
             );
           })}
         </div>

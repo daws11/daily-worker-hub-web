@@ -244,15 +244,15 @@ export default function BusinessJobsPage() {
 
       {/* Empty State */}
       {!loading && !error && jobs.jobsList?.length === 0 && (
-        <div className="bg-card rounded-lg p-12 shadow-sm text-center border border-dashed border-border">
+        <div className="bg-card rounded-xl p-6 md:p-12 shadow-sm text-center border border-dashed border-border">
           <div className="flex flex-col items-center">
             <div className="p-4 bg-primary/10 rounded-full mb-4">
-              <Building2 className="w-12 h-12 text-primary" />
+              <Building2 className="w-10 h-10 md:w-12 md:h-12 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold mb-2">
+            <h3 className="text-lg md:text-xl font-semibold mb-2">
               {locale === "id" ? "Belum Ada Pekerjaan Aktif" : "No Active Jobs"}
             </h3>
-            <p className="text-muted-foreground text-center max-w-md mb-6">
+            <p className="text-sm md:text-base text-muted-foreground text-center max-w-md mb-6">
               {locale === "id"
                 ? "Mulai dengan membuat pekerjaan pertama Anda. Pekerja yang cocok akan melamar dan Anda bisa mengelola mereka dari sini."
                 : "Start by creating your first job. Suitable workers will apply and you can manage them from here."}
@@ -262,7 +262,7 @@ export default function BusinessJobsPage() {
                 onClick={() => {
                   window.location.href = "/business/jobs/new";
                 }}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white border-none rounded-lg text-sm font-semibold cursor-pointer transition-all hover:bg-primary/90 shadow-sm hover:shadow-md"
+                className="inline-flex items-center justify-center gap-2 px-5 md:px-6 py-3 bg-primary text-white border-none rounded-lg text-sm font-semibold cursor-pointer transition-all hover:bg-primary/90 shadow-sm hover:shadow-md min-h-[44px] touch-manipulation"
               >
                 <Plus className="w-5 h-5" />
                 {locale === "id" ? "Buat Pekerjaan Pertama" : "Create First Job"}
@@ -271,7 +271,7 @@ export default function BusinessJobsPage() {
                 onClick={() => {
                   window.location.href = "/business/workers";
                 }}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-muted text-foreground border border-border rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-muted/80"
+                className="inline-flex items-center justify-center gap-2 px-5 md:px-6 py-3 bg-muted text-foreground border border-border rounded-lg text-sm font-medium cursor-pointer transition-all hover:bg-muted/80 min-h-[44px] touch-manipulation"
               >
                 <Users className="w-5 h-5" />
                 {locale === "id" ? "Cari Pekerja" : "Browse Workers"}
@@ -463,6 +463,12 @@ export default function BusinessJobsPage() {
               </button>
             </div>
           </div>
+        </dialog>
+      ))}
+    </div>
+  );
+}
+/div>
         </dialog>
       ))}
     </div>

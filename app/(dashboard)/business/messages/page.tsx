@@ -188,11 +188,11 @@ export default function BusinessMessagesPage() {
   }, [fetchConversations]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6 p-4 md:p-6 pb-24 md:pb-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Pesan</h1>
-        <p className="text-muted-foreground text-sm">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight">Pesan</h1>
+        <p className="text-muted-foreground text-xs md:text-sm">
           Kelola komunikasi dengan pekerja untuk setiap booking
         </p>
       </div>
@@ -398,6 +398,25 @@ export default function BusinessMessagesPage() {
                   </Card>
                 </Link>
               );
+            })}
+          </div>
+        )}
+    </div>
+  );
+}
+         );
+            })}
+          </div>
+        )}
+    </div>
+  );
+}
+   </div>
+        )}
+    </div>
+  );
+}
+           );
             })}
           </div>
         )}

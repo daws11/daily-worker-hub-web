@@ -432,7 +432,7 @@ export default function WorkerJobsPage() {
 
                   {/* Check-in/out Times */}
                   {(booking.check_in_at || booking.check_out_at) && (
-                    <div className="pt-2 border-t space-y-1 text-sm">
+                    <div className="pt-2 border-t space-y-1 text-xs md:text-sm">
                       {booking.check_in_at && (
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <CheckCircle className="h-3 w-3 text-green-600" />
@@ -553,5 +553,14 @@ export default function WorkerJobsPage() {
         workerId={user?.id}
       />
     </div>
+  );
+}
+ccess={handleApplicationSuccess}
+        workerId={user?.id}
+      />
+    </div>
+  );
+}
+iv>
   );
 }

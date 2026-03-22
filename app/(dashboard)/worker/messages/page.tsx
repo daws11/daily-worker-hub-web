@@ -343,9 +343,29 @@ export default function WorkerMessagesPage() {
           searchQuery &&
           filteredConversations.length === 0 &&
           conversations.length > 0 && (
-            <Card>
+            <Card className="rounded-xl shadow-sm">
               <CardContent className="py-8 flex flex-col items-center justify-center text-center">
                 <Search className="h-8 w-8 text-muted-foreground mb-3" />
+                <p className="text-sm md:text-base text-muted-foreground">
+                  Tidak ada percakapan yang cocok dengan "{searchQuery}"
+                </p>
+              </CardContent>
+            </Card>
+          )}
+      </div>
+    </div>
+  );
+}
+
+                </p>
+              </CardContent>
+            </Card>
+          )}
+      </div>
+    </div>
+  );
+}
+ground mb-3" />
                 <p className="text-muted-foreground">
                   Tidak ada percakapan yang cocok dengan "{searchQuery}"
                 </p>

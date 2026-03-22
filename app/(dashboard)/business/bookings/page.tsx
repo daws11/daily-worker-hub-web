@@ -428,12 +428,12 @@ export default function BusinessBookingsPage() {
                     return (
                       <div
                         key={booking.id}
-                        className="bg-card dark:bg-card rounded-lg border border-border shadow-sm overflow-hidden"
+                        className="bg-card dark:bg-card rounded-xl border border-border shadow-sm overflow-hidden hover:shadow-md transition-all"
                       >
                         {/* Worker Info Header */}
-                        <div className="px-4 pt-4 pb-3 border-b border-border bg-muted/30">
+                        <div className="px-3 md:px-4 pt-3 md:pt-4 pb-3 border-b border-border bg-muted/30">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
                               {booking.worker?.avatar_url ? (
                                 <img
                                   src={booking.worker.avatar_url}
@@ -441,7 +441,7 @@ export default function BusinessBookingsPage() {
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <span className="text-sm font-semibold text-muted-foreground">
+                                <span className="text-xs md:text-sm font-semibold text-muted-foreground">
                                   {getInitials(
                                     booking.worker?.full_name || "?",
                                   )}
@@ -449,10 +449,10 @@ export default function BusinessBookingsPage() {
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-sm m-0 whitespace-nowrap overflow-hidden text-ellipsis">
+                              <p className="font-semibold text-xs md:text-sm m-0 whitespace-nowrap overflow-hidden text-ellipsis">
                                 {booking.worker?.full_name || "Pekerja"}
                               </p>
-                              <p className="text-xs text-muted-foreground m-0">
+                              <p className="text-xs text-muted-foreground m-0 truncate">
                                 {booking.worker?.phone || ""}
                               </p>
                             </div>
@@ -595,6 +595,20 @@ export default function BusinessBookingsPage() {
           businessId={user.id}
           reviewer="business"
           targetName={selectedBooking.worker?.full_name || "Pekerja"}
+          onSuccess={handleReviewSuccess}
+        />
+      )}
+    </div>
+  );
+}
+rker?.full_name || "Pekerja"}
+          onSuccess={handleReviewSuccess}
+        />
+      )}
+    </div>
+  );
+}
+}
           onSuccess={handleReviewSuccess}
         />
       )}
