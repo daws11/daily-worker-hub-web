@@ -172,7 +172,9 @@ export type Database = {
       bookings: {
         Row: {
           actual_end_time: string | null
+          actual_hours: number | null
           actual_start_time: string | null
+          application_id: string | null
           business_id: string
           cancellation_note: string | null
           cancellation_reason_id: string | null
@@ -192,6 +194,7 @@ export type Database = {
           interview_status: string | null
           job_id: string
           matching_score: number | null
+          payment_id: string | null
           payment_status: Database["public"]["Enums"]["payment_status"] | null
           review_deadline: string | null
           start_date: string | null
@@ -202,7 +205,9 @@ export type Database = {
         }
         Insert: {
           actual_end_time?: string | null
+          actual_hours?: number | null
           actual_start_time?: string | null
+          application_id?: string | null
           business_id: string
           cancellation_note?: string | null
           cancellation_reason_id?: string | null
@@ -222,6 +227,7 @@ export type Database = {
           interview_status?: string | null
           job_id: string
           matching_score?: number | null
+          payment_id?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           review_deadline?: string | null
           start_date?: string | null
@@ -232,7 +238,9 @@ export type Database = {
         }
         Update: {
           actual_end_time?: string | null
+          actual_hours?: number | null
           actual_start_time?: string | null
+          application_id?: string | null
           business_id?: string
           cancellation_note?: string | null
           cancellation_reason_id?: string | null
@@ -252,6 +260,7 @@ export type Database = {
           interview_status?: string | null
           job_id?: string
           matching_score?: number | null
+          payment_id?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"] | null
           review_deadline?: string | null
           start_date?: string | null
@@ -261,6 +270,13 @@ export type Database = {
           worker_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "bookings_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "job_applications"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookings_business_id_fkey"
             columns: ["business_id"]
@@ -746,6 +762,76 @@ export type Database = {
           },
           {
             foreignKeyName: "interview_sessions_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_applications: {
+        Row: {
+          applied_at: string
+          availability_json: Json | null
+          business_id: string
+          cover_letter: string | null
+          created_at: string
+          id: string
+          job_id: string
+          proposed_wage: number | null
+          responded_at: string | null
+          reviewed_at: string | null
+          status: string
+          updated_at: string
+          worker_id: string
+        }
+        Insert: {
+          applied_at?: string
+          availability_json?: Json | null
+          business_id: string
+          cover_letter?: string | null
+          created_at?: string
+          id?: string
+          job_id: string
+          proposed_wage?: number | null
+          responded_at?: string | null
+          reviewed_at?: string | null
+          status?: string
+          updated_at?: string
+          worker_id: string
+        }
+        Update: {
+          applied_at?: string
+          availability_json?: Json | null
+          business_id?: string
+          cover_letter?: string | null
+          created_at?: string
+          id?: string
+          job_id?: string
+          proposed_wage?: number | null
+          responded_at?: string | null
+          reviewed_at?: string | null
+          status?: string
+          updated_at?: string
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_applications_worker_id_fkey"
             columns: ["worker_id"]
             isOneToOne: false
             referencedRelation: "workers"
@@ -1577,6 +1663,48 @@ export type Database = {
           },
         ]
       }
+      worker_badges: {
+        Row: {
+          badge_id: string
+          created_at: string
+          earned_at: string
+          id: string
+          progress: Json | null
+          worker_id: string
+        }
+        Insert: {
+          badge_id: string
+          created_at?: string
+          earned_at?: string
+          id?: string
+          progress?: Json | null
+          worker_id: string
+        }
+        Update: {
+          badge_id?: string
+          created_at?: string
+          earned_at?: string
+          id?: string
+          progress?: Json | null
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "worker_badges_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       worker_skills: {
         Row: {
           created_at: string
@@ -1689,6 +1817,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      award_badge: {
+        Args: { p_badge_id: string; p_progress?: Json; p_worker_id: string }
+        Returns: string
+      }
       calculate_availability_score: {
         Args: {
           p_day_of_week: number
@@ -1705,6 +1837,10 @@ export type Database = {
       calculate_reliability_score: {
         Args: { p_worker_id: string }
         Returns: number
+      }
+      check_badge_eligibility: {
+        Args: { p_badge_id: string; p_worker_id: string }
+        Returns: boolean
       }
       check_worker_availability: {
         Args: {
@@ -1862,6 +1998,7 @@ export type Database = {
     }
     Enums: {
       badge_category: "skill" | "training" | "certification" | "specialization"
+      badge_type: "tier" | "achievement" | "skill"
       bank_code: "BCA" | "BRI" | "Mandiri" | "BNI"
       booking_status:
         | "pending"
@@ -1894,6 +2031,7 @@ export type Database = {
       reviewer_type: "business" | "worker"
       social_platform_status: "active" | "inactive" | "maintenance"
       social_platform_type: "instagram" | "facebook" | "twitter" | "linkedin"
+      tier_requirement: "classic" | "pro" | "elite" | "champion"
       transaction_status: "pending" | "success" | "failed"
       transaction_type: "payment" | "refund"
       user_role: "worker" | "business" | "admin"
@@ -2030,6 +2168,7 @@ export const Constants = {
   public: {
     Enums: {
       badge_category: ["skill", "training", "certification", "specialization"],
+      badge_type: ["tier", "achievement", "skill"],
       bank_code: ["BCA", "BRI", "Mandiri", "BNI"],
       booking_status: [
         "pending",
@@ -2065,6 +2204,7 @@ export const Constants = {
       reviewer_type: ["business", "worker"],
       social_platform_status: ["active", "inactive", "maintenance"],
       social_platform_type: ["instagram", "facebook", "twitter", "linkedin"],
+      tier_requirement: ["classic", "pro", "elite", "champion"],
       transaction_status: ["pending", "success", "failed"],
       transaction_type: ["payment", "refund"],
       user_role: ["worker", "business", "admin"],
