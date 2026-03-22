@@ -194,7 +194,7 @@ export default function WorkerAttendancePage() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 p-4 md:p-6">
+    <div className="min-h-screen bg-muted/30 p-4 md:p-6 pb-24 md:pb-6">
       <div className="mx-auto max-w-7xl space-y-6">
         {/* Page Header */}
         <div className="space-y-1">

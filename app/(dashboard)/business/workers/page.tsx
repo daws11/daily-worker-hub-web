@@ -257,7 +257,7 @@ export default function BusinessWorkersPage() {
   }, [fetchBadges, fetchWorkers]);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="p-4 md:p-6 pb-24 md:pb-6 space-y-6 max-w-7xl mx-auto">
       {/* Page Header */}
       <div style={{ marginBottom: "1.5rem" }}>
         <h1
@@ -317,6 +317,8 @@ export default function BusinessWorkersPage() {
               display: "flex",
               alignItems: "center",
               gap: "0.5rem",
+              minHeight: "44px",
+              touchAction: "manipulation",
             }}
           >
             <Loader2 style={{ width: "1rem", height: "1rem" }} />

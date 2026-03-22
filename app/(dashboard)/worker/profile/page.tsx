@@ -123,7 +123,7 @@ export default function WorkerProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 p-4">
+    <div className="min-h-screen bg-muted/30 p-4 pb-24 md:pb-4">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="mb-6">
