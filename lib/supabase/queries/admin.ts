@@ -810,10 +810,10 @@ export async function getUsers(
     } else if (filters.role === "worker") {
       query = query.not("worker", "is", null);
     } else if (filters.role === "admin") {
-      query = query.in(
-        "id",
-        supabase.from("admin_users").select("user_id") as any,
-      );
+      const adminUserIds = await supabase.from("admin_users").select("user_id");
+      if (adminUserIds.data) {
+        query = query.in("id", adminUserIds.data.map(u => u.user_id));
+      }
     }
   }
 
