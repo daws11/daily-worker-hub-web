@@ -378,11 +378,12 @@ export default function WorkerApplicationsPage() {
 
       {/* Tabs */}
       {!isLoading && !error && (
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
           <Button
             variant={activeTab === "all" ? "default" : "outline"}
             size="sm"
             onClick={() => setActiveTab("all")}
+            className="min-h-[44px] touch-manipulation whitespace-nowrap"
           >
             Semua ({tabCounts.all})
           </Button>
@@ -396,6 +397,7 @@ export default function WorkerApplicationsPage() {
                 variant={activeTab === status ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTab(status as keyof StatusGroup)}
+                className="min-h-[44px] touch-manipulation whitespace-nowrap"
               >
                 {statusGroupLabels[status as keyof StatusGroup]} ({count})
               </Button>

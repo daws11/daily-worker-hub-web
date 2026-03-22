@@ -516,11 +516,42 @@ export default function BusinessApplicantsPage() {
 
         {/* Applications List */}
         {!isLoading && !error && filteredApplications.length > 0 && (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 md:gap-4 md:grid-cols-2">
             {filteredApplications.map((application) => (
               <ApplicantCard
                 key={application.id}
                 application={application}
+                budgetMin={job?.budget_min || 0}
+                budgetMax={job?.budget_max || 0}
+                onShortlist={() =>
+                  handleStatusUpdate(application.id, "reviewed")
+                }
+                onAccept={() => handleStatusUpdate(application.id, "accepted")}
+                onReject={() => handleStatusUpdate(application.id, "rejected")}
+                isProcessing={processingId === application.id}
+                bookingId={
+                  application.status === "accepted"
+                    ? bookingIds[application.id]
+                    : null
+                }
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+     </div>
+    </div>
+  );
+}
+    )}
+      </div>
+    </div>
+  );
+}
+        application={application}
                 budgetMin={job?.budget_min || 0}
                 budgetMax={job?.budget_max || 0}
                 onShortlist={() =>

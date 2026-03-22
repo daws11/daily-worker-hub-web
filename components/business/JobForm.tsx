@@ -266,7 +266,7 @@ export default function JobForm() {
               placeholder="e.g., Driver for Hotel Event"
               required
               disabled={loading}
-              className="w-full p-2.5 border border-border rounded-md text-sm bg-background dark:bg-background disabled:bg-muted"
+              className="w-full p-3 md:p-3.5 min-h-[44px] border border-border rounded-lg text-sm bg-background dark:bg-background disabled:bg-muted focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </div>
 
@@ -276,12 +276,12 @@ export default function JobForm() {
               Category *
             </label>
             {initialLoading ? (
-              <div className="p-2.5 border border-border rounded-md text-sm text-muted-foreground flex items-center gap-2">
+              <div className="p-3 min-h-[44px] border border-border rounded-lg text-sm text-muted-foreground flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 Loading categories...
               </div>
             ) : categories.length === 0 ? (
-              <div className="p-2.5 border border-destructive/20 rounded-md text-sm text-destructive bg-destructive/10">
+              <div className="p-3 min-h-[44px] border border-destructive/20 rounded-lg text-sm text-destructive bg-destructive/10">
                 No categories available. Please contact admin.
               </div>
             ) : (
@@ -291,7 +291,7 @@ export default function JobForm() {
                 onChange={handleChange}
                 required
                 disabled={loading}
-                className="w-full p-2.5 border border-border rounded-md text-sm bg-card dark:bg-card"
+                className="w-full p-3 md:p-3.5 min-h-[44px] border border-border rounded-lg text-sm bg-card dark:bg-card focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all"
               >
                 <option value="">Select a category</option>
                 {categories.map((cat) => (
@@ -483,6 +483,12 @@ export default function JobForm() {
               )}
             </button>
           </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+  </div>
         </form>
       </div>
     </div>

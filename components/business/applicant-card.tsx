@@ -191,7 +191,7 @@ export function ApplicantCard({
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-3 p-4 md:p-6">
           {/* Stats Row */}
           <div className="grid grid-cols-2 gap-3">
             {/* Reliability Score */}
@@ -533,6 +533,22 @@ export function ApplicantCard({
             </div>
           )}
         </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+ >
+                <Video className="h-4 w-4 mr-2" />
+                Mulai Interview
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+DialogContent>
       </Dialog>
     </>
   );
