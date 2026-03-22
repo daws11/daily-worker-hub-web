@@ -18,7 +18,7 @@ import type { Database } from "../supabase/types";
 import { useTranslation } from "../i18n/hooks";
 
 type BookingRow = Database["public"]["Tables"]["bookings"]["Row"];
-type BookingStatus = BookingRow["status"];
+type BookingStatus = BookingRow["status"] | "no_show";
 
 type UseBookingsOptions = {
   jobId?: string;
@@ -171,7 +171,7 @@ export function useBookings(
       setError(null);
 
       try {
-        const result = await updateMultipleBookingStatuses(bookingIds, status);
+        const result = await updateMultipleBookingStatuses(bookingIds, status as any);
 
         if (result.error) {
           setError(result.error.message);

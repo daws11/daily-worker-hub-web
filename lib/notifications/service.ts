@@ -199,7 +199,7 @@ export class NotificationService {
 
       // Filter users who have this notification type enabled
       const eligibleTokens = tokens.filter((t) => {
-        const prefs = preferencesMap.get(t.user_id);
+        const prefs = preferencesMap.get(t.user_id) as { push_enabled?: boolean; quiet_hours_start?: string; quiet_hours_end?: string; notification_types?: string } | undefined;
         if (!prefs) return true; // Default to sending if no preferences
         if (!prefs.push_enabled) return false;
         if (this.isQuietHours(prefs)) return false;

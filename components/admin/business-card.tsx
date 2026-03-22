@@ -136,7 +136,7 @@ function BusinessCard({
                 {getBusinessTypeLabel(business.business_type)}
               </CardDescription>
             </div>
-            <VerificationBadge status={business.verification_status} />
+            <VerificationBadge status={business.verification_status as "pending" | "verified" | "rejected"} />
           </div>
         </CardHeader>
 

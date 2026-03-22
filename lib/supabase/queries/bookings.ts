@@ -266,7 +266,8 @@ export async function updateBookingStatus(
     | "rejected"
     | "in_progress"
     | "completed"
-    | "cancelled",
+    | "cancelled"
+    | "no_show",
 ) {
   try {
     const { data, error } = await supabase
@@ -299,7 +300,8 @@ export async function updateMultipleBookingStatuses(
     | "rejected"
     | "in_progress"
     | "completed"
-    | "cancelled",
+    | "cancelled"
+    | "no_show",
 ) {
   try {
     const { data, error } = await supabase

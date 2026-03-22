@@ -117,7 +117,7 @@ export async function getWorkerBadges(
     throw new Error(`Failed to fetch worker badges: ${error.message}`);
   }
 
-  return data || [];
+  return (data || []) as unknown as WorkerBadgeWithRelations[];
 }
 
 /**
