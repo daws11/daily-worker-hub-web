@@ -728,12 +728,12 @@ export async function getWorkerAchievements(
 
   const earnedMap = new Map<AchievementBadgeType, any>();
   achievements?.forEach((a) =>
-    earnedMap.set(a.badge_type as AchievementBadgeType, a),
+    earnedMap.set(a.achievement_type as AchievementBadgeType, a),
   );
 
   const progressMap = new Map<AchievementBadgeType, any>();
   progress?.forEach((p) =>
-    progressMap.set(p.badge_type as AchievementBadgeType, p),
+    progressMap.set(p.achievement_type as AchievementBadgeType, p),
   );
 
   // Return all badges with earned status and progress
