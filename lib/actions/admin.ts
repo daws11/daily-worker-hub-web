@@ -101,7 +101,7 @@ export async function getRevenueMetrics(
     // Get daily revenue from bookings
     const { data: bookings, error: bookingsError } = await supabase
       .from("bookings")
-      .select("created_at, total_amount, status")
+      .select("created_at, final_price, status")
       .gte("created_at", start)
       .lte("created_at", end + "T23:59:59")
       .in("status", ["completed", "in_progress"]);
@@ -123,7 +123,7 @@ export async function getRevenueMetrics(
         fees: 0,
         bookings: 0,
       };
-      existing.revenue += Number(booking.total_amount) || 0;
+      existing.revenue += Number(booking.final_price) || 0;
       // Platform fees not currently tracked in bookings table
       existing.fees += 0;
       existing.bookings += 1;
@@ -282,18 +282,18 @@ export async function getWorkerStatistics(): Promise<{
     // Get workers by area
     const { data: areaData, error: areaError } = await supabase
       .from("workers")
-      .select("area")
-      .not("area", "is", null);
+      .select("location_name")
+      .not("location_name", "is", null);
 
     const areaMap = new Map<string, number>();
     areaData?.forEach((w) => {
-      if (w.area) {
-        areaMap.set(w.area, (areaMap.get(w.area) || 0) + 1);
+      if (w.location_name) {
+        areaMap.set(w.location_name, (areaMap.get(w.location_name) || 0) + 1);
       }
     });
 
     const byArea = Array.from(areaMap.entries())
-      .map(([area, count]) => ({ area, count }))
+      .map(([location_name, count]) => ({ area: location_name, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
@@ -444,7 +444,7 @@ export async function getPaymentMetrics(): Promise<{
       // If transactions table doesn't exist, use bookings payment_status
       const { data: bookings, error: bookingsError } = await supabase
         .from("bookings")
-        .select("payment_status, total_amount")
+        .select("payment_status, final_price")
         .not("payment_status", "is", null);
 
       if (bookingsError) {
@@ -454,18 +454,16 @@ export async function getPaymentMetrics(): Promise<{
       const total = bookings?.length || 0;
       const successful =
         bookings?.filter(
-          (b) => b.payment_status === "paid" || b.payment_status === "refunded",
+          (b) => b.payment_status === "paid" || b.payment_status === "released",
         ).length || 0;
       const failed =
         bookings?.filter((b) => b.payment_status === "failed").length || 0;
       const pending =
         bookings?.filter(
-          (b) =>
-            b.payment_status === "pending" ||
-            b.payment_status === "pending_review",
+          (b) => b.payment_status === "pending_review",
         ).length || 0;
       const volume =
-        bookings?.reduce((sum, b) => sum + (Number(b.total_amount) || 0), 0) ||
+        bookings?.reduce((sum, b) => sum + (Number(b.final_price) || 0), 0) ||
         0;
 
       return {

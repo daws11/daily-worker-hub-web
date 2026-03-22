@@ -53,8 +53,8 @@ export function DashboardGreeting({ name, role }: DashboardGreetingProps) {
   
   const subtitle =
     role === "business"
-      ? t("dashboard.readyToFindWorkers", "Siap mencari pekerja untuk hari ini?")
-      : t("dashboard.newJobOpportunities", "Ada peluang kerja baru untuk Anda!");
+      ? t("dashboard.readyToFindWorkers")
+      : t("dashboard.newJobOpportunities");
 
   const displayName = name || (role === "business" ? "Pengusaha" : "Pekerja");
 

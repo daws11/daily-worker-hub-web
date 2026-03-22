@@ -5,8 +5,7 @@ import type { Database } from "../supabase/types";
 
 type Badge = Database["public"]["Tables"]["badges"]["Row"];
 type WorkerBadge = Database["public"]["Tables"]["worker_badges"]["Row"];
-type BadgeVerificationStatus =
-  Database["public"]["Enums"]["badge_verification_status"];
+type BadgeVerificationStatus = string;
 
 export type BadgeResult = {
   success: boolean;

@@ -21,13 +21,13 @@ export interface MessageWithRelations extends Message {
     id: string;
     full_name: string;
     avatar_url: string | null;
-    role: "worker" | "business";
+    role: "worker" | "business" | "admin";
   };
   receiver: {
     id: string;
     full_name: string;
     avatar_url: string | null;
-    role: "worker" | "business";
+    role: "worker" | "business" | "admin";
   };
   booking?: {
     id: string;

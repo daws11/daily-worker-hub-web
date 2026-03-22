@@ -34,22 +34,15 @@ function getInitials(name: string): string {
   return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 }
 
-function mapKycStatus(
-  status: "pending" | "in_review" | "approved" | "rejected" | null,
-): "unverified" | "pending" | "verified" | "rejected" {
-  switch (status) {
-    case "approved":
-      return "verified" as const;
-    case "in_review":
-    case "pending":
-      return "pending" as const;
-    case "rejected":
-      return "rejected" as const;
-    case null:
-    default:
-      return "unverified" as const;
-  }
-}
+type KycDisplayStatus = "unverified" | "pending" | "verified" | "rejected";
+
+const mapKycStatus = (status: string | null): KycDisplayStatus => {
+  if (!status) return "unverified";
+  if (status === "approved") return "verified";
+  if (status === "in_review" || status === "pending") return "pending";
+  if (status === "rejected") return "rejected";
+  return "unverified";
+};
 
 function WorkerCard({ worker, className, ...props }: WorkerCardProps) {
   const formatDate = React.useCallback((dateString: string) => {

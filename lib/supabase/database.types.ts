@@ -1,5 +1,6 @@
 export type WorkerTier = "classic" | "pro" | "elite" | "champion";
 
+
 export type Json =
   | string
   | number
@@ -7,7 +8,6 @@ export type Json =
   | null
   | { [key: string]: Json | undefined }
   | Json[]
-
 export type Database = {
   graphql_public: {
     Tables: {
@@ -82,6 +82,51 @@ export type Database = {
             columns: ["admin_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      applications: {
+        Row: {
+          cover_letter: string | null
+          created_at: string
+          id: string
+          job_id: string | null
+          status: string | null
+          updated_at: string
+          worker_id: string | null
+        }
+        Insert: {
+          cover_letter?: string | null
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          status?: string | null
+          updated_at?: string
+          worker_id?: string | null
+        }
+        Update: {
+          cover_letter?: string | null
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          status?: string | null
+          updated_at?: string
+          worker_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
             referencedColumns: ["id"]
           },
         ]
@@ -202,6 +247,7 @@ export type Database = {
           start_date: string | null
           status: Database["public"]["Enums"]["booking_status"]
           time_to_hire: number | null
+          total_amount: number | null
           updated_at: string
           worker_id: string
         }
@@ -235,6 +281,7 @@ export type Database = {
           start_date?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           time_to_hire?: number | null
+          total_amount?: number | null
           updated_at?: string
           worker_id: string
         }
@@ -268,6 +315,7 @@ export type Database = {
           start_date?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           time_to_hire?: number | null
+          total_amount?: number | null
           updated_at?: string
           worker_id?: string
         }
@@ -1696,6 +1744,41 @@ export type Database = {
         }
         Relationships: []
       }
+      worker_achievements: {
+        Row: {
+          achievement_type: string
+          awarded_at: string
+          description: string | null
+          id: string
+          title: string
+          worker_id: string | null
+        }
+        Insert: {
+          achievement_type: string
+          awarded_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          worker_id?: string | null
+        }
+        Update: {
+          achievement_type?: string
+          awarded_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          worker_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_achievements_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       worker_availabilities: {
         Row: {
           created_at: string
@@ -1821,6 +1904,7 @@ export type Database = {
       workers: {
         Row: {
           address: string | null
+          area: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string
@@ -1835,6 +1919,7 @@ export type Database = {
           lng: number | null
           location_name: string | null
           phone: string | null
+          punctuality: number | null
           rating: number | null
           reliability_score: number
           tier: Database["public"]["Enums"]["worker_tier"]
@@ -1843,6 +1928,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          area?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -1857,6 +1943,7 @@ export type Database = {
           lng?: number | null
           location_name?: string | null
           phone?: string | null
+          punctuality?: number | null
           rating?: number | null
           reliability_score?: number
           tier?: Database["public"]["Enums"]["worker_tier"]
@@ -1865,6 +1952,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          area?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
@@ -1879,6 +1967,7 @@ export type Database = {
           lng?: number | null
           location_name?: string | null
           phone?: string | null
+          punctuality?: number | null
           rating?: number | null
           reliability_score?: number
           tier?: Database["public"]["Enums"]["worker_tier"]
@@ -2135,11 +2224,8 @@ export type Database = {
     }
   }
 }
-
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
-
 type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
-
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
@@ -2168,7 +2254,6 @@ export type Tables<
       ? R
       : never
     : never
-
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
@@ -2193,7 +2278,6 @@ export type TablesInsert<
       ? I
       : never
     : never
-
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
@@ -2218,7 +2302,6 @@ export type TablesUpdate<
       ? U
       : never
     : never
-
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
@@ -2235,7 +2318,6 @@ export type Enums<
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
-
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
@@ -2252,7 +2334,6 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-
 export const Constants = {
   graphql_public: {
     Enums: {},
@@ -2315,4 +2396,3 @@ export const Constants = {
     },
   },
 } as const
-

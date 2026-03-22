@@ -89,7 +89,7 @@ export function MobileProfileMenu({ role }: MobileProfileMenuProps) {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+      <PopoverTrigger>
         <button
           className={cn(
             "flex flex-col items-center justify-center flex-1 h-full touch-manipulation",

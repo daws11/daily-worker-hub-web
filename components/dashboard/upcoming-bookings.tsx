@@ -248,7 +248,7 @@ export function UpcomingBookings({
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">
-            {t("dashboard.upcomingBookings", "Booking Mendatang")}
+            {t("dashboard.upcomingBookings")}
           </h2>
         </div>
         <div className="space-y-3">
@@ -265,13 +265,13 @@ export function UpcomingBookings({
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">
-            {t("dashboard.upcomingBookings", "Booking Mendatang")}
+            {t("dashboard.upcomingBookings")}
           </h2>
           <Link
             href={viewAllHref}
             className="text-sm text-primary hover:underline"
           >
-            {t("common.viewAll", "Lihat Semua")} →
+            {t("common.viewAll")} →
           </Link>
         </div>
         <div className="p-8 bg-card rounded-xl border border-border text-center">
@@ -279,12 +279,12 @@ export function UpcomingBookings({
             <Calendar className="h-7 w-7 text-primary" />
           </div>
           <p className="text-muted-foreground font-medium">
-            {t("dashboard.noUpcomingBookings", "Belum ada booking mendatang")}
+            {t("dashboard.noUpcomingBookings")}
           </p>
           <p className="text-sm text-muted-foreground mt-1">
             {role === "business"
-              ? t("dashboard.createJobHint", "Buat pekerjaan baru untuk mencari pekerja")
-              : t("dashboard.findJobsHint", "Cari pekerjaan yang tersedia")}
+              ? t("dashboard.createJobHint")
+              : t("dashboard.findJobsHint")}
           </p>
         </div>
       </div>
@@ -295,14 +295,14 @@ export function UpcomingBookings({
     <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold">
-          {t("dashboard.upcomingBookings", "Booking Mendatang")} 
+          {t("dashboard.upcomingBookings")} 
           <span className="ml-2 text-sm font-normal text-muted-foreground">({upcomingCount})</span>
         </h2>
         <Link
           href={viewAllHref}
           className="text-sm text-primary hover:underline flex items-center gap-1 touch-manipulation"
         >
-          {t("common.viewAll", "Lihat Semua")}
+          {t("common.viewAll")}
           <ChevronRight className="h-4 w-4" />
         </Link>
       </div>
