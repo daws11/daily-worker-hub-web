@@ -35,7 +35,6 @@ interface JobWithAttendance extends JobsRow {
     checkedIn: number;
     checkedOut: number;
   };
-  qr_code?: string | null;
 }
 
 export default function BusinessJobAttendancePage() {

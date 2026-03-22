@@ -186,6 +186,7 @@ interface TierBadgeDetailedProps {
   jobsCompleted?: number;
   rating?: number;
   punctuality?: number;
+  compact?: boolean;
 }
 
 export function TierBadgeDetailed({
@@ -193,6 +194,7 @@ export function TierBadgeDetailed({
   jobsCompleted,
   rating,
   punctuality,
+  compact = false,
 }: TierBadgeDetailedProps) {
   const config = tierConfig[tier] as TierConfig;
   const Icon = config.icon;
@@ -200,7 +202,7 @@ export function TierBadgeDetailed({
   return (
     <div
       className={cn(
-        "flex items-start gap-3 p-3 rounded-lg border",
+        compact ? "p-2" : "flex items-start gap-3 p-3 rounded-lg border",
         config.bgColor,
         config.borderColor,
       )}
@@ -210,10 +212,10 @@ export function TierBadgeDetailed({
           "flex items-center justify-center rounded-full",
           "border-2",
           config.bgGradient,
-          "h-10 w-10",
+          compact ? "h-6 w-6" : "h-10 w-10",
         )}
       >
-        <Icon className="text-white h-5 w-5" />
+        <Icon className={cn("text-white", compact ? "h-3 w-3" : "h-5 w-5")} />
       </div>
 
       <div className="flex-1">

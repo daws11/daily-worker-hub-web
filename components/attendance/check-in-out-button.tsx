@@ -13,7 +13,8 @@ type BookingStatus =
   | "rejected"
   | "in_progress"
   | "completed"
-  | "cancelled";
+  | "cancelled"
+  | "no_show";
 
 export type AttendanceState =
   | "can_check_in"

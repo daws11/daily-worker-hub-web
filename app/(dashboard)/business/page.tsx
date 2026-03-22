@@ -139,12 +139,9 @@ export default function BusinessDashboardPage() {
           .eq("business_id", business.id);
 
         // Calculate total spent
-        const { data: transactions } = await supabase
-          .from("wallet_transactions")
-          .select("amount")
-          .eq("user_id", user.id)
-          .eq("type", "debit");
-
+        // @ts-expect-error Supabase type instantiation too deep
+        const { data: wtData } = await supabase.from("wallet_transactions").select("amount").eq("user_id", user.id).eq("type", "debit");
+        const transactions = wtData as { amount: number }[] | null;
         const totalSpent = transactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
 
         setStats({

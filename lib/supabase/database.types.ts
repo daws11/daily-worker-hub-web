@@ -1,3 +1,5 @@
+export type WorkerTier = "classic" | "pro" | "elite" | "champion";
+
 export type Json =
   | string
   | number
@@ -1184,6 +1186,78 @@ export type Database = {
           },
         ]
       }
+      payment_transactions: {
+        Row: {
+          amount: number
+          booking_id: string | null
+          business_id: string | null
+          created_at: string
+          fee_amount: number | null
+          id: string
+          metadata: Json | null
+          paid_at: string | null
+          payment_method: string | null
+          payment_provider: string
+          payment_url: string | null
+          provider_payment_id: string | null
+          provider_transaction_id: string | null
+          qris_expires_at: string | null
+          status: Database["public"]["Enums"]["payment_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          booking_id?: string | null
+          business_id?: string | null
+          created_at?: string
+          fee_amount?: number | null
+          id?: string
+          metadata?: Json | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_provider?: string
+          payment_url?: string | null
+          provider_payment_id?: string | null
+          provider_transaction_id?: string | null
+          qris_expires_at?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string | null
+          business_id?: string | null
+          created_at?: string
+          fee_amount?: number | null
+          id?: string
+          metadata?: Json | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_provider?: string
+          payment_url?: string | null
+          provider_payment_id?: string | null
+          provider_transaction_id?: string | null
+          qris_expires_at?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_transactions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_transactions_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reliability_score_history: {
         Row: {
           booking_id: string | null
@@ -1670,6 +1744,8 @@ export type Database = {
           earned_at: string
           id: string
           progress: Json | null
+          verification_status: string | null
+          verified_at: string | null
           worker_id: string
         }
         Insert: {
@@ -1678,6 +1754,8 @@ export type Database = {
           earned_at?: string
           id?: string
           progress?: Json | null
+          verification_status?: string | null
+          verified_at?: string | null
           worker_id: string
         }
         Update: {
@@ -1686,6 +1764,8 @@ export type Database = {
           earned_at?: string
           id?: string
           progress?: Json | null
+          verification_status?: string | null
+          verified_at?: string | null
           worker_id?: string
         }
         Relationships: [
@@ -1755,6 +1835,7 @@ export type Database = {
           lng: number | null
           location_name: string | null
           phone: string | null
+          rating: number | null
           reliability_score: number
           tier: Database["public"]["Enums"]["worker_tier"]
           updated_at: string
@@ -1776,6 +1857,7 @@ export type Database = {
           lng?: number | null
           location_name?: string | null
           phone?: string | null
+          rating?: number | null
           reliability_score?: number
           tier?: Database["public"]["Enums"]["worker_tier"]
           updated_at?: string
@@ -1797,6 +1879,7 @@ export type Database = {
           lng?: number | null
           location_name?: string | null
           phone?: string | null
+          rating?: number | null
           reliability_score?: number
           tier?: Database["public"]["Enums"]["worker_tier"]
           updated_at?: string
@@ -2026,6 +2109,8 @@ export type Database = {
         | "released"
         | "disputed"
         | "cancelled"
+        | "paid"
+        | "failed"
       report_status: "pending" | "reviewing" | "resolved" | "dismissed"
       report_type: "user" | "job" | "business" | "booking"
       reviewer_type: "business" | "worker"
@@ -2035,7 +2120,14 @@ export type Database = {
       transaction_status: "pending" | "success" | "failed"
       transaction_type: "payment" | "refund"
       user_role: "worker" | "business" | "admin"
-      wallet_transaction_type: "earn" | "payout" | "refund" | "hold" | "release"
+      wallet_transaction_type:
+        | "earn"
+        | "payout"
+        | "refund"
+        | "hold"
+        | "release"
+        | "debit"
+        | "credit"
       worker_tier: "classic" | "pro" | "elite" | "champion"
     }
     CompositeTypes: {
@@ -2198,6 +2290,8 @@ export const Constants = {
         "released",
         "disputed",
         "cancelled",
+        "paid",
+        "failed",
       ],
       report_status: ["pending", "reviewing", "resolved", "dismissed"],
       report_type: ["user", "job", "business", "booking"],
@@ -2208,7 +2302,15 @@ export const Constants = {
       transaction_status: ["pending", "success", "failed"],
       transaction_type: ["payment", "refund"],
       user_role: ["worker", "business", "admin"],
-      wallet_transaction_type: ["earn", "payout", "refund", "hold", "release"],
+      wallet_transaction_type: [
+        "earn",
+        "payout",
+        "refund",
+        "hold",
+        "release",
+        "debit",
+        "credit",
+      ],
       worker_tier: ["classic", "pro", "elite", "champion"],
     },
   },

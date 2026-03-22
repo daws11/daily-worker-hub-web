@@ -46,8 +46,17 @@ import {
 
 type BusinessesRow = Database["public"]["Tables"]["businesses"]["Row"];
 
-type PaymentTransaction =
-  Database["public"]["Tables"]["payment_transactions"]["Row"];
+// Local type until payment_transactions table is created
+type PaymentTransaction = {
+  id: string;
+  amount: number;
+  fee_amount?: number;
+  status: string;
+  payment_method: string;
+  payment_provider?: string;
+  created_at: string;
+  xendit_payment_id?: string;
+};
 
 type WalletBalance = {
   balance: number;
