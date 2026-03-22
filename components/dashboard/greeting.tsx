@@ -5,8 +5,8 @@ import { Sunrise, Sun, Moon, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface DashboardGreetingProps {
-  name: string;
-  role: "business" | "worker";
+  name?: string;
+  role?: "business" | "worker";
 }
 
 function getTimeBasedGreeting(hour: number): {

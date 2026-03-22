@@ -42,7 +42,7 @@ interface Booking {
 }
 
 interface WalletData {
-  balance: number;
+  available_balance: number;
   pending_balance: number;
 }
 
@@ -103,7 +103,7 @@ export default function WorkerDashboardPage() {
         // Fetch wallet
         const { data: walletData } = await supabase
           .from("wallets")
-          .select("balance, pending_balance")
+          .select("available_balance, pending_balance")
           .eq("user_id", user.id)
           .single();
         
@@ -190,7 +190,7 @@ export default function WorkerDashboardPage() {
                 <div>
                   <p className="text-emerald-100 text-sm font-medium">Saldo Earnings</p>
                   <p className="text-2xl md:text-3xl font-bold mt-1">
-                    {wallet ? formatCurrency(wallet.balance) : "Rp 0"}
+                    {wallet ? formatCurrency(wallet.available_balance) : "Rp 0"}
                   </p>
                   {wallet && wallet.pending_balance > 0 && (
                     <p className="text-xs text-emerald-100 mt-1">

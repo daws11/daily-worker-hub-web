@@ -639,11 +639,3 @@ export default function BusinessAnalyticsPage() {
     </div>
   );
 }
-</div>
-    </div>
-  );
-}
-}
->
-  );
-}

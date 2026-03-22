@@ -707,25 +707,3 @@ export default function WorkerBookingsPage() {
     </div>
   );
 }
-div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Review Form Dialog */}
-      {selectedBooking && (
-        <ReviewFormDialog
-          open={reviewDialogOpen}
-          onOpenChange={setReviewDialogOpen}
-          bookingId={selectedBooking.id}
-          workerId={user.id}
-          businessId={selectedBooking.business_id}
-          reviewer="worker"
-          targetName={selectedBooking.business?.name || "Bisnis"}
-          onSuccess={handleReviewSuccess}
-        />
-      )}
-    </div>
-  );
-}

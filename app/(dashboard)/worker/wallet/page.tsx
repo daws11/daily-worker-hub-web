@@ -759,11 +759,3 @@ export default function WorkerWalletPage() {
     </div>
   );
 }
->
-  );
-}
-;
-}
-v>
-  );
-}

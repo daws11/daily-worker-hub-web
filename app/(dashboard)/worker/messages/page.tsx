@@ -356,23 +356,3 @@ export default function WorkerMessagesPage() {
     </div>
   );
 }
-
-                </p>
-              </CardContent>
-            </Card>
-          )}
-      </div>
-    </div>
-  );
-}
-ground mb-3" />
-                <p className="text-muted-foreground">
-                  Tidak ada percakapan yang cocok dengan "{searchQuery}"
-                </p>
-              </CardContent>
-            </Card>
-          )}
-      </div>
-    </div>
-  );
-}

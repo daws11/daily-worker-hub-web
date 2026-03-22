@@ -404,22 +404,3 @@ export default function BusinessMessagesPage() {
     </div>
   );
 }
-         );
-            })}
-          </div>
-        )}
-    </div>
-  );
-}
-   </div>
-        )}
-    </div>
-  );
-}
-           );
-            })}
-          </div>
-        )}
-    </div>
-  );
-}

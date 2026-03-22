@@ -542,34 +542,3 @@ export default function BusinessApplicantsPage() {
     </div>
   );
 }
-     </div>
-    </div>
-  );
-}
-    )}
-      </div>
-    </div>
-  );
-}
-        application={application}
-                budgetMin={job?.budget_min || 0}
-                budgetMax={job?.budget_max || 0}
-                onShortlist={() =>
-                  handleStatusUpdate(application.id, "reviewed")
-                }
-                onAccept={() => handleStatusUpdate(application.id, "accepted")}
-                onReject={() => handleStatusUpdate(application.id, "rejected")}
-                isProcessing={processingId === application.id}
-                bookingId={
-                  application.status === "accepted"
-                    ? bookingIds[application.id]
-                    : null
-                }
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}

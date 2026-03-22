@@ -555,12 +555,3 @@ export default function WorkerJobsPage() {
     </div>
   );
 }
-ccess={handleApplicationSuccess}
-        workerId={user?.id}
-      />
-    </div>
-  );
-}
-iv>
-  );
-}

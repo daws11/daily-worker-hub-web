@@ -488,9 +488,3 @@ export default function JobForm() {
     </div>
   );
 }
-  </div>
-        </form>
-      </div>
-    </div>
-  );
-}

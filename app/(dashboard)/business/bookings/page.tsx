@@ -601,17 +601,3 @@ export default function BusinessBookingsPage() {
     </div>
   );
 }
-rker?.full_name || "Pekerja"}
-          onSuccess={handleReviewSuccess}
-        />
-      )}
-    </div>
-  );
-}
-}
-          onSuccess={handleReviewSuccess}
-        />
-      )}
-    </div>
-  );
-}

@@ -468,9 +468,3 @@ export default function BusinessJobsPage() {
     </div>
   );
 }
-/div>
-        </dialog>
-      ))}
-    </div>
-  );
-}
