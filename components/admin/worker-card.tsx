@@ -39,15 +39,15 @@ function mapKycStatus(
 ): "unverified" | "pending" | "verified" | "rejected" {
   switch (status) {
     case "approved":
-      return "verified";
+      return "verified" as const;
     case "in_review":
     case "pending":
-      return "pending";
+      return "pending" as const;
     case "rejected":
-      return "rejected";
+      return "rejected" as const;
     case null:
     default:
-      return "unverified";
+      return "unverified" as const;
   }
 }
 

@@ -221,8 +221,9 @@ async function processWebhook(
     }
 
     if (payload.paymentMethod) {
+      const existingMetadata = (transaction.metadata || {}) as Record<string, unknown>;
       updateData.metadata = {
-        ...(transaction.metadata || {}),
+        ...existingMetadata,
         payment_method: payload.paymentMethod,
         payment_channel: payload.paymentChannel,
       };
