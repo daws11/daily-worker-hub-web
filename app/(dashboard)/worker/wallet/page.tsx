@@ -418,18 +418,18 @@ export default function WorkerWalletPage() {
   const hasBankAccounts = bankAccounts.length > 0;
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-4 md:space-y-6 max-w-7xl mx-auto p-4 md:p-6 pb-24 md:pb-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">{t("wallet.title")}</h1>
-        <p className="text-muted-foreground">
+      <div className="mb-4 md:mb-6">
+        <h1 className="text-xl md:text-2xl font-bold">{t("wallet.title")}</h1>
+        <p className="text-sm md:text-base text-muted-foreground">
           {t("wallet.transactionHistory")}
         </p>
       </div>
 
       {/* Wallet Balance Card */}
-      <Card className="mb-6">
-        <CardHeader>
+      <Card className="mb-4 md:mb-6">
+        <CardHeader className="p-4 md:p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-green-100 rounded-full">
@@ -474,13 +474,13 @@ export default function WorkerWalletPage() {
       </Card>
 
       {/* Withdrawal Form */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      <Card className="mb-4 md:mb-6">
+        <CardHeader className="p-4 md:p-6">
+          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
             <ArrowDownLeft className="h-5 w-5" />
             {t("wallet.withdrawFunds")}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm">
             {hasBankAccounts
               ? locale === "id"
                 ? "Tarik saldo ke rekening bank Anda (minimal Rp 100.000)"
@@ -490,7 +490,7 @@ export default function WorkerWalletPage() {
                 : "Please add a bank account first to withdraw funds"}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
           {!hasBankAccounts ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
@@ -617,7 +617,7 @@ export default function WorkerWalletPage() {
                   (walletBalance &&
                     Number(withdrawalAmount) > walletBalance.balance)
                 }
-                className="w-full"
+                className="w-full min-h-[44px] touch-manipulation"
               >
                 {isProcessingPayout ? (
                   <>
@@ -638,7 +638,7 @@ export default function WorkerWalletPage() {
 
       {/* Payout History */}
       <Card>
-        <CardHeader>
+        <CardHeader className="p-4 md:p-6">
           <CardTitle>{t("wallet.withdrawalHistory")}</CardTitle>
           <CardDescription>
             {locale === "id"
@@ -646,7 +646,7 @@ export default function WorkerWalletPage() {
               : "List of all your withdrawal requests"}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
           {isLoadingPayouts ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -757,5 +757,13 @@ export default function WorkerWalletPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+>
+  );
+}
+;
+}
+v>
   );
 }

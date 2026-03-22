@@ -350,15 +350,15 @@ export default function BusinessWalletPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
             {isLoadingWallet ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3 md:space-y-4">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold text-blue-600">
+                  <span className="text-3xl md:text-4xl font-bold text-blue-600">
                     {walletBalance
                       ? formatCurrency(walletBalance.balance)
                       : formatCurrency(0)}
@@ -378,8 +378,8 @@ export default function BusinessWalletPage() {
         </Card>
 
         {/* Top-up Form */}
-        <Card className="mb-6">
-          <CardHeader>
+        <Card className="mb-4 md:mb-6">
+          <CardHeader className="p-4 md:p-6">
             <CardTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
               {t("wallet.topUp")}
@@ -390,7 +390,7 @@ export default function BusinessWalletPage() {
                 : "Top up wallet balance using QRIS (min. Rp 500.000)"}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
             <form onSubmit={handleTopUp} className="space-y-4">
               <div className="grid w-full items-center gap-1.5">
                 <Label htmlFor="amount">{t("wallet.topUpAmount")} (Rp)</Label>
@@ -477,7 +477,7 @@ export default function BusinessWalletPage() {
 
         {/* Transaction History */}
         <Card>
-          <CardHeader>
+          <CardHeader className="p-4 md:p-6">
             <CardTitle>{t("wallet.transactionHistory")}</CardTitle>
             <CardDescription>
               {locale === "id"
@@ -485,7 +485,7 @@ export default function BusinessWalletPage() {
                 : "List of all your wallet top up transactions"}
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 md:p-6 pt-0 md:pt-0">
             {isLoadingTransactions ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />

@@ -285,17 +285,17 @@ export default function WorkerEarningsPage() {
         )}
 
         {/* Statistics Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 md:gap-4 grid-cols-2 lg:grid-cols-4">
           {/* Total Earnings */}
           <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-blue-100">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
+              <CardTitle className="text-xs md:text-sm font-medium text-blue-100">
                 Total Penghasilan
               </CardTitle>
               <Wallet className="h-4 w-4 text-blue-100" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
+            <CardContent className="p-4 md:p-6 pt-0">
+              <div className="text-xl md:text-2xl font-bold">
                 {formatPrice(totalEarnings)}
               </div>
               <p className="text-xs text-blue-100 mt-1">
@@ -306,14 +306,14 @@ export default function WorkerEarningsPage() {
 
           {/* Pending Earnings */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
+              <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
                 Menunggu Pembayaran
               </CardTitle>
               <Clock className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">
+            <CardContent className="p-4 md:p-6 pt-0">
+              <div className="text-xl md:text-2xl font-bold text-yellow-600">
                 {formatPrice(pendingEarnings)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -324,14 +324,14 @@ export default function WorkerEarningsPage() {
 
           {/* Completed Payments */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
+              <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
                 Pembayaran Selesai
               </CardTitle>
               <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+            <CardContent className="p-4 md:p-6 pt-0">
+              <div className="text-xl md:text-2xl font-bold text-green-600">
                 {completedPayments}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -342,14 +342,14 @@ export default function WorkerEarningsPage() {
 
           {/* Total Earnings Count */}
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-4 md:p-6">
+              <CardTitle className="text-xs md:text-sm font-medium text-muted-foreground">
                 Total Transaksi
               </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
+            <CardContent className="p-4 md:p-6 pt-0">
+              <div className="text-xl md:text-2xl font-bold text-blue-600">
                 {earnings.length}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -362,7 +362,7 @@ export default function WorkerEarningsPage() {
         {/* Loading State */}
         {isLoading && !error && (
           <Card>
-            <CardContent className="py-12 flex flex-col items-center justify-center text-center">
+            <CardContent className="py-12 px-4 flex flex-col items-center justify-center text-center">
               <Loader2 className="h-8 w-8 text-blue-600 mb-4 animate-spin" />
               <p className="text-muted-foreground">
                 Memuat data penghasilan...
@@ -374,7 +374,7 @@ export default function WorkerEarningsPage() {
         {/* Empty State */}
         {!isLoading && !error && !hasEarnings && (
           <Card>
-            <CardContent className="py-12 flex flex-col items-center justify-center text-center border-2 border-dashed border-gray-300">
+            <CardContent className="py-12 px-4 flex flex-col items-center justify-center text-center border-2 border-dashed border-gray-300">
               <DollarSign className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">
                 Belum Ada Penghasilan
@@ -390,18 +390,18 @@ export default function WorkerEarningsPage() {
         {/* Recent Payments */}
         {!isLoading && !error && recentPayments.length > 0 && (
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                 <TrendingUp className="h-5 w-5 text-green-600" />
                 Pembayaran Terbaru
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 md:p-6 pt-0">
               <div className="space-y-3">
                 {recentPayments.map((entry) => (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between p-3 bg-muted rounded-lg border"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 md:p-4 bg-muted rounded-lg border gap-3"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">
@@ -432,7 +432,7 @@ export default function WorkerEarningsPage() {
 
         {/* Earnings List by Status */}
         {!isLoading && !error && hasEarnings && (
-          <div className="space-y-8">
+          <div className="space-y-4 md:space-y-6">
             {(
               Object.keys(groupedEarnings) as Array<keyof EarningsStatusGroup>
             ).map((status) => {
@@ -446,9 +446,9 @@ export default function WorkerEarningsPage() {
 
               return (
                 <Card key={status}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">
+                  <CardHeader className="p-4 md:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <CardTitle className="text-base md:text-lg">
                         {statusGroupLabels[status]}
                       </CardTitle>
                       <Badge className={statusColors[status]}>
@@ -457,17 +457,17 @@ export default function WorkerEarningsPage() {
                       </Badge>
                     </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-4 md:p-6 pt-0">
                     <div className="space-y-3">
                       {groupEarnings.map((entry) => (
                         <div
                           key={entry.id}
-                          className="flex items-center justify-between p-4 bg-muted rounded-lg border hover:bg-background transition-colors"
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-3 md:p-4 bg-muted rounded-lg border hover:bg-background transition-colors gap-3"
                         >
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start gap-3">
                               <div
-                                className={`p-2 rounded-lg ${
+                                className={`p-2 rounded-lg shrink-0 ${
                                   status === "completed"
                                     ? "bg-green-500/10"
                                     : status === "processing"
@@ -501,9 +501,9 @@ export default function WorkerEarningsPage() {
                               </div>
                             </div>
                           </div>
-                          <div className="text-right ml-4">
+                          <div className="text-right sm:ml-4 flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2">
                             <p
-                              className={`font-bold ${
+                              className={`font-bold text-sm md:text-base ${
                                 status === "completed"
                                   ? "text-green-600"
                                   : status === "processing"

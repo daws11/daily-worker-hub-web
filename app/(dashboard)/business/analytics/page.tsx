@@ -416,11 +416,11 @@ export default function BusinessAnalyticsPage() {
             </CardHeader>
             <CardContent>
               {isLoadingPosts ? (
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               ) : (
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-purple-600" />
-                  <span className="text-2xl font-bold">
+                  <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-purple-600" />
+                  <span className="text-xl md:text-2xl font-bold">
                     {formatNumber(
                       (stats?.totalLikes || 0) +
                         (stats?.totalComments || 0) +
@@ -444,11 +444,11 @@ export default function BusinessAnalyticsPage() {
             </CardHeader>
             <CardContent>
               {isLoadingPosts ? (
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               ) : (
                 <div className="flex items-center gap-2">
-                  <Share2 className="h-5 w-5 text-orange-600" />
-                  <span className="text-2xl font-bold">
+                  <Share2 className="h-4 w-4 md:h-5 md:w-5 text-orange-600" />
+                  <span className="text-xl md:text-2xl font-bold">
                     {stats?.avgEngagementRate
                       ? stats.avgEngagementRate.toFixed(2)
                       : "0.00"}
@@ -464,64 +464,64 @@ export default function BusinessAnalyticsPage() {
         </div>
 
         {/* Detailed Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Likes</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-xs md:text-sm text-muted-foreground">Total Likes</p>
+                  <p className="text-xl md:text-2xl font-bold text-blue-600">
                     {isLoadingPosts ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       formatNumber(stats?.totalLikes || 0)
                     )}
                   </p>
                 </div>
-                <div className="p-3 bg-blue-100 rounded-full">
-                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                <div className="p-2 md:p-3 bg-blue-100 rounded-full">
+                  <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-xs md:text-sm text-muted-foreground">
                     Total Komentar
                   </p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-xl md:text-2xl font-bold text-green-600">
                     {isLoadingPosts ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       formatNumber(stats?.totalComments || 0)
                     )}
                   </p>
                 </div>
-                <div className="p-3 bg-green-100 rounded-full">
-                  <MessageCircle className="h-5 w-5 text-green-600" />
+                <div className="p-2 md:p-3 bg-green-100 rounded-full">
+                  <MessageCircle className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
+            <CardContent className="p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Shares</p>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-xs md:text-sm text-muted-foreground">Total Shares</p>
+                  <p className="text-xl md:text-2xl font-bold text-purple-600">
                     {isLoadingPosts ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
                       formatNumber(stats?.totalShares || 0)
                     )}
                   </p>
                 </div>
-                <div className="p-3 bg-purple-100 rounded-full">
-                  <Share2 className="h-5 w-5 text-purple-600" />
+                <div className="p-2 md:p-3 bg-purple-100 rounded-full">
+                  <Share2 className="h-4 w-4 md:h-5 md:w-5 text-purple-600" />
                 </div>
               </div>
             </CardContent>
@@ -530,13 +530,13 @@ export default function BusinessAnalyticsPage() {
 
         {/* Posts Performance Table */}
         <Card>
-          <CardHeader>
-            <CardTitle>Performa Postingan</CardTitle>
-            <CardDescription>
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="text-base md:text-lg">Performa Postingan</CardTitle>
+            <CardDescription className="text-sm">
               Detail performa setiap postingan lowongan kerja
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 md:p-6 pt-0">
             {isLoadingPosts ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -550,18 +550,18 @@ export default function BusinessAnalyticsPage() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto -mx-4 md:mx-0 px-4 md:px-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Platform</TableHead>
-                      <TableHead>Tanggal Posting</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Dilihat</TableHead>
-                      <TableHead>Likes</TableHead>
-                      <TableHead>Komentar</TableHead>
-                      <TableHead>Shares</TableHead>
-                      <TableHead>Link</TableHead>
+                      <TableHead className="text-xs md:text-sm">Platform</TableHead>
+                      <TableHead className="text-xs md:text-sm">Tanggal</TableHead>
+                      <TableHead className="text-xs md:text-sm">Status</TableHead>
+                      <TableHead className="text-xs md:text-sm">Dilihat</TableHead>
+                      <TableHead className="text-xs md:text-sm">Likes</TableHead>
+                      <TableHead className="text-xs md:text-sm">Komentar</TableHead>
+                      <TableHead className="text-xs md:text-sm">Shares</TableHead>
+                      <TableHead className="text-xs md:text-sm">Link</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -574,42 +574,42 @@ export default function BusinessAnalyticsPage() {
                         <TableRow key={post.id}>
                           <TableCell>
                             <div className="flex items-center gap-2">
-                              <span className="text-lg">
+                              <span className="text-base md:text-lg">
                                 {getPlatformIcon(
                                   post.social_platforms?.platform_type || "",
                                 )}
                               </span>
-                              <span className="font-medium capitalize">
+                              <span className="font-medium capitalize text-xs md:text-sm">
                                 {post.social_platforms?.platform_name || "-"}
                               </span>
                             </div>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-xs md:text-sm">
                             {post.posted_at
                               ? formatDate(post.posted_at)
                               : formatDate(post.created_at)}
                           </TableCell>
                           <TableCell>
                             <Badge
-                              className={statusInfo.className}
+                              className={`${statusInfo.className} text-xs`}
                               variant={statusInfo.variant}
                             >
                               <StatusIcon className="h-3 w-3 mr-1" />
                               {statusInfo.label}
                             </Badge>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-xs md:text-sm">
                             {formatNumber(
                               metrics.views || metrics.impressions || 0,
                             )}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-xs md:text-sm">
                             {formatNumber(metrics.likes || 0)}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-xs md:text-sm">
                             {formatNumber(metrics.comments || 0)}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-xs md:text-sm">
                             {formatNumber(metrics.shares || 0)}
                           </TableCell>
                           <TableCell>
@@ -618,12 +618,12 @@ export default function BusinessAnalyticsPage() {
                                 href={post.platform_post_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                                className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-xs md:text-sm touch-manipulation min-h-[44px] min-w-[44px]"
                               >
                                 Lihat <ExternalLink className="h-3 w-3" />
                               </a>
                             ) : (
-                              <span className="text-muted-foreground">-</span>
+                              <span className="text-muted-foreground text-xs md:text-sm">-</span>
                             )}
                           </TableCell>
                         </TableRow>
@@ -637,5 +637,13 @@ export default function BusinessAnalyticsPage() {
         </Card>
       </div>
     </div>
+  );
+}
+</div>
+    </div>
+  );
+}
+}
+>
   );
 }
