@@ -4,12 +4,13 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/app/providers/auth-provider";
 import {
   Home,
   Briefcase,
   MessageSquare,
-  User,
 } from "lucide-react";
+import { MobileProfileMenu } from "./mobile-profile-menu";
 
 interface MobileNavItem {
   title: string;
@@ -33,11 +34,6 @@ const businessMobileNav: MobileNavItem[] = [
     href: "/business/messages",
     icon: MessageSquare,
   },
-  {
-    title: "Profile",
-    href: "/business/settings",
-    icon: User,
-  },
 ];
 
 const workerMobileNav: MobileNavItem[] = [
@@ -56,11 +52,6 @@ const workerMobileNav: MobileNavItem[] = [
     href: "/worker/messages",
     icon: MessageSquare,
   },
-  {
-    title: "Profile",
-    href: "/worker/settings",
-    icon: User,
-  },
 ];
 
 interface MobileBottomNavProps {
@@ -69,7 +60,11 @@ interface MobileBottomNavProps {
 
 export function MobileBottomNav({ role }: MobileBottomNavProps) {
   const pathname = usePathname();
-  const items = role === "business" ? businessMobileNav : workerMobileNav;
+  const { user } = useAuth();
+  
+  // Determine user role from metadata or default
+  const userRole = role || (user?.user_metadata?.role as string) || "worker";
+  const items = userRole === "business" ? businessMobileNav : workerMobileNav;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border md:hidden z-50">
@@ -96,6 +91,9 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
             </Link>
           );
         })}
+        
+        {/* Profile with Menu */}
+        <MobileProfileMenu role={userRole} />
       </div>
     </nav>
   );
