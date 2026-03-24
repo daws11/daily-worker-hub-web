@@ -186,6 +186,30 @@ export async function completeBusinessOnboarding(
       return { success: false, error: "Failed to create business profile" };
     }
 
+    // Get the created business ID to link wallet
+    const { data: createdBusiness, error: fetchBusinessError } = await supabase
+      .from("businesses")
+      .select("id")
+      .eq("user_id", data.userId)
+      .single();
+
+    if (fetchBusinessError || !createdBusiness) {
+      console.error("Error fetching created business:", fetchBusinessError);
+      return { success: false, error: "Failed to retrieve created business" };
+    }
+
+    // Update wallet with business_id
+    const { error: walletError } = await (supabase as any)
+      .from("wallets")
+      .update({ business_id: createdBusiness.id })
+      .eq("user_id", data.userId)
+      .is("business_id", null);
+
+    if (walletError) {
+      console.error("Error updating wallet with business_id:", walletError);
+      // Don't fail the whole operation for this
+    }
+
     // Update user record with phone if provided
     if (data.phone) {
       const { error: updateUserError } = await supabase

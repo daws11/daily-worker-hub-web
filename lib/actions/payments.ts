@@ -119,7 +119,7 @@ export async function initializeQrisPayment(
     const newTransaction: PaymentTransactionInsert = {
       business_id: businessId,
       amount: totalAmount,
-      status: "pending",
+      status: "pending_review",
       payment_provider: provider,
       provider_payment_id: null,
       payment_url: null,

@@ -100,15 +100,17 @@ export default function BusinessWalletPage() {
         .single();
 
       if (error || !data) {
-        toast.error(t("errors.loadFailed"));
+        toast.error("Failed to load business data");
+        setIsLoadingBusiness(false);
         return;
       }
 
       setBusiness(data);
+      setIsLoadingBusiness(false);
     }
 
     fetchBusiness();
-  }, [user, router, t]);
+  }, [user, router]);
 
   // Fetch wallet balance
   useEffect(() => {
@@ -120,7 +122,7 @@ export default function BusinessWalletPage() {
         const result = await getBusinessWalletBalance(business.id);
 
         if (!result.success || !result.data) {
-          toast.error(result.error || t("errors.loadFailed"));
+          toast.error(result.error || "Failed to load wallet balance");
           return;
         }
 
@@ -131,7 +133,7 @@ export default function BusinessWalletPage() {
     }
 
     fetchWalletBalance();
-  }, [business, t]);
+  }, [business]);
 
   // Fetch payment history
   useEffect(() => {
@@ -143,7 +145,7 @@ export default function BusinessWalletPage() {
         const result = await getBusinessPaymentHistory(business.id);
 
         if (!result.success || !result.data) {
-          toast.error(result.error || t("errors.loadFailed"));
+          toast.error(result.error || "Failed to load payment history");
           return;
         }
 
@@ -154,7 +156,7 @@ export default function BusinessWalletPage() {
     }
 
     fetchTransactions();
-  }, [business, t]);
+  }, [business]);
 
   // Calculate fee when amount changes
   useEffect(() => {

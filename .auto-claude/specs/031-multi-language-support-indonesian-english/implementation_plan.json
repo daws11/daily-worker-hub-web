@@ -2,8 +2,8 @@
   "feature": "Multi-Language Support (Indonesian & English)",
   "description": "# Multi-Language Support (Indonesian & English)\n\nFull localization support for Indonesian and English languages. Users can switch languages, and all UI elements, notifications, and content are translated. Includes RTL support for future language expansion.\n\n## Rationale\nBali's hospitality workforce includes both local and international workers. Multi-language support makes the platform accessible to all users and provides a competitive advantage over monolingual competitors.\n\n## User Stories\n- As a local worker, I want to use the app in Indonesian so that I can understand everything\n- As an expat business owner, I want to use the app in English so that I can navigate easily\n- As a user, I want to switch languages so that I can use whichever is more comfortable\n\n## Acceptance Criteria\n- [ ] Users can switch between Indonesian and English\n- [ ] All UI elements are translated\n- [ ] Notifications are sent in user's preferred language\n- [ ] Job postings maintain original language or can be auto-translated\n- [ ] Language preference is saved per user\n- [ ] Translation system supports adding more languages\n- [ ] Content is culturally appropriate for each language\n",
   "created_at": "2026-02-21T21:45:13.417Z",
-  "updated_at": "2026-02-24T17:39:13.956Z",
-  "status": "in_progress",
+  "updated_at": "2026-03-24T20:08:35.538Z",
+  "status": "human_review",
   "workflow_type": "feature",
   "workflow_rationale": "This is a feature implementation that requires building new i18n infrastructure from scratch. The phases follow dependency order: database schema first, then i18n infrastructure, then providers, then components, then translation of existing content, and finally integration.",
   "phases": [
@@ -908,8 +908,9 @@
     }
   },
   "qa_signoff": null,
-  "planStatus": "in_progress",
-  "xstateState": "backlog",
-  "executionPhase": "coding",
-  "last_updated": "2026-02-24T17:44:49.880873+00:00"
+  "planStatus": "review",
+  "xstateState": "human_review",
+  "executionPhase": "complete",
+  "last_updated": "2026-02-24T17:44:49.880873+00:00",
+  "reviewReason": "stopped"
 }

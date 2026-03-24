@@ -25,6 +25,7 @@
     "previous": "Sebelumnya",
     "continue": "Lanjutkan",
     "view": "Lihat",
+    "viewAll": "Lihat Semua",
     "details": "Detail",
     "showMore": "Tampilkan Lebih Banyak",
     "showLess": "Tampilkan Lebih Sedikit",
@@ -73,7 +74,12 @@
     "balance": "Saldo",
     "amount": "Jumlah",
     "available": "Tersedia",
-    "unavailable": "Tidak Tersedia"
+    "unavailable": "Tidak Tersedia",
+    "business": "Bisnis",
+    "job": "Pekerjaan",
+    "paid": "Dibayar",
+    "retry": "Coba Lagi",
+    "welcome": "Selamat Datang"
   },
   "auth": {
     "login": "Masuk",
@@ -118,7 +124,11 @@
     "emailRequired": "Email diperlukan",
     "passwordRequired": "Kata sandi diperlukan",
     "nameRequired": "Nama lengkap diperlukan",
-    "accountTypeRequired": "Tipe akun diperlukan"
+    "accountTypeRequired": "Tipe akun diperlukan",
+    "continueWithGoogle": "Lanjutkan dengan Google",
+    "forgotPassword": "Lupa Kata Sandi",
+    "or": "atau",
+    "registrationSuccess": "Pendaftaran berhasil!"
   },
   "navigation": {
     "dashboard": "Dasbor",
@@ -337,7 +347,14 @@
     "checkInFailed": "Check-in gagal: {message}",
     "checkOutFailed": "Check-out gagal: {message}",
     "locationVerificationPassed": "Lokasi terverifikasi",
-    "locationVerificationFailed": "Lokasi tidak dalam rentang yang diizinkan"
+    "locationVerificationFailed": "Lokasi tidak dalam rentang yang diizinkan",
+    "enableLocationDescription": "Aktifkan lokasi untuk memverifikasi kehadiran Anda",
+    "gpsNotAvailable": "GPS tidak tersedia di perangkat Anda",
+    "history": "Riwayat",
+    "noScheduleToday": "Tidak ada jadwal hari ini",
+    "subtitle": "Lacak kehadiran kerja Anda",
+    "todaysSchedule": "Jadwal Hari Ini",
+    "working": "Bekerja"
   },
   "wallet": {
     "title": "Dompet",
@@ -684,5 +701,13 @@
     "phase2": "Phase 2: shadcn/ui & Authentication",
     "phase3": "Phase 3: Business Portal",
     "phase4": "Phase 4: Worker Portal"
+  },
+  "dashboard": {
+    "upcomingBookings": "Booking Akan Datang",
+    "noUpcomingBookings": "Tidak ada booking yang akan datang",
+    "findJobsHint": "Cari lowongan untuk memulai",
+    "createJobHint": "Buat lowongan untuk memulai",
+    "newJobOpportunities": "Lowongan baru tersedia!",
+    "readyToFindWorkers": "Siap mencari pekerja?"
   }
 }

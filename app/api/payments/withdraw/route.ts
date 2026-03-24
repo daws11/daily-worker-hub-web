@@ -310,11 +310,12 @@ async function handlePOST(request: NextRequest) {
       externalId,
     });
 
-    // Deduct balance from wallet (hold until completed)
+    // Deduct available_balance from wallet (hold until completed)
+    // available_balance represents funds that are held/reserved for pending withdrawals
     const { error: updateWalletError } = await (supabase as any)
       .from("wallets")
       .update({
-        balance: wallet.balance - amount,
+        available_balance: wallet.available_balance - amount,
         updated_at: new Date().toISOString(),
       })
       .eq("id", wallet.id);

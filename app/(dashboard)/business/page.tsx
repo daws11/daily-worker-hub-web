@@ -138,15 +138,46 @@ export default function BusinessDashboardPage() {
           .select("*", { count: "exact", head: true })
           .eq("business_id", business.id);
 
-        // Calculate total spent
-        // @ts-expect-error Supabase type instantiation too deep
-        const { data: wtData } = await supabase.from("wallet_transactions").select("amount").eq("user_id", user.id).eq("type", "debit");
-        const transactions = wtData as { amount: number }[] | null;
-        const totalSpent = transactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
+        // Calculate total spent - first get business wallet
+        if (!business) return;
+        
+        const { data: businessWallet } = await supabase
+          .from("wallets")
+          .select("id")
+          .eq("business_id", business.id)
+          .maybeSingle();
 
+        if (!businessWallet) {
+          setStats({
+            activeJobs,
+            workersApplied: activeJobs * 3,
+            pendingReviews: reviewCount || 0,
+            totalSpent: 0,
+          });
+          return;
+        }
+
+        const walletId = businessWallet.id;
+        const { data: wtData, error: wtError } = await supabase
+          .from("wallet_transactions")
+          .select("amount")
+          .eq("wallet_id", walletId)
+          .eq("type", "debit");
+        if (wtError) {
+          console.error("Error fetching wallet transactions:", wtError);
+          setStats({
+            activeJobs,
+            workersApplied: activeJobs * 3,
+            pendingReviews: reviewCount || 0,
+            totalSpent: 0,
+          });
+          return;
+        }
+        const transactions = wtData as { amount: number }[] | null;
+        const totalSpent = transactions?.reduce((sum, t) => sum + (t.amount || 1), 0) || 0;
         setStats({
           activeJobs,
-          workersApplied: activeJobs * 3, // Estimate
+          workersApplied: activeJobs * 3,
           pendingReviews: reviewCount || 0,
           totalSpent,
         });
