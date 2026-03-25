@@ -516,7 +516,7 @@ export interface ExportBookingRow {
   worker_phone: string;
   business_name: string;
   job_title: string;
-  work_date: string;
+  start_date: string;
   status: string;
   total_amount: number;
   platform_fee: number;
@@ -542,7 +542,7 @@ export async function exportBookingsCsv(
       .select(
         `
         id,
-        work_date,
+        start_date,
         status,
         total_amount,
         platform_fee,
@@ -594,7 +594,7 @@ export async function exportBookingsCsv(
       b.worker?.phone || "",
       b.business?.name || "",
       b.job?.title || "",
-      b.work_date || "",
+      b.start_date || "",
       b.status || "",
       b.total_amount || 0,
       b.platform_fee || 0,
