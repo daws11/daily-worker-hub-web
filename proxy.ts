@@ -183,6 +183,55 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  // Check if user has completed onboarding for their role
+  async function checkOnboardingCompleted(
+    supabaseClient: ReturnType<typeof createServerClient>,
+    userId: string,
+    role: string
+  ): Promise<boolean> {
+    if (role === "business") {
+      const { data: business } = await supabaseClient
+        .from("businesses")
+        .select("id")
+        .eq("user_id", userId)
+        .single();
+      return !!business;
+    }
+
+    if (role === "worker") {
+      const { data: worker } = await supabaseClient
+        .from("workers")
+        .select("id")
+        .eq("user_id", userId)
+        .single();
+      return !!worker;
+    }
+
+    return true; // Admin doesn't need onboarding
+  }
+
+  // Protect /worker/* routes - check if worker has completed onboarding
+  if (isWorkerRoute && user) {
+    const userRole = user.user_metadata?.role;
+    if (userRole === "worker") {
+      const hasCompletedOnboarding = await checkOnboardingCompleted(supabase, user.id, "worker");
+      if (!hasCompletedOnboarding) {
+        return NextResponse.redirect(new URL("/onboarding", origin));
+      }
+    }
+  }
+
+  // Protect /business/* routes - check if business has completed onboarding
+  if (isBusinessRoute && user) {
+    const userRole = user.user_metadata?.role;
+    if (userRole === "business") {
+      const hasCompletedOnboarding = await checkOnboardingCompleted(supabase, user.id, "business");
+      if (!hasCompletedOnboarding) {
+        return NextResponse.redirect(new URL("/onboarding", origin));
+      }
+    }
+  }
+
   // Redirect authenticated users away from login/register pages to appropriate dashboard
   if (
     (pathname === "/login" || pathname === "/register") &&
@@ -191,7 +240,7 @@ export async function proxy(request: NextRequest) {
     if (user.user_metadata?.role === "worker") {
       return NextResponse.redirect(new URL("/worker/jobs", origin));
     } else if (user.user_metadata?.role === "business") {
-      return NextResponse.redirect(new URL("/business/jobs", origin));
+      return NextResponse.redirect(new URL("/onboarding", origin));
     } else if (user.user_metadata?.role === "admin") {
       return NextResponse.redirect(new URL("/admin", origin));
     }

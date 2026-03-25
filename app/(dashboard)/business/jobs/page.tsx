@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { getBusinessJobs } from "@/lib/supabase/queries/jobs";
 import { getJobBookings } from "@/lib/supabase/queries/bookings";
+import { supabase } from "@/lib/supabase/client";
 import type { JobsRow } from "@/lib/supabase/queries/jobs";
 import type { JobBookingWithDetails } from "@/lib/supabase/queries/bookings";
 import dynamic from "next/dynamic";
@@ -68,17 +69,20 @@ export default function BusinessJobsPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCheckingProfile, setIsCheckingProfile] = useState(true);
+  const [hasBusinessProfile, setHasBusinessProfile] = useState(false);
+  const [businessId, setBusinessId] = useState<string | null>(null);
 
   // Fetch business jobs with attendance data
   const fetchJobsWithAttendance = useCallback(async () => {
-    if (!user?.id) return;
+    if (!businessId) return;
 
     setLoading(true);
     setError(null);
 
     try {
       // Fetch all jobs for the business
-      const businessJobs = await getBusinessJobs(user.id);
+      const businessJobs = await getBusinessJobs(businessId);
 
       // Calculate stats
       const totalJobs = businessJobs.length;
@@ -126,7 +130,7 @@ export default function BusinessJobsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, t]);
+  }, [businessId, t]);
 
   // Handle QR code refresh
   const handleQRRefresh = useCallback(() => {
@@ -157,10 +161,53 @@ export default function BusinessJobsPage() {
     );
   };
 
+  // Check if business has completed onboarding
+  useEffect(() => {
+    async function checkBusinessProfile() {
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      try {
+        const { data: business } = await supabase
+          .from("businesses")
+          .select("id")
+          .eq("user_id", user.id)
+          .single();
+
+        if (!business) {
+          router.push("/onboarding");
+          return;
+        }
+        setBusinessId(business.id);
+        setHasBusinessProfile(true);
+      } catch {
+        router.push("/onboarding");
+        return;
+      } finally {
+        setIsCheckingProfile(false);
+      }
+    }
+
+    checkBusinessProfile();
+  }, [user, router, supabase]);
+
   // Fetch jobs on mount
   useEffect(() => {
-    fetchJobsWithAttendance();
-  }, [fetchJobsWithAttendance]);
+    if (hasBusinessProfile) {
+      fetchJobsWithAttendance();
+    }
+  }, [hasBusinessProfile, fetchJobsWithAttendance]);
+
+  // Show loading state while checking profile
+  if (isCheckingProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin w-8 h-8 text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -290,7 +337,7 @@ export default function BusinessJobsPage() {
             >
               {/* Job Header */}
               <div className="p-4 px-6 border-b border-border bg-muted/50">
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold mb-1">{job.title}</h3>
                     {job.address && (
@@ -300,19 +347,28 @@ export default function BusinessJobsPage() {
                       </div>
                     )}
                   </div>
-                  <button
-                    onClick={() => {
-                      // Open QR code dialog
-                      const dialog = document.getElementById(
-                        `qr-dialog-${job.id}`,
-                      ) as HTMLDialogElement;
-                      dialog?.showModal();
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary text-white border-none rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-primary/90"
-                  >
-                    <QrCode className="w-4 h-4" />
-                    {t("business.qrCodeButton")}
-                  </button>
+                  <div className="flex gap-2">
+                    <a
+                      href={`/business/jobs/${job.id}/applicants`}
+                      className="flex items-center gap-2 px-4 py-2 bg-muted text-foreground border border-border rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-muted/80"
+                    >
+                      <Users className="w-4 h-4" />
+                      {locale === "id" ? "Pelamar" : "Applicants"}
+                    </a>
+                    <button
+                      onClick={() => {
+                        // Open QR code dialog
+                        const dialog = document.getElementById(
+                          `qr-dialog-${job.id}`,
+                        ) as HTMLDialogElement;
+                        dialog?.showModal();
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-primary text-white border-none rounded-md text-sm font-medium cursor-pointer transition-colors hover:bg-primary/90"
+                    >
+                      <QrCode className="w-4 h-4" />
+                      {t("business.qrCodeButton")}
+                    </button>
+                  </div>
                 </div>
                 {job.stats && job.stats.total > 0 && (
                   <div className="flex gap-6 mt-3">

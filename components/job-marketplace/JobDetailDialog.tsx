@@ -75,8 +75,8 @@ export function JobDetailDialog({
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Building2 className="h-4 w-4" />
-              <span>{job.business.name}</span>
-              {job.business.is_verified && (
+              <span>{job.business?.name || "Business"}</span>
+              {job.business?.is_verified && (
                 <CheckCircle2 className="h-4 w-4 text-blue-500" />
               )}
             </div>
@@ -86,7 +86,7 @@ export function JobDetailDialog({
         <div className="space-y-6">
           {/* Category */}
           <div className="flex items-center gap-2">
-            <Badge variant="secondary">{job.category.name}</Badge>
+            <Badge variant="secondary">{job.category?.name || "General"}</Badge>
           </div>
 
           {/* Wage */}
@@ -167,30 +167,30 @@ export function JobDetailDialog({
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Building2 className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">{job.business.name}</span>
-                {job.business.is_verified && (
+                <span className="text-sm font-medium">{job.business?.name || "Business"}</span>
+                {job.business?.is_verified && (
                   <CheckCircle2 className="h-4 w-4 text-blue-500" />
                 )}
               </div>
-              {job.business.description && (
+              {job.business?.description && (
                 <p className="text-sm text-muted-foreground">
                   {job.business.description}
                 </p>
               )}
               <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                {job.business.email && (
+                {job.business?.email && (
                   <div className="flex items-center gap-1">
                     <Mail className="h-4 w-4" />
                     <span>{job.business.email}</span>
                   </div>
                 )}
-                {job.business.phone && (
+                {job.business?.phone && (
                   <div className="flex items-center gap-1">
                     <Phone className="h-4 w-4" />
                     <span>{job.business.phone}</span>
                   </div>
                 )}
-                {job.business.website && (
+                {job.business?.website && (
                   <div className="flex items-center gap-1">
                     <Globe className="h-4 w-4" />
                     <a

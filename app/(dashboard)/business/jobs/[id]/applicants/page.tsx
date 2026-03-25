@@ -39,7 +39,7 @@ import {
 
 type ApplicationStatus =
   | "pending"
-  | "reviewed"
+  | "shortlisted"
   | "accepted"
   | "rejected"
   | "withdrawn";
@@ -238,7 +238,7 @@ export default function BusinessApplicantsPage() {
 
   const handleStatusUpdate = async (
     applicationId: string,
-    newStatus: "reviewed" | "accepted" | "rejected",
+    newStatus: "shortlisted" | "accepted" | "rejected",
   ) => {
     if (!user?.id) return;
 
@@ -331,7 +331,7 @@ export default function BusinessApplicantsPage() {
     () => ({
       total: applications.length,
       pending: applications.filter((a) => a.status === "pending").length,
-      shortlisted: applications.filter((a) => a.status === "reviewed").length,
+      shortlisted: applications.filter((a) => a.status === "shortlisted").length,
       accepted: applications.filter((a) => a.status === "accepted").length,
       rejected: applications.filter((a) => a.status === "rejected").length,
     }),
@@ -524,7 +524,7 @@ export default function BusinessApplicantsPage() {
                 budgetMin={job?.budget_min || 0}
                 budgetMax={job?.budget_max || 0}
                 onShortlist={() =>
-                  handleStatusUpdate(application.id, "reviewed")
+                  handleStatusUpdate(application.id, "shortlisted")
                 }
                 onAccept={() => handleStatusUpdate(application.id, "accepted")}
                 onReject={() => handleStatusUpdate(application.id, "rejected")}

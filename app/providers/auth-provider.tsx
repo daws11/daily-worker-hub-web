@@ -324,16 +324,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       toast.success(t("auth.loginSuccess"));
 
       // Redirect based on database role (not form input)
-      // Workers go to onboarding (which checks if they have a profile)
+      // Workers and businesses go to onboarding (which checks if they have a profile)
       // Use a slightly longer delay to ensure cookies are fully persisted
       if (typeof window !== "undefined") {
         setTimeout(() => {
           const redirectPath =
-            userRole === "worker"
-              ? "/onboarding" // Onboarding page will redirect to /worker/jobs if profile exists
-              : userRole === "business"
-                ? "/business/jobs"
-                : "/admin";
+            userRole === "worker" || userRole === "business"
+              ? "/onboarding" // Onboarding page will redirect based on profile existence
+              : "/admin";
           console.log("[AUTH signIn] Redirecting to:", redirectPath);
           window.location.href = redirectPath;
         }, 800); // Increased delay to 800ms for better cookie persistence

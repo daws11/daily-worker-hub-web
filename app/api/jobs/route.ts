@@ -169,7 +169,7 @@ async function handleGET(request: Request) {
 
     // Build URL with relationships
     const selectParams = [
-      "select=*,business:businesses(id,name,is_verified,address,phone),category:categories(id,name,slug)",
+      "select=*,business:businesses(id,name,is_verified,address,phone,email,description,website),category:categories(id,name,slug)",
     ];
 
     const allParams = [

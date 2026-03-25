@@ -313,19 +313,23 @@ export function ApplyJobModal({
         );
         form.reset();
         setAvailability([]);
+        // Close modal first, then call success callback
         onOpenChange(false);
-        onSuccess?.();
+        // Delay success callback to allow modal to close first
+        setTimeout(() => {
+          onSuccess?.();
+        }, 100);
       } else {
         toast.error(
           result.error || "Gagal melamar pekerjaan. Silakan coba lagi.",
         );
+        setIsSubmitting(false);
       }
     } catch (error) {
       console.error("Error applying for job:", error);
       toast.error(
         "Terjadi kesalahan saat melamar pekerjaan. Silakan coba lagi.",
       );
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -348,7 +352,7 @@ export function ApplyJobModal({
             {job ? (
               <>
                 Anda akan melamar untuk posisi <strong>{job.title}</strong> di{" "}
-                <strong>{job.business.name}</strong>
+                <strong>{job.business?.name || "Business"}</strong>
               </>
             ) : (
               "Lamar pekerjaan yang tersedia"
@@ -368,7 +372,7 @@ export function ApplyJobModal({
                   <div>
                     <h4 className="font-semibold">{job.title}</h4>
                     <p className="text-sm text-muted-foreground">
-                      {job.business.name}
+                      {job.business?.name || "Business"}
                     </p>
                   </div>
                 </div>
@@ -436,13 +440,13 @@ export function ApplyJobModal({
 
             {/* Availability Selector (Optional) */}
             <div className="space-y-2">
-              <FormLabel className="flex items-center gap-2">
+              <Label className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 Ketersediaan Waktu (Opsional)
-              </FormLabel>
-              <FormDescription>
+              </Label>
+              <p className="text-sm text-muted-foreground">
                 Tambahkan waktu ketersediaan Anda untuk bekerja
-              </FormDescription>
+              </p>
               <AvailabilitySelector
                 value={availability}
                 onChange={setAvailability}

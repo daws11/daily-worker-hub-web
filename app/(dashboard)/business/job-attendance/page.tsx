@@ -4,9 +4,11 @@ import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "@/app/providers/auth-provider";
 import { useAttendance } from "@/lib/hooks/use-attendance";
 import { useTranslation } from "@/lib/i18n/hooks";
+import { useRouter } from "next/navigation";
 import { QRCodeGenerator } from "@/components/attendance/qr-code-generator";
 import { getBusinessJobs } from "@/lib/supabase/queries/jobs";
 import { getJobBookings } from "@/lib/supabase/queries/bookings";
+import { supabase } from "@/lib/supabase/client";
 import type { JobsRow } from "@/lib/supabase/queries/jobs";
 import type { JobBookingWithDetails } from "@/lib/supabase/queries/bookings";
 import {
@@ -39,21 +41,24 @@ interface JobWithAttendance extends JobsRow {
 
 export default function BusinessJobAttendancePage() {
   const { user } = useAuth();
+  const router = useRouter();
   const { t, locale } = useTranslation();
   const [jobs, setJobs] = useState<JobWithAttendance[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCheckingProfile, setIsCheckingProfile] = useState(true);
+  const [businessId, setBusinessId] = useState<string | null>(null);
 
   // Fetch business jobs with attendance data
   const fetchJobsWithAttendance = useCallback(async () => {
-    if (!user?.id) return;
+    if (!businessId) return;
 
     setLoading(true);
     setError(null);
 
     try {
       // Fetch active jobs for the business
-      const businessJobs = await getBusinessJobs(user.id);
+      const businessJobs = await getBusinessJobs(businessId);
       const activeJobs = businessJobs.filter(
         (job) => job.status === "open" || job.status === "in_progress",
       );
@@ -86,7 +91,7 @@ export default function BusinessJobAttendancePage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id, t]);
+  }, [businessId, t]);
 
   // Handle QR code refresh
   const handleQRRefresh = useCallback(() => {
@@ -105,10 +110,52 @@ export default function BusinessJobAttendancePage() {
     );
   };
 
-  // Fetch jobs on mount
+  // Check if business has completed onboarding and fetch jobs
   useEffect(() => {
-    fetchJobsWithAttendance();
-  }, [fetchJobsWithAttendance]);
+    async function checkBusinessProfile() {
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      try {
+        const { data: business } = await supabase
+          .from("businesses")
+          .select("id")
+          .eq("user_id", user.id)
+          .single();
+
+        if (!business) {
+          router.push("/onboarding");
+          return;
+        }
+
+        setBusinessId(business.id);
+      } catch {
+        router.push("/onboarding");
+      } finally {
+        setIsCheckingProfile(false);
+      }
+    }
+
+    checkBusinessProfile();
+  }, [user, router, supabase]);
+
+  // Fetch jobs when businessId is available
+  useEffect(() => {
+    if (businessId) {
+      fetchJobsWithAttendance();
+    }
+  }, [businessId, fetchJobsWithAttendance]);
+
+  // Show loading state while checking profile
+  if (isCheckingProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="animate-spin w-8 h-8 text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 pb-24 md:pb-6 space-y-6">

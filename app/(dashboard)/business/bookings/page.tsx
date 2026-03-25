@@ -173,9 +173,10 @@ export default function BusinessBookingsPage() {
   const [selectedBooking, setSelectedBooking] = React.useState<Booking | null>(
     null,
   );
+  const [businessId, setBusinessId] = React.useState<string | null>(null);
 
   const fetchBookingsWithReviews = useCallback(async () => {
-    if (!user?.id) return;
+    if (!businessId) return;
 
     setIsLoading(true);
     setError(null);
@@ -208,7 +209,7 @@ export default function BusinessBookingsPage() {
           )
         `,
         )
-        .eq("business_id", user.id)
+        .eq("business_id", businessId)
         .order("created_at", { ascending: false });
 
       if (bookingsError) throw bookingsError;
@@ -271,12 +272,33 @@ export default function BusinessBookingsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.id]);
+  }, [businessId]);
 
-  // Fetch bookings on mount
+  // Fetch bookings on mount and when businessId is available
   React.useEffect(() => {
-    fetchBookingsWithReviews();
-  }, [fetchBookingsWithReviews]);
+    if (businessId) {
+      fetchBookingsWithReviews();
+    }
+  }, [businessId, fetchBookingsWithReviews]);
+
+  // Look up business profile to get business ID
+  React.useEffect(() => {
+    async function lookupBusiness() {
+      if (!user?.id) return;
+
+      const { data: business } = await supabase
+        .from("businesses")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (business) {
+        setBusinessId(business.id);
+      }
+    }
+
+    lookupBusiness();
+  }, [user?.id, supabase]);
 
   const handleLogout = async () => {
     await signOut();
@@ -586,13 +608,13 @@ export default function BusinessBookingsPage() {
       )}
 
       {/* Review Form Dialog */}
-      {selectedBooking && (
+      {selectedBooking && businessId && (
         <ReviewFormDialog
           open={reviewDialogOpen}
           onOpenChange={setReviewDialogOpen}
           bookingId={selectedBooking.id}
           workerId={selectedBooking.worker_id}
-          businessId={user.id}
+          businessId={businessId}
           reviewer="business"
           targetName={selectedBooking.worker?.full_name || "Pekerja"}
           onSuccess={handleReviewSuccess}

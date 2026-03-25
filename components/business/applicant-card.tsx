@@ -41,7 +41,7 @@ import {
 
 type ApplicationStatus =
   | "pending"
-  | "reviewed"
+  | "shortlisted"
   | "accepted"
   | "rejected"
   | "withdrawn";
@@ -115,7 +115,7 @@ const statusConfig: Record<
   }
 > = {
   pending: { label: "Menunggu", variant: "secondary" },
-  reviewed: { label: "Dipilih", variant: "default" },
+  shortlisted: { label: "Dipilih", variant: "default" },
   accepted: { label: "Diterima", variant: "default" },
   rejected: { label: "Ditolak", variant: "destructive" },
   withdrawn: { label: "Ditarik", variant: "outline" },
@@ -141,7 +141,7 @@ export function ApplicantCard({
   const config = statusConfig[application.status];
 
   const canTakeAction =
-    application.status === "pending" || application.status === "reviewed";
+    application.status === "pending" || application.status === "shortlisted";
 
   return (
     <>
@@ -293,8 +293,7 @@ export function ApplicantCard({
                   )}
                 </Button>
               )}
-
-              {onAccept && (
+              {(application.status === "pending" || application.status === "shortlisted") && onAccept && (
                 <Button
                   variant="default"
                   size="sm"

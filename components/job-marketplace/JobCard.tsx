@@ -70,8 +70,8 @@ export function JobCard({ job, onClick, className }: JobCardProps) {
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
               <Building2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
-              <span className="line-clamp-1">{job.business.name}</span>
-              {job.business.is_verified && (
+              <span className="line-clamp-1">{job.business?.name || "Business"}</span>
+              {job.business?.is_verified && (
                 <CheckCircle2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500 flex-shrink-0" />
               )}
             </div>
@@ -82,7 +82,7 @@ export function JobCard({ job, onClick, className }: JobCardProps) {
       <CardContent className="space-y-2 sm:space-y-3 pb-2 sm:pb-3 px-3 sm:px-6">
         {/* Category */}
         <Badge variant="secondary" className="text-[10px] sm:text-xs">
-          {job.category.name}
+          {job.category?.name || "General"}
         </Badge>
 
         {/* Wage */}

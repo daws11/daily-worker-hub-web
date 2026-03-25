@@ -235,7 +235,7 @@ export async function PATCH(request: Request, { params }: Params) {
     // Business actions: shortlist, accept, reject
     if (
       body.status &&
-      ["reviewed", "accepted", "rejected"].includes(body.status)
+      ["shortlisted", "accepted", "rejected"].includes(body.status)
     ) {
       if (user.role !== "business") {
         routeLogger.warn("Non-business tried to update status", {
@@ -324,7 +324,7 @@ export async function PATCH(request: Request, { params }: Params) {
       // Otherwise just update status
       const result = await updateApplicationStatus(
         id,
-        body.status as "reviewed" | "accepted" | "rejected",
+        body.status as "shortlisted" | "accepted" | "rejected",
         business.id,
       );
 
