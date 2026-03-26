@@ -5,14 +5,13 @@
  */
 
 import {
-  calculateMatchingScore,
   MatchingScoreParams,
   getMatchingScoreBreakdown,
 } from "./matching-score";
 import { getTierRank } from "./tier-classifier";
 import { WorkerTier } from "@/lib/supabase/types";
 import { supabase } from "@/lib/supabase/client";
-import { isWorkerAvailable } from "./availability-checker";
+import { batchCheckWorkerAvailability } from "./availability-checker";
 
 /**
  * Worker with matching score
@@ -113,64 +112,69 @@ export async function generateWorkerShortlist(
       return [];
     }
 
-    // Calculate matching scores for each worker
+    // Filter workers (exclude specified IDs) and collect their IDs for batch availability check
     // Use type assertion to handle Supabase query result typing
     const workersList = workers as any[];
-    const workersWithScores: WorkerWithScore[] = await Promise.all(
-      workersList
-        .filter((worker: any) => !excludeWorkerIds.includes(worker.id))
-        .map(async (worker: any) => {
-          const workerSkills =
-            worker.worker_skills?.map((ws: any) => ws.skill_id) || [];
+    const eligibleWorkers = workersList.filter(
+      (worker: any) => !excludeWorkerIds.includes(worker.id),
+    );
+    const eligibleWorkerIds = eligibleWorkers.map((w: any) => w.id);
 
-          // Check actual worker availability
-          const isAvailable = await isWorkerAvailable(
-            worker.id,
-            jobDate,
-            jobStartHour,
-            jobEndHour,
-          );
+    // Batch-check availability for all workers in a single DB query (avoids N+1)
+    const availabilityMap = await batchCheckWorkerAvailability(
+      eligibleWorkerIds,
+      jobDate,
+      jobStartHour,
+      jobEndHour,
+    );
 
-          const matchingParams: MatchingScoreParams = {
-            workerSkills,
-            workerLat: worker.lat,
-            workerLng: worker.lng,
-            workerRating: worker.rating,
-            workerTier: worker.tier,
-            jobSkills,
-            jobLat,
-            jobLng,
-            isAvailable,
-            isCompliant: true, // TODO: Check 21 Days Rule compliance
-          };
+    // Calculate matching scores for each worker using the pre-fetched availability data
+    const workersWithScores: WorkerWithScore[] = eligibleWorkers.map(
+      (worker: any) => {
+        const workerSkills =
+          worker.worker_skills?.map((ws: any) => ws.skill_id) || [];
+        const isAvailable = availabilityMap[worker.id] ?? false;
 
-          const breakdown = getMatchingScoreBreakdown(matchingParams);
+        const matchingParams: MatchingScoreParams = {
+          workerSkills,
+          workerLat: worker.lat,
+          workerLng: worker.lng,
+          workerRating: worker.rating,
+          workerTier: worker.tier,
+          jobSkills,
+          jobLat,
+          jobLng,
+          isAvailable,
+          isCompliant: true, // TODO: Check 21 Days Rule compliance
+        };
 
-          return {
-            id: worker.id,
-            userId: worker.user_id,
-            fullName: worker.full_name,
-            avatarUrl: worker.avatar_url,
-            tier: worker.tier,
-            skills: workerSkills,
-            rating: worker.rating,
-            punctuality: worker.punctuality,
-            jobsCompleted: worker.jobs_completed || 0,
-            locationName: worker.location_name,
-            lat: worker.lat,
-            lng: worker.lng,
-            matchingScore: breakdown.totalScore,
-            distanceKm: breakdown.distanceKm,
-            breakdown: {
-              skillScore: breakdown.skillScore,
-              distanceScore: breakdown.distanceScore,
-              availabilityScore: breakdown.availabilityScore,
-              ratingScore: breakdown.ratingScore,
-              complianceScore: breakdown.complianceScore,
-              tierBonus: breakdown.tierBonus,
-            },
-          };
-        }),
+        const breakdown = getMatchingScoreBreakdown(matchingParams);
+
+        return {
+          id: worker.id,
+          userId: worker.user_id,
+          fullName: worker.full_name,
+          avatarUrl: worker.avatar_url,
+          tier: worker.tier,
+          skills: workerSkills,
+          rating: worker.rating,
+          punctuality: worker.punctuality,
+          jobsCompleted: worker.jobs_completed || 0,
+          locationName: worker.location_name,
+          lat: worker.lat,
+          lng: worker.lng,
+          matchingScore: breakdown.totalScore,
+          distanceKm: breakdown.distanceKm,
+          breakdown: {
+            skillScore: breakdown.skillScore,
+            distanceScore: breakdown.distanceScore,
+            availabilityScore: breakdown.availabilityScore,
+            ratingScore: breakdown.ratingScore,
+            complianceScore: breakdown.complianceScore,
+            tierBonus: breakdown.tierBonus,
+          },
+        };
+      },
     );
 
     // Filter by minimum score and sort
@@ -250,63 +254,62 @@ export async function generateWorkerShortlistFromIds(
       return [];
     }
 
-    // Calculate matching scores
+    // Batch-check availability for all workers in a single DB query (avoids N+1)
+    const availabilityMap = await batchCheckWorkerAvailability(
+      workerIds,
+      jobDate,
+      jobStartHour,
+      jobEndHour,
+    );
+
+    // Calculate matching scores using the pre-fetched availability data
     // Use type assertion to handle Supabase query result typing
     const workersList = workers as any[];
-    const workersWithScores = await Promise.all(
-      workersList.map(async (worker: any) => {
-        const workerSkills =
-          worker.worker_skills?.map((ws: any) => ws.skill_id) || [];
+    const workersWithScores = workersList.map((worker: any) => {
+      const workerSkills =
+        worker.worker_skills?.map((ws: any) => ws.skill_id) || [];
+      const isAvailable = availabilityMap[worker.id] ?? false;
 
-        // Check actual worker availability
-        const isAvailable = await isWorkerAvailable(
-          worker.id,
-          jobDate,
-          jobStartHour,
-          jobEndHour,
-        );
+      const matchingParams: MatchingScoreParams = {
+        workerSkills,
+        workerLat: worker.lat,
+        workerLng: worker.lng,
+        workerRating: worker.rating,
+        workerTier: worker.tier,
+        jobSkills,
+        jobLat,
+        jobLng,
+        isAvailable,
+        isCompliant: true,
+      };
 
-        const matchingParams: MatchingScoreParams = {
-          workerSkills,
-          workerLat: worker.lat,
-          workerLng: worker.lng,
-          workerRating: worker.rating,
-          workerTier: worker.tier,
-          jobSkills,
-          jobLat,
-          jobLng,
-          isAvailable,
-          isCompliant: true,
-        };
+      const breakdown = getMatchingScoreBreakdown(matchingParams);
 
-        const breakdown = getMatchingScoreBreakdown(matchingParams);
-
-        return {
-          id: worker.id,
-          userId: worker.user_id,
-          fullName: worker.full_name,
-          avatarUrl: worker.avatar_url,
-          tier: worker.tier,
-          skills: workerSkills,
-          rating: worker.rating,
-          punctuality: worker.punctuality,
-          jobsCompleted: worker.jobs_completed || 0,
-          locationName: worker.location_name,
-          lat: worker.lat,
-          lng: worker.lng,
-          matchingScore: breakdown.totalScore,
-          distanceKm: breakdown.distanceKm,
-          breakdown: {
-            skillScore: breakdown.skillScore,
-            distanceScore: breakdown.distanceScore,
-            availabilityScore: breakdown.availabilityScore,
-            ratingScore: breakdown.ratingScore,
-            complianceScore: breakdown.complianceScore,
-            tierBonus: breakdown.tierBonus,
-          },
-        };
-      }),
-    );
+      return {
+        id: worker.id,
+        userId: worker.user_id,
+        fullName: worker.full_name,
+        avatarUrl: worker.avatar_url,
+        tier: worker.tier,
+        skills: workerSkills,
+        rating: worker.rating,
+        punctuality: worker.punctuality,
+        jobsCompleted: worker.jobs_completed || 0,
+        locationName: worker.location_name,
+        lat: worker.lat,
+        lng: worker.lng,
+        matchingScore: breakdown.totalScore,
+        distanceKm: breakdown.distanceKm,
+        breakdown: {
+          skillScore: breakdown.skillScore,
+          distanceScore: breakdown.distanceScore,
+          availabilityScore: breakdown.availabilityScore,
+          ratingScore: breakdown.ratingScore,
+          complianceScore: breakdown.complianceScore,
+          tierBonus: breakdown.tierBonus,
+        },
+      };
+    });
 
     // Sort and return top workers
     return workersWithScores
