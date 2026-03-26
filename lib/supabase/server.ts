@@ -7,7 +7,7 @@ import { Database } from "./types";
  * Get Supabase service role key from environment
  * @throws {Error} If SUPABASE_SERVICE_ROLE_KEY is not set
  */
-function getServiceRoleKey(): string {
+export function getServiceRoleKey(): string {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) {
     throw new Error(
