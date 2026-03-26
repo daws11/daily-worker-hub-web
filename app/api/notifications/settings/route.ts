@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+} from "@/lib/api/error-response";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
@@ -36,10 +41,7 @@ export async function GET(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
-      );
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     // Fetch notification preferences
@@ -69,9 +71,10 @@ export async function GET(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Gagal mengambil preferensi notifikasi" },
-        { status: response.status },
+      return errorResponse(
+        response.status,
+        { code: "DB_QUERY_ERROR", i18nKey: "errors.serverError", details: errorText },
+        request,
       );
     }
 
@@ -129,12 +132,8 @@ export async function GET(request: NextRequest) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/notifications/settings", "GET");
   }
 }
 
@@ -166,10 +165,7 @@ export async function POST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
-      );
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const body = await request.json();
@@ -204,9 +200,10 @@ export async function POST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Tidak ada data yang valid untuk diperbarui" },
-        { status: 400 },
+      return errorResponse(
+        400,
+        { code: "VALIDATION_ERROR", i18nKey: "errors.validation", details: "Tidak ada data yang valid untuk diperbarui" },
+        request,
       );
     }
 
@@ -275,9 +272,10 @@ export async function POST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Gagal memperbarui preferensi notifikasi" },
-        { status: response.status },
+      return errorResponse(
+        response.status,
+        { code: "DB_QUERY_ERROR", i18nKey: "errors.serverError", details: errorText },
+        request,
       );
     }
 
@@ -304,11 +302,7 @@ export async function POST(request: NextRequest) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/notifications/settings", "POST");
   }
 }
