@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { cache } from "@/lib/cache";
-import { rateLimitStore } from "@/lib/rate-limit";
+import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import os from "os";
 
@@ -104,55 +104,70 @@ function getCacheMetrics() {
 }
 
 /**
- * Get rate limiting metrics
+ * Get rate limiting metrics from the database
  */
-function getRateLimitMetrics() {
-  const stats = {
-    totalRequests: 0,
-    blockedRequests: 0,
-    activeLimiters: rateLimitStore.size,
-    byType: {
-      auth: { requests: 0, blocked: 0 },
-      "api-authenticated": { requests: 0, blocked: 0 },
-      "api-public": { requests: 0, blocked: 0 },
-      payment: { requests: 0, blocked: 0 },
-    },
-    topEndpoints: [] as Array<{ endpoint: string; count: number }>,
-  };
+async function getRateLimitMetrics() {
+  const rate_limit_db = createClient();
 
-  // Aggregate rate limit data
-  for (const [key, record] of rateLimitStore.entries()) {
-    const type = key.split(":")[1] as keyof typeof stats.byType;
+  const { data, error } = await (rate_limit_db as any).from("rate_limits").select("identifier, rate_limit_type, created_at");
 
-    if (type && stats.byType[type]) {
-      stats.byType[type].requests += record.count;
-      stats.totalRequests += record.count;
+  if (error) {
+    return {
+      totalRequests: 0,
+      blockedRequests: 0,
+      activeLimiters: 0,
+      byType: {
+        auth: { requests: 0, blocked: 0 },
+        "api-authenticated": { requests: 0, blocked: 0 },
+        "api-public": { requests: 0, blocked: 0 },
+        payment: { requests: 0, blocked: 0 },
+      },
+      topEndpoints: [],
+    };
+  }
 
-      // If count equals max requests, consider it as potentially blocked
-      if (record.count >= 5) {
-        // Assuming 5 is the minimum threshold
-        stats.byType[type].blocked++;
-        stats.blockedRequests++;
+  const byType = {
+    auth: { requests: 0, blocked: 0, activeLimiters: 0 },
+    "api-authenticated": { requests: 0, blocked: 0, activeLimiters: 0 },
+    "api-public": { requests: 0, blocked: 0, activeLimiters: 0 },
+    payment: { requests: 0, blocked: 0, activeLimiters: 0 },
+  } as Record<string, { requests: number; blocked: number; activeLimiters: number }>;
+
+  const identifierCounts = new Map<string, number>();
+
+  for (const row of data as Array<{ identifier: string; rate_limit_type: string; created_at: string }>) {
+    const type = row.rate_limit_type;
+    if (byType[type]) {
+      byType[type].requests++;
+      const limiterKey = `${type}:${row.identifier}`;
+      identifierCounts.set(limiterKey, (identifierCounts.get(limiterKey) || 0) + 1);
+    }
+  }
+
+  let blockedRequests = 0;
+  for (const [key, count] of identifierCounts.entries()) {
+    const [type] = key.split(":");
+    if (byType[type]) {
+      byType[type].activeLimiters++;
+      if (count >= 5) {
+        byType[type].blocked++;
+        blockedRequests++;
       }
     }
   }
 
-  // Get top endpoints (simplified - would need better tracking in production)
-  const endpointCounts = new Map<string, number>();
-  for (const [key, record] of rateLimitStore.entries()) {
-    const endpoint = key.split(":")[0] || "unknown";
-    endpointCounts.set(
-      endpoint,
-      (endpointCounts.get(endpoint) || 0) + record.count,
-    );
-  }
-
-  stats.topEndpoints = Array.from(endpointCounts.entries())
-    .map(([endpoint, count]) => ({ endpoint, count }))
+  const topEndpoints = Array.from(identifierCounts.entries())
+    .map(([key, count]) => ({ endpoint: key.split(":")[1] || key, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
-  return stats;
+  return {
+    totalRequests: data.length,
+    blockedRequests,
+    activeLimiters: identifierCounts.size,
+    byType,
+    topEndpoints,
+  };
 }
 
 /**
@@ -313,7 +328,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
       system: getSystemHealth(),
       cache: getCacheMetrics(),
-      rateLimit: getRateLimitMetrics(),
+      rateLimit: await getRateLimitMetrics(),
       api: getApiResponseMetrics(),
       errors: getErrorMetrics(),
       users: getActiveUsersMetrics(),
