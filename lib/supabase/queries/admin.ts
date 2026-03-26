@@ -1,4 +1,4 @@
-import { supabase } from "../client";
+import { createClient } from "../server";
 import type {
   UserManagementFilters,
   UserManagementItem,
@@ -24,6 +24,7 @@ export async function getBusinessesForVerification(
   page: number = 1,
   limit: number = 20,
 ): Promise<PaginatedAdminResponse<BusinessVerificationItem>> {
+  const supabase = await createClient();
   const offset = (page - 1) * limit;
 
   let query = supabase.from("businesses").select(`
@@ -113,6 +114,7 @@ export async function approveBusiness(
   businessId: string,
   adminId: string,
 ): Promise<void> {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("businesses")
     .update({
@@ -142,6 +144,7 @@ export async function rejectBusiness(
   reason: string,
   adminId: string,
 ): Promise<void> {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("businesses")
     .update({
@@ -175,6 +178,7 @@ export async function getKYCVerifications(
   page: number = 1,
   limit: number = 20,
 ): Promise<PaginatedAdminResponse<KYCVerificationItem>> {
+  const supabase = await createClient();
   const offset = (page - 1) * limit;
 
   let query = supabase.from("kyc_verifications").select(`
@@ -264,6 +268,7 @@ export async function approveKYC(
   kycId: string,
   adminId: string,
 ): Promise<void> {
+  const supabase = await createClient();
   const { data: kyc } = await supabase
     .from("kyc_verifications")
     .select("worker_id")
@@ -319,6 +324,7 @@ export async function rejectKYC(
   rejectionReason: string,
   adminId: string,
 ): Promise<void> {
+  const supabase = await createClient();
   const { data: kyc } = await supabase
     .from("kyc_verifications")
     .select("worker_id")
@@ -379,6 +385,7 @@ export async function getJobsForModeration(
   page: number = 1,
   limit: number = 20,
 ): Promise<PaginatedAdminResponse<JobModerationItem>> {
+  const supabase = await createClient();
   const offset = (page - 1) * limit;
 
   let query = supabase.from("jobs").select(`
@@ -476,6 +483,7 @@ export async function moderateJob(
   reason?: string,
   adminId?: string,
 ): Promise<void> {
+  const supabase = await createClient();
   const updateData: any = {
     updated_at: new Date().toISOString(),
   };
@@ -531,6 +539,7 @@ export async function getDisputes(
   page: number = 1,
   limit: number = 20,
 ): Promise<PaginatedAdminResponse<DisputeItem>> {
+  const supabase = await createClient();
   const offset = (page - 1) * limit;
 
   let query = supabase.from("disputes").select(`
@@ -644,6 +653,7 @@ export async function resolveDispute(
   refundAmount?: number,
   adminId?: string,
 ): Promise<void> {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("disputes")
     .update({
@@ -687,6 +697,7 @@ interface AuditActionInput {
 }
 
 async function logAuditAction(input: AuditActionInput): Promise<void> {
+  const supabase = await createClient();
   const { error } = await (supabase as any).from("admin_audit_logs").insert({
     admin_id: input.admin_id,
     action: input.action,
@@ -710,6 +721,7 @@ export async function getWorkersForManagement(
   page: number = 1,
   limit: number = 20,
 ): Promise<PaginatedAdminResponse<WorkerManagementItem>> {
+  const supabase = await createClient();
   const offset = (page - 1) * limit;
 
   let query = supabase.from("workers").select(`
@@ -788,6 +800,7 @@ export async function getUsers(
   page: number = 1,
   limit: number = 20,
 ): Promise<PaginatedAdminResponse<UserManagementItem>> {
+  const supabase = await createClient();
   const offset = (page - 1) * limit;
 
   let query = supabase.from("users").select(`
@@ -882,6 +895,7 @@ export async function processBusinessVerification(
   reason?: string,
   adminId?: string,
 ): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
   try {
     if (action === "approve") {
       if (adminId) {
@@ -928,6 +942,7 @@ export async function processKYCVerification(
   rejectionReason?: string,
   adminId?: string,
 ): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
   try {
     if (action === "approve") {
       if (adminId) {
@@ -1014,6 +1029,7 @@ export interface AdminPendingCounts {
 }
 
 export async function getAdminPendingCounts(): Promise<AdminPendingCounts> {
+  const supabase = await createClient();
   const [
     { count: pendingBusinessVerifications },
     { count: pendingKYCVerifications },
@@ -1058,6 +1074,7 @@ export async function getAdminPendingCounts(): Promise<AdminPendingCounts> {
 // ============================================================================
 
 export async function getPlatformMetrics(): Promise<any> {
+  const supabase = await createClient();
   const [
     { count: totalUsers },
     { count: totalWorkers },
