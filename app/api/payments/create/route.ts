@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getServerSession } from "@/lib/auth/get-server-session";
-import type { Json } from "@/lib/supabase/database.types";
+import type { Json } from "@/lib/supabase/types";
 import {
   createInvoice,
   calculateFee,
