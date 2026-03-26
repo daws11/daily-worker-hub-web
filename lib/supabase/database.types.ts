@@ -2318,9 +2318,9 @@ export type Database = {
         | "cancelled"
         | "paid"
         | "failed"
-      rate_limit_type: "auth" | "api-authenticated" | "api-public" | "payment"
       report_status: "pending" | "reviewing" | "resolved" | "dismissed"
       report_type: "user" | "job" | "business" | "booking"
+      rate_limit_type: "auth" | "api-authenticated" | "api-public" | "payment"
       reviewer_type: "business" | "worker"
       social_platform_status: "active" | "inactive" | "maintenance"
       social_platform_type: "instagram" | "facebook" | "twitter" | "linkedin"
@@ -2495,6 +2495,7 @@ export const Constants = {
       ],
       report_status: ["pending", "reviewing", "resolved", "dismissed"],
       report_type: ["user", "job", "business", "booking"],
+      rate_limit_type: ["auth", "api-authenticated", "api-public", "payment"],
       reviewer_type: ["business", "worker"],
       social_platform_status: ["active", "inactive", "maintenance"],
       social_platform_type: ["instagram", "facebook", "twitter", "linkedin"],

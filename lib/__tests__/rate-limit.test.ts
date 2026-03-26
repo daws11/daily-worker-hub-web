@@ -57,6 +57,7 @@ import {
   cleanupExpiredRateLimits,
 } from "@/lib/db/rate-limit";
 import { getServerSession } from "@/lib/auth/get-server-session";
+import { createClient } from "@/lib/supabase/server";
 
 describe("Rate Limiter", () => {
   beforeEach(() => {
@@ -291,7 +292,18 @@ describe("Rate Limiter", () => {
 
     it("should use user ID when userBased is true and user is authenticated", async () => {
       vi.mocked(getServerSession).mockResolvedValue({
-        user: { id: "user-123", email: "test@example.com" },
+        access_token: "mock-access-token",
+        refresh_token: "mock-refresh-token",
+        expires_in: 3600,
+        token_type: "bearer",
+        user: {
+          id: "user-123",
+          email: "test@example.com",
+          app_metadata: {},
+          user_metadata: {},
+          aud: "authenticated",
+          created_at: "",
+        },
       });
 
       const wrappedHandler = withRateLimit(mockHandler, {
@@ -353,7 +365,18 @@ describe("Rate Limiter", () => {
 
     it("should bypass rate limit for admin users when skipAdmin is true", async () => {
       vi.mocked(getServerSession).mockResolvedValue({
-        user: { id: "admin-123", email: "admin@example.com" },
+        access_token: "mock-access-token",
+        refresh_token: "mock-refresh-token",
+        expires_in: 3600,
+        token_type: "bearer",
+        user: {
+          id: "admin-123",
+          email: "admin@example.com",
+          app_metadata: {},
+          user_metadata: {},
+          aud: "authenticated",
+          created_at: "",
+        },
       });
 
       vi.mocked(createClient as any).mockReturnValue({
@@ -383,7 +406,18 @@ describe("Rate Limiter", () => {
 
     it("should not bypass rate limit for non-admin users", async () => {
       vi.mocked(getServerSession).mockResolvedValue({
-        user: { id: "user-123", email: "user@example.com" },
+        access_token: "mock-access-token",
+        refresh_token: "mock-refresh-token",
+        expires_in: 3600,
+        token_type: "bearer",
+        user: {
+          id: "user-123",
+          email: "user@example.com",
+          app_metadata: {},
+          user_metadata: {},
+          aud: "authenticated",
+          created_at: "",
+        },
       });
 
       vi.mocked(createClient as any).mockReturnValue({
@@ -436,7 +470,18 @@ describe("Rate Limiter", () => {
 
     it("should apply both IP and user-based limits when alsoIpBased is true", async () => {
       vi.mocked(getServerSession).mockResolvedValue({
-        user: { id: "user-123", email: "test@example.com" },
+        access_token: "mock-access-token",
+        refresh_token: "mock-refresh-token",
+        expires_in: 3600,
+        token_type: "bearer",
+        user: {
+          id: "user-123",
+          email: "test@example.com",
+          app_metadata: {},
+          user_metadata: {},
+          aud: "authenticated",
+          created_at: "",
+        },
       });
 
       // User has 0 requests, but IP will have too many
@@ -459,7 +504,18 @@ describe("Rate Limiter", () => {
 
     it("should use stricter limit when both IP and user are limited", async () => {
       vi.mocked(getServerSession).mockResolvedValue({
-        user: { id: "user-123", email: "test@example.com" },
+        access_token: "mock-access-token",
+        refresh_token: "mock-refresh-token",
+        expires_in: 3600,
+        token_type: "bearer",
+        user: {
+          id: "user-123",
+          email: "test@example.com",
+          app_metadata: {},
+          user_metadata: {},
+          aud: "authenticated",
+          created_at: "",
+        },
       });
 
       // User has 20 requests remaining, IP has only 1

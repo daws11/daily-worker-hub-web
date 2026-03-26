@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { cache } from "@/lib/cache";
-import { createClient } from "@/lib/supabase/server";
+import { getRateLimitMetrics } from "@/lib/db/rate-limit";
 import { logger } from "@/lib/logger";
 import os from "os";
 
@@ -106,12 +106,10 @@ function getCacheMetrics() {
 /**
  * Get rate limiting metrics from the database
  */
-async function getRateLimitMetrics() {
-  const rate_limit_db = createClient();
+async function getRateLimitMetricsFromDb() {
+  const dbMetrics = await getRateLimitMetrics();
 
-  const { data, error } = await (rate_limit_db as any).from("rate_limits").select("identifier, rate_limit_type, created_at");
-
-  if (error) {
+  if (!dbMetrics) {
     return {
       totalRequests: 0,
       blockedRequests: 0,
@@ -122,50 +120,45 @@ async function getRateLimitMetrics() {
         "api-public": { requests: 0, blocked: 0 },
         payment: { requests: 0, blocked: 0 },
       },
-      topEndpoints: [],
+      topEndpoints: [] as Array<{ endpoint: string; count: number }>,
     };
   }
 
-  const byType = {
-    auth: { requests: 0, blocked: 0, activeLimiters: 0 },
-    "api-authenticated": { requests: 0, blocked: 0, activeLimiters: 0 },
-    "api-public": { requests: 0, blocked: 0, activeLimiters: 0 },
-    payment: { requests: 0, blocked: 0, activeLimiters: 0 },
-  } as Record<string, { requests: number; blocked: number; activeLimiters: number }>;
-
-  const identifierCounts = new Map<string, number>();
-
-  for (const row of data as Array<{ identifier: string; rate_limit_type: string; created_at: string }>) {
-    const type = row.rate_limit_type;
-    if (byType[type]) {
-      byType[type].requests++;
-      const limiterKey = `${type}:${row.identifier}`;
-      identifierCounts.set(limiterKey, (identifierCounts.get(limiterKey) || 0) + 1);
-    }
+  // Build topEndpoints from topIdentifiers (format: "prefix:user:id" or "prefix:ip:id")
+  const endpointCounts = new Map<string, number>();
+  for (const { identifier, count } of dbMetrics.topIdentifiers) {
+    const parts = identifier.split(":");
+    const endpoint = parts.length >= 2 ? parts[0] : identifier;
+    endpointCounts.set(endpoint, (endpointCounts.get(endpoint) || 0) + count);
   }
 
-  let blockedRequests = 0;
-  for (const [key, count] of identifierCounts.entries()) {
-    const [type] = key.split(":");
-    if (byType[type]) {
-      byType[type].activeLimiters++;
-      if (count >= 5) {
-        byType[type].blocked++;
-        blockedRequests++;
-      }
-    }
-  }
-
-  const topEndpoints = Array.from(identifierCounts.entries())
-    .map(([key, count]) => ({ endpoint: key.split(":")[1] || key, count }))
+  const topEndpoints = Array.from(endpointCounts.entries())
+    .map(([endpoint, count]) => ({ endpoint, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
   return {
-    totalRequests: data.length,
-    blockedRequests,
-    activeLimiters: identifierCounts.size,
-    byType,
+    totalRequests: dbMetrics.totalRequests,
+    blockedRequests: dbMetrics.blockedRequests,
+    activeLimiters: Object.values(dbMetrics.byType).reduce(
+      (sum, t) => sum + t.activeLimiters,
+      0,
+    ),
+    byType: {
+      auth: { requests: dbMetrics.byType.auth.requests, blocked: dbMetrics.byType.auth.blocked },
+      "api-authenticated": {
+        requests: dbMetrics.byType["api-authenticated"].requests,
+        blocked: dbMetrics.byType["api-authenticated"].blocked,
+      },
+      "api-public": {
+        requests: dbMetrics.byType["api-public"].requests,
+        blocked: dbMetrics.byType["api-public"].blocked,
+      },
+      payment: {
+        requests: dbMetrics.byType.payment.requests,
+        blocked: dbMetrics.byType.payment.blocked,
+      },
+    },
     topEndpoints,
   };
 }
@@ -328,7 +321,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
       system: getSystemHealth(),
       cache: getCacheMetrics(),
-      rateLimit: await getRateLimitMetrics(),
+      rateLimit: await getRateLimitMetricsFromDb(),
       api: getApiResponseMetrics(),
       errors: getErrorMetrics(),
       users: getActiveUsersMetrics(),
