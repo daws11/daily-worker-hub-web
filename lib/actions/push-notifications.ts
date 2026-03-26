@@ -1,9 +1,12 @@
-// @ts-nocheck
 "use server";
 
 import { createClient } from "../supabase/server";
 import type { Database } from "../supabase/types";
 import { createNotification } from "./notifications";
+
+// ============================================================================
+// PUSH NOTIFICATION ACTIONS
+// ============================================================================
 
 type PushSubscription =
   Database["public"]["Tables"]["push_subscriptions"]["Row"];
@@ -29,18 +32,27 @@ type NotificationPreferencesUpdate = Partial<
   >
 >;
 
+/**
+ * Result of a push subscription operation
+ */
 export type PushSubscriptionResult = {
   success: boolean;
   error?: string;
   data?: PushSubscription;
 };
 
+/**
+ * Result of a notification preferences operation
+ */
 export type NotificationPreferencesResult = {
   success: boolean;
   error?: string;
   data?: NotificationPreferences;
 };
 
+/**
+ * Result of sending a push notification
+ */
 export type SendPushNotificationResult = {
   success: boolean;
   error?: string;
