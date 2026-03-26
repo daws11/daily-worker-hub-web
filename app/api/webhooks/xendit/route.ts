@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { xenditGateway, type WebhookPayload } from "@/lib/payments";
 import { logger } from "@/lib/logger";
+import { errorResponse } from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("webhooks/xendit");
 
@@ -77,10 +78,7 @@ export async function POST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Invalid callback token" },
-        { status: 401 },
-      );
+      return errorResponse(401, "AUTH_UNAUTHORIZED", request);
     }
 
     // Extract relevant data
@@ -131,7 +129,7 @@ export async function POST(request: NextRequest) {
         requestId,
       });
 
-      return NextResponse.json({ error: result.error }, { status: 500 });
+      return errorResponse(500, result.error, request);
     }
 
     routeLogger.info("Xendit webhook processed successfully", {
@@ -166,10 +164,7 @@ export async function POST(request: NextRequest) {
 
     logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return errorResponse(500, "SERVER_INTERNAL_ERROR", request);
   }
 }
 
