@@ -165,6 +165,62 @@ export async function updateScore(
   return data;
 }
 
+export type ScoreTrend = "improving" | "declining" | "stable";
+
+export interface WorkerScoreTrendResult {
+  trend: ScoreTrend;
+  score_change: number;
+  data_points: number;
+}
+
+/**
+ * Calculate trend direction based on score history
+ * Compares average of recent 5 scores vs older 5 scores from the last 10 entries
+ * - "improving" if recent avg > older avg + threshold
+ * - "declining" if recent avg < older avg - threshold
+ * - "stable" otherwise
+ */
+export async function getWorkerScoreTrend(
+  workerId: string,
+): Promise<WorkerScoreTrendResult | null> {
+  const history = await getScoreHistory(workerId, 10);
+
+  if (!history || history.length < 2) {
+    return null;
+  }
+
+  // Scores are ordered desc by calculated_at, so:
+  // First 5 = most recent, Last 5 = older
+  const midpoint = Math.floor(history.length / 2);
+  const recentScores = history.slice(0, midpoint).map((h) => h.score);
+  const olderScores = history.slice(midpoint).map((h) => h.score);
+
+  const recentAvg =
+    recentScores.reduce((sum, s) => sum + s, 0) / recentScores.length;
+  const olderAvg =
+    olderScores.reduce((sum, s) => sum + s, 0) / olderScores.length;
+
+  const scoreChange = Math.round((recentAvg - olderAvg) * 10) / 10;
+
+  // Threshold of 0.2 for determining stable vs trending
+  const threshold = 0.2;
+
+  let trend: ScoreTrend;
+  if (scoreChange > threshold) {
+    trend = "improving";
+  } else if (scoreChange < -threshold) {
+    trend = "declining";
+  } else {
+    trend = "stable";
+  }
+
+  return {
+    trend,
+    score_change: scoreChange,
+    data_points: history.length,
+  };
+}
+
 /**
  * Record a score history entry
  */
