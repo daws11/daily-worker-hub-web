@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
@@ -12,7 +13,7 @@ const routeLogger = logger.createApiLogger("notifications/[id]/read");
  * PATCH /api/notifications/[id]/read
  * Mark a specific notification as read
  */
-export async function PATCH(
+async function handlePATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
@@ -134,3 +135,11 @@ export async function PATCH(
     );
   }
 }
+
+// Export handlers with rate limiting
+// PATCH is authenticated (100 req/min)
+export const PATCH = withRateLimitForMethod(
+  handlePATCH as any,
+  { type: "api-authenticated", userBased: true },
+  ["PATCH"],
+);

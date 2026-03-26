@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
@@ -12,7 +13,7 @@ const routeLogger = logger.createApiLogger("notifications/settings");
  * GET /api/notifications/settings
  * Get notification preferences for the authenticated user
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications/settings",
   });
@@ -142,7 +143,7 @@ export async function GET(request: NextRequest) {
  * POST /api/notifications/settings
  * Update notification preferences for the authenticated user
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications/settings",
   });
@@ -312,3 +313,16 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Export handlers with rate limiting
+// GET is authenticated (100 req/min), POST is authenticated (100 req/min)
+export const GET = withRateLimitForMethod(
+  handleGET as any,
+  { type: "api-authenticated", userBased: true },
+  ["GET"],
+);
+export const POST = withRateLimitForMethod(
+  handlePOST as any,
+  { type: "api-authenticated", userBased: true },
+  ["POST"],
+);
