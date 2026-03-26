@@ -113,7 +113,6 @@ function formatDateTime(dateString: string): string {
 
 async function fetchEarnings(workerId: string): Promise<EarningsEntry[]> {
   // Use any to bypass complex type inference with nested relations
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = await (supabase as any)
     .from("bookings")
     .select(
