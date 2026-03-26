@@ -3,7 +3,7 @@ import type { Database } from "../types";
 
 type WorkersRow = Database["public"]["Tables"]["workers"]["Row"];
 type WorkersUpdate = Database["public"]["Tables"]["workers"]["Update"];
-type ReliabilityScoreHistoryRow =
+export type ReliabilityScoreHistoryRow =
   Database["public"]["Tables"]["reliability_score_history"]["Row"];
 type ReliabilityScoreHistoryInsert =
   Database["public"]["Tables"]["reliability_score_history"]["Insert"];

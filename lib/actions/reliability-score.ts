@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use server";
 
 import { createClient } from "../supabase/server";
@@ -6,29 +5,24 @@ import type { Database } from "../supabase/types";
 import {
   calculateScore,
   getScoreHistory,
-  getWorkerScore,
   updateScore,
   recordScoreHistory,
 } from "../supabase/queries/reliability-score";
+import type {
+  ReliabilityScoreBreakdown,
+  ReliabilityScoreHistoryRow,
+} from "../supabase/queries/reliability-score";
 
 type Worker = Database["public"]["Tables"]["workers"]["Row"];
-type ReliabilityScoreHistory =
-  Database["public"]["Tables"]["reliability_score_history"]["Row"];
 
-export interface ScoreBreakdown {
-  score: number;
-  attendance_rate: number;
-  punctuality_rate: number;
-  avg_rating: number;
-  completed_jobs_count: number;
-}
+export type { ReliabilityScoreBreakdown };
 
 export type ScoreCalculationResult = {
   success: boolean;
   error?: string;
   data?: {
     worker: Worker;
-    breakdown: ScoreBreakdown;
+    breakdown: ReliabilityScoreBreakdown;
   };
 };
 
@@ -37,7 +31,7 @@ export type WorkerScoreResult = {
   error?: string;
   data?: {
     worker: Worker;
-    history: ReliabilityScoreHistory[];
+    history: ReliabilityScoreHistoryRow[];
   };
 };
 
