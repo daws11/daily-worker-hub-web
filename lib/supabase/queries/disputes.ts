@@ -1,10 +1,48 @@
-// @ts-nocheck
 import { supabase } from "../client";
 import type { Database } from "../types";
 
-type DisputeRow = Database["public"]["Tables"]["disputes"]["Row"];
-type DisputeInsert = Database["public"]["Tables"]["disputes"]["Insert"];
-type DisputeUpdate = Database["public"]["Tables"]["disputes"]["Update"];
+// Local types matching actual DB schema (excludes phantom fields like type/description/priority/resolved_by
+// that were in the old generated types but don't exist in the actual database table)
+type DisputeRow = {
+  id: string;
+  booking_id: string;
+  raised_by: string;
+  reason: string;
+  status: Database["public"]["Enums"]["dispute_status"];
+  resolution: string | null;
+  admin_notes: string | null;
+  resolved_at: string | null;
+  evidence_urls: string[] | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type DisputeInsert = {
+  booking_id: string;
+  raised_by: string;
+  reason: string;
+  status?: Database["public"]["Enums"]["dispute_status"];
+  resolution?: string | null;
+  admin_notes?: string | null;
+  resolved_at?: string | null;
+  evidence_urls?: string[] | null;
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+type DisputeUpdate = {
+  booking_id?: string;
+  raised_by?: string;
+  reason?: string;
+  status?: Database["public"]["Enums"]["dispute_status"];
+  resolution?: string | null;
+  admin_notes?: string | null;
+  resolved_at?: string | null;
+  evidence_urls?: string[] | null;
+  created_at?: string;
+  updated_at?: string;
+};
 
 export type DisputeWithDetails = DisputeRow & {
   booking?: {
