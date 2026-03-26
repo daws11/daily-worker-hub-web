@@ -3,21 +3,6 @@
 import { createClient } from "../supabase/server";
 import type { Database } from "../supabase/types";
 
-// Re-export admin analytics types and functions for backward compatibility
-export {
-  getRevenueMetrics,
-  getWorkerStatistics,
-  getBookingTrends,
-  getPaymentMetrics,
-} from "./admin-analytics";
-
-export type {
-  RevenueMetrics,
-  WorkerStatistics,
-  BookingTrends,
-  PaymentMetrics,
-} from "./admin-analytics";
-
 // ============================================================================
 // ADMIN EXPORT ACTIONS
 // ============================================================================

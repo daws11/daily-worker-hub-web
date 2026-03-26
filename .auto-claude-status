@@ -3,23 +3,23 @@
   "spec": "044-split-monolithic-action-files-into-domain-specific",
   "state": "building",
   "subtasks": {
-    "completed": 7,
+    "completed": 9,
     "total": 11,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Extract admin analytics from admin.ts",
+    "current": "Remove deprecated code from monolithic files",
     "id": null,
-    "total": 4
+    "total": 3
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 8,
+    "number": 10,
     "started_at": "2026-03-27T01:14:06.983916"
   },
-  "last_update": "2026-03-27T02:16:17.900533"
+  "last_update": "2026-03-27T02:21:02.381408"
 }
