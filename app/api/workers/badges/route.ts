@@ -6,6 +6,7 @@ import {
   fetchWorkerStats,
 } from "@/lib/badges";
 import { cache, LRUCache, CACHE_TTL } from "@/lib/cache";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
@@ -60,7 +61,7 @@ async function fetchWorkerBadgesData(workerId: string, filter: string) {
  * - Badge definitions are cached for 1 hour (rarely change)
  * - Worker badges are cached for 10 minutes (may change with progress)
  */
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const workerId = searchParams.get("worker_id");
@@ -108,3 +109,11 @@ export async function GET(request: Request) {
     );
   }
 }
+
+// Export handlers with rate limiting
+// GET is public (30 req/min)
+export const GET = withRateLimitForMethod(
+  handleGET as any,
+  { type: "api-public", userBased: false },
+  ["GET"],
+);
