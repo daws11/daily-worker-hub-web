@@ -73,15 +73,9 @@ export function DashboardLayout({
           {/* Sidebar Navigation */}
           <div className="flex-1 overflow-hidden">
             {role === "worker" ? (
-              <WorkerSidebarNav
-                groups={sidebarGroups ?? workerNavGroups}
-                collapsed={collapsed}
-              />
+              <WorkerSidebarNav collapsed={collapsed} />
             ) : (
-              <BusinessSidebarNav
-                groups={sidebarGroups ?? businessNavGroups}
-                collapsed={collapsed}
-              />
+              <BusinessSidebarNav collapsed={collapsed} />
             )}
           </div>
 

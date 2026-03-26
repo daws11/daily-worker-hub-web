@@ -65,7 +65,7 @@ export async function sendMessage(
 
     // Booking scope authorization: prevent messaging unconnected users
     // Get sender profile to determine their role
-    const { data: senderProfile } = await supabase
+    const { data: senderProfile } = await (supabase as any)
       .from("profiles")
       .select("role")
       .eq("id", senderId)
@@ -82,7 +82,7 @@ export async function sendMessage(
       const { data: booking } = await supabase
         .from("bookings")
         .select("id")
-        .eq("status", "active")
+        .eq("status", "in_progress")
         .or(
           senderRole === "business"
             ? `and(business_id.eq.${senderId},worker_id.eq.${receiverId})`

@@ -204,27 +204,27 @@ export function SiteHeader({
           )}
 
           {/* Notifications */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative h-11 w-11 touch-manipulation"
-            asChild
+          <Link
+            href="/business/messages"
+            className={cn(
+              "relative flex h-11 w-11 items-center justify-center rounded-lg",
+              "text-muted-foreground hover:bg-muted hover:text-foreground",
+              "transition-colors min-h-[44px] touch-manipulation aria-expanded:bg-muted aria-expanded:text-foreground",
+            )}
           >
-            <Link href="/business/messages">
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <span
-                  className={cn(
-                    "absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1 text-xs font-medium text-primary-foreground",
-                    unreadCount > 99 && "min-w-[1.5rem] px-1.5",
-                  )}
-                >
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </span>
-              )}
-              <span className="sr-only">Notifications</span>
-            </Link>
-          </Button>
+            <Bell className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <span
+                className={cn(
+                  "absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1 text-xs font-medium text-primary-foreground",
+                  unreadCount > 99 && "min-w-[1.5rem] px-1.5",
+                )}
+              >
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
+            <span className="sr-only">Notifications</span>
+          </Link>
 
           {/* Theme Toggle */}
           <div className="touch-manipulation">
