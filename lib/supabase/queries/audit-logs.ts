@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { supabase } from "../client";
 import type {
   AuditLog,
@@ -36,9 +35,7 @@ export async function createAuditLog(
   },
 ): Promise<AuditLog> {
   const { data, error } = await (supabase
-    // @ts-ignore - admin_audit_logs table not in Database types yet
     .from("admin_audit_logs")
-    // @ts-ignore - admin_audit_logs table not in Database types yet
     .insert({
       old_values: auditData.old_values || {},
       new_values: auditData.new_values || {},
@@ -96,9 +93,8 @@ export async function getAuditLogs(
   try {
     const offset = (page - 1) * limit;
 
-    let query = supabase
-      // @ts-ignore - admin_audit_logs table not in Database types yet
-      .from("admin_audit_logs")
+    let query = (supabase
+      .from("admin_audit_logs") as any)
       .select("*, admin:users(*)", { count: "exact" });
 
     if (filters.adminId) {
@@ -237,9 +233,8 @@ export async function getAuditLogById(
   logId: string,
 ): Promise<{ data: AuditLogWithAdmin | null; error?: string }> {
   try {
-    const { data, error } = (await supabase
-      // @ts-ignore - admin_audit_logs table not in Database types yet
-      .from("admin_audit_logs")
+    const { data, error } = (await (supabase
+      .from("admin_audit_logs") as any)
       .select("*, admin:users(*)")
       .eq("id", logId)
       .single()) as {
@@ -318,9 +313,8 @@ export async function getAuditLogCountsByAction(
   endDate?: string,
 ): Promise<{ data: Record<string, number> | null; error?: string }> {
   try {
-    let query = supabase
-      // @ts-ignore - admin_audit_logs table not in Database types yet
-      .from("admin_audit_logs")
+    let query = (supabase
+      .from("admin_audit_logs") as any)
       .select("action");
 
     if (startDate) {
@@ -373,9 +367,8 @@ export async function getAuditLogStats(
   error?: string;
 }> {
   try {
-    const { data, error } = (await supabase
-      // @ts-ignore - admin_audit_logs table not in Database types yet
-      .from("admin_audit_logs")
+    const { data, error } = (await (supabase
+      .from("admin_audit_logs") as any)
       .select("*")
       .gte("created_at", startDate)
       .lte("created_at", endDate)) as {

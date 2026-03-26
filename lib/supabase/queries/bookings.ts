@@ -1,9 +1,9 @@
-// @ts-nocheck
 import { supabase } from "../client";
 import type { Database } from "../types";
 
 type BookingRow = Database["public"]["Tables"]["bookings"]["Row"];
 type BookingUpdate = Database["public"]["Tables"]["bookings"]["Update"];
+type BookingInsert = Database["public"]["Tables"]["bookings"]["Insert"];
 
 export type JobBookingWithDetails = BookingRow & {
   // Attendance fields (may not be in current DB schema but needed for feature)
@@ -53,10 +53,15 @@ export type JobBookingWithDetails = BookingRow & {
   } | null;
 };
 
+type BookingResult<T = unknown> = {
+  data: T | null;
+  error: { message: string } | null;
+};
+
 /**
  * Get all bookings for a specific job
  */
-export async function getJobBookings(jobId: string) {
+export async function getJobBookings(jobId: string): Promise<BookingResult<JobBookingWithDetails[]>> {
   try {
     const { data, error } = await supabase
       .from("bookings")
@@ -92,17 +97,17 @@ export async function getJobBookings(jobId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as unknown as JobBookingWithDetails[]) || [], error: null };
   } catch (error) {
     console.error("Unexpected error fetching job bookings:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
 /**
  * Get bookings for a worker
  */
-export async function getWorkerBookings(workerId: string) {
+export async function getWorkerBookings(workerId: string): Promise<BookingResult<JobBookingWithDetails[]>> {
   try {
     const { data, error } = await supabase
       .from("bookings")
@@ -144,17 +149,17 @@ export async function getWorkerBookings(workerId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as unknown as JobBookingWithDetails[]) || [], error: null };
   } catch (error) {
     console.error("Unexpected error fetching worker bookings:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
 /**
  * Get bookings for a business
  */
-export async function getBusinessBookings(businessId: string) {
+export async function getBusinessBookings(businessId: string): Promise<BookingResult<JobBookingWithDetails[]>> {
   try {
     const { data, error } = await supabase
       .from("bookings")
@@ -193,17 +198,17 @@ export async function getBusinessBookings(businessId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as unknown as JobBookingWithDetails[]) || [], error: null };
   } catch (error) {
     console.error("Unexpected error fetching business bookings:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
 /**
  * Get a single booking by ID
  */
-export async function getBookingById(bookingId: string) {
+export async function getBookingById(bookingId: string): Promise<BookingResult<JobBookingWithDetails>> {
   try {
     const { data, error } = await supabase
       .from("bookings")
@@ -248,10 +253,10 @@ export async function getBookingById(bookingId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as unknown as JobBookingWithDetails) || null, error: null };
   } catch (error) {
     console.error("Unexpected error fetching booking:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
@@ -268,7 +273,7 @@ export async function updateBookingStatus(
     | "completed"
     | "cancelled"
     | "no_show",
-) {
+): Promise<BookingResult<BookingRow>> {
   try {
     const { data, error } = await supabase
       .from("bookings")
@@ -282,10 +287,10 @@ export async function updateBookingStatus(
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as BookingRow) || null, error: null };
   } catch (error) {
     console.error("Unexpected error updating booking status:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
@@ -302,7 +307,7 @@ export async function updateMultipleBookingStatuses(
     | "completed"
     | "cancelled"
     | "no_show",
-) {
+): Promise<BookingResult<BookingRow[]>> {
   try {
     const { data, error } = await supabase
       .from("bookings")
@@ -315,20 +320,20 @@ export async function updateMultipleBookingStatuses(
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as BookingRow[]) || [], error: null };
   } catch (error) {
     console.error(
       "Unexpected error updating multiple booking statuses:",
       error,
     );
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
 /**
  * Add or update booking notes
  */
-export async function addBookingNotes(bookingId: string, notes: string) {
+export async function addBookingNotes(bookingId: string, notes: string): Promise<BookingResult<BookingRow>> {
   try {
     const { data, error } = await supabase
       .from("bookings")
@@ -342,10 +347,10 @@ export async function addBookingNotes(bookingId: string, notes: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as BookingRow) || null, error: null };
   } catch (error) {
     console.error("Unexpected error adding booking notes:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
@@ -354,11 +359,11 @@ export async function addBookingNotes(bookingId: string, notes: string) {
  */
 export async function createBooking(
   booking: Omit<BookingRow, "id" | "created_at" | "updated_at">,
-) {
+): Promise<BookingResult<BookingRow>> {
   try {
     const { data, error } = await supabase
       .from("bookings")
-      .insert(booking)
+      .insert(booking as BookingInsert)
       .select()
       .single();
 
@@ -367,17 +372,17 @@ export async function createBooking(
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as BookingRow) || null, error: null };
   } catch (error) {
     console.error("Unexpected error creating booking:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
 /**
  * Delete a booking
  */
-export async function deleteBooking(bookingId: string) {
+export async function deleteBooking(bookingId: string): Promise<{ error: { message: string } | null }> {
   try {
     const { error } = await supabase
       .from("bookings")
@@ -392,7 +397,7 @@ export async function deleteBooking(bookingId: string) {
     return { error: null };
   } catch (error) {
     console.error("Unexpected error deleting booking:", error);
-    return { error };
+    return { error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
@@ -454,7 +459,17 @@ export function calculateReliabilityScore(
  * Get reliability score breakdown for a worker
  * Returns detailed metrics used in score calculation
  */
-export async function getWorkerReliabilityMetrics(workerId: string) {
+export async function getWorkerReliabilityMetrics(workerId: string): Promise<{
+  data: {
+    totalBookings: number;
+    completedBookings: number;
+    attendanceRate: number;
+    punctualityRate: number;
+    averageRating: number | null;
+    reliabilityScore: number;
+  } | null;
+  error: { message: string } | null;
+}> {
   try {
     // Fetch bookings data
     const { data: bookingsData, error: bookingsError } = await supabase
@@ -486,7 +501,7 @@ export async function getWorkerReliabilityMetrics(workerId: string) {
       return { data: null, error: reviewsError };
     }
 
-    const bookings = (bookingsData || []) as unknown as Array<{
+    const bookings = (bookingsData || []) as Array<{
       status: string;
       check_in_at?: string | null;
       check_out_at?: string | null;
@@ -533,6 +548,6 @@ export async function getWorkerReliabilityMetrics(workerId: string) {
       "Unexpected error fetching worker reliability metrics:",
       error,
     );
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }

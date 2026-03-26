@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { supabase } from "../client";
 import type { Database } from "../types";
 
@@ -8,6 +7,8 @@ type ReliabilityScoreHistoryRow =
   Database["public"]["Tables"]["reliability_score_history"]["Row"];
 type ReliabilityScoreHistoryInsert =
   Database["public"]["Tables"]["reliability_score_history"]["Insert"];
+type BookingRow = Database["public"]["Tables"]["bookings"]["Row"];
+type ReviewRow = Database["public"]["Tables"]["reviews"]["Row"];
 
 export interface ReliabilityScoreBreakdown {
   score: number;
@@ -41,7 +42,8 @@ export async function calculateScore(
     return null;
   }
 
-  const completedJobsCount = bookings.length;
+  const bookingsTyped = bookings as BookingRow[];
+  const completedJobsCount = bookingsTyped.length;
 
   // Calculate attendance rate
   // All completed bookings count as attended (they weren't cancelled)
@@ -50,13 +52,13 @@ export async function calculateScore(
   // Calculate punctuality rate
   // Punctual if actual_start_time is before or equal to scheduled start_time
   let onTimeCount = 0;
-  const bookingsWithTimes = bookings.filter(
+  const bookingsWithTimes = bookingsTyped.filter(
     (b) => b.actual_start_time !== null && b.start_date !== null,
   );
 
   bookingsWithTimes.forEach((booking) => {
-    const actualStart = new Date(booking.actual_start_time!);
-    const scheduledStart = new Date(booking.start_date);
+    const actualStart = new Date(booking.actual_start_time as string);
+    const scheduledStart = new Date(booking.start_date as string);
     if (actualStart <= scheduledStart) {
       onTimeCount++;
     }
@@ -75,9 +77,10 @@ export async function calculateScore(
     throw new Error(`Failed to fetch worker reviews: ${reviewsError.message}`);
   }
 
+  const reviewsTyped = reviews as ReviewRow[];
   const avg_rating =
-    reviews && reviews.length > 0
-      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+    reviewsTyped.length > 0
+      ? reviewsTyped.reduce((sum, r) => sum + (r.rating || 0), 0) / reviewsTyped.length
       : 0;
 
   // Calculate final score using 40/30/30 formula
@@ -116,7 +119,7 @@ export async function getScoreHistory(
     throw new Error(`Failed to fetch score history: ${error.message}`);
   }
 
-  return data || [];
+  return (data as ReliabilityScoreHistoryRow[]) || [];
 }
 
 /**
@@ -138,7 +141,7 @@ export async function getWorkerScore(
     throw new Error(`Failed to fetch worker score: ${error.message}`);
   }
 
-  return data;
+  return data as WorkersRow;
 }
 
 /**
@@ -162,7 +165,7 @@ export async function updateScore(
     throw new Error(`Failed to update worker score: ${error.message}`);
   }
 
-  return data;
+  return data as WorkersRow;
 }
 
 /**
@@ -193,5 +196,5 @@ export async function recordScoreHistory(
     throw new Error(`Failed to record score history: ${error.message}`);
   }
 
-  return data;
+  return data as ReliabilityScoreHistoryRow;
 }
