@@ -13,6 +13,13 @@ import {
   type PaymentProvider,
 } from "@/lib/payments";
 import { logger } from "@/lib/logger";
+import {
+  errorResponse,
+  handleApiError,
+  notFoundErrorResponse,
+  badRequestErrorResponse,
+} from "@/lib/api/error-response";
+import { ErrorCode } from "@/lib/api/errors";
 
 const routeLogger = logger.createApiLogger("payments/verify");
 
@@ -54,9 +61,9 @@ export async function GET(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Transaction ID is required" },
-        { status: 400 },
+      return badRequestErrorResponse(
+        "errors.validation.transaction_id_required",
+        request,
       );
     }
 
@@ -70,9 +77,9 @@ export async function GET(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Valid payment provider is required (xendit or midtrans)" },
-        { status: 400 },
+      return badRequestErrorResponse(
+        "errors.validation.invalid_provider",
+        request,
       );
     }
 
@@ -97,10 +104,7 @@ export async function GET(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Transaction not found" },
-        { status: 404 },
-      );
+      return notFoundErrorResponse("Transaction", transactionId, request);
     }
 
     // If transaction is already in a final state, return from database
@@ -267,13 +271,7 @@ export async function GET(request: NextRequest) {
     });
     logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/payments/verify", "GET");
   }
 }
 
@@ -312,9 +310,9 @@ export async function POST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Transactions array is required" },
-        { status: 400 },
+      return badRequestErrorResponse(
+        "errors.validation.transactions_required",
+        request,
       );
     }
 
@@ -332,9 +330,13 @@ export async function POST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Maximum 50 transactions per batch" },
-        { status: 400 },
+      return errorResponse(
+        400,
+        {
+          code: ErrorCode.VALIDATION_ERROR,
+          details: { message: "Maximum 50 transactions per batch" },
+        },
+        request,
       );
     }
 
@@ -405,10 +407,7 @@ export async function POST(request: NextRequest) {
     });
     logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/payments/verify", "POST");
   }
 }
 
