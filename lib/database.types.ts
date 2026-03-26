@@ -388,6 +388,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      conversations: {
+        Row: {
+          id: string;
+          booking_id: string;
+          worker_id: string;
+          business_id: string;
+          last_message_id: string | null;
+          last_message_at: string | null;
+          unread_worker_count: number;
+          unread_business_count: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          worker_id: string;
+          business_id: string;
+          last_message_id?: string | null;
+          last_message_at?: string | null;
+          unread_worker_count?: number;
+          unread_business_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          booking_id?: string;
+          worker_id?: string;
+          business_id?: string;
+          last_message_id?: string | null;
+          last_message_at?: string | null;
+          unread_worker_count?: number;
+          unread_business_count?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       messages: {
         Row: {
           id: string;
