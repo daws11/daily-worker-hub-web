@@ -8,7 +8,7 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { InterviewChat } from "@/components/messaging/interview-chat";
-import { getInterviewSessionByBooking } from "@/lib/actions/bookings";
+import { getInterviewSessionByBooking } from "@/lib/actions/interview-sessions";
 import { getBookingMessages } from "@/lib/actions/messages";
 import { sendMessage } from "@/lib/actions/messages";
 import {
@@ -16,7 +16,7 @@ import {
   cancelInterviewSession,
   startVoiceCallInterview,
   completeVoiceCallInterview,
-} from "@/lib/actions/bookings";
+} from "@/lib/actions/interview-sessions";
 
 interface InterviewPageProps {
   params: Promise<{
