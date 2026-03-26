@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { releaseFundsAction } from "@/lib/actions/wallets";
 import { createNotification } from "@/lib/actions/notifications";
 import { logger } from "@/lib/logger";
+import { withRateLimit } from "@/lib/rate-limit";
 
 const routeLogger = logger.createApiLogger("cron/release-pending-payments");
 
@@ -22,7 +23,7 @@ const routeLogger = logger.createApiLogger("cron/release-pending-payments");
  *
  * Action: Release funds to worker's available balance
  */
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "cron/release-pending-payments",
   });
@@ -252,3 +253,8 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const POST = withRateLimit(handlePOST as any, {
+  type: "api-public",
+  userBased: false,
+});
