@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/app/providers/auth-provider";
-import { getBookingMessages } from "@/lib/supabase/queries/messages";
+import { getBookingMessages, markBookingMessagesAsRead } from "@/lib/supabase/queries/messages";
 import { getBookingById } from "@/lib/supabase/queries/bookings";
 import { sendMessage } from "@/lib/actions/messages";
 import {
@@ -74,6 +74,11 @@ export default function BusinessBookingMessagePage() {
       }
 
       setMessages(messagesData || []);
+
+      // Mark messages as read for the business (current user as receiver)
+      if (user?.id) {
+        await markBookingMessagesAsRead(bookingId, user.id);
+      }
 
       // Scroll to bottom after messages load
       setTimeout(() => {
