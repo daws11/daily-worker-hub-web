@@ -16,12 +16,17 @@ export type HttpStatusCode =
   | 401 // Unauthorized
   | 403 // Forbidden
   | 404 // Not Found
+  | 405 // Method Not Allowed
   | 409 // Conflict
+  | 410 // Gone
   | 422 // Unprocessable Entity
+  | 423 // Locked
   | 429 // Too Many Requests
   | 500 // Internal Server Error
+  | 501 // Not Implemented
   | 502 // Bad Gateway
-  | 503; // Service Unavailable
+  | 503 // Service Unavailable
+  | 504; // Gateway Timeout
 
 /**
  * Standardized API error codes used throughout the application.
