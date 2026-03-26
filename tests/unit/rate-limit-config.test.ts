@@ -10,6 +10,11 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
+// Helper to set NODE_ENV in tests (needed because TypeScript makes it read-only)
+const setNodeEnv = (value: string | undefined) => {
+  (process.env as { NODE_ENV?: string }).NODE_ENV = value;
+};
+
 // Mock the auth dependencies
 vi.mock("@/lib/auth/get-server-session", () => ({
   getServerSession: vi.fn().mockResolvedValue(null),
@@ -61,33 +66,33 @@ describe("Rate Limit Configuration", () => {
         delete process.env[key];
       }
     });
-    process.env.NODE_ENV = originalEnv;
+    setNodeEnv(originalEnv);
   });
 
   describe("Environment Detection", () => {
     it("should detect production environment", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       const { getRateLimitEnvironment } = await import("@/lib/rate-limit");
       const result = getRateLimitEnvironment();
       expect(result.environment).toBe("production");
     });
 
     it("should detect staging environment", async () => {
-      process.env.NODE_ENV = "staging";
+      setNodeEnv("staging");
       const { getRateLimitEnvironment } = await import("@/lib/rate-limit");
       const result = getRateLimitEnvironment();
       expect(result.environment).toBe("staging");
     });
 
     it("should detect development environment by default", async () => {
-      process.env.NODE_ENV = undefined;
+      setNodeEnv(undefined);
       const { getRateLimitEnvironment } = await import("@/lib/rate-limit");
       const result = getRateLimitEnvironment();
       expect(result.environment).toBe("development");
     });
 
     it("should treat unknown environments as development", async () => {
-      process.env.NODE_ENV = "test";
+      setNodeEnv("test");
       const { getRateLimitEnvironment } = await import("@/lib/rate-limit");
       const result = getRateLimitEnvironment();
       expect(result.environment).toBe("development");
@@ -96,21 +101,21 @@ describe("Rate Limit Configuration", () => {
 
   describe("Environment Multipliers", () => {
     it("should apply multiplier of 1 for production", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       const { getRateLimitEnvironment } = await import("@/lib/rate-limit");
       const result = getRateLimitEnvironment();
       expect(result.multiplier).toBe(1);
     });
 
     it("should apply multiplier of 2 for staging", async () => {
-      process.env.NODE_ENV = "staging";
+      setNodeEnv("staging");
       const { getRateLimitEnvironment } = await import("@/lib/rate-limit");
       const result = getRateLimitEnvironment();
       expect(result.multiplier).toBe(2);
     });
 
     it("should apply multiplier of 5 for development", async () => {
-      process.env.NODE_ENV = "development";
+      setNodeEnv("development");
       const { getRateLimitEnvironment } = await import("@/lib/rate-limit");
       const result = getRateLimitEnvironment();
       expect(result.multiplier).toBe(5);
@@ -119,7 +124,7 @@ describe("Rate Limit Configuration", () => {
 
   describe("Base Rate Limit Configurations", () => {
     it("should have auth type with 5 requests per minute (production)", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS.auth.maxRequests).toBe(5);
       expect(RATE_LIMIT_CONFIGS.auth.windowMs).toBe(60000);
@@ -127,7 +132,7 @@ describe("Rate Limit Configuration", () => {
     });
 
     it("should have api-authenticated type with 100 requests per minute (production)", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS["api-authenticated"].maxRequests).toBe(100);
       expect(RATE_LIMIT_CONFIGS["api-authenticated"].windowMs).toBe(60000);
@@ -135,7 +140,7 @@ describe("Rate Limit Configuration", () => {
     });
 
     it("should have api-public type with 30 requests per minute (production)", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS["api-public"].maxRequests).toBe(30);
       expect(RATE_LIMIT_CONFIGS["api-public"].windowMs).toBe(60000);
@@ -143,7 +148,7 @@ describe("Rate Limit Configuration", () => {
     });
 
     it("should have payment type with 10 requests per minute (production)", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS.payment.maxRequests).toBe(10);
       expect(RATE_LIMIT_CONFIGS.payment.windowMs).toBe(60000);
@@ -153,7 +158,7 @@ describe("Rate Limit Configuration", () => {
 
   describe("Environment Multiplier Effects", () => {
     it("should apply 2x multiplier for staging", async () => {
-      process.env.NODE_ENV = "staging";
+      setNodeEnv("staging");
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       // Base: auth=5, api-auth=100, api-public=30, payment=10
       // Staging (2x): auth=10, api-auth=200, api-public=60, payment=20
@@ -164,7 +169,7 @@ describe("Rate Limit Configuration", () => {
     });
 
     it("should apply 5x multiplier for development", async () => {
-      process.env.NODE_ENV = "development";
+      setNodeEnv("development");
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       // Base: auth=5, api-auth=100, api-public=30, payment=10
       // Development (5x): auth=25, api-auth=500, api-public=150, payment=50
@@ -175,7 +180,7 @@ describe("Rate Limit Configuration", () => {
     });
 
     it("should maintain windowMs regardless of multiplier", async () => {
-      process.env.NODE_ENV = "development";
+      setNodeEnv("development");
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       // Window should always be 60 seconds (60000ms)
       expect(RATE_LIMIT_CONFIGS.auth.windowMs).toBe(60000);
@@ -187,63 +192,63 @@ describe("Rate Limit Configuration", () => {
 
   describe("Environment Variable Overrides", () => {
     it("should override auth max requests via RATE_LIMIT_AUTH_MAX_REQUESTS", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       process.env.RATE_LIMIT_AUTH_MAX_REQUESTS = "20";
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS.auth.maxRequests).toBe(20);
     });
 
     it("should override auth window via RATE_LIMIT_AUTH_WINDOW_MS", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       process.env.RATE_LIMIT_AUTH_WINDOW_MS = "120000";
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS.auth.windowMs).toBe(120000);
     });
 
     it("should override api-authenticated max requests via RATE_LIMIT_API_AUTHENTICATED_MAX_REQUESTS", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       process.env.RATE_LIMIT_API_AUTHENTICATED_MAX_REQUESTS = "500";
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS["api-authenticated"].maxRequests).toBe(500);
     });
 
     it("should override api-authenticated window via RATE_LIMIT_API_AUTHENTICATED_WINDOW_MS", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       process.env.RATE_LIMIT_API_AUTHENTICATED_WINDOW_MS = "300000";
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS["api-authenticated"].windowMs).toBe(300000);
     });
 
     it("should override api-public max requests via RATE_LIMIT_API_PUBLIC_MAX_REQUESTS", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       process.env.RATE_LIMIT_API_PUBLIC_MAX_REQUESTS = "100";
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS["api-public"].maxRequests).toBe(100);
     });
 
     it("should override api-public window via RATE_LIMIT_API_PUBLIC_WINDOW_MS", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       process.env.RATE_LIMIT_API_PUBLIC_WINDOW_MS = "180000";
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS["api-public"].windowMs).toBe(180000);
     });
 
     it("should override payment max requests via RATE_LIMIT_PAYMENT_MAX_REQUESTS", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       process.env.RATE_LIMIT_PAYMENT_MAX_REQUESTS = "50";
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS.payment.maxRequests).toBe(50);
     });
 
     it("should override payment window via RATE_LIMIT_PAYMENT_WINDOW_MS", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       process.env.RATE_LIMIT_PAYMENT_WINDOW_MS = "240000";
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS.payment.windowMs).toBe(240000);
     });
 
     it("should allow overriding max requests without affecting windowMs", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       process.env.RATE_LIMIT_AUTH_MAX_REQUESTS = "100";
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS.auth.maxRequests).toBe(100);
@@ -251,7 +256,7 @@ describe("Rate Limit Configuration", () => {
     });
 
     it("should allow overriding windowMs without affecting maxRequests", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       process.env.RATE_LIMIT_AUTH_WINDOW_MS = "300000";
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS.auth.maxRequests).toBe(5); // Unchanged
@@ -261,7 +266,7 @@ describe("Rate Limit Configuration", () => {
 
   describe("Override Priority Over Multipliers", () => {
     it("should prioritize env var overrides over multipliers", async () => {
-      process.env.NODE_ENV = "development"; // 5x multiplier
+      setNodeEnv("development"); // 5x multiplier
       process.env.RATE_LIMIT_AUTH_MAX_REQUESTS = "3"; // Override to lower value
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       // Without override: 5 * 5 = 25
@@ -270,7 +275,7 @@ describe("Rate Limit Configuration", () => {
     });
 
     it("should prioritize env var overrides in staging", async () => {
-      process.env.NODE_ENV = "staging"; // 2x multiplier
+      setNodeEnv("staging"); // 2x multiplier
       process.env.RATE_LIMIT_API_PUBLIC_MAX_REQUESTS = "10";
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       // Without override: 30 * 2 = 60
@@ -281,7 +286,7 @@ describe("Rate Limit Configuration", () => {
 
   describe("RateLimitConfig Interface", () => {
     it("should export RateLimitConfig interface through getRateLimitEnvironment", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       const { getRateLimitEnvironment } = await import("@/lib/rate-limit");
       const result = getRateLimitEnvironment();
 
@@ -293,7 +298,7 @@ describe("Rate Limit Configuration", () => {
     });
 
     it("should have Indonesian error messages", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS.auth.message).toContain("Terlalu banyak");
       expect(RATE_LIMIT_CONFIGS["api-authenticated"].message).toContain("Terlalu banyak");
@@ -304,28 +309,28 @@ describe("Rate Limit Configuration", () => {
 
   describe("RateLimitType Support", () => {
     it("should support auth rate limit type", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS.auth).toBeDefined();
       expect(RATE_LIMIT_CONFIGS.auth.type).toBe("auth");
     });
 
     it("should support api-authenticated rate limit type", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS["api-authenticated"]).toBeDefined();
       expect(RATE_LIMIT_CONFIGS["api-authenticated"].type).toBe("api-authenticated");
     });
 
     it("should support api-public rate limit type", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS["api-public"]).toBeDefined();
       expect(RATE_LIMIT_CONFIGS["api-public"].type).toBe("api-public");
     });
 
     it("should support payment rate limit type", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS.payment).toBeDefined();
       expect(RATE_LIMIT_CONFIGS.payment.type).toBe("payment");
@@ -334,7 +339,7 @@ describe("Rate Limit Configuration", () => {
 
   describe("Edge Cases", () => {
     it("should handle empty string env var as invalid", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       process.env.RATE_LIMIT_AUTH_MAX_REQUESTS = "";
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       // Empty string should not override (parseInt returns NaN which is falsy)
@@ -342,7 +347,7 @@ describe("Rate Limit Configuration", () => {
     });
 
     it("should handle non-numeric env var with NaN value", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       process.env.RATE_LIMIT_AUTH_MAX_REQUESTS = "abc";
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       // parseInt("abc") returns NaN, which is a valid value (not undefined)
@@ -351,7 +356,7 @@ describe("Rate Limit Configuration", () => {
     });
 
     it("should handle negative number env var (no sanitization)", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       process.env.RATE_LIMIT_AUTH_MAX_REQUESTS = "-5";
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       // Negative numbers are not sanitized; override takes precedence
@@ -359,7 +364,7 @@ describe("Rate Limit Configuration", () => {
     });
 
     it("should handle very large number env var", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       process.env.RATE_LIMIT_AUTH_MAX_REQUESTS = "999999";
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
       expect(RATE_LIMIT_CONFIGS.auth.maxRequests).toBe(999999);
@@ -368,7 +373,7 @@ describe("Rate Limit Configuration", () => {
 
   describe("Configuration Consistency", () => {
     it("should have consistent configs between RATE_LIMIT_CONFIGS and getRateLimitEnvironment", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       const { RATE_LIMIT_CONFIGS, getRateLimitEnvironment } = await import("@/lib/rate-limit");
       const envInfo = getRateLimitEnvironment();
 
@@ -376,7 +381,7 @@ describe("Rate Limit Configuration", () => {
     });
 
     it("should always have all four rate limit types configured", async () => {
-      process.env.NODE_ENV = "production";
+      setNodeEnv("production");
       const { RATE_LIMIT_CONFIGS } = await import("@/lib/rate-limit");
 
       const types = ["auth", "api-authenticated", "api-public", "payment"] as const;
@@ -387,7 +392,7 @@ describe("Rate Limit Configuration", () => {
     });
 
     it("should maintain multiplier consistency with environment", async () => {
-      process.env.NODE_ENV = "staging";
+      setNodeEnv("staging");
       const { getRateLimitEnvironment } = await import("@/lib/rate-limit");
       const result = getRateLimitEnvironment();
 

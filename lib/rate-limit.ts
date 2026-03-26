@@ -23,7 +23,7 @@ export type Environment = "development" | "staging" | "production";
  * Get current environment
  */
 function getEnvironment(): Environment {
-  const env = process.env.NODE_ENV;
+  const env = (process.env.NODE_ENV ?? "development") as string;
   if (env === "production") return "production";
   if (env === "staging") return "staging";
   return "development";
