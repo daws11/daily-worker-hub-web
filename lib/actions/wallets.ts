@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use server";
 
 import { createClient } from "../supabase/server";
@@ -26,12 +25,20 @@ type WalletTransactionInsert = Pick<
   | "metadata"
 >;
 
+/**
+ * Result type for wallet creation and retrieval operations.
+ * Contains the wallet data on success or an error message on failure.
+ */
 export type WalletResult = {
   success: boolean;
   error?: string;
   data?: Wallet;
 };
 
+/**
+ * Result type for retrieving wallet balance.
+ * Contains pending and available balances on success.
+ */
 export type WalletBalanceResult = {
   success: boolean;
   error?: string;
@@ -41,12 +48,20 @@ export type WalletBalanceResult = {
   };
 };
 
+/**
+ * Result type for single wallet transaction operations.
+ * Contains the transaction record on success.
+ */
 export type WalletTransactionResult = {
   success: boolean;
   error?: string;
   data?: WalletTransaction;
 };
 
+/**
+ * Result type for listing wallet transactions with pagination count.
+ * Contains an array of transactions on success.
+ */
 export type WalletTransactionsListResult = {
   success: boolean;
   error?: string;
