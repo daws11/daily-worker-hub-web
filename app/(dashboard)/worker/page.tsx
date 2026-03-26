@@ -131,12 +131,12 @@ export default function WorkerDashboardPage() {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        const { data: transactions } = await supabase
+        const { data: transactions } = await (supabase as any)
           .from("wallet_transactions")
           .select("amount, created_at")
           .eq("user_id", user.id)
           .eq("type", "credit")
-          .gte("created_at", startOfMonth.toISOString());
+          .gte("created_at", startOfMonth.toISOString()) as { data: { amount: number; created_at: string }[] | null };
 
         const earnedThisMonth = transactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
 
