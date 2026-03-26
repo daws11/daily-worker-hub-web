@@ -51,6 +51,8 @@ export type ConversationResult = {
 
 /**
  * Send a new message from one user to another
+ * Authorization: sender must have a booking relationship with receiver
+ * (business-worker or worker-business via an active booking)
  */
 export async function sendMessage(
   senderId: string,
@@ -60,6 +62,39 @@ export async function sendMessage(
 ): Promise<MessageResult> {
   try {
     const supabase = await createClient();
+
+    // Booking scope authorization: prevent messaging unconnected users
+    // Get sender profile to determine their role
+    const { data: senderProfile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", senderId)
+      .single();
+
+    const senderRole = senderProfile?.role || "worker";
+
+    // Only check booking relationship if sender is not messaging themselves
+    if (senderId !== receiverId && senderRole !== "admin") {
+      // Check for an active booking between sender and receiver
+      const { data: booking } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("status", "active")
+        .or(
+          senderRole === "business"
+            ? `and(business_id.eq.${senderId},worker_id.eq.${receiverId})`
+            : `and(worker_id.eq.${senderId},business_id.eq.${receiverId})`,
+        )
+        .limit(1)
+        .single();
+
+      if (!booking) {
+        return {
+          success: false,
+          error: "Anda tidak dapat mengirim pesan ke pengguna ini tanpa booking yang aktif",
+        };
+      }
+    }
 
     const newMessage: MessageInsert = {
       sender_id: senderId,
