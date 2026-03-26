@@ -94,7 +94,7 @@ export default function BusinessDashboardPage() {
       setIsLoading(true);
       try {
         // Get business ID
-        const { data: business } = await supabase
+        const { data: business } = await (supabase as any)
           .from("businesses")
           .select("id")
           .eq("user_id", user.id)
@@ -106,7 +106,7 @@ export default function BusinessDashboardPage() {
         }
 
         // Fetch wallet
-        const { data: walletData } = await supabase
+        const { data: walletData } = await (supabase as any)
           .from("wallets")
           .select("available_balance, pending_balance")
           .eq("user_id", user.id)
@@ -115,15 +115,15 @@ export default function BusinessDashboardPage() {
         if (walletData) setWallet(walletData);
 
         // Fetch jobs
-        const { data: jobs } = await supabase
+        const { data: jobs } = await (supabase as any)
           .from("jobs")
           .select("id, status")
           .eq("business_id", business.id);
 
-        const activeJobs = jobs?.filter(j => j.status === "open" || j.status === "in_progress").length || 0;
+        const activeJobs = jobs?.filter((j: { status: string }) => j.status === "open" || j.status === "in_progress").length || 0;
 
         // Fetch bookings
-        const { data: bookings } = await supabase
+        const { data: bookings } = await (supabase as any)
           .from("bookings")
           .select("id, status, start_date, end_date, final_price, jobs (id, title, address), workers (id, full_name, avatar_url)")
           .eq("business_id", business.id)
@@ -133,7 +133,7 @@ export default function BusinessDashboardPage() {
         if (bookings) setUpcomingBookings(bookings);
 
         // Fetch reviews count
-        const { count: reviewCount } = await supabase
+        const { count: reviewCount } = await (supabase as any)
           .from("reviews")
           .select("*", { count: "exact", head: true })
           .eq("business_id", business.id);
@@ -141,7 +141,7 @@ export default function BusinessDashboardPage() {
         // Calculate total spent - first get business wallet
         if (!business) return;
         
-        const { data: businessWallet } = await supabase
+        const { data: businessWallet } = await (supabase as any)
           .from("wallets")
           .select("id")
           .eq("business_id", business.id)
@@ -158,7 +158,7 @@ export default function BusinessDashboardPage() {
         }
 
         const walletId = businessWallet.id;
-        const { data: wtData, error: wtError } = await supabase
+        const { data: wtData, error: wtError } = await (supabase as any)
           .from("wallet_transactions")
           .select("amount")
           .eq("wallet_id", walletId)

@@ -94,31 +94,31 @@ export default function WorkerDashboardPage() {
       setIsLoading(true);
       try {
         // Get worker profile
-        const { data: worker } = await supabase
+        const { data: worker } = await (supabase as any)
           .from("workers")
           .select("id, rating")
           .eq("user_id", user.id)
           .single();
 
         // Fetch wallet
-        const { data: walletData } = await supabase
+        const { data: walletData } = await (supabase as any)
           .from("wallets")
           .select("available_balance, pending_balance")
           .eq("user_id", user.id)
           .single();
-        
+
         if (walletData) setWallet(walletData);
 
         // Fetch open jobs count
-        const { count: openJobs } = await supabase
+        const { count: openJobs } = await (supabase as any)
           .from("jobs")
           .select("*", { count: "exact", head: true })
           .eq("status", "open");
 
         // Fetch worker bookings
         const workerId = worker?.id || user.id;
-        
-        const { data: bookings } = await supabase
+
+        const { data: bookings } = await (supabase as any)
           .from("bookings")
           .select("id, status, start_date, end_date, final_price, jobs (id, title, address), businesses (id, name)")
           .eq("worker_id", workerId)
@@ -131,7 +131,7 @@ export default function WorkerDashboardPage() {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        const { data: transactions } = await supabase
+        const { data: transactions } = await (supabase as any)
           .from("wallet_transactions")
           .select("amount, created_at")
           .eq("user_id", user.id)
