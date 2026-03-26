@@ -1,26 +1,9 @@
-// @ts-nocheck
 "use server";
 
 import { createClient } from "../supabase/server";
 import type { Database } from "../supabase/types";
 
-type Dispute = {
-  id: string;
-  booking_id: string;
-  reporter_id: string;
-  reported_id: string;
-  type: string;
-  description: string;
-  status: "pending" | "reviewing" | "resolved" | "dismissed";
-  priority: "low" | "medium" | "high" | "urgent";
-  resolution?: string;
-  resolution_notes?: string;
-  admin_notes?: string;
-  created_at: string;
-  updated_at: string;
-  resolved_at?: string;
-  resolved_by?: string;
-};
+type Dispute = Database["public"]["Tables"]["disputes"]["Row"];
 type Booking = Database["public"]["Tables"]["bookings"]["Row"];
 
 // Types for bookings with joined data
@@ -43,7 +26,6 @@ type BookingWithJobAndUsers = Booking & {
     id: string;
     full_name: string;
     phone: string | null;
-    email: string | null;
   } | null;
   businesses: {
     id: string;
@@ -79,7 +61,6 @@ type DisputeWithFullBooking = Dispute & {
       id: string;
       full_name: string;
       phone: string | null;
-      email: string | null;
     } | null;
     businesses: {
       id: string;
@@ -391,8 +372,7 @@ export async function getDispute(disputeId: string) {
           workers (
             id,
             full_name,
-            phone,
-            email
+            phone
           ),
           businesses (
             id,
@@ -762,8 +742,7 @@ export async function getPendingDisputes() {
           workers (
             id,
             full_name,
-            phone,
-            email
+            phone
           ),
           businesses (
             id,
