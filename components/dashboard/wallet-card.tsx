@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,11 +30,12 @@ function formatCurrency(value: number): string {
 }
 
 export function WalletActionCard({ role, wallet }: WalletActionCardProps) {
+  const router = useRouter();
   const isWorker = role === "worker";
   const walletHref = isWorker ? "/worker/wallet" : "/business/wallet";
 
   return (
-    <div className="animate-slide-up animation-delay-100">
+    <Link href={walletHref} className="block animate-slide-up animation-delay-100">
       <Card className={`bg-gradient-to-br ${isWorker ? "from-emerald-500 to-emerald-600" : "from-primary to-primary/80"} text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}>
         <CardContent className="p-4 md:p-6">
           <div className="flex items-center justify-between">
@@ -57,34 +59,46 @@ export function WalletActionCard({ role, wallet }: WalletActionCardProps) {
           <div className="flex gap-3 mt-4">
             {isWorker ? (
               <>
-                <Link href={walletHref} className="flex-1">
-                  <Button size="sm" variant="secondary" className="w-full bg-white/20 hover:bg-white/30 text-white border-0">
-                    <ArrowRight className="h-4 w-4 mr-1" /> Tarik Dana
-                  </Button>
-                </Link>
-                <Link href={walletHref} className="flex-1">
-                  <Button size="sm" variant="secondary" className="w-full bg-white/20 hover:bg-white/30 text-white border-0">
-                    Riwayat
-                  </Button>
-                </Link>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="flex-1 bg-white/20 hover:bg-white/30 text-white border-0"
+                  onClick={(e) => { e.stopPropagation(); router.push(walletHref); }}
+                >
+                  <ArrowRight className="h-4 w-4 mr-1" /> Tarik Dana
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="flex-1 bg-white/20 hover:bg-white/30 text-white border-0"
+                  onClick={(e) => { e.stopPropagation(); router.push(walletHref); }}
+                >
+                  Riwayat
+                </Button>
               </>
             ) : (
               <>
-                <Link href={walletHref} className="flex-1">
-                  <Button size="sm" variant="secondary" className="w-full bg-white/20 hover:bg-white/30 text-white border-0">
-                    <Plus className="h-4 w-4 mr-1" /> Top Up
-                  </Button>
-                </Link>
-                <Link href={walletHref} className="flex-1">
-                  <Button size="sm" variant="secondary" className="w-full bg-white/20 hover:bg-white/30 text-white border-0">
-                    Riwayat
-                  </Button>
-                </Link>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="flex-1 bg-white/20 hover:bg-white/30 text-white border-0"
+                  onClick={(e) => { e.stopPropagation(); router.push(walletHref); }}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Top Up
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="flex-1 bg-white/20 hover:bg-white/30 text-white border-0"
+                  onClick={(e) => { e.stopPropagation(); router.push(walletHref); }}
+                >
+                  Riwayat
+                </Button>
               </>
             )}
           </div>
         </CardContent>
       </Card>
-    </div>
+    </Link>
   );
 }
