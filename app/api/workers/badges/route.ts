@@ -1,3 +1,9 @@
+/**
+ * Worker Badges API Routes
+ *
+ * Endpoints for retrieving worker badges and achievements in the Daily Worker Hub platform.
+ */
+
 import { NextResponse } from "next/server";
 import {
   getWorkerAchievements,
@@ -6,9 +12,10 @@ import {
   fetchWorkerStats,
 } from "@/lib/badges";
 import { cache, LRUCache, CACHE_TTL } from "@/lib/cache";
+import { logger } from "@/lib/logger";
+import { validationErrorResponse, handleApiError, errorResponse } from "@/lib/api/error-response";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const routeLogger = logger.createApiLogger("workers/badges");
 
 /**
  * Generate cache key for worker badges
@@ -61,6 +68,10 @@ async function fetchWorkerBadgesData(workerId: string, filter: string) {
  * - Worker badges are cached for 10 minutes (may change with progress)
  */
 export async function GET(request: Request) {
+  const { startTime, requestId } = logger.requestStart(request, {
+    route: "workers/badges",
+  });
+
   try {
     const { searchParams } = new URL(request.url);
     const workerId = searchParams.get("worker_id");
@@ -73,9 +84,18 @@ export async function GET(request: Request) {
     const authHeader = request.headers.get("authorization");
 
     if (!workerId) {
-      return NextResponse.json(
-        { error: "worker_id is required" },
-        { status: 400 },
+      routeLogger.warn("Missing required parameter: worker_id", { requestId });
+      logger.requestError(
+        request,
+        new Error("Missing required parameter: worker_id"),
+        400,
+        startTime,
+        { requestId },
+      );
+
+      return validationErrorResponse(
+        { reason: "worker_id is required" },
+        request,
       );
     }
 
@@ -94,17 +114,41 @@ export async function GET(request: Request) {
     // Fetch fresh data
     const result = await fetchWorkerBadgesData(workerId, filter);
 
+    if (!result || result.data === undefined) {
+      routeLogger.error(
+        "Failed to fetch worker badges data",
+        new Error("Invalid result from fetchWorkerBadgesData"),
+        { requestId, workerId, filter },
+      );
+      logger.requestError(
+        request,
+        new Error("Failed to fetch worker badges"),
+        500,
+        startTime,
+        { requestId },
+      );
+
+      return errorResponse(500, "errors.serverError", request);
+    }
+
     // Cache the result (10 minutes TTL - badges can change with progress)
     cache.set(cacheKey, result, CACHE_TTL.BADGES);
 
     const response = NextResponse.json(result);
     response.headers.set("X-Cache", "MISS");
+
+    logger.requestSuccess(request, { status: 200 }, startTime, {
+      requestId,
+      workerId,
+      filter,
+    });
+
     return response;
   } catch (error) {
-    console.error("Error in GET /api/workers/badges:", error);
-    return NextResponse.json(
-      { error: "Internal server error", details: (error as Error).message },
-      { status: 500 },
-    );
+    routeLogger.error("Unexpected error in GET /api/workers/badges", error, {
+      requestId,
+    });
+
+    return handleApiError(error, request, "/api/workers/badges", "GET");
   }
 }
