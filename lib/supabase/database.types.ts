@@ -1433,6 +1433,30 @@ export type Database = {
           },
         ]
       }
+      rate_limits: {
+        Row: {
+          created_at: string
+          id: string
+          identifier: string
+          rate_limit_type: Database["public"]["Enums"]["rate_limit_type"]
+          window_ms: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          identifier: string
+          rate_limit_type: Database["public"]["Enums"]["rate_limit_type"]
+          window_ms: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          identifier?: string
+          rate_limit_type?: Database["public"]["Enums"]["rate_limit_type"]
+          window_ms?: number
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           booking_id: string
@@ -2294,6 +2318,7 @@ export type Database = {
         | "cancelled"
         | "paid"
         | "failed"
+      rate_limit_type: "auth" | "api-authenticated" | "api-public" | "payment"
       report_status: "pending" | "reviewing" | "resolved" | "dismissed"
       report_type: "user" | "job" | "business" | "booking"
       reviewer_type: "business" | "worker"
