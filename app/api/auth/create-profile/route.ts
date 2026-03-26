@@ -1,22 +1,46 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { NextRequest } from "next/server";
+import { logger } from "@/lib/logger";
+import {
+  errorResponse,
+  handleApiError,
+  validationErrorResponse,
+  internalErrorResponse,
+} from "@/lib/api/error-response";
+
+const routeLogger = logger.createApiLogger("create-profile");
 
 /**
  * POST /api/auth/create-profile
- * 
+ *
  * Create user profile after signup using service role to bypass RLS
  * This is needed because RLS policies require auth.uid() to match the user id,
  * but during signup the session might not be fully established yet.
  */
 export async function POST(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, {
+    route: "create-profile",
+  });
+
   try {
     const body = await request.json();
     const { userId, email, fullName, role } = body;
 
     if (!userId || !email || !fullName || !role) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
+      routeLogger.warn("Missing required fields", { requestId });
+      logger.requestError(
+        request,
+        new Error("Missing required fields: userId, email, fullName, role"),
+        400,
+        startTime,
+        { requestId },
+      );
+
+      return validationErrorResponse(
+        {
+          reason: "Missing required fields",
+          required: ["userId", "email", "fullName", "role"],
+        },
+        request,
       );
     }
 
@@ -25,11 +49,18 @@ export async function POST(request: NextRequest) {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
-      console.error("[create-profile] Missing Supabase credentials");
-      return NextResponse.json(
-        { error: "Server configuration error" },
-        { status: 500 }
+      routeLogger.error("Missing Supabase credentials", new Error("Server configuration error"), {
+        requestId,
+      });
+      logger.requestError(
+        request,
+        new Error("Missing Supabase credentials"),
+        500,
+        startTime,
+        { requestId },
       );
+
+      return internalErrorResponse(new Error("Server configuration error"), request);
     }
 
     // Use service role to bypass RLS
@@ -54,20 +85,40 @@ export async function POST(request: NextRequest) {
       });
 
     if (profileError) {
-      console.error("[create-profile] Profile creation error:", profileError);
-      return NextResponse.json(
-        { error: "Failed to create profile", details: profileError.message },
-        { status: 500 }
+      routeLogger.error(
+        "Profile creation failed",
+        new Error(profileError.message),
+        { requestId, userId },
+      );
+      logger.requestError(
+        request,
+        new Error(profileError.message),
+        500,
+        startTime,
+        { requestId },
+      );
+
+      return errorResponse(
+        500,
+        { code: "PROFILE_CREATION_FAILED", details: profileError.message },
+        request,
       );
     }
 
-    console.log("[create-profile] Profile created successfully for:", userId);
-    return NextResponse.json({ success: true });
+    routeLogger.info("Profile created successfully", {
+      requestId,
+      userId,
+    });
+    logger.requestSuccess(request, { status: 200 }, startTime, {
+      requestId,
+    });
+
+    return new (await import("next/server")).NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[create-profile] Unexpected error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    routeLogger.error("Unexpected error in POST /api/auth/create-profile", error, {
+      requestId,
+    });
+
+    return handleApiError(error, request, "/api/auth/create-profile", "POST");
   }
 }
