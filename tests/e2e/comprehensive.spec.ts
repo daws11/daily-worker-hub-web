@@ -1,5 +1,4 @@
-import { test, expect } from "@playwright/test";
-import { chromium } from "playwright";
+import { test, expect, chromium } from "@playwright/test";
 import path from "path";
 
 test.describe("Daily Worker Hub - Comprehensive E2E Testing", () => {

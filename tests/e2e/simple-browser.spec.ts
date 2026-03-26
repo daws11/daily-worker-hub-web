@@ -1,5 +1,4 @@
-import { test } from "@playwright/test";
-import { chromium } from "playwright";
+import { test, chromium } from "@playwright/test";
 
 test.describe("Simple Browser Launch Test", () => {
   test("should launch chromium and take screenshot", async ({ page }) => {
