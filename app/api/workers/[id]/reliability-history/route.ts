@@ -44,17 +44,12 @@ import { createClient } from "@/lib/supabase/server";
  *                         type: string
  *                       score:
  *                         type: number
- *                       attendance_rate:
+ *                       previous_score:
  *                         type: number
- *                       punctuality_rate:
- *                         type: number
- *                       avg_rating:
- *                         type: number
- *                       completed_jobs_count:
- *                         type: number
- *                       calculated_at:
+ *                       change_reason:
  *                         type: string
- *                         format: date-time
+ *                       booking_id:
+ *                         type: string
  *                       created_at:
  *                         type: string
  *                         format: date-time
@@ -91,12 +86,10 @@ export async function GET(
     const formattedHistory = (history || []).map((entry) => ({
       id: entry.id,
       worker_id: entry.worker_id,
-      score: entry.score,
-      attendance_rate: entry.attendance_rate,
-      punctuality_rate: entry.punctuality_rate,
-      avg_rating: entry.avg_rating,
-      completed_jobs_count: entry.completed_jobs_count,
-      calculated_at: entry.calculated_at,
+      score: entry.new_score,
+      previous_score: entry.previous_score,
+      change_reason: entry.change_reason,
+      booking_id: entry.booking_id,
       created_at: entry.created_at,
     }));
 

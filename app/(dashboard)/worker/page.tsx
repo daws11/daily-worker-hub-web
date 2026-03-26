@@ -131,6 +131,7 @@ export default function WorkerDashboardPage() {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
+        // @ts-expect-error - Supabase type inference causes deep recursion with UUID comparisons
         const { data: transactions } = await supabase
           .from("wallet_transactions")
           .select("amount, created_at")
