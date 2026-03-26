@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use server";
 
 import { createClient } from "../supabase/server";
@@ -125,7 +124,7 @@ export async function initializeQrisPayment(
       payment_url: null,
       qris_expires_at: qrisExpiresAt,
       fee_amount: feeAmount,
-      metadata: metadata || {},
+      metadata: (metadata || {}) as any,
     };
 
     const { data: transaction, error: transactionError } = await supabase
@@ -159,7 +158,7 @@ export async function initializeQrisPayment(
           failureRedirectUrl: `${baseUrl}/business/wallet?payment=failed`,
           callbackUrl: `${baseUrl}/api/webhooks/${provider}`,
           metadata: {
-            business_id,
+            business_id: businessId,
             business_name: business.name,
             original_amount: amount,
             fee_amount: feeAmount,
@@ -238,9 +237,9 @@ export async function getBusinessWalletBalance(
   try {
     const supabase = await createClient();
 
-    const { data: wallet, error } = await supabase
+    const { data: wallet, error } = await (supabase as any)
       .from("wallets")
-      .select("balance, currency")
+      .select("available_balance, pending_balance, balance")
       .eq("business_id", businessId)
       .maybeSingle();
 
@@ -253,16 +252,15 @@ export async function getBusinessWalletBalance(
 
     // If wallet doesn't exist, create one with zero balance
     if (!wallet) {
-      const { data: newWallet, error: createError } = await supabase
+      const { data: newWallet, error: createError } = await (supabase as any)
         .from("wallets")
         .insert({
           business_id: businessId,
-          worker_id: null,
           balance: 0,
-          currency: "IDR",
-          is_active: true,
+          available_balance: 0,
+          pending_balance: 0,
         })
-        .select("balance, currency")
+        .select("available_balance, pending_balance, balance")
         .single();
 
       if (createError || !newWallet) {
@@ -274,13 +272,19 @@ export async function getBusinessWalletBalance(
 
       return {
         success: true,
-        data: { balance: newWallet.balance, currency: newWallet.currency },
+        data: {
+          balance: newWallet.available_balance + newWallet.pending_balance,
+          currency: "IDR",
+        },
       };
     }
 
     return {
       success: true,
-      data: { balance: wallet.balance, currency: wallet.currency },
+      data: {
+        balance: wallet.available_balance + wallet.pending_balance,
+        currency: "IDR",
+      },
     };
   } catch (error) {
     return {
@@ -310,9 +314,9 @@ export async function getWorkerWalletBalance(
       return { success: false, error: "Worker tidak ditemukan" };
     }
 
-    const { data: wallet, error } = await supabase
+    const { data: wallet, error } = await (supabase as any)
       .from("wallets")
-      .select("balance")
+      .select("available_balance, pending_balance, balance")
       .eq("user_id", worker.user_id)
       .maybeSingle();
 
@@ -325,7 +329,7 @@ export async function getWorkerWalletBalance(
 
     // If wallet doesn't exist, create one with zero balance
     if (!wallet) {
-      const { data: newWallet, error: createError } = await supabase
+      const { data: newWallet, error: createError } = await (supabase as any)
         .from("wallets")
         .insert({
           user_id: worker.user_id,
@@ -333,7 +337,7 @@ export async function getWorkerWalletBalance(
           pending_balance: 0,
           available_balance: 0,
         })
-        .select("balance")
+        .select("available_balance, pending_balance, balance")
         .single();
 
       if (createError || !newWallet) {
@@ -345,13 +349,19 @@ export async function getWorkerWalletBalance(
 
       return {
         success: true,
-        data: { balance: newWallet.balance, currency: "IDR" },
+        data: {
+          balance: newWallet.available_balance + newWallet.pending_balance,
+          currency: "IDR",
+        },
       };
     }
 
     return {
       success: true,
-      data: { balance: wallet.balance, currency: "IDR" },
+      data: {
+        balance: wallet.available_balance + wallet.pending_balance,
+        currency: "IDR",
+      },
     };
   } catch (error) {
     return {
@@ -378,7 +388,7 @@ export async function getBusinessPaymentHistory(
       .order("created_at", { ascending: false });
 
     if (status) {
-      query = query.eq("status", status);
+      query = query.eq("status", status as any);
     }
 
     const { data, error } = await query;

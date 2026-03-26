@@ -3,9 +3,9 @@
   "spec": "041-systematically-remove-16-ts-nocheck-directives-to-",
   "state": "building",
   "subtasks": {
-    "completed": 12,
+    "completed": 13,
     "total": 18,
-    "in_progress": 0,
+    "in_progress": 1,
     "failed": 0
   },
   "phase": {
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 13,
+    "number": 15,
     "started_at": "2026-03-27T02:00:21.823595"
   },
-  "last_update": "2026-03-27T03:13:01.430910"
+  "last_update": "2026-03-27T03:21:26.079504"
 }
