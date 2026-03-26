@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { supabase } from "../client";
 import type { Database } from "../types";
 
@@ -48,22 +47,13 @@ export async function calculateScore(
   const attendance_rate = 1.0;
 
   // Calculate punctuality rate
-  // Punctual if actual_start_time is before or equal to scheduled start_time
-  let onTimeCount = 0;
-  const bookingsWithTimes = bookings.filter(
-    (b) => b.actual_start_time !== null && b.start_date !== null,
+  // Punctual if check_in_at is present (worker has checked in)
+  const bookingsWithCheckIn = bookings.filter(
+    (b) => b.check_in_at !== null,
   );
 
-  bookingsWithTimes.forEach((booking) => {
-    const actualStart = new Date(booking.actual_start_time!);
-    const scheduledStart = new Date(booking.start_date);
-    if (actualStart <= scheduledStart) {
-      onTimeCount++;
-    }
-  });
-
   const punctuality_rate =
-    bookingsWithTimes.length > 0 ? onTimeCount / bookingsWithTimes.length : 1.0;
+    bookingsWithCheckIn.length > 0 ? bookingsWithCheckIn.length / bookings.length : 1.0;
 
   // Calculate average rating
   const { data: reviews, error: reviewsError } = await supabase
@@ -109,7 +99,7 @@ export async function getScoreHistory(
     .from("reliability_score_history")
     .select("*")
     .eq("worker_id", workerId)
-    .order("calculated_at", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {
@@ -171,16 +161,14 @@ export async function updateScore(
 export async function recordScoreHistory(
   workerId: string,
   breakdown: ReliabilityScoreBreakdown,
+  previousScore?: number,
 ): Promise<ReliabilityScoreHistoryRow> {
   const historyData: Omit<ReliabilityScoreHistoryInsert, "id" | "created_at"> =
     {
       worker_id: workerId,
-      score: breakdown.score,
-      attendance_rate: breakdown.attendance_rate,
-      punctuality_rate: breakdown.punctuality_rate,
-      avg_rating: breakdown.avg_rating,
-      completed_jobs_count: breakdown.completed_jobs_count,
-      calculated_at: new Date().toISOString(),
+      new_score: breakdown.score,
+      previous_score: previousScore ?? null,
+      change_reason: "scheduled_calculation",
     };
 
   const { data, error } = await supabase
