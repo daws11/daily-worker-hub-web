@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "./providers/auth-provider";
 import { I18nProvider } from "./providers/i18n-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Daily Worker Hub",
@@ -33,7 +30,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} dir="ltr" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body style={{ fontFamily: "var(--font-sans)" }}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
