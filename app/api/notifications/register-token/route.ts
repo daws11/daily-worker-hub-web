@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import { verifyFcmToken } from "@/lib/firebase-admin";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+} from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("notifications/register-token");
 
@@ -31,10 +36,15 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       routeLogger.warn("Unauthorized access attempt", { requestId });
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
+      logger.requestError(
+        request,
+        new Error("Tidak terautentikasi"),
+        401,
+        startTime,
+        { requestId },
       );
+
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const body = await request.json();
@@ -42,18 +52,22 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!token) {
-      return NextResponse.json(
-        { error: "Token FCM diperlukan" },
-        { status: 400 },
+      return errorResponse(
+        400,
+        { code: "VALIDATION_ERROR", i18nKey: "errors.validationFailed", details: { field: "token" } },
+        request,
       );
     }
 
     if (!deviceType || !["web", "android", "ios"].includes(deviceType)) {
-      return NextResponse.json(
+      return errorResponse(
+        400,
         {
-          error: "Tipe perangkat tidak valid. Gunakan: web, android, atau ios",
+          code: "VALIDATION_ERROR",
+          i18nKey: "errors.validationFailed",
+          details: { message: "Tipe perangkat tidak valid. Gunakan: web, android, atau ios" },
         },
-        { status: 400 },
+        request,
       );
     }
 
@@ -94,9 +108,18 @@ export async function POST(request: NextRequest) {
           requestId,
           userId: user.id,
         });
-        return NextResponse.json(
-          { error: "Gagal memperbarui token FCM" },
-          { status: 500 },
+        logger.requestError(
+          request,
+          new Error("Gagal memperbarui token FCM"),
+          500,
+          startTime,
+          { requestId },
+        );
+
+        return errorResponse(
+          500,
+          { code: "DB_UPDATE_ERROR", i18nKey: "errors.serverError", details: error.message },
+          request,
         );
       }
 
@@ -132,9 +155,18 @@ export async function POST(request: NextRequest) {
         requestId,
         userId: user.id,
       });
-      return NextResponse.json(
-        { error: "Gagal mendaftarkan token FCM" },
-        { status: 500 },
+      logger.requestError(
+        request,
+        new Error("Gagal mendaftarkan token FCM"),
+        500,
+        startTime,
+        { requestId },
+      );
+
+      return errorResponse(
+        500,
+        { code: "DB_INSERT_ERROR", i18nKey: "errors.serverError", details: error.message },
+        request,
       );
     }
 
@@ -174,11 +206,7 @@ export async function POST(request: NextRequest) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/notifications/register-token", "POST");
   }
 }
