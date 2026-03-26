@@ -8,6 +8,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+} from "@/lib/api/error-response";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
@@ -87,10 +92,7 @@ export async function GET(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
-      );
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { searchParams } = new URL(request.url);
@@ -134,9 +136,10 @@ export async function GET(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Gagal mengambil notifikasi" },
-        { status: response.status },
+      return errorResponse(
+        response.status,
+        { code: "DB_QUERY_ERROR", i18nKey: "errors.serverError", details: errorText },
+        request,
       );
     }
 
@@ -184,12 +187,8 @@ export async function GET(request: NextRequest) {
     routeLogger.error("Unexpected error in GET /api/notifications", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/notifications", "GET");
   }
 }
 
@@ -253,10 +252,7 @@ export async function PATCH(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
-      );
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     // Mark all as read
@@ -289,9 +285,10 @@ export async function PATCH(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Gagal menandai notifikasi" },
-        { status: response.status },
+      return errorResponse(
+        response.status,
+        { code: "DB_QUERY_ERROR", i18nKey: "errors.serverError", details: errorText },
+        request,
       );
     }
 
@@ -316,11 +313,7 @@ export async function PATCH(request: NextRequest) {
     routeLogger.error("Unexpected error in PATCH /api/notifications", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/notifications", "PATCH");
   }
 }
