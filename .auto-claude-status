@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "005-admin-api-secret-exposed-to-browser-bundle-and-loc",
+  "spec": "004-lazy-load-firebase-sdk-to-eliminate-unused-client-",
   "state": "building",
   "subtasks": {
-    "completed": 5,
-    "total": 6,
+    "completed": 3,
+    "total": 4,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Integration Verification",
+    "current": "Verify Bundle Size Improvement",
     "id": null,
-    "total": 1
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 7,
-    "started_at": "2026-03-26T17:39:13.550812"
+    "number": 5,
+    "started_at": "2026-03-26T17:42:13.944173"
   },
-  "last_update": "2026-03-26T17:55:17.778917"
+  "last_update": "2026-03-26T18:04:59.505471"
 }
