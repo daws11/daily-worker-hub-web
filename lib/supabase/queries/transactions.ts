@@ -29,9 +29,9 @@ export type WalletTransactionWithDetails = WalletTransactionRow & {
 /**
  * Get all wallet transactions for a specific wallet
  */
-export async function getWalletTransactions(walletId: string) {
+export async function getWalletTransactions(walletId: string, limit?: number) {
   try {
-    const { data, error } = await (supabase as any)
+    let query = (supabase as any)
       .from("wallet_transactions")
       .select(
         `
@@ -49,6 +49,12 @@ export async function getWalletTransactions(walletId: string) {
       .eq("wallet_id", walletId)
       .order("created_at", { ascending: false });
 
+    if (limit !== undefined) {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
+
     if (error) {
       console.error("Error fetching wallet transactions:", error);
       return { data: null, error };
@@ -64,9 +70,9 @@ export async function getWalletTransactions(walletId: string) {
 /**
  * Get wallet transactions for a user (via their wallet)
  */
-export async function getUserWalletTransactions(userId: string) {
+export async function getUserWalletTransactions(userId: string, limit?: number) {
   try {
-    const { data, error } = await (supabase as any)
+    let query = (supabase as any)
       .from("wallet_transactions")
       .select(
         `
@@ -83,6 +89,12 @@ export async function getUserWalletTransactions(userId: string) {
       )
       .eq("wallet.user_id", userId)
       .order("created_at", { ascending: false });
+
+    if (limit !== undefined) {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error("Error fetching user wallet transactions:", error);

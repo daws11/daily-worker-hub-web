@@ -1,5 +1,13 @@
 import { supabase } from "../client";
 import type { Database } from "../types";
+import {
+  getWalletTransactions as getWalletTransactionsBase,
+  getUserWalletTransactions as getUserWalletTransactionsBase,
+} from "./transactions";
+
+// Re-export transaction functions for useWallet convenience import
+export const getWalletTransactions = getWalletTransactionsBase;
+export const getUserWalletTransactions = getUserWalletTransactionsBase;
 
 type WalletsRow = {
   id: string;
@@ -9,8 +17,19 @@ type WalletsRow = {
   balance: number;
   currency: string;
   is_active: boolean;
+  available_balance: number;
+  pending_balance: number;
   created_at: string;
   updated_at: string;
+};
+
+export type WalletWithUser = WalletsRow & {
+  user?: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    avatar_url: string | null;
+  } | null;
 };
 
 export type WalletTransactionWithDetails = {
@@ -219,6 +238,8 @@ export async function getOrCreateBusinessWallet(
     balance: 0,
     currency,
     is_active: true,
+    available_balance: 0,
+    pending_balance: 0,
   });
 }
 
@@ -243,6 +264,8 @@ export async function getOrCreateWorkerWallet(
     balance: 0,
     currency,
     is_active: true,
+    available_balance: 0,
+    pending_balance: 0,
   });
 }
 
@@ -392,5 +415,296 @@ export async function deleteWallet(walletId: string): Promise<void> {
 
   if (error) {
     throw new Error(`Failed to delete wallet: ${error.message}`);
+  }
+}
+
+// ============================================
+// WALLET BALANCE & TRANSACTION MANAGEMENT
+// ============================================
+
+export type WalletBalance = {
+  pending_balance: number;
+  available_balance: number;
+};
+
+/**
+ * Get wallet balance (pending and available) for a user
+ */
+export async function getWalletBalance(
+  userId: string,
+): Promise<{ data: WalletBalance | null; error: { message: string } | null }> {
+  try {
+    const { data, error } = await (supabase as any)
+      .from("wallets")
+      .select("pending_balance, available_balance")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error) {
+      return { data: null, error: { message: error.message } };
+    }
+
+    return {
+      data: {
+        pending_balance: data?.pending_balance ?? 0,
+        available_balance: data?.available_balance ?? 0,
+      },
+      error: null,
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unexpected error";
+    return { data: null, error: { message } };
+  }
+}
+
+/**
+ * Get or create a wallet for a user
+ */
+export async function getOrCreateWallet(
+  userId: string,
+): Promise<{ data: WalletWithUser | null; error: { message: string } | null }> {
+  try {
+    // First try to get existing wallet
+    const { data: existingWallet, error: fetchError } = await (supabase as any)
+      .from("wallets")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (fetchError) {
+      return { data: null, error: { message: fetchError.message } };
+    }
+
+    if (existingWallet) {
+      return { data: existingWallet as WalletWithUser, error: null };
+    }
+
+    // Create new wallet
+    const { data: newWallet, error: createError } = await (supabase as any)
+      .from("wallets")
+      .insert({
+        user_id: userId,
+        balance: 0,
+        currency: "IDR",
+        is_active: true,
+        available_balance: 0,
+        pending_balance: 0,
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      return { data: null, error: { message: createError.message } };
+    }
+
+    return { data: newWallet as WalletWithUser, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unexpected error";
+    return { data: null, error: { message } };
+  }
+}
+
+/**
+ * Update wallet balance fields (available_balance and pending_balance)
+ */
+export async function updateWalletBalance(
+  walletId: string,
+  pendingBalance: number,
+  availableBalance: number,
+): Promise<{ data: WalletsRow | null; error: { message: string } | null }> {
+  try {
+    const { data, error } = await (supabase as any)
+      .from("wallets")
+      .update({
+        pending_balance: pendingBalance,
+        available_balance: availableBalance,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", walletId)
+      .select()
+      .single();
+
+    if (error) {
+      return { data: null, error: { message: error.message } };
+    }
+
+    return { data: data as WalletsRow, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unexpected error";
+    return { data: null, error: { message } };
+  }
+}
+
+/**
+ * Add funds to pending balance (hold transaction)
+ */
+export async function addPendingFunds(
+  walletId: string,
+  amount: number,
+  bookingId?: string,
+  description?: string,
+): Promise<{ data: null; error: { message: string } | null }> {
+  try {
+    // Insert hold transaction
+    const { error: txError } = await (supabase as any)
+      .from("wallet_transactions")
+      .insert({
+        wallet_id: walletId,
+        amount,
+        type: "hold",
+        status: "pending_review",
+        booking_id: bookingId ?? null,
+        description: description ?? null,
+      });
+
+    if (txError) {
+      return { data: null, error: { message: txError.message } };
+    }
+
+    // Update wallet pending balance
+    const { data: wallet, error: walletError } = await (supabase as any)
+      .from("wallets")
+      .select("pending_balance, available_balance")
+      .eq("id", walletId)
+      .single();
+
+    if (walletError) {
+      return { data: null, error: { message: walletError.message } };
+    }
+
+    const newPendingBalance = (wallet.pending_balance ?? 0) + amount;
+    const { error: updateError } = await (supabase as any)
+      .from("wallets")
+      .update({
+        pending_balance: newPendingBalance,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", walletId);
+
+    if (updateError) {
+      return { data: null, error: { message: updateError.message } };
+    }
+
+    return { data: null, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unexpected error";
+    return { data: null, error: { message } };
+  }
+}
+
+/**
+ * Release pending funds to available balance (release transaction)
+ */
+export async function releaseFunds(
+  walletId: string,
+  amount: number,
+): Promise<{ data: null; error: { message: string } | null }> {
+  try {
+    // Insert release transaction
+    const { error: txError } = await (supabase as any)
+      .from("wallet_transactions")
+      .insert({
+        wallet_id: walletId,
+        amount,
+        type: "release",
+        status: "released",
+        description: "Funds released to available balance",
+      });
+
+    if (txError) {
+      return { data: null, error: { message: txError.message } };
+    }
+
+    // Update wallet balances
+    const { data: wallet, error: walletError } = await (supabase as any)
+      .from("wallets")
+      .select("pending_balance, available_balance")
+      .eq("id", walletId)
+      .single();
+
+    if (walletError) {
+      return { data: null, error: { message: walletError.message } };
+    }
+
+    const newPendingBalance = Math.max(0, (wallet.pending_balance ?? 0) - amount);
+    const newAvailableBalance = (wallet.available_balance ?? 0) + amount;
+
+    const { error: updateError } = await (supabase as any)
+      .from("wallets")
+      .update({
+        pending_balance: newPendingBalance,
+        available_balance: newAvailableBalance,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", walletId);
+
+    if (updateError) {
+      return { data: null, error: { message: updateError.message } };
+    }
+
+    return { data: null, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unexpected error";
+    return { data: null, error: { message } };
+  }
+}
+
+/**
+ * Deduct from available balance (payout transaction)
+ */
+export async function deductAvailableFunds(
+  walletId: string,
+  amount: number,
+  description?: string,
+): Promise<{ data: null; error: { message: string } | null }> {
+  try {
+    // Verify sufficient balance
+    const { data: wallet, error: fetchError } = await (supabase as any)
+      .from("wallets")
+      .select("available_balance")
+      .eq("id", walletId)
+      .single();
+
+    if (fetchError) {
+      return { data: null, error: { message: fetchError.message } };
+    }
+
+    if ((wallet.available_balance ?? 0) < amount) {
+      return { data: null, error: { message: "Insufficient available balance" } };
+    }
+
+    // Insert payout transaction
+    const { error: txError } = await (supabase as any)
+      .from("wallet_transactions")
+      .insert({
+        wallet_id: walletId,
+        amount,
+        type: "payout",
+        status: "pending_review",
+        description: description ?? "Withdrawal",
+      });
+
+    if (txError) {
+      return { data: null, error: { message: txError.message } };
+    }
+
+    // Update wallet available balance
+    const newAvailableBalance = (wallet.available_balance ?? 0) - amount;
+    const { error: updateError } = await (supabase as any)
+      .from("wallets")
+      .update({
+        available_balance: newAvailableBalance,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", walletId);
+
+    if (updateError) {
+      return { data: null, error: { message: updateError.message } };
+    }
+
+    return { data: null, error: null };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unexpected error";
+    return { data: null, error: { message } };
   }
 }

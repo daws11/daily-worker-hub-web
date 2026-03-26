@@ -3,23 +3,23 @@
   "spec": "041-systematically-remove-16-ts-nocheck-directives-to-",
   "state": "building",
   "subtasks": {
-    "completed": 13,
+    "completed": 14,
     "total": 18,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Fix complex action files with major type mismatches",
+    "current": "Fix useWallet hook with missing function imports",
     "id": null,
-    "total": 3
+    "total": 1
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 15,
+    "number": 16,
     "started_at": "2026-03-27T02:00:21.823595"
   },
-  "last_update": "2026-03-27T03:21:26.079504"
+  "last_update": "2026-03-27T03:26:29.934453"
 }
