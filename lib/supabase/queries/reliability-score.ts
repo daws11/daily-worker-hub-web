@@ -251,3 +251,40 @@ export async function recordScoreHistory(
 
   return data;
 }
+
+export interface WorkersReliabilityFilter {
+  minReliability?: number;
+  maxReliability?: number;
+}
+
+/**
+ * Get workers filtered by reliability score range
+ */
+export async function getWorkersWithReliabilityFilter(
+  filter: WorkersReliabilityFilter,
+): Promise<WorkersRow[]> {
+  let query = supabase
+    .from("workers")
+    .select("*")
+    .not("reliability_score", "is", null);
+
+  if (filter.minReliability !== undefined) {
+    query = query.gte("reliability_score", filter.minReliability);
+  }
+
+  if (filter.maxReliability !== undefined) {
+    query = query.lte("reliability_score", filter.maxReliability);
+  }
+
+  const { data, error } = await query.order("reliability_score", {
+    ascending: false,
+  });
+
+  if (error) {
+    throw new Error(
+      `Failed to fetch workers with reliability filter: ${error.message}`,
+    );
+  }
+
+  return data || [];
+}
