@@ -8,6 +8,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 import { cache, LRUCache, CACHE_TTL } from "@/lib/cache";
 
 const routeLogger = logger.createApiLogger("categories");
@@ -55,7 +56,7 @@ const CATEGORIES_CACHE_KEY = LRUCache.createKey("categories", "all");
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "categories",
   });
@@ -129,3 +130,9 @@ export async function GET(request: Request) {
     );
   }
 }
+
+export const GET = withRateLimitForMethod(
+  handleGET as any,
+  { type: "api-public", userBased: false },
+  ["GET"],
+);
