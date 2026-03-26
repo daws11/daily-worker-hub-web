@@ -5,7 +5,11 @@ export default defineConfig({
   test: {
     environment: "happy-dom",
     globals: true,
-    include: ["lib/**/__tests__/**/*.test.ts", "lib/**/*.test.ts"],
+    include: [
+      "lib/**/__tests__/**/*.test.ts",
+      "lib/**/*.test.ts",
+      "tests/unit/**/*.test.ts",
+    ],
     exclude: ["node_modules/", "dist/", ".next/"],
     coverage: {
       provider: "v8",
