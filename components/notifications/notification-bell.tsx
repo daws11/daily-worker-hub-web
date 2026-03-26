@@ -123,14 +123,14 @@ export function NotificationBell({
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50 overflow-hidden">
+        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-lg border border-border bg-popover shadow-md ring-1 ring-foreground/10 z-50 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-900">Notifikasi</h3>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <h3 className="font-semibold text-foreground">Notifikasi</h3>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="text-xs text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1"
+                className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1"
               >
                 <Check className="h-3 w-3" />
                 Tandai semua dibaca
@@ -142,21 +142,21 @@ export function NotificationBell({
           <ScrollArea className="max-h-96">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : notifications.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-8 text-gray-500">
-                <Bell className="h-12 w-12 text-gray-300 mb-2" />
+              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                <Bell className="h-12 w-12 text-muted-foreground/50 mb-2" />
                 <p className="text-sm">Tidak ada notifikasi</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-50">
+              <div className="divide-y divide-muted-foreground/10">
                 {notifications.map((notification) => (
                   <div
                     key={notification.id}
                     className={cn(
-                      "px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer",
-                      !notification.is_read && "bg-blue-50/50",
+                      "px-4 py-3 hover:bg-accent transition-colors cursor-pointer",
+                      !notification.is_read && "bg-primary/5",
                     )}
                     onClick={() => {
                       if (!notification.is_read) {
@@ -171,7 +171,7 @@ export function NotificationBell({
                     <div className="flex items-start gap-3">
                       {/* Unread indicator */}
                       {!notification.is_read && (
-                        <span className="mt-1.5 h-2 w-2 rounded-full bg-blue-600 flex-shrink-0" />
+                        <span className="mt-1.5 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
                       )}
 
                       <div
@@ -182,16 +182,16 @@ export function NotificationBell({
                       >
                         <p
                           className={cn(
-                            "text-sm font-medium text-gray-900 truncate",
+                            "text-sm font-medium text-foreground truncate",
                             !notification.is_read && "font-semibold",
                           )}
                         >
                           {notification.title}
                         </p>
-                        <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                           {notification.body}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {formatTime(notification.created_at)}
                         </p>
                       </div>
@@ -204,10 +204,10 @@ export function NotificationBell({
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="border-t border-gray-100 px-4 py-2">
+            <div className="border-t border-border px-4 py-2">
               <a
                 href="/notifications"
-                className="block text-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="block text-center text-sm text-primary hover:text-primary/80 font-medium"
                 onClick={() => setIsOpen(false)}
               >
                 Lihat semua notifikasi
