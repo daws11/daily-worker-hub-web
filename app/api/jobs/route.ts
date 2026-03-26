@@ -11,6 +11,12 @@ import { parseRequest } from "@/lib/validations";
 import { createJobSchema } from "@/lib/validations/job";
 import { withRateLimitForMethod } from "@/lib/rate-limit";
 import { cache, LRUCache, CACHE_TTL, invalidateJobCache } from "@/lib/cache";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+  notFoundErrorResponse,
+} from "@/lib/api/error-response";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
@@ -204,10 +210,7 @@ async function handleGET(request: Request) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Failed to fetch jobs from database" },
-        { status: response.status },
-      );
+      return errorResponse(response.status, "Failed to fetch jobs from database", request);
     }
 
     const data = await response.json();
@@ -232,12 +235,8 @@ async function handleGET(request: Request) {
     routeLogger.error("Unexpected error in GET /api/jobs", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/jobs", "GET");
   }
 }
 
@@ -301,10 +300,7 @@ async function handlePOST(request: Request) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Unauthorized - No authentication token" },
-        { status: 401 },
-      );
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const body = await request.json();
@@ -345,10 +341,7 @@ async function handlePOST(request: Request) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Failed to verify business" },
-        { status: 500 },
-      );
+      return errorResponse(500, "Failed to verify business", request);
     }
 
     const businessData = await businessResponse.json();
@@ -365,10 +358,7 @@ async function handlePOST(request: Request) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Business not found" },
-        { status: 404 },
-      );
+      return notFoundErrorResponse("Business", validatedData.business_id, request);
     }
 
     // Create job
@@ -416,10 +406,7 @@ async function handlePOST(request: Request) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Failed to create job", details: errorText },
-        { status: 500 },
-      );
+      return errorResponse(500, "Failed to create job", request);
     }
 
     const job = await createResponse.json();
@@ -448,12 +435,8 @@ async function handlePOST(request: Request) {
     routeLogger.error("Unexpected error in POST /api/jobs", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/jobs", "POST");
   }
 }
 
