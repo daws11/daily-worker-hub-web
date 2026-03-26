@@ -2,6 +2,7 @@
  * Admin Metrics API Route
  *
  * Provides system metrics for the monitoring dashboard.
+ * Uses session-based authentication (not exposed to browser).
  * Collects data from cache, rate limiting, database, and logs.
  */
 
@@ -9,27 +10,27 @@ import { NextRequest, NextResponse } from "next/server";
 import { cache } from "@/lib/cache";
 import { rateLimitStore } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { getServerSession } from "@/lib/auth/get-server-session";
 import os from "os";
 
 const routeLogger = logger.createApiLogger("admin-metrics");
 
 /**
- * Verify admin authentication
- * TODO: Implement proper admin auth check
+ * Verify admin authentication using session
+ * Requires valid user session with admin role
  */
 async function verifyAdminAuth(request: NextRequest): Promise<boolean> {
-  const authHeader = request.headers.get("authorization");
+  const session = await getServerSession();
 
-  // For now, check for a simple admin secret
-  // In production, this should use proper admin authentication
-  const adminSecret = process.env.ADMIN_API_SECRET;
-
-  if (!adminSecret) {
-    // If no admin secret is configured, deny access
+  if (!session?.user?.id) {
     return false;
   }
 
-  return authHeader === `Bearer ${adminSecret}`;
+  // Check for admin role in user metadata or custom claims
+  // In production, this could check session.user.role or app_metadata
+  const userRole = (session.user as any)?.role;
+
+  return userRole === "admin";
 }
 
 /**
@@ -300,12 +301,33 @@ function getDatabaseMetrics() {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify admin auth
-    const isAuthorized = await verifyAdminAuth(request);
+    // Try session auth first (primary, not exposed to browser bundle)
+    let isAuthorized = await verifyAdminAuth(request);
+    let authMethod = "session";
+
+    // Fall back to Bearer token auth if no valid session
+    if (!isAuthorized) {
+      authMethod = "bearer";
+      const authHeader = request.headers.get("authorization");
+      const adminSecret = process.env.ADMIN_API_SECRET;
+
+      if (adminSecret && authHeader === `Bearer ${adminSecret}`) {
+        isAuthorized = true;
+      }
+    }
 
     if (!isAuthorized) {
-      routeLogger.warn("Unauthorized metrics access attempt");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      const session = await getServerSession();
+      const isAuthenticated = !!session?.user?.id;
+
+      if (!isAuthenticated) {
+        routeLogger.warn("Unauthorized metrics access attempt - no session");
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      // User is logged in but not admin
+      routeLogger.warn("Forbidden metrics access attempt - not admin");
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Collect all metrics
