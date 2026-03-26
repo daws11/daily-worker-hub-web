@@ -691,6 +691,7 @@ test.describe("Messaging Authorization - Booking Scope", () => {
   });
 });
 
+test.describe("Chat Timestamps", () => {
   test("Chat messages display correct timestamps", async ({ page }) => {
     console.log("\n⏰ Testing message timestamp display...");
 
