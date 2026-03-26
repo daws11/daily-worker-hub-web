@@ -1,0 +1,61 @@
+{
+  "files_to_modify": {
+    "components": [
+      "components/worker/reliability-score.tsx",
+      "components/worker/reliability-badge.tsx",
+      "components/worker/score-breakdown.tsx",
+      "components/worker/score-history.tsx",
+      "components/analytics/analytics-reliability-chart.tsx"
+    ],
+    "pages": [
+      "app/(dashboard)/business/workers/page.tsx"
+    ],
+    "lib": [
+      "lib/supabase/queries/reliability-score.ts",
+      "lib/actions/reliability-score.ts",
+      "lib/types/analytics.ts"
+    ]
+  },
+  "files_to_reference": [
+    "components/worker/reliability-score.tsx",
+    "components/worker/score-breakdown.tsx",
+    "components/worker/score-history.tsx",
+    "components/worker/reliability-badge.tsx",
+    "components/analytics/analytics-reliability-chart.tsx",
+    "lib/supabase/queries/reliability-score.ts",
+    "lib/actions/reliability-score.ts",
+    "lib/supabase/database.types.ts"
+  ],
+  "patterns": {
+    "component_pattern": "Components use shadcn/ui Card, Badge, cn() for styling. Size variants via object maps. Color classes based on score thresholds.",
+    "action_pattern": "Server actions use 'use server' directive, createClient from supabase, and return typed Result objects with success/error.",
+    "query_pattern": "Query functions are async, throw on error, return null for no data. Use supabase.from().select().eq().order().limit().",
+    "type_pattern": "Types are defined in lib/types/analytics.ts for analytics and lib/supabase/database.types.ts for database rows"
+  },
+  "existing_implementations": {
+    "description": "Reliability score system already exists with star-based display, badge variants, score breakdown (attendance/punctuality/rating), and score history. The score_history component has trend badges (TrendingUp/TrendingDown/Minus) that show change between entries.",
+    "relevant_files": [
+      "components/worker/reliability-score.tsx",
+      "components/worker/reliability-badge.tsx",
+      "components/worker/score-breakdown.tsx",
+      "components/worker/score-history.tsx",
+      "components/analytics/analytics-reliability-chart.tsx",
+      "lib/supabase/queries/reliability-score.ts",
+      "lib/actions/reliability-score.ts"
+    ]
+  },
+  "database_schema": {
+    "reliability_score_history": {
+      "columns": ["id", "worker_id", "booking_id", "score", "attendance_rate", "punctuality_rate", "avg_rating", "completed_jobs_count", "calculated_at", "created_at", "previous_score", "change_reason"],
+      "relationships": ["workers(id)", "bookings(id)"]
+    },
+    "workers": {
+      "columns": ["id", "reliability_score", "full_name", "avatar_url", "bio", "phone", "address", "location_name"]
+    }
+  },
+  "tech_stack": {
+    "frontend": ["Next.js 14", "React 19", "TypeScript", "Tailwind CSS", "shadcn/ui", "recharts"],
+    "backend": ["Supabase", "PostgreSQL", "Server Actions"],
+    "testing": ["Vitest", "Playwright"]
+  }
+}
