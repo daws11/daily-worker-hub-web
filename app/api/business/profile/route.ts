@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getServerSession } from "@/lib/auth/get-server-session";
 import { logger } from "@/lib/logger";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+  notFoundErrorResponse,
+} from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("business/profile");
 
@@ -20,7 +26,7 @@ export async function GET(request: Request) {
         requestId,
       });
 
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const supabase = await createClient();
@@ -39,10 +45,7 @@ export async function GET(request: Request) {
       });
       logger.requestError(request, error, 500, startTime, { requestId });
 
-      return NextResponse.json(
-        { error: "Failed to fetch business profile" },
-        { status: 500 },
-      );
+      return errorResponse(500, "Failed to fetch business profile", request);
     }
 
     if (!business) {
@@ -58,10 +61,7 @@ export async function GET(request: Request) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Business profile not found" },
-        { status: 404 },
-      );
+      return notFoundErrorResponse("Business", session.user.id, request);
     }
 
     routeLogger.info("Business profile fetched successfully", {
@@ -79,11 +79,7 @@ export async function GET(request: Request) {
     routeLogger.error("Unexpected error in GET /api/business/profile", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/business/profile", "GET");
   }
 }
