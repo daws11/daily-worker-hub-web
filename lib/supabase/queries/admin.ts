@@ -1,4 +1,5 @@
 import { supabase } from "../client";
+import type { Database } from "../../supabase/types";
 import type {
   UserManagementFilters,
   UserManagementItem,
@@ -14,6 +15,13 @@ import type {
   DisputeItem,
   PaginatedAdminResponse,
 } from "../../types/admin";
+
+// ============================================================================
+// SHARED TYPES
+// ============================================================================
+
+/** Supabase query builder for chained filter calls */
+type QueryBuilder = ReturnType<typeof supabase.from>;
 
 // ============================================================================
 // BUSINESS VERIFICATION
@@ -35,7 +43,7 @@ export async function getBusinessesForVerification(
         phone,
         avatar_url
       )
-    `) as any;
+    `) as QueryBuilder;
 
   // Apply search filter
   if (filters.search) {
@@ -46,7 +54,10 @@ export async function getBusinessesForVerification(
 
   // Apply verification status filter
   if (filters.verificationStatus) {
-    query = query.eq("verification_status", filters.verificationStatus as any);
+    query = query.eq(
+      "verification_status",
+      filters.verificationStatus as Database["public"]["Tables"]["businesses"]["Row"]["verification_status"],
+    );
   }
 
   // Apply business type filter
@@ -71,7 +82,7 @@ export async function getBusinessesForVerification(
   // Apply sorting
   const sortBy = filters.sortBy || "submitted_at";
   const sortOrder = filters.sortOrder || "desc";
-  query = query.order(sortBy, { ascending: sortOrder === "asc" }) as any;
+  query = query.order(sortBy, { ascending: sortOrder === "asc" }) as QueryBuilder;
 
   // Get total count
   const { count } = await query;
@@ -86,7 +97,7 @@ export async function getBusinessesForVerification(
 
   // Transform data to include submittedAt and pendingDays
   const items: BusinessVerificationItem[] = (data || []).map(
-    (business: any) => {
+    (business) => {
       const submittedAt = business.created_at;
       const pendingDays = Math.floor(
         (Date.now() - new Date(submittedAt).getTime()) / (1000 * 60 * 60 * 24),
@@ -116,7 +127,7 @@ export async function approveBusiness(
   const { error } = await supabase
     .from("businesses")
     .update({
-      verification_status: "approved" as any,
+      verification_status: "verified",
       verified_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
@@ -145,7 +156,7 @@ export async function rejectBusiness(
   const { error } = await supabase
     .from("businesses")
     .update({
-      verification_status: "rejected" as any,
+      verification_status: "rejected",
       rejection_reason: reason,
       updated_at: new Date().toISOString(),
     })
@@ -189,7 +200,7 @@ export async function getKYCVerifications(
           avatar_url
         )
       )
-    `) as any;
+    `) as QueryBuilder;
 
   // Apply search filter
   if (filters.search) {
@@ -200,7 +211,10 @@ export async function getKYCVerifications(
 
   // Apply status filter
   if (filters.status) {
-    query = query.eq("status", filters.status as any);
+    query = query.eq(
+      "status",
+      filters.status as Database["public"]["Tables"]["kyc_verifications"]["Row"]["status"],
+    );
   }
 
   // Apply area filter
@@ -220,7 +234,7 @@ export async function getKYCVerifications(
   // Apply sorting
   const sortBy = filters.sortBy || "submitted_at";
   const sortOrder = filters.sortOrder || "desc";
-  query = query.order(sortBy, { ascending: sortOrder === "asc" }) as any;
+  query = query.order(sortBy, { ascending: sortOrder === "asc" }) as QueryBuilder;
 
   // Get total count
   const { count } = await query;
@@ -234,7 +248,7 @@ export async function getKYCVerifications(
   }
 
   // Transform data
-  const items: KYCVerificationItem[] = (data || []).map((kyc: any) => {
+  const items: KYCVerificationItem[] = (data || []).map((kyc) => {
     const worker = kyc.worker || {};
     const user = worker.user || {};
     const submittedAt = kyc.submitted_at;
@@ -278,7 +292,7 @@ export async function approveKYC(
   const { error: kycError } = await supabase
     .from("kyc_verifications")
     .update({
-      status: "approved" as any,
+      status: "verified",
       verified_at: new Date().toISOString(),
       verified_by: adminId,
       updated_at: new Date().toISOString(),
@@ -294,7 +308,7 @@ export async function approveKYC(
   const { error: workerError } = await supabase
     .from("workers")
     .update({
-      kyc_status: "verified" as any,
+      kyc_status: "verified",
       updated_at: new Date().toISOString(),
     })
     .eq("id", kyc.worker_id);
@@ -333,7 +347,7 @@ export async function rejectKYC(
   const { error: kycError } = await supabase
     .from("kyc_verifications")
     .update({
-      status: "rejected" as any,
+      status: "rejected",
       rejection_reason: rejectionReason,
       rejected_at: new Date().toISOString(),
       rejected_by: adminId,
@@ -350,7 +364,7 @@ export async function rejectKYC(
   const { error: workerError } = await supabase
     .from("workers")
     .update({
-      kyc_status: "rejected" as any,
+      kyc_status: "rejected",
       updated_at: new Date().toISOString(),
     })
     .eq("id", kyc.worker_id);
@@ -397,7 +411,7 @@ export async function getJobsForModeration(
         email
       ),
       category:categories(id, name, slug)
-    `) as any;
+    `) as QueryBuilder;
 
   // Apply search filter
   if (filters.search) {
@@ -408,7 +422,10 @@ export async function getJobsForModeration(
 
   // Apply status filter
   if (filters.status) {
-    query = query.eq("status", filters.status as any);
+    query = query.eq(
+      "status",
+      filters.status as Database["public"]["Tables"]["jobs"]["Row"]["status"],
+    );
   }
 
   // Apply category filter
@@ -439,7 +456,7 @@ export async function getJobsForModeration(
   // Apply sorting
   const sortBy = filters.sortBy || "created_at";
   const sortOrder = filters.sortOrder || "desc";
-  query = query.order(sortBy, { ascending: sortOrder === "asc" }) as any;
+  query = query.order(sortBy, { ascending: sortOrder === "asc" }) as QueryBuilder;
 
   // Get total count
   const { count } = await query;
@@ -452,7 +469,7 @@ export async function getJobsForModeration(
     throw error;
   }
 
-  const items: JobModerationItem[] = (data || []).map((job: any) => ({
+  const items: JobModerationItem[] = (data || []).map((job) => ({
     ...job,
     business: job.business,
     user: job.user,
@@ -476,7 +493,7 @@ export async function moderateJob(
   reason?: string,
   adminId?: string,
 ): Promise<void> {
-  const updateData: any = {
+  const updateData: Database["public"]["Tables"]["jobs"]["Update"] = {
     updated_at: new Date().toISOString(),
   };
 
@@ -554,7 +571,7 @@ export async function getDisputes(
         email,
         avatar_url
       )
-    `) as any;
+    `) as QueryBuilder;
 
   // Apply search filter
   if (filters.search) {
@@ -565,7 +582,10 @@ export async function getDisputes(
 
   // Apply status filter
   if (filters.status) {
-    query = query.eq("status", filters.status as any);
+    query = query.eq(
+      "status",
+      filters.status as Database["public"]["Tables"]["disputes"]["Row"]["status"],
+    );
   }
 
   // Apply type filter
@@ -590,7 +610,7 @@ export async function getDisputes(
   // Apply sorting
   const sortBy = filters.sortBy || "created_at";
   const sortOrder = filters.sortOrder || "desc";
-  query = query.order(sortBy, { ascending: sortOrder === "asc" }) as any;
+  query = query.order(sortBy, { ascending: sortOrder === "asc" }) as QueryBuilder;
 
   // Get total count
   const { count } = await query;
@@ -603,7 +623,7 @@ export async function getDisputes(
     throw error;
   }
 
-  const items: DisputeItem[] = (data || []).map((dispute: any) => ({
+  const items: DisputeItem[] = (data || []).map((dispute) => ({
     id: dispute.id,
     booking_id: dispute.booking_id,
     booking: dispute.booking,
@@ -687,14 +707,16 @@ interface AuditActionInput {
 }
 
 async function logAuditAction(input: AuditActionInput): Promise<void> {
-  const { error } = await (supabase as any).from("admin_audit_logs").insert({
-    admin_id: input.admin_id,
-    action: input.action,
-    resource_type: input.entity_type,
-    resource_id: input.entity_id,
-    details: input.details,
-    created_at: new Date().toISOString(),
-  });
+  const { error } = await (supabase as unknown as { from: (table: string) => { insert: (data: Record<string, unknown>) => { then: (onrejected: (reason: unknown) => void) => void } } } })
+    .from("admin_audit_logs")
+    .insert({
+      admin_id: input.admin_id,
+      action: input.action,
+      resource_type: input.entity_type,
+      resource_id: input.entity_id,
+      details: input.details,
+      created_at: new Date().toISOString(),
+    });
 
   if (error) {
     console.error("Error logging audit action:", error);
@@ -721,7 +743,7 @@ export async function getWorkersForManagement(
         phone,
         avatar_url
       )
-    `) as any;
+    `) as QueryBuilder;
 
   // Apply search filter
   if (filters.search) {
@@ -732,7 +754,10 @@ export async function getWorkersForManagement(
 
   // Apply KYC status filter
   if (filters.kycStatus) {
-    query = query.eq("kyc_status", filters.kycStatus as any);
+    query = query.eq(
+      "kyc_status",
+      filters.kycStatus as Database["public"]["Tables"]["workers"]["Row"]["kyc_status"],
+    );
   }
 
   // Apply area filter
@@ -752,7 +777,7 @@ export async function getWorkersForManagement(
   // Apply sorting
   const sortBy = filters.sortBy || "created_at";
   const sortOrder = filters.sortOrder || "desc";
-  query = query.order(sortBy, { ascending: sortOrder === "asc" }) as any;
+  query = query.order(sortBy, { ascending: sortOrder === "asc" }) as QueryBuilder;
 
   // Get total count
   const { count } = await query;
@@ -765,10 +790,10 @@ export async function getWorkersForManagement(
     throw error;
   }
 
-  const items: WorkerManagementItem[] = (data || []).map((worker: any) => ({
+  const items: WorkerManagementItem[] = (data || []).map((worker) => ({
     worker,
     user: worker.user,
-  })) as any;
+  })) as WorkerManagementItem[];
 
   return {
     items,
@@ -794,7 +819,7 @@ export async function getUsers(
       *,
       business:businesses!users_id_fkey (*),
       worker:workers!users_id_fkey (*)
-    `) as any;
+    `) as QueryBuilder;
 
   // Apply search filter
   if (filters.search) {
@@ -812,7 +837,8 @@ export async function getUsers(
     } else if (filters.role === "admin") {
       const adminUserIds = await supabase.from("admin_users").select("user_id");
       if (adminUserIds.data) {
-        query = query.in("id", adminUserIds.data.map(u => u.user_id));
+        const adminRows = adminUserIds.data as { user_id: string }[];
+        query = query.in("id", adminRows.map((u) => u.user_id));
       }
     }
   }
@@ -844,7 +870,7 @@ export async function getUsers(
   // Apply sorting
   const sortBy = filters.sortBy || "created_at";
   const sortOrder = filters.sortOrder || "desc";
-  query = query.order(sortBy, { ascending: sortOrder === "asc" }) as any;
+  query = query.order(sortBy, { ascending: sortOrder === "asc" }) as QueryBuilder;
 
   // Get total count
   const { count } = await query;
@@ -857,11 +883,11 @@ export async function getUsers(
     throw error;
   }
 
-  const items: UserManagementItem[] = (data || []).map((user: any) => ({
+  const items: UserManagementItem[] = (data || []).map((user) => ({
     user,
     business: user.business,
     worker: user.worker,
-  })) as any;
+  })) as UserManagementItem[];
 
   return {
     items,
@@ -944,7 +970,7 @@ export async function processKYCVerification(
           await supabase
             .from("kyc_verifications")
             .update({
-              status: "approved" as any,
+              status: "verified",
               verified_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             })
@@ -953,7 +979,7 @@ export async function processKYCVerification(
           await supabase
             .from("workers")
             .update({
-              kyc_status: "verified" as any,
+              kyc_status: "verified",
               updated_at: new Date().toISOString(),
             })
             .eq("id", kyc.worker_id);
@@ -1021,23 +1047,23 @@ export async function getAdminPendingCounts(): Promise<AdminPendingCounts> {
     { count: openDisputes },
     { count: activeComplianceWarnings },
   ] = await Promise.all([
-    (supabase as any)
+    supabase
       .from("businesses")
       .select("*", { count: "exact", head: true })
       .eq("verification_status", "pending"),
-    (supabase as any)
+    supabase
       .from("kyc_verifications")
       .select("*", { count: "exact", head: true })
       .eq("status", "pending"),
-    (supabase as any)
+    supabase
       .from("jobs")
       .select("*", { count: "exact", head: true })
       .in("status", ["open", "draft"]),
-    (supabase as any)
+    supabase
       .from("disputes")
       .select("*", { count: "exact", head: true })
       .in("status", ["open", "resolved"]),
-    (supabase as any)
+    supabase
       .from("compliance_warnings")
       .select("*", { count: "exact", head: true })
       .eq("acknowledged", false)
@@ -1057,7 +1083,28 @@ export async function getAdminPendingCounts(): Promise<AdminPendingCounts> {
 // PLATFORM METRICS
 // ============================================================================
 
-export async function getPlatformMetrics(): Promise<any> {
+export async function getPlatformMetrics(): Promise<{
+  users: {
+    total: number;
+    workers: number;
+    businesses: number;
+  };
+  jobs: {
+    total: number;
+    active: number;
+  };
+  bookings: {
+    total: number;
+    pending: number;
+    completed: number;
+  };
+  verifications: {
+    pendingKYC: number;
+  };
+  disputes: {
+    open: number;
+  };
+}> {
   const [
     { count: totalUsers },
     { count: totalWorkers },
@@ -1094,7 +1141,10 @@ export async function getPlatformMetrics(): Promise<any> {
     supabase
       .from("disputes")
       .select("*", { count: "exact", head: true })
-      .in("status", ["open", "resolved"] as any),
+      .in("status", [
+        "open",
+        "resolved",
+      ] as Database["public"]["Tables"]["disputes"]["Row"]["status"][]),
   ]);
 
   return {
