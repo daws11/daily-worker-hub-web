@@ -3,6 +3,7 @@
 import { createClient } from "../supabase/server";
 import type { Database } from "../supabase/types";
 import { createNotification } from "./notifications";
+import { notificationService } from "../notifications/service";
 import type { MessageWithRelations } from "../types/message";
 
 type Message = Database["public"]["Tables"]["messages"]["Row"];
@@ -92,13 +93,21 @@ export async function sendMessage(
 
       const senderName = senderProfile?.full_name || "Seseorang";
       const messagePreview =
-        content.length > 50 ? content.substring(0, 50) + "..." : content;
+        content.length > 100 ? content.substring(0, 100) + "..." : content;
 
       await createNotification(
         receiverId,
         `Pesan Baru dari ${senderName}`,
         messagePreview,
         "/messages",
+      );
+
+      // Send FCM push notification to the receiver
+      await notificationService.sendNewMessage(
+        receiverId,
+        senderName,
+        content,
+        receiverId,
       );
     } catch (notificationError) {
       // Don't fail the message send if notification creation fails
