@@ -321,7 +321,8 @@
             "command": "grep -l 'withRateLimit' app/api/workers/badges/check/route.ts && echo 'Rate limiting added'",
             "expected": "Rate limiting added"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added rate limiting to POST /api/workers/badges/check using withRateLimitForMethod with api-authenticated type and userBased: true. Handler renamed to handlePOST. Added proper logging with routeLogger instead of console.error. Committed as a2bae8c."
         },
         {
           "id": "subtask-6-4",
