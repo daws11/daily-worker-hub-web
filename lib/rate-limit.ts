@@ -4,6 +4,7 @@
  * Implements in-memory sliding window rate limiting with:
  * - IP-based and user-based rate limiting
  * - Configurable limits per endpoint type
+ * - Environment-aware rate limits (dev/staging/prod)
  * - Admin bypass support
  * - Rate limit headers (X-RateLimit-*)
  * - Retry-After header on 429 responses
@@ -12,6 +13,85 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth/get-server-session";
 import { createClient } from "@/lib/supabase/server";
+
+/**
+ * Environment types for rate limit configuration
+ */
+export type Environment = "development" | "staging" | "production";
+
+/**
+ * Get current environment
+ */
+function getEnvironment(): Environment {
+  const env = process.env.NODE_ENV;
+  if (env === "production") return "production";
+  if (env === "staging") return "staging";
+  return "development";
+}
+
+/**
+ * Environment-specific multiplier for rate limits
+ * Development: Higher limits for testing
+ * Staging: Moderate limits
+ * Production: Strict limits for security
+ */
+const ENV_MULTIPLIERS: Record<Environment, number> = {
+  development: 5, // 5x more relaxed for local testing
+  staging: 2, // 2x more relaxed than production
+  production: 1, // Standard limits
+};
+
+/**
+ * Environment-aware rate limit overrides
+ * These can be set via environment variables for fine-grained control
+ */
+interface EnvironmentOverrides {
+  authMaxRequests?: number;
+  authWindowMs?: number;
+  apiAuthenticatedMaxRequests?: number;
+  apiAuthenticatedWindowMs?: number;
+  apiPublicMaxRequests?: number;
+  apiPublicWindowMs?: number;
+  paymentMaxRequests?: number;
+  paymentWindowMs?: number;
+}
+
+/**
+ * Parse environment variable overrides
+ */
+function getEnvironmentOverrides(): EnvironmentOverrides {
+  return {
+    // Auth limits
+    authMaxRequests: process.env.RATE_LIMIT_AUTH_MAX_REQUESTS
+      ? parseInt(process.env.RATE_LIMIT_AUTH_MAX_REQUESTS, 10)
+      : undefined,
+    authWindowMs: process.env.RATE_LIMIT_AUTH_WINDOW_MS
+      ? parseInt(process.env.RATE_LIMIT_AUTH_WINDOW_MS, 10)
+      : undefined,
+    // Authenticated API limits
+    apiAuthenticatedMaxRequests: process.env
+      .RATE_LIMIT_API_AUTHENTICATED_MAX_REQUESTS
+      ? parseInt(process.env.RATE_LIMIT_API_AUTHENTICATED_MAX_REQUESTS, 10)
+      : undefined,
+    apiAuthenticatedWindowMs: process.env.RATE_LIMIT_API_AUTHENTICATED_WINDOW_MS
+      ? parseInt(process.env.RATE_LIMIT_API_AUTHENTICATED_WINDOW_MS, 10)
+      : undefined,
+    // Public API limits
+    apiPublicMaxRequests: process.env.RATE_LIMIT_API_PUBLIC_MAX_REQUESTS
+      ? parseInt(process.env.RATE_LIMIT_API_PUBLIC_MAX_REQUESTS, 10)
+      : undefined,
+    apiPublicWindowMs: process.env.RATE_LIMIT_API_PUBLIC_WINDOW_MS
+      ? parseInt(process.env.RATE_LIMIT_API_PUBLIC_WINDOW_MS, 10)
+      : undefined,
+    // Payment limits
+    paymentMaxRequests: process.env.RATE_LIMIT_PAYMENT_MAX_REQUESTS
+      ? parseInt(process.env.RATE_LIMIT_PAYMENT_MAX_REQUESTS, 10)
+      : undefined,
+    paymentWindowMs: process.env.RATE_LIMIT_PAYMENT_WINDOW_MS
+      ? parseInt(process.env.RATE_LIMIT_PAYMENT_WINDOW_MS, 10)
+      : undefined,
+  };
+}
 
 /**
  * Rate limit configuration types
@@ -34,9 +114,9 @@ export interface RateLimitConfig {
 }
 
 /**
- * Predefined rate limit configurations
+ * Base rate limit configurations (production defaults)
  */
-export const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
+const BASE_RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
   auth: {
     maxRequests: 5,
     windowMs: 60 * 1000, // 5 requests per minute
@@ -64,6 +144,97 @@ export const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
       "Terlalu banyak permintaan pembayaran. Silakan coba lagi dalam beberapa menit.",
   },
 };
+
+/**
+ * Apply environment multiplier to a base value
+ */
+function applyEnvironmentMultiplier(
+  baseValue: number,
+  multiplier: number,
+): number {
+  return Math.max(1, Math.round(baseValue * multiplier));
+}
+
+/**
+ * Get environment-aware rate limit configurations
+ * Applies environment multipliers and allows environment variable overrides
+ */
+function buildRateLimitConfigs(): Record<RateLimitType, RateLimitConfig> {
+  const env = getEnvironment();
+  const multiplier = ENV_MULTIPLIERS[env];
+  const overrides = getEnvironmentOverrides();
+
+  return {
+    auth: {
+      maxRequests:
+        overrides.authMaxRequests ??
+        applyEnvironmentMultiplier(BASE_RATE_LIMIT_CONFIGS.auth.maxRequests, multiplier),
+      windowMs: overrides.authWindowMs ?? BASE_RATE_LIMIT_CONFIGS.auth.windowMs,
+      type: "auth",
+      message:
+        "Terlalu banyak percobaan login/register. Silakan coba lagi dalam beberapa menit.",
+    },
+    "api-authenticated": {
+      maxRequests:
+        overrides.apiAuthenticatedMaxRequests ??
+        applyEnvironmentMultiplier(
+          BASE_RATE_LIMIT_CONFIGS["api-authenticated"].maxRequests,
+          multiplier,
+        ),
+      windowMs:
+        overrides.apiAuthenticatedWindowMs ??
+        BASE_RATE_LIMIT_CONFIGS["api-authenticated"].windowMs,
+      type: "api-authenticated",
+      message: "Terlalu banyak permintaan. Silakan coba lagi nanti.",
+    },
+    "api-public": {
+      maxRequests:
+        overrides.apiPublicMaxRequests ??
+        applyEnvironmentMultiplier(
+          BASE_RATE_LIMIT_CONFIGS["api-public"].maxRequests,
+          multiplier,
+        ),
+      windowMs:
+        overrides.apiPublicWindowMs ?? BASE_RATE_LIMIT_CONFIGS["api-public"].windowMs,
+      type: "api-public",
+      message: "Terlalu banyak permintaan. Silakan coba lagi nanti.",
+    },
+    payment: {
+      maxRequests:
+        overrides.paymentMaxRequests ??
+        applyEnvironmentMultiplier(
+          BASE_RATE_LIMIT_CONFIGS.payment.maxRequests,
+          multiplier,
+        ),
+      windowMs: overrides.paymentWindowMs ?? BASE_RATE_LIMIT_CONFIGS.payment.windowMs,
+      type: "payment",
+      message:
+        "Terlalu banyak permintaan pembayaran. Silakan coba lagi dalam beberapa menit.",
+    },
+  };
+}
+
+/**
+ * Predefined rate limit configurations (environment-aware)
+ */
+export const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> =
+  buildRateLimitConfigs();
+
+/**
+ * Get current environment information
+ * Useful for debugging and logging
+ */
+export function getRateLimitEnvironment(): {
+  environment: Environment;
+  multiplier: number;
+  configs: Record<RateLimitType, RateLimitConfig>;
+} {
+  return {
+    environment: getEnvironment(),
+    multiplier: ENV_MULTIPLIERS[getEnvironment()],
+    configs: RATE_LIMIT_CONFIGS,
+  };
+}
 
 /**
  * Request record for tracking rate limits
