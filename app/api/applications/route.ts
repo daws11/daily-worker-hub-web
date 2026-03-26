@@ -14,6 +14,7 @@ import {
   getApplicationsByJob,
   getApplicationsByWorker,
 } from "@/lib/actions/job-applications";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 
 const routeLogger = logger.createApiLogger("applications");
 
@@ -87,7 +88,7 @@ const routeLogger = logger.createApiLogger("applications");
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "applications",
   });
@@ -348,7 +349,7 @@ export async function GET(request: Request) {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "applications",
   });
@@ -462,3 +463,16 @@ export async function POST(request: Request) {
     );
   }
 }
+
+// Export handlers with rate limiting
+// Both GET and POST are authenticated routes (100 req/min)
+export const GET = withRateLimitForMethod(
+  handleGET as any,
+  { type: "api-authenticated", userBased: true },
+  ["GET"],
+);
+export const POST = withRateLimitForMethod(
+  handlePOST as any,
+  { type: "api-authenticated", userBased: true },
+  ["POST"],
+);

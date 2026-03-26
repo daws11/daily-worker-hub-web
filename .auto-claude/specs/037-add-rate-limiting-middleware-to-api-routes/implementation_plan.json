@@ -87,7 +87,8 @@
             "command": "grep -l 'withRateLimit' app/api/auth/create-profile/route.ts && echo 'Rate limiting added'",
             "expected": "Rate limiting added"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added rate limiting using withRateLimitForMethod with type 'auth' and userBased: false. Replaced console.error/log with routeLogger for proper logging. Committed as 2792e3d."
         }
       ]
     },
