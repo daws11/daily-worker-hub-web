@@ -9,6 +9,14 @@ import {
 } from "@/lib/actions/bookings-completion";
 import { validateData } from "@/lib/validations";
 import { z } from "zod";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+  forbiddenErrorResponse,
+  notFoundErrorResponse,
+  validationErrorResponse,
+} from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("bookings/[id]/review");
 
@@ -48,7 +56,7 @@ export async function GET(request: Request, { params }: Params) {
         requestId,
       });
 
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { id: bookingId } = await params;
@@ -72,7 +80,7 @@ export async function GET(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+      return notFoundErrorResponse("Booking", bookingId, request);
     }
 
     // Get user role
@@ -95,7 +103,7 @@ export async function GET(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return notFoundErrorResponse("User", session.user.id, request);
     }
 
     // Verify access
@@ -119,7 +127,7 @@ export async function GET(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        return forbiddenErrorResponse("errors.forbidden", request);
       }
     } else if (user.role === "worker") {
       const { data: worker } = await supabase
@@ -141,7 +149,7 @@ export async function GET(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        return forbiddenErrorResponse("errors.forbidden", request);
       }
     }
 
@@ -157,7 +165,7 @@ export async function GET(request: Request, { params }: Params) {
         requestId,
       });
 
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return errorResponse(400, result.error, request);
     }
 
     routeLogger.info("Review status fetched", {
@@ -177,12 +185,8 @@ export async function GET(request: Request, { params }: Params) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/bookings/[id]/review", "GET");
   }
 }
 
@@ -201,7 +205,7 @@ export async function POST(request: Request, { params }: Params) {
         requestId,
       });
 
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { id: bookingId } = await params;
@@ -230,7 +234,7 @@ export async function POST(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return NextResponse.json(validationError.error, { status: 400 });
+      return validationErrorResponse(validationError.error, request);
     }
 
     const { rating, review } = validationResult.data;
@@ -257,7 +261,7 @@ export async function POST(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return notFoundErrorResponse("User", session.user.id, request);
     }
 
     let result;
@@ -283,10 +287,7 @@ export async function POST(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return NextResponse.json(
-          { error: "Unauthorized - Business profile not found" },
-          { status: 403 },
-        );
+        return forbiddenErrorResponse("errors.forbidden", request);
       }
 
       result = await addBookingReview(
@@ -324,10 +325,7 @@ export async function POST(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return NextResponse.json(
-          { error: "Unauthorized - Worker profile not found" },
-          { status: 403 },
-        );
+        return forbiddenErrorResponse("errors.forbidden", request);
       }
 
       result = await addWorkerReview(
@@ -357,10 +355,7 @@ export async function POST(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Unauthorized - Invalid user role" },
-        { status: 403 },
-      );
+      return forbiddenErrorResponse("errors.forbidden", request);
     }
 
     if (!result.success) {
@@ -372,7 +367,7 @@ export async function POST(request: Request, { params }: Params) {
         requestId,
       });
 
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return errorResponse(400, result.error, request);
     }
 
     logger.requestSuccess(request, { status: 201 }, startTime, {
@@ -393,11 +388,7 @@ export async function POST(request: Request, { params }: Params) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/bookings/[id]/review", "POST");
   }
 }
