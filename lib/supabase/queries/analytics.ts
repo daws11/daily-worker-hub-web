@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { supabase } from "../client";
 import type {
   UserGrowthMetrics,
