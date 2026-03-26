@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use server";
 
 import { createClient } from "../supabase/server";
@@ -445,7 +444,7 @@ export async function getWalletTransactionsAction(
   try {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("wallet_transactions")
       .select(
         `
@@ -474,7 +473,7 @@ export async function getWalletTransactionsAction(
       };
     }
 
-    return { success: true, data, count: data?.length || 0 };
+    return { success: true, data: data as WalletTransaction[], count: data?.length || 0 };
   } catch (error) {
     return {
       success: false,

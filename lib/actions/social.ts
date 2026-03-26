@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use server";
 
 import { createClient } from "../supabase/server";
@@ -56,7 +55,7 @@ export async function connectSocialPlatform(
     if (existingConnection) {
       // If connection exists but is not active, update it
       if (existingConnection.status !== "active") {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from("business_social_connections")
           .update({
             access_token: input.access_token,
@@ -74,7 +73,7 @@ export async function connectSocialPlatform(
             last_error_at: null,
             last_verified_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
-          } as any)
+          })
           .eq("id", existingConnection.id)
           .select()
           .single();
@@ -117,17 +116,14 @@ export async function connectSocialPlatform(
       platform_account_id: input.platform_account_id || null,
       platform_account_name: input.platform_account_name || null,
       platform_account_url: input.platform_account_url || null,
-      platform_page_id: input.platform_page_id || null,
-      scopes: input.scopes || null,
-      settings: (input.settings || {}) as any,
       status: "active",
-      error_count: 0,
-      last_verified_at: new Date().toISOString(),
+      auto_post_enabled: input.settings?.autoPostEnabled ?? null,
+      metadata: input.settings ? { ...input.settings } : null,
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("business_social_connections")
-      .insert(newConnection as any)
+      .insert(newConnection as unknown as SocialConnectionInsert)
       .select()
       .single();
 
@@ -172,7 +168,7 @@ export async function disconnectSocialPlatform(
 
     const connectionData = connection as SocialConnectionRow;
 
-    if (connectionData.status === "revoked") {
+    if (connectionData.status === "disconnected") {
       return { success: false, error: "Koneksi sudah diputus" };
     }
 
@@ -180,7 +176,7 @@ export async function disconnectSocialPlatform(
     const { data, error } = await (
       supabase.from("business_social_connections") as any
     )
-      .update({ status: "revoked" })
+      .update({ status: "disconnected" })
       .eq("id", connectionId)
       .eq("business_id", businessId)
       .select()
@@ -213,7 +209,7 @@ export async function getSocialConnections(
   try {
     const supabase = await createClient();
 
-    let query = supabase
+    let query = (supabase as any)
       .from("business_social_connections")
       .select(
         `
@@ -247,7 +243,7 @@ export async function getSocialConnections(
     }
 
     // Transform the data to include platform as a nested object
-    const connections = data?.map((row: any) => ({
+    const connections = data?.map((row: Record<string, unknown>) => ({
       ...row,
       platform: row.social_platforms,
     })) as BusinessSocialConnectionWithPlatform[];
@@ -297,10 +293,10 @@ export async function getSocialConnection(
 
     const connection = {
       ...data,
-      platform: (data as any).social_platforms,
+      platform: (data as Record<string, unknown>).social_platforms,
     } as BusinessSocialConnectionWithPlatform;
 
-    return { success: true, data: connection as any };
+    return { success: true, data: connection as unknown as BusinessSocialConnection };
   } catch (error) {
     return { success: false, error: "Gagal mengambil data koneksi" };
   }
@@ -332,17 +328,21 @@ export async function updateConnectionError(
     }
 
     const currentData = current as SocialConnectionRow;
-    const newErrorCount = (currentData.error_count || 0) + 1;
+    const currentMeta = (currentData.metadata as Record<string, unknown>) || {};
+    const newErrorCount = ((currentMeta.error_count as number) || 0) + 1;
 
-    // Update error tracking
-    const { data, error } = await (
-      supabase.from("business_social_connections") as any
-    )
+    // Update error tracking in metadata
+    const { data, error } = await (supabase as any)
+      .from("business_social_connections")
       .update({
-        error_count: newErrorCount,
-        last_error: errorMessage,
-        last_error_at: new Date().toISOString(),
-        status: newErrorCount >= 5 ? "error" : currentData.status,
+        metadata: {
+          ...currentMeta,
+          error_count: newErrorCount,
+          last_error: errorMessage,
+          last_error_at: new Date().toISOString(),
+        } as Record<string, unknown>,
+        status: newErrorCount >= 5 ? "disconnected" : currentData.status,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", connectionId)
       .eq("business_id", businessId)
@@ -376,14 +376,16 @@ export async function updateConnectionLastUsed(
   try {
     const supabase = await createClient();
 
-    const { data, error } = await (
-      supabase.from("business_social_connections") as any
-    )
+    const { data, error } = await (supabase as any)
+      .from("business_social_connections")
       .update({
-        last_used_at: new Date().toISOString(),
-        error_count: 0,
-        last_error: null,
-        last_error_at: null,
+        last_posted_at: new Date().toISOString(),
+        metadata: {
+          error_count: 0,
+          last_error: null,
+          last_error_at: null,
+          last_used_at: new Date().toISOString(),
+        } as Record<string, unknown>,
       })
       .eq("id", connectionId)
       .eq("business_id", businessId)
@@ -427,7 +429,7 @@ export async function updatePlatformSettings(
     // Verify the connection belongs to the business
     const { data: connection, error: fetchError } = await supabase
       .from("business_social_connections")
-      .select("id, settings, status")
+      .select("id, metadata, status")
       .eq("id", connectionId)
       .eq("business_id", businessId)
       .single();
@@ -437,21 +439,20 @@ export async function updatePlatformSettings(
     }
 
     const connectionData = connection as SocialConnectionRow;
-    const currentSettings =
-      (connectionData.settings as Record<string, unknown>) || {};
+    const currentMeta =
+      (connectionData.metadata as Record<string, unknown>) || {};
 
     // Merge settings
-    const updatedSettings = {
-      ...currentSettings,
+    const updatedMeta = {
+      ...currentMeta,
       ...settings,
     };
 
     // Update the connection settings
-    const { data, error } = await (
-      supabase.from("business_social_connections") as any
-    )
+    const { data, error } = await (supabase as any)
+      .from("business_social_connections")
       .update({
-        settings: updatedSettings,
+        metadata: updatedMeta as Record<string, unknown>,
         updated_at: new Date().toISOString(),
       })
       .eq("id", connectionId)
@@ -492,7 +493,7 @@ export async function getPlatformSettings(
 
     const { data, error } = await supabase
       .from("business_social_connections")
-      .select("settings")
+      .select("metadata")
       .eq("id", connectionId)
       .eq("business_id", businessId)
       .single();
@@ -502,7 +503,7 @@ export async function getPlatformSettings(
     }
 
     const settings =
-      (data as { settings: Record<string, unknown> | null }).settings || {};
+      (data as { metadata: Record<string, unknown> | null }).metadata || {};
 
     return { success: true, data: settings };
   } catch (error) {

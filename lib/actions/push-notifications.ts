@@ -1,14 +1,37 @@
-// @ts-nocheck
 "use server";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+declare const process: { env: Record<string, string | undefined> };
 
 import { createClient } from "../supabase/server";
-import type { Database } from "../supabase/types";
 import { createNotification } from "./notifications";
 
-type PushSubscription =
-  Database["public"]["Tables"]["push_subscriptions"]["Row"];
-type NotificationPreferences =
-  Database["public"]["Tables"]["user_notification_preferences"]["Row"];
+// ============================================================================
+// LOCAL TYPES (Database does not include push_subscriptions /
+// user_notification_preferences tables)
+// ============================================================================
+
+type PushSubscription = {
+  id: string;
+  user_id: string;
+  endpoint: string;
+  keys_auth: string;
+  keys_p256h: string;
+  created_at: string;
+  updated_at: string;
+};
+
+type NotificationPreferences = {
+  id: string;
+  user_id: string;
+  push_enabled: boolean;
+  new_applications: boolean;
+  booking_status: boolean;
+  payment_confirmation: boolean;
+  new_job_matches: boolean;
+  shift_reminders: boolean;
+  created_at: string;
+  updated_at: string;
+};
 
 // Type for inserting a new push subscription
 type PushSubscriptionInsert = Pick<
