@@ -262,7 +262,10 @@ const QRCodeScanner = React.forwardRef<HTMLDivElement, QRCodeScannerProps>(
 
           <div className="space-y-4">
             {/* Scanner Container */}
-            <div className="relative overflow-hidden rounded-lg border bg-black">
+            <div
+              className="relative overflow-hidden rounded-lg border bg-black"
+              aria-label={t("attendance.cameraViewfinder")}
+            >
               <div id={scannerContainerId.current} className="min-h-[300px]" />
 
               {!isScanning && !cameraError && !processing && (
