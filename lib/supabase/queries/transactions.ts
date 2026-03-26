@@ -1,5 +1,12 @@
 import { supabase } from "../client";
-import type { Database } from "../types";
+import type { Database, Json } from "../types";
+
+// ============================================================================
+// SHARED TYPES
+// ============================================================================
+
+/** Supabase query builder for chained filter calls */
+type QueryBuilder = ReturnType<typeof supabase.from>;
 
 // ============================================
 // WALLET TRANSACTIONS (Internal wallet transactions)
@@ -31,8 +38,8 @@ export type WalletTransactionWithDetails = WalletTransactionRow & {
  */
 export async function getWalletTransactions(walletId: string) {
   try {
-    const { data, error } = await (supabase as any)
-      .from("wallet_transactions")
+    const { data, error } = await (supabase
+      .from("wallet_transactions") as QueryBuilder)
       .select(
         `
         *,
@@ -54,7 +61,7 @@ export async function getWalletTransactions(walletId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data || []) as WalletTransactionWithDetails[], error: null };
   } catch (error) {
     console.error("Unexpected error fetching wallet transactions:", error);
     return { data: null, error };
@@ -66,8 +73,8 @@ export async function getWalletTransactions(walletId: string) {
  */
 export async function getUserWalletTransactions(userId: string) {
   try {
-    const { data, error } = await (supabase as any)
-      .from("wallet_transactions")
+    const { data, error } = await (supabase
+      .from("wallet_transactions") as QueryBuilder)
       .select(
         `
         *,
@@ -89,7 +96,7 @@ export async function getUserWalletTransactions(userId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data || []) as WalletTransactionWithDetails[], error: null };
   } catch (error) {
     console.error("Unexpected error fetching user wallet transactions:", error);
     return { data: null, error };
@@ -101,8 +108,8 @@ export async function getUserWalletTransactions(userId: string) {
  */
 export async function getWalletTransactionById(transactionId: string) {
   try {
-    const { data, error } = await (supabase as any)
-      .from("wallet_transactions")
+    const { data, error } = await (supabase
+      .from("wallet_transactions") as QueryBuilder)
       .select(
         `
         *,
@@ -124,7 +131,7 @@ export async function getWalletTransactionById(transactionId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: data as WalletTransactionWithDetails | null, error: null };
   } catch (error) {
     console.error("Unexpected error fetching wallet transaction:", error);
     return { data: null, error };
@@ -139,8 +146,8 @@ export async function filterWalletTransactions(
   type?: "credit" | "debit" | "pending" | "released",
 ) {
   try {
-    let query = (supabase as any)
-      .from("wallet_transactions")
+    let query = (supabase
+      .from("wallet_transactions") as QueryBuilder)
       .select(
         `
         *,
@@ -193,7 +200,7 @@ type PaymentTransactionsRow = {
   qris_expires_at: string | null;
   paid_at?: string | null;
   failure_reason?: string | null;
-  metadata: Record<string, any> | null;
+  metadata: Json | null;
   created_at: string;
 };
 
@@ -224,8 +231,8 @@ export async function createPaymentTransaction(
     "id" | "created_at" | "updated_at"
   >,
 ): Promise<PaymentTransactionsRow> {
-  const { data, error } = await (supabase as any)
-    .from("payment_transactions")
+  const { data, error } = await (supabase
+    .from("payment_transactions") as QueryBuilder)
     .insert(transactionData)
     .select()
     .single();
@@ -234,7 +241,7 @@ export async function createPaymentTransaction(
     throw new Error(`Failed to create payment transaction: ${error.message}`);
   }
 
-  return data;
+  return data as PaymentTransactionsRow;
 }
 
 /**
@@ -244,8 +251,8 @@ export async function updatePaymentTransaction(
   transactionId: string,
   updates: PaymentTransactionsUpdate,
 ): Promise<PaymentTransactionsRow> {
-  const { data, error } = await (supabase as any)
-    .from("payment_transactions")
+  const { data, error } = await (supabase
+    .from("payment_transactions") as QueryBuilder)
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
@@ -258,7 +265,7 @@ export async function updatePaymentTransaction(
     throw new Error(`Failed to update payment transaction: ${error.message}`);
   }
 
-  return data;
+  return data as PaymentTransactionsRow;
 }
 
 /**
@@ -267,8 +274,8 @@ export async function updatePaymentTransaction(
 export async function getPaymentTransactionById(
   transactionId: string,
 ): Promise<PaymentTransactionWithRelations | null> {
-  const { data, error } = await (supabase as any)
-    .from("payment_transactions")
+  const { data, error } = await (supabase
+    .from("payment_transactions") as QueryBuilder)
     .select(
       `
       *,
@@ -285,7 +292,7 @@ export async function getPaymentTransactionById(
     throw new Error(`Failed to fetch payment transaction: ${error.message}`);
   }
 
-  return data;
+  return data as PaymentTransactionWithRelations | null;
 }
 
 /**
@@ -295,8 +302,8 @@ export async function getBusinessPaymentTransactions(
   businessId: string,
   status?: PaymentStatus,
 ): Promise<PaymentTransactionsRow[]> {
-  let query = (supabase as any)
-    .from("payment_transactions")
+  let query = (supabase
+    .from("payment_transactions") as QueryBuilder)
     .select("*")
     .eq("business_id", businessId)
     .order("created_at", { ascending: false });
@@ -313,7 +320,7 @@ export async function getBusinessPaymentTransactions(
     );
   }
 
-  return data || [];
+  return (data || []) as PaymentTransactionsRow[];
 }
 
 /**
@@ -322,8 +329,8 @@ export async function getBusinessPaymentTransactions(
 export async function getPendingPaymentTransactions(): Promise<
   PaymentTransactionsRow[]
 > {
-  const { data, error } = await (supabase as any)
-    .from("payment_transactions")
+  const { data, error } = await (supabase
+    .from("payment_transactions") as QueryBuilder)
     .select("*")
     .eq("status", "pending")
     .order("created_at", { ascending: false });
@@ -334,7 +341,7 @@ export async function getPendingPaymentTransactions(): Promise<
     );
   }
 
-  return data || [];
+  return (data || []) as PaymentTransactionsRow[];
 }
 
 /**
@@ -343,8 +350,8 @@ export async function getPendingPaymentTransactions(): Promise<
 export async function getExpiredPaymentTransactions(): Promise<
   PaymentTransactionsRow[]
 > {
-  const { data, error } = await (supabase as any)
-    .from("payment_transactions")
+  const { data, error } = await (supabase
+    .from("payment_transactions") as QueryBuilder)
     .select("*")
     .eq("status", "pending")
     .lt("qris_expires_at", new Date().toISOString())
@@ -356,7 +363,7 @@ export async function getExpiredPaymentTransactions(): Promise<
     );
   }
 
-  return data || [];
+  return (data || []) as PaymentTransactionsRow[];
 }
 
 /**
@@ -417,8 +424,8 @@ export async function updatePaymentDetails(
 export async function getTransactionByProviderPaymentId(
   providerPaymentId: string,
 ): Promise<PaymentTransactionWithRelations | null> {
-  const { data, error } = await (supabase as any)
-    .from("payment_transactions")
+  const { data, error } = await (supabase
+    .from("payment_transactions") as QueryBuilder)
     .select(
       `
       *,
@@ -437,7 +444,7 @@ export async function getTransactionByProviderPaymentId(
     );
   }
 
-  return data;
+  return data as PaymentTransactionWithRelations | null;
 }
 
 /**
@@ -449,8 +456,8 @@ export async function getBusinessPaymentStats(businessId: string): Promise<{
   successful_amount: number;
   pending_amount: number;
 }> {
-  const { data, error } = await (supabase as any)
-    .from("payment_transactions")
+  const { data, error } = await (supabase
+    .from("payment_transactions") as QueryBuilder)
     .select("status, amount")
     .eq("business_id", businessId);
 
@@ -458,7 +465,7 @@ export async function getBusinessPaymentStats(businessId: string): Promise<{
     throw new Error(`Failed to fetch business payment stats: ${error.message}`);
   }
 
-  const transactions = data || [];
+  const transactions = (data || []) as Array<{ status: string; amount: number }>;
   const successful = transactions.filter((t) => t.status === "success");
   const pending = transactions.filter((t) => t.status === "pending");
 

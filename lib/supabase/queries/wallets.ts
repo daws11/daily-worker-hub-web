@@ -1,6 +1,14 @@
 import { supabase } from "../client";
 import type { Database, Json } from "../types";
 
+// ============================================================================
+// SHARED TYPES
+// ============================================================================
+
+/** Supabase query builder for chained filter calls */
+type QueryBuilder = ReturnType<typeof supabase.from>;
+
+// Database table row types
 type WalletsRow = {
   id: string;
   business_id: string | null;
@@ -42,8 +50,8 @@ export type WalletTransactionWithDetails = {
 export async function createWallet(
   walletData: Omit<WalletsRow, "id" | "created_at" | "updated_at">,
 ): Promise<WalletsRow> {
-  const { data, error } = await (supabase as any)
-    .from("wallets")
+  const { data, error } = await (supabase
+    .from("wallets") as QueryBuilder)
     .insert(walletData)
     .select()
     .single();
@@ -52,7 +60,7 @@ export async function createWallet(
     throw new Error(`Failed to create wallet: ${error.message}`);
   }
 
-  return data;
+  return data as WalletsRow;
 }
 
 /**
@@ -61,8 +69,8 @@ export async function createWallet(
  */
 export async function createWalletForUser(userId: string) {
   try {
-    const { data, error } = await (supabase as any)
-      .from("wallets")
+    const { data, error } = await (supabase
+      .from("wallets") as QueryBuilder)
       .insert({ user_id: userId })
       .select()
       .single();
@@ -72,7 +80,7 @@ export async function createWalletForUser(userId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: data as WalletsRow | null, error: null };
   } catch (error) {
     console.error("Unexpected error creating wallet:", error);
     return { data: null, error };
@@ -86,8 +94,8 @@ export async function updateWallet(
   walletId: string,
   updates: Partial<Pick<WalletsRow, "balance" | "currency" | "is_active">>,
 ): Promise<WalletsRow> {
-  const { data, error } = await (supabase as any)
-    .from("wallets")
+  const { data, error } = await (supabase
+    .from("wallets") as QueryBuilder)
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
@@ -100,7 +108,7 @@ export async function updateWallet(
     throw new Error(`Failed to update wallet: ${error.message}`);
   }
 
-  return data;
+  return data as WalletsRow;
 }
 
 /**
@@ -109,8 +117,8 @@ export async function updateWallet(
 export async function getWalletById(
   walletId: string,
 ): Promise<WalletsRow | null> {
-  const { data, error } = await (supabase as any)
-    .from("wallets")
+  const { data, error } = await (supabase
+    .from("wallets") as QueryBuilder)
     .select("*")
     .eq("id", walletId)
     .single();
@@ -122,7 +130,7 @@ export async function getWalletById(
     throw new Error(`Failed to fetch wallet: ${error.message}`);
   }
 
-  return data;
+  return data as WalletsRow | null;
 }
 
 /**
@@ -131,8 +139,8 @@ export async function getWalletById(
  */
 export async function getWallet(userId: string) {
   try {
-    const { data, error } = await (supabase as any)
-      .from("wallets")
+    const { data, error } = await (supabase
+      .from("wallets") as QueryBuilder)
       .select("*")
       .eq("user_id", userId)
       .single();
@@ -142,7 +150,7 @@ export async function getWallet(userId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: data as WalletsRow | null, error: null };
   } catch (error) {
     console.error("Unexpected error fetching wallet:", error);
     return { data: null, error };
@@ -155,8 +163,8 @@ export async function getWallet(userId: string) {
 export async function getBusinessWallet(
   businessId: string,
 ): Promise<WalletsRow | null> {
-  const { data, error } = await (supabase as any)
-    .from("wallets")
+  const { data, error } = await (supabase
+    .from("wallets") as QueryBuilder)
     .select("*")
     .eq("business_id", businessId)
     .maybeSingle();
@@ -165,7 +173,7 @@ export async function getBusinessWallet(
     throw new Error(`Failed to fetch business wallet: ${error.message}`);
   }
 
-  return data;
+  return data as WalletsRow | null;
 }
 
 /**
@@ -175,8 +183,8 @@ export async function getWorkerWallet(
   workerId: string,
 ): Promise<WalletsRow | null> {
   // First get the worker's user_id
-  const { data: worker, error: workerError } = await (supabase as any)
-    .from("workers")
+  const { data: worker, error: workerError } = await (supabase
+    .from("workers") as QueryBuilder)
     .select("user_id")
     .eq("id", workerId)
     .single();
@@ -185,17 +193,17 @@ export async function getWorkerWallet(
     throw new Error(`Failed to fetch worker: ${workerError?.message}`);
   }
 
-  const { data, error } = await (supabase as any)
-    .from("wallets")
+  const { data, error } = await (supabase
+    .from("wallets") as QueryBuilder)
     .select("*")
-    .eq("user_id", worker.user_id)
+    .eq("user_id", (worker as { user_id: string }).user_id)
     .maybeSingle();
 
   if (error) {
     throw new Error(`Failed to fetch worker wallet: ${error.message}`);
   }
 
-  return data;
+  return data as WalletsRow | null;
 }
 
 /**
@@ -252,8 +260,8 @@ export async function getOrCreateWorkerWallet(
  */
 export async function updateBalance(walletId: string, newBalance: number) {
   try {
-    const { data, error } = await (supabase as any)
-      .from("wallets")
+    const { data, error } = await (supabase
+      .from("wallets") as QueryBuilder)
       .update({ balance: newBalance, updated_at: new Date().toISOString() })
       .eq("id", walletId)
       .select()
@@ -264,7 +272,7 @@ export async function updateBalance(walletId: string, newBalance: number) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: data as WalletsRow | null, error: null };
   } catch (error) {
     console.error("Unexpected error updating wallet balance:", error);
     return { data: null, error };
@@ -317,8 +325,8 @@ export async function debitWallet(
  */
 export async function calculatePendingBalance(walletId: string) {
   try {
-    const { data, error } = await (supabase as any)
-      .from("wallet_transactions")
+    const { data, error } = await (supabase
+      .from("wallet_transactions") as QueryBuilder)
       .select("amount")
       .eq("wallet_id", walletId)
       .eq("type", "pending");
@@ -345,8 +353,8 @@ export async function calculatePendingBalance(walletId: string) {
  */
 export async function getTotalEarnings(walletId: string) {
   try {
-    const { data, error } = await (supabase as any)
-      .from("wallet_transactions")
+    const { data, error } = await (supabase
+      .from("wallet_transactions") as QueryBuilder)
       .select("amount")
       .eq("wallet_id", walletId)
       .eq("type", "credit");
@@ -385,8 +393,8 @@ export async function activateWallet(walletId: string): Promise<WalletsRow> {
  * Delete a wallet
  */
 export async function deleteWallet(walletId: string): Promise<void> {
-  const { error } = await (supabase as any)
-    .from("wallets")
+  const { error } = await (supabase
+    .from("wallets") as QueryBuilder)
     .delete()
     .eq("id", walletId);
 
@@ -457,8 +465,8 @@ export async function getOrCreateWallet(userId: string): Promise<{
       return { data: existing.data as WalletWithUser, error: null };
     }
 
-    const { data, error } = await (supabase as any)
-      .from("wallets")
+    const { data, error } = await (supabase
+      .from("wallets") as QueryBuilder)
       .insert({ user_id: userId, pending_balance: 0, available_balance: 0 })
       .select()
       .single();
@@ -478,8 +486,8 @@ export async function getWalletTransactions(
   limit = 50,
 ): Promise<{ data: WalletTransactionWithDetails[] | null; error: Error | null }> {
   try {
-    const { data, error } = await (supabase as any)
-      .from("wallet_transactions")
+    const { data, error } = await (supabase
+      .from("wallet_transactions") as QueryBuilder)
       .select(
         "*, booking:bookings(id, job:jobs(id, title))",
       )
@@ -519,8 +527,8 @@ export async function updateWalletBalance(
   availableBalance: number,
 ): Promise<{ data: WalletWithUser | null; error: Error | null }> {
   try {
-    const { data, error } = await (supabase as any)
-      .from("wallets")
+    const { data, error } = await (supabase
+      .from("wallets") as QueryBuilder)
       .update({
         pending_balance: pendingBalance,
         available_balance: availableBalance,
@@ -546,8 +554,8 @@ export async function addPendingFunds(
   _bookingId?: string,
 ): Promise<{ data: WalletWithUser | null; error: Error | null }> {
   try {
-    const { data, error } = await (supabase as any)
-      .from("wallet_transactions")
+    const { data, error } = await (supabase
+      .from("wallet_transactions") as QueryBuilder)
       .insert({
         wallet_id: walletId,
         amount,
@@ -591,8 +599,8 @@ export async function releaseFunds(
     const newPending = Math.max(0, (wallet.pending_balance ?? 0) - amount);
     const newAvailable = (wallet.available_balance ?? 0) + amount;
 
-    const { data, error } = await (supabase as any)
-      .from("wallet_transactions")
+    const { data, error } = await (supabase
+      .from("wallet_transactions") as QueryBuilder)
       .insert({
         wallet_id: walletId,
         amount,
@@ -630,8 +638,8 @@ export async function deductAvailableFunds(
       };
     }
 
-    const { data, error } = await (supabase as any)
-      .from("wallet_transactions")
+    const { data, error } = await (supabase
+      .from("wallet_transactions") as QueryBuilder)
       .insert({
         wallet_id: walletId,
         amount,

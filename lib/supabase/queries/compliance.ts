@@ -4,6 +4,13 @@ import type { Database } from "../types";
 // Type for workers row
 type WorkerRow = Database["public"]["Tables"]["workers"]["Row"];
 
+// ============================================================================
+// SHARED TYPES
+// ============================================================================
+
+/** Supabase query builder for chained filter calls */
+type QueryBuilder = ReturnType<typeof supabase.from>;
+
 // Type for compliance_tracking record (not yet in generated types)
 export interface ComplianceTrackingRow {
   id: string;
@@ -36,9 +43,7 @@ export async function getWorkerDaysForMonth(
   month: string,
 ) {
   try {
-    // Use type assertion to bypass missing type definitions for the database function
-    // The function exists in the database and will work correctly at runtime
-    const { data, error } = await (supabase.rpc as any)(
+    const { data, error } = await supabase.rpc<number | null>(
       "calculate_days_worked",
       {
         p_business_id: businessId,
@@ -73,8 +78,8 @@ export async function getBusinessComplianceRecords(
   limit = 100,
 ) {
   try {
-    const { data, error } = await (supabase as any)
-      .from("compliance_tracking")
+    const { data, error } = await (supabase
+      .from("compliance_tracking") as QueryBuilder)
       .select(
         `
         *,
@@ -116,8 +121,8 @@ export async function getWorkerComplianceRecords(
   limit = 100,
 ) {
   try {
-    const { data, error } = await (supabase as any)
-      .from("compliance_tracking")
+    const { data, error } = await (supabase
+      .from("compliance_tracking") as QueryBuilder)
       .select(
         `
         *,
@@ -155,8 +160,8 @@ export async function getWorkerComplianceRecords(
  */
 export async function getComplianceRecords(businessId: string, limit = 100) {
   try {
-    const { data, error } = await (supabase as any)
-      .from("compliance_tracking")
+    const { data, error } = await (supabase
+      .from("compliance_tracking") as QueryBuilder)
       .select(
         `
         *,
@@ -391,8 +396,8 @@ export async function getBusinessComplianceWarnings(
   try {
     const targetMonth = month || new Date().toISOString().slice(0, 7) + "-01";
 
-    const { data, error } = await (supabase as any)
-      .from("compliance_warnings")
+    const { data, error } = await (supabase
+      .from("compliance_warnings") as QueryBuilder)
       .select(
         `
         *,
@@ -440,8 +445,8 @@ export async function getWorkerComplianceWarnings(
   try {
     const targetMonth = month || new Date().toISOString().slice(0, 7) + "-01";
 
-    const { data, error } = await (supabase as any)
-      .from("compliance_warnings")
+    const { data, error } = await (supabase
+      .from("compliance_warnings") as QueryBuilder)
       .select(
         `
         *,
@@ -488,8 +493,8 @@ export async function getBusinessComplianceSummary(
   try {
     const targetMonth = month || new Date().toISOString().slice(0, 7) + "-01";
 
-    const { data, error } = await (supabase as any)
-      .from("compliance_warnings")
+    const { data, error } = await (supabase
+      .from("compliance_warnings") as QueryBuilder)
       .select(
         `
         *,
@@ -549,8 +554,8 @@ export async function getBusinessComplianceSummary(
  */
 export async function acknowledgeComplianceWarning(warningId: string) {
   try {
-    const { data, error } = await (supabase as any)
-      .from("compliance_warnings")
+    const { data, error } = await (supabase
+      .from("compliance_warnings") as QueryBuilder)
       .update({ acknowledged: true })
       .eq("id", warningId)
       .select()
@@ -583,8 +588,8 @@ export async function getUnacknowledgedWarnings(
   try {
     const targetMonth = month || new Date().toISOString().slice(0, 7) + "-01";
 
-    const { data, error } = await (supabase as any)
-      .from("compliance_warnings")
+    const { data, error } = await (supabase
+      .from("compliance_warnings") as QueryBuilder)
       .select(
         `
         *,
