@@ -81,7 +81,13 @@ export interface PaymentMetrics {
 }
 
 /**
- * Get revenue metrics for admin analytics dashboard
+ * Get revenue metrics for admin analytics dashboard.
+ * Aggregates completed and in-progress bookings to calculate daily, weekly, and monthly revenue.
+ * Defaults to the last 30 days if no date range is provided.
+ *
+ * @param startDate - Optional start date filter (YYYY-MM-DD format, defaults to 30 days ago)
+ * @param endDate   - Optional end date filter (YYYY-MM-DD format, defaults to today)
+ * @returns Result object containing revenue metrics (daily/weekly/monthly breakdowns and totals) or an error message
  */
 export async function getRevenueMetrics(
   startDate?: string,
@@ -210,7 +216,11 @@ export async function getRevenueMetrics(
 }
 
 /**
- * Get worker statistics for admin analytics dashboard
+ * Get worker statistics for admin analytics dashboard.
+ * Calculates active workers (those with bookings in the last 30 days), new workers this month,
+ * and breakdowns by tier, area, and KYC status.
+ *
+ * @returns Result object containing worker statistics or an error message
  */
 export async function getWorkerStatistics(): Promise<{
   data: WorkerStatistics | null;
@@ -330,7 +340,13 @@ export async function getWorkerStatistics(): Promise<{
 }
 
 /**
- * Get booking trends for admin analytics dashboard
+ * Get booking trends for admin analytics dashboard.
+ * Tracks daily booking creation, completion, and cancellation rates, plus breakdowns by status and category.
+ * Defaults to the last 30 days if no date range is provided.
+ *
+ * @param startDate - Optional start date filter (YYYY-MM-DD format, defaults to 30 days ago)
+ * @param endDate   - Optional end date filter (YYYY-MM-DD format, defaults to today)
+ * @returns Result object containing booking trend data (daily, by status, by category) or an error message
  */
 export async function getBookingTrends(
   startDate?: string,
@@ -424,7 +440,11 @@ export async function getBookingTrends(
 }
 
 /**
- * Get payment success rate for admin analytics dashboard
+ * Get payment success rate for admin analytics dashboard.
+ * Queries transactions table for payment metrics; falls back to bookings payment_status if unavailable.
+ * Returns success rate percentage, transaction counts, and total volume.
+ *
+ * @returns Result object containing payment metrics (success rate, volumes, counts) or an error message
  */
 export async function getPaymentMetrics(): Promise<{
   data: PaymentMetrics | null;
@@ -527,7 +547,13 @@ export interface ExportBookingRow {
 }
 
 /**
- * Export bookings data as CSV
+ * Export bookings data as CSV.
+ * Generates a CSV file containing all bookings with worker, business, job, and payment details.
+ * Supports optional date range filtering and limits results to 10,000 rows.
+ *
+ * @param startDate - Optional start date filter (YYYY-MM-DD format)
+ * @param endDate   - Optional end date filter (YYYY-MM-DD format)
+ * @returns Result object containing CSV string data or an error message
  */
 export async function exportBookingsCsv(
   startDate?: string,
@@ -631,7 +657,13 @@ export interface ExportPaymentRow {
 }
 
 /**
- * Export payments data as CSV
+ * Export payments data as CSV.
+ * Attempts to use the transactions table; falls back to bookings payment data if the table is unavailable.
+ * Exports up to 10,000 rows with optional date range filtering.
+ *
+ * @param startDate - Optional start date filter (YYYY-MM-DD format)
+ * @param endDate   - Optional end date filter (YYYY-MM-DD format)
+ * @returns Result object containing CSV string data or an error message
  */
 export async function exportPaymentsCsv(
   startDate?: string,
@@ -789,7 +821,12 @@ export interface ExportComplianceRow {
 }
 
 /**
- * Export compliance data as CSV
+ * Export compliance data as CSV.
+ * Exports worker-business compliance tracking records for a given month, including days worked,
+ * compliance status, and warning levels.
+ *
+ * @param month - Optional target month (YYYY-MM format, defaults to current month)
+ * @returns Result object containing CSV string data or an error message
  */
 export async function exportComplianceCsv(
   month?: string,
@@ -904,7 +941,12 @@ export interface WorkerComplianceDetail {
 }
 
 /**
- * Get compliance overview for admin dashboard
+ * Get compliance overview for admin dashboard.
+ * Returns aggregated compliance statistics including compliant, warning, and blocked workers,
+ * average days worked, and businesses with warnings for the given month.
+ *
+ * @param month - Optional target month (YYYY-MM format, defaults to current month)
+ * @returns Result object containing compliance overview data or an error message
  */
 export async function getComplianceOverview(
   month?: string,
@@ -972,7 +1014,13 @@ export async function getComplianceOverview(
 }
 
 /**
- * Get compliance warnings list for admin dashboard
+ * Get compliance warnings list for admin dashboard.
+ * Retrieves all workers with warning or blocked compliance status for the given month,
+ * ordered by severity and days worked.
+ *
+ * @param month - Optional target month (YYYY-MM format, defaults to current month)
+ * @param limit - Maximum number of warnings to return (default: 50)
+ * @returns Result object containing array of worker compliance detail records or an error message
  */
 export async function getComplianceWarningsList(
   month?: string,
