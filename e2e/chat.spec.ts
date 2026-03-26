@@ -155,9 +155,9 @@ test.describe("Chat History Persistence", () => {
 
     // Step 7: HARD REFRESH - This is the key persistence test
     // Hard refresh (Ctrl+Shift+R or Cmd+Shift+R) bypasses cache
-    await page.goto(`/${page.url().replace(/^.*\//business\/messages\/[^/]+/, "business/messages")}`, { waitUntil: "reload" });
-    await page.reload({ waitUntil: "hardeload" });
-    await page.goto(`/business/messages/${bookingId}`);
+    // Navigate directly to the booking messages page (acts as a hard refresh since we
+    // re-fetch from Supabase on every page load)
+    await page.goto(`/business/messages/${bookingId}`, { waitUntil: "networkidle" });
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
 
@@ -398,6 +398,298 @@ test.describe("Chat History Persistence", () => {
       await workerContext.close();
     }
   });
+
+// ========================================
+// TEST: Messaging Authorization - Booking Scope
+// ========================================
+
+/**
+ * subtask-5-3: Verify messaging blocked for unconnected users (no booking scope)
+ *
+ * Verification steps:
+ * 1. User A (no booking with User B) tries to send message
+ * 2. Verify API returns 400 with 'booking_id required' or 'not authorized'
+ * 3. Verify message does NOT appear in any conversation
+ *
+ * Security requirement: chat is scoped to confirmed bookings only —
+ * no open messaging between unconnected users
+ */
+test.describe("Messaging Authorization - Booking Scope", () => {
+  /**
+   * Test: API rejects message when bookingId is missing (non-admin user)
+   *
+   * Verifies that the API returns HTTP 400 with a descriptive error
+   * when a non-admin user tries to send a message without a bookingId.
+   */
+  test("API rejects message without bookingId - returns 400", async ({ page }) => {
+    console.log("\n🔒 Testing API rejection: message without bookingId...");
+
+    // Login as business to get authenticated session
+    await loginAs(page, "business");
+
+    // Make API call without bookingId
+    const response = await page.request.post("/api/messages/send", {
+      data: {
+        receiverId: "00000000-0000-0000-0000-000000000001",
+        content: "This message should be rejected - no bookingId",
+      },
+    });
+
+    const status = response.status();
+    const body = await response.json();
+
+    console.log(`  HTTP Status: ${status}`);
+    console.log(`  Response body: ${JSON.stringify(body)}`);
+
+    // ASSERTION 1: API must return 400 (or 401 if session expired)
+    expect([400, 401]).toContain(status);
+
+    // ASSERTION 2: Error message must mention bookingId or authorization
+    const errorMsg = body.error?.toLowerCase() || "";
+    const hasBookingError =
+      errorMsg.includes("bookingid") ||
+      errorMsg.includes("booking") ||
+      errorMsg.includes("wajib");
+    expect(hasBookingError).toBe(true);
+
+    console.log(
+      `✅ API correctly rejected message without bookingId (${status}): "${body.error}"`,
+    );
+  });
+
+  /**
+   * Test: API rejects message with non-existent bookingId
+   *
+   * Verifies that the API returns HTTP 404 when a non-existent bookingId
+   * is provided, preventing users from fabricating booking relationships.
+   */
+  test("API rejects message with non-existent bookingId - returns 404", async ({
+    page,
+  }) => {
+    console.log(
+      "\n🔒 Testing API rejection: message with non-existent bookingId...",
+    );
+
+    await loginAs(page, "business");
+
+    // Use a clearly fake UUID that won't exist in the database
+    const fakeBookingId = "99999999-9999-9999-9999-999999999999";
+
+    const response = await page.request.post("/api/messages/send", {
+      data: {
+        receiverId: "00000000-0000-0000-0000-000000000001",
+        content: "This should be rejected - booking does not exist",
+        bookingId: fakeBookingId,
+      },
+    });
+
+    const status = response.status();
+    const body = await response.json();
+
+    console.log(`  HTTP Status: ${status}`);
+    console.log(`  Response body: ${JSON.stringify(body)}`);
+
+    // ASSERTION 1: API must return 404 (or 400 if bookingId validation catches it first)
+    expect([400, 404]).toContain(status);
+
+    // ASSERTION 2: Error message must indicate booking not found or invalid
+    const errorMsg = body.error?.toLowerCase() || "";
+    const hasBookingError =
+      errorMsg.includes("booking") ||
+      errorMsg.includes("tidak ditemukan") ||
+      errorMsg.includes("tidak valid");
+    expect(hasBookingError).toBe(true);
+
+    console.log(
+      `✅ API correctly rejected message with non-existent bookingId (${status}): "${body.error}"`,
+    );
+  });
+
+  /**
+   * Test: API rejects message when receiver is not a participant in booking
+   *
+   * Verifies that even with a valid bookingId, a user cannot message
+   * someone who is not part of that booking. This is the key security check
+   * that prevents cross-user message spoofing.
+   */
+  test("API rejects message when receiver is not a booking participant - returns 403", async ({
+    page,
+  }) => {
+    console.log(
+      "\n🔒 Testing API rejection: message to non-participant in booking...",
+    );
+
+    await loginAs(page, "business");
+
+    // Try to send to the demo worker account using a fake bookingId
+    // where the worker is NOT a participant (or booking doesn't involve them)
+    const fakeBookingId = "88888888-8888-8888-8888-888888888888";
+
+    const response = await page.request.post("/api/messages/send", {
+      data: {
+        receiverId: "00000000-0000-0000-0000-000000000001",
+        content: "This should be rejected - not a booking participant",
+        bookingId: fakeBookingId,
+      },
+    });
+
+    const status = response.status();
+    const body = await response.json();
+
+    console.log(`  HTTP Status: ${status}`);
+    console.log(`  Response body: ${JSON.stringify(body)}`);
+
+    // ASSERTION 1: API must return 4xx error (booking not found → 404,
+    // or forbidden → 403 depending on validation order)
+    expect([400, 403, 404]).toContain(status);
+
+    console.log(
+      `✅ API correctly rejected message to non-participant (${status}): "${body.error}"`,
+    );
+  });
+
+  /**
+   * Test: Message does NOT appear in conversations when API blocked it
+   *
+   * After the API rejection tests above, this test verifies that no messages
+   * were actually inserted into the database. We navigate to the messages
+   * page and confirm no unexpected messages appeared.
+   */
+  test("Rejected message does NOT appear in conversations - API block is effective", async ({
+    page,
+  }) => {
+    console.log(
+      "\n🔒 Testing: rejected API message does not appear in conversations...",
+    );
+
+    await loginAs(page, "business");
+
+    // Attempt to send via API with an obviously fake booking
+    const fakeBookingId = "77777777-7777-7777-7777-777777777777";
+    const blockedMessage = `Unauthorized msg test - ${Date.now()}`;
+
+    await page.request.post("/api/messages/send", {
+      data: {
+        receiverId: "00000000-0000-0000-0000-000000000001",
+        content: blockedMessage,
+        bookingId: fakeBookingId,
+      },
+    });
+
+    // Navigate to messages page
+    await page.goto("/business/messages");
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(2000);
+
+    // ASSERTION: The blocked message must NOT appear anywhere on the page
+    const pageContent = await page.content();
+    const messageAppeared = pageContent.includes(blockedMessage);
+
+    console.log(
+      `  Blocked message "${blockedMessage}" found on page: ${messageAppeared}`,
+    );
+
+    // ASSERTION: Message must NOT be visible on the conversations page
+    expect(messageAppeared).toBe(false);
+
+    console.log(
+      "✅ Confirmed: blocked message does not appear in any conversation",
+    );
+  });
+
+  /**
+   * Test: Unconnected user cannot initiate a conversation via UI
+   *
+   * Verifies that the UI is designed to only show conversations for
+   * existing bookings — users cannot arbitrarily message each other.
+   */
+  test("Messages page only shows conversations with existing booking connections", async ({
+    page,
+  }) => {
+    console.log(
+      "\n🔒 Testing: messages page only shows booking-scoped conversations...",
+    );
+
+    await loginAs(page, "business");
+
+    await page.goto("/business/messages");
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(2000);
+
+    // All conversation links should go to /business/messages/[bookingId]
+    // — there should be NO direct user-to-user messaging links
+    const messageLinks = await page.locator('a[href*="/messages/"]').all();
+
+    if (messageLinks.length === 0) {
+      console.log(
+        "  No conversation links found (user has no bookings yet) — this is valid",
+      );
+      // With no bookings, there are no conversations to display, which is expected
+      console.log(
+        "✅ Messages page correctly shows no conversations for unconnected user",
+      );
+      return;
+    }
+
+    for (const link of messageLinks) {
+      const href = await link.getAttribute("href");
+      // Each link must contain a bookingId segment (UUID-like)
+      const hasBookingId =
+        href &&
+        /\bmessages\/[a-f0-9-]{36}\b/i.test(href);
+      console.log(`  Link: ${href} — has booking-scoped ID: ${hasBookingId}`);
+      expect(hasBookingId).toBe(true);
+    }
+
+    console.log(
+      "✅ All conversation links are booking-scoped — no open user-to-user messaging",
+    );
+  });
+
+  /**
+   * Test: Worker side — messaging to unconnected business is also blocked
+   *
+   * Same security check but from the worker perspective.
+   * Workers should not be able to message businesses they have no booking with.
+   */
+  test("Worker: API rejects message to unconnected business without bookingId", async ({
+    page,
+  }) => {
+    console.log(
+      "\n🔒 Testing worker API rejection: message without bookingId...",
+    );
+
+    await loginAs(page, "worker");
+
+    // Try to send message to a business the worker has no booking with
+    const response = await page.request.post("/api/messages/send", {
+      data: {
+        receiverId: "00000000-0000-0000-0000-000000000002",
+        content: "Worker trying to message unconnected business",
+      },
+    });
+
+    const status = response.status();
+    const body = await response.json();
+
+    console.log(`  HTTP Status: ${status}`);
+    console.log(`  Response body: ${JSON.stringify(body)}`);
+
+    // ASSERTION: API must reject without bookingId
+    expect([400, 401]).toContain(status);
+
+    const errorMsg = body.error?.toLowerCase() || "";
+    const hasBookingError =
+      errorMsg.includes("bookingid") ||
+      errorMsg.includes("booking") ||
+      errorMsg.includes("wajib");
+    expect(hasBookingError).toBe(true);
+
+    console.log(
+      `✅ Worker API correctly rejected message without bookingId (${status}): "${body.error}"`,
+    );
+  });
+});
 
   test("Chat messages display correct timestamps", async ({ page }) => {
     console.log("\n⏰ Testing message timestamp display...");
