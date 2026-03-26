@@ -98,6 +98,7 @@ export default function LoginPage() {
               <RadioGroup
                 name="role"
                 value={role}
+                label={t("auth.accountType")}
                 onValueChange={(value: string) =>
                   setRole(value as "worker" | "business")
                 }
