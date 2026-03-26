@@ -73,6 +73,9 @@ export async function sendMessage(
 
     const senderRole = senderProfile?.role || "worker";
 
+    // Resolve the booking ID to use (passed in or looked up)
+    const resolvedBookingId = bookingId || null;
+
     // Only check booking relationship if sender is not messaging themselves
     if (senderId !== receiverId && senderRole !== "admin") {
       // Check for an active booking between sender and receiver
@@ -122,11 +125,12 @@ export async function sendMessage(
       // Fetch sender's user profile to get their name
       const { data: senderProfile } = await supabase
         .from("users")
-        .select("full_name")
+        .select("full_name, role")
         .eq("id", senderId)
         .single();
 
       const senderName = senderProfile?.full_name || "Seseorang";
+      const senderUserRole = senderProfile?.role || senderRole;
       const messagePreview =
         content.length > 100 ? content.substring(0, 100) + "..." : content;
 
@@ -138,11 +142,16 @@ export async function sendMessage(
       );
 
       // Send FCM push notification to the receiver
+      // bookingId is used as conversationId since conversations are scoped to bookings
       await notificationService.sendNewMessage(
         receiverId,
         senderName,
         content,
-        receiverId,
+        resolvedBookingId || receiverId, // conversationId = bookingId
+        senderId, // senderId
+        senderUserRole, // senderRole
+        resolvedBookingId || undefined, // bookingId
+        data?.id, // messageId
       );
     } catch (notificationError) {
       // Don't fail the message send if notification creation fails
