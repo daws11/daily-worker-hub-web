@@ -4,7 +4,7 @@
   "workflow_type": "feature",
   "workflow_rationale": "This is a multi-service feature that requires modifying 25 API route files to add rate limiting. The implementation can be parallelized by grouping routes by type.",
   "created_at": "2026-03-26T13:03:15.177Z",
-  "updated_at": "2026-03-26T13:37:05.156Z",
+  "updated_at": "2026-03-26T13:40:16.370Z",
   "status": "in_progress",
   "planStatus": "in_progress",
   "phases": [
@@ -281,7 +281,9 @@
             "command": "grep -l 'withRateLimit' app/api/business/profile/route.ts && echo 'Rate limiting added'",
             "expected": "Rate limiting added"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Rate limiting added to GET /api/business/profile using withRateLimitForMethod with api-authenticated type. Handler renamed to handleGET and exported via withRateLimitForMethod wrapper.",
+          "updated_at": "2026-03-26T13:37:49.642723+00:00"
         },
         {
           "id": "subtask-6-2",
@@ -299,7 +301,9 @@
             "command": "grep -l 'withRateLimit' app/api/workers/badges/route.ts && echo 'Rate limiting added'",
             "expected": "Rate limiting added"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Added rate limiting to GET /api/workers/badges using withRateLimitForMethod with api-public type and userBased: false. Handler renamed to handleGET and exported via withRateLimitForMethod wrapper. Committed as 04a7052.",
+          "updated_at": "2026-03-26T13:39:39.868819+00:00"
         },
         {
           "id": "subtask-6-3",
@@ -669,5 +673,5 @@
   "qa_signoff": null,
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "last_updated": "2026-03-26T13:35:00.000000+00:00"
+  "last_updated": "2026-03-26T13:39:39.868828+00:00"
 }
