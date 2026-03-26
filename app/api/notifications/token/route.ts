@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+} from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("notifications/token");
 
@@ -28,10 +33,8 @@ export async function DELETE(request: NextRequest) {
 
     if (authError || !user) {
       routeLogger.warn("Unauthorized access attempt", { requestId });
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
-      );
+
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { searchParams } = new URL(request.url);
@@ -39,9 +42,10 @@ export async function DELETE(request: NextRequest) {
     const deviceId = searchParams.get("deviceId");
 
     if (!token && !deviceId) {
-      return NextResponse.json(
-        { error: "Token atau deviceId diperlukan" },
-        { status: 400 },
+      return errorResponse(
+        400,
+        { code: "VALIDATION_ERROR", i18nKey: "errors.validationFailed", details: { message: "Token atau deviceId diperlukan" } },
+        request,
       );
     }
 
@@ -65,9 +69,11 @@ export async function DELETE(request: NextRequest) {
         requestId,
         userId: user.id,
       });
-      return NextResponse.json(
-        { error: "Gagal menghapus token FCM" },
-        { status: 500 },
+
+      return errorResponse(
+        500,
+        { code: "DB_QUERY_ERROR", i18nKey: "errors.serverError", details: { supabaseMessage: error.message } },
+        request,
       );
     }
 
@@ -92,12 +98,8 @@ export async function DELETE(request: NextRequest) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/notifications/token", "DELETE");
   }
 }
 
@@ -121,10 +123,8 @@ export async function GET(request: NextRequest) {
 
     if (authError || !user) {
       routeLogger.warn("Unauthorized access attempt", { requestId });
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
-      );
+
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { data: tokens, error } = await (supabase as any)
@@ -140,9 +140,11 @@ export async function GET(request: NextRequest) {
         requestId,
         userId: user.id,
       });
-      return NextResponse.json(
-        { error: "Gagal mengambil token FCM" },
-        { status: 500 },
+
+      return errorResponse(
+        500,
+        { code: "DB_QUERY_ERROR", i18nKey: "errors.serverError", details: { supabaseMessage: error.message } },
+        request,
       );
     }
 
@@ -166,11 +168,7 @@ export async function GET(request: NextRequest) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/notifications/token", "GET");
   }
 }
