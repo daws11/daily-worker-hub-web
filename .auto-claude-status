@@ -1,60 +1,15 @@
 {
   "active": true,
-  "spec": "031-multi-language-support-indonesian-english",
+  "spec": "041-systematically-remove-16-ts-nocheck-directives-to-",
   "state": "building",
   "subtasks": {
-    "completed": 29,
-    "total": 31,
-    "in_progress": 1,
+    "completed": 12,
+    "total": 18,
+    "in_progress": 0,
     "failed": 0
   },
   "phase": {
-    "current": "Integration & Polish",
-    "id": null,
-    "total": 5
-  },
-  "workers": {
-    "active": 0,
-    "max": 1
-  },
-  "session": {
-    "number": 19,
-    "started_at": "2026-02-25T00:48:20.367590"
-  },
-  "last_update": "2026-02-25T01:31:13.651231"
-}
-    "in_progress": 1,
-    "failed": 0
-  },
-  "phase": {
-    "current": "Integration & Polish",
-    "id": null,
-<<<<<<< HEAD
-    "total": 3
-=======
-    "total": 5
->>>>>>> auto-claude/031-multi-language-support-indonesian-english
-  },
-  "workers": {
-    "active": 0,
-    "max": 1
-  },
-  "session": {
-<<<<<<< HEAD
-    "number": 18,
-    "started_at": "2026-02-24T23:25:08.810344"
-  },
-  "last_update": "2026-02-25T00:26:01.223722"
-}
-    "in_progress": 1,
-    "failed": 0
-  },
-  "phase": {
-<<<<<<< HEAD
-    "current": "Integration & Testing",
-=======
-    "current": "Integration & Polish",
->>>>>>> auto-claude/030-skill-badges-certifications
+    "current": "Fix complex action files with major type mismatches",
     "id": null,
     "total": 3
   },
@@ -63,21 +18,8 @@
     "max": 1
   },
   "session": {
-<<<<<<< HEAD
-    "number": 9,
-    "started_at": "2026-02-24T23:06:03.010329"
+    "number": 13,
+    "started_at": "2026-03-27T02:00:21.823595"
   },
-  "last_update": "2026-02-24T23:36:40.917840"
-=======
-    "number": 18,
-    "started_at": "2026-02-24T23:25:08.810344"
-  },
-  "last_update": "2026-02-25T00:26:01.223722"
->>>>>>> auto-claude/030-skill-badges-certifications
-=======
-    "number": 31,
-    "started_at": "2026-02-24T23:55:22.765652"
-  },
-  "last_update": "2026-02-25T01:39:13.872560"
->>>>>>> auto-claude/031-multi-language-support-indonesian-english
+  "last_update": "2026-03-27T03:13:01.430910"
 }
