@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use server";
 
 import { createClient } from "../supabase/server";
@@ -10,17 +9,27 @@ import type {
   ConnectionStatus,
 } from "../types/social";
 
+// ============================================================================
+// SOCIAL PLATFORM CONNECTION ACTIONS
+// ============================================================================
+
 type SocialConnectionRow =
   Database["public"]["Tables"]["business_social_connections"]["Row"];
 type SocialConnectionInsert =
   Database["public"]["Tables"]["business_social_connections"]["Insert"];
 
+/**
+ * Result type for single social connection operations
+ */
 export type SocialConnectionResult = {
   success: boolean;
   error?: string;
   data?: BusinessSocialConnection;
 };
 
+/**
+ * Result type for listing social connections with platform details
+ */
 export type SocialConnectionListResult = {
   success: boolean;
   error?: string;
