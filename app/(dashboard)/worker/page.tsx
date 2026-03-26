@@ -131,7 +131,9 @@ export default function WorkerDashboardPage() {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        const { data: transactions } = await supabase
+        // Use (supabase as any) to bypass complex type instantiation with nested query
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: transactions } = await (supabase as any)
           .from("wallet_transactions")
           .select("amount, created_at")
           .eq("user_id", user.id)
