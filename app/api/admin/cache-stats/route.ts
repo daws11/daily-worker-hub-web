@@ -15,26 +15,25 @@ import {
   invalidateCategoryCache,
 } from "@/lib/cache";
 import { logger } from "@/lib/logger";
+import { getServerSession } from "@/lib/auth/get-server-session";
 
 const routeLogger = logger.createApiLogger("cache-stats");
 
 /**
- * Verify admin authentication
- * TODO: Implement proper admin auth check
+ * Verify admin authentication using session
+ * Requires valid user session with admin role
  */
 async function verifyAdminAuth(request: NextRequest): Promise<boolean> {
-  const authHeader = request.headers.get("authorization");
+  const session = await getServerSession();
 
-  // For now, check for a simple admin secret
-  // In production, this should use proper admin authentication
-  const adminSecret = process.env.ADMIN_API_SECRET;
-
-  if (!adminSecret) {
-    // If no admin secret is configured, deny access
+  if (!session?.user?.id) {
     return false;
   }
 
-  return authHeader === `Bearer ${adminSecret}`;
+  // Check for admin role in user metadata or custom claims
+  const userRole = (session.user as any)?.role;
+
+  return userRole === "admin";
 }
 
 /**
@@ -88,12 +87,33 @@ async function verifyAdminAuth(request: NextRequest): Promise<boolean> {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Verify admin auth
-    const isAuthorized = await verifyAdminAuth(request);
+    // Try session auth first (primary, not exposed to browser bundle)
+    let isAuthorized = await verifyAdminAuth(request);
+    let authMethod = "session";
+
+    // Fall back to Bearer token auth if no valid session
+    if (!isAuthorized) {
+      authMethod = "bearer";
+      const authHeader = request.headers.get("authorization");
+      const adminSecret = process.env.ADMIN_API_SECRET;
+
+      if (adminSecret && authHeader === `Bearer ${adminSecret}`) {
+        isAuthorized = true;
+      }
+    }
 
     if (!isAuthorized) {
-      routeLogger.warn("Unauthorized cache stats access attempt");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      const session = await getServerSession();
+      const isAuthenticated = !!session?.user?.id;
+
+      if (!isAuthenticated) {
+        routeLogger.warn("Unauthorized cache stats access attempt - no session");
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      // User is logged in but not admin
+      routeLogger.warn("Forbidden cache stats access attempt - not admin");
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Get cache stats
@@ -183,12 +203,33 @@ export async function GET(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    // Verify admin auth
-    const isAuthorized = await verifyAdminAuth(request);
+    // Try session auth first (primary, not exposed to browser bundle)
+    let isAuthorized = await verifyAdminAuth(request);
+    let authMethod = "session";
+
+    // Fall back to Bearer token auth if no valid session
+    if (!isAuthorized) {
+      authMethod = "bearer";
+      const authHeader = request.headers.get("authorization");
+      const adminSecret = process.env.ADMIN_API_SECRET;
+
+      if (adminSecret && authHeader === `Bearer ${adminSecret}`) {
+        isAuthorized = true;
+      }
+    }
 
     if (!isAuthorized) {
-      routeLogger.warn("Unauthorized cache clear attempt");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      const session = await getServerSession();
+      const isAuthenticated = !!session?.user?.id;
+
+      if (!isAuthenticated) {
+        routeLogger.warn("Unauthorized cache clear attempt - no session");
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      // User is logged in but not admin
+      routeLogger.warn("Forbidden cache clear attempt - not admin");
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -299,12 +340,33 @@ export async function DELETE(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    // Verify admin auth
-    const isAuthorized = await verifyAdminAuth(request);
+    // Try session auth first (primary, not exposed to browser bundle)
+    let isAuthorized = await verifyAdminAuth(request);
+    let authMethod = "session";
+
+    // Fall back to Bearer token auth if no valid session
+    if (!isAuthorized) {
+      authMethod = "bearer";
+      const authHeader = request.headers.get("authorization");
+      const adminSecret = process.env.ADMIN_API_SECRET;
+
+      if (adminSecret && authHeader === `Bearer ${adminSecret}`) {
+        isAuthorized = true;
+      }
+    }
 
     if (!isAuthorized) {
-      routeLogger.warn("Unauthorized cache warmup attempt");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      const session = await getServerSession();
+      const isAuthenticated = !!session?.user?.id;
+
+      if (!isAuthenticated) {
+        routeLogger.warn("Unauthorized cache warmup attempt - no session");
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      // User is logged in but not admin
+      routeLogger.warn("Forbidden cache warmup attempt - not admin");
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const body = await request.json().catch(() => ({}));
