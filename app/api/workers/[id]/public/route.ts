@@ -9,6 +9,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { BADGE_DEFINITIONS, BadgeWithProgress } from "@/lib/badges";
 import { cache, LRUCache, CACHE_TTL, invalidateWorkerCache } from "@/lib/cache";
+import { logger } from "@/lib/logger";
+import {
+  errorResponse,
+  handleApiError,
+  notFoundErrorResponse,
+} from "@/lib/api/error-response";
+
+const routeLogger = logger.createApiLogger("workers:public");
 
 /**
  * Generate cache key for worker public profile
@@ -233,6 +241,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const { startTime, requestId } = logger.requestStart(request, {
+    route: "workers:public",
+  });
+
   try {
     const { id: workerId } = await params;
 
@@ -246,6 +258,11 @@ export async function GET(
     if (!bypassCache) {
       const cached = cache.get(cacheKey);
       if (cached !== null) {
+        routeLogger.info("Public worker profile cache hit", {
+          requestId,
+          workerId,
+        });
+
         const response = NextResponse.json(cached);
         response.headers.set("X-Cache", "HIT");
         return response;
@@ -256,20 +273,42 @@ export async function GET(
     const publicProfile = await fetchWorkerProfile(workerId);
 
     if (!publicProfile) {
-      return NextResponse.json({ error: "Worker not found" }, { status: 404 });
+      routeLogger.warn("Worker not found", {
+        requestId,
+        workerId,
+      });
+      logger.requestError(
+        request,
+        new Error("Worker not found"),
+        404,
+        startTime,
+        { requestId },
+      );
+
+      return notFoundErrorResponse("Worker", workerId, request);
     }
 
     // Cache the result (10 minutes TTL)
     cache.set(cacheKey, publicProfile, CACHE_TTL.WORKERS);
 
+    routeLogger.info("Public worker profile fetched", {
+      requestId,
+      workerId,
+    });
+    logger.requestSuccess(request, { status: 200 }, startTime, {
+      requestId,
+    });
+
     const response = NextResponse.json(publicProfile);
     response.headers.set("X-Cache", "MISS");
     return response;
   } catch (error) {
-    console.error("Error fetching public worker profile:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch worker profile" },
-      { status: 500 },
+    routeLogger.error(
+      "Unexpected error in GET /api/workers/[id]/public",
+      error,
+      { requestId },
     );
+
+    return handleApiError(error, request, "/api/workers/[id]/public", "GET");
   }
 }
