@@ -15,6 +15,7 @@ import {
   invalidateCategoryCache,
 } from "@/lib/cache";
 import { logger } from "@/lib/logger";
+import { errorResponse, handleApiError } from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("cache-stats");
 
@@ -87,13 +88,21 @@ async function verifyAdminAuth(request: NextRequest): Promise<boolean> {
  *         description: Internal server error
  */
 export async function GET(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, {
+    route: "admin:cache-stats",
+  });
+
   try {
     // Verify admin auth
     const isAuthorized = await verifyAdminAuth(request);
 
     if (!isAuthorized) {
-      routeLogger.warn("Unauthorized cache stats access attempt");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      routeLogger.warn("Unauthorized cache stats access attempt", {
+        requestId,
+      });
+      logger.requestError(request, null, 401, startTime, { requestId });
+
+      return errorResponse(401, "Unauthorized", request);
     }
 
     // Get cache stats
@@ -111,9 +120,17 @@ export async function GET(request: NextRequest) {
     }
 
     routeLogger.info("Cache stats retrieved", {
+      requestId,
       size: stats.size,
       hitRate: stats.hitRate,
     });
+
+    logger.requestSuccess(
+      request,
+      { status: 200 },
+      startTime,
+      { requestId, totalEntries: stats.entries.length },
+    );
 
     return NextResponse.json({
       stats: {
@@ -129,11 +146,11 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    routeLogger.error("Error getting cache stats", error);
-    return NextResponse.json(
-      { error: "Internal server error", details: (error as Error).message },
-      { status: 500 },
-    );
+    routeLogger.error("Unexpected error in GET /api/admin/cache-stats", error, {
+      requestId,
+    });
+
+    return handleApiError(error, request, "/api/admin/cache-stats", "GET");
   }
 }
 
@@ -182,13 +199,19 @@ export async function GET(request: NextRequest) {
  *         description: Internal server error
  */
 export async function DELETE(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, {
+    route: "admin:cache-stats:delete",
+  });
+
   try {
     // Verify admin auth
     const isAuthorized = await verifyAdminAuth(request);
 
     if (!isAuthorized) {
-      routeLogger.warn("Unauthorized cache clear attempt");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      routeLogger.warn("Unauthorized cache clear attempt", { requestId });
+      logger.requestError(request, null, 401, startTime, { requestId });
+
+      return errorResponse(401, "Unauthorized", request);
     }
 
     const { searchParams } = new URL(request.url);
@@ -245,6 +268,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     routeLogger.info("Cache cleared", {
+      requestId,
       cleared,
       namespace,
       key,
@@ -253,6 +277,13 @@ export async function DELETE(request: NextRequest) {
       userId,
     });
 
+    logger.requestSuccess(
+      request,
+      { status: 200 },
+      startTime,
+      { requestId, cleared },
+    );
+
     return NextResponse.json({
       success: true,
       message,
@@ -260,11 +291,11 @@ export async function DELETE(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    routeLogger.error("Error clearing cache", error);
-    return NextResponse.json(
-      { error: "Internal server error", details: (error as Error).message },
-      { status: 500 },
-    );
+    routeLogger.error("Unexpected error in DELETE /api/admin/cache-stats", error, {
+      requestId,
+    });
+
+    return handleApiError(error, request, "/api/admin/cache-stats", "DELETE");
   }
 }
 
@@ -298,13 +329,19 @@ export async function DELETE(request: NextRequest) {
  *         description: Internal server error
  */
 export async function POST(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, {
+    route: "admin:cache-stats:warmup",
+  });
+
   try {
     // Verify admin auth
     const isAuthorized = await verifyAdminAuth(request);
 
     if (!isAuthorized) {
-      routeLogger.warn("Unauthorized cache warmup attempt");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      routeLogger.warn("Unauthorized cache warmup attempt", { requestId });
+      logger.requestError(request, null, 401, startTime, { requestId });
+
+      return errorResponse(401, "Unauthorized", request);
     }
 
     const body = await request.json().catch(() => ({}));
@@ -345,7 +382,17 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    routeLogger.info("Cache warmup requested", { warmup });
+    routeLogger.info("Cache warmup requested", {
+      requestId,
+      warmup,
+    });
+
+    logger.requestSuccess(
+      request,
+      { status: 200 },
+      startTime,
+      { requestId, warmupCount: warmup.length },
+    );
 
     return NextResponse.json({
       success: true,
@@ -354,10 +401,10 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    routeLogger.error("Error warming up cache", error);
-    return NextResponse.json(
-      { error: "Internal server error", details: (error as Error).message },
-      { status: 500 },
-    );
+    routeLogger.error("Unexpected error in POST /api/admin/cache-stats", error, {
+      requestId,
+    });
+
+    return handleApiError(error, request, "/api/admin/cache-stats", "POST");
   }
 }
