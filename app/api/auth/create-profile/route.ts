@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
+
+const routeLogger = logger.createApiLogger("auth-create-profile");
 
 /**
  * POST /api/auth/create-profile
- * 
+ *
  * Create user profile after signup using service role to bypass RLS
  * This is needed because RLS policies require auth.uid() to match the user id,
  * but during signup the session might not be fully established yet.
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const body = await request.json();
     const { userId, email, fullName, role } = body;
@@ -25,7 +28,7 @@ export async function POST(request: NextRequest) {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
-      console.error("[create-profile] Missing Supabase credentials");
+      routeLogger.error("Missing Supabase credentials", new Error("Configuration error"));
       return NextResponse.json(
         { error: "Server configuration error" },
         { status: 500 }
@@ -54,20 +57,27 @@ export async function POST(request: NextRequest) {
       });
 
     if (profileError) {
-      console.error("[create-profile] Profile creation error:", profileError);
+      routeLogger.error("Profile creation error", profileError);
       return NextResponse.json(
         { error: "Failed to create profile", details: profileError.message },
         { status: 500 }
       );
     }
 
-    console.log("[create-profile] Profile created successfully for:", userId);
+    routeLogger.info("Profile created successfully", { userId });
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[create-profile] Unexpected error:", error);
+    routeLogger.error("Unexpected error in profile creation", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
     );
   }
 }
+
+// Export POST handler with rate limiting for auth routes
+export const POST = withRateLimitForMethod(
+  handlePOST as any,
+  { type: "auth", userBased: false },
+  ["POST"],
+);
