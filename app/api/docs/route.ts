@@ -9,6 +9,10 @@
 
 import { NextResponse } from "next/server";
 import { getOpenApiJson } from "@/lib/openapi";
+import { logger } from "@/lib/logger";
+import { errorResponse, handleApiError } from "@/lib/api/error-response";
+
+const routeLogger = logger.createApiLogger("docs");
 
 /**
  * @openapi
@@ -28,9 +32,15 @@ import { getOpenApiJson } from "@/lib/openapi";
  *               type: object
  *               description: OpenAPI 3.0.3 specification object
  */
-export async function GET() {
+export async function GET(request: Request) {
+  const { startTime, requestId } = logger.requestStart(request, {
+    route: "docs",
+  });
+
   try {
     const spec = getOpenApiJson();
+
+    logger.requestSuccess(request, { status: 200 }, startTime, { requestId });
 
     return new NextResponse(spec, {
       status: 200,
@@ -41,11 +51,8 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("Error generating OpenAPI spec:", error);
+    routeLogger.error("Unexpected error in GET /api/docs", error, { requestId });
 
-    return NextResponse.json(
-      { error: "Failed to generate OpenAPI specification" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/docs", "GET");
   }
 }
