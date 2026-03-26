@@ -8,15 +8,15 @@ import { DashboardGreeting } from "@/components/dashboard/greeting";
 import { QuickStats, type WorkerStats } from "@/components/dashboard/quick-stats";
 import { UpcomingBookings } from "@/components/dashboard/upcoming-bookings";
 import { QuickActions } from "@/components/dashboard/quick-actions";
+import { WalletActionCard } from "@/components/dashboard/wallet-card";
 import { useTranslation } from "@/lib/i18n/hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Wallet, 
+import {
+  Wallet,
   TrendingUp,
   Clock,
   ArrowRight,
-  Plus,
   CheckCircle,
   AlertCircle,
   Briefcase,
@@ -182,38 +182,7 @@ export default function WorkerDashboardPage() {
       </div>
 
       {/* Wallet Card - Highlight */}
-      <div className="animate-slide-up animation-delay-100">
-        <Link href="/worker/wallet">
-          <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-emerald-100 text-sm font-medium">Saldo Earnings</p>
-                  <p className="text-2xl md:text-3xl font-bold mt-1">
-                    {wallet ? formatCurrency(wallet.available_balance) : "Rp 0"}
-                  </p>
-                  {wallet && wallet.pending_balance > 0 && (
-                    <p className="text-xs text-emerald-100 mt-1">
-                      +{formatCurrency(wallet.pending_balance)} pending
-                    </p>
-                  )}
-                </div>
-                <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
-                  <Wallet className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <div className="flex gap-3 mt-4">
-                <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
-                  <ArrowRight className="h-4 w-4 mr-1" /> Tarik Dana
-                </Button>
-                <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
-                  Riwayat
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
+      <WalletActionCard role="worker" wallet={wallet} />
 
       {/* Quick Stats */}
       <div className="animate-slide-up animation-delay-200">
