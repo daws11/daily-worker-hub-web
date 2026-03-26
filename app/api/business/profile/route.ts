@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getServerSession } from "@/lib/auth/get-server-session";
 import { logger } from "@/lib/logger";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 
 const routeLogger = logger.createApiLogger("business/profile");
 
 // GET /api/business/profile - Get current business user profile
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "business/profile",
   });
@@ -87,3 +88,11 @@ export async function GET(request: Request) {
     );
   }
 }
+
+// Export handlers with rate limiting
+// GET is authenticated (100 req/min)
+export const GET = withRateLimitForMethod(
+  handleGET as any,
+  { type: "api-authenticated", userBased: true },
+  ["GET"],
+);
