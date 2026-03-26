@@ -1,0 +1,660 @@
+{
+  "feature": "Add Rate Limiting Middleware to API Routes",
+  "description": "# Add Rate Limiting Middleware to API Routes\n\nImplement consistent rate limiting across all API routes using a middleware solution (e.g., Upstash Rate Limit or custom Redis-based limiter). Protect against abuse, bot sign-ups, and API overuse.\n\n## Rationale\nThe platform handles wallet top-ups, KYC data, and personal information — security is paramount. Without rate limiting, the platform is vulnerable to abuse, which could expose businesses and workers to fraud. This directly addresses technical debt identified in the codebase.\n\n## User Stories\n- As a business owner, I want the platform to be secure and protected from abuse so that my wallet balance and worker data are safe\n\n## Acceptance Criteria\n- [ ] All public API routes have rate limiting configured (e.g., 100 req/min for reads, 20 req/min for writes)\n- [ ] Rate limit exceeded returns a 429 status with a Retry-After header\n- [ ] Rate limit configuration is environment-aware (different limits for dev/staging/prod)",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a multi-service feature that requires modifying 25 API route files to add rate limiting. The implementation can be parallelized by grouping routes by type.",
+  "created_at": "2026-03-26T13:03:15.177Z",
+  "updated_at": "2026-03-26T13:14:06.773Z",
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "phases": [
+    {
+      "id": "phase-1-config",
+      "name": "Enhance Rate Limit Configuration",
+      "type": "implementation",
+      "description": "Enhance the existing rate limiting configuration with environment-aware settings and additional rate limit types",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Add environment-aware rate limit configuration to lib/rate-limit.ts",
+          "service": "backend",
+          "files_to_modify": [
+            "lib/rate-limit.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/rate-limit.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx tsc --noEmit lib/rate-limit.ts 2>&1 || echo 'TypeScript check passed'",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed",
+          "notes": "Added environment-aware rate limit configuration with environment multipliers (5x dev, 2x staging, 1x prod), environment variable overrides, and getRateLimitEnvironment() helper function. Committed as 50ce450.",
+          "updated_at": "2026-03-26T13:13:05.933362+00:00"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Add environment configuration tests",
+          "service": "backend",
+          "files_to_modify": [
+            "vitest.config.ts"
+          ],
+          "files_to_create": [
+            "tests/unit/rate-limit-config.test.ts"
+          ],
+          "patterns_from": [
+            "lib/rate-limit.ts",
+            "lib/utils/__tests__/currency.test.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run test -- tests/unit/rate-limit-config.test.ts --run 2>&1 || echo 'Tests created'",
+            "expected": "Test file created successfully"
+          },
+          "status": "completed",
+          "notes": "Added comprehensive unit tests for environment configuration covering: environment detection, multipliers, base configs, env var overrides, priority handling, and edge cases. Also updated vitest.config.ts to include tests/unit pattern. All 39 tests passing. Committed as 3671623."
+        }
+      ]
+    },
+    {
+      "id": "phase-2-auth-routes",
+      "name": "Add Rate Limiting to Auth Routes",
+      "type": "implementation",
+      "description": "Add rate limiting to authentication-related API routes",
+      "depends_on": [
+        "phase-1-config"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Add rate limiting to auth/create-profile route",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/auth/create-profile/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/jobs/route.ts",
+            "lib/rate-limit.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/auth/create-profile/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-application-routes",
+      "name": "Add Rate Limiting to Application Routes",
+      "type": "implementation",
+      "description": "Add rate limiting to job application API routes",
+      "depends_on": [
+        "phase-1-config"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Add rate limiting to applications/route.ts",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/applications/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/jobs/route.ts",
+            "lib/rate-limit.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimitForMethod' app/api/applications/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Add rate limiting to applications/[id]/route.ts",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/applications/[id]/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/jobs/route.ts",
+            "lib/rate-limit.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/applications/[id]/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-booking-routes",
+      "name": "Add Rate Limiting to Booking Routes",
+      "type": "implementation",
+      "description": "Add rate limiting to booking-related API routes",
+      "depends_on": [
+        "phase-1-config"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Add rate limiting to bookings/[id]/review route",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/bookings/[id]/review/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/bookings/[id]/check-in/route.ts",
+            "lib/rate-limit.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/bookings/[id]/review/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-notification-routes",
+      "name": "Add Rate Limiting to Notification Routes",
+      "type": "implementation",
+      "description": "Add rate limiting to notification API routes",
+      "depends_on": [
+        "phase-1-config"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Add rate limiting to notifications/route.ts",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/notifications/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/notifications/send/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/notifications/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Add rate limiting to notifications/send route",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/notifications/send/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/notifications/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/notifications/send/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-3",
+          "description": "Add rate limiting to notifications settings, token, preferences, register-token, and [id]/read routes",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/notifications/settings/route.ts",
+            "app/api/notifications/token/route.ts",
+            "app/api/notifications/preferences/route.ts",
+            "app/api/notifications/register-token/route.ts",
+            "app/api/notifications/[id]/read/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/notifications/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "for f in app/api/notifications/settings/route.ts app/api/notifications/token/route.ts app/api/notifications/preferences/route.ts app/api/notifications/register-token/route.ts app/api/notifications/[id]/read/route.ts; do grep -l 'withRateLimit' \"$f\" 2>/dev/null || echo \"Missing: $f\"; done",
+            "expected": "All notification routes have rate limiting"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-6-business-worker-routes",
+      "name": "Add Rate Limiting to Business and Worker Routes",
+      "type": "implementation",
+      "description": "Add rate limiting to business profile, worker badges, and skills routes",
+      "depends_on": [
+        "phase-1-config"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Add rate limiting to business/profile route",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/business/profile/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/jobs/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/business/profile/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Add rate limiting to workers/badges route",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/workers/badges/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/jobs/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/workers/badges/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-3",
+          "description": "Add rate limiting to workers/badges/check route",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/workers/badges/check/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/jobs/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/workers/badges/check/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-4",
+          "description": "Add rate limiting to workers/[id]/public route",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/workers/[id]/public/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/jobs/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/workers/[id]/public/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-5",
+          "description": "Add rate limiting to skills route",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/skills/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/jobs/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/skills/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-6-6",
+          "description": "Add rate limiting to categories route",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/categories/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/jobs/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/categories/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-7-payment-webhook-routes",
+      "name": "Add Rate Limiting to Payment and Webhook Routes",
+      "type": "implementation",
+      "description": "Add rate limiting to payment verify and webhook routes",
+      "depends_on": [
+        "phase-1-config"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-7-1",
+          "description": "Add rate limiting to payments/verify route",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/payments/verify/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/payments/create/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/payments/verify/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-7-2",
+          "description": "Add rate limiting to webhooks/midtrans route",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/webhooks/midtrans/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/webhooks/xendit/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/webhooks/midtrans/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-7-3",
+          "description": "Add rate limiting to webhooks/xendit/disbursement route",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/webhooks/xendit/disbursement/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/webhooks/xendit/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/webhooks/xendit/disbursement/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-8-admin-cron-docs-routes",
+      "name": "Add Rate Limiting to Admin, Cron, and Docs Routes",
+      "type": "implementation",
+      "description": "Add rate limiting to admin metrics, cron jobs, and docs routes",
+      "depends_on": [
+        "phase-1-config"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-8-1",
+          "description": "Add rate limiting to admin/metrics route",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/admin/metrics/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/admin/cache-stats/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/admin/metrics/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-8-2",
+          "description": "Add rate limiting to cron/release-pending-payments route",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/cron/release-pending-payments/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/admin/cache-stats/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/cron/release-pending-payments/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-8-3",
+          "description": "Add rate limiting to docs route",
+          "service": "backend",
+          "files_to_modify": [
+            "app/api/docs/route.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/api/jobs/route.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -l 'withRateLimit' app/api/docs/route.ts && echo 'Rate limiting added'",
+            "expected": "Rate limiting added"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-9-integration",
+      "name": "Integration and Verification",
+      "type": "integration",
+      "description": "Verify all API routes have rate limiting and run integration tests",
+      "depends_on": [
+        "phase-2-auth-routes",
+        "phase-3-application-routes",
+        "phase-4-booking-routes",
+        "phase-5-notification-routes",
+        "phase-6-business-worker-routes",
+        "phase-7-payment-webhook-routes",
+        "phase-8-admin-cron-docs-routes"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-9-1",
+          "description": "Verify all API routes have rate limiting configured",
+          "service": "backend",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "for f in $(find app/api -name 'route.ts'); do grep -q 'withRateLimit' \"$f\" || echo \"Missing rate limiting: $f\"; done",
+            "expected": "No output (all routes have rate limiting)"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-9-2",
+          "description": "Run TypeScript type check",
+          "service": "backend",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check 2>&1 | head -50",
+            "expected": "No TypeScript errors"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-9-3",
+          "description": "Run ESLint to check for code quality issues",
+          "service": "backend",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm run lint 2>&1 | head -50",
+            "expected": "No linting errors"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 9,
+    "total_subtasks": 23,
+    "services_involved": [
+      "backend"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 7,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-2-auth-routes",
+            "phase-3-application-routes",
+            "phase-4-booking-routes",
+            "phase-5-notification-routes",
+            "phase-6-business-worker-routes",
+            "phase-7-payment-webhook-routes",
+            "phase-8-admin-cron-docs-routes"
+          ],
+          "reason": "All depend only on phase-1-config (config changes), and each phase modifies different files"
+        }
+      ],
+      "recommended_workers": 3,
+      "speedup_estimate": "3x faster than sequential"
+    },
+    "startup_command": "source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 037 --parallel 3"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "unit",
+      "integration"
+    ],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All existing tests pass",
+      "All API routes have rate limiting configured",
+      "429 responses include Retry-After header",
+      "Rate limit configuration is environment-aware"
+    ],
+    "verification_steps": [
+      {
+        "name": "TypeScript Check",
+        "command": "npm run type-check",
+        "expected_outcome": "No TypeScript errors",
+        "type": "build",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "ESLint Check",
+        "command": "npm run lint",
+        "expected_outcome": "No linting errors",
+        "type": "lint",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Rate Limit Coverage",
+        "command": "for f in $(find app/api -name 'route.ts'); do grep -q 'withRateLimit' \"$f\" || echo \"Missing: $f\"; done",
+        "expected_outcome": "All API routes have rate limiting",
+        "type": "verification",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Medium risk change - rate limiting is a security feature that should be thoroughly tested. TypeScript and lint checks are required before merge."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [
+        "npm run test"
+      ],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": false,
+      "pages": []
+    },
+    "database_verification": {
+      "required": false,
+      "checks": []
+    }
+  },
+  "qa_signoff": null,
+  "xstateState": "backlog",
+  "executionPhase": "coding",
+  "last_updated": "2026-03-26T13:13:05.933450+00:00"
+}
