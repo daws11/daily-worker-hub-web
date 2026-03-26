@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { supabase } from "../client";
 import type { Database } from "../types";
 
@@ -30,10 +29,15 @@ export type DisputeWithDetails = DisputeRow & {
   };
 };
 
+type DisputeResult<T = unknown> = {
+  data: T | null;
+  error: { message: string } | null;
+};
+
 /**
  * Get a single dispute by ID with related booking details
  */
-export async function getDisputeById(disputeId: string) {
+export async function getDisputeById(disputeId: string): Promise<DisputeResult<DisputeWithDetails>> {
   try {
     const { data, error } = await supabase
       .from("disputes")
@@ -71,17 +75,17 @@ export async function getDisputeById(disputeId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as unknown as DisputeWithDetails) || null, error: null };
   } catch (error) {
     console.error("Unexpected error fetching dispute:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
 /**
  * Get all disputes for a specific booking
  */
-export async function getDisputesByBookingId(bookingId: string) {
+export async function getDisputesByBookingId(bookingId: string): Promise<DisputeResult<DisputeRow[]>> {
   try {
     const { data, error } = await supabase
       .from("disputes")
@@ -94,17 +98,17 @@ export async function getDisputesByBookingId(bookingId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as DisputeRow[]) || [], error: null };
   } catch (error) {
     console.error("Unexpected error fetching disputes by booking:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
 /**
  * Get all disputes for a business
  */
-export async function getBusinessDisputes(businessId: string) {
+export async function getBusinessDisputes(businessId: string): Promise<DisputeResult<DisputeWithDetails[]>> {
   try {
     const { data, error } = await supabase
       .from("disputes")
@@ -135,17 +139,17 @@ export async function getBusinessDisputes(businessId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as unknown as DisputeWithDetails[]) || [], error: null };
   } catch (error) {
     console.error("Unexpected error fetching business disputes:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
 /**
  * Get all disputes for a worker
  */
-export async function getWorkerDisputes(workerId: string) {
+export async function getWorkerDisputes(workerId: string): Promise<DisputeResult<DisputeWithDetails[]>> {
   try {
     const { data, error } = await supabase
       .from("disputes")
@@ -177,17 +181,17 @@ export async function getWorkerDisputes(workerId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as unknown as DisputeWithDetails[]) || [], error: null };
   } catch (error) {
     console.error("Unexpected error fetching worker disputes:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
 /**
  * Get all pending or investigating disputes (admin view)
  */
-export async function getPendingDisputes() {
+export async function getPendingDisputes(): Promise<DisputeResult<DisputeWithDetails[]>> {
   try {
     const { data, error } = await supabase
       .from("disputes")
@@ -226,10 +230,10 @@ export async function getPendingDisputes() {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as unknown as DisputeWithDetails[]) || [], error: null };
   } catch (error) {
     console.error("Unexpected error fetching pending disputes:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
@@ -238,7 +242,7 @@ export async function getPendingDisputes() {
  */
 export async function createDispute(
   disputeData: Omit<DisputeInsert, "id" | "created_at" | "updated_at">,
-) {
+): Promise<DisputeResult<DisputeRow>> {
   try {
     const { data, error } = await supabase
       .from("disputes")
@@ -251,10 +255,10 @@ export async function createDispute(
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as DisputeRow) || null, error: null };
   } catch (error) {
     console.error("Unexpected error creating dispute:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
@@ -264,7 +268,7 @@ export async function createDispute(
 export async function updateDisputeStatus(
   disputeId: string,
   status: "pending" | "investigating" | "resolved" | "rejected",
-) {
+): Promise<DisputeResult<DisputeRow>> {
   try {
     const { data, error } = await supabase
       .from("disputes")
@@ -281,10 +285,10 @@ export async function updateDisputeStatus(
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as DisputeRow) || null, error: null };
   } catch (error) {
     console.error("Unexpected error updating dispute status:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
@@ -299,7 +303,7 @@ export async function updateDisputeResolution(
     resolution: string;
     admin_notes?: string;
   },
-) {
+): Promise<DisputeResult<DisputeRow>> {
   try {
     const { data, error } = await supabase
       .from("disputes")
@@ -319,17 +323,17 @@ export async function updateDisputeResolution(
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as DisputeRow) || null, error: null };
   } catch (error) {
     console.error("Unexpected error updating dispute resolution:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
 /**
  * Check if a booking has an active dispute (pending or investigating)
  */
-export async function checkActiveDispute(bookingId: string) {
+export async function checkActiveDispute(bookingId: string): Promise<DisputeResult<DisputeRow>> {
   try {
     const { data, error } = await supabase
       .from("disputes")
@@ -343,9 +347,9 @@ export async function checkActiveDispute(bookingId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as DisputeRow) || null, error: null };
   } catch (error) {
     console.error("Unexpected error checking active dispute:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
