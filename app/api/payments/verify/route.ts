@@ -3,6 +3,8 @@
  *
  * Verifies payment status by checking with the payment gateway.
  * Returns the current status of a payment transaction.
+ *
+ * Rate limited: 10 requests per minute (payment endpoints)
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -13,6 +15,7 @@ import {
   type PaymentProvider,
 } from "@/lib/payments";
 import { logger } from "@/lib/logger";
+import { withRateLimit } from "@/lib/rate-limit";
 
 const routeLogger = logger.createApiLogger("payments/verify");
 
@@ -25,7 +28,7 @@ const routeLogger = logger.createApiLogger("payments/verify");
  * - transaction_id: Transaction ID (required)
  * - provider: Payment provider 'xendit' | 'midtrans' (required)
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "payments/verify",
   });
@@ -285,7 +288,7 @@ export async function GET(request: NextRequest) {
  * Request body:
  * - transactions: Array of { transaction_id, provider }
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "payments/verify",
   });
@@ -534,3 +537,13 @@ async function recordWalletTransaction(
     });
   }
 }
+
+// Export handlers with rate limiting
+export const GET = withRateLimit(handleGET, {
+  type: "payment",
+  userBased: true,
+});
+export const POST = withRateLimit(handlePOST, {
+  type: "payment",
+  userBased: true,
+});
