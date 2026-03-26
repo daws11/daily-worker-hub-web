@@ -51,3 +51,9 @@ node_modules/
 # E2E test results
 test-results/
 playwright-report/
+
+# Auto Claude generated files
+.auto-claude-status
+.worktrees/
+.security-key
+logs/security/
