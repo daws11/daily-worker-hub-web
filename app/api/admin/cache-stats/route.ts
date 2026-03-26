@@ -15,6 +15,7 @@ import {
   invalidateCategoryCache,
 } from "@/lib/cache";
 import { logger } from "@/lib/logger";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 
 const routeLogger = logger.createApiLogger("cache-stats");
 
@@ -86,7 +87,7 @@ async function verifyAdminAuth(request: NextRequest): Promise<boolean> {
  *       500:
  *         description: Internal server error
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     // Verify admin auth
     const isAuthorized = await verifyAdminAuth(request);
@@ -181,7 +182,7 @@ export async function GET(request: NextRequest) {
  *       500:
  *         description: Internal server error
  */
-export async function DELETE(request: NextRequest) {
+async function handleDELETE(request: NextRequest) {
   try {
     // Verify admin auth
     const isAuthorized = await verifyAdminAuth(request);
@@ -297,7 +298,7 @@ export async function DELETE(request: NextRequest) {
  *       500:
  *         description: Internal server error
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // Verify admin auth
     const isAuthorized = await verifyAdminAuth(request);
@@ -361,3 +362,21 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Export handlers with rate limiting
+// Admin endpoints - authenticated, stricter limits
+export const GET = withRateLimitForMethod(
+  handleGET as any,
+  { type: "api-authenticated", userBased: true },
+  ["GET"],
+);
+export const DELETE = withRateLimitForMethod(
+  handleDELETE as any,
+  { type: "api-authenticated", userBased: true },
+  ["DELETE"],
+);
+export const POST = withRateLimitForMethod(
+  handlePOST as any,
+  { type: "api-authenticated", userBased: true },
+  ["POST"],
+);
