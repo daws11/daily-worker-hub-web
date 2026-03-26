@@ -4,6 +4,7 @@ import {
   PublicWorkerProfile,
   PublicWorkerProfileProps,
 } from "@/components/workers/public-worker-profile";
+import type { ReliabilityHistoryEntry } from "@/components/worker/reliability-history-chart";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -34,6 +35,32 @@ async function getWorkerProfile(
   } catch (error) {
     console.error("Error fetching worker profile:", error);
     return null;
+  }
+}
+
+// Fetch reliability history from API
+async function getWorkerReliabilityHistory(
+  id: string,
+): Promise<ReliabilityHistoryEntry[]> {
+  try {
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000";
+
+    const res = await fetch(`${baseUrl}/api/workers/${id}/reliability-history`, {
+      cache: "no-store", // Always fetch fresh data
+    });
+
+    if (!res.ok) {
+      return [];
+    }
+
+    const response = await res.json();
+    return response.data || [];
+  } catch (error) {
+    console.error("Error fetching reliability history:", error);
+    return [];
   }
 }
 
@@ -100,11 +127,15 @@ export default async function WorkerProfilePage({ params }: PageProps) {
     notFound();
   }
 
+  // Fetch reliability history
+  const reliabilityHistory = await getWorkerReliabilityHistory(id);
+
   return (
     <main className="min-h-screen bg-background py-8 px-4">
       <PublicWorkerProfile
         worker={worker}
         isAuthenticated={false} // Will be determined client-side
+        reliabilityHistory={reliabilityHistory}
       />
     </main>
   );

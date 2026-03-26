@@ -26,6 +26,10 @@ import {
   WorkerBadgesDisplay,
   WorkerBadgesEmpty,
 } from "@/components/workers/worker-badges-display";
+import {
+  ReliabilityHistoryChart,
+  type ReliabilityHistoryEntry,
+} from "@/components/worker/reliability-history-chart";
 import type { BadgeWithProgress } from "@/lib/badges";
 import type { WorkerTier } from "@/lib/supabase/types";
 
@@ -63,6 +67,7 @@ export interface PublicWorkerProfileProps {
   onBookNow?: () => void;
   onBack?: () => void;
   className?: string;
+  reliabilityHistory?: ReliabilityHistoryEntry[];
 }
 
 export function PublicWorkerProfile({
@@ -71,6 +76,7 @@ export function PublicWorkerProfile({
   onBookNow,
   onBack,
   className,
+  reliabilityHistory,
 }: PublicWorkerProfileProps) {
   const initials = getInitials(worker.fullName);
 
@@ -258,6 +264,16 @@ export function PublicWorkerProfile({
           </section>
 
           <Separator />
+
+          {/* Reliability History Chart section */}
+          {reliabilityHistory && reliabilityHistory.length > 0 && (
+            <>
+              <section>
+                <ReliabilityHistoryChart data={reliabilityHistory} />
+              </section>
+              <Separator />
+            </>
+          )}
 
           {/* Badges & Achievements section */}
           <section>
