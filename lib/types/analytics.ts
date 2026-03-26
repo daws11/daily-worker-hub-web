@@ -264,6 +264,18 @@ export interface BookingSummary {
 }
 
 // ============================================================================
+// RELIABILITY SCORE ANALYTICS TYPES
+// ============================================================================
+
+export type ReliabilityTrend = "improving" | "declining" | "stable" | "insufficient_data";
+
+export interface ShiftCompletionRate {
+  completed_shifts: number;
+  total_scheduled_shifts: number;
+  completion_rate_percentage: number;
+}
+
+// ============================================================================
 // ANALYTICS DASHBOARD TYPES
 // ============================================================================
 
