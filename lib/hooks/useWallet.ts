@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -18,10 +17,7 @@ import {
 } from "../supabase/queries/wallets";
 import type { Database } from "../supabase/types";
 
-type WalletRow = Database["public"]["Tables"]["wallets"]["Row"];
-type WalletTransactionRow =
-  Database["public"]["Tables"]["wallet_transactions"]["Row"];
-type TransactionStatus = WalletTransactionRow["status"];
+type TransactionStatus = Database["public"]["Tables"]["wallet_transactions"]["Row"]["status"];
 
 type UseWalletOptions = {
   userId?: string;

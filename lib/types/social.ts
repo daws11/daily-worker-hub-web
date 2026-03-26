@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Database } from "../supabase/types";
 
 type SocialPlatformRow =
