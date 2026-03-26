@@ -137,6 +137,32 @@ export async function getWorkerAvailabilityForDay(
 }
 
 /**
+ * Pure availability check logic - determines if a job fits within an availability block.
+ * This function performs NO database queries and is suitable for batch processing.
+ *
+ * @param availability - Worker's availability record for the day (or null if none)
+ * @param jobStartHour - Job start hour (0-23)
+ * @param jobEndHour - Job end hour (0-23)
+ * @returns Whether the job fits within the worker's availability block
+ */
+export function checkAvailabilityFit(
+  availability: WorkerAvailability | null,
+  jobStartHour: number,
+  jobEndHour: number,
+): boolean {
+  if (!availability || !availability.is_available) {
+    return false;
+  }
+
+  const { start_hour, end_hour } = availability;
+  return (
+    jobStartHour >= start_hour &&
+    jobEndHour <= end_hour &&
+    jobStartHour < jobEndHour
+  );
+}
+
+/**
  * Check if worker is available for a specific time period
  *
  * @param workerId - Worker ID
