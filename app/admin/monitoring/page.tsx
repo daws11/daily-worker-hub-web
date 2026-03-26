@@ -36,21 +36,13 @@ import {
   type HealthMetric,
 } from "@/components/admin/health-status";
 
-const fetcher = (url: string) => {
-  const adminSecret =
-    process.env.NEXT_PUBLIC_ADMIN_API_SECRET ||
-    localStorage.getItem("adminSecret");
-  return fetch(url, {
-    headers: {
-      Authorization: `Bearer ${adminSecret}`,
-    },
-  }).then((res) => {
+const fetcher = (url: string) =>
+  fetch(url).then((res) => {
     if (!res.ok) {
       throw new Error("Failed to fetch metrics");
     }
     return res.json();
   });
-};
 
 interface MetricsData {
   timestamp: string;
@@ -144,25 +136,17 @@ export default function AdminMonitoringPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [adminSecret, setAdminSecret] = useState<string>("");
-
-  // Load admin secret from localStorage
-  useEffect(() => {
-    const secret = localStorage.getItem("adminSecret");
-    if (secret) {
-      setAdminSecret(secret);
-    }
-  }, []);
 
   // Fetch metrics with SWR (30 second refresh)
+  // Uses session-based authentication - no secret required
   const {
     data: metrics,
     error,
     isLoading,
     mutate,
   } = useSWR<MetricsData>(
-    user && adminSecret ? "/api/admin/metrics" : null,
-    (url) => fetcher(url),
+    user ? "/api/admin/monitoring/metrics" : null,
+    fetcher,
     {
       refreshInterval: 30000, // 30 seconds
       onSuccess: () => {
@@ -176,19 +160,6 @@ export default function AdminMonitoringPage() {
       router.push("/login?redirect=/admin/monitoring");
     }
   }, [user, authLoading, router]);
-
-  // Prompt for admin secret if not set
-  useEffect(() => {
-    if (user && !adminSecret) {
-      const secret = prompt("Enter admin API secret:");
-      if (secret) {
-        localStorage.setItem("adminSecret", secret);
-        setAdminSecret(secret);
-      } else {
-        router.push("/admin");
-      }
-    }
-  }, [user, adminSecret, router]);
 
   const getHealthMetrics = (): HealthMetric[] => {
     if (!metrics) return [];
