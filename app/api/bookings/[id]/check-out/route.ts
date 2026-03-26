@@ -6,6 +6,13 @@ import { checkOutBooking } from "@/lib/actions/bookings-completion";
 import { validateData } from "@/lib/validations";
 import { checkOutSchema } from "@/lib/validations/booking";
 import { withRateLimit } from "@/lib/rate-limit";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+  forbiddenErrorResponse,
+  validationErrorResponse,
+} from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("bookings/[id]/check-out");
 
@@ -28,7 +35,7 @@ async function handlePOST(request: Request, { params }: Params) {
         requestId,
       });
 
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { id: bookingId } = await params;
@@ -63,7 +70,10 @@ async function handlePOST(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return NextResponse.json(validationError.error, { status: 400 });
+      return validationErrorResponse(
+        { reason: validationError.error.error, details: validationError.error.details },
+        request,
+      );
     }
 
     const supabase = await createClient();
@@ -88,10 +98,7 @@ async function handlePOST(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Unauthorized - Worker not found" },
-        { status: 403 },
-      );
+      return forbiddenErrorResponse("Unauthorized - Worker not found", request);
     }
 
     const result = await checkOutBooking(
@@ -111,7 +118,7 @@ async function handlePOST(request: Request, { params }: Params) {
         requestId,
       });
 
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return errorResponse(400, result.error, request);
     }
 
     routeLogger.info("Check-out successful", {
@@ -136,11 +143,12 @@ async function handlePOST(request: Request, { params }: Params) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
+    return handleApiError(
+      error,
+      request,
+      "/api/bookings/[id]/check-out",
+      "POST",
     );
   }
 }
