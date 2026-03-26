@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { releaseFundsAction } from "@/lib/actions/wallets";
 import { createNotification } from "@/lib/actions/notifications";
 import { logger } from "@/lib/logger";
+import { errorResponse, handleApiError } from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("cron/release-pending-payments");
 
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
         requestId,
       });
 
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return errorResponse(401, "AUTH_UNAUTHORIZED", request);
     }
 
     routeLogger.info("Starting auto-release cron job", { requestId });
@@ -90,10 +91,7 @@ export async function POST(request: Request) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Failed to fetch bookings" },
-        { status: 500 },
-      );
+      return errorResponse(500, "FETCH_ERROR", request);
     }
 
     if (!bookings || bookings.length === 0) {
@@ -246,9 +244,6 @@ export async function POST(request: Request) {
 
     logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/cron/release-pending-payments", "POST");
   }
 }

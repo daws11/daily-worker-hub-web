@@ -3,13 +3,13 @@
   "spec": "038-standardize-error-handling-across-api-routes",
   "state": "building",
   "subtasks": {
-    "completed": 27,
+    "completed": 32,
     "total": 36,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Update workers and skills API routes",
+    "current": "Update admin, cron, and docs API routes",
     "id": null,
     "total": 4
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 29,
+    "number": 34,
     "started_at": "2026-03-26T21:56:43.433356"
   },
-  "last_update": "2026-03-26T23:22:49.644694"
+  "last_update": "2026-03-26T23:32:18.702948"
 }
