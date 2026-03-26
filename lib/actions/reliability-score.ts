@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use server";
 
 import { createClient } from "../supabase/server";
@@ -6,7 +5,6 @@ import type { Database } from "../supabase/types";
 import {
   calculateScore,
   getScoreHistory,
-  getWorkerScore,
   updateScore,
   recordScoreHistory,
 } from "../supabase/queries/reliability-score";
