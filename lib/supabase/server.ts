@@ -2,21 +2,11 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { Database } from "./types";
+import { getServiceRoleKey } from "./server-keys";
 
-/**
- * Get Supabase service role key from environment
- * @throws {Error} If SUPABASE_SERVICE_ROLE_KEY is not set
- */
-export function getServiceRoleKey(): string {
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!key) {
-    throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY environment variable is not set. " +
-        "This key is required for server-side operations with elevated privileges.",
-    );
-  }
-  return key;
-}
+// Re-export for backwards compatibility — callers importing getServiceRoleKey
+// from server.ts will still get the correct function.
+export { getServiceRoleKey } from "./server-keys";
 
 export async function createClient() {
   const cookieStore = await cookies();

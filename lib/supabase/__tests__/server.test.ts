@@ -7,9 +7,9 @@
 
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 
-// We need to test the module's behavior, so we import it
-// The "server-only" import is fine in test environment
-import { getServiceRoleKey } from "../server";
+// Import from server-keys.ts — it has no server-only guard, so it can be
+// imported and tested in a vitest (Node/jsdom) environment.
+import { getServiceRoleKey } from "../server-keys";
 
 describe("Service Role Key Validation", () => {
   const originalEnv = process.env.SUPABASE_SERVICE_ROLE_KEY;
