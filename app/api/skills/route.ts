@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import { cache, LRUCache, CACHE_TTL } from "@/lib/cache";
+import { errorResponse, handleApiError } from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("skills");
 
@@ -86,10 +87,7 @@ export async function GET(request: Request) {
       routeLogger.error("Error fetching skills", error, { requestId });
       logger.requestError(request, error, 500, startTime, { requestId });
 
-      return NextResponse.json(
-        { error: "Failed to fetch skills" },
-        { status: 500 },
-      );
+      return errorResponse(500, "Failed to fetch skills", request);
     }
 
     const result = { data: skills };
@@ -113,11 +111,7 @@ export async function GET(request: Request) {
     routeLogger.error("Unexpected error in GET /api/skills", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/skills", "GET");
   }
 }
