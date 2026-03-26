@@ -31,14 +31,17 @@ function RadioGroup({
   children,
   ...props
 }: RadioGroupProps) {
+  const labelId = React.useId();
+
   return (
     <div className="space-y-2">
       {label && (
-        <label className="text-sm font-medium text-foreground">{label}</label>
+        <label id={labelId} className="text-sm font-medium text-foreground">{label}</label>
       )}
       <RadioGroupPrimitive
         data-slot="radio-group"
         name={name}
+        aria-labelledby={label ? labelId : undefined}
         className={cn("grid w-full gap-2", className)}
         {...props}
       >
