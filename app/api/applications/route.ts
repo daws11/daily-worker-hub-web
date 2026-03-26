@@ -14,6 +14,14 @@ import {
   getApplicationsByJob,
   getApplicationsByWorker,
 } from "@/lib/actions/job-applications";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+  forbiddenErrorResponse,
+  notFoundErrorResponse,
+  validationErrorResponse,
+} from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("applications");
 
@@ -101,7 +109,7 @@ export async function GET(request: Request) {
         requestId,
       });
 
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { searchParams } = new URL(request.url);
@@ -132,7 +140,7 @@ export async function GET(request: Request) {
         { requestId },
       );
 
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return notFoundErrorResponse("User", session.user.id, request);
     }
 
     // Business viewing applicants for a job
@@ -158,10 +166,7 @@ export async function GET(request: Request) {
           { requestId },
         );
 
-        return NextResponse.json(
-          { error: "Unauthorized - Business not found" },
-          { status: 403 },
-        );
+        return forbiddenErrorResponse("Unauthorized - Business not found", request);
       }
 
       const result = await getApplicationsByJob(jobId, businessId);
@@ -176,7 +181,7 @@ export async function GET(request: Request) {
           requestId,
         });
 
-        return NextResponse.json({ error: result.error }, { status: 400 });
+        return errorResponse(400, result.error, request);
       }
 
       routeLogger.info("Applications fetched for business", {
@@ -216,10 +221,7 @@ export async function GET(request: Request) {
           { requestId },
         );
 
-        return NextResponse.json(
-          { error: "Unauthorized - Worker not found" },
-          { status: 403 },
-        );
+        return forbiddenErrorResponse("Unauthorized - Worker not found", request);
       }
 
       const result = await getApplicationsByWorker(workerId, status);
@@ -234,7 +236,7 @@ export async function GET(request: Request) {
           requestId,
         });
 
-        return NextResponse.json({ error: result.error }, { status: 400 });
+        return errorResponse(400, result.error, request);
       }
 
       routeLogger.info("Applications fetched for worker", {
@@ -259,20 +261,16 @@ export async function GET(request: Request) {
       { requestId },
     );
 
-    return NextResponse.json(
-      { error: "Missing required parameters" },
-      { status: 400 },
+    return validationErrorResponse(
+      { reason: "Missing required parameters", required: ["job_id or worker_id"] },
+      request,
     );
   } catch (error) {
     routeLogger.error("Unexpected error in GET /api/applications", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/applications", "GET");
   }
 }
 
@@ -362,7 +360,7 @@ export async function POST(request: Request) {
         requestId,
       });
 
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const body = await request.json();
@@ -378,9 +376,9 @@ export async function POST(request: Request) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Missing required fields: job_id, worker_id" },
-        { status: 400 },
+      return validationErrorResponse(
+        { reason: "Missing required fields", required: ["job_id", "worker_id"] },
+        request,
       );
     }
 
@@ -407,10 +405,7 @@ export async function POST(request: Request) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Unauthorized - Worker not found" },
-        { status: 403 },
-      );
+      return forbiddenErrorResponse("Unauthorized - Worker not found", request);
     }
 
     const result = await createJobApplication(body.job_id, body.worker_id, {
@@ -429,7 +424,7 @@ export async function POST(request: Request) {
         requestId,
       });
 
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return errorResponse(400, result.error, request);
     }
 
     routeLogger.info("Application created successfully", {
@@ -454,11 +449,7 @@ export async function POST(request: Request) {
     routeLogger.error("Unexpected error in POST /api/applications", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/applications", "POST");
   }
 }
