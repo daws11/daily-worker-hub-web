@@ -516,3 +516,71 @@ export async function getWalletDetailsAction(
     };
   }
 }
+
+/**
+ * Get worker wallet data by worker ID
+ * First looks up the worker's user_id, then retrieves/creates the wallet
+ */
+export async function getWorkerWalletAction(
+  workerId: string,
+): Promise<WalletResult> {
+  try {
+    const supabase = await createClient();
+
+    // First get the worker's user_id
+    const { data: worker, error: workerError } = await supabase
+      .from("workers")
+      .select("user_id")
+      .eq("id", workerId)
+      .single();
+
+    if (workerError || !worker) {
+      return { success: false, error: "Worker tidak ditemukan" };
+    }
+
+    // Try to get existing wallet
+    const { data, error } = await supabase
+      .from("wallets")
+      .select("*")
+      .eq("user_id", worker.user_id)
+      .maybeSingle();
+
+    if (error) {
+      return {
+        success: false,
+        error: `Gagal mengambil data dompet: ${error.message}`,
+      };
+    }
+
+    // Create wallet if it doesn't exist
+    if (!data) {
+      const newWallet: WalletInsert = {
+        user_id: worker.user_id,
+        pending_balance: 0,
+        available_balance: 0,
+      };
+
+      const { data: newWalletData, error: createError } = await supabase
+        .from("wallets")
+        .insert(newWallet)
+        .select()
+        .single();
+
+      if (createError) {
+        return {
+          success: false,
+          error: `Gagal membuat dompet: ${createError.message}`,
+        };
+      }
+
+      return { success: true, data: newWalletData };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    return {
+      success: false,
+      error: "Terjadi kesalahan saat mengambil data dompet",
+    };
+  }
+}
