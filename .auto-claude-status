@@ -3,23 +3,23 @@
   "spec": "005-admin-api-secret-exposed-to-browser-bundle-and-loc",
   "state": "building",
   "subtasks": {
-    "completed": 4,
+    "completed": 5,
     "total": 6,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Update Existing Admin API Routes to Use Session Auth",
+    "current": "Integration Verification",
     "id": null,
-    "total": 2
+    "total": 1
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 6,
+    "number": 7,
     "started_at": "2026-03-26T17:39:13.550812"
   },
-  "last_update": "2026-03-26T17:53:14.972413"
+  "last_update": "2026-03-26T17:55:17.778917"
 }

@@ -1,0 +1,140 @@
+=== AUTO-BUILD PROGRESS ===
+
+Project: Admin API secret exposed to browser bundle and localStorage
+Workspace: /Users/yanuar/Documents/daws/daily-worker-hub-web/.auto-claude/worktrees/tasks/005-admin-api-secret-exposed-to-browser-bundle-and-loc
+Started: 2026-03-26
+
+Workflow Type: refactor
+Rationale: Security fix replacing insecure client-side secret pattern with secure server-side session-based auth. Matches refactor workflow: add new secure code, migrate consumers, remove old insecure code.
+
+Session 1 (Planner):
+- Created project_index.json
+- Created context.json
+- Created implementation_plan.json
+- 5 phases defined
+- 6 subtasks total
+- Created init.sh
+
+=== INVESTIGATION FINDINGS ===
+
+Root Cause:
+- app/admin/monitoring/page.tsx reads NEXT_PUBLIC_ADMIN_API_SECRET (a server-only secret)
+  from process.env and stores it in localStorage as "adminSecret"
+- The secret is used as a Bearer token in Authorization headers to fetch metrics
+- NEXT_PUBLIC_ prefix causes Next.js to embed ADMIN_API_SECRET value in the browser JS bundle
+- Any XSS vulnerability (even self-contained) can read localStorage.getItem("adminSecret")
+  or access window.__NEXT_DATA__ to steal the admin secret
+
+Existing Auth Pattern:
+- Supabase cookie-based session via createServerClient (@supabase/ssr)
+- getServerSession() in lib/auth/get-server-session.ts
+- useAuth() in app/providers/auth-provider.tsx tracks userRole ("admin"|"worker"|"business")
+- Admin pages already check user session via useAuth()
+
+Files in Scope:
+- app/admin/monitoring/page.tsx (CLIENT - needs refactoring)
+- app/api/admin/metrics/route.ts (SERVER - needs session auth)
+- app/api/admin/cache-stats/route.ts (SERVER - needs session auth)
+- .env.local.example (needs NEXT_PUBLIC_ADMIN_API_SECRET removed)
+
+=== PHASE SUMMARY ===
+
+Phase 1 - Create Internal Admin Metrics API Route:
+  - 1 subtask: Create app/api/admin/monitoring/metrics/route.ts
+  - Depends on: nothing
+  - Pattern: import metrics logic, use getServerSession() for auth
+
+Phase 2 - Refactor Monitoring Page:
+  - 1 subtask: Refactor app/admin/monitoring/page.tsx
+  - Depends on: phase-1-backend
+  - Remove: localStorage, NEXT_PUBLIC_ADMIN_API_SECRET, Bearer token auth
+  - Add: Simple fetch to /api/admin/monitoring/metrics (no secret needed)
+
+Phase 3 - Remove NEXT_PUBLIC_ADMIN_API_SECRET:
+  - 1 subtask: Remove from .env.local.example
+  - Depends on: phase-2-frontend
+
+Phase 4 - Update Existing Admin API Routes:
+  - 2 subtasks: Update metrics and cache-stats routes
+  - Depends on: phase-3-security
+  - Add session-based auth, keep Bearer token as fallback
+
+Phase 5 - Integration Verification:
+  - 1 subtask: Verify no secrets in bundle, monitoring page works
+  - Depends on: phase-4-admin-routes
+
+=== SECURITY NOTES ===
+
+Critical Risk: This is a security vulnerability fix.
+- Any XSS could steal the admin API secret from localStorage or window
+- Stolen secret grants full admin API access
+- Must verify: (1) bundle has no ADMIN_API_SECRET, (2) no localStorage secret calls remain
+
+=== STARTUP COMMAND ===
+
+To continue building this spec, run:
+
+  source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 005 --parallel 1
+
+=== END SESSION 1 ===
+
+=== SESSION 2 (2026-03-26) ===
+
+--- subtask-2-1: COMPLETED ---
+Task: Refactor app/admin/monitoring/page.tsx - remove secret/localStorage, use new internal API
+
+Changes Made:
+- Removed localStorage.getItem("adminSecret") usage
+- Removed NEXT_PUBLIC_ADMIN_API_SECRET environment variable
+- Removed Authorization Bearer token header from fetcher
+- Removed prompt() call for admin secret entry
+- Changed SWR to use simple fetch (session handled server-side)
+- Updated API endpoint to /api/admin/monitoring/metrics
+
+Verification: grep -c 'localStorage|NEXT_PUBLIC_ADMIN_API_SECRET|adminSecret' returned 0
+
+Commit: e1e9e3d - "auto-claude: subtask-2-1 - Refactor app/admin/monitoring/page.tsx - remove secret/localStorage"
+
+--- Next Subtask ---
+subtask-3-1: Remove NEXT_PUBLIC_ADMIN_API_SECRET from .env.local.example
+
+=== END SESSION 2 ===
+
+--- subtask-5-1: COMPLETED (Session 7) ---
+Task: Verify monitoring page makes no secret requests - check bundle for exposed secrets
+
+Verification Steps Performed:
+1. Build Verification: npm run build - SUCCEEDED
+   - 72 pages generated (including /admin/monitoring)
+   - Build warnings: Sentry/OpenTelemetry dependency warnings (pre-existing, non-blocking)
+   - Build completed in ~39s
+
+2. Bundle Security Scan - PASSED:
+   - grep -r 'ADMIN_API_SECRET' .next/static/ .next/chunks/ -> 0 results
+   - grep -r 'adminSecret' .next/static/ .next/chunks/ -> 0 results
+   - grep -r 'NEXT_PUBLIC_ADMIN_API_SECRET' .next/static/ .next/chunks/ -> 0 results
+   - NO secrets found in any client-side bundle files
+
+3. Monitoring Page Source Review:
+   - app/admin/monitoring/page.tsx: "use client" component
+   - No localStorage.getItem("adminSecret") usage
+   - No NEXT_PUBLIC_ADMIN_API_SECRET references
+   - No Authorization Bearer token headers
+   - Uses simple fetch to /api/admin/monitoring/metrics
+   - Session auth handled server-side via useAuth() and SWR
+
+4. API Route Review:
+   - app/api/admin/monitoring/metrics/route.ts: GET handler only
+   - Uses getServerSession() for session-based auth
+   - Returns 401 for unauthenticated, 403 for non-admin users
+   - No secret embedded in response
+
+Note: App run verification (npm run dev) requires Supabase/database access which
+is not available in this sandbox environment. Code review confirms proper session-
+based auth flow that will work when Supabase is accessible.
+
+Commit: <pending> - "auto-claude: subtask-5-1 - Integration verification - no secrets in browser bundle"
+
+=== ALL SUBTASKS COMPLETED ===
+All 6 subtasks across 5 phases are now complete.
+Security fix verified: ADMIN_API_SECRET no longer exposed to browser bundle.
