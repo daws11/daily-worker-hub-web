@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "@/app/providers/auth-provider";
 import { getBadges, getWorkersByBadge } from "@/lib/supabase/queries/badges";
+import { getWorkerScoreTrend } from "@/lib/supabase/queries/reliability-score";
 import type { BadgesRow } from "@/lib/supabase/queries/badges";
 import { BadgeFilterSelect } from "@/components/badge/badge-filter-select";
 import { SkillBadgeChip } from "@/components/badge/skill-badge-display";
@@ -52,6 +53,7 @@ export default function BusinessWorkersPage() {
     filtered: 0,
     workersList: [],
   });
+  const [unfilteredWorkers, setUnfilteredWorkers] = useState<WorkerWithBadges[]>([]);
   const [badges, setBadges] = useState<BadgesRow[]>([]);
   const [selectedBadgeIds, setSelectedBadgeIds] = useState<string[]>([]);
   const [reliabilityFilter, setReliabilityFilter] = useState<ReliabilityFilterValue>({
@@ -194,10 +196,39 @@ export default function BusinessWorkersPage() {
           );
         }
 
+        // Fetch trend data for each worker
+        const workersWithTrends = await Promise.all(
+          workersWithBadges.map(async (worker) => {
+            if (worker.reliability_score !== undefined && worker.reliability_score !== null) {
+              try {
+                const trendResult = await getWorkerScoreTrend(worker.id);
+                return {
+                  ...worker,
+                  reliability_trend: (trendResult?.trend ?? "insufficient_data") as TrendDirection,
+                };
+              } catch {
+                return { ...worker, reliability_trend: "insufficient_data" as TrendDirection };
+              }
+            }
+            return { ...worker, reliability_trend: "insufficient_data" as TrendDirection };
+          }),
+        );
+
+        // Store unfiltered list
+        setUnfilteredWorkers(workersWithTrends);
+
+        // Apply reliability filter client-side
+        const filteredWorkers = workersWithTrends.filter((worker) => {
+          const score = worker.reliability_score ?? 0;
+          const min = reliabilityFilter.minScore ?? 1;
+          const max = reliabilityFilter.maxScore ?? 5;
+          return score >= min && score <= max;
+        });
+
         setWorkers({
-          total: workersWithBadges.length,
-          filtered: workersWithBadges.length,
-          workersList: workersWithBadges,
+          total: workersWithTrends.length,
+          filtered: filteredWorkers.length,
+          workersList: filteredWorkers,
         });
       } catch (err) {
         const message =
@@ -208,7 +239,7 @@ export default function BusinessWorkersPage() {
         setLoading(false);
       }
     },
-    [user?.id],
+    [user?.id, reliabilityFilter],
   );
 
   // Handle badge filter change
@@ -265,6 +296,24 @@ export default function BusinessWorkersPage() {
     fetchBadges();
     fetchWorkers();
   }, [fetchBadges, fetchWorkers]);
+
+  // Apply reliability filter whenever filter or unfiltered workers change
+  useEffect(() => {
+    if (unfilteredWorkers.length === 0) return;
+
+    const filteredWorkers = unfilteredWorkers.filter((worker) => {
+      const score = worker.reliability_score ?? 0;
+      const min = reliabilityFilter.minScore ?? 1;
+      const max = reliabilityFilter.maxScore ?? 5;
+      return score >= min && score <= max;
+    });
+
+    setWorkers((prev) => ({
+      ...prev,
+      filtered: filteredWorkers.length,
+      workersList: filteredWorkers,
+    }));
+  }, [reliabilityFilter, unfilteredWorkers]);
 
   return (
     <div className="p-4 md:p-6 pb-24 md:pb-6 space-y-6 max-w-7xl mx-auto">

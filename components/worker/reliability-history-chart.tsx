@@ -18,12 +18,7 @@ export type PeriodDays = 30 | 60 | 90;
 export interface ReliabilityHistoryEntry {
   id: string;
   worker_id: string;
-  score: number;
-  attendance_rate: number;
-  punctuality_rate: number;
-  avg_rating: number;
-  completed_jobs_count: number;
-  calculated_at: string;
+  score: number; // Mapped from new_score by API route
   created_at: string;
 }
 
@@ -62,19 +57,19 @@ const filterDataByPeriod = (
   cutoffDate.setDate(cutoffDate.getDate() - days);
 
   return data
-    .filter((entry) => new Date(entry.calculated_at) >= cutoffDate)
+    .filter((entry) => new Date(entry.created_at) >= cutoffDate)
     .sort(
       (a, b) =>
-        new Date(a.calculated_at).getTime() -
-        new Date(b.calculated_at).getTime(),
+        new Date(a.created_at).getTime() -
+        new Date(b.created_at).getTime(),
     );
 };
 
 const transformToChartData = (data: ReliabilityHistoryEntry[]) => {
   return data.map((entry) => ({
-    label: formatDate(entry.calculated_at),
+    label: formatDate(entry.created_at),
     reliability: entry.score,
-    rawDate: entry.calculated_at,
+    rawDate: entry.created_at,
   }));
 };
 

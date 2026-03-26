@@ -72,7 +72,7 @@ export async function GET(
       .from("reliability_score_history")
       .select("*")
       .eq("worker_id", workerId)
-      .order("calculated_at", { ascending: true });
+      .order("created_at", { ascending: true });
 
     if (error) {
       console.error("Error fetching reliability history:", error);
@@ -86,7 +86,7 @@ export async function GET(
     const formattedHistory = (history || []).map((entry) => ({
       id: entry.id,
       worker_id: entry.worker_id,
-      score: entry.new_score,
+      score: entry.new_score ?? 0,
       previous_score: entry.previous_score,
       change_reason: entry.change_reason,
       booking_id: entry.booking_id,

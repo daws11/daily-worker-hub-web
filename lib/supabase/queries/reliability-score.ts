@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { supabase } from "../client";
 import type { Database } from "../types";
 
@@ -109,7 +108,7 @@ export async function getScoreHistory(
     .from("reliability_score_history")
     .select("*")
     .eq("worker_id", workerId)
-    .order("calculated_at", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {
@@ -189,11 +188,11 @@ export async function getWorkerScoreTrend(
     return null;
   }
 
-  // Scores are ordered desc by calculated_at, so:
+  // Scores are ordered desc by created_at, so:
   // First 5 = most recent, Last 5 = older
   const midpoint = Math.floor(history.length / 2);
-  const recentScores = history.slice(0, midpoint).map((h) => h.score);
-  const olderScores = history.slice(midpoint).map((h) => h.score);
+  const recentScores = history.slice(0, midpoint).map((h) => h.new_score ?? 0);
+  const olderScores = history.slice(midpoint).map((h) => h.new_score ?? 0);
 
   const recentAvg =
     recentScores.reduce((sum, s) => sum + s, 0) / recentScores.length;
@@ -231,12 +230,10 @@ export async function recordScoreHistory(
   const historyData: Omit<ReliabilityScoreHistoryInsert, "id" | "created_at"> =
     {
       worker_id: workerId,
-      score: breakdown.score,
-      attendance_rate: breakdown.attendance_rate,
-      punctuality_rate: breakdown.punctuality_rate,
-      avg_rating: breakdown.avg_rating,
-      completed_jobs_count: breakdown.completed_jobs_count,
-      calculated_at: new Date().toISOString(),
+      new_score: breakdown.score,
+      previous_score: null,
+      booking_id: null,
+      change_reason: null,
     };
 
   const { data, error } = await supabase
