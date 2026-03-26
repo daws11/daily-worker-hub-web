@@ -31,7 +31,14 @@ type WalletTransactionInsert = Pick<
 export type WalletResult = {
   success: boolean;
   error?: string;
-  data?: Wallet;
+  data?: Wallet | null;
+};
+
+export type TransactionsResult = {
+  success: boolean;
+  error?: string;
+  data?: WalletTransaction[];
+  count?: number;
 };
 
 export type WalletBalanceResult = {
