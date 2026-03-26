@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Bell, Check, Filter, Loader2, Trash2 } from "lucide-react";
+import { Bell, Check, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -140,7 +140,7 @@ export function NotificationList({
 
           <div className="flex items-center gap-2">
             {/* Filter buttons */}
-            <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-lg">
+            <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
               <Button
                 variant={filter === "all" ? "default" : "ghost"}
                 size="sm"
@@ -193,11 +193,11 @@ export function NotificationList({
       <CardContent className="p-0">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : filteredNotifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-            <Bell className="h-16 w-16 text-gray-300 mb-4" />
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+            <Bell className="h-16 w-16 text-muted mb-4" />
             <p className="text-lg font-medium">
               {filter === "unread"
                 ? "Tidak ada notifikasi belum dibaca"
@@ -205,29 +205,29 @@ export function NotificationList({
                   ? "Tidak ada notifikasi yang sudah dibaca"
                   : "Tidak ada notifikasi"}
             </p>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1">
               {filter === "all"
                 ? "Notifikasi baru akan muncul di sini"
                 : "Coba ubah filter untuk melihat notifikasi lain"}
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-border">
             {filteredNotifications.map((notification) => (
               <div
                 key={notification.id}
                 className={cn(
-                  "p-4 hover:bg-gray-50 transition-colors",
-                  !notification.is_read && "bg-blue-50/30",
+                  "p-4 hover:bg-accent transition-colors",
+                  !notification.is_read && "bg-primary/5",
                 )}
               >
                 <div className="flex items-start gap-4">
                   {/* Unread indicator */}
                   <div className="pt-1">
                     {!notification.is_read ? (
-                      <span className="block h-3 w-3 rounded-full bg-blue-600" />
+                      <span className="block h-3 w-3 rounded-full bg-primary" />
                     ) : (
-                      <span className="block h-3 w-3 rounded-full bg-gray-300" />
+                      <span className="block h-3 w-3 rounded-full bg-muted-foreground" />
                     )}
                   </div>
 
@@ -239,16 +239,16 @@ export function NotificationList({
                           className={cn(
                             "text-base",
                             !notification.is_read
-                              ? "font-semibold text-gray-900"
-                              : "font-medium text-gray-700",
+                              ? "font-semibold text-foreground"
+                              : "font-medium text-foreground",
                           )}
                         >
                           {notification.title}
                         </h4>
-                        <p className="text-sm text-gray-600 mt-1">
+                        <p className="text-sm text-muted-foreground mt-1">
                           {notification.body}
                         </p>
-                        <p className="text-xs text-gray-400 mt-2">
+                        <p className="text-xs text-muted-foreground mt-2">
                           {formatRelativeTime(notification.created_at)}
                         </p>
                       </div>
@@ -267,7 +267,7 @@ export function NotificationList({
                             {actionLoading === notification.id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              <Check className="h-4 w-4 text-green-600" />
+                              <Check className="h-4 w-4 text-success" />
                             )}
                           </Button>
                         )}
@@ -285,7 +285,7 @@ export function NotificationList({
                             {actionLoading === `delete-${notification.id}` ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              <Trash2 className="h-4 w-4 text-gray-400 hover:text-red-500" />
+                              <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                             )}
                           </Button>
                         )}
@@ -296,7 +296,7 @@ export function NotificationList({
                     {notification.link && (
                       <a
                         href={notification.link}
-                        className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 mt-2 font-medium"
+                        className="inline-flex items-center text-sm text-primary hover:text-primary mt-2 font-medium"
                       >
                         Lihat detail →
                       </a>
