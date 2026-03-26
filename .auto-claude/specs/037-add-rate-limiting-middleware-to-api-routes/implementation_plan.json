@@ -4,7 +4,7 @@
   "workflow_type": "feature",
   "workflow_rationale": "This is a multi-service feature that requires modifying 25 API route files to add rate limiting. The implementation can be parallelized by grouping routes by type.",
   "created_at": "2026-03-26T13:03:15.177Z",
-  "updated_at": "2026-03-26T14:17:50.936Z",
+  "updated_at": "2026-03-26T14:24:12.451Z",
   "status": "in_progress",
   "planStatus": "in_progress",
   "phases": [
@@ -380,7 +380,9 @@
             "command": "grep -l 'withRateLimit' app/api/categories/route.ts && echo 'Rate limiting added'",
             "expected": "Rate limiting added"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Rate limiting already implemented in app/api/categories/route.ts using withRateLimitForMethod with { type: \"api-public\", userBased: false }. Pattern matches jobs route implementation.",
+          "updated_at": "2026-03-26T14:19:24.054262+00:00"
         }
       ]
     },
@@ -410,7 +412,9 @@
             "command": "grep -l 'withRateLimit' app/api/payments/verify/route.ts && echo 'Rate limiting added'",
             "expected": "Rate limiting added"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Rate limiting already present in app/api/payments/verify/route.ts using withRateLimit with type 'payment' and userBased: true for both GET and POST handlers. Verified via grep command. No changes needed - the implementation was already done in a previous commit.",
+          "updated_at": "2026-03-26T14:20:27.470597+00:00"
         },
         {
           "id": "subtask-7-2",
@@ -428,7 +432,9 @@
             "command": "grep -l 'withRateLimit' app/api/webhooks/midtrans/route.ts && echo 'Rate limiting added'",
             "expected": "Rate limiting added"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Rate limiting already present in app/api/webhooks/midtrans/route.ts using withRateLimit with type 'api-public' and userBased: false for both POST and GET handlers. Implementation matches xendit pattern exactly.",
+          "updated_at": "2026-03-26T14:22:00.000000+00:00"
         },
         {
           "id": "subtask-7-3",
@@ -446,7 +452,9 @@
             "command": "grep -l 'withRateLimit' app/api/webhooks/xendit/disbursement/route.ts && echo 'Rate limiting added'",
             "expected": "Rate limiting added"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Rate limiting already implemented: POST and GET handlers wrapped with withRateLimit (type: \"api-public\", userBased: false). Verified with grep.",
+          "updated_at": "2026-03-26T14:22:57.135773+00:00"
         }
       ]
     },
@@ -476,7 +484,9 @@
             "command": "grep -l 'withRateLimit' app/api/admin/metrics/route.ts && echo 'Rate limiting added'",
             "expected": "Rate limiting added"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Rate limiting already present in app/api/admin/metrics/route.ts using withRateLimitForMethod. Verification passes.",
+          "updated_at": "2026-03-26T14:23:41.037379+00:00"
         },
         {
           "id": "subtask-8-2",
@@ -678,5 +688,5 @@
   "qa_signoff": null,
   "xstateState": "backlog",
   "executionPhase": "coding",
-  "last_updated": "2026-03-26T14:18:19.886973+00:00"
+  "last_updated": "2026-03-26T14:23:41.037389+00:00"
 }

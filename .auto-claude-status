@@ -3,23 +3,23 @@
   "spec": "037-add-rate-limiting-middleware-to-api-routes",
   "state": "building",
   "subtasks": {
-    "completed": 22,
+    "completed": 19,
     "total": 24,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Add Rate Limiting to Business and Worker Routes",
+    "current": "Add Rate Limiting to Admin, Cron, and Docs Routes",
     "id": null,
-    "total": 6
+    "total": 3
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 25,
+    "number": 31,
     "started_at": "2026-03-26T20:03:15.064661"
   },
-  "last_update": "2026-03-26T21:17:50.794150"
+  "last_update": "2026-03-26T21:24:12.442958"
 }
