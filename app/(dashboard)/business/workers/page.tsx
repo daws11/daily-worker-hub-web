@@ -6,6 +6,9 @@ import { getBadges, getWorkersByBadge } from "@/lib/supabase/queries/badges";
 import type { BadgesRow } from "@/lib/supabase/queries/badges";
 import { BadgeFilterSelect } from "@/components/badge/badge-filter-select";
 import { SkillBadgeChip } from "@/components/badge/skill-badge-display";
+import { ReliabilityBadge } from "@/components/worker/reliability-badge";
+import { ReliabilityFilter, type ReliabilityFilterValue } from "@/components/worker/reliability-filter";
+import type { TrendDirection } from "@/components/worker/trend-indicator";
 import {
   Loader2,
   AlertCircle,
@@ -27,6 +30,7 @@ interface WorkerWithBadges {
   address: string | null;
   location_name: string | null;
   reliability_score?: number;
+  reliability_trend?: TrendDirection;
   badges?: Array<{
     id: string;
     badge_id: string;
@@ -50,6 +54,10 @@ export default function BusinessWorkersPage() {
   });
   const [badges, setBadges] = useState<BadgesRow[]>([]);
   const [selectedBadgeIds, setSelectedBadgeIds] = useState<string[]>([]);
+  const [reliabilityFilter, setReliabilityFilter] = useState<ReliabilityFilterValue>({
+    minScore: 1,
+    maxScore: 5,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -116,6 +124,7 @@ export default function BusinessWorkersPage() {
                   phone: wb.worker.phone,
                   address: wb.worker.address,
                   location_name: wb.worker.location_name,
+                  reliability_score: wb.worker.reliability_score,
                   badges: wb.badge
                     ? [
                         {
@@ -153,7 +162,8 @@ export default function BusinessWorkersPage() {
             bio,
             phone,
             address,
-            location_name
+            location_name,
+            reliability_score
           `,
             )
             .order("created_at", { ascending: false });
@@ -383,6 +393,14 @@ export default function BusinessWorkersPage() {
             onBadgesChange={handleBadgeFilterChange}
             placeholder="Pilih badge untuk filter pekerja..."
           />
+
+          {/* Reliability Filter */}
+          <div style={{ marginTop: "1.5rem" }}>
+            <ReliabilityFilter
+              value={reliabilityFilter}
+              onValueChange={setReliabilityFilter}
+            />
+          </div>
         </div>
       )}
 
@@ -627,6 +645,12 @@ export default function BusinessWorkersPage() {
                         </div>
                       )}
                     </div>
+                    {/* Reliability Badge */}
+                    <ReliabilityBadge
+                      score={worker.reliability_score}
+                      trend={worker.reliability_trend || "insufficient_data"}
+                      trendSize="sm"
+                    />
                   </div>
                 </div>
 
