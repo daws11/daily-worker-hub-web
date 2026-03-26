@@ -1,4 +1,3 @@
-// @ts-nocheck
 "use server";
 
 import { createClient } from "../supabase/server";
@@ -474,7 +473,7 @@ export async function getWalletTransactionsAction(
       };
     }
 
-    return { success: true, data, count: data?.length || 0 };
+    return { success: true, data: data as unknown as WalletTransaction[], count: data?.length || 0 };
   } catch (error) {
     return {
       success: false,
