@@ -1,20 +1,12 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import type { Messaging, MessagePayload } from "firebase/messaging";
 import {
-  getFirebaseApp,
   getFirebaseMessaging,
   getVapidKey,
   isFirebaseClientConfigured,
-} from "@/lib/firebase-client";
-import {
-  onMessage,
-  getToken,
-  deleteToken,
-  // onTokenRefresh, // Deprecated in newer Firebase SDK
-  MessagePayload,
-  Messaging,
-} from "firebase/messaging";
+} from "@/lib/firebase-client-lazy";
 
 type NotificationPermission = "granted" | "denied" | "default";
 
@@ -267,7 +259,8 @@ export function useFcmNotifications(
         return;
       }
 
-      const fcmToken = await getToken(messaging, { vapidKey });
+      const { getToken: firebaseGetToken } = await import("firebase/messaging");
+      const fcmToken = await firebaseGetToken(messaging, { vapidKey });
 
       if (!fcmToken) {
         setError("Gagal mendapatkan token FCM");
@@ -329,7 +322,10 @@ export function useFcmNotifications(
         // Delete token from FCM
         const messaging = messagingRef.current;
         if (messaging) {
-          await deleteToken(messaging);
+          const { deleteToken: firebaseDeleteToken } = await import(
+            "firebase/messaging"
+          );
+          await firebaseDeleteToken(messaging);
         }
       }
 
@@ -354,13 +350,13 @@ export function useFcmNotifications(
   /**
    * Set up foreground message listener
    */
-  const setupMessageListener = useCallback(() => {
+  const setupMessageListener = useCallback(async () => {
     const messaging = messagingRef.current;
     if (!messaging) return;
 
-    unsubscribeRef.current = onMessage(messaging, (payload) => {
-      console.log("FCM message received:", payload);
+    const { onMessage: firebaseOnMessage } = await import("firebase/messaging");
 
+    unsubscribeRef.current = firebaseOnMessage(messaging, (payload) => {
       // Call custom handler if provided
       if (onMessageReceived) {
         onMessageReceived(payload);
