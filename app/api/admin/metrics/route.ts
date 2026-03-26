@@ -7,7 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { cache } from "@/lib/cache";
-import { rateLimitStore } from "@/lib/rate-limit";
+import { rateLimitStore, withRateLimitForMethod } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import os from "os";
 
@@ -295,10 +295,12 @@ function getDatabaseMetrics() {
  *                   type: object
  *       401:
  *         description: Unauthorized
+ *       429:
+ *         description: Too many requests
  *       500:
  *         description: Internal server error
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     // Verify admin auth
     const isAuthorized = await verifyAdminAuth(request);
@@ -331,3 +333,9 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRateLimitForMethod(
+  handleGET as any,
+  { type: "api-public", userBased: false },
+  ["GET"],
+);
