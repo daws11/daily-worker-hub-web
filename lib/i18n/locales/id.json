@@ -354,7 +354,8 @@
     "noScheduleToday": "Tidak ada jadwal hari ini",
     "subtitle": "Lacak kehadiran kerja Anda",
     "todaysSchedule": "Jadwal Hari Ini",
-    "working": "Bekerja"
+    "working": "Bekerja",
+    "cameraViewfinder": "Jendela bidik kamera pemindai QR code"
   },
   "wallet": {
     "title": "Dompet",
