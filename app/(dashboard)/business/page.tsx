@@ -141,10 +141,12 @@ export default function BusinessDashboardPage() {
         // Calculate total spent - first get business wallet
         if (!business) return;
         
-        const { data: businessWallet } = await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const walletQuery = supabase as any;
+        const { data: businessWallet }: { data: any } = await walletQuery
           .from("wallets")
           .select("id")
-          .eq("business_id", business.id)
+          .eq("business_id", business.id as string)
           .maybeSingle();
 
         if (!businessWallet) {

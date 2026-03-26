@@ -131,10 +131,12 @@ export default function WorkerDashboardPage() {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        const { data: transactions } = await supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const txQuery = supabase as any;
+        const { data: transactions }: { data: any } = await txQuery
           .from("wallet_transactions")
           .select("amount, created_at")
-          .eq("user_id", user.id)
+          .eq("user_id", user.id as string)
           .eq("type", "credit")
           .gte("created_at", startOfMonth.toISOString());
 

@@ -1,1 +1,3 @@
+import { vi } from "vitest";
+
 export const createClient = vi.fn().mockResolvedValue({ from: vi.fn().mockReturnThis(), select: vi.fn().mockReturnThis(), eq: vi.fn().mockReturnThis(), single: vi.fn(), update: vi.fn().mockReturnThis(), insert: vi.fn().mockReturnThis(), limit: vi.fn().mockReturnThis(), order: vi.fn().mockReturnThis(), lt: vi.fn().mockReturnThis(), delete: vi.fn().mockReturnThis(), maybeSingle: vi.fn() });
