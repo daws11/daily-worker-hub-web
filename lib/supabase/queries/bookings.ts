@@ -1,19 +1,13 @@
-// @ts-nocheck
 import { supabase } from "../client";
 import type { Database } from "../types";
 
 type BookingRow = Database["public"]["Tables"]["bookings"]["Row"];
 type BookingUpdate = Database["public"]["Tables"]["bookings"]["Update"];
 
+// Extended type for bookings with related data from joined tables.
+// Relations (worker, business, job, wallet_transaction) are not in the DB Row type
+// and are appended via Supabase select chains.
 export type JobBookingWithDetails = BookingRow & {
-  // Attendance fields (may not be in current DB schema but needed for feature)
-  check_in_at?: string | null;
-  check_out_at?: string | null;
-  check_in_lat?: number | null;
-  check_in_lng?: number | null;
-  check_out_lat?: number | null;
-  check_out_lng?: number | null;
-  booking_notes?: string | null;
   worker?: {
     id: string;
     full_name: string;
@@ -58,7 +52,7 @@ export type JobBookingWithDetails = BookingRow & {
  */
 export async function getJobBookings(jobId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("bookings")
       .select(
         `
@@ -104,7 +98,7 @@ export async function getJobBookings(jobId: string) {
  */
 export async function getWorkerBookings(workerId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("bookings")
       .select(
         `
@@ -156,7 +150,7 @@ export async function getWorkerBookings(workerId: string) {
  */
 export async function getBusinessBookings(businessId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("bookings")
       .select(
         `
@@ -205,7 +199,7 @@ export async function getBusinessBookings(businessId: string) {
  */
 export async function getBookingById(bookingId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("bookings")
       .select(
         `
