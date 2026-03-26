@@ -1,7 +1,7 @@
 /**
  * Rate Limiting Middleware for Daily Worker Hub
  *
- * Implements in-memory sliding window rate limiting with:
+ * Implements DB-backed sliding window rate limiting with:
  * - IP-based and user-based rate limiting
  * - Configurable limits per endpoint type
  * - Admin bypass support
@@ -12,6 +12,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth/get-server-session";
 import { createClient } from "@/lib/supabase/server";
+import {
+  getRateLimitCount,
+  recordRateLimitRequest,
+  cleanupExpiredRateLimits,
+} from "@/lib/db/rate-limit";
 
 /**
  * Rate limit configuration types
@@ -74,22 +79,20 @@ interface RequestRecord {
 }
 
 /**
- * In-memory store for rate limit tracking
+ * In-memory store for rate limit tracking (legacy, kept for backward compatibility)
  * Key format: `${identifier}:${type}`
  * Exported for admin metrics access
  */
 export const rateLimitStore = new Map<string, RequestRecord>();
 
 /**
- * Clean up expired entries periodically (every 5 minutes)
+ * Clean up expired DB entries periodically (every 5 minutes)
  */
 setInterval(
-  () => {
-    const now = Date.now();
-    for (const [key, record] of rateLimitStore.entries()) {
-      if (now > record.resetTime) {
-        rateLimitStore.delete(key);
-      }
+  async () => {
+    const result = await cleanupExpiredRateLimits();
+    if (result.error) {
+      console.error("Failed to cleanup expired rate limits:", result.error);
     }
   },
   5 * 60 * 1000,
@@ -132,9 +135,7 @@ async function isAdminUser(): Promise<boolean> {
       return false;
     }
 
-    const supabase = await createClient();
-
-    const { data: user, error } = await supabase
+    const { data: user, error } = await (await createClient())
       .from("users")
       .select("role")
       .eq("id", session.user.id)
@@ -151,61 +152,60 @@ async function isAdminUser(): Promise<boolean> {
 }
 
 /**
- * Sliding window rate limit check
+ * Sliding window rate limit check using DB
  * Returns remaining requests and reset time
  */
-function checkRateLimit(
+async function checkRateLimit(
   identifier: string,
   config: RateLimitConfig,
-): {
+): Promise<{
   allowed: boolean;
   remaining: number;
   resetTime: number;
   retryAfter: number;
-} {
+}> {
   const now = Date.now();
-  const key = `${identifier}:${config.type}`;
+  const resetTime = now + config.windowMs;
 
-  const record = rateLimitStore.get(key);
+  // Get current count from DB
+  const countResult = await getRateLimitCount(
+    identifier,
+    config.type,
+    config.windowMs,
+  );
 
-  if (!record || now > record.resetTime) {
-    // No record or window expired - create new entry
-    const newRecord: RequestRecord = {
-      count: 1,
-      resetTime: now + config.windowMs,
-    };
-    rateLimitStore.set(key, newRecord);
-
+  if (countResult.error) {
+    // On DB error, allow request but log it
+    console.error("Rate limit check failed:", countResult.error);
     return {
       allowed: true,
       remaining: config.maxRequests - 1,
-      resetTime: newRecord.resetTime,
+      resetTime,
       retryAfter: 0,
     };
   }
 
-  // Window is still active
-  if (record.count < config.maxRequests) {
-    // Increment count
-    record.count++;
-    rateLimitStore.set(key, record);
+  const currentCount = countResult.count;
 
+  if (currentCount >= config.maxRequests) {
+    // Rate limit exceeded
+    const retryAfter = Math.ceil(config.windowMs / 1000); // Convert to seconds
     return {
-      allowed: true,
-      remaining: config.maxRequests - record.count,
-      resetTime: record.resetTime,
-      retryAfter: 0,
+      allowed: false,
+      remaining: 0,
+      resetTime,
+      retryAfter,
     };
   }
 
-  // Rate limit exceeded
-  const retryAfter = Math.ceil((record.resetTime - now) / 1000); // Convert to seconds
+  // Record this request in DB
+  await recordRateLimitRequest(identifier, config.type, config.windowMs);
 
   return {
-    allowed: false,
-    remaining: 0,
-    resetTime: record.resetTime,
-    retryAfter,
+    allowed: true,
+    remaining: config.maxRequests - currentCount - 1,
+    resetTime,
+    retryAfter: 0,
   };
 }
 
@@ -347,12 +347,12 @@ export function withRateLimit<T extends NextRequest>(
     }
 
     // Check rate limit
-    const result = checkRateLimit(identifier, rateLimitConfig);
+    const result = await checkRateLimit(identifier, rateLimitConfig);
 
     // If also IP-based, check that too (stricter limit wins)
     if (alsoIpBased && userId) {
       const ipIdentifier = keyPrefix ? `${keyPrefix}:ip:${ip}` : `ip:${ip}`;
-      const ipResult = checkRateLimit(ipIdentifier, rateLimitConfig);
+      const ipResult = await checkRateLimit(ipIdentifier, rateLimitConfig);
 
       // Use the stricter result
       if (!ipResult.allowed || ipResult.remaining < result.remaining) {
@@ -422,30 +422,4 @@ export function withRateLimitForMethod<T extends NextRequest>(
   ],
 ): (request: T) => Promise<NextResponse> {
   return withRateLimit(handler, { ...options, methods });
-}
-
-/**
- * Clear rate limit for a specific identifier (useful for testing)
- */
-export function clearRateLimit(identifier: string, type: RateLimitType): void {
-  const key = `${identifier}:${type}`;
-  rateLimitStore.delete(key);
-}
-
-/**
- * Clear all rate limits (useful for testing)
- */
-export function clearAllRateLimits(): void {
-  rateLimitStore.clear();
-}
-
-/**
- * Get current rate limit stats for an identifier (useful for debugging)
- */
-export function getRateLimitStats(
-  identifier: string,
-  type: RateLimitType,
-): RequestRecord | undefined {
-  const key = `${identifier}:${type}`;
-  return rateLimitStore.get(key);
 }
