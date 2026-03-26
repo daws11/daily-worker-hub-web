@@ -186,8 +186,12 @@ export type IncomeProjectionResult = {
 };
 
 /**
- * Get earnings summary for a worker
- * Includes total lifetime earnings, current/previous month comparison, and averages
+ * Get earnings summary for a worker.
+ * Includes total lifetime earnings, current/previous month comparison, and averages.
+ *
+ * @param workerId - The unique identifier of the worker
+ * @param period   - Time period for the earnings summary (today | week | month | quarter | year | all_time)
+ * @returns Result object containing earnings summary data or an error message
  */
 export async function getEarningsSummary(
   workerId: string,
@@ -316,7 +320,14 @@ export async function getEarningsSummary(
 }
 
 /**
- * Get monthly earnings data for charts
+ * Get monthly earnings data for charts.
+ * Groups completed bookings by month and calculates earnings statistics.
+ *
+ * @param workerId  - The unique identifier of the worker
+ * @param months    - Number of past months to include in the report (default: 12)
+ * @param startDate - Optional start date filter (ISO 8601 format)
+ * @param endDate   - Optional end date filter (ISO 8601 format)
+ * @returns Result object containing monthly earnings array and summary statistics
  */
 export async function getMonthlyEarnings(
   workerId: string,
@@ -430,7 +441,14 @@ export async function getMonthlyEarnings(
 }
 
 /**
- * Get earnings grouped by position type
+ * Get earnings grouped by position/job type.
+ * Aggregates bookings by job position and calculates per-position earnings.
+ *
+ * @param workerId  - The unique identifier of the worker
+ * @param sortBy    - Field to sort results by (earnings | bookings | average)
+ * @param sortOrder - Sort direction (asc | desc)
+ * @param limit     - Optional limit on the number of positions to return
+ * @returns Result object containing positions array with earnings breakdown and best performer
  */
 export async function getEarningsByPosition(
   workerId: string,
@@ -533,7 +551,18 @@ export async function getEarningsByPosition(
 }
 
 /**
- * Get earnings transaction history with pagination
+ * Get earnings transaction history with pagination.
+ * Returns completed bookings as transactions with optional filters and sorting.
+ *
+ * @param workerId  - The unique identifier of the worker
+ * @param page      - Page number for pagination (default: 1)
+ * @param limit     - Number of transactions per page (default: 20, max: 100)
+ * @param type      - Optional filter by transaction type (payment | refund)
+ * @param status    - Optional filter by transaction status (pending | success | failed)
+ * @param startDate - Optional start date filter (ISO 8601 format)
+ * @param endDate   - Optional end date filter (ISO 8601 format)
+ * @param sortOrder - Sort order (date_asc | date_desc | amount_asc | amount_desc)
+ * @returns Result object containing paginated transactions, totals, and aggregate amount
  */
 export async function getEarningsTransactionHistory(
   workerId: string,
@@ -655,8 +684,14 @@ export async function getEarningsTransactionHistory(
 }
 
 /**
- * Get income projection for a worker
- * Projects future earnings based on current trends
+ * Get income projection for a worker.
+ * Projects future earnings based on current booking trends and historical data.
+ * Requires at least 3 completed bookings to generate a projection.
+ *
+ * @param workerId         - The unique identifier of the worker
+ * @param period            - Projection period (week | month | quarter)
+ * @param calculationMethod - Method used for projection (simple_average | trend_based | booking_based)
+ * @returns Result object containing projected income, confidence level, and calculation factors
  */
 export async function getIncomeProjection(
   workerId: string,
@@ -837,8 +872,14 @@ export async function getIncomeProjection(
 }
 
 /**
- * Get complete earnings dashboard data
- * Fetches all required data for the earnings analytics page
+ * Get complete earnings dashboard data.
+ * Fetches all required data for the earnings analytics page in parallel for performance.
+ *
+ * @param workerId         - The unique identifier of the worker
+ * @param monthsToDisplay   - Number of past months to display in charts (default: 12)
+ * @param includeProjection - Whether to include income projection data (default: true)
+ * @param projectionPeriod  - Projection period for the dashboard (week | month | quarter)
+ * @returns Result object containing summary, monthly earnings, position breakdown, recent transactions, and optional projection
  */
 export async function getEarningsDashboardData(
   workerId: string,
