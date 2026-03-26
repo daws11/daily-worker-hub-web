@@ -1,6 +1,5 @@
-// @ts-nocheck
 import { supabase } from "../supabase/client";
-import { Database } from "../supabase/types";
+import { Database, Json } from "../supabase/types";
 import {
   SavedSearch,
   CreateSavedSearchInput,
@@ -101,7 +100,7 @@ export async function createSavedSearch(
     const insertData: SavedSearchesInsert = {
       worker_id: workerId,
       name: input.name,
-      filters: input.filters as any,
+      filters: input.filters as Json,
       is_favorite: input.is_favorite ?? false,
     };
 
@@ -145,7 +144,7 @@ export async function updateSavedSearch(
       updateData.name = input.name;
     }
     if (input.filters !== undefined) {
-      updateData.filters = input.filters as any;
+      updateData.filters = input.filters as Json;
     }
     if (input.is_favorite !== undefined) {
       updateData.is_favorite = input.is_favorite;
