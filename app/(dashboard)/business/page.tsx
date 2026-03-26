@@ -41,6 +41,11 @@ interface Booking {
   } | null;
 }
 
+interface WalletData {
+  available_balance: number;
+  pending_balance: number;
+}
+
 interface RecentActivity {
   id: string;
   type: "booking" | "payment" | "worker" | "job";
