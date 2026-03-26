@@ -3,6 +3,10 @@
 import { createClient } from "../supabase/server";
 import type { Database } from "../supabase/types";
 
+// ============================================================================
+// BADGE ACTIONS
+// ============================================================================
+
 type Badge = Database["public"]["Tables"]["badges"]["Row"];
 type WorkerBadge = Database["public"]["Tables"]["worker_badges"]["Row"];
 type BadgeVerificationStatus = string;
@@ -37,7 +41,10 @@ export type BadgeProgressResult = {
 };
 
 /**
- * Get all badges earned by a worker
+ * Get all badges earned by a worker.
+ * Returns worker badges with joined badge data, ordered by most recent first.
+ * @param workerId - The unique identifier of the worker
+ * @throws {Error} If database query fails
  */
 export async function getWorkerBadges(
   workerId: string,
@@ -74,7 +81,10 @@ export async function getWorkerBadges(
 }
 
 /**
- * Get all available badges
+ * Get all available badges.
+ * Returns all badges optionally filtered by category, ordered alphabetically by name.
+ * @param category - Optional badge category filter (skill, certification, specialization, training)
+ * @throws {Error} If database query fails
  */
 export async function getAllBadges(category?: string): Promise<BadgeResult> {
   try {
@@ -108,8 +118,12 @@ export async function getAllBadges(category?: string): Promise<BadgeResult> {
 }
 
 /**
- * Get progress towards next badges for a worker
- * This calculates progress based on completed jobs, ratings, and other metrics
+ * Get progress towards next badges for a worker.
+ * Calculates progress based on completed jobs, average ratings, and other metrics.
+ * Progress is calculated per badge category: skill (10 jobs), certification (20 jobs),
+ * specialization (4.5 avg rating), and training (15 jobs).
+ * @param workerId - The unique identifier of the worker
+ * @throws {Error} If database query fails
  */
 export async function getBadgeProgress(
   workerId: string,
@@ -226,7 +240,12 @@ export async function getBadgeProgress(
 }
 
 /**
- * Request a new badge for a worker
+ * Request a new badge for a worker.
+ * Creates a new worker badge entry with pending verification status.
+ * Returns an error if the worker already has the requested badge.
+ * @param workerId - The unique identifier of the worker
+ * @param badgeId - The unique identifier of the badge being requested
+ * @throws {Error} If database query fails
  */
 export async function requestBadge(
   workerId: string,
