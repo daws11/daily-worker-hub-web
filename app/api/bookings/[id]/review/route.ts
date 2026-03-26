@@ -9,6 +9,7 @@ import {
 } from "@/lib/actions/bookings-completion";
 import { validateData } from "@/lib/validations";
 import { z } from "zod";
+import { withRateLimit } from "@/lib/rate-limit";
 
 const routeLogger = logger.createApiLogger("bookings/[id]/review");
 
@@ -187,7 +188,7 @@ export async function GET(request: Request, { params }: Params) {
 }
 
 // POST /api/bookings/[id]/review - Add a review for a booking
-export async function POST(request: Request, { params }: Params) {
+async function handlePOST(request: Request, { params }: Params) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "bookings/[id]/review",
   });
@@ -401,3 +402,9 @@ export async function POST(request: Request, { params }: Params) {
     );
   }
 }
+
+// Export handler with rate limiting
+export const POST = withRateLimit(handlePOST as any, {
+  type: "api-authenticated",
+  userBased: true,
+});
