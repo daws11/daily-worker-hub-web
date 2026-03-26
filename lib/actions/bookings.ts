@@ -4,9 +4,6 @@ import { createClient } from "../supabase/server";
 import type { Database } from "../supabase/types";
 import { checkComplianceBeforeAccept } from "./compliance";
 
-// Re-export InterviewSession type from dedicated module for backward compatibility
-export type { InterviewSession } from "./interview-sessions";
-
 type Booking = Database["public"]["Tables"]["bookings"]["Row"];
 
 // Types for bookings with joined data
@@ -705,22 +702,3 @@ export async function getBusinessBookings(
   }
 }
 
-// ============================================================================
-// BACKWARD-COMPATIBLE RE-EXPORTS
-// All interview session functions are now in the dedicated interview-sessions.ts module.
-// These re-exports ensure existing imports from bookings.ts continue to work.
-// ============================================================================
-
-export {
-  createInterviewSession,
-  startInterviewSession,
-  startChatInterview,
-  completeChatInterview,
-  startVoiceCallInterview,
-  completeVoiceCallInterview,
-  completeInterviewSession,
-  cancelInterviewSession,
-  getInterviewSessionByBooking,
-  incrementInterviewMessageCount,
-  calculateBookingTimeToHire,
-} from "./interview-sessions";
