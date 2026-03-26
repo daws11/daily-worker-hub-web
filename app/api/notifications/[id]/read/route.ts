@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+} from "@/lib/api/error-response";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
@@ -39,10 +44,7 @@ export async function PATCH(
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
-      );
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { id } = await params;
@@ -78,9 +80,10 @@ export async function PATCH(
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Gagal menandai notifikasi" },
-        { status: response.status },
+      return errorResponse(
+        response.status,
+        { code: "DB_QUERY_ERROR", i18nKey: "errors.serverError", details: errorText },
+        request,
       );
     }
 
@@ -100,9 +103,10 @@ export async function PATCH(
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Notifikasi tidak ditemukan" },
-        { status: 404 },
+      return errorResponse(
+        404,
+        { code: "NOT_FOUND", i18nKey: "errors.notFound", details: "Notifikasi tidak ditemukan" },
+        request,
       );
     }
 
@@ -128,9 +132,6 @@ export async function PATCH(
     );
     logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/notifications/[id]/read", "PATCH");
   }
 }
