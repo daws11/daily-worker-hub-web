@@ -34,7 +34,7 @@
 
 import { NextResponse } from "next/server";
 
-import type { ErrorResponse } from "next";
+// ErrorResponse is imported and re-exported from ./errors below
 import type { Locale } from "~/lib/i18n/types";
 
 import { ErrorCode, isApiError, toApiError } from "./errors";
@@ -451,6 +451,35 @@ export async function forbiddenErrorResponse(
       code: ErrorCode.AUTH_FORBIDDEN,
       i18nKey: message ? undefined : "errors.forbidden",
       details: message ? { message } : undefined,
+    },
+    request ?? new Request("http://localhost"),
+  );
+}
+
+/**
+ * Create a bad request error response
+ *
+ * Convenience helper for malformed requests or invalid input.
+ *
+ * @param message - Optional custom message or i18n key
+ * @param request - The incoming request
+ * @returns NextResponse with bad request error payload
+ *
+ * @example
+ * return badRequestErrorResponse("errors.validation.invalid_input", request);
+ */
+export async function badRequestErrorResponse(
+  message?: string,
+  request?: Request,
+): Promise<NextResponse<ErrorResponse>> {
+  return errorResponse(
+    400,
+    {
+      code: ErrorCode.VALIDATION_ERROR,
+      i18nKey: message?.startsWith("errors.") ? message : undefined,
+      details: message && !message.startsWith("errors.")
+        ? { message }
+        : undefined,
     },
     request ?? new Request("http://localhost"),
   );
