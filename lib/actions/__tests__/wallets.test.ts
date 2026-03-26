@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Module-level client — captured by the factory so tests can set up mocks on it directly
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 var _moduleClient: any;
 
 // Mock Supabase — factory captures its client in _moduleClient
@@ -30,11 +29,9 @@ vi.mock("@/lib/supabase/server", () => {
 });
 
 // Mock xenditGateway — stored in a var so tests and resetAllMocks can reference it directly
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 var _xenditCreateDisbursement: any;
 
 // Store the factory's default implementation so we can restore it
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 var _xenditDefaultImpl: any;
 
 vi.mock("@/lib/payments", () => {
