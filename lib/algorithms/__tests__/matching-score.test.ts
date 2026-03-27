@@ -440,14 +440,15 @@ describe("Matching Score Algorithm", () => {
         isCompliant: true,
       });
 
-      expect(breakdown).toHaveProperty("skillScore");
-      expect(breakdown).toHaveProperty("distanceScore");
+      expect(breakdown).toHaveProperty("matchingScore");
       expect(breakdown).toHaveProperty("distanceKm");
-      expect(breakdown).toHaveProperty("availabilityScore");
-      expect(breakdown).toHaveProperty("ratingScore");
-      expect(breakdown).toHaveProperty("complianceScore");
-      expect(breakdown).toHaveProperty("tierBonus");
-      expect(breakdown).toHaveProperty("totalScore");
+      expect(breakdown).toHaveProperty("breakdown");
+      expect(breakdown.breakdown).toHaveProperty("skillScore");
+      expect(breakdown.breakdown).toHaveProperty("distanceScore");
+      expect(breakdown.breakdown).toHaveProperty("availabilityScore");
+      expect(breakdown.breakdown).toHaveProperty("ratingScore");
+      expect(breakdown.breakdown).toHaveProperty("complianceScore");
+      expect(breakdown.breakdown).toHaveProperty("tierBonus");
     });
 
     it("should reflect exact precomputed distance in breakdown", () => {
@@ -462,7 +463,7 @@ describe("Matching Score Algorithm", () => {
       });
 
       // 7.5km falls in 5-10km band -> 20 points
-      expect(breakdown.distanceScore).toBe(20);
+      expect(breakdown.breakdown.distanceScore).toBe(20);
       expect(breakdown.distanceKm).toBe(7.5);
     });
 
@@ -480,7 +481,7 @@ describe("Matching Score Algorithm", () => {
       const breakdown = getMatchingScoreBreakdownWithDistance(params);
       const score = calculateMatchingScoreWithDistance(params);
 
-      expect(breakdown.totalScore).toBe(score);
+      expect(breakdown.matchingScore).toBe(score);
     });
 
     it("should return zero distance score for far distance", () => {
@@ -494,7 +495,7 @@ describe("Matching Score Algorithm", () => {
         isCompliant: true,
       });
 
-      expect(breakdown.distanceScore).toBe(0);
+      expect(breakdown.breakdown.distanceScore).toBe(0);
       expect(breakdown.distanceKm).toBe(50);
     });
   });
@@ -547,9 +548,9 @@ describe("Matching Score Algorithm", () => {
       });
 
       // Distance ~10km
-      expect(breakdown.distanceScore).toBe(20);
-      expect(breakdown.skillScore).toBe(30);
-      expect(breakdown.totalScore).toBeGreaterThan(70);
+      expect(breakdown.breakdown.distanceScore).toBe(20);
+      expect(breakdown.breakdown.skillScore).toBe(30);
+      expect(breakdown.matchingScore).toBeGreaterThan(70);
     });
 
     it("should match worker in Ubud with job in Ubud (same area)", () => {
@@ -567,8 +568,8 @@ describe("Matching Score Algorithm", () => {
       });
 
       // Very close distance, excellent worker
-      expect(breakdown.distanceScore).toBe(30);
-      expect(breakdown.totalScore).toBeGreaterThan(90);
+      expect(breakdown.breakdown.distanceScore).toBe(30);
+      expect(breakdown.matchingScore).toBeGreaterThan(90);
     });
 
     it("should penalize far distance (Denpasar to Lovina)", () => {
@@ -586,7 +587,7 @@ describe("Matching Score Algorithm", () => {
       });
 
       // Distance > 20km
-      expect(breakdown.distanceScore).toBe(0);
+      expect(breakdown.breakdown.distanceScore).toBe(0);
     });
   });
 });

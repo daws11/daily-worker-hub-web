@@ -199,8 +199,32 @@ export interface MatchingScoreParamsWithDistance {
   isCompliant: boolean;
 }
 
+/**
+ * Score breakdown with individual component scores.
+ * Use with WorkerScoreSummary for a lightweight return type.
+ */
+export interface ScoreBreakdown {
+  skillScore: number;
+  distanceScore: number;
+  availabilityScore: number;
+  ratingScore: number;
+  complianceScore: number;
+  tierBonus: number;
+}
+
+/**
+ * Lightweight summary of a worker's matching score for a job.
+ * Use this type when callers only need the score and distance,
+ * not a full WorkerWithScore object.
+ */
+export interface WorkerScoreSummary {
+  matchingScore: number;
+  distanceKm: number;
+  breakdown: ScoreBreakdown;
+}
+
 export function calculateMatchingScore(params: MatchingScoreParams): number {
-  return getMatchingScoreBreakdown(params).totalScore;
+  return getMatchingScoreBreakdown(params).matchingScore;
 }
 
 /**
@@ -209,16 +233,7 @@ export function calculateMatchingScore(params: MatchingScoreParams): number {
  * @param params - Matching parameters
  * @returns Score breakdown
  */
-export function getMatchingScoreBreakdown(params: MatchingScoreParams): {
-  skillScore: number;
-  distanceScore: number;
-  distanceKm: number;
-  availabilityScore: number;
-  ratingScore: number;
-  complianceScore: number;
-  tierBonus: number;
-  totalScore: number;
-} {
+export function getMatchingScoreBreakdown(params: MatchingScoreParams): WorkerScoreSummary {
   const {
     workerSkills,
     workerLat,
@@ -258,14 +273,16 @@ export function getMatchingScoreBreakdown(params: MatchingScoreParams): {
     tierBonus;
 
   return {
-    skillScore,
-    distanceScore,
+    matchingScore: Math.min(totalScore, 115),
     distanceKm: distance,
-    availabilityScore,
-    ratingScore,
-    complianceScore,
-    tierBonus,
-    totalScore: Math.min(totalScore, 115),
+    breakdown: {
+      skillScore,
+      distanceScore,
+      availabilityScore,
+      ratingScore,
+      complianceScore,
+      tierBonus,
+    },
   };
 }
 
@@ -281,7 +298,7 @@ export function getMatchingScoreBreakdown(params: MatchingScoreParams): {
 export function calculateMatchingScoreWithDistance(
   params: MatchingScoreParamsWithDistance,
 ): number {
-  return getMatchingScoreBreakdownWithDistance(params).totalScore;
+  return getMatchingScoreBreakdownWithDistance(params).matchingScore;
 }
 
 /**
@@ -295,16 +312,7 @@ export function calculateMatchingScoreWithDistance(
  */
 export function getMatchingScoreBreakdownWithDistance(
   params: MatchingScoreParamsWithDistance,
-): {
-  skillScore: number;
-  distanceScore: number;
-  distanceKm: number;
-  availabilityScore: number;
-  ratingScore: number;
-  complianceScore: number;
-  tierBonus: number;
-  totalScore: number;
-} {
+): WorkerScoreSummary {
   const {
     workerSkills,
     workerRating,
@@ -335,14 +343,16 @@ export function getMatchingScoreBreakdownWithDistance(
     tierBonus;
 
   return {
-    skillScore,
-    distanceScore,
+    matchingScore: Math.min(totalScore, 115),
     distanceKm,
-    availabilityScore,
-    ratingScore,
-    complianceScore,
-    tierBonus,
-    totalScore: Math.min(totalScore, 115),
+    breakdown: {
+      skillScore,
+      distanceScore,
+      availabilityScore,
+      ratingScore,
+      complianceScore,
+      tierBonus,
+    },
   };
 }
 

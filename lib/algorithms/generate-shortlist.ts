@@ -159,16 +159,9 @@ export async function generateWorkerShortlist(
             locationName: worker.location_name,
             lat: worker.lat,
             lng: worker.lng,
-            matchingScore: breakdown.totalScore,
+            matchingScore: breakdown.matchingScore,
             distanceKm: breakdown.distanceKm,
-            breakdown: {
-              skillScore: breakdown.skillScore,
-              distanceScore: breakdown.distanceScore,
-              availabilityScore: breakdown.availabilityScore,
-              ratingScore: breakdown.ratingScore,
-              complianceScore: breakdown.complianceScore,
-              tierBonus: breakdown.tierBonus,
-            },
+            breakdown: breakdown.breakdown,
           };
         }),
     );
@@ -294,16 +287,9 @@ export async function generateWorkerShortlistFromIds(
           locationName: worker.location_name,
           lat: worker.lat,
           lng: worker.lng,
-          matchingScore: breakdown.totalScore,
+          matchingScore: breakdown.matchingScore,
           distanceKm: breakdown.distanceKm,
-          breakdown: {
-            skillScore: breakdown.skillScore,
-            distanceScore: breakdown.distanceScore,
-            availabilityScore: breakdown.availabilityScore,
-            ratingScore: breakdown.ratingScore,
-            complianceScore: breakdown.complianceScore,
-            tierBonus: breakdown.tierBonus,
-          },
+          breakdown: breakdown.breakdown,
         };
       }),
     );
