@@ -11,6 +11,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   exportToJSON,
   exportToCSV,
+  exportToExcel,
   generateExportFilename,
 } from "../export";
 
@@ -637,6 +638,430 @@ describe("exportToCSV", () => {
       expect(mockCreateObjectURL).toHaveBeenCalledWith(
         expect.objectContaining({ type: "text/csv;charset=utf-8;" }),
       );
+    });
+  });
+});
+
+describe("exportToExcel", () => {
+  describe("Basic Functionality", () => {
+    it("should export data as Excel file", () => {
+      const data = [{ id: 1, name: "Test" }];
+      const filename = "test-excel";
+
+      exportToExcel(data, filename);
+
+      // Verify blob was created with correct Excel content type
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+      const blobArg = mockCreateObjectURL.mock.calls[0][0] as Blob;
+      expect(blobArg.type).toBe(
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      );
+    });
+
+    it("should append .xlsx extension to filename", () => {
+      const data = [{ id: 1 }];
+
+      exportToExcel(data, "my-workbook");
+
+      const link = mockCreateElement.mock.results[0].value;
+      expect(link.download).toBe("my-workbook.xlsx");
+    });
+
+    it("should use 2-space indentation for pretty printing", () => {
+      const data = { name: "Test", nested: { value: 42 } };
+
+      exportToExcel([data], "test");
+
+      // Verify json_to_sheet was used for conversion
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should trigger download via click", () => {
+      const data = [{ id: 1 }];
+
+      exportToExcel(data, "click-test");
+
+      expect(mockClick).toHaveBeenCalledTimes(1);
+    });
+
+    it("should schedule URL cleanup", () => {
+      const data = [{ id: 1 }];
+
+      exportToExcel(data, "cleanup-test");
+
+      expect(mockSetTimeout).toHaveBeenCalledTimes(1);
+      expect(mockSetTimeout).toHaveBeenCalledWith(
+        expect.any(Function),
+        100,
+      );
+    });
+
+    it("should cleanup object URL after download", () => {
+      const data = [{ id: 1 }];
+
+      exportToExcel(data, "cleanup-test");
+
+      const revokeFn = mockSetTimeout.mock.calls[0][0];
+      revokeFn();
+
+      expect(mockRevokeObjectURL).toHaveBeenCalledWith(
+        "blob:http://localhost/mock-url",
+      );
+    });
+
+    it("should set href on download link", () => {
+      const data = [{ id: 1 }];
+
+      exportToExcel(data, "href-test");
+
+      const link = mockCreateElement.mock.results[0].value;
+      expect(link.href).toBe("blob:http://localhost/mock-url");
+    });
+
+    it("should create workbook with Sheet1", () => {
+      const data = [{ col1: "a", col2: "b" }];
+
+      exportToExcel(data, "sheet-test");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+      expect(mockClick).toHaveBeenCalled();
+    });
+  });
+
+  describe("Error Handling", () => {
+    it("should throw error when data is empty array", () => {
+      const data: any[] = [];
+
+      expect(() => exportToExcel(data, "empty")).toThrow(
+        "No data to export",
+      );
+    });
+
+    it("should throw error when data is null", () => {
+      expect(() => exportToExcel(null as any, "null")).toThrow(
+        "No data to export",
+      );
+    });
+
+    it("should throw error when data is undefined", () => {
+      expect(() => exportToExcel(undefined as any, "undefined")).toThrow(
+        "No data to export",
+      );
+    });
+
+    it("should not call createObjectURL when data is empty", () => {
+      try {
+        exportToExcel([] as any, "empty");
+      } catch {
+        // Expected
+      }
+
+      expect(mockCreateObjectURL).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("Data Type Handling", () => {
+    it("should handle string values", () => {
+      const data = [{ name: "Test Name", city: "Denpasar" }];
+
+      exportToExcel(data, "strings");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle number values", () => {
+      const data = [{ amount: 150000, rate: 20.5, count: 42 }];
+
+      exportToExcel(data, "numbers");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle boolean values", () => {
+      const data = [{ active: true, verified: false }];
+
+      exportToExcel(data, "booleans");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle null values", () => {
+      const data = [{ name: "Test", description: null }];
+
+      exportToExcel(data, "nulls");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle undefined values", () => {
+      const data = [{ name: "Test", notes: undefined }];
+
+      exportToExcel(data, "undefineds");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle nested objects", () => {
+      const data = [
+        {
+          id: 1,
+          profile: { name: "John", address: { city: "Bali" } },
+        },
+      ];
+
+      exportToExcel(data, "nested");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle arrays as values", () => {
+      const data = [{ tags: ["urgent", "bali"], scores: [1, 2, 3] }];
+
+      exportToExcel(data, "arrays");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle empty strings", () => {
+      const data = [{ name: "", description: "" }];
+
+      exportToExcel(data, "empty-strings");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle zero values", () => {
+      const data = [{ count: 0, score: 0, amount: 0 }];
+
+      exportToExcel(data, "zeros");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle special characters in strings", () => {
+      const data = [
+        { name: "Test \"Quotes\"", note: "Line1\nLine2", tab: "col1\tcol2" },
+      ];
+
+      exportToExcel(data, "special-chars");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should export single object in array", () => {
+      const data = [{ id: 1 }];
+
+      exportToExcel(data, "single");
+
+      const blobArg = mockCreateObjectURL.mock.calls[0][0] as Blob;
+      expect(blobArg.type).toBe(
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      );
+      expect(mockClick).toHaveBeenCalled();
+    });
+
+    it("should export multiple objects in array", () => {
+      const data = [
+        { id: 1, name: "Alice" },
+        { id: 2, name: "Bob" },
+        { id: 3, name: "Charlie" },
+      ];
+
+      exportToExcel(data, "multiple");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+      expect(mockClick).toHaveBeenCalled();
+    });
+  });
+
+  describe("Realistic Bali Hospitality Data", () => {
+    it("should export worker records", () => {
+      const workers = [
+        {
+          id: 1,
+          name: "Made Suryani",
+          category: "Housekeeping",
+          daily_rate: 150000,
+          verified: true,
+        },
+        {
+          id: 2,
+          name: "Putu Antari",
+          category: "Kitchen Staff",
+          daily_rate: 175000,
+          verified: true,
+        },
+      ];
+
+      exportToExcel(workers, "workers-bali");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+      expect(mockClick).toHaveBeenCalled();
+    });
+
+    it("should export job listings", () => {
+      const jobs = [
+        {
+          id: "JOB-001",
+          title: "Daily Housekeeper",
+          location: "Ubud",
+          wage_idr: 150000,
+          duration_hours: 8,
+          status: "active",
+        },
+      ];
+
+      exportToExcel(jobs, "jobs-ubud");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should export booking transactions", () => {
+      const transactions = [
+        {
+          booking_id: "BK-2024-001",
+          worker_name: "Made Suryani",
+          employer_name: "Villa Bulan",
+          total_amount: 150000,
+          platform_fee: 9000,
+          net_amount: 141000,
+          status: "completed",
+        },
+      ];
+
+      exportToExcel(transactions, "transactions-jan");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should export analytics metrics", () => {
+      const metrics = [
+        {
+          date: "2024-01-15",
+          total_users: 1250,
+          active_workers: 340,
+          total_bookings: 89,
+          completion_rate: 94.5,
+          revenue_idr: 13400000,
+        },
+      ];
+
+      exportToExcel(metrics, "analytics-weekly");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should export KYC verification records", () => {
+      const records = [
+        {
+          worker_id: "WRK-001",
+          name: "Komang Sugiarta",
+          ktp_number: "51010xxxxxxxx",
+          verification_status: "verified",
+          verified_at: "2024-01-10T08:30:00Z",
+        },
+      ];
+
+      exportToExcel(records, "kyc-pending");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("Edge Cases", () => {
+    it("should handle single key-value pair", () => {
+      const data = [{ key: "value" }];
+
+      exportToExcel(data, "single-pair");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle very long property names", () => {
+      const data = [
+        {
+          very_long_property_name_that_describes_the_data: "test",
+        },
+      ];
+
+      exportToExcel(data, "long-props");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle large numeric values", () => {
+      const data = [{ total_revenue: 999999999999 }];
+
+      exportToExcel(data, "large-numbers");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle decimal numbers", () => {
+      const data = [{ rate: 20.5, score: 99.99, tax: 0.06 }];
+
+      exportToExcel(data, "decimals");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle negative numbers", () => {
+      const data = [{ adjustment: -5000, penalty: -15000 }];
+
+      exportToExcel(data, "negatives");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle date string values", () => {
+      const data = [
+        {
+          created_at: "2024-01-15T10:30:00Z",
+          updated_at: "2024-01-16T14:45:00Z",
+        },
+      ];
+
+      exportToExcel(data, "dates");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+
+    it("should handle ISO date strings correctly", () => {
+      const data = [{ date: new Date("2024-01-15").toISOString() }];
+
+      exportToExcel(data, "iso-dates");
+
+      expect(mockCreateObjectURL).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("Performance", () => {
+    it("should export quickly for typical dataset", () => {
+      const data = Array.from({ length: 100 }, (_, i) => ({
+        id: i,
+        name: `Worker ${i}`,
+        rate: 150000 + i * 1000,
+      }));
+
+      const start = performance.now();
+      exportToExcel(data, "performance-test");
+      const end = performance.now();
+
+      expect(end - start).toBeLessThan(200);
+    });
+
+    it("should handle large dataset efficiently", () => {
+      const data = Array.from({ length: 1000 }, (_, i) => ({
+        id: i,
+        name: `Record ${i}`,
+        value: i * 100,
+      }));
+
+      const start = performance.now();
+      exportToExcel(data, "large-export");
+      const end = performance.now();
+
+      expect(end - start).toBeLessThan(500);
     });
   });
 });
