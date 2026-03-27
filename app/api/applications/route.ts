@@ -14,7 +14,7 @@ import {
   getApplicationsByJob,
   getApplicationsByWorker,
 } from "@/lib/actions/job-applications";
-import { cache, LRUCache, CACHE_TTL } from "@/lib/cache";
+import { cache, LRUCache, CACHE_TTL, invalidateApplicationCache } from "@/lib/cache";
 
 const routeLogger = logger.createApiLogger("applications");
 
@@ -484,6 +484,15 @@ export async function POST(request: Request) {
       jobId: body.job_id,
       userId: session.user.id,
     });
+
+    // Invalidate application listings cache since a new application was created
+    const invalidated = invalidateApplicationCache();
+    routeLogger.info("Cache invalidated after application creation", {
+      requestId,
+      applicationId: result.data?.id,
+      cacheKeysCleared: invalidated,
+    });
+
     logger.requestSuccess(request, { status: 201 }, startTime, {
       requestId,
       userId: session.user.id,
