@@ -2,6 +2,7 @@ import { createBrowserClient } from "@supabase/ssr";
 import { Database } from "./types";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// Updated to ES256 key format (matches supabase local dev keys)
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 /**
