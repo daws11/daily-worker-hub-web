@@ -13,7 +13,7 @@ import {
   invalidateUserCache,
   invalidateBadgeCache,
   invalidateCategoryCache,
-} from "@/lib/cache";
+} from "@/lib/cache/index";
 import { logger } from "@/lib/logger";
 
 const routeLogger = logger.createApiLogger("cache-stats");
@@ -96,8 +96,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get cache stats
-    const stats = cache.getStats();
+    // Get cache stats (async for Redis backend)
+    const stats = await cache.getStats();
 
     // Group entries by namespace for better readability
     const entriesByNamespace: Record<string, typeof stats.entries> = {};
@@ -212,16 +212,17 @@ export async function DELETE(request: NextRequest) {
       cleared = invalidateUserCache(userId);
       message = `Cleared ${cleared} cache entries for user ${userId}`;
     } else if (key) {
-      cleared = cache.del(key) ? 1 : 0;
+      const deleted = await cache.del(key);
+      cleared = deleted ? 1 : 0;
       message = `Cleared cache key: ${key}`;
     } else if (namespace) {
       // Clear by namespace
       switch (namespace) {
         case "jobs":
-          cleared = cache.delPattern("jobs:*");
+          cleared = await cache.delPattern("jobs:*");
           break;
         case "workers":
-          cleared = cache.delPattern("workers:*");
+          cleared = await cache.delPattern("workers:*");
           break;
         case "badges":
           cleared = invalidateBadgeCache();
@@ -230,16 +231,16 @@ export async function DELETE(request: NextRequest) {
           cleared = invalidateCategoryCache();
           break;
         case "sessions":
-          cleared = cache.delPattern("sessions:*");
+          cleared = await cache.delPattern("sessions:*");
           break;
         default:
-          cleared = cache.delPattern(`${namespace}:*`);
+          cleared = await cache.delPattern(`${namespace}:*`);
       }
       message = `Cleared ${cleared} cache entries for namespace: ${namespace}`;
     } else {
       // Clear all
-      const statsBefore = cache.getStats();
-      cache.flush();
+      const statsBefore = await cache.getStats();
+      await cache.flush();
       cleared = statsBefore.size;
       message = `Cleared all ${cleared} cache entries`;
     }
