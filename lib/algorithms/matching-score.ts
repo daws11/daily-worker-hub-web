@@ -179,45 +179,7 @@ export interface MatchingScoreParams {
 }
 
 export function calculateMatchingScore(params: MatchingScoreParams): number {
-  const {
-    workerSkills,
-    workerLat,
-    workerLng,
-    workerRating,
-    workerTier,
-    jobSkills,
-    jobLat,
-    jobLng,
-    isAvailable,
-    isCompliant,
-  } = params;
-
-  // Calculate distance
-  const distance = calculateHaversineDistance(
-    workerLat,
-    workerLng,
-    jobLat,
-    jobLng,
-  );
-
-  // Calculate individual scores
-  const skillScore = calculateSkillScore(workerSkills, jobSkills);
-  const distanceScore = calculateDistanceScore(distance);
-  const availabilityScore = calculateAvailabilityScore(isAvailable);
-  const ratingScore = calculateRatingScore(workerRating);
-  const complianceScore = calculateComplianceScore(isCompliant);
-  const tierBonus = getTierBonus(workerTier);
-
-  // Calculate total score
-  const totalScore =
-    skillScore +
-    distanceScore +
-    availabilityScore +
-    ratingScore +
-    complianceScore +
-    tierBonus;
-
-  return Math.min(totalScore, 115); // Cap at 115
+  return getMatchingScoreBreakdown(params).totalScore;
 }
 
 /**
