@@ -1,14 +1,18 @@
 /**
  * Matching Score Algorithm
  *
- * Implements the 5-point matching algorithm:
- * 1. Skill Compatibility (30 points)
- * 2. Distance/Location (30 points)
- * 3. Availability (20 points)
- * 4. Rating & Reliability (15 points)
- * 5. Compliance (5 points)
- * + Tier Bonus (5-20 points)
- * Total: 115 max
+ * Implements the 5-factor matching algorithm with tier bonus:
+ * 1. Skill Compatibility (0–30 points): see calculateSkillScore
+ * 2. Distance/Location  (0–30 points): see calculateDistanceScore
+ * 3. Availability       (0–20 points): see calculateAvailabilityScore
+ * 4. Rating & Reliability (0–15 points): see calculateRatingScore
+ * 5. Compliance        (0–5 points):  see calculateComplianceScore
+ * + Tier Bonus (5–20 points): see getTierBonus (in tier-classifier.ts)
+ *
+ * Maximum possible score: 115 points (capped via Math.min in calculateMatchingScore)
+ *
+ * Distance calculation: Haversine formula using Earth's radius of 6371 km
+ * (see calculateHaversineDistance)
  */
 
 import { WorkerTier } from "@/lib/supabase/types";
@@ -51,9 +55,14 @@ function toRadians(degrees: number): number {
 /**
  * Calculate skill compatibility score (0-30 points)
  *
+ * Scoring thresholds:
+ * - 30 points: No skill requirements, OR worker matches all required skills (100% match)
+ * - 15 points: Worker matches at least 50% of required skills (partial match)
+ * - 0 points:  Worker has no skills, OR matches less than 50% of required skills
+ *
  * @param workerSkills - Array of worker skill IDs
  * @param jobSkills - Array of required job skill IDs
- * @returns Skill compatibility score
+ * @returns Skill compatibility score (0, 15, or 30)
  */
 export function calculateSkillScore(
   workerSkills: string[],
@@ -87,8 +96,14 @@ export function calculateSkillScore(
 /**
  * Calculate distance/location score (0-30 points)
  *
+ * Scoring thresholds (in kilometers):
+ * - 30 points: 0 km <= distance <= 5 km  (perfect proximity)
+ * - 20 points: 5 km < distance <= 10 km  (good proximity)
+ * - 10 points: 10 km < distance <= 20 km (acceptable)
+ * - 0 points:  distance > 20 km            (too far)
+ *
  * @param distance - Distance in kilometers
- * @returns Distance score
+ * @returns Distance score (0, 10, 20, or 30)
  */
 export function calculateDistanceScore(distance: number): number {
   if (distance <= 5) {
@@ -105,9 +120,14 @@ export function calculateDistanceScore(distance: number): number {
 /**
  * Calculate availability score (0-20 points)
  *
+ * Scoring thresholds:
+ * - 20 points: isAvailable = true  (available for full job duration)
+ * - 10 points: isAvailable = false, partialAvailability = true (partial availability)
+ * - 0 points:  isAvailable = false, partialAvailability = false (not available)
+ *
  * @param isAvailable - Whether worker is available for the full duration
  * @param partialAvailability - Whether worker is available for partial duration
- * @returns Availability score
+ * @returns Availability score (0, 10, or 20)
  */
 export function calculateAvailabilityScore(
   isAvailable: boolean,
@@ -125,8 +145,15 @@ export function calculateAvailabilityScore(
 /**
  * Calculate rating & reliability score (0-15 points)
  *
+ * Scoring thresholds (rating scale 0-5):
+ * - 15 points: rating >= 4.8 (excellent, 4.8-5.0 range)
+ * - 12 points: rating >= 4.5 (very good, 4.5-4.7 range)
+ * - 8 points:  rating >= 4.0 (good, 4.0-4.4 range)
+ * - 0 points:  rating < 4.0  (poor)
+ * - 0 points:  null / undefined (no rating yet)
+ *
  * @param rating - Average rating (0-5)
- * @returns Rating score
+ * @returns Rating score (0, 8, 12, or 15)
  */
 export function calculateRatingScore(rating: number | null): number {
   if (!rating) {
@@ -147,8 +174,12 @@ export function calculateRatingScore(rating: number | null): number {
 /**
  * Calculate compliance score (0-5 points)
  *
+ * Scoring thresholds:
+ * - 5 points: isCompliant = true  (worker is compliant with the 21 Days Rule)
+ * - 0 points: isCompliant = false (worker has exceeded the 21-day limit)
+ *
  * @param isCompliant - Whether worker is compliant with 21 Days Rule
- * @returns Compliance score
+ * @returns Compliance score (0 or 5)
  */
 export function calculateComplianceScore(isCompliant: boolean): number {
   return isCompliant ? 5 : 0;
@@ -289,8 +320,15 @@ export function getMatchingScoreBreakdown(params: MatchingScoreParams): {
 /**
  * Get match quality label based on score
  *
+ * Quality thresholds (score range 0-115):
+ * - "Perfect Match" (green):  score >= 100
+ * - "Great Match"  (blue):    score >= 85 && score < 100
+ * - "Good Match"   (cyan):    score >= 70 && score < 85
+ * - "Fair Match"   (yellow):  score >= 55 && score < 70
+ * - "Poor Match"   (red):     score < 55
+ *
  * @param score - Matching score
- * @returns Match quality label and color
+ * @returns Match quality label, color class, and description
  */
 export function getMatchQuality(score: number): {
   label: string;
