@@ -215,11 +215,13 @@ export async function generateWorkerShortlist(
  *
  * @param workerIds - List of worker IDs to score
  * @param params - Matching parameters
+ * @param precomputedDistances - Optional precomputed distance map (workerId -> distanceKm). When provided, skips Haversine recalculation.
  * @returns Sorted list of workers with matching scores
  */
 export async function generateWorkerShortlistFromIds(
   workerIds: string[],
   params: ShortlistParams,
+  precomputedDistances?: Map<string, number>,
 ): Promise<WorkerWithScore[]> {
   const {
     jobSkills,
@@ -276,20 +278,33 @@ export async function generateWorkerShortlistFromIds(
           jobEndHour,
         );
 
-        const matchingParams: MatchingScoreParams = {
-          workerSkills,
-          workerLat: worker.lat,
-          workerLng: worker.lng,
-          workerRating: worker.rating,
-          workerTier: worker.tier,
-          jobSkills,
-          jobLat,
-          jobLng,
-          isAvailable,
-          isCompliant: true,
-        };
-
-        const breakdown = getMatchingScoreBreakdown(matchingParams);
+        let breakdown;
+        if (precomputedDistances) {
+          const matchingParamsWithDistance: MatchingScoreParamsWithDistance = {
+            workerSkills,
+            workerRating: worker.rating,
+            workerTier: worker.tier,
+            jobSkills,
+            distanceKm: precomputedDistances.get(worker.id) ?? 0,
+            isAvailable,
+            isCompliant: true,
+          };
+          breakdown = getMatchingScoreBreakdownWithDistance(matchingParamsWithDistance);
+        } else {
+          const matchingParams: MatchingScoreParams = {
+            workerSkills,
+            workerLat: worker.lat,
+            workerLng: worker.lng,
+            workerRating: worker.rating,
+            workerTier: worker.tier,
+            jobSkills,
+            jobLat,
+            jobLng,
+            isAvailable,
+            isCompliant: true,
+          };
+          breakdown = getMatchingScoreBreakdown(matchingParams);
+        }
 
         return {
           id: worker.id,
