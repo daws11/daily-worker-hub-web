@@ -6,6 +6,7 @@ import { checkOutBooking } from "@/lib/actions/bookings-completion";
 import { validateData } from "@/lib/validations";
 import { checkOutSchema } from "@/lib/validations/booking";
 import { withRateLimit } from "@/lib/rate-limit";
+import { invalidateBookingCache } from "@/lib/cache";
 
 const routeLogger = logger.createApiLogger("bookings/[id]/check-out");
 
@@ -114,12 +115,15 @@ async function handlePOST(request: Request, { params }: Params) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
+    // Invalidate booking caches since check-out state changed
+    const invalidated = invalidateBookingCache(bookingId);
     routeLogger.info("Check-out successful", {
       requestId,
       bookingId,
       workerId: worker.id,
       actualHours: body.actual_hours,
       userId: session.user.id,
+      cacheKeysCleared: invalidated,
     });
     logger.requestSuccess(request, { status: 200 }, startTime, {
       requestId,
