@@ -1,11 +1,13 @@
-# Panduan Pertanyaan Umum & Pemecahan Masalah — Worker
+# Panduan Pertanyaan Umum & Pemecahan Masalah — Worker & Business
 
-> Dokumentasi Panduan FAQ untuk pekerja di Daily Worker Hub
-> Bahasa: Bahasa Indonesia (Bahasa Inggris disediakasn sebagai alternatif)
+> Dokumentasi Panduan FAQ untuk pekerja dan bisnis di Daily Worker Hub
+> Bahasa: Bahasa Indonesia (Bahasa Inggris disediakan sebagai alternatif)
 
 ---
 
 ## Daftar Isi
+
+**Bagian A — Panduan untuk Worker (Pekerja)**
 
 1. [Akun & Login](#1-akun--login)
 2. [Verifikasi (KYC)](#2-verifikasi-kyc)
@@ -15,6 +17,16 @@
 6. [21-Hari & Aturan Kerja](#6-21-hari--aturan-kerja)
 7. [Notifikasi & Pesan](#7-notifikasi--pesan)
 8. [Hubungi Kami](#8-hubungi-kami)
+
+**Bagian B — Panduan untuk Business (Bisnis)**
+
+9. [Akun & Login Bisnis](#9-akun--login-bisnis)
+10. [Posting Lowongan](#10-posting-lowongan)
+11. [Pelamar & Kandidat](#11-pelamar--kandidat)
+12. [Absensi Worker](#12-absensi-worker)
+13. [Wallet & Pembayaran Bisnis](#13-wallet--pembayaran-bisnis)
+14. [Aturan 21 Hari untuk Bisnis](#14-aturan-21-hari-untuk-bisnis)
+15. [Hubungi Kami](#15-hubungi-kami)
 
 ---
 
@@ -850,6 +862,676 @@ Kami sangat menghargai masukan dari para pekerja. Anda bisa:
 
 3. **Beri rating dan ulasan**
    - Di halaman **Booking Saya**, Anda bisa memberikan rating setelah booking selesai
+
+---
+
+---
+
+## 9. Akun & Login Bisnis
+
+### Cara daftar akun baru sebagai bisnis?
+
+Ikuti langkah berikut untuk mendaftar:
+
+1. Buka aplikasi Daily Worker Hub
+2. Pilih **"Daftar sebagai Business"**
+3. Masukkan email aktif (untuk verifikasi)
+4. Masukkan kode OTP yang dikirim ke email
+5. Lengkapi data bisnis:
+   - Nama bisnis / nama perusahaan
+   - Alamat bisnis
+   - Nomor HP kontak
+   - Kategori bisnis (Restoran, Hotel, Event, dll.)
+6. Upload dokumen pendukung (opsional)
+7. Akun bisnis siap digunakan
+
+> **Tips:** Pastikan email yang digunakan adalah email resmi bisnis, karena kami akan mengirim notifikasi dan kode verifikasi ke email tersebut.
+
+---
+
+### Saya tidak bisa login sebagai bisnis. Apa yang harus dilakukan?
+
+Coba langkah-langkah berikut secara berurutan:
+
+**Langkah 1 — Periksa koneksi internet**
+- Pastikan WiFi atau data seluler Anda aktif
+- Coba buka aplikasi lain untuk memastikan internet berfungsi
+
+**Langkah 2 — Pastikan email benar**
+- Masukkan email dengan format yang benar (contoh: info@namabisnis.com)
+- Hindari salah ketik atau spasi
+
+**Langkah 3 — Reset password**
+1. Klik **"Lupa Password"** di halaman login
+2. Masukkan email yang terdaftar
+3. Cek inbox atau folder spam untuk email reset
+4. Ikuti tautan reset dan buat password baru
+
+**Langkah 4 — Pastikan Anda login sebagai business**
+- Jika sebelumnya login sebagai worker, logout terlebih dahulu
+- Pilih opsi **"Login sebagai Business"**
+
+> **Catatan:** Akun worker dan business menggunakan sistem login yang terpisah. Satu email tidak bisa digunakan untuk kedua akun sekaligus.
+
+---
+
+### Apakah saya bisa mengelola beberapa lokasi bisnis?
+
+**Ya, fitur multi-lokasi tersedia untuk akun business:**
+
+1. **Tambah lokasi baru**
+   - Buka **Pengaturan** → **Kelola Lokasi**
+   - Ketuk **"Tambah Lokasi Baru"**
+   - Masukkan detail lokasi (alamat, jam buka, nomor HP)
+
+2. **Atur lokasi utama**
+   - Lokasi utama adalah default saat posting lowongan
+   - Anda bisa mengubah lokasi utama kapan saja
+
+3. **Posting lowongan per lokasi**
+   - Saat membuat lowongan, pilih lokasi yang spesifik
+   - Atau pilih "Semua Lokasi" jika lowongan berlaku di semua cabang
+
+> **Tips:** Jika bisnis Anda memiliki banyak cabang, manfaatkan fitur multi-lokasi agar penarikan data dan pelaporan lebih mudah.
+
+---
+
+## 10. Posting Lowongan
+
+### Bagaimana cara memposting lowongan baru?
+
+Ikuti langkah berikut untuk memposting lowongan:
+
+1. Buka aplikasi Daily Worker Hub Business
+2. Ketuk tombol **"+"** atau **"Posting Lowongan Baru"**
+3. Lengkapi detail lowongan:
+   - **Judul pekerjaan** (contoh: "Staff Kitchen Helper")
+   - **Kategori** — pilih kategori pekerjaan
+   - **Deskripsi** — jelaskan tugas dan tanggung jawab
+   - **Persyaratan** — pendidikan, pengalaman, dll.
+   - **Lokasi** — pilih lokasi bisnis Anda
+   - **Tanggal & jam kerja** — tentukan jadwal
+   - **Gaji yang ditawarkan** — per hari atau per bulan
+4. Masukkan jumlah pekerja yang dibutuhkan
+5. Tentukan metode pencarian:
+   - **Posting publik** — terlihat semua worker
+   - **Undang worker tertentu** — invite worker spesifik
+6. Ketuk **"Posting"**
+
+> **Tips:** Lowongan dengan deskripsi yang jelas dan gaji yang wajar mendapat respons lebih banyak dari worker.
+
+---
+
+### Jenis lowongan apa saja yang bisa saya posting?
+
+| Jenis Lowongan | Keterangan |
+| -------------- | ---------- |
+| **Harian** | Worker bekerja untuk satu hari, dibayar per hari |
+| **Mingguan** | Worker bekerja selama seminggu |
+| **Event** | Pekerjaan terkait event (pernikahan, seminar, dll.) |
+| **Tetap parsial** | Pekerjaan rutin dengan jam fleksibel |
+| **Kontrak pendek** | Durasi 1–3 bulan |
+
+> **Catatan:** Durasi kontrak tidak boleh melebihi 21 hari per worker sesuai aturan PP 35/2021. Untuk kebutuhan lebih dari 21 hari, bisnis harus membuat kontrak resmi PKWT/PKWL.
+
+---
+
+### Bagaimana cara mengedit atau menghapus lowongan?
+
+**Mengedit lowongan:**
+1. Buka halaman **"Lowongan Saya"**
+2. Pilih lowongan yang ingin diedit
+3. Ketuk tombol **"Edit"**
+4. Ubah detail yang diperlukan
+5. Ketuk **"Simpan Perubahan"**
+
+**Menghapus lowongan:**
+1. Buka halaman **"Lowongan Saya"**
+2. Pilih lowongan yang ingin dihapus
+3. Ketuk tombol **"Hapus"**
+4. Konfirmasi penghapusan
+
+> **Peringatan:** Menghapus lowongan yang sudah memiliki pelamar akan membatalkan semua lamaran. Worker yang sudah melamar akan mendapat notifikasi pembatalan.
+
+---
+
+### Lowongan saya tidak muncul di Pasar Kerja. Mengapa?
+
+Beberapa alasan mengapa lowongan tidak terlihat worker:
+
+| Penyebab | Penjelasan |
+| -------- | ---------- |
+| Status "Draft" | Lowongan belum diposting, masih dalam status draft |
+| Lokasi tidak dipilih | Worker tidak bisa menemukan lowongan tanpa lokasi |
+| Kategory salah | Worker yang mencari category berbeda tidak akan melihat |
+| Masa berlaku habis | Lowongan sudah melewati tanggal berakhir |
+| Akun bisnis belum diverifikasi | Lowongan dari akun belum terverifikasi mungkin tidak ditampilkan |
+
+**Solusi:**
+1. Buka **"Lowongan Saya"** dan periksa status lowongan
+2. Pastikan semua field (lokasi, kategori, tanggal) sudah terisi
+3. Pastikan akun bisnis sudah terverifikasi
+4. Pastikan tanggal lowongan belum lewat
+
+---
+
+### Berapa lama lowongan ditampilkan di Pasar Kerja?
+
+**Pengaturan masa berlaku lowongan:**
+
+| Durasi Posting | Keterangan |
+| ------------- | ---------- |
+| 1 hari | Berlaku untuk pekerjaan harian |
+| 7 hari | Cocok untuk pekerjaan mingguan |
+| 14 hari | Durasi default |
+| 30 hari | Untuk pekerjaan jangka panjang |
+
+**Perpanjangan lowongan:**
+- Jika lowongan akan berakhir dan belum dapat worker yang cocok
+- Buka **"Lowongan Saya"** → pilih lowongan → **"Perpanjang"**
+- Pilih durasi perpanjangan yang diinginkan
+
+> **Tips:** Posting ulang lowongan setiap minggu bisa meningkatkan visibilitas di Pasar Kerja.
+
+---
+
+## 11. Pelamar & Kandidat
+
+### Di mana saya bisa melihat pelamar yang masuk?
+
+Ikuti langkah berikut:
+
+1. Buka halaman **"Lowongan Saya"** di aplikasi Business
+2. Pilih lowongan yang ingin dilihat pelamarnya
+3. Ketuk tab **"Pelamar"** atau **"Kandidat"**
+4. Di halaman tersebut Anda akan melihat:
+   - Daftar worker yang melamar
+   - Foto profil dan nama
+   - Tier worker (Classic, Pro, Elite, Champion)
+   - Rating dan review dari bisnis sebelumnya
+   - Status lamaran (Pending, Dilihat, Shortlisted, Diterima, Ditolak)
+
+---
+
+### Bagaimana cara memilih dan menerima worker?
+
+**Langkah menerima worker:**
+
+1. Buka halaman **"Pelamar"** untuk lowongan tertentu
+2. Periksa profil dan rating worker
+3. Klik **"Lihat Detail"** untuk informasi lengkap:
+   - Pengalaman kerja sebelumnya
+   - Review dari bisnis lain
+   - Jumlah hari bekerja di platform
+4. Jika cocok, ketuk tombol **"Terima"**
+5. Konfirmasi booking:
+   - Tentukan tanggal dan jam kerja
+   - Tinjau total biaya (gaji + biaya platform)
+   - Konfirmasi pembayaran
+
+> **Penting:** Setelah menerima worker, Anda bertanggung jawab untuk memberikan pekerjaan sesuai jadwal yang dijanjikan.
+
+---
+
+### Apa arti status pelamar?
+
+| Status | Arti |
+| ------ | ---- |
+| **Pending** | Worker baru saja melamar, belum dibaca |
+| **Dilihat** | Anda sudah melihat lamaran worker ini |
+| **Shortlisted** | Worker ditandai sebagai kandidat potensial |
+| **Diterima** | Booking sudah dikonfirmasi, worker siap bekerja |
+| **Ditolak** | Worker tidak diterima untuk lowongan ini |
+
+**Tips mengelola pelamar:**
+- Respon cepat terhadap pelamar bisa meningkatkan peluang Anda mendapat worker terbaik
+- Worker cenderung memilih bisnis yang responsif
+- Berikan alasan penolakan yang sopan untuk membangun reputasi baik
+
+---
+
+### Saya tidak menemukan worker yang sesuai. Apa yang harus dilakukan?
+
+Tips untuk menarik worker yang lebih berkualitas:
+
+1. **Perbaiki deskripsi lowongan**
+   - Jelaskan tugas dengan jelas
+   - Tulis persyaratan yang realistis
+   - Jelaskan budaya dan lingkungan kerja
+
+2. **Naikkan gaji yang ditawarkan**
+   - Worker berkualitas cenderung memilih bisnis dengan bayaran lebih tinggi
+   - Bandingkan dengan gaji di bisnis sejenis
+
+3. **Tingkatkan reputasi bisnis**
+   - Berikan rating dan review untuk worker yang pernah bekerja
+   - Bayar tepat waktu
+   - Berikan lingkungan kerja yang baik
+
+4. **Posting di waktu yang tepat**
+   - Worker aktif mencari pekerjaan di pagi dan sore hari
+   - Hindari posting lowongan tengah malam jika bisa
+
+5. **Undang worker secara langsung**
+   - Jika ada worker tertentu yang Anda kenal, gunakan fitur **"Undang Worker"**
+   - Worker yang diundang mendapat notifikasi prioritas
+
+---
+
+### Apakah saya bisa mengundang worker tertentu secara langsung?
+
+**Ya, Anda bisa mengundang worker spesifik:**
+
+1. Buka halaman **"Cari Worker"** atau **"Worker Direkomendasikan"**
+2. Cari worker berdasarkan nama, kategori, atau lokasi
+3. Ketuk profil worker yang Anda minati
+4. Ketuk tombol **"Undang untuk Interview"** atau **"Undang Kerja"**
+5. Pilih lowongan yang tersedia
+6. Kirim undangan
+
+Worker akan mendapat notifikasi undangan dan bisa menerima atau menolak.
+
+> **Catatan:** Worker yang diundang tidak terikat aturan 21 hari untuk bisnis pertama kali undangan. Namun, setelah booking pertama dibuat, aturan 21 hari berlaku seperti biasa.
+
+---
+
+### Bagaimana cara menolak pelamar dengan sopan?
+
+Kami sarankan untuk menolak pelamar secara profesional:
+
+1. Buka halaman **"Pelamar"** untuk lowongan tertentu
+2. Pilih worker yang ingin ditolak
+3. Ketuk tombol **"Tolak"**
+4. (Opsional) Pilih alasan penolakan:
+   - "Kualifikasi tidak sesuai"
+   - "Sudah mendapat kandidat lain"
+   - "Lowongan sudah ditutup"
+5. (Opsional) Tambahkan pesan singkat untuk worker
+6. Konfirmasi penolakan
+
+> **Tips:** Memberikan alasan penolasan yang sopan membantu worker memperbaiki profil mereka dan meningkatkan reputasi bisnis Anda di mata komunitas.
+
+---
+
+## 12. Absensi Worker
+
+### Bagaimana cara worker check-in dan check-out?
+
+Worker akan melakukan check-in dan check-out melalui aplikasi Daily Worker Hub:
+
+**Check-in:**
+1. Worker tiba di lokasi pekerjaan Anda
+2. Buka aplikasi → **"Booking Saya"**
+3. Scan QR code yang disediakan bisnis
+4. Sistem mencatat lokasi dan waktu check-in
+
+**Check-out:**
+1. Worker selesai bekerja
+2. Buka aplikasi → **"Booking Saya"**
+3. Ketuk tombol **"Check-out"**
+4. Sistem mencatat waktu dan durasi kerja
+
+> **Penting:** Sebagai bisnis, Anda akan menerima notifikasi setiap kali worker check-in dan check-out.
+
+---
+
+### Bagaimana cara membuat dan menampilkan QR code attendance?
+
+Ikuti langkah berikut untuk生成 QR code:
+
+1. Buka aplikasi Daily Worker Hub Business
+2. Buka menu **"Attendance"** atau **"Absensi"**
+3. Pilih lowongan atau jadwal yang ingin diaktifkan
+4. Ketuk **"Generate QR Code"** untuk membuat QR code baru
+5. QR code akan ditampilkan di layar HP
+6. Tempelkan HP di lokasi yang mudah discan worker
+
+**Tips menampilkan QR code:**
+- Gunakan kertas atau tablet untuk menampilkan QR code
+- Pastikan layar HP atau tablet tetap menyala selama jam kerja
+- Cetak QR code dalam ukuran besar (minimal A4) jika diperlukan
+
+> **Tips:** QR code berlaku untuk satu sesi check-in/check-out. Generate QR code baru setiap hari kerja.
+
+---
+
+### Bagaimana cara melihat laporan absensi worker?
+
+**Melihat laporan absensi:**
+
+1. Buka halaman **"Attendance"** atau **"Absensi"**
+2. Pilih lowongan atau periode waktu tertentu
+3. Di halaman tersebut Anda akan melihat:
+   - Daftar worker yang bekerja hari itu
+   - Waktu check-in dan check-out
+   - Total jam kerja
+   - Status kehadiran (Hadir, Terlambat, Tidak Hadir)
+
+**Filter dan sorting:**
+- Filter berdasarkan tanggal
+- Filter berdasarkan worker
+- Sortir berdasarkan nama atau jam kerja
+
+**Export laporan:**
+- Ketuk tombol **"Export"** untuk mengunduh laporan dalam format PDF atau Excel
+
+---
+
+### Worker tidak check-in. Apa yang harus dilakukan?
+
+Jika worker tidak melakukan check-in:
+
+**Langkah 1 — Hubungi worker**
+- Kirim pesan melalui fitur chat di aplikasi
+- Tanyakan apakah ada kendala
+
+**Langkah 2 — Verifikasi kehadiran secara manual**
+- Jika worker sudah hadir tapi sistem gagal, catat kehadiran secara manual:
+  1. Buka **"Attendance"** → **"Tambah Manual"**
+  2. Masukkan nama worker dan jam datang
+  3. Konfirmasi kehadiran
+
+**Langkah 3 — Hubungi tim support**
+- Jika worker tidak hadir dan tidak bisa dihubungi
+- Laporkan ke tim support kami
+
+> **Penting:** Kehadiran yang tidak tercatat bisa mempengaruhi pembayaran worker. Pastikan selalu catat kehadiran secara akurat.
+
+---
+
+### Worker check-in terlambat. Bagaimana penalti?
+
+**Pengaturan keterlambatan:**
+
+| Keterlambatan | Konsekuensi |
+| ------------ | ----------- |
+| 0–15 menit | Diberitahukan, tidak ada penalti |
+| 16–30 menit | Potongan 15% dari gaji hari itu |
+| 31–60 menit | Potongan 30% dari gaji hari itu |
+| >60 menit | Dihitung tidak masuk, tidak dibayar |
+
+**Cara melihat keterlambatan:**
+1. Buka halaman **"Attendance"**
+2. Worker dengan status "Terlambat" akan ditandai
+3. Potongan otomatis dihitung oleh sistem
+
+> **Catatan:** Anda bisa mengatur kebijakan keterlambatan sendiri di **"Pengaturan"** → **"Kebijakan Bisnis"**. Default di atas bisa disesuaikan.
+
+---
+
+## 13. Wallet & Pembayaran Bisnis
+
+### Di mana saya bisa melihat saldo wallet bisnis?
+
+Ikuti langkah berikut:
+
+1. Buka aplikasi Daily Worker Hub Business
+2. Ketuk menu **"Wallet"** di bagian bawah layar
+3. Di halaman Wallet, Anda akan melihat:
+   - **Saldo Saat Ini** — jumlah dana yang tersedia
+   - **Dana yang Dicadangkan** — dana untuk booking aktif
+   - **Riwayat Transaksi** — daftar semua masuk dan keluar
+   - **Top-up** — tombol untuk menambah saldo
+
+> **Tips:** Pastikan saldo cukup sebelum menerima worker. Booking tidak bisa dikonfirmasi tanpa saldo yang cukup.
+
+---
+
+### Bagaimana cara top-up saldo wallet bisnis?
+
+1. Buka **Wallet** → **Top-up**
+2. Pilih metode pembayaran:
+   - Transfer bank (BCA, BNI, BRI, Mandiri)
+   - E-wallet (OVO, GoPay, Dana)
+   - Kartu kredit
+3. Masukkan jumlah yang ingin di-top-up
+4. Ikuti instruksi pembayaran
+5. Saldo akan masuk setelah pembayaran terkonfirmasi
+
+**Estimasi waktu top-up:**
+
+| Metode | Estimasi |
+| ------ | -------- |
+| E-wallet | 1–5 menit |
+| Transfer bank | 15–30 menit |
+| Kartu kredit | 1–2 menit |
+
+> **Tips:** Top-up dalam jumlah besar bisa mendapat diskon biaya platform. Hubungi tim support untuk informasi promo.
+
+---
+
+### Bagaimana cara membayar worker setelah pekerjaan selesai?
+
+Pembayaran dilakukan secara otomatis oleh sistem setelah worker check-out:
+
+1. Worker menyelesaikan pekerjaan dan check-out
+2. Sistem menghitung total:
+   - Gaji worker (sesuai booking)
+   - Biaya platform Daily Worker Hub
+3. Dana otomatis dipotong dari wallet bisnis
+4. Dana masuk ke wallet worker (dalam 1–2 hari kerja)
+
+**Detail pemotongan:**
+
+| Komponen | Keterangan |
+| -------- | ---------- |
+| Gaji worker | Sesuai yang dijanjikan di booking |
+| Biaya platform | 5–10% dari gaji (bervariasi per tier) |
+| Total | Gaji + Biaya platform |
+
+> **Penting:** Dana yang sudah dibayarkan tidak bisa dikembalikan kecuali ada sengketa yang terbukti valid.
+
+---
+
+### Pembayaran saya gagal. Apa yang harus dilakukan?
+
+**Alasan umum pembayaran gagal:**
+
+| Alasan | Solusi |
+| ------ | ------ |
+| Saldo tidak cukup | Top-up wallet terlebih dahulu |
+| Saldo terkunci untuk booking aktif | Tunggu booking selesai atau batalkan booking |
+| Metode pembayaran bermasalah | Coba metode lain |
+| Server sedang gangguan | Tunggu beberapa saat, coba lagi |
+
+**Langkah troubleshooting:**
+
+1. **Periksa saldo wallet**
+   - Buka **Wallet** → cek saldo saat ini
+   - Pastikan saldo + dana yang dicadangkan cukup
+
+2. **Top-up jika saldo kurang**
+   - Ikuti langkah top-up di atas
+   - Top-up minimal sesuai jumlah yang diperlukan
+
+3. **Coba metode lain**
+   - Jika transfer bank gagal, coba e-wallet
+   - Atau sebaliknya
+
+4. **Hubungi tim support**
+   - Jika masalah berlanjut, laporkan dengan detail:
+     - Jumlah yang ingin dibayarkan
+     - Worker ID
+     - Screenshot pesan error
+
+---
+
+### Apakah ada biaya tambahan selain gaji worker?
+
+| Jenis Biaya | Keterangan |
+| ---------- | ---------- |
+| **Biaya platform** | 5–10% dari gaji worker (bervariasi per tier) |
+| **Biaya top-up** | Tergantung metode pembayaran |
+| **Biaya penarikan** | Rp 2.500 per penarikan ke rekening bank |
+| **Pajak** | Sesuai regulasi yang berlaku |
+
+**Detail biaya platform per tier worker:**
+
+| Tier Worker | Biaya Platform |
+| ---------- | -------------- |
+| Classic | 10% dari gaji |
+| Pro | 8% dari gaji |
+| Elite | 6% dari gaji |
+| Champion | 5% dari gaji |
+
+> **Catatan:** Worker tier lebih tinggi memiliki biaya platform lebih rendah karena mereka punya reputasi dan pengalaman lebih baik.
+
+---
+
+## 14. Aturan 21 Hari untuk Bisnis
+
+### Apa itu aturan 21 hari dan bagaimana aturan ini mempengaruhi bisnis saya?
+
+**Aturan 21 hari** adalah ketentuan dalam sistem Daily Worker Hub yang melarang satu worker bekerja di bisnis yang sama lebih dari 21 hari kalender. Aturan ini berdasarkan **PP No. 35 Tahun 2021** tentang Perjanjian Kerja Waktu Tertentu (PKWT) di Indonesia.
+
+**Bagaimana aturan ini mempengaruhi bisnis Anda:**
+
+| Situasi | Hasil |
+| ------- | ----- |
+| Worker bekerja 21 hari | Worker harus berhenti, tidak bisa booking baru |
+| Anda butuh worker lebih dari 21 hari | Worker harus istirahat 21 hari sebelum bisa kerja lagi |
+| Worker sama harus lanjut bekerja | Anda harus membuat kontrak resmi PKWT/PKWL |
+
+---
+
+### Worker saya sudah 21 hari. Apakah saya harus mengganti worker?
+
+**Ya, jika worker sudah mencapai batas 21 hari:**
+
+1. **Cari worker pengganti**
+   - Buka halaman **"Pasar Kerja"**
+   - Posting lowongan baru
+   - Pilih worker dengan kualifikasi serupa
+
+2. **Pertimbangkan kontrak resmi**
+   - Jika Anda benar-benar butuh worker tetap
+   - Buat kontrak PKWT/PKWL resmi melalui tim HR
+   - Kontrak resmi tidak terikat aturan 21 hari
+
+3. **Rotasi worker**
+   - Gunakan sistem rotasi worker dari platform
+   - Worker A bekerja 21 hari → istirahat 21 hari → Worker B
+
+> **Tips:** Mulailah mencari worker pengganti sejak worker mendekati hari ke-18–20 agar tidak ada jeda pekerjaan.
+
+---
+
+### Apakah saya bisa mendapatkan pengecualian dari aturan 21 hari?
+
+**Ya, ada beberapa opsi:**
+
+| Opsi | Syarat |
+| ---- | ------ |
+| **Kontrak PKWT/PKWL resmi** | Buat kontrak kerja tetap melalui HR, aturan 21 hari tidak berlaku |
+| **Hubungi tim support** | Jelaskan situasi khusus, tim kami akan membantu |
+| **Rotasi yang terstruktur** | Gunakan jadwal rotasi worker yang terencana |
+
+**Langkah mengajukan pengecualian:**
+
+1. Kirim email ke support@dwh.com
+2. Jelaskan:
+   - Kebutuhan bisnis Anda
+   - Durasi kerja yang diperlukan
+   - Alasan worker tidak bisa diganti
+3. Tim kami akan meninjau dan memberi respons dalam 1–2 hari kerja
+
+---
+
+### Bagaimana cara mengelola rotasi worker?
+
+**Tips mengelola rotasi worker:**
+
+1. **Rencanakan jadwal rotasi dari awal**
+   - Buat spreadsheet rotasi worker
+   - Catat tanggal mulai dan tanggal berakhir setiap worker
+
+2. **Komunikasikan dengan worker**
+   - Beri tahu worker bahwa sistem ini berbasis rotasi
+   - Jelaskan aturan 21 hari sejak awal
+
+3. **Document pengalaman worker**
+   - Catat siapa worker yang bekerja di bisnis Anda
+   - Catat review dari bisnis lain tentang worker
+
+4. **Gunakan fitur pengingat**
+   - Sistem akan mengirim notifikasi saat worker mendekati batas 21 hari
+   - Manfaatkan notifikasi ini untuk mencari pengganti lebih awal
+
+> **Catatan:** Rotasi yang terencana dengan baik tidak akan mengganggu operasional bisnis Anda. Persiapan adalah kunci.
+
+---
+
+### Worker saya bilang sudah 21 hari dan tidak bisa check-in. Apakah benar?
+
+**Ya, jika worker sudah mencapai batas 21 hari, sistem akan menolak check-in secara otomatis.**
+
+**Langkah yang harus Anda lakukan:**
+
+1. **Verifikasi di aplikasi**
+   - Buka **"Booking Saya"** → pilih worker tersebut
+   - Periksa jumlah hari kerja di detail booking
+
+2. **Jangan paksa worker bekerja**
+   - Menerima worker yang sudah melanggar aturan bisa mengakibatkan:
+     - Booking tidak diakui oleh sistem
+     - Pembayaran tidak bisa diproses
+     - Akun bisnis Anda bisa mendapat peringatan
+
+3. **Cari worker pengganti atau buat kontrak resmi**
+   - Posting lowongan baru
+   - Atau buat kontrak PKWT/PKWL jika kebutuhan bersifat tetap
+
+> **Penting:** Jangan pernah memaksa worker untuk bekerja melewati batas 21 hari. Aturan ini ada untuk melindungi hak pekerja sesuai regulasi ketenagakerjaan Indonesia.
+
+---
+
+## 15. Hubungi Kami
+
+### Cara menghubungi tim support Daily Worker Hub (untuk Bisnis)
+
+| Metode | Detail |
+| ------ | ------ |
+| **Email** | business@dwh.com (respon 1–2 hari kerja) |
+| **WhatsApp Business** | +62 812-3456-7891 (respon lebih cepat) |
+| **Dalam aplikasi** | Buka **Pengaturan** → **Hubungi Kami** |
+
+**Informasi yang perlu disiapkan saat menghubungi kami:**
+- Nama bisnis
+- Email yang terdaftar
+- Nomor HP kontak bisnis
+- Screenshot masalah (jika ada)
+- Detail masalah yang dialami
+- ID lowongan atau worker yang terkait (jika ada)
+
+> **Catatan:** Kami tidak menerima panggilan telepon untuk masalah non-darurat. Gunakan email atau WhatsApp untuk respons terbaik.
+
+---
+
+### Saya ingin melaporkan masalah dengan worker. Bagaimana?
+
+Jika ada masalah dengan worker yang bekerja di bisnis Anda:
+
+1. **Hubungi worker langsung**
+   - Gunakan fitur chat di aplikasi
+   - Selalu coba selesaikan masalah secara langsung terlebih dahulu
+
+2. **Berikan review/rating**
+   - Setelah booking selesai, berikan rating dan review untuk worker
+   - Review negatif akan mempengaruhi profil worker
+
+3. **Laporkan ke tim support**
+   - Jika masalah serius (tidak hadir, mencuri, dll.)
+   - Kirim email ke business@dwh.com
+   - Sertakan:
+     - Detail worker (nama, ID)
+     - Detail masalah
+     - Bukti (screenshot, foto, dll.)
+
+4. **Blokir worker (jika diperlukan)**
+   - Anda bisa memblokir worker tertentu agar tidak bisa melamar di bisnis Anda
+   - Buka **"Pengaturan"** → **"Worker Diblokir"** → **"Tambah"**
+
+> **Catatan:** Pelaporan yang tidak berdasar bisa mempengaruhi reputasi bisnis Anda. Pastikan laporan Anda berdasarkan fakta.
 
 ---
 
