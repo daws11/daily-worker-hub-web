@@ -1,4 +1,8 @@
-# Supabase Local Development Guide
+# ⚠️ LOCAL DEVELOPMENT ONLY — Supabase Local Development Guide
+
+> **⚠️ DEPRECATED for Production:** This guide covers **Supabase Local (Self-Hosted)** — for **local development only**.
+>
+> **Production uses Supabase Cloud.** See the updated [Architecture.md](Architecture.md) for the current production architecture (Vercel + Supabase Cloud).
 
 ## ✅ Panduan Lengkap Pengembangan Lokal dengan Supabase
 
