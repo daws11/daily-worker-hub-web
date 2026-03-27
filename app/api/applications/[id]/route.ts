@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getServerSession } from "@/lib/auth/get-server-session";
 import { logger } from "@/lib/logger";
@@ -7,8 +7,16 @@ import {
   acceptApplicationAndCreateBooking,
   withdrawApplication,
 } from "@/lib/actions/job-applications";
+import { cache, LRUCache, CACHE_TTL } from "@/lib/cache";
 
 const routeLogger = logger.createApiLogger("applications/[id]");
+
+/**
+ * Generate cache key for application detail
+ */
+function getApplicationDetailCacheKey(applicationId: string): string {
+  return LRUCache.createKey("applications", applicationId, "detail");
+}
 
 type Params = {
   params: Promise<{ id: string }>;
@@ -34,6 +42,66 @@ export async function GET(request: Request, { params }: Params) {
 
     const { id } = await params;
     const supabase = await createClient();
+
+    // Check for cache bypass
+    const { searchParams } = new URL(request.url);
+    const bypassCache = searchParams.get("nocache") === "true";
+    const cacheKey = getApplicationDetailCacheKey(id);
+
+    // Try cache first (unless bypassed)
+    if (!bypassCache) {
+      const cached = cache.get(cacheKey);
+      if (cached !== null) {
+        // Verify authorization for cached data
+        const { data: user } = await supabase
+          .from("users")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (!user) {
+          return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        const application = cached as Record<string, unknown>;
+
+        if (user.role === "worker") {
+          const { data: worker } = await supabase
+            .from("workers")
+            .select("id")
+            .eq("user_id", session.user.id)
+            .single();
+
+          if (!worker || worker.id !== application.worker_id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+          }
+        } else if (user.role === "business") {
+          const { data: business } = await supabase
+            .from("businesses")
+            .select("id")
+            .eq("user_id", session.user.id)
+            .single();
+
+          if (!business || business.id !== application.business_id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+          }
+        }
+
+        routeLogger.info("Application fetched from cache", {
+          requestId,
+          applicationId: id,
+          userId: session.user.id,
+        });
+
+        const response = NextResponse.json({ data: application });
+        response.headers.set("X-Cache", "HIT");
+        logger.requestSuccess(request, { status: 200 }, startTime, {
+          requestId,
+          userId: session.user.id,
+        });
+        return response;
+      }
+    }
 
     // Get application with related data
     const { data: application, error } = await supabase
@@ -162,6 +230,9 @@ export async function GET(request: Request, { params }: Params) {
       }
     }
 
+    // Cache the result
+    cache.set(cacheKey, application, CACHE_TTL.APPLICATIONS);
+
     routeLogger.info("Application fetched successfully", {
       requestId,
       applicationId: id,
@@ -172,7 +243,9 @@ export async function GET(request: Request, { params }: Params) {
       userId: session.user.id,
     });
 
-    return NextResponse.json({ data: application });
+    const response = NextResponse.json({ data: application });
+    response.headers.set("X-Cache", "MISS");
+    return response;
   } catch (error) {
     routeLogger.error("Unexpected error in GET /api/applications/[id]", error, {
       requestId,
