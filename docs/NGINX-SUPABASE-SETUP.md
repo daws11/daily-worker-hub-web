@@ -1,4 +1,16 @@
-# Supabase Dev Nginx Configuration
+# ⚠️ ARCHIVED - Self-Hosted Supabase via Nginx (No Longer Applicable)
+
+> **⚠️ DEPRECATED / ARCHIVED**
+>
+> This document described a self-hosted Supabase Local deployment behind Nginx on a VPS. This architecture was never used in production.
+>
+> The production system runs on **Vercel + Supabase Cloud** (SaaS). No Nginx, Docker, or VPS is required or used.
+>
+> **For the current production architecture, see [docs/Architecture.md](./Architecture.md).**
+>
+> This file is retained for historical reference only. Do not follow this guide for any deployment.
+
+---
 
 ## Problem
 
