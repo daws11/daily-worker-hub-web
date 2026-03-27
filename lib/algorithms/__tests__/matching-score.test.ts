@@ -341,14 +341,15 @@ describe("Matching Score Algorithm", () => {
         isCompliant: true,
       });
 
-      expect(breakdown).toHaveProperty("skillScore");
-      expect(breakdown).toHaveProperty("distanceScore");
+      expect(breakdown).toHaveProperty("matchingScore");
       expect(breakdown).toHaveProperty("distanceKm");
-      expect(breakdown).toHaveProperty("availabilityScore");
-      expect(breakdown).toHaveProperty("ratingScore");
-      expect(breakdown).toHaveProperty("complianceScore");
-      expect(breakdown).toHaveProperty("tierBonus");
-      expect(breakdown).toHaveProperty("totalScore");
+      expect(breakdown).toHaveProperty("breakdown");
+      expect(breakdown.breakdown).toHaveProperty("skillScore");
+      expect(breakdown.breakdown).toHaveProperty("distanceScore");
+      expect(breakdown.breakdown).toHaveProperty("availabilityScore");
+      expect(breakdown.breakdown).toHaveProperty("ratingScore");
+      expect(breakdown.breakdown).toHaveProperty("complianceScore");
+      expect(breakdown.breakdown).toHaveProperty("tierBonus");
     });
 
     it("should calculate correct distance", () => {
