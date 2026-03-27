@@ -178,6 +178,27 @@ export interface MatchingScoreParams {
   isCompliant: boolean;
 }
 
+/**
+ * Matching score params with precomputed distance — avoids redundant Haversine
+ * computation when distance is already known (e.g. from a database query).
+ */
+export interface MatchingScoreParamsWithDistance {
+  // Worker data
+  workerSkills: string[];
+  workerRating: number | null;
+  workerTier: WorkerTier;
+
+  // Job data
+  jobSkills: string[];
+
+  // Precomputed distance in kilometers
+  distanceKm: number;
+
+  // Availability & compliance
+  isAvailable: boolean;
+  isCompliant: boolean;
+}
+
 export function calculateMatchingScore(params: MatchingScoreParams): number {
   return getMatchingScoreBreakdown(params).totalScore;
 }
@@ -240,6 +261,83 @@ export function getMatchingScoreBreakdown(params: MatchingScoreParams): {
     skillScore,
     distanceScore,
     distanceKm: distance,
+    availabilityScore,
+    ratingScore,
+    complianceScore,
+    tierBonus,
+    totalScore: Math.min(totalScore, 115),
+  };
+}
+
+/**
+ * Calculate total matching score using a precomputed distance.
+ *
+ * Use this overload when distance has already been computed (e.g. from a DB
+ * GIS query) to avoid recalculating the Haversine formula.
+ *
+ * @param params - Matching parameters with precomputed distance
+ * @returns Total matching score (0-115)
+ */
+export function calculateMatchingScoreWithDistance(
+  params: MatchingScoreParamsWithDistance,
+): number {
+  return getMatchingScoreBreakdownWithDistance(params).totalScore;
+}
+
+/**
+ * Get matching score breakdown using a precomputed distance.
+ *
+ * Use this overload when distance has already been computed (e.g. from a DB
+ * GIS query) to avoid recalculating the Haversine formula.
+ *
+ * @param params - Matching parameters with precomputed distance
+ * @returns Score breakdown
+ */
+export function getMatchingScoreBreakdownWithDistance(
+  params: MatchingScoreParamsWithDistance,
+): {
+  skillScore: number;
+  distanceScore: number;
+  distanceKm: number;
+  availabilityScore: number;
+  ratingScore: number;
+  complianceScore: number;
+  tierBonus: number;
+  totalScore: number;
+} {
+  const {
+    workerSkills,
+    workerRating,
+    workerTier,
+    jobSkills,
+    distanceKm,
+    isAvailable,
+    isCompliant,
+  } = params;
+
+  // Use precomputed distance directly
+  const distanceScore = calculateDistanceScore(distanceKm);
+
+  // Calculate individual scores
+  const skillScore = calculateSkillScore(workerSkills, jobSkills);
+  const availabilityScore = calculateAvailabilityScore(isAvailable);
+  const ratingScore = calculateRatingScore(workerRating);
+  const complianceScore = calculateComplianceScore(isCompliant);
+  const tierBonus = getTierBonus(workerTier);
+
+  // Calculate total score
+  const totalScore =
+    skillScore +
+    distanceScore +
+    availabilityScore +
+    ratingScore +
+    complianceScore +
+    tierBonus;
+
+  return {
+    skillScore,
+    distanceScore,
+    distanceKm,
     availabilityScore,
     ratingScore,
     complianceScore,
