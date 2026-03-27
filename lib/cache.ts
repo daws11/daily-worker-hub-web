@@ -35,7 +35,9 @@ export type CacheNamespace =
   | "badges"
   | "categories"
   | "sessions"
-  | "skills";
+  | "skills"
+  | "bookings"
+  | "applications";
 
 // TTL presets in milliseconds
 export const CACHE_TTL = {
@@ -44,6 +46,8 @@ export const CACHE_TTL = {
   BADGES: 60 * 60 * 1000, // 1 hour
   CATEGORIES: 60 * 60 * 1000, // 1 hour
   SESSIONS: 15 * 60 * 1000, // 15 minutes
+  BOOKINGS: 5 * 60 * 1000, // 5 minutes
+  APPLICATIONS: 5 * 60 * 1000, // 5 minutes
 } as const;
 
 /**
