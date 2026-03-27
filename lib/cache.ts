@@ -486,5 +486,41 @@ export async function getCachedSession(
   return cache.getOrSet(cacheKey, fetcher, CACHE_TTL.SESSIONS);
 }
 
+/**
+ * Cache application listings with automatic key generation
+ */
+export async function getCachedApplications(
+  filters: Record<string, string | number | undefined>,
+  fetcher: () => Promise<unknown>,
+): Promise<unknown> {
+  const filterKey = Object.entries(filters)
+    .filter(([, v]) => v !== undefined)
+    .map(([k, v]) => `${k}=${v}`)
+    .sort()
+    .join("&");
+
+  const cacheKey = LRUCache.createKey("applications", "list", filterKey || "all");
+
+  return cache.getOrSet(cacheKey, fetcher, CACHE_TTL.APPLICATIONS);
+}
+
+/**
+ * Cache booking listings with automatic key generation
+ */
+export async function getCachedBookings(
+  filters: Record<string, string | number | undefined>,
+  fetcher: () => Promise<unknown>,
+): Promise<unknown> {
+  const filterKey = Object.entries(filters)
+    .filter(([, v]) => v !== undefined)
+    .map(([k, v]) => `${k}=${v}`)
+    .sort()
+    .join("&");
+
+  const cacheKey = LRUCache.createKey("bookings", "list", filterKey || "all");
+
+  return cache.getOrSet(cacheKey, fetcher, CACHE_TTL.BOOKINGS);
+}
+
 // Export the class for testing
 export { LRUCache };
