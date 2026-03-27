@@ -11,6 +11,7 @@ import { getServerSession } from "@/lib/auth/get-server-session";
 import { logger } from "@/lib/logger";
 import { checkInBooking } from "@/lib/actions/bookings-completion";
 import { withRateLimit } from "@/lib/rate-limit";
+import { invalidateBookingCache } from "@/lib/cache";
 
 const routeLogger = logger.createApiLogger("bookings/[id]/check-in");
 
@@ -133,11 +134,14 @@ async function handlePOST(request: Request, { params }: Params) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
+    // Invalidate booking caches since check-in state changed
+    const invalidated = invalidateBookingCache(bookingId);
     routeLogger.info("Check-in successful", {
       requestId,
       bookingId,
       workerId: worker.id,
       userId: session.user.id,
+      cacheKeysCleared: invalidated,
     });
     logger.requestSuccess(request, { status: 200 }, startTime, {
       requestId,
