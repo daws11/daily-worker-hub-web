@@ -54,10 +54,46 @@ export interface AlternativeWorker {
 // Constants
 // ============================================================================
 
+/**
+ * PP 35/2021 Compliance Thresholds for Daily Workers
+ *
+ * Indonesian labor law PP 35/2021 limits daily workers to 21 days per month
+ * for the same business. Thresholds define warning levels to guide booking
+ * decisions before the legal limit is reached.
+ *
+ * Rules:
+ * - 0-15 days: OK (green) — can book freely
+ * - 16-18 days: Warning (yellow) — booking allowed, advisory shown
+ * - 19-20 days: Strong warning (orange) — booking allowed, strong advisory shown
+ * - 21+ days: Blocked (red) — booking prohibited
+ */
+
+/**
+ * Maximum working days per month per business per worker (PP 35/2021 limit).
+ * Workers who reach this count cannot be booked for additional days with the same business.
+ */
 const MAX_DAYS_PER_MONTH = 21;
-const WARNING_THRESHOLD = 16; // 16-20 days: warning (yellow)
-const STRONG_WARNING_THRESHOLD = 19; // 19-20 days: strong warning (orange)
-const BLOCK_THRESHOLD = 21; // 21+ days: blocked (red)
+
+/**
+ * Warning threshold — days 16 to MAX_DAYS_PER_MONTH - 2.
+ * Workers who have worked WARNING_THRESHOLD or more days receive a yellow warning banner.
+ * Booking is still permitted but the advisory message is shown.
+ */
+const WARNING_THRESHOLD = 16;
+
+/**
+ * Strong warning threshold — days 19 to MAX_DAYS_PER_MONTH - 2.
+ * Workers who have worked STRONG_WARNING_THRESHOLD or more days receive an orange warning banner.
+ * Booking is still permitted but a strong advisory message is shown.
+ */
+const STRONG_WARNING_THRESHOLD = 19;
+
+/**
+ * Block threshold — MAX_DAYS_PER_MONTH and above.
+ * Workers who have worked BLOCK_THRESHOLD or more days are blocked from booking.
+ * The worker cannot be hired for additional days with the same business this month.
+ */
+const BLOCK_THRESHOLD = 21;
 
 // ============================================================================
 // Compliance Check Functions
