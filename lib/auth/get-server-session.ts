@@ -10,7 +10,7 @@ export async function getServerSession() {
   } = await supabase.auth.getSession();
 
   if (error) {
-    console.error("Error getting session:", error);
+    console.error("Error getting session:", error.message);
     return null;
   }
 
