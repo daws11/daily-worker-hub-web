@@ -517,6 +517,17 @@
     "validationFailed": "Validation failed. Please check your inputs.",
     "failedToLoadData": "Failed to load data. Please try again."
   },
+  "applications": {
+    "fetchApplicationsFailed": "Failed to fetch applications: {message}",
+    "createApplicationFailed": "Failed to create application: {message}",
+    "createApplicationSuccess": "Application created successfully!",
+    "updateStatusFailed": "Failed to update application status: {message}",
+    "updateStatusSuccess": "Application status updated successfully!",
+    "acceptApplicationFailed": "Failed to accept application: {message}",
+    "acceptApplicationSuccess": "Application accepted successfully!",
+    "withdrawApplicationFailed": "Failed to withdraw application: {message}",
+    "withdrawApplicationSuccess": "Application withdrawn successfully!"
+  },
   "business": {
     "postJob": "Post a Job",
     "myJobs": "My Jobs",
