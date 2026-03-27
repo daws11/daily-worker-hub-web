@@ -279,6 +279,24 @@ export function invalidateCategoryCache(): number {
   return cache.delPattern("categories:*");
 }
 
+/**
+ * Invalidate all application-related caches
+ */
+export function invalidateApplicationCache(applicationId?: string): number {
+  let deleted = 0;
+
+  if (applicationId) {
+    // Invalidate specific application
+    if (cache.del(LRUCache.createKey("applications", applicationId))) deleted++;
+    deleted += cache.delPattern(`applications:${applicationId}:*`);
+  }
+
+  // Invalidate application listings
+  deleted += cache.delPattern("applications:list:*");
+
+  return deleted;
+}
+
 // ============================================================
 // CACHE MIDDLEWARE FOR API ROUTES
 // ============================================================
