@@ -320,3 +320,118 @@ export function ApplicationsPageSkeleton() {
     </div>
   );
 }
+
+/**
+ * Review Card Skeleton - Shows placeholder while review data loads
+ * Supports both WorkerReviewDisplay and BusinessReviewDisplay variants
+ */
+export function ReviewCardSkeleton({
+  variant = "worker",
+  size = "md",
+  className,
+}: {
+  variant?: "worker" | "business";
+  size?: "sm" | "md" | "lg";
+  className?: string;
+}) {
+  const sizeStyles = {
+    sm: {
+      container: "p-4",
+      avatar: "h-8 w-8",
+      text: "text-xs",
+      stars: "h-3 w-3",
+      rating: "text-xs",
+    },
+    md: {
+      container: "p-6",
+      avatar: "h-10 w-10",
+      text: "text-sm",
+      stars: "h-4 w-4",
+      rating: "text-sm",
+    },
+    lg: {
+      container: "p-6",
+      avatar: "h-12 w-12",
+      text: "text-base",
+      stars: "h-5 w-5",
+      rating: "text-base",
+    },
+  };
+
+  const styles = sizeStyles[size];
+
+  return (
+    <Card className={cn("overflow-hidden", className)}>
+      <CardHeader className={cn(styles.container, "pb-3")}>
+        <div className="flex items-start justify-between gap-3">
+          {/* Left: Avatar + Name + Date */}
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <Skeleton className={cn(styles.avatar, "rounded-full shrink-0")} />
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <Skeleton className={cn("h-4 w-32", styles.text)} />
+              <div className="flex items-center gap-1.5">
+                <Skeleton className={cn(styles.stars, "shrink-0")} />
+                <Skeleton className={cn("h-3 w-20", styles.text)} />
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Stars + Rating + Badge */}
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-1.5">
+              <div className="flex gap-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className={cn(styles.stars)} />
+                ))}
+              </div>
+              <Skeleton className={cn("h-4 w-8 font-bold", styles.rating)} />
+            </div>
+            {variant === "worker" && (
+              <Skeleton className="h-5 w-24 rounded-full" />
+            )}
+          </div>
+        </div>
+      </CardHeader>
+
+      {/* Comment Section */}
+      <CardContent className={cn("pt-0", styles.container, "space-y-2")}>
+        <Skeleton className={cn("h-3 w-full", styles.text)} />
+        <Skeleton className={cn("h-3 w-3/4", styles.text)} />
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Review List Skeleton - Shows multiple review cards in a list
+ */
+export function ReviewListSkeleton({
+  count = 3,
+  variant = "worker",
+  size = "md",
+}: {
+  count?: number;
+  variant?: "worker" | "business";
+  size?: "sm" | "md" | "lg";
+}) {
+  return (
+    <div className="space-y-4">
+      {Array.from({ length: count }).map((_, i) => (
+        <ReviewCardSkeleton key={i} variant={variant} size={size} />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Reviews Page Skeleton - Complete loading state for reviews page
+ */
+export function ReviewsPageSkeleton() {
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <PageHeaderSkeleton />
+      <QuickStatsSkeleton count={3} />
+      <ReviewListSkeleton count={4} variant="worker" />
+    </div>
+  );
+}
