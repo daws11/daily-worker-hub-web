@@ -1,9 +1,9 @@
 # Security & Compliance - Daily Worker Hub Web MVP
 
 **Project:** Daily Worker Hub - Web MVP
-**Platform:** Next.js + Supabase Local (Self-Hosted)
+**Platform:** Next.js + Vercel + Supabase Cloud
 **Version:** 1.0
-**Last Updated:** February 21, 2026
+**Last Updated:** March 27, 2026
 
 ---
 
@@ -136,7 +136,11 @@ User clicks "Login with Google" → Redirect to Google Auth → User grants perm
 - HSTS (HTTP Strict Transport Security) header
 - Secure cipher suites only
 
-**Nginx Configuration:**
+> ⚠️ **Deprecated – Self-Hosted / Nginx Only**
+>
+> The following Nginx TLS configuration is only applicable for self-hosted deployments. For Vercel + Supabase Cloud deployments, TLS/SSL is handled automatically by Vercel (auto HTTPS) and Supabase (managed TLS). No manual Nginx configuration is required.
+
+**Nginx Configuration (Self-Hosted Only):**
 
 ```nginx
 ssl_protocols TLSv1.2 TLSv1.3;
@@ -236,7 +240,11 @@ const maskKTP = (ktp: string) => ktp.replace(/(.{6})(.*)(.{4})/, "$1******$3");
 | API (general) | 100 requests | 1 minute |
 | Public endpoints | 1000 requests | 1 minute |
 
-**Nginx Configuration:**
+> ⚠️ **Deprecated – Self-Hosted / Nginx Only**
+>
+> The following Nginx rate limiting configuration is only applicable for self-hosted deployments. For Vercel + Supabase Cloud deployments, rate limiting is handled by Vercel Edge Functions and Supabase. The Next.js middleware rate limiting below remains the primary mechanism.
+
+**Nginx Configuration (Self-Hosted Only):**
 
 ```nginx
 # Rate limiting for API
