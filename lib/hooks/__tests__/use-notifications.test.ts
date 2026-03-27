@@ -14,6 +14,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from "vitest";
+import type { Mock } from "vitest";
 import React from "react";
 
 // ---------------------------------------------------------------------------
@@ -22,22 +23,27 @@ import React from "react";
 // Defined with mockImplementation so they always return Promises safely.
 // ---------------------------------------------------------------------------
 
-const mockGetUserNotifications = vi.fn(() =>
+// Type union covering all possible return shapes from notification actions
+type NotificationsListResult = { success: boolean; data?: unknown[]; error?: string };
+type NotificationResult = { success: boolean; data?: unknown; error?: string };
+type UnreadCountResult = { success: boolean; count?: number; error?: string };
+
+const mockGetUserNotifications: Mock<(userId: string) => Promise<NotificationsListResult>> = vi.fn(() =>
   Promise.resolve({ success: false, error: "Not mocked" }),
 );
-const mockGetUnreadNotifications = vi.fn(() =>
+const mockGetUnreadNotifications: Mock<(userId: string) => Promise<NotificationsListResult>> = vi.fn(() =>
   Promise.resolve({ success: false, error: "Not mocked" }),
 );
-const mockGetUnreadCount = vi.fn(() =>
+const mockGetUnreadCount: Mock<(userId: string) => Promise<UnreadCountResult>> = vi.fn(() =>
   Promise.resolve({ success: false, error: "Not mocked" }),
 );
-const mockMarkNotificationAsRead = vi.fn(() =>
+const mockMarkNotificationAsRead: Mock<(...args: unknown[]) => Promise<NotificationResult>> = vi.fn(() =>
   Promise.resolve({ success: false, error: "Not mocked" }),
 );
-const mockMarkAllNotificationsAsRead = vi.fn(() =>
+const mockMarkAllNotificationsAsRead: Mock<(...args: unknown[]) => Promise<NotificationResult>> = vi.fn(() =>
   Promise.resolve({ success: false, error: "Not mocked" }),
 );
-const mockDeleteNotification = vi.fn(() =>
+const mockDeleteNotification: Mock<(...args: unknown[]) => Promise<NotificationResult>> = vi.fn(() =>
   Promise.resolve({ success: false, error: "Not mocked" }),
 );
 
@@ -84,12 +90,12 @@ vi.mock("@/lib/supabase/server", () => ({
 // ---------------------------------------------------------------------------
 
 vi.mock("@/lib/actions/notifications", () => ({
-  getUserNotifications: (...args: unknown[]) => mockGetUserNotifications(...args),
-  getUnreadNotifications: (...args: unknown[]) => mockGetUnreadNotifications(...args),
-  getUnreadCount: (...args: unknown[]) => mockGetUnreadCount(...args),
-  markNotificationAsRead: (...args: unknown[]) => mockMarkNotificationAsRead(...args),
-  markAllNotificationsAsRead: (...args: unknown[]) => mockMarkAllNotificationsAsRead(...args),
-  deleteNotification: (...args: unknown[]) => mockDeleteNotification(...args),
+  getUserNotifications: mockGetUserNotifications,
+  getUnreadNotifications: mockGetUnreadNotifications,
+  getUnreadCount: mockGetUnreadCount,
+  markNotificationAsRead: mockMarkNotificationAsRead,
+  markAllNotificationsAsRead: mockMarkAllNotificationsAsRead,
+  deleteNotification: mockDeleteNotification,
 }));
 
 // ---------------------------------------------------------------------------
@@ -147,7 +153,7 @@ function createMockHook(options: UseNotificationsOptions = {}): UseNotifications
       if (!result.success) {
         error = result.error || "Gagal mengambil notifikasi";
       } else {
-        notifications = result.data || null;
+        notifications = (result.data as NotificationRow[]) || null;
       }
     } catch (err) {
       isLoading = false;
@@ -165,7 +171,7 @@ function createMockHook(options: UseNotificationsOptions = {}): UseNotifications
       if (!result.success) {
         error = result.error || "Gagal mengambil notifikasi";
       } else {
-        unreadNotifications = result.data || null;
+        unreadNotifications = (result.data as NotificationRow[]) || null;
       }
     } catch (err) {
       isLoading = false;
@@ -329,22 +335,22 @@ const mockUnreadNotifications = [
 
 const resetAllMocks = () => {
   vi.clearAllMocks();
-  mockGetUserNotifications.mockImplementation(() =>
+  (mockGetUserNotifications as Mock<(userId: string) => Promise<NotificationsListResult>>).mockImplementation(() =>
     Promise.resolve({ success: false, error: "Not mocked" }),
   );
-  mockGetUnreadNotifications.mockImplementation(() =>
+  (mockGetUnreadNotifications as Mock<(userId: string) => Promise<NotificationsListResult>>).mockImplementation(() =>
     Promise.resolve({ success: false, error: "Not mocked" }),
   );
-  mockGetUnreadCount.mockImplementation(() =>
+  (mockGetUnreadCount as Mock<(userId: string) => Promise<UnreadCountResult>>).mockImplementation(() =>
     Promise.resolve({ success: false, error: "Not mocked" }),
   );
-  mockMarkNotificationAsRead.mockImplementation(() =>
+  (mockMarkNotificationAsRead as Mock<(...args: unknown[]) => Promise<NotificationResult>>).mockImplementation(() =>
     Promise.resolve({ success: false, error: "Not mocked" }),
   );
-  mockMarkAllNotificationsAsRead.mockImplementation(() =>
+  (mockMarkAllNotificationsAsRead as Mock<(...args: unknown[]) => Promise<NotificationResult>>).mockImplementation(() =>
     Promise.resolve({ success: false, error: "Not mocked" }),
   );
-  mockDeleteNotification.mockImplementation(() =>
+  (mockDeleteNotification as Mock<(...args: unknown[]) => Promise<NotificationResult>>).mockImplementation(() =>
     Promise.resolve({ success: false, error: "Not mocked" }),
   );
 };

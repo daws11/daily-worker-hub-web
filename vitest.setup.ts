@@ -39,16 +39,3 @@ vi.mock("sonner", () => ({
     warning: vi.fn(),
   },
 }));
-
-// Mock server-only globally
-vi.mock("server-only", () => ({}));
-
-// Mock sonner globally
-vi.mock("sonner", () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-    info: vi.fn(),
-    warning: vi.fn(),
-  },
-}));

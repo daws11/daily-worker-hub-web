@@ -47,7 +47,7 @@ export const createPaymentSchema = z
       .number({
         message: "Jumlah pembayaran harus berupa angka",
       })
-      .min(500000, "Top-up minimal Rp 500.000")
+      .min(50000, "Top-up minimal Rp 50.000")
       .max(100000000, "Top-up maksimal Rp 100.000.000"),
 
     provider: paymentProviderEnum.default("xendit"),
