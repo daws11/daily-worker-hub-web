@@ -8,6 +8,7 @@ import {
   getBookingReviewStatus,
 } from "@/lib/actions/bookings-completion";
 import { validateData } from "@/lib/validations";
+import { invalidateBookingCache } from "@/lib/cache";
 import { z } from "zod";
 
 const routeLogger = logger.createApiLogger("bookings/[id]/review");
@@ -374,6 +375,14 @@ export async function POST(request: Request, { params }: Params) {
 
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
+
+    // Invalidate booking caches since a review was submitted
+    const invalidated = invalidateBookingCache(bookingId);
+    routeLogger.info("Cache invalidated after review submission", {
+      requestId,
+      bookingId,
+      cacheKeysCleared: invalidated,
+    });
 
     logger.requestSuccess(request, { status: 201 }, startTime, {
       requestId,
