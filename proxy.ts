@@ -160,7 +160,7 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  console.log("[PROXY] Path:", pathname, "| User:", user ? user.email : "null");
+  console.log("[PROXY] Path:", pathname, "| Authenticated:", !!user);
 
   // Check if route is public (no auth required)
   const isPublicRoute = publicRoutes.some(
