@@ -14,6 +14,7 @@ import {
   getApplicationsByJob,
   getApplicationsByWorker,
 } from "@/lib/actions/job-applications";
+import { cache, LRUCache, CACHE_TTL } from "@/lib/cache";
 
 const routeLogger = logger.createApiLogger("applications");
 
@@ -110,6 +111,39 @@ export async function GET(request: Request) {
     const businessId = searchParams.get("business_id");
     const status = searchParams.get("status") || undefined;
 
+    // Check for cache bypass
+    const bypassCache = searchParams.get("nocache") === "true";
+
+    // Generate cache key from query params
+    const cacheKey = LRUCache.createKey(
+      "applications",
+      "list",
+      jobId || "all",
+      workerId || "all",
+      businessId || "all",
+      status || "all",
+    );
+
+    // Try cache first (unless bypassed)
+    if (!bypassCache) {
+      const cached = cache.get(cacheKey);
+      if (cached !== null) {
+        logger.requestSuccess(request, { status: 200 }, startTime, {
+          requestId,
+          resultCount: (cached as { data: unknown[] })?.data?.length || 0,
+          cached: true,
+        });
+        routeLogger.info("Applications served from cache", {
+          requestId,
+          cacheKey,
+        });
+
+        const response = NextResponse.json(cached);
+        response.headers.set("X-Cache", "HIT");
+        return response;
+      }
+    }
+
     const supabase = await createClient();
 
     // Get user role
@@ -190,7 +224,13 @@ export async function GET(request: Request) {
         userId: session.user.id,
       });
 
-      return NextResponse.json({ data: result.data });
+      const businessResponse = NextResponse.json({ data: result.data });
+      businessResponse.headers.set("X-Cache", "MISS");
+
+      // Cache the result
+      cache.set(cacheKey, { data: result.data }, CACHE_TTL.APPLICATIONS);
+
+      return businessResponse;
     }
 
     // Worker viewing their applications
@@ -247,7 +287,13 @@ export async function GET(request: Request) {
         userId: session.user.id,
       });
 
-      return NextResponse.json({ data: result.data });
+      const workerResponse = NextResponse.json({ data: result.data });
+      workerResponse.headers.set("X-Cache", "MISS");
+
+      // Cache the result
+      cache.set(cacheKey, { data: result.data }, CACHE_TTL.APPLICATIONS);
+
+      return workerResponse;
     }
 
     routeLogger.warn("Missing required parameters", { requestId });
