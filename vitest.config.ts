@@ -5,6 +5,7 @@ export default defineConfig({
   test: {
     environment: "happy-dom",
     globals: true,
+    setupFiles: ["./vitest.setup.ts"],
     include: ["lib/**/__tests__/**/*.test.ts", "lib/**/*.test.ts"],
     exclude: ["node_modules/", "dist/", ".next/"],
     coverage: {
@@ -20,5 +21,6 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./"),
     },
+    dedupe: ["react", "react-dom"],
   },
 });
