@@ -15,6 +15,20 @@ import { supabase } from "@/lib/supabase/client";
 import { isWorkerAvailable } from "./availability-checker";
 
 /**
+ * Default minimum matching score threshold for worker shortlisting.
+ * Workers with a score below this value are excluded from the shortlist.
+ * A score of 50 represents partial relevance — acceptable but not strong.
+ */
+const DEFAULT_MIN_SCORE = 50;
+
+/**
+ * Shortlist multiplier — number of top-ranked workers returned per required worker.
+ * Returns 2× the requested count to provide the employer with selection options.
+ * e.g., 3 required workers → top 6 candidates returned.
+ */
+const SHORTLIST_MULTIPLIER = 2;
+
+/**
  * Worker with matching score
  */
 export interface WorkerWithScore {
@@ -76,7 +90,7 @@ export async function generateWorkerShortlist(
     jobEndHour,
     requiredWorkers,
     excludeWorkerIds = [],
-    minScore = 50, // Default minimum score
+    minScore = DEFAULT_MIN_SCORE,
   } = params;
 
   try {
@@ -192,7 +206,7 @@ export async function generateWorkerShortlist(
         // Tertiary sort: Distance (closer = better)
         return a.distanceKm - b.distanceKm;
       })
-      .slice(0, requiredWorkers * 2); // Return top workers (2x required workers for options)
+      .slice(0, requiredWorkers * SHORTLIST_MULTIPLIER);
   } catch (error) {
     console.error("Error generating worker shortlist:", error);
     return [];
@@ -321,7 +335,7 @@ export async function generateWorkerShortlistFromIds(
         }
         return a.distanceKm - b.distanceKm;
       })
-      .slice(0, requiredWorkers * 2);
+      .slice(0, requiredWorkers * SHORTLIST_MULTIPLIER);
   } catch (error) {
     console.error("Error generating worker shortlist from IDs:", error);
     return [];
