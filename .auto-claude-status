@@ -1,83 +1,25 @@
 {
   "active": true,
-  "spec": "031-multi-language-support-indonesian-english",
+  "spec": "049-document-magic-numbers-and-undocumented-thresholds",
   "state": "building",
   "subtasks": {
-    "completed": 29,
-    "total": 31,
+    "completed": 3,
+    "total": 7,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Integration & Polish",
+    "current": "Document tier-classifier.ts and rate-bali.ts thresholds",
     "id": null,
-    "total": 5
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 19,
-    "started_at": "2026-02-25T00:48:20.367590"
+    "number": 5,
+    "started_at": "2026-03-27T13:53:08.786623"
   },
-  "last_update": "2026-02-25T01:31:13.651231"
-}
-    "in_progress": 1,
-    "failed": 0
-  },
-  "phase": {
-    "current": "Integration & Polish",
-    "id": null,
-<<<<<<< HEAD
-    "total": 3
-=======
-    "total": 5
->>>>>>> auto-claude/031-multi-language-support-indonesian-english
-  },
-  "workers": {
-    "active": 0,
-    "max": 1
-  },
-  "session": {
-<<<<<<< HEAD
-    "number": 18,
-    "started_at": "2026-02-24T23:25:08.810344"
-  },
-  "last_update": "2026-02-25T00:26:01.223722"
-}
-    "in_progress": 1,
-    "failed": 0
-  },
-  "phase": {
-<<<<<<< HEAD
-    "current": "Integration & Testing",
-=======
-    "current": "Integration & Polish",
->>>>>>> auto-claude/030-skill-badges-certifications
-    "id": null,
-    "total": 3
-  },
-  "workers": {
-    "active": 0,
-    "max": 1
-  },
-  "session": {
-<<<<<<< HEAD
-    "number": 9,
-    "started_at": "2026-02-24T23:06:03.010329"
-  },
-  "last_update": "2026-02-24T23:36:40.917840"
-=======
-    "number": 18,
-    "started_at": "2026-02-24T23:25:08.810344"
-  },
-  "last_update": "2026-02-25T00:26:01.223722"
->>>>>>> auto-claude/030-skill-badges-certifications
-=======
-    "number": 31,
-    "started_at": "2026-02-24T23:55:22.765652"
-  },
-  "last_update": "2026-02-25T01:39:13.872560"
->>>>>>> auto-claude/031-multi-language-support-indonesian-english
+  "last_update": "2026-03-27T14:40:11.703812"
 }

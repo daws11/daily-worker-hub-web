@@ -2,14 +2,31 @@
  * Rate Bali - UMK 2025 Based Wage Standards
  *
  * Minimum wage rates based on UMK (Upah Minimum Kabupaten/Kota) 2025 for Bali Province.
- * Rates are calculated as hourly wages based on:
- * - 22 working days per month
- * - 8 working hours per day
- * - 176 working hours per month
  *
  * Source: Bali Provincial Government, Human Resources and Energy Agency
  * SK No. B.21.500.15/18055/IV/DISNAKER.ESDM (December 16, 2024)
  */
+
+/**
+ * Standard working days per month used in UMK calculations.
+ * Based on Indonesian labor standard (21-22 working days/month).
+ * Used as divisor when deriving daily rates from monthly UMK.
+ */
+export const WORK_DAYS_PER_MONTH = 22;
+
+/**
+ * Standard working hours per day as per Indonesian labor law (PP No. 78/2015).
+ * Maximum regular working hours without triggering overtime provisions.
+ * Used as divisor when deriving hourly rates from monthly UMK.
+ */
+export const WORKING_HOURS_PER_DAY = 8;
+
+/**
+ * Standard working hours per month for full-time employment.
+ * Calculated as: WORK_DAYS_PER_MONTH (22) × WORKING_HOURS_PER_DAY (8) = 176.
+ * Used as divisor when deriving hourly rates from monthly UMK.
+ */
+export const WORKING_HOURS_PER_MONTH = WORK_DAYS_PER_MONTH * WORKING_HOURS_PER_DAY; // 176
 
 export interface RegencyRate {
   regency: string;
@@ -123,61 +140,65 @@ export const CATEGORY_RATES: CategoryRate[] = [
 /**
  * UMK 2025 Rates by Regency
  * Monthly minimum wages in Indonesian Rupiah (IDR)
+ *
+ * Fee calculation:
+ * - hourlyRate = monthlyUmk / WORKING_HOURS_PER_MONTH (176)
+ * - dailyRate  = monthlyUmk / WORK_DAYS_PER_MONTH (22)
  */
 export const REGENCY_RATES: RegencyRate[] = [
   {
     regency: "Badung",
     monthlyUmk: 3534339,
-    hourlyRate: Math.round(3534339 / 176),
-    dailyRate: Math.round(3534339 / 22),
+    hourlyRate: Math.round(3534339 / WORKING_HOURS_PER_MONTH),
+    dailyRate: Math.round(3534339 / WORK_DAYS_PER_MONTH),
   },
   {
     regency: "Denpasar",
     monthlyUmk: 3298117,
-    hourlyRate: Math.round(3298117 / 176),
-    dailyRate: Math.round(3298117 / 22),
+    hourlyRate: Math.round(3298117 / WORKING_HOURS_PER_MONTH),
+    dailyRate: Math.round(3298117 / WORK_DAYS_PER_MONTH),
   },
   {
     regency: "Gianyar",
     monthlyUmk: 3119080,
-    hourlyRate: Math.round(3119080 / 176),
-    dailyRate: Math.round(3119080 / 22),
+    hourlyRate: Math.round(3119080 / WORKING_HOURS_PER_MONTH),
+    dailyRate: Math.round(3119080 / WORK_DAYS_PER_MONTH),
   },
   {
     regency: "Tabanan",
     monthlyUmk: 3102520,
-    hourlyRate: Math.round(3102520 / 176),
-    dailyRate: Math.round(3102520 / 22),
+    hourlyRate: Math.round(3102520 / WORKING_HOURS_PER_MONTH),
+    dailyRate: Math.round(3102520 / WORK_DAYS_PER_MONTH),
   },
   {
     regency: "Jembrana",
     monthlyUmk: 2996561,
-    hourlyRate: Math.round(2996561 / 176),
-    dailyRate: Math.round(2996561 / 22),
+    hourlyRate: Math.round(2996561 / WORKING_HOURS_PER_MONTH),
+    dailyRate: Math.round(2996561 / WORK_DAYS_PER_MONTH),
   },
   {
     regency: "Buleleng",
     monthlyUmk: 2996561,
-    hourlyRate: Math.round(2996561 / 176),
-    dailyRate: Math.round(2996561 / 22),
+    hourlyRate: Math.round(2996561 / WORKING_HOURS_PER_MONTH),
+    dailyRate: Math.round(2996561 / WORK_DAYS_PER_MONTH),
   },
   {
     regency: "Klungkung",
     monthlyUmk: 2996561,
-    hourlyRate: Math.round(2996561 / 176),
-    dailyRate: Math.round(2996561 / 22),
+    hourlyRate: Math.round(2996561 / WORKING_HOURS_PER_MONTH),
+    dailyRate: Math.round(2996561 / WORK_DAYS_PER_MONTH),
   },
   {
     regency: "Karangasem",
     monthlyUmk: 2996561,
-    hourlyRate: Math.round(2996561 / 176),
-    dailyRate: Math.round(2996561 / 22),
+    hourlyRate: Math.round(2996561 / WORKING_HOURS_PER_MONTH),
+    dailyRate: Math.round(2996561 / WORK_DAYS_PER_MONTH),
   },
   {
     regency: "Bangli",
     monthlyUmk: 2996561,
-    hourlyRate: Math.round(2996561 / 176),
-    dailyRate: Math.round(2996561 / 22),
+    hourlyRate: Math.round(2996561 / WORKING_HOURS_PER_MONTH),
+    dailyRate: Math.round(2996561 / WORK_DAYS_PER_MONTH),
   },
 ];
 
@@ -403,47 +424,93 @@ export function getHourlyRate(category: string, regency: string): number {
 }
 
 /**
- * Get overtime multiplier based on hours worked
+ * Regular hours threshold per day (Indonesian labor law PP No. 78/2015).
+ * Hours up to and including this value are billed at the base rate.
+ */
+const REGULAR_HOURS_THRESHOLD = 8;
+
+/**
+ * Overtime hours threshold — hours beyond this value trigger overtime billing.
+ * Hours >= REGULAR_HOURS_THRESHOLD + 1 are billed at OVERTIME_MULTIPLIER.
+ */
+const OVERTIME_START_HOUR = REGULAR_HOURS_THRESHOLD + 1; // 9
+
+/**
+ * Minimum valid total hours for a shift booking (4 hours minimum engagement).
+ * Per Indonesian labor standards, minimum work period is 4 hours.
+ */
+const MIN_VALID_HOURS = 4;
+
+/**
+ * Maximum valid total hours for a single shift booking (12 hours cap).
+ * Booking more than 12 hours in one shift requires rebooking as a new shift.
+ */
+const MAX_VALID_HOURS = 12;
+
+/**
+ * Regular rate multiplier — applies to hours within REGULAR_HOURS_THRESHOLD (≤ 8h).
+ */
+const REGULAR_RATE_MULTIPLIER = 1.0;
+
+/**
+ * Overtime rate multiplier — applies to hours beyond REGULAR_HOURS_THRESHOLD (≥ 9h).
+ * Per Indonesian labor law (UU No. 13/2003): 1.5× for hours beyond the first extra hour.
+ */
+const OVERTIME_RATE_MULTIPLIER = 1.5;
+
+/**
+ * Get overtime multiplier based on total hours needed.
  *
- * @param hoursNeeded - Total hours needed (4-12)
- * @returns Overtime multiplier (1.0 for 4-8 hours, 1.5 for 9-12 hours)
+ * @param hoursNeeded - Total shift hours (4–12)
+ * @returns 1.0 for regular hours (≤ 8), 1.5 for overtime hours (≥ 9)
  */
 export function getOvertimeMultiplier(hoursNeeded: number): number {
-  if (hoursNeeded >= 9) {
-    return 1.5; // Overtime rate for 9+ hours
+  if (hoursNeeded >= OVERTIME_START_HOUR) {
+    return OVERTIME_RATE_MULTIPLIER;
   }
-  return 1.0; // Regular rate for 4-8 hours
+  return REGULAR_RATE_MULTIPLIER;
 }
 
 /**
- * Get regular and overtime hours breakdown
+ * Get regular and overtime hours breakdown for a shift.
  *
- * @param hoursNeeded - Total hours needed (4-12)
+ * Breakdown:
+ * - Regular hours: min(totalHours, REGULAR_HOURS_THRESHOLD) — capped at 8
+ * - Overtime hours: max(totalHours - REGULAR_HOURS_THRESHOLD, 0) — hours beyond 8
+ *
+ * @param hoursNeeded - Total shift hours (4–12)
  * @returns Object with regularHours and overtimeHours
  */
 export function getHoursBreakdown(hoursNeeded: number): {
   regularHours: number;
   overtimeHours: number;
 } {
-  if (hoursNeeded <= 8) {
+  if (hoursNeeded <= REGULAR_HOURS_THRESHOLD) {
     return {
       regularHours: hoursNeeded,
       overtimeHours: 0,
     };
   } else {
     return {
-      regularHours: 8,
-      overtimeHours: hoursNeeded - 8,
+      regularHours: REGULAR_HOURS_THRESHOLD,
+      overtimeHours: hoursNeeded - REGULAR_HOURS_THRESHOLD,
     };
   }
 }
 
 /**
- * Validate hours needed (must be 4-12)
+ * Validate that a given hour value falls within the permitted shift range.
  *
- * @param hours - Hours to validate
- * @returns True if valid
+ * Valid range: MIN_VALID_HOURS (4) to MAX_VALID_HOURS (12), inclusive.
+ * Must be an integer.
+ *
+ * @param hours - Total shift hours to validate
+ * @returns True if hours are within [4, 12] and an integer
  */
 export function isValidHours(hours: number): boolean {
-  return hours >= 4 && hours <= 12 && Number.isInteger(hours);
+  return (
+    hours >= MIN_VALID_HOURS &&
+    hours <= MAX_VALID_HOURS &&
+    Number.isInteger(hours)
+  );
 }
