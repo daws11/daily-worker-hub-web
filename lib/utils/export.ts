@@ -49,6 +49,31 @@ export function exportToCSV<T extends Record<string, any>>(
 }
 
 /**
+ * Convert data to JSON format and trigger download
+ * @param data - Array of objects to export
+ * @param filename - Name of the file (without extension)
+ * @throws Error if data is empty or invalid
+ */
+export function exportToJSON<T extends Record<string, any>>(
+  data: T[],
+  filename: string,
+): void {
+  if (!data || data.length === 0) {
+    throw new Error("No data to export");
+  }
+
+  const jsonContent = JSON.stringify(data, null, 2);
+
+  // Add BOM for proper encoding
+  const BOM = "\uFEFF";
+  const blob = new Blob([BOM + jsonContent], {
+    type: "application/json;charset=utf-8;",
+  });
+
+  downloadBlob(blob, `${filename}.json`);
+}
+
+/**
  * Export analytics dashboard data as PDF using browser print
  * @param title - Title of the report
  */
