@@ -7,7 +7,7 @@ import {
   acceptApplicationAndCreateBooking,
   withdrawApplication,
 } from "@/lib/actions/job-applications";
-import { cache, LRUCache, CACHE_TTL } from "@/lib/cache";
+import { cache, LRUCache, CACHE_TTL, invalidateApplicationCache } from "@/lib/cache";
 
 const routeLogger = logger.createApiLogger("applications/[id]");
 
@@ -383,6 +383,15 @@ export async function PATCH(request: Request, { params }: Params) {
           bookingId: result.data?.booking.id,
           userId: session.user.id,
         });
+
+        // Invalidate application cache after status change
+        const invalidated = invalidateApplicationCache();
+        routeLogger.info("Application cache invalidated", {
+          requestId,
+          applicationId: id,
+          cacheKeysCleared: invalidated,
+        });
+
         logger.requestSuccess(request, { status: 200 }, startTime, {
           requestId,
           userId: session.user.id,
@@ -420,6 +429,15 @@ export async function PATCH(request: Request, { params }: Params) {
         newStatus: body.status,
         userId: session.user.id,
       });
+
+      // Invalidate application cache after status change
+      const invalidated = invalidateApplicationCache();
+      routeLogger.info("Application cache invalidated", {
+        requestId,
+        applicationId: id,
+        cacheKeysCleared: invalidated,
+      });
+
       logger.requestSuccess(request, { status: 200 }, startTime, {
         requestId,
         userId: session.user.id,
@@ -499,6 +517,15 @@ export async function PATCH(request: Request, { params }: Params) {
         applicationId: id,
         userId: session.user.id,
       });
+
+      // Invalidate application cache after status change
+      const invalidated = invalidateApplicationCache();
+      routeLogger.info("Application cache invalidated", {
+        requestId,
+        applicationId: id,
+        cacheKeysCleared: invalidated,
+      });
+
       logger.requestSuccess(request, { status: 200 }, startTime, {
         requestId,
         userId: session.user.id,
