@@ -135,358 +135,349 @@
 
 ---
 
-## 3. Server Setup (VPS)
+## 3. Vercel Deployment
 
-### 3.1 VPS Requirements
+### 3.1 Overview
 
-| Resource      | Minimum          | Recommended      |
-| ------------- | ---------------- | ---------------- |
-| **CPU**       | 2 vCPUs          | 4 vCPUs          |
-| **RAM**       | 4 GB             | 8 GB             |
-| **Storage**   | 80 GB SSD        | 160 GB SSD       |
-| **Bandwidth** | 4 TB             | 5 TB             |
-| **OS**        | Ubuntu 22.04 LTS | Ubuntu 22.04 LTS |
+Vercel provides zero-config deployment with automatic HTTPS, global CDN, serverless functions, and seamless Git integration. The entire application is deployed as a serverless Next.js app connected to Supabase Cloud.
 
-### 3.2 Software Installation (VPS)
+### 3.2 Prerequisites
 
-```bash
-# 1. Update System
-sudo apt update && sudo apt upgrade -y
+Before deploying, ensure you have:
 
-# 2. Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
+- GitHub repository with the project code
+- Vercel account linked to GitHub
+- Supabase Cloud project created
+- All required API keys and credentials
 
-# 3. Install Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
+### 3.3 Deploy Steps
 
-# 4. Install Node.js (via NVM)
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-source ~/.bashrc
-nvm install 20
-nvm use 20
+#### Step 1: Connect Repository
 
-# 5. Install PM2
-sudo npm install -g pm2
+1. Go to [vercel.com](https://vercel.com) and sign in with GitHub
+2. Click **Add New Project**
+3. Select the `daily-worker-hub` repository
+4. Vercel will auto-detect Next.js configuration
 
-# 6. Install Nginx
-sudo apt install nginx -y
-sudo systemctl start nginx
-sudo systemctl enable nginx
+#### Step 2: Configure Build Settings
 
-# 7. Install Certbot (for SSL)
-sudo apt install certbot python3-certbot-nginx -y
-```
+Vercel auto-detects most settings. Verify the following:
+
+| Setting          | Value              |
+| ---------------- | ------------------ |
+| **Framework**    | Next.js            |
+| **Build Command**| `npm run build`    |
+| **Output Dir**   | `.next`            |
+| **Install Cmd**  | `npm ci`           |
+| **Node.js Ver**  | 20.x               |
+
+#### Step 3: Configure Environment Variables
+
+In **Vercel Project Settings → Environment Variables**, add all required variables. See [Section 4](#4-supabase-cloud-configuration) for Supabase values and [Section 5](#5-environment-variables) for the full variable list.
+
+#### Step 4: Deploy
+
+1. Click **Deploy**
+2. Vercel builds and deploys automatically on every push to the connected branch
+3. A `.vercel.app` preview URL is provided after each deployment
+4. For production, connect the `main` branch and promote preview deployments
 
 ---
 
-## 4. Supabase Local Setup
+## 4. Supabase Cloud Configuration
 
-### 4.1 Initialize Supabase Local
+### 4.1 Create Supabase Project
+
+1. Go to [supabase.com](https://supabase.com) and create a new project
+2. Choose a region closest to your users (e.g., Southeast Asia: Singapore)
+3. Set a strong database password — store it securely
+4. Note the **Project ID** from the project settings
+
+### 4.2 Get API Keys
+
+From **Supabase Dashboard → Settings → API**, retrieve:
+
+| Variable                   | Where to Find                              |
+| -------------------------- | ------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Project URL (e.g., `https://xyz.supabase.co`) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `anon` public key                        |
+| `SUPABASE_SERVICE_ROLE_KEY`| `service_role` secret key (server-only)    |
+
+### 4.3 Configure Row Level Security (RLS)
+
+All tables use Supabase RLS policies to enforce access control:
+
+```sql
+-- Example: Workers can only read their own profile
+CREATE POLICY "Workers can view own profile"
+  ON profiles FOR SELECT
+  USING (auth.uid() = id);
+
+-- Example: Businesses can only manage their own jobs
+CREATE POLICY "Businesses manage own jobs"
+  ON jobs FOR ALL
+  USING (auth.uid() = business_id);
+```
+
+### 4.4 Configure Realtime
+
+Enable Realtime subscriptions for live updates:
+
+1. Go to **Database → Replication** in Supabase Dashboard
+2. Select tables to subscribe to (e.g., `bookings`, `jobs`, `messages`)
+3. Enable Realtime in the Storage settings for file upload events
+
+### 4.5 Configure Auth Settings
+
+From **Authentication → Settings**:
+
+- Set **Site URL** to your production domain (e.g., `https://dailyworkerhub.com`)
+- Add all preview/deployment URLs to **Redirect URLs**
+- Configure email templates for magic link and OTP emails
+- Enable OAuth providers as needed (Google, Apple, etc.)
+
+### 4.6 Supabase Edge Functions (Optional)
+
+For server-side logic that needs to run close to the database:
 
 ```bash
-# 1. Install Supabase CLI
+# Install Supabase CLI
 npm install -g supabase
 
-# 2. Login to Supabase (link to your project)
+# Login
 supabase login
 
-# 3. Start Supabase Local
-cd ~/projects
+# Initialize (if needed)
 supabase init
 
-# 4. Start Supabase Local (Docker)
-supabase start
-
-# 5. Stop Supabase Local
-supabase stop
-
-# 6. Reset Supabase Local (drop all data)
-supabase db reset
+# Deploy an edge function
+supabase functions deploy my-function --project-ref <project-ref>
 ```
-
-### 4.2 Supabase Local Services (Docker)
-
-| Service        | Port | Internal Access                                    |
-| -------------- | ---- | -------------------------------------------------- |
-| **Studio UI**  | 8000 | http://localhost:8000 (via Docker port forwarding) |
-| **PostgreSQL** | 5432 | localhost:5432 (via Docker)                        |
-| **API (REST)** | 3000 | localhost:3000 (via Docker)                        |
-| **Auth**       | 9999 | localhost:9999 (via Docker)                        |
-| **Realtime**   | 4000 | localhost:4000 (via Docker)                        |
-| **Storage**    | 5000 | localhost:5000 (via Docker)                        |
 
 ---
 
-## 5. Next.js App Setup (VPS)
+## 5. Environment Variables
 
-### 5.1 Project Initialization
+### 5.1 Vercel Environment Variables
+
+Configure all variables in **Vercel Project Settings → Environment Variables** for all environments (Production, Preview, Development).
 
 ```bash
-# 1. Clone Repository
-git clone https://github.com/daws11/daily-worker-hub.git
-cd daily-worker-hub
-
-# 2. Install Dependencies
-npm install
-
-# 3. Configure Environment Variables
-cp .env.example .env.local
-
-# Edit .env.local with VPS details
-nano .env.local
-```
-
-### 5.2 Environment Variables (VPS)
-
-```env
 # ========================================
-# SUPABASE LOCAL CONFIGURATION
+# SUPABASE CLOUD CONFIGURATION
 # ========================================
-NEXT_PUBLIC_SUPABASE_URL=http://[VPS-IP]:8000
-NEXT_PUBLIC_SUPABASE_ANON_KEY=[Get from Supabase Studio → Settings → API]
-SUPABASE_SERVICE_ROLE_KEY=[Get from Supabase Studio → Settings → API]
+NEXT_PUBLIC_SUPABASE_URL=https://xyz.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
 
 # ========================================
 # APP CONFIGURATION
 # ========================================
 NEXT_PUBLIC_APP_URL=https://dailyworkerhub.com
-NEXT_PUBLIC_APP_NAME=Daily Worker Hub
+NEXT_PUBLIC_BASE_URL=https://dailyworkerhub.com
+NEXT_PUBLIC_SITE_URL=https://dailyworkerhub.com
 
 # ========================================
-# NEXTAUTH CONFIGURATION
+# PAYMENT GATEWAY (Xendit or Midtrans)
 # ========================================
-NEXTAUTH_SECRET=[Generate with: openssl rand -base64 32]
-NEXTAUTH_URL=https://dailyworkerhub.com/api/auth
+XENDIT_SECRET_KEY=xnd_production_...
+XENDIT_WEBHOOK_TOKEN=...
+XENDIT_PUBLIC_KEY=xnd_public_production_...
 
 # ========================================
-# PAYMENT GATEWAY (XENDIT/MIDTRANS)
+# FIREBASE / PUSH NOTIFICATIONS
 # ========================================
-XENDIT_SECRET_KEY=[Get from Xendit Dashboard]
-XENDIT_PUBLIC_KEY=[Get from Xendit Dashboard]
-MIDTRANS_SECRET_KEY=[Get from Midtrans Dashboard]
-MIDTRANS_PUBLIC_KEY=[Get from Midtrans Dashboard]
+NEXT_PUBLIC_FIREBASE_API_KEY=AIza...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=xxx.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=xxx
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=xxx.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=xxx
+NEXT_PUBLIC_FIREBASE_APP_ID=1:xxx:web:xxx
+NEXT_PUBLIC_VAPID_KEY=xxx
+VAPID_PUBLIC_KEY=xxx
+VAPID_PRIVATE_KEY=xxx
+FIREBASE_PROJECT_ID=xxx
+FIREBASE_CLIENT_EMAIL=xxx@xxx.iam.gserviceaccount.com
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nxxx\n-----END PRIVATE KEY-----\n"
 
 # ========================================
-# KYC PROVIDER (VERIHUBS/VIDA)
+# EMAIL (Resend)
 # ========================================
-VERIHUBS_API_KEY=[Get from Verihubs Dashboard]
-VIDA_API_KEY=[Get from Vida Dashboard]
+RESEND_API_KEY=re_xxx
 
 # ========================================
-# EMAIL/OTP (TWILIO)
+# ERROR TRACKING (Sentry)
 # ========================================
-TWILIO_ACCOUNT_SID=[Get from Twilio Dashboard]
-TWILIO_AUTH_TOKEN=[Get from Twilio Dashboard]
+NEXT_PUBLIC_SENTRY_DSN=https://xxx@o0.ingest.sentry.io/0
+SENTRY_ORG=your-org
+SENTRY_PROJECT=daily-worker-hub
 
 # ========================================
-# ERROR TRACKING (SENTRY)
+# SECURITY
 # ========================================
-NEXT_PUBLIC_SENTRY_DSN=[Get from Sentry Dashboard]
-
-# ========================================
-# ANALYTICS (POSTHOG)
-# ========================================
-NEXT_PUBLIC_POSTHOG_KEY=[Get from PostHog Dashboard]
-NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+ADMIN_API_SECRET=$(openssl rand -base64 32)
+CRON_SECRET=$(openssl rand -base64 32)
 ```
 
-### 5.3 Build & Start Next.js
+### 5.2 Local Development (.env.local)
+
+For local development, use the Supabase CLI to link your local project:
 
 ```bash
-# 1. Build Production Bundle
-npm run build
+# Link to Supabase project
+npx supabase link --project-ref <project-ref>
 
-# 2. Start Next.js with PM2 (Production)
-pm2 start npm --name "daily-worker-hub" -- start
-
-# 3. Save PM2 Process List
-pm2 save
-
-# 4. Start PM2 on Boot
-pm2 startup
+# Pull remote schema (optional)
+npx supabase db pull
 ```
 
 ---
 
-## 6. Hostinger MCP Setup (DNS Management)
+## 6. Custom Domain & DNS
 
-### 6.1 Configure Hostinger MCP
+### 6.1 Configure Custom Domain in Vercel
 
-**Goal:** Set up DNS records for `dailyworkerhub.com` to point to VPS IP.
+1. Go to **Vercel Project → Settings → Domains**
+2. Enter your domain (e.g., `dailyworkerhub.com`)
+3. Click **Add**
+4. Vercel will provide DNS records to add at your domain registrar
 
-**Steps:**
+### 6.2 DNS Records
 
-1. **Connect to Hostinger MCP Server**
-   - Use MCP client to connect to Hostinger API
-   - Authenticate with Hostinger credentials
+Add the following records at your domain registrar:
 
-2. **Add Domain to Hostinger**
-   - If domain is registered elsewhere, update nameservers to Hostinger
-   - If domain is registered with Hostinger, skip to step 3
+| Record Type | Name | Value                        | TTL   |
+| ----------- | ---- | ---------------------------- | ----- |
+| **A**       | `@`  | `76.76.21.21`                | Auto  |
+| **CNAME**   | `www` | `cname.vercel-dns.com`       | Auto  |
+| **CNAME**   | `*`  | `cname.vercel-dns.com`       | Auto  |
 
-3. **Configure DNS Records**
-   - Create **A Record**:
-     - **Name:** `@` (root) or `www`
-     - **Type:** `A`
-     - **Value:** `[VPS-IP]` (e.g., `161.35.123.456`)
-     - **TTL:** `3600` (1 hour)
+> **Note:** DNS propagation typically takes 10–60 minutes. Vercel provides automatic SSL/TLS certificates — no manual certificate management needed.
 
-4. **Verify DNS Propagation**
-   - Use `dig dailyworkerhub.com` to check if A record points to VPS IP
-   - Wait 15-30 minutes for global propagation
+### 6.3 Verify Domain
 
-### 6.2 MCP Function Example
+Once DNS propagates, Vercel will automatically provision an SSL certificate and your site will be accessible at `https://dailyworkerhub.com`.
+
+```bash
+# Verify DNS is pointing correctly
+dig dailyworkerhub.com
+nslookup dailyworkerhub.com
+
+# Test HTTPS
+curl -I https://dailyworkerhub.com
+```
+
+---
+
+## 7. Cron Jobs & Background Tasks
+
+### 7.1 Vercel Cron Configuration
+
+Scheduled tasks are defined in `vercel.json` at the project root:
+
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cron/release-pending-payments",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/expire-old-jobs",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/daily-summary",
+      "schedule": "0 6 * * *"
+    }
+  ]
+}
+```
+
+### 7.2 Cron Endpoint Requirements
+
+All cron endpoints must:
+
+- Be located in `app/api/cron/[name]/route.ts`
+- Verify the `CRON_SECRET` header for security
+- Return a `200` status code when successful
 
 ```typescript
-// lib/mcp/hostinger-dns.ts
-export interface UpdateDnsParams {
-  domain: string;
-  type: "A" | "CNAME";
-  name: string;
-  value: string;
-  ttl: number;
+// app/api/cron/release-pending-payments/route.ts
+import { NextResponse } from "next/server";
+
+export async function GET(request: Request) {
+  // Verify cron secret
+  const authHeader = request.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Process pending payments
+  // ... business logic ...
+
+  return NextResponse.json({ success: true });
 }
-
-export async function updateDnsRecord(params: UpdateDnsParams) {
-  // Call Hostinger MCP API
-  const response = await fetch("https://api.hostinger.com/v1/dns/records", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.HOSTINGER_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(params),
-  });
-
-  return response.json();
-}
-
-// Example Usage
-await updateDnsRecord({
-  domain: "dailyworkerhub.com",
-  type: "A",
-  name: "@",
-  value: "161.35.123.456",
-  ttl: 3600,
-});
 ```
 
 ---
 
-## 7. Nginx Configuration (VPS)
+## 8. Monitoring & Error Tracking
 
-### 7.1 Reverse Proxy Setup
+### 8.1 Sentry Integration
 
-**File:** `/etc/nginx/sites-available/dailyworkerhub`
+Sentry captures errors and performance data from both client and server:
 
-```nginx
-# ========================================
-# HTTP → HTTPS Redirect
-# ========================================
-server {
-    listen 80;
-    server_name dailyworkerhub.com www.dailyworkerhub.com;
-    return 301 https://$host$request_uri;
-}
-
-# ========================================
-# HTTPS Configuration
-# ========================================
-server {
-    listen 443 ssl http2;
-    server_name dailyworkerhub.com www.dailyworkerhub.com;
-
-    # SSL Certificate (Let's Encrypt)
-    ssl_certificate /etc/letsencrypt/live/dailyworkerhub.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/dailyworkerhub.com/privkey.pem;
-
-    # Security Headers
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-Content-Type-Options "nosniff";
-    add_header X-XSS-Protection "1; mode=block";
-
-    # ========================================
-    # Next.js App (Port 3000)
-    # ========================================
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    # ========================================
-    # Supabase Studio (Port 8000)
-    # ========================================
-    location /studio {
-        proxy_pass http://localhost:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-        # Optional: Basic Auth for Studio
-        # auth_basic "Supabase Studio";
-        # auth_basic_user_file /etc/nginx/.htpasswd;
-    }
-
-    # ========================================
-    # Supabase API (Port 3000 - Docker)
-    # ========================================
-    location /api {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-### 7.2 Enable Nginx Configuration
+1. Create a Sentry project at [sentry.io](https://sentry.io)
+2. Install the Sentry SDK:
 
 ```bash
-# 1. Create symbolic link
-sudo ln -s /etc/nginx/sites-available/dailyworkerhub /etc/nginx/sites-enabled/
-
-# 2. Test Nginx Configuration
-sudo nginx -t
-
-# 3. Reload Nginx
-sudo systemctl reload nginx
+npm install @sentry/nextjs
 ```
 
----
+3. Configure in `sentry.client.config.ts` and `sentry.server.config.ts`
+4. Set `NEXT_PUBLIC_SENTRY_DSN` in Vercel environment variables
+5. Sentry is automatically integrated with Vercel via the `@sentry/nextjs` package
 
-## 8. SSL/TLS Setup (Let's Encrypt)
+### 8.2 Vercel Analytics
 
-### 8.1 Obtain SSL Certificate
+Enable Vercel Analytics in `next.config.mjs`:
+
+```js
+// next.config.mjs
+import { withSentryConfig } from "@sentry/nextjs";
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  experimental: {
+    // Enable Vercel Analytics
+  },
+};
+
+export default nextConfig;
+```
+
+### 8.3 Uptime Monitoring
+
+Use Vercel's built-in deployment monitoring, or configure external uptime checks:
 
 ```bash
-# 1. Install Certbot (if not already installed)
-sudo apt install certbot python3-certbot-nginx -y
+# Example: Use a free uptime service like UptimeRobot
+# Monitor: https://dailyworkerhub.com
+# Check interval: 5 minutes
+# Alert on: 3 consecutive failures
+```
 
-# 2. Obtain SSL Certificate
-sudo certbot --nginx -d dailyworkerhub.com -d www.dailyworkerhub.com
+### 8.4 Logging
 
-# 3. Auto-renew SSL (Cron Job)
-sudo crontab -e
+Vercel provides built-in log streaming for all serverless function invocations. Access logs via:
 
-# Add this line to crontab (renews SSL daily at 2:30 AM)
-30 2 * * * /usr/bin/certbot renew --quiet
+```bash
+# Using Vercel CLI
+vercel logs daily-worker-hub
+
+# Filter for errors only
+vercel logs daily-worker-hub --filter=error
 ```
 
 ---
@@ -547,9 +538,8 @@ daily-worker-hub/
 │   ├── functions/                  # Edge Functions (Local Docker)
 │   └── seed-data/                  # Seed Data for Development
 ├── scripts/                        # Deployment Scripts
-│   ├── deploy.sh                   # Deploy to VPS script
-│   ├── start-supabase.sh           # Start Supabase Local script
-│   └── setup-dns.sh                # Setup Hostinger DNS script
+│   ├── setup-env.sh                # Generate environment variables template
+│   └── verify-deploy.sh            # Post-deployment verification script
 └── docs/                           # Documentation
     ├── architecture.md
     ├── deployment.md
@@ -1292,17 +1282,17 @@ serve(async (req) => {
 
 ### 13.2 Data Protection
 
-- **TLS 1.3**: All data in transit encrypted (Nginx + Let's Encrypt)
-- **AES-256**: Data at rest encrypted (PostgreSQL)
-- **Environment Variables**: Sensitive data in `.env.local` (never committed)
+- **TLS 1.3**: All data in transit encrypted (automatic via Vercel)
+- **AES-256**: Data at rest encrypted (Supabase Cloud PostgreSQL)
+- **Environment Variables**: Sensitive data in Vercel environment variables (never committed)
 - **Input Validation**: Zod schemas for all inputs
-- **VPN Access**: Only access VPS via VPN (for co-founder safety)
+- **Admin API Protection**: `ADMIN_API_SECRET` header required for admin endpoints
 
 ### 13.3 Payment Security
 
 - **PCI DSS Compliance**: Via Xendit/Midtrans
 - **Webhook Verification**: Verify webhook signatures
-- **Rate Limiting**: Prevent brute force attacks (Nginx or Next.js middleware)
+- **Rate Limiting**: Prevent brute force attacks (Vercel Edge + Next.js middleware)
 
 ---
 
@@ -1318,99 +1308,112 @@ serve(async (req) => {
 ### 14.2 Backend
 
 - **Database Indexing**: All frequently queried columns indexed
-- **Connection Pooling**: Supabase managed connection pooling (Docker)
-- **Edge Functions**: Server-side logic at edge (Deno in Docker)
+- **Connection Pooling**: Supabase Cloud managed connection pooling
+- **Edge Functions**: Server-side logic at edge (Supabase Edge Functions — Deno)
 - **Real-time Subscriptions**: Efficient pub/sub (Supabase Realtime)
 
 ---
 
 ## 15. Monitoring & Observability
 
-| Tool                   | Purpose               | Integration             |
-| ---------------------- | --------------------- | ----------------------- |
-| **Sentry**             | Error tracking        | Next.js middleware      |
-| **PostHog**            | User analytics        | Client-side tracking    |
-| **Supabase Dashboard** | Database monitoring   | Built-in (Local Studio) |
-| **Nginx Access Logs**  | Web server monitoring | Built-in (VPS logs)     |
-| **PM2**                | Process monitoring    | Built-in (VPS logs)     |
-| **Docker Logs**        | Container monitoring  | Docker logs             |
+| Tool                    | Purpose                | Integration             |
+| ---------------------- | ----------------------| ----------------------- |
+| **Sentry**             | Error tracking         | Next.js middleware      |
+| **PostHog**            | User analytics         | Client-side tracking    |
+| **Supabase Dashboard** | Database monitoring    | Built-in (Cloud Studio) |
+| **Vercel Logs**        | Serverless function logs | Vercel CLI / Dashboard |
+| **Vercel Analytics**  | Performance monitoring | Built-in               |
 
 ---
 
-## 16. Deployment Scripts
+## 16. Vercel CI/CD & Automation
 
-### 16.1 Start Supabase Local
+### 16.1 Automatic Deployments
+
+Vercel automatically deploys on every push to connected branches:
+
+| Branch      | Environment | Trigger              |
+| ----------- | ----------- | -------------------- |
+| `main`      | Production  | Push to `main`       |
+| `develop`   | Preview     | Push to `develop`    |
+| `feature/*` | Preview     | Push to feature branches |
+
+### 16.2 Promote Preview to Production
 
 ```bash
-#!/bin/bash
-# scripts/start-supabase.sh
+# Merge to main for production deployment
+git checkout main
+git merge develop
+git push origin main
 
-echo "Starting Supabase Local..."
-cd ~/projects/supabase
-supabase start
-
-echo "Supabase Local started!"
-echo "Studio: http://localhost:8000"
-echo "API: http://localhost:3000"
+# Or promote a specific preview via Vercel CLI
+vercel --prod
 ```
 
-### 16.2 Deploy Next.js to VPS
+### 16.3 Rollback
 
 ```bash
-#!/bin/bash
-# scripts/deploy.sh
+# List recent deployments
+vercel list
 
-echo "Pulling latest code..."
-git pull origin main
-
-echo "Installing dependencies..."
-npm install
-
-echo "Building production bundle..."
-npm run build
-
-echo "Starting Next.js with PM2..."
-pm2 stop daily-worker-hub
-pm2 start npm --name "daily-worker-hub" -- start
-
-echo "Deployment completed!"
-echo "App URL: https://dailyworkerhub.com"
+# Rollback to a previous deployment
+vercel rollback <deployment-url>
 ```
 
-### 16.3 Setup Hostinger DNS (MCP)
+### 16.4 Post-Deployment Verification
 
 ```bash
+# scripts/verify-deploy.sh
 #!/bin/bash
-# scripts/setup-dns.sh
 
-echo "Updating Hostinger DNS records..."
-# Call MCP function to update A record
-./scripts/update-dns-record.sh dailyworkerhub.com A @ [VPS-IP]
+echo "Verifying deployment..."
+DEPLOY_URL="$1"
 
-echo "DNS updated! Waiting for propagation..."
-sleep 30
+# Check HTTP status
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOY_URL")
+if [ "$STATUS" = "200" ]; then
+  echo "✓ Site is accessible"
+else
+  echo "✗ Site returned status $STATUS"
+  exit 1
+fi
 
-echo "Testing DNS..."
-dig dailyworkerhub.com
+# Check critical API routes
+curl -sf "$DEPLOY_URL/api/health" > /dev/null && echo "✓ API health check passed"
 
-echo "DNS setup completed!"
+echo "Deployment verified successfully!"
 ```
 
 ---
 
-## 17. Cost Analysis (Self-Hosted)
+## 17. Cost Analysis (Vercel + Supabase Cloud)
 
-| Component                  | Monthly Cost | Annual Cost  |
+### 17.1 Monthly Costs
+
+| Component                   | Tier         | Monthly Cost |
 | -------------------------- | ------------ | ------------ |
-| **VPS (DigitalOcean 4GB)** | $24.00       | $288.00      |
-| **Domain (Hostinger)**     | ~$10.00      | ~$120.00     |
-| **SSL (Let's Encrypt)**    | $0.00        | $0.00        |
-| **Total**                  | **~$34.00**  | **~$408.00** |
+| **Vercel Pro**             | Team plan    | $20.00/mo    |
+| **Supabase Pro**           | Database + Auth + Storage | ~$25.00/mo |
+| **Domain (any registrar)** | Annual / 12  | ~$1.00/mo    |
+| **Sentry**                 | Pro plan     | ~$26.00/mo   |
+| **Resend**                 | Pay-as-you-go | ~$5.00/mo  |
+| **Total**                  |              | **~$77.00/mo** |
 
-**Savings vs Supabase Cloud:** Self-hosting saves ~$25-50/month compared to Pro plan, plus gives full control.
+### 17.2 Free Tier Estimates
+
+For small teams starting out, the free tiers are sufficient:
+
+| Service       | Free Tier                                    | Cost  |
+| ------------- | -------------------------------------------- | ----- |
+| **Vercel**    | 100GB bandwidth, serverless functions       | $0    |
+| **Supabase**  | 500MB database, 1GB storage, 50k monthly users | $0  |
+| **Domain**    | ~$10-15/year                                 | ~$1.25 |
+| **Sentry**    | 5k errors/month, 1 user                      | $0    |
+| **Resend**    | 100 emails/day                               | $0    |
+| **Total**      |                                             | **~$1.25/mo** |
 
 ---
 
 **Document Owner:** Sasha (AI Co-founder)
-**Last Review:** February 21, 2026
-**Next Review:** After VPS Deployment
+**Last Updated:** March 27, 2026
+**Next Review:** After first production deployment
