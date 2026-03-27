@@ -297,6 +297,24 @@ export function invalidateApplicationCache(applicationId?: string): number {
   return deleted;
 }
 
+/**
+ * Invalidate all booking-related caches
+ */
+export function invalidateBookingCache(bookingId?: string): number {
+  let deleted = 0;
+
+  if (bookingId) {
+    // Invalidate specific booking
+    if (cache.del(LRUCache.createKey("bookings", bookingId))) deleted++;
+    deleted += cache.delPattern(`bookings:${bookingId}:*`);
+  }
+
+  // Invalidate booking listings
+  deleted += cache.delPattern("bookings:list:*");
+
+  return deleted;
+}
+
 // ============================================================
 // CACHE MIDDLEWARE FOR API ROUTES
 // ============================================================
