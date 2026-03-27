@@ -21,6 +21,8 @@ import {
   calculateComplianceScore,
   calculateMatchingScore,
   getMatchingScoreBreakdown,
+  calculateMatchingScoreWithDistance,
+  getMatchingScoreBreakdownWithDistance,
   getMatchQuality,
 } from "../matching-score";
 import type { WorkerTier } from "@/lib/supabase/types";
@@ -365,6 +367,135 @@ describe("Matching Score Algorithm", () => {
 
       expect(breakdown.distanceKm).toBeGreaterThan(15);
       expect(breakdown.distanceKm).toBeLessThan(30);
+    });
+  });
+
+  describe("calculateMatchingScoreWithDistance", () => {
+    it("should return same score as calculateMatchingScore for equivalent params", () => {
+      const withDistance = calculateMatchingScoreWithDistance({
+        workerSkills: ["housekeeping", "cleaning"],
+        workerRating: 4.8,
+        workerTier: "champion",
+        jobSkills: ["housekeeping"],
+        distanceKm: 1.5,
+        isAvailable: true,
+        isCompliant: true,
+      });
+
+      const withoutDistance = calculateMatchingScore({
+        workerSkills: ["housekeeping", "cleaning"],
+        workerLat: -8.65,
+        workerLng: 115.22,
+        workerRating: 4.8,
+        workerTier: "champion",
+        jobSkills: ["housekeeping"],
+        jobLat: -8.651,
+        jobLng: 115.225,
+        isAvailable: true,
+        isCompliant: true,
+      });
+
+      expect(withDistance).toBe(withoutDistance);
+    });
+
+    it("should cap score at 115", () => {
+      const score = calculateMatchingScoreWithDistance({
+        workerSkills: ["housekeeping"],
+        workerRating: 5.0,
+        workerTier: "champion",
+        jobSkills: ["housekeeping"],
+        distanceKm: 0,
+        isAvailable: true,
+        isCompliant: true,
+      });
+
+      // Skill: 30 + Distance: 30 + Rating: 15 + Availability: 20 + Compliance: 5 + Tier: 20 = 120, capped at 115
+      expect(score).toBe(115);
+    });
+
+    it("should return low score for poor match with distance", () => {
+      const score = calculateMatchingScoreWithDistance({
+        workerSkills: [],
+        workerRating: 3.0,
+        workerTier: "classic",
+        jobSkills: ["housekeeping", "cleaning"],
+        distanceKm: 25,
+        isAvailable: false,
+        isCompliant: false,
+      });
+
+      expect(score).toBeLessThan(30);
+    });
+  });
+
+  describe("getMatchingScoreBreakdownWithDistance", () => {
+    it("should return detailed breakdown with precomputed distance", () => {
+      const breakdown = getMatchingScoreBreakdownWithDistance({
+        workerSkills: ["housekeeping"],
+        workerRating: 4.8,
+        workerTier: "champion",
+        jobSkills: ["housekeeping"],
+        distanceKm: 3,
+        isAvailable: true,
+        isCompliant: true,
+      });
+
+      expect(breakdown).toHaveProperty("skillScore");
+      expect(breakdown).toHaveProperty("distanceScore");
+      expect(breakdown).toHaveProperty("distanceKm");
+      expect(breakdown).toHaveProperty("availabilityScore");
+      expect(breakdown).toHaveProperty("ratingScore");
+      expect(breakdown).toHaveProperty("complianceScore");
+      expect(breakdown).toHaveProperty("tierBonus");
+      expect(breakdown).toHaveProperty("totalScore");
+    });
+
+    it("should reflect exact precomputed distance in breakdown", () => {
+      const breakdown = getMatchingScoreBreakdownWithDistance({
+        workerSkills: ["housekeeping"],
+        workerRating: 4.5,
+        workerTier: "pro",
+        jobSkills: ["housekeeping"],
+        distanceKm: 7.5,
+        isAvailable: true,
+        isCompliant: true,
+      });
+
+      // 7.5km falls in 5-10km band -> 20 points
+      expect(breakdown.distanceScore).toBe(20);
+      expect(breakdown.distanceKm).toBe(7.5);
+    });
+
+    it("should match calculateMatchingScoreWithDistance total", () => {
+      const params = {
+        workerSkills: ["housekeeping", "cleaning"],
+        workerRating: 4.8,
+        workerTier: "champion",
+        jobSkills: ["housekeeping"],
+        distanceKm: 2,
+        isAvailable: true,
+        isCompliant: true,
+      };
+
+      const breakdown = getMatchingScoreBreakdownWithDistance(params);
+      const score = calculateMatchingScoreWithDistance(params);
+
+      expect(breakdown.totalScore).toBe(score);
+    });
+
+    it("should return zero distance score for far distance", () => {
+      const breakdown = getMatchingScoreBreakdownWithDistance({
+        workerSkills: ["housekeeping"],
+        workerRating: 4.5,
+        workerTier: "pro",
+        jobSkills: ["housekeeping"],
+        distanceKm: 50,
+        isAvailable: true,
+        isCompliant: true,
+      });
+
+      expect(breakdown.distanceScore).toBe(0);
+      expect(breakdown.distanceKm).toBe(50);
     });
   });
 
