@@ -484,66 +484,132 @@ vercel logs daily-worker-hub --filter=error
 
 ## 9. Project Structure
 
-### 9.1 Monorepo Structure
+### 9.1 Single-App Structure
+
+The project is a **single Next.js application** (not a monorepo). All routes, components, and logic live under a flat `app/` directory with separate root-level directories for shared code.
 
 ```
-daily-worker-hub/
-├── apps/                          # Next.js Apps
-│   ├── web/                       # Main Web Application
-│   │   ├── app/                   # App Router (Next.js 14)
-│   │   │   ├── (auth)/            # Auth Layout
-│   │   │   │   ├── login/
-│   │   │   │   ├── register/
-│   │   │   │   └── layout.tsx
-│   │   │   ├── (dashboard)/        # Dashboard Layout
-│   │   │   │   ├── business/      # Business Portal
-│   │   │   │   │   ├── jobs/      # Job Management
-│   │   │   │   │   ├── bookings/ # Booking Management
-│   │   │   │   │   ├── wallet/    # Wallet Management
-│   │   │   │   │   └── reports/   # Reports & Compliance
-│   │   │   │   └── worker/       # Worker Portal
-│   │   │   │       ├── jobs/      # Job Discovery
-│   │   │   │       ├── bookings/ # My Bookings
-│   │   │   │       ├── wallet/    # Earnings & Withdraw
-│   │   │   │       └── profile/   # Profile & Ratings
-│   │   │   ├── (marketplace)/      # Public Marketplace
-│   │   │   │   ├── jobs/          # Job Listings
-│   │   │   │   └── workers/      # Worker Profiles
-│   │   │   ├── api/               # API Routes (if needed)
-│   │   │   │   └── webhooks/      # Payment Webhooks
-│   │   │   ├── layout.tsx          # Root Layout
-│   │   │   ├── page.tsx            # Landing Page
-│   │   │   └── globals.css        # Global Styles
-│   │   ├── components/            # Shared Components
-│   │   │   ├── ui/                # shadcn/ui Components
-│   │   │   ├── layout/             # Layout Components
-│   │   │   ├── business/           # Business-Specific Components
-│   │   │   ├── worker/            # Worker-Specific Components
-│   │   │   └── shared/            # Shared Components
-│   │   ├── lib/                   # Utilities & Helpers
-│   │   │   ├── supabase/          # Supabase Client
-│   │   │   ├── api/               # API Wrappers
-│   │   │   ├── hooks/             # Custom React Hooks
-│   │   │   ├── schemas/            # Zod Schemas
-│   │   │   └── types/             # TypeScript Types
-│   │   ├── styles/                # CSS Files
-│   │   ├── public/                # Static Assets
-│   │   ├── middleware.ts          # Middleware (Auth, etc)
-│   │   ├── next.config.mjs         # Next.js Config
-│   │   ├── tailwind.config.ts     # Tailwind Config
-│   │   ├── tsconfig.json          # TypeScript Config
-│   │   └── package.json
-├── supabase/                       # Supabase Configuration (Local)
-│   ├── migrations/                 # Database Migrations
-│   ├── functions/                  # Edge Functions (Local Docker)
-│   └── seed-data/                  # Seed Data for Development
-├── scripts/                        # Deployment Scripts
-│   ├── setup-env.sh                # Generate environment variables template
-│   └── verify-deploy.sh            # Post-deployment verification script
-└── docs/                           # Documentation
-    ├── architecture.md
-    ├── deployment.md
-    └── mcp-setup.md
+daily-worker-hub/                      # Project root — single Next.js app
+├── app/                               # Next.js App Router (Next.js 16+)
+│   ├── (auth)/                        # Auth group routes (no shared layout)
+│   │   ├── login/
+│   │   ├── register/
+│   │   ├── auth/
+│   │   │   └── callback/              # OAuth callback
+│   │   └── onboarding/
+│   │       ├── business/
+│   │       └── worker/
+│   ├── (dashboard)/                   # Authenticated dashboard group
+│   │   ├── business/                  # Business portal pages
+│   │   │   ├── jobs/
+│   │   │   ├── bookings/
+│   │   │   ├── analytics/
+│   │   │   ├── wallet/
+│   │   │   ├── workers/
+│   │   │   ├── reviews/
+│   │   │   ├── settings/
+│   │   │   ├── messages/
+│   │   │   ├── badge-verifications/
+│   │   │   ├── job-attendance/
+│   │   │   ├── interviews/
+│   │   │   └── compliance/
+│   │   └── worker/                    # Worker portal pages
+│   │       ├── jobs/
+│   │       ├── applications/
+│   │       ├── bookings/
+│   │       ├── earnings/
+│   │       ├── wallet/
+│   │       ├── profile/
+│   │       ├── availability/
+│   │       ├── badges/
+│   │       ├── achievements/
+│   │       ├── attendance/
+│   │       ├── settings/
+│   │       └── messages/
+│   ├── admin/                         # Admin dashboard pages
+│   │   ├── analytics/
+│   │   ├── businesses/
+│   │   ├── compliance/
+│   │   ├── disputes/
+│   │   ├── jobs/
+│   │   ├── kycs/
+│   │   ├── monitoring/
+│   │   ├── reports/
+│   │   ├── users/
+│   │   └── workers/
+│   ├── api/                           # API route handlers (Next.js serverless)
+│   │   ├── admin/
+│   │   │   ├── cache-stats/
+│   │   │   └── metrics/
+│   │   ├── applications/
+│   │   ├── auth/
+│   │   │   └── create-profile/
+│   │   ├── bookings/
+│   │   ├── business/
+│   │   ├── categories/
+│   │   ├── cron/                      # Vercel Cron endpoints
+│   │   │   ├── release-pending-payments/
+│   │   │   └── expire-old-jobs/
+│   │   └── webhooks/                  # Payment gateway webhooks
+│   ├── jobs/                          # Public marketplace pages
+│   ├── workers/                       # Public worker pages
+│   ├── components/                    # App-scoped components
+│   ├── docs/
+│   ├── lib/
+│   ├── providers/
+│   ├── layout.tsx                     # Root layout
+│   ├── page.tsx                       # Landing page
+│   ├── error.tsx                      # Root error boundary
+│   ├── global-error.tsx
+│   └── globals.css
+├── components/                        # Shared / root-level components
+│   ├── ui/                            # shadcn/ui primitives
+│   ├── applicant-list.tsx
+│   ├── application-list.tsx
+│   ├── error-boundary.tsx
+│   ├── job-card.tsx
+│   ├── notification-settings.tsx
+│   ├── pwa-install-prompt.tsx
+│   └── pwa-offline-banner.tsx
+├── lib/                               # Shared utilities
+│   ├── supabase/                      # Supabase client setup (in lib/ or env)
+│   ├── firebase-admin.ts              # Firebase Admin (push notifications)
+│   ├── firebase-client.ts             # Firebase Client
+│   ├── database.types.ts              # Supabase generated types
+│   ├── utils.ts                       # cn() and other helpers
+│   ├── logger.ts                      # Structured logging
+│   ├── cache.ts                       # Caching helpers
+│   ├── rate-limit.ts                  # Rate limiting
+│   ├── badges.ts                      # Badge/achievement logic
+│   └── sentry.ts                      # Sentry helpers
+├── hooks/                             # Shared React hooks
+│   └── use-fcm-notifications.ts       # Firebase Cloud Messaging hook
+├── public/                            # Static assets
+│   ├── manifest.webmanifest            # PWA manifest
+│   └── sw.js                          # Service worker
+├── supabase/                          # Supabase local config & migrations
+│   ├── config.toml                    # Supabase CLI config
+│   └── migrations/                    # SQL migrations for schema setup
+├── migrations/                        # Standalone SQL migration files
+├── scripts/                           # Utility scripts
+│   ├── setup-demo-accounts.ts
+│   ├── verify-15-day-warning.ts
+│   ├── verify-21-day-blocking.ts
+│   ├── backup-supabase.sh
+│   └── ...other automation scripts
+├── vercel.json                        # Vercel deployment config (cron jobs)
+├── next.config.mjs                    # Next.js configuration
+├── tailwind.config.js                 # Tailwind CSS configuration
+├── sentry.client.config.ts            # Sentry client config
+├── sentry.server.config.ts            # Sentry server config
+├── sentry.edge.config.ts              # Sentry Edge config
+├── tsconfig.json                      # TypeScript configuration
+├── package.json
+└── docs/                              # Project documentation
+    ├── Architecture.md
+    ├── PRODUCTION_DEPLOYMENT_GUIDE.md
+    ├── PRODUCTION_ENVIRONMENT_CHECKLIST.md
+    └── ...
 ```
 
 ---
@@ -929,7 +995,7 @@ CREATE INDEX idx_feedback_created_at ON feedback(created_at DESC);
        │ 1. Login Request (email/password or Google OAuth)
        ▼
 ┌─────────────────────────┐
-│  Supabase Local Auth  │
+│  Supabase Auth       │
 │  - Validate Credentials│
 │  - Generate JWT Token  │
 └──────┬──────────────────┘
@@ -1087,7 +1153,7 @@ CREATE INDEX idx_feedback_created_at ON feedback(created_at DESC);
 
 ---
 
-## 12. Edge Functions (Supabase Local)
+## 12. Edge Functions (Supabase Cloud)
 
 ### 12.1 Reliability Score Calculation
 
@@ -1275,7 +1341,7 @@ serve(async (req) => {
 
 ### 13.1 Authentication & Authorization
 
-- **JWT-based Auth**: Supabase Local Auth generates JWT tokens
+- **JWT-based Auth**: Supabase Auth generates JWT tokens
 - **Refresh Tokens**: Automatic token rotation
 - **Role-based Access**: `business`, `worker`, `admin` roles
 - **RLS Policies**: Database-level access control (PostgreSQL)
