@@ -7,6 +7,7 @@ import {
   confirmBookingCompletion,
 } from "@/lib/actions/bookings-completion";
 import { withRateLimit } from "@/lib/rate-limit";
+import { invalidateBookingCache } from "@/lib/cache";
 
 const routeLogger = logger.createApiLogger("bookings/[id]/complete");
 
@@ -159,6 +160,15 @@ async function handlePOST(request: Request, { params }: Params) {
           businessId: business.id,
           userId: session.user.id,
         });
+
+        // Invalidate booking caches since completion state changed
+        const invalidated = invalidateBookingCache(bookingId);
+        routeLogger.info("Cache invalidated", {
+          requestId,
+          bookingId,
+          cacheKeysCleared: invalidated,
+        });
+
         logger.requestSuccess(request, { status: 200 }, startTime, {
           requestId,
           userId: session.user.id,
@@ -197,6 +207,15 @@ async function handlePOST(request: Request, { params }: Params) {
         finalPrice: body.final_price,
         userId: session.user.id,
       });
+
+      // Invalidate booking caches since completion state changed
+      const invalidated = invalidateBookingCache(bookingId);
+      routeLogger.info("Cache invalidated", {
+        requestId,
+        bookingId,
+        cacheKeysCleared: invalidated,
+      });
+
       logger.requestSuccess(request, { status: 200 }, startTime, {
         requestId,
         userId: session.user.id,
