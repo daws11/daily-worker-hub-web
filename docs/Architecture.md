@@ -1,72 +1,64 @@
 # Architecture - Daily Worker Hub Web MVP
 
 **Project:** Daily Worker Hub - Web MVP
-**Tech Stack:** Next.js 14 + Supabase Local (Self-Hosted)
+**Tech Stack:** Next.js + Supabase Cloud
 **Version:** 1.0
-**Last Updated:** February 21, 2026
+**Last Updated:** March 27, 2026
 
 ---
 
-## 1. Deployment Architecture (Self-Hosted)
+## 1. Deployment Architecture
 
 ### 1.1 Infrastructure Overview
 
 ```
 ┌─────────────────────────────────────────────────┐
-│                DNS (dailyworkerhub.com)          │
+│              DNS (dailyworkerhub.com)            │
 │                    │                            │
 │                    ▼                            │
-│              ┌───────────────┐                    │
-│              │  Hostinger   │                    │
-│              │     MCP       │                    │
-│              └───────┬───────┘                    │
-│                      │                            │
-│                      │ A Record                     │
-│                      │ dailyworkerhub.com → VPS IP    │
-└──────────────────────┬────────────────────────┘
-                       │
-                       │
-        ┌──────────────┴───────────────┐
-        │          VPS Server           │
-        │    (Ubuntu/DigitalOcean/Contabo) │
-        │  - Next.js App (Port 3000)        │
-        │  - Supabase Local (Docker)        │
-        │    - PostgreSQL (Port 5432)         │
-        │    - Studio (Port 8000)            │
-        └──────────────┬───────────────┘
-                       │
-        ┌──────────────┴───────────────┐
-        │  Docker Containers (VPS)   │
-        │  ┌────────────────────────┐  │
-        │  │  Supabase (Docker)    │  │
-        │  │  ┌────────────────────┐│  │
-        │  │  │  PostgreSQL      ││  │
-        │  │  ├────────────────────┤│  │
-        │  │  │  GoTrue (Auth)    ││  │
-        │  │  ├────────────────────┤│  │
-        │  │  │  PostgREST (API)   ││  │
-        │  │  ├────────────────────┤│  │
-        │  │  │  Realtime (WS)    ││  │
-        │  │  ├────────────────────┤│  │
-        │  │  │  Storage (S3)     ││  │
-        │  │  ├────────────────────┤│  │
-        │  │  │  Studio (UI)     ││  │
-        │  │  ├────────────────────┤│  │
-        │  │  │  Edge Functions   ││  │
-        │  │  └────────────────────┘│  │
-        │  └────────────────────────┘  │
-        └───────────────────────────────┘
+│  ┌─────────────────────────────────────────┐    │
+│  │            Vercel (CDN + Edge)           │    │
+│  │  ┌─────────────────────────────────────┐ │    │
+│  │  │  Next.js App (Serverless Functions) │ │    │
+│  │  │  - Static Assets (Edge)             │ │    │
+│  │  │  - API Routes (Serverless)           │ │    │
+│  │  │  - Image Optimization                 │ │    │
+│  │  └──────────────────┬──────────────────┘ │    │
+│  └─────────────────────┼────────────────────┘    │
+│                        │ HTTPS (auto)             │
+└────────────────────────┼────────────────────────┘
+                         │
+          ┌──────────────┴──────────────┐
+          │      Supabase Cloud           │
+          │  ┌────────────────────────┐  │
+          │  │  PostgreSQL (Hosted)  │  │
+          │  ├────────────────────────┤  │
+          │  │  Auth (JWT, OAuth)    │  │
+          │  ├────────────────────────┤  │
+          │  │  Realtime (WebSocket) │  │
+          │  ├────────────────────────┤  │
+          │  │  Storage (S3)         │  │
+          │  ├────────────────────────┤  │
+          │  │  Edge Functions        │  │
+          │  ├────────────────────────┤  │
+          │  │  Dashboard / Studio   │  │
+          │  └────────────────────────┘  │
+          └─────────────────────────────┘
 ```
 
 ### 1.2 Components
 
-| Component          | Provider                | Purpose                                                       |
-| ------------------ | ----------------------- | ------------------------------------------------------------- |
-| **VPS Server**     | DigitalOcean / Contabo  | Host Next.js app and Supabase Local (Docker)                  |
-| **Supabase Local** | Docker (Supabase CLI)   | Self-hosted database, auth, storage, edge functions           |
-| **DNS Provider**   | Hostinger MCP           | Manage DNS records for dailyworkerhub.com (A record → VPS IP) |
-| **Reverse Proxy**  | Nginx (VPS)             | Route traffic to Next.js (3000) and Supabase Studio (8000)    |
-| **SSL/TLS**        | Let's Encrypt / Certbot | Free SSL for dailyworkerhub.com                               |
+| Component             | Provider         | Purpose                                                         |
+| --------------------- | ---------------- | --------------------------------------------------------------- |
+| **Next.js (Vercel)** | Vercel           | React framework with serverless functions, CDN, auto SSL       |
+| **Supabase Cloud**    | Supabase         | Hosted PostgreSQL, Auth, Realtime, Storage, Edge Functions      |
+| **Custom Domain**     | Vercel / DNS     | Custom domain with automatic HTTPS (dailyworkerhub.com)          |
+| **Sentry**             | Vercel Integr.   | Error tracking and performance monitoring                       |
+| **Cron Jobs**         | Vercel Cron      | Scheduled tasks (e.g., release-pending-payments, every hour)    |
+| **Email**             | Resend           | Transactional emails (notifications, receipts)                  |
+| **Push Notifications**| Firebase        | Web push notifications via Firebase Cloud Messaging              |
+| **Payments**          | Xendit / Midtrans | Payment gateway for top-ups and withdrawals                      |
+| **Maps**              | Leaflet / OSM    | Open-source map display for worker locations                    |
 
 ---
 
@@ -74,42 +66,47 @@
 
 ### 2.1 Frontend
 
-| Technology          | Purpose                         | Version |
-| ------------------- | ------------------------------- | ------- |
-| **Next.js**         | React Framework with App Router | 14.1+   |
-| **React**           | UI Library                      | 18.2+   |
-| **TypeScript**      | Type Safety                     | 5.3+    |
-| **Tailwind CSS**    | Styling                         | 3.4+    |
-| **shadcn/ui**       | Component Library               | Latest  |
-| **Lucide React**    | Icons                           | Latest  |
-| **React Hook Form** | Form Management                 | 7.47+   |
-| **Zod**             | Schema Validation               | 3.22+   |
-| **TanStack Query**  | Server State Management         | 5.17+   |
-| **Zustand**         | Client State Management         | 4.4+    |
-| **React Hot Toast** | Notifications                   | 2.4+    |
+| Technology          | Purpose                         | Version   |
+| ------------------- | ------------------------------- | --------- |
+| **Next.js**         | React Framework with App Router | 16.1+    |
+| **React**           | UI Library                      | 19.2+    |
+| **TypeScript**      | Type Safety                     | 5.9+     |
+| **Tailwind CSS**    | Styling                         | 3.4+     |
+| **shadcn/ui**       | Component Library               | Latest   |
+| **Lucide React**    | Icons                           | Latest   |
+| **React Hook Form** | Form Management                 | 7.71+    |
+| **Zod**             | Schema Validation               | 4.3+     |
+| **TanStack Query**  | Server State Management         | 5.17+    |
+| **SWR**             | Data Fetching / Caching         | 2.4+     |
+| **Recharts**        | Analytics Charts                | 2.15+    |
+| **Sonner**          | Toast Notifications              | 2.0+     |
+| **Leaflet**         | Maps (OpenStreetMap)            | 1.9+     |
 
-### 2.2 Backend & Database (Self-Hosted)
+### 2.2 Backend & Database
 
-| Technology                  | Purpose                               | Version    |
-| --------------------------- | ------------------------------------- | ---------- |
-| **Supabase Local**          | Self-hosted backend (Docker)          | Latest     |
-| **PostgreSQL**              | Database (managed by Supabase Docker) | 15+        |
-| **Supabase Auth**           | Authentication (JWT, OAuth)           | Built-in   |
-| **Supabase Realtime**       | Real-time subscriptions               | Built-in   |
-| **Supabase Storage**        | File Storage (S3-compatible)          | Built-in   |
-| **Supabase Edge Functions** | Serverless Functions                  | Deno-based |
-| **Prisma**                  | ORM (Optional, for type-safe queries) | 5.8+       |
+| Technology                  | Purpose                     | Version    |
+| --------------------------- | --------------------------- | ---------- |
+| **Supabase Cloud**          | Hosted backend-as-a-service | Latest     |
+| **PostgreSQL**              | Relational database         | 15+        |
+| **Supabase Auth**           | Authentication (JWT, OAuth) | Built-in   |
+| **Supabase Realtime**       | Real-time subscriptions     | Built-in   |
+| **Supabase Storage**        | File Storage (S3-compatible)| Built-in   |
+| **Supabase Edge Functions** | Serverless Functions        | Deno-based |
+| **Firebase Admin SDK**      | Server-side push notifications| 13+      |
+| **Resend**                  | Email delivery API           | 4.8+      |
+| **Xendit / Midtrans**       | Payment gateway APIs         | Latest    |
 
 ### 2.3 Infrastructure
 
-| Technology        | Purpose                         | Provider                                |
-| ----------------- | ------------------------------- | --------------------------------------- |
-| **VPS**           | Host Next.js + Supabase Local   | DigitalOcean (4GB RAM, 2 vCPUs, $24/mo) |
-| **Docker**        | Containerize Supabase Local     | Docker CE                               |
-| **Nginx**         | Reverse proxy & SSL termination | Nginx (VPS)                             |
-| **Let's Encrypt** | Free SSL certificates           | Certbot                                 |
-| **Hostinger MCP** | DNS management                  | Hostinger (MCP Server)                  |
-| **PM2**           | Process Manager                 | PM2 (VPS)                               |
+| Technology       | Purpose                          | Provider                          |
+| ---------------- | -------------------------------- | -------------------------------- |
+| **Vercel**       | Hosting, CDN, serverless compute | Vercel (vercel.com)              |
+| **Supabase Cloud** | Managed database, auth, storage | Supabase (supabase.com)          |
+| **Vercel Cron**  | Scheduled background jobs        | Built-in (vercel.json configured)|
+| **HTTPS / SSL**  | Automatic TLS via Vercel        | Automatic (no manual config)     |
+| **Sentry**       | Error & performance monitoring   | Vercel + Sentry integration      |
+| **Resend**       | Email service                    | Resend API                       |
+| **Firebase**     | Push notifications               | Firebase Console                  |
 
 ### 2.4 Admin Dashboard & Community Platform
 
