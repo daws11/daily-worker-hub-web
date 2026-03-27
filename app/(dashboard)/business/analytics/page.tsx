@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { supabase } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/types";
+import { AnalyticsTableSkeleton } from "@/components/ui/skeleton-card";
 import {
   BarChart3,
   Loader2,
@@ -538,9 +539,7 @@ export default function BusinessAnalyticsPage() {
           </CardHeader>
           <CardContent className="p-4 md:p-6 pt-0">
             {isLoadingPosts ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
+              <AnalyticsTableSkeleton />
             ) : posts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
