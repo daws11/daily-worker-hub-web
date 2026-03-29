@@ -5,11 +5,8 @@ export default defineConfig({
   test: {
     environment: "happy-dom",
     globals: true,
-    include: [
-      "lib/**/__tests__/**/*.test.ts",
-      "lib/**/*.test.ts",
-      "tests/unit/**/*.test.ts",
-    ],
+    setupFiles: ["./vitest.setup.ts"],
+    include: ["lib/**/__tests__/**/*.test.ts", "lib/**/*.test.ts"],
     exclude: ["node_modules/", "dist/", ".next/"],
     coverage: {
       provider: "v8",
@@ -19,11 +16,11 @@ export default defineConfig({
     },
     testTimeout: 10000,
     hookTimeout: 10000,
-    setupFiles: ["./vitest.setup.ts"],
   },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./"),
     },
+    dedupe: ["react", "react-dom"],
   },
 });
