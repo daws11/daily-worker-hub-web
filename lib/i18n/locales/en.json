@@ -354,7 +354,8 @@
     "noScheduleToday": "No schedule for today",
     "subtitle": "Track your work attendance",
     "todaysSchedule": "Today's Schedule",
-    "working": "Working"
+    "working": "Working",
+    "cameraViewfinder": "QR code scanner camera viewfinder"
   },
   "wallet": {
     "title": "Wallet",
