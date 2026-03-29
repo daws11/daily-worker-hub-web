@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "047-add-missing-getting-started-tutorial-for-business-",
-  "state": "building",
+  "spec": "048-create-user-facing-faq-and-troubleshooting-guide",
+  "state": "planning",
   "subtasks": {
-    "completed": 2,
-    "total": 3,
+    "completed": 0,
+    "total": 0,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Documentation Creation",
+    "current": "FAQ Content Design",
     "id": null,
-    "total": 3
+    "total": 1
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 4,
-    "started_at": "2026-03-27T13:53:10.110167"
+    "number": 2,
+    "started_at": "2026-03-27T13:52:36.768730"
   },
-  "last_update": "2026-03-27T14:03:21.456464"
+  "last_update": "2026-03-27T13:57:32.679307"
 }
