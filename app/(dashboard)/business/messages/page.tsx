@@ -1,11 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/app/providers/auth-provider";
-import {
-  getUserConversations,
-  getUnreadCount,
-} from "@/lib/supabase/queries/messages";
+import { useConversations } from "@/lib/hooks/use-conversations";
 import { getBusinessBookings } from "@/lib/supabase/queries/bookings";
 import type { MessageWithRelations } from "@/lib/types/message";
 import {
@@ -51,38 +48,39 @@ interface ConversationsData {
 
 export default function BusinessMessagesPage() {
   const { user } = useAuth();
-  const [conversations, setConversations] = useState<ConversationsData>({
+
+  // Use the conversations hook for data management
+  const {
+    conversations,
+    unreadCount,
+    isLoading: hookLoading,
+    error: hookError,
+    fetchConversations,
+    fetchUnreadCount,
+  } = useConversations({
+    userId: user?.id,
+    autoFetch: false,
+  });
+
+  const [conversationsData, setConversationsData] = useState<ConversationsData>({
     total: 0,
     unread: 0,
     conversationsList: [],
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [enriching, setEnriching] = useState(false);
 
-  // Fetch business conversations
-  const fetchConversations = useCallback(async () => {
+  const loading = hookLoading || enriching;
+
+  // Fetch conversations and enrich with booking details
+  const fetchAndEnrichConversations = useCallback(async () => {
     if (!user?.id) return;
 
-    setLoading(true);
-    setError(null);
+    setEnriching(true);
 
     try {
-      // Fetch all user conversations (last message per booking)
-      const { data: conversationsData, error: conversationsError } =
-        await getUserConversations(user.id);
-
-      if (conversationsError) {
-        throw conversationsError;
-      }
-
-      // Get unread count
-      const { data: unreadData, error: unreadError } = await getUnreadCount(
-        user.id,
-      );
-
-      if (unreadError) {
-        throw unreadError;
-      }
+      // Fetch conversations using the hook
+      await fetchConversations();
+      await fetchUnreadCount();
 
       // Get all business bookings to add job details
       const { data: bookingsData, error: bookingsError } =
@@ -104,21 +102,15 @@ export default function BusinessMessagesPage() {
 
       // Enrich conversations with booking details
       const conversationsWithDetails: ConversationWithDetails[] = (
-        conversationsData || []
+        conversations || []
       ).map((conv) => {
         const bookingDetails = conv.booking_id
           ? bookingMap.get(conv.booking_id)
           : undefined;
 
-        // Calculate unread count for this booking
-        const unreadForBooking =
-          unreadData?.by_booking?.find((b) => b.booking_id === conv.booking_id)
-            ?.count || 0;
-
         return {
           ...conv,
           bookingDetails,
-          unreadCount: unreadForBooking,
         };
       });
 
@@ -133,19 +125,23 @@ export default function BusinessMessagesPage() {
         );
       });
 
-      setConversations({
+      setConversationsData({
         total: conversationsWithDetails.length,
-        unread: unreadData?.total_unread || 0,
+        unread: unreadCount,
         conversationsList: conversationsWithDetails,
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Gagal memuat data";
-      setError(message);
       toast.error(message);
     } finally {
-      setLoading(false);
+      setEnriching(false);
     }
-  }, [user?.id]);
+  }, [user?.id, conversations, unreadCount, fetchConversations, fetchUnreadCount]);
+
+  // Fetch conversations on mount
+  useEffect(() => {
+    fetchAndEnrichConversations();
+  }, [fetchAndEnrichConversations]);
 
   // Format date to Indonesian locale
   const formatDate = (dateString: string) => {
@@ -182,11 +178,6 @@ export default function BusinessMessagesPage() {
     return message.sender;
   };
 
-  // Fetch conversations on mount
-  useEffect(() => {
-    fetchConversations();
-  }, [fetchConversations]);
-
   return (
     <div className="space-y-4 md:space-y-6 p-4 md:p-6 pb-24 md:pb-6">
       {/* Page Header */}
@@ -198,13 +189,13 @@ export default function BusinessMessagesPage() {
       </div>
 
       {/* Error State */}
-      {error && (
+      {hookError && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Gagal memuat data</AlertTitle>
           <AlertDescription className="flex items-center justify-between">
-            <span>{error}</span>
-            <Button variant="outline" size="sm" onClick={fetchConversations}>
+            <span>{hookError}</span>
+            <Button variant="outline" size="sm" onClick={fetchAndEnrichConversations}>
               <RefreshCw className="mr-2 h-4 w-4" />
               Coba Lagi
             </Button>
@@ -213,7 +204,7 @@ export default function BusinessMessagesPage() {
       )}
 
       {/* Loading State */}
-      {loading && !error && (
+      {loading && !hookError && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
@@ -223,7 +214,7 @@ export default function BusinessMessagesPage() {
       )}
 
       {/* Stats Cards */}
-      {!loading && !error && (
+      {!loading && !hookError && (
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader className="pb-2">
@@ -233,7 +224,7 @@ export default function BusinessMessagesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-primary">
-                {conversations.total ?? 0}
+                {conversationsData.total ?? 0}
               </div>
             </CardContent>
           </Card>
@@ -246,9 +237,9 @@ export default function BusinessMessagesPage() {
             </CardHeader>
             <CardContent className="flex items-center gap-2">
               <div className="text-3xl font-bold text-destructive">
-                {conversations.unread ?? 0}
+                {conversationsData.unread ?? 0}
               </div>
-              {conversations.unread > 0 && (
+              {conversationsData.unread > 0 && (
                 <Badge variant="destructive">Baru</Badge>
               )}
             </CardContent>
@@ -257,7 +248,7 @@ export default function BusinessMessagesPage() {
       )}
 
       {/* Empty State */}
-      {!loading && !error && conversations.conversationsList?.length === 0 && (
+      {!loading && !hookError && conversationsData.conversationsList?.length === 0 && (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <div className="p-4 bg-primary/10 rounded-full mb-4">
@@ -290,11 +281,11 @@ export default function BusinessMessagesPage() {
 
       {/* Conversations List */}
       {!loading &&
-        !error &&
-        conversations.conversationsList &&
-        conversations.conversationsList.length > 0 && (
+        !hookError &&
+        conversationsData.conversationsList &&
+        conversationsData.conversationsList.length > 0 && (
           <div className="space-y-3">
-            {conversations.conversationsList.map((conversation) => {
+            {conversationsData.conversationsList.map((conversation) => {
               const otherUser = getOtherUser(conversation);
               const isUnread =
                 !conversation.is_read && conversation.receiver_id === user?.id;

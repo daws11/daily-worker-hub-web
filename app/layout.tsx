@@ -5,6 +5,7 @@ import { AuthProvider } from "./providers/auth-provider";
 import { I18nProvider } from "./providers/i18n-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { ChatNotificationWrapper } from "./providers/chat-notification-provider";
 
 export const metadata: Metadata = {
   title: "Daily Worker Hub",
@@ -38,7 +39,9 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <I18nProvider>
-            <AuthProvider>{children}</AuthProvider>
+            <AuthProvider>
+              <ChatNotificationWrapper>{children}</ChatNotificationWrapper>
+            </AuthProvider>
           </I18nProvider>
           <Toaster />
         </ThemeProvider>

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { SiteHeader } from "./site-header";
-import { SidebarNav, businessNavItems, businessNavGroups, workerNavGroups } from "./sidebar-nav";
+import { SidebarNav, BusinessSidebarNav, WorkerSidebarNav, businessNavItems, businessNavGroups, workerNavGroups } from "./sidebar-nav";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { Button } from "@/components/ui/button";
 import { PanelLeftClose, PanelLeft } from "lucide-react";
@@ -72,11 +72,11 @@ export function DashboardLayout({
 
           {/* Sidebar Navigation */}
           <div className="flex-1 overflow-hidden">
-            <SidebarNav
-              items={sidebarItems}
-              groups={sidebarGroups}
-              collapsed={collapsed}
-            />
+            {role === "worker" ? (
+              <WorkerSidebarNav collapsed={collapsed} />
+            ) : (
+              <BusinessSidebarNav collapsed={collapsed} />
+            )}
           </div>
 
           {/* Collapse Toggle */}

@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ThemeToggle } from "./theme-toggle";
+import { useUnreadMessages } from "@/lib/hooks/use-unread-messages";
 import {
   Bell,
   ChevronRight,
@@ -91,6 +92,7 @@ export function SiteHeader({
   const { user, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const { unreadCount } = useUnreadMessages({ userId: user?.id, enabled: !!user });
 
   // Auto-generate breadcrumbs if not provided
   const crumbs =
@@ -202,15 +204,27 @@ export function SiteHeader({
           )}
 
           {/* Notifications */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="relative h-11 w-11 touch-manipulation"
+          <Link
+            href="/business/messages"
+            className={cn(
+              "relative flex h-11 w-11 items-center justify-center rounded-lg",
+              "text-muted-foreground hover:bg-muted hover:text-foreground",
+              "transition-colors min-h-[44px] touch-manipulation aria-expanded:bg-muted aria-expanded:text-foreground",
+            )}
           >
             <Bell className="h-5 w-5" />
-            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-primary" />
+            {unreadCount > 0 && (
+              <span
+                className={cn(
+                  "absolute -right-0.5 -top-0.5 flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-primary px-1 text-xs font-medium text-primary-foreground",
+                  unreadCount > 99 && "min-w-[1.5rem] px-1.5",
+                )}
+              >
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
             <span className="sr-only">Notifications</span>
-          </Button>
+          </Link>
 
           {/* Theme Toggle */}
           <div className="touch-manipulation">

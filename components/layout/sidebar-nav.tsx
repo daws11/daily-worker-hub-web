@@ -38,6 +38,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useUnreadCount } from "@/lib/hooks/use-unread-count";
 
 interface NavItem {
   title: string;
@@ -417,3 +418,36 @@ export function MobileSidebarNav({
 }
 
 export { businessNavItems, workerNavItems, businessNavGroups, workerNavGroups, type NavItem };
+
+// Badge-aware sidebar wrapper for Messages unread count
+
+function applyMessagesBadge(
+  groups: typeof businessNavGroups,
+  unreadCount: number,
+): typeof businessNavGroups {
+  return {
+    main: groups.main.map((item) => {
+      if (item.href.includes("/messages")) {
+        return {
+          ...item,
+          badge: unreadCount > 0 ? unreadCount : undefined,
+        };
+      }
+      return item;
+    }),
+    secondary: groups.secondary,
+    bottom: groups.bottom,
+  };
+}
+
+export function BusinessSidebarNav(props: Omit<SidebarNavProps, "groups">) {
+  const { unreadCount } = useUnreadCount();
+  const groups = applyMessagesBadge(businessNavGroups, unreadCount);
+  return <SidebarNav {...props} groups={groups} />;
+}
+
+export function WorkerSidebarNav(props: Omit<SidebarNavProps, "groups">) {
+  const { unreadCount } = useUnreadCount();
+  const groups = applyMessagesBadge(workerNavGroups, unreadCount);
+  return <SidebarNav {...props} groups={groups} />;
+}

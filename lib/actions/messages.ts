@@ -3,6 +3,7 @@
 import { createClient } from "../supabase/server";
 import type { Database } from "../supabase/types";
 import { createNotification } from "./notifications";
+import { notificationService } from "../notifications/service";
 import type { MessageWithRelations } from "../types/message";
 
 type Message = Database["public"]["Tables"]["messages"]["Row"];
@@ -33,23 +34,10 @@ export type RawMessagesListResult = {
   count?: number;
 };
 
-export type ConversationResult = {
-  success: boolean;
-  error?: string;
-  data?: Array<{
-    id: string;
-    participant_id: string;
-    participant_name: string;
-    participant_avatar?: string;
-    last_message: string;
-    last_message_time: string;
-    unread_count: number;
-  }>;
-  count?: number;
-};
-
 /**
  * Send a new message from one user to another
+ * Authorization: sender must have a booking relationship with receiver
+ * (business-worker or worker-business via an active booking)
  */
 export async function sendMessage(
   senderId: string,
@@ -59,6 +47,45 @@ export async function sendMessage(
 ): Promise<MessageResult> {
   try {
     const supabase = await createClient();
+
+    // Booking scope authorization: prevent messaging unconnected users
+    // Get sender profile to determine their role
+    const { data: senderProfile } = await (supabase as any)
+      .from("profiles")
+      .select("role")
+      .eq("id", senderId)
+      .single();
+
+    const senderRole = senderProfile?.role || "worker";
+
+    // Resolve the booking ID to use (passed in or looked up)
+    const resolvedBookingId = bookingId || null;
+
+    // Only check booking relationship if sender is not messaging themselves
+    if (senderId !== receiverId && senderRole !== "admin") {
+      // Check for an active booking between sender and receiver
+      const { data: booking } = await supabase
+        .from("bookings")
+        .select("id")
+        // Note: intentionally more restrictive than the API route (app/api/messages/send/route.ts:109)
+        // which allows pending, accepted, in_progress, and completed bookings.
+        // The server action restricts to in_progress only for tighter control.
+        .eq("status", "in_progress")
+        .or(
+          senderRole === "business"
+            ? `and(business_id.eq.${senderId},worker_id.eq.${receiverId})`
+            : `and(worker_id.eq.${senderId},business_id.eq.${receiverId})`,
+        )
+        .limit(1)
+        .single();
+
+      if (!booking) {
+        return {
+          success: false,
+          error: "Anda tidak dapat mengirim pesan ke pengguna ini tanpa booking yang aktif",
+        };
+      }
+    }
 
     const newMessage: MessageInsert = {
       sender_id: senderId,
@@ -86,19 +113,33 @@ export async function sendMessage(
       // Fetch sender's user profile to get their name
       const { data: senderProfile } = await supabase
         .from("users")
-        .select("full_name")
+        .select("full_name, role")
         .eq("id", senderId)
         .single();
 
       const senderName = senderProfile?.full_name || "Seseorang";
+      const senderUserRole = senderProfile?.role || senderRole;
       const messagePreview =
-        content.length > 50 ? content.substring(0, 50) + "..." : content;
+        content.length > 100 ? content.substring(0, 100) + "..." : content;
 
       await createNotification(
         receiverId,
         `Pesan Baru dari ${senderName}`,
         messagePreview,
         "/messages",
+      );
+
+      // Send FCM push notification to the receiver
+      // bookingId is used as conversationId since conversations are scoped to bookings
+      await notificationService.sendNewMessage(
+        receiverId,
+        senderName,
+        content,
+        resolvedBookingId || receiverId, // conversationId = bookingId
+        senderId, // senderId
+        senderUserRole, // senderRole
+        resolvedBookingId || undefined, // bookingId
+        data?.id, // messageId
       );
     } catch (notificationError) {
       // Don't fail the message send if notification creation fails
@@ -497,95 +538,6 @@ export async function getBookingMessages(
     };
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat mengambil pesan" };
-  }
-}
-
-/**
- * Get all conversations for a user
- * Returns a list of unique conversations with last message and unread count
- */
-export async function getConversations(
-  userId: string,
-): Promise<ConversationResult> {
-  try {
-    const supabase = await createClient();
-
-    // Get all messages where user is sender or receiver
-    const { data: messages, error } = await supabase
-      .from("messages")
-      .select("*")
-      .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      return {
-        success: false,
-        error: `Gagal mengambil percakapan: ${error.message}`,
-      };
-    }
-
-    if (!messages || messages.length === 0) {
-      return { success: true, data: [], count: 0 };
-    }
-
-    // Group messages by conversation partner
-    const conversationMap = new Map<
-      string,
-      {
-        participant_id: string;
-        last_message: Message;
-        unread_count: number;
-      }
-    >();
-
-    messages.forEach((msg) => {
-      const partnerId =
-        msg.sender_id === userId ? msg.receiver_id : msg.sender_id;
-
-      if (!conversationMap.has(partnerId)) {
-        conversationMap.set(partnerId, {
-          participant_id: partnerId,
-          last_message: msg,
-          unread_count: msg.receiver_id === userId && !msg.is_read ? 1 : 0,
-        });
-      } else {
-        const conv = conversationMap.get(partnerId)!;
-        // Count unread messages
-        if (msg.receiver_id === userId && !msg.is_read) {
-          conv.unread_count++;
-        }
-      }
-    });
-
-    // Fetch participant details (users table)
-    const participantIds = Array.from(conversationMap.keys());
-    const { data: participants } = await supabase
-      .from("users")
-      .select("id, full_name, avatar_url")
-      .in("id", participantIds);
-
-    // Build conversation list with participant info
-    const conversations = Array.from(conversationMap.values()).map((conv) => {
-      const participant = participants?.find(
-        (p) => p.id === conv.participant_id,
-      );
-      return {
-        id: conv.participant_id, // Use participant ID as conversation ID
-        participant_id: conv.participant_id,
-        participant_name: participant?.full_name || "Unknown",
-        participant_avatar: participant?.avatar_url,
-        last_message: conv.last_message.content,
-        last_message_time: conv.last_message.created_at,
-        unread_count: conv.unread_count,
-      };
-    });
-
-    return { success: true, data: conversations, count: conversations.length };
-  } catch (error) {
-    return {
-      success: false,
-      error: "Terjadi kesalahan saat mengambil percakapan",
-    };
   }
 }
 

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/app/providers/auth-provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useUnreadCount } from "@/lib/hooks/use-unread-count";
 import {
   Home,
   Briefcase,
@@ -40,7 +41,8 @@ interface MobileBottomNavProps {
 export function MobileBottomNav({ role }: MobileBottomNavProps) {
   const pathname = usePathname();
   const { user } = useAuth();
-  
+  const { unreadCount } = useUnreadCount();
+
   const userRole = role || (user?.user_metadata?.role as string) || "worker";
   const items = userRole === "business" ? businessMobileNav : workerMobileNav;
 
@@ -84,6 +86,33 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
                   </AvatarFallback>
                 </Avatar>
                 <span className="text-xs font-medium">{item.title}</span>
+              </Link>
+            );
+          }
+
+          // Special rendering for Messages tab with unread badge
+          if (item.title === "Messages") {
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex flex-col items-center justify-center flex-1 h-full touch-manipulation relative",
+                  "transition-all duration-200",
+                  isActive
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <div className="relative">
+                  <Icon className="h-6 w-6" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full px-1">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs mt-1 font-medium">{item.title}</span>
               </Link>
             );
           }

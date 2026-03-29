@@ -477,23 +477,53 @@ export class NotificationService {
 
   /**
    * Send new message notification
+   *
+   * @param recipientUserId - User ID of the message recipient
+   * @param senderName - Full name of the sender
+   * @param messagePreview - Preview of the message content (will be truncated to 100 chars)
+   * @param conversationId - Booking ID (used as conversation identifier)
+   * @param senderId - User ID of the sender (for hook to skip own messages)
+   * @param senderRole - Role of the sender (business or worker)
+   * @param bookingId - Booking ID for navigation
+   * @param messageId - Message ID for the notification
    */
   async sendNewMessage(
     recipientUserId: string,
     senderName: string,
     messagePreview: string,
     conversationId: string,
+    senderId?: string,
+    senderRole?: string,
+    bookingId?: string,
+    messageId?: string,
   ): Promise<SendNotificationResult> {
+    const truncatedPreview =
+      messagePreview.length > 100
+        ? `${messagePreview.slice(0, 100)}...`
+        : messagePreview;
+
     return this.sendToUser(
       recipientUserId,
       {
         title: senderName,
-        body:
-          messagePreview.length > 100
-            ? `${messagePreview.slice(0, 100)}...`
-            : messagePreview,
-        data: { conversationId, type: "new_message" },
-        clickAction: `/messages/${conversationId}`,
+        body: truncatedPreview,
+        data: {
+          conversationId,
+          type: "new_message",
+          // Required fields for use-chat-notifications hook
+          sender_id: senderId || "",
+          sender_name: senderName,
+          sender_role: senderRole || "",
+          booking_id: bookingId || conversationId,
+          message_id: messageId || "",
+          message_preview: truncatedPreview,
+          timestamp: new Date().toISOString(),
+        },
+        // Build role-aware click action URL based on sender role
+        // Actual routes are: /business/messages/[bookingId] or /worker/messages/[bookingId]
+        clickAction: senderRole
+          ? `/${senderRole}/messages/${bookingId || conversationId}`
+          : `/messages/${conversationId}`,
         tag: `message-${conversationId}`, // Group messages
       },
       "new_message",
