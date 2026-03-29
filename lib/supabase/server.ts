@@ -2,14 +2,18 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { Database } from "./types";
+import { getServiceRoleKey } from "./server-keys";
+
+// Re-export for backwards compatibility — callers importing getServiceRoleKey
+// from server.ts will still get the correct function.
+export { getServiceRoleKey } from "./server-keys";
 
 export async function createClient() {
   const cookieStore = await cookies();
 
   return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    getServiceRoleKey(),
     {
       cookies: {
         getAll() {
