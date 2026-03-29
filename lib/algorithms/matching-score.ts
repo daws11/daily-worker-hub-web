@@ -209,46 +209,53 @@ export interface MatchingScoreParams {
   isCompliant: boolean;
 }
 
+/**
+ * Matching score params with precomputed distance — avoids redundant Haversine
+ * computation when distance is already known (e.g. from a database query).
+ */
+export interface MatchingScoreParamsWithDistance {
+  // Worker data
+  workerSkills: string[];
+  workerRating: number | null;
+  workerTier: WorkerTier;
+
+  // Job data
+  jobSkills: string[];
+
+  // Precomputed distance in kilometers
+  distanceKm: number;
+
+  // Availability & compliance
+  isAvailable: boolean;
+  isCompliant: boolean;
+}
+
+/**
+ * Score breakdown with individual component scores.
+ * Use with WorkerScoreSummary for a lightweight return type.
+ */
+export interface ScoreBreakdown {
+  skillScore: number;
+  distanceScore: number;
+  availabilityScore: number;
+  ratingScore: number;
+  complianceScore: number;
+  tierBonus: number;
+}
+
+/**
+ * Lightweight summary of a worker's matching score for a job.
+ * Use this type when callers only need the score and distance,
+ * not a full WorkerWithScore object.
+ */
+export interface WorkerScoreSummary {
+  matchingScore: number;
+  distanceKm: number;
+  breakdown: ScoreBreakdown;
+}
+
 export function calculateMatchingScore(params: MatchingScoreParams): number {
-  const {
-    workerSkills,
-    workerLat,
-    workerLng,
-    workerRating,
-    workerTier,
-    jobSkills,
-    jobLat,
-    jobLng,
-    isAvailable,
-    isCompliant,
-  } = params;
-
-  // Calculate distance
-  const distance = calculateHaversineDistance(
-    workerLat,
-    workerLng,
-    jobLat,
-    jobLng,
-  );
-
-  // Calculate individual scores
-  const skillScore = calculateSkillScore(workerSkills, jobSkills);
-  const distanceScore = calculateDistanceScore(distance);
-  const availabilityScore = calculateAvailabilityScore(isAvailable);
-  const ratingScore = calculateRatingScore(workerRating);
-  const complianceScore = calculateComplianceScore(isCompliant);
-  const tierBonus = getTierBonus(workerTier);
-
-  // Calculate total score
-  const totalScore =
-    skillScore +
-    distanceScore +
-    availabilityScore +
-    ratingScore +
-    complianceScore +
-    tierBonus;
-
-  return Math.min(totalScore, 115); // Cap at 115
+  return getMatchingScoreBreakdown(params).matchingScore;
 }
 
 /**
@@ -257,16 +264,7 @@ export function calculateMatchingScore(params: MatchingScoreParams): number {
  * @param params - Matching parameters
  * @returns Score breakdown
  */
-export function getMatchingScoreBreakdown(params: MatchingScoreParams): {
-  skillScore: number;
-  distanceScore: number;
-  distanceKm: number;
-  availabilityScore: number;
-  ratingScore: number;
-  complianceScore: number;
-  tierBonus: number;
-  totalScore: number;
-} {
+export function getMatchingScoreBreakdown(params: MatchingScoreParams): WorkerScoreSummary {
   const {
     workerSkills,
     workerLat,
@@ -306,14 +304,86 @@ export function getMatchingScoreBreakdown(params: MatchingScoreParams): {
     tierBonus;
 
   return {
-    skillScore,
-    distanceScore,
+    matchingScore: Math.min(totalScore, 115),
     distanceKm: distance,
-    availabilityScore,
-    ratingScore,
-    complianceScore,
-    tierBonus,
-    totalScore: Math.min(totalScore, 115),
+    breakdown: {
+      skillScore,
+      distanceScore,
+      availabilityScore,
+      ratingScore,
+      complianceScore,
+      tierBonus,
+    },
+  };
+}
+
+/**
+ * Calculate total matching score using a precomputed distance.
+ *
+ * Use this overload when distance has already been computed (e.g. from a DB
+ * GIS query) to avoid recalculating the Haversine formula.
+ *
+ * @param params - Matching parameters with precomputed distance
+ * @returns Total matching score (0-115)
+ */
+export function calculateMatchingScoreWithDistance(
+  params: MatchingScoreParamsWithDistance,
+): number {
+  return getMatchingScoreBreakdownWithDistance(params).matchingScore;
+}
+
+/**
+ * Get matching score breakdown using a precomputed distance.
+ *
+ * Use this overload when distance has already been computed (e.g. from a DB
+ * GIS query) to avoid recalculating the Haversine formula.
+ *
+ * @param params - Matching parameters with precomputed distance
+ * @returns Score breakdown
+ */
+export function getMatchingScoreBreakdownWithDistance(
+  params: MatchingScoreParamsWithDistance,
+): WorkerScoreSummary {
+  const {
+    workerSkills,
+    workerRating,
+    workerTier,
+    jobSkills,
+    distanceKm,
+    isAvailable,
+    isCompliant,
+  } = params;
+
+  // Use precomputed distance directly
+  const distanceScore = calculateDistanceScore(distanceKm);
+
+  // Calculate individual scores
+  const skillScore = calculateSkillScore(workerSkills, jobSkills);
+  const availabilityScore = calculateAvailabilityScore(isAvailable);
+  const ratingScore = calculateRatingScore(workerRating);
+  const complianceScore = calculateComplianceScore(isCompliant);
+  const tierBonus = getTierBonus(workerTier);
+
+  // Calculate total score
+  const totalScore =
+    skillScore +
+    distanceScore +
+    availabilityScore +
+    ratingScore +
+    complianceScore +
+    tierBonus;
+
+  return {
+    matchingScore: Math.min(totalScore, 115),
+    distanceKm,
+    breakdown: {
+      skillScore,
+      distanceScore,
+      availabilityScore,
+      ratingScore,
+      complianceScore,
+      tierBonus,
+    },
   };
 }
 

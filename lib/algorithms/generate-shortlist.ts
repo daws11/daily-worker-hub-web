@@ -5,27 +5,16 @@
  */
 
 import {
-  MatchingScoreParams,
+  calculateHaversineDistance,
+  getMatchingScoreBreakdownWithDistance,
   getMatchingScoreBreakdown,
+  MatchingScoreParams,
+  MatchingScoreParamsWithDistance,
 } from "./matching-score";
 import { getTierRank } from "./tier-classifier";
 import { WorkerTier } from "@/lib/supabase/types";
 import { supabase } from "@/lib/supabase/client";
-import { batchCheckWorkerAvailability } from "./availability-checker";
-
-/**
- * Default minimum matching score threshold for worker shortlisting.
- * Workers with a score below this value are excluded from the shortlist.
- * A score of 50 represents partial relevance — acceptable but not strong.
- */
-const DEFAULT_MIN_SCORE = 50;
-
-/**
- * Shortlist multiplier — number of top-ranked workers returned per required worker.
- * Returns 2× the requested count to provide the employer with selection options.
- * e.g., 3 required workers → top 6 candidates returned.
- */
-const SHORTLIST_MULTIPLIER = 2;
+import { isWorkerAvailable } from "./availability-checker";
 
 /**
  * Worker with matching score
@@ -89,7 +78,7 @@ export async function generateWorkerShortlist(
     jobEndHour,
     requiredWorkers,
     excludeWorkerIds = [],
-    minScore = DEFAULT_MIN_SCORE,
+    minScore = 50, // Default minimum score
   } = params;
 
   try {
@@ -126,43 +115,53 @@ export async function generateWorkerShortlist(
       return [];
     }
 
-    // Filter workers (exclude specified IDs) and collect their IDs for batch availability check
-    // Use type assertion to handle Supabase query result typing
+    // Precompute distance map per worker (one Haversine call per worker)
     const workersList = workers as any[];
     const eligibleWorkers = workersList.filter(
       (worker: any) => !excludeWorkerIds.includes(worker.id),
     );
-    const eligibleWorkerIds = eligibleWorkers.map((w: any) => w.id);
-
-    // Batch-check availability for all workers in a single DB query (avoids N+1)
-    const availabilityMap = await batchCheckWorkerAvailability(
-      eligibleWorkerIds,
-      jobDate,
-      jobStartHour,
-      jobEndHour,
+    const distanceMap = new Map<string, number>();
+    await Promise.all(
+      eligibleWorkers.map(
+        (worker: any) =>
+          new Promise<void>((resolve) => {
+            const distance = calculateHaversineDistance(
+              worker.lat,
+              worker.lng,
+              jobLat,
+              jobLng,
+            );
+            distanceMap.set(worker.id, distance);
+            resolve();
+          }),
+      ),
     );
 
-    // Calculate matching scores for each worker using the pre-fetched availability data
-    const workersWithScores: WorkerWithScore[] = eligibleWorkers.map(
-      (worker: any) => {
+    // Calculate matching scores for each worker using precomputed distances
+    const workersWithScores: WorkerWithScore[] = await Promise.all(
+      eligibleWorkers.map(async (worker: any) => {
         const workerSkills =
           worker.worker_skills?.map((ws: any) => ws.skill_id) || [];
-        const isAvailable = availabilityMap[worker.id] ?? false;
 
-        const matchingParams: MatchingScoreParams = {
+        // Check actual worker availability
+        const isAvailable = await isWorkerAvailable(
+          worker.id,
+          jobDate,
+          jobStartHour,
+          jobEndHour,
+        );
+
+        const matchingParams: MatchingScoreParamsWithDistance = {
           workerSkills,
-          workerLat: worker.lat,
-          workerLng: worker.lng,
           workerRating: worker.rating,
           workerTier: worker.tier,
           jobSkills,
-          jobLat,
-          jobLng,
+          distanceKm: distanceMap.get(worker.id) ?? 0,
           isAvailable,
           isCompliant: true, // TODO: Check 21 Days Rule compliance
         };
 
-        const breakdown = getMatchingScoreBreakdown(matchingParams);
+        const breakdown = getMatchingScoreBreakdownWithDistance(matchingParams);
 
         return {
           id: worker.id,
@@ -177,18 +176,11 @@ export async function generateWorkerShortlist(
           locationName: worker.location_name,
           lat: worker.lat,
           lng: worker.lng,
-          matchingScore: breakdown.totalScore,
+          matchingScore: breakdown.matchingScore,
           distanceKm: breakdown.distanceKm,
-          breakdown: {
-            skillScore: breakdown.skillScore,
-            distanceScore: breakdown.distanceScore,
-            availabilityScore: breakdown.availabilityScore,
-            ratingScore: breakdown.ratingScore,
-            complianceScore: breakdown.complianceScore,
-            tierBonus: breakdown.tierBonus,
-          },
+          breakdown: breakdown.breakdown,
         };
-      },
+      }),
     );
 
     // Filter by minimum score and sort
@@ -210,7 +202,7 @@ export async function generateWorkerShortlist(
         // Tertiary sort: Distance (closer = better)
         return a.distanceKm - b.distanceKm;
       })
-      .slice(0, requiredWorkers * SHORTLIST_MULTIPLIER);
+      .slice(0, requiredWorkers * 2); // Return top workers (2x required workers for options)
   } catch (error) {
     console.error("Error generating worker shortlist:", error);
     return [];
@@ -223,11 +215,13 @@ export async function generateWorkerShortlist(
  *
  * @param workerIds - List of worker IDs to score
  * @param params - Matching parameters
+ * @param precomputedDistances - Optional precomputed distance map (workerId -> distanceKm). When provided, skips Haversine recalculation.
  * @returns Sorted list of workers with matching scores
  */
 export async function generateWorkerShortlistFromIds(
   workerIds: string[],
   params: ShortlistParams,
+  precomputedDistances?: Map<string, number>,
 ): Promise<WorkerWithScore[]> {
   const {
     jobSkills,
@@ -268,62 +262,69 @@ export async function generateWorkerShortlistFromIds(
       return [];
     }
 
-    // Batch-check availability for all workers in a single DB query (avoids N+1)
-    const availabilityMap = await batchCheckWorkerAvailability(
-      workerIds,
-      jobDate,
-      jobStartHour,
-      jobEndHour,
-    );
-
-    // Calculate matching scores using the pre-fetched availability data
+    // Calculate matching scores
     // Use type assertion to handle Supabase query result typing
     const workersList = workers as any[];
-    const workersWithScores = workersList.map((worker: any) => {
-      const workerSkills =
-        worker.worker_skills?.map((ws: any) => ws.skill_id) || [];
-      const isAvailable = availabilityMap[worker.id] ?? false;
+    const workersWithScores = await Promise.all(
+      workersList.map(async (worker: any) => {
+        const workerSkills =
+          worker.worker_skills?.map((ws: any) => ws.skill_id) || [];
 
-      const matchingParams: MatchingScoreParams = {
-        workerSkills,
-        workerLat: worker.lat,
-        workerLng: worker.lng,
-        workerRating: worker.rating,
-        workerTier: worker.tier,
-        jobSkills,
-        jobLat,
-        jobLng,
-        isAvailable,
-        isCompliant: true,
-      };
+        // Check actual worker availability
+        const isAvailable = await isWorkerAvailable(
+          worker.id,
+          jobDate,
+          jobStartHour,
+          jobEndHour,
+        );
 
-      const breakdown = getMatchingScoreBreakdown(matchingParams);
+        let breakdown;
+        if (precomputedDistances) {
+          const matchingParamsWithDistance: MatchingScoreParamsWithDistance = {
+            workerSkills,
+            workerRating: worker.rating,
+            workerTier: worker.tier,
+            jobSkills,
+            distanceKm: precomputedDistances.get(worker.id) ?? 0,
+            isAvailable,
+            isCompliant: true,
+          };
+          breakdown = getMatchingScoreBreakdownWithDistance(matchingParamsWithDistance);
+        } else {
+          const matchingParams: MatchingScoreParams = {
+            workerSkills,
+            workerLat: worker.lat,
+            workerLng: worker.lng,
+            workerRating: worker.rating,
+            workerTier: worker.tier,
+            jobSkills,
+            jobLat,
+            jobLng,
+            isAvailable,
+            isCompliant: true,
+          };
+          breakdown = getMatchingScoreBreakdown(matchingParams);
+        }
 
-      return {
-        id: worker.id,
-        userId: worker.user_id,
-        fullName: worker.full_name,
-        avatarUrl: worker.avatar_url,
-        tier: worker.tier,
-        skills: workerSkills,
-        rating: worker.rating,
-        punctuality: worker.punctuality,
-        jobsCompleted: worker.jobs_completed || 0,
-        locationName: worker.location_name,
-        lat: worker.lat,
-        lng: worker.lng,
-        matchingScore: breakdown.totalScore,
-        distanceKm: breakdown.distanceKm,
-        breakdown: {
-          skillScore: breakdown.skillScore,
-          distanceScore: breakdown.distanceScore,
-          availabilityScore: breakdown.availabilityScore,
-          ratingScore: breakdown.ratingScore,
-          complianceScore: breakdown.complianceScore,
-          tierBonus: breakdown.tierBonus,
-        },
-      };
-    });
+        return {
+          id: worker.id,
+          userId: worker.user_id,
+          fullName: worker.full_name,
+          avatarUrl: worker.avatar_url,
+          tier: worker.tier,
+          skills: workerSkills,
+          rating: worker.rating,
+          punctuality: worker.punctuality,
+          jobsCompleted: worker.jobs_completed || 0,
+          locationName: worker.location_name,
+          lat: worker.lat,
+          lng: worker.lng,
+          matchingScore: breakdown.matchingScore,
+          distanceKm: breakdown.distanceKm,
+          breakdown: breakdown.breakdown,
+        };
+      }),
+    );
 
     // Sort and return top workers
     return workersWithScores
@@ -338,7 +339,7 @@ export async function generateWorkerShortlistFromIds(
         }
         return a.distanceKm - b.distanceKm;
       })
-      .slice(0, requiredWorkers * SHORTLIST_MULTIPLIER);
+      .slice(0, requiredWorkers * 2);
   } catch (error) {
     console.error("Error generating worker shortlist from IDs:", error);
     return [];
