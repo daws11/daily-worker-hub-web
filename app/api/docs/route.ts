@@ -9,6 +9,7 @@
 
 import { NextResponse } from "next/server";
 import { getOpenApiJson } from "@/lib/openapi";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 
 /**
  * @openapi
@@ -28,7 +29,7 @@ import { getOpenApiJson } from "@/lib/openapi";
  *               type: object
  *               description: OpenAPI 3.0.3 specification object
  */
-export async function GET() {
+async function handleGET() {
   try {
     const spec = getOpenApiJson();
 
@@ -49,3 +50,10 @@ export async function GET() {
     );
   }
 }
+
+// Export handlers with rate limiting
+export const GET = withRateLimitForMethod(
+  handleGET as any,
+  { type: "api-public", userBased: false },
+  ["GET"],
+);

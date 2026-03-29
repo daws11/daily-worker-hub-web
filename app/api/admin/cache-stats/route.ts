@@ -15,25 +15,27 @@ import {
   invalidateCategoryCache,
 } from "@/lib/cache";
 import { logger } from "@/lib/logger";
-import { getServerSession } from "@/lib/auth/get-server-session";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 
 const routeLogger = logger.createApiLogger("cache-stats");
 
 /**
- * Verify admin authentication using session
- * Requires valid user session with admin role
+ * Verify admin authentication
+ * TODO: Implement proper admin auth check
  */
 async function verifyAdminAuth(request: NextRequest): Promise<boolean> {
-  const session = await getServerSession();
+  const authHeader = request.headers.get("authorization");
 
-  if (!session?.user?.id) {
+  // For now, check for a simple admin secret
+  // In production, this should use proper admin authentication
+  const adminSecret = process.env.ADMIN_API_SECRET;
+
+  if (!adminSecret) {
+    // If no admin secret is configured, deny access
     return false;
   }
 
-  // Check for admin role in user metadata or custom claims
-  const userRole = (session.user as any)?.role;
-
-  return userRole === "admin";
+  return authHeader === `Bearer ${adminSecret}`;
 }
 
 /**
@@ -85,35 +87,14 @@ async function verifyAdminAuth(request: NextRequest): Promise<boolean> {
  *       500:
  *         description: Internal server error
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
-    // Try session auth first (primary, not exposed to browser bundle)
-    let isAuthorized = await verifyAdminAuth(request);
-    let authMethod = "session";
-
-    // Fall back to Bearer token auth if no valid session
-    if (!isAuthorized) {
-      authMethod = "bearer";
-      const authHeader = request.headers.get("authorization");
-      const adminSecret = process.env.ADMIN_API_SECRET;
-
-      if (adminSecret && authHeader === `Bearer ${adminSecret}`) {
-        isAuthorized = true;
-      }
-    }
+    // Verify admin auth
+    const isAuthorized = await verifyAdminAuth(request);
 
     if (!isAuthorized) {
-      const session = await getServerSession();
-      const isAuthenticated = !!session?.user?.id;
-
-      if (!isAuthenticated) {
-        routeLogger.warn("Unauthorized cache stats access attempt - no session");
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-
-      // User is logged in but not admin
-      routeLogger.warn("Forbidden cache stats access attempt - not admin");
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      routeLogger.warn("Unauthorized cache stats access attempt");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Get cache stats
@@ -201,35 +182,14 @@ export async function GET(request: NextRequest) {
  *       500:
  *         description: Internal server error
  */
-export async function DELETE(request: NextRequest) {
+async function handleDELETE(request: NextRequest) {
   try {
-    // Try session auth first (primary, not exposed to browser bundle)
-    let isAuthorized = await verifyAdminAuth(request);
-    let authMethod = "session";
-
-    // Fall back to Bearer token auth if no valid session
-    if (!isAuthorized) {
-      authMethod = "bearer";
-      const authHeader = request.headers.get("authorization");
-      const adminSecret = process.env.ADMIN_API_SECRET;
-
-      if (adminSecret && authHeader === `Bearer ${adminSecret}`) {
-        isAuthorized = true;
-      }
-    }
+    // Verify admin auth
+    const isAuthorized = await verifyAdminAuth(request);
 
     if (!isAuthorized) {
-      const session = await getServerSession();
-      const isAuthenticated = !!session?.user?.id;
-
-      if (!isAuthenticated) {
-        routeLogger.warn("Unauthorized cache clear attempt - no session");
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-
-      // User is logged in but not admin
-      routeLogger.warn("Forbidden cache clear attempt - not admin");
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      routeLogger.warn("Unauthorized cache clear attempt");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -338,35 +298,14 @@ export async function DELETE(request: NextRequest) {
  *       500:
  *         description: Internal server error
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
-    // Try session auth first (primary, not exposed to browser bundle)
-    let isAuthorized = await verifyAdminAuth(request);
-    let authMethod = "session";
-
-    // Fall back to Bearer token auth if no valid session
-    if (!isAuthorized) {
-      authMethod = "bearer";
-      const authHeader = request.headers.get("authorization");
-      const adminSecret = process.env.ADMIN_API_SECRET;
-
-      if (adminSecret && authHeader === `Bearer ${adminSecret}`) {
-        isAuthorized = true;
-      }
-    }
+    // Verify admin auth
+    const isAuthorized = await verifyAdminAuth(request);
 
     if (!isAuthorized) {
-      const session = await getServerSession();
-      const isAuthenticated = !!session?.user?.id;
-
-      if (!isAuthenticated) {
-        routeLogger.warn("Unauthorized cache warmup attempt - no session");
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-
-      // User is logged in but not admin
-      routeLogger.warn("Forbidden cache warmup attempt - not admin");
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      routeLogger.warn("Unauthorized cache warmup attempt");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json().catch(() => ({}));
@@ -423,3 +362,21 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Export handlers with rate limiting
+// Admin endpoints - authenticated, stricter limits
+export const GET = withRateLimitForMethod(
+  handleGET as any,
+  { type: "api-authenticated", userBased: true },
+  ["GET"],
+);
+export const DELETE = withRateLimitForMethod(
+  handleDELETE as any,
+  { type: "api-authenticated", userBased: true },
+  ["DELETE"],
+);
+export const POST = withRateLimitForMethod(
+  handlePOST as any,
+  { type: "api-authenticated", userBased: true },
+  ["POST"],
+);

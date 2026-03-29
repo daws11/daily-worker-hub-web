@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 
 const routeLogger = logger.createApiLogger("notifications/preferences");
 
@@ -8,7 +9,7 @@ const routeLogger = logger.createApiLogger("notifications/preferences");
  * GET /api/notifications/preferences
  * Get notification preferences for the authenticated user
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications/preferences",
   });
@@ -136,7 +137,7 @@ export async function GET(request: NextRequest) {
  * - quiet_hours_start: string (HH:mm format)
  * - quiet_hours_end: string (HH:mm format)
  */
-export async function PUT(request: NextRequest) {
+async function handlePUT(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications/preferences",
   });
@@ -282,3 +283,16 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
+
+// Export handlers with rate limiting
+// GET is authenticated (100 req/min), PUT is authenticated (100 req/min)
+export const GET = withRateLimitForMethod(
+  handleGET as any,
+  { type: "api-authenticated", userBased: true },
+  ["GET"],
+);
+export const PUT = withRateLimitForMethod(
+  handlePUT as any,
+  { type: "api-authenticated", userBased: true },
+  ["PUT"],
+);

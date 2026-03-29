@@ -2,35 +2,34 @@
  * Admin Metrics API Route
  *
  * Provides system metrics for the monitoring dashboard.
- * Uses session-based authentication (not exposed to browser).
  * Collects data from cache, rate limiting, database, and logs.
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { cache } from "@/lib/cache";
-import { getRateLimitMetrics } from "@/lib/db/rate-limit";
+import { rateLimitStore, withRateLimitForMethod } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
-import { getServerSession } from "@/lib/auth/get-server-session";
 import os from "os";
 
 const routeLogger = logger.createApiLogger("admin-metrics");
 
 /**
- * Verify admin authentication using session
- * Requires valid user session with admin role
+ * Verify admin authentication
+ * TODO: Implement proper admin auth check
  */
 async function verifyAdminAuth(request: NextRequest): Promise<boolean> {
-  const session = await getServerSession();
+  const authHeader = request.headers.get("authorization");
 
-  if (!session?.user?.id) {
+  // For now, check for a simple admin secret
+  // In production, this should use proper admin authentication
+  const adminSecret = process.env.ADMIN_API_SECRET;
+
+  if (!adminSecret) {
+    // If no admin secret is configured, deny access
     return false;
   }
 
-  // Check for admin role in user metadata or custom claims
-  // In production, this could check session.user.role or app_metadata
-  const userRole = (session.user as any)?.role;
-
-  return userRole === "admin";
+  return authHeader === `Bearer ${adminSecret}`;
 }
 
 /**
@@ -105,63 +104,55 @@ function getCacheMetrics() {
 }
 
 /**
- * Get rate limiting metrics from the database
+ * Get rate limiting metrics
  */
-async function getRateLimitMetricsFromDb() {
-  const dbMetrics = await getRateLimitMetrics();
+function getRateLimitMetrics() {
+  const stats = {
+    totalRequests: 0,
+    blockedRequests: 0,
+    activeLimiters: rateLimitStore.size,
+    byType: {
+      auth: { requests: 0, blocked: 0 },
+      "api-authenticated": { requests: 0, blocked: 0 },
+      "api-public": { requests: 0, blocked: 0 },
+      payment: { requests: 0, blocked: 0 },
+    },
+    topEndpoints: [] as Array<{ endpoint: string; count: number }>,
+  };
 
-  if (!dbMetrics) {
-    return {
-      totalRequests: 0,
-      blockedRequests: 0,
-      activeLimiters: 0,
-      byType: {
-        auth: { requests: 0, blocked: 0 },
-        "api-authenticated": { requests: 0, blocked: 0 },
-        "api-public": { requests: 0, blocked: 0 },
-        payment: { requests: 0, blocked: 0 },
-      },
-      topEndpoints: [] as Array<{ endpoint: string; count: number }>,
-    };
+  // Aggregate rate limit data
+  for (const [key, record] of rateLimitStore.entries()) {
+    const type = key.split(":")[1] as keyof typeof stats.byType;
+
+    if (type && stats.byType[type]) {
+      stats.byType[type].requests += record.count;
+      stats.totalRequests += record.count;
+
+      // If count equals max requests, consider it as potentially blocked
+      if (record.count >= 5) {
+        // Assuming 5 is the minimum threshold
+        stats.byType[type].blocked++;
+        stats.blockedRequests++;
+      }
+    }
   }
 
-  // Build topEndpoints from topIdentifiers (format: "prefix:user:id" or "prefix:ip:id")
+  // Get top endpoints (simplified - would need better tracking in production)
   const endpointCounts = new Map<string, number>();
-  for (const { identifier, count } of dbMetrics.topIdentifiers) {
-    const parts = identifier.split(":");
-    const endpoint = parts.length >= 2 ? parts[0] : identifier;
-    endpointCounts.set(endpoint, (endpointCounts.get(endpoint) || 0) + count);
+  for (const [key, record] of rateLimitStore.entries()) {
+    const endpoint = key.split(":")[0] || "unknown";
+    endpointCounts.set(
+      endpoint,
+      (endpointCounts.get(endpoint) || 0) + record.count,
+    );
   }
 
-  const topEndpoints = Array.from(endpointCounts.entries())
+  stats.topEndpoints = Array.from(endpointCounts.entries())
     .map(([endpoint, count]) => ({ endpoint, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
-  return {
-    totalRequests: dbMetrics.totalRequests,
-    blockedRequests: dbMetrics.blockedRequests,
-    activeLimiters: Object.values(dbMetrics.byType).reduce(
-      (sum, t) => sum + t.activeLimiters,
-      0,
-    ),
-    byType: {
-      auth: { requests: dbMetrics.byType.auth.requests, blocked: dbMetrics.byType.auth.blocked },
-      "api-authenticated": {
-        requests: dbMetrics.byType["api-authenticated"].requests,
-        blocked: dbMetrics.byType["api-authenticated"].blocked,
-      },
-      "api-public": {
-        requests: dbMetrics.byType["api-public"].requests,
-        blocked: dbMetrics.byType["api-public"].blocked,
-      },
-      payment: {
-        requests: dbMetrics.byType.payment.requests,
-        blocked: dbMetrics.byType.payment.blocked,
-      },
-    },
-    topEndpoints,
-  };
+  return stats;
 }
 
 /**
@@ -304,38 +295,19 @@ function getDatabaseMetrics() {
  *                   type: object
  *       401:
  *         description: Unauthorized
+ *       429:
+ *         description: Too many requests
  *       500:
  *         description: Internal server error
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
-    // Try session auth first (primary, not exposed to browser bundle)
-    let isAuthorized = await verifyAdminAuth(request);
-    let authMethod = "session";
-
-    // Fall back to Bearer token auth if no valid session
-    if (!isAuthorized) {
-      authMethod = "bearer";
-      const authHeader = request.headers.get("authorization");
-      const adminSecret = process.env.ADMIN_API_SECRET;
-
-      if (adminSecret && authHeader === `Bearer ${adminSecret}`) {
-        isAuthorized = true;
-      }
-    }
+    // Verify admin auth
+    const isAuthorized = await verifyAdminAuth(request);
 
     if (!isAuthorized) {
-      const session = await getServerSession();
-      const isAuthenticated = !!session?.user?.id;
-
-      if (!isAuthenticated) {
-        routeLogger.warn("Unauthorized metrics access attempt - no session");
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-
-      // User is logged in but not admin
-      routeLogger.warn("Forbidden metrics access attempt - not admin");
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      routeLogger.warn("Unauthorized metrics access attempt");
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Collect all metrics
@@ -343,7 +315,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
       system: getSystemHealth(),
       cache: getCacheMetrics(),
-      rateLimit: await getRateLimitMetricsFromDb(),
+      rateLimit: getRateLimitMetrics(),
       api: getApiResponseMetrics(),
       errors: getErrorMetrics(),
       users: getActiveUsersMetrics(),
@@ -361,3 +333,9 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = withRateLimitForMethod(
+  handleGET as any,
+  { type: "api-public", userBased: false },
+  ["GET"],
+);

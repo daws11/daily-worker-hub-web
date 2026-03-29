@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 import { verifyFcmToken } from "@/lib/firebase-admin";
 
 const routeLogger = logger.createApiLogger("notifications/register-token");
@@ -15,7 +16,7 @@ const routeLogger = logger.createApiLogger("notifications/register-token");
  * - deviceId: Unique device identifier (optional)
  * - deviceName: Human-readable device name (optional)
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications/register-token",
   });
@@ -182,3 +183,11 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Export handlers with rate limiting
+// POST is authenticated (100 req/min)
+export const POST = withRateLimitForMethod(
+  handlePOST as any,
+  { type: "api-authenticated", userBased: true },
+  ["POST"],
+);

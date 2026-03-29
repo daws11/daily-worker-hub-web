@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
@@ -63,7 +64,7 @@ const routeLogger = logger.createApiLogger("notifications");
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications",
   });
@@ -229,7 +230,7 @@ export async function GET(request: NextRequest) {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-export async function PATCH(request: NextRequest) {
+async function handlePATCH(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications",
   });
@@ -324,3 +325,16 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+
+// Export handlers with rate limiting
+// GET is authenticated (100 req/min), PATCH is authenticated (100 req/min)
+export const GET = withRateLimitForMethod(
+  handleGET as any,
+  { type: "api-authenticated", userBased: true },
+  ["GET"],
+);
+export const PATCH = withRateLimitForMethod(
+  handlePATCH as any,
+  { type: "api-authenticated", userBased: true },
+  ["PATCH"],
+);

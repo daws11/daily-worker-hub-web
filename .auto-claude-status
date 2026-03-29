@@ -1,15 +1,15 @@
 {
   "active": true,
-  "spec": "008-in-memory-rate-limiter-bypassable-in-serverless-mu",
+  "spec": "037-add-rate-limiting-middleware-to-api-routes",
   "state": "building",
   "subtasks": {
-    "completed": 7,
-    "total": 9,
+    "completed": 19,
+    "total": 24,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Integration Verification",
+    "current": "Add Rate Limiting to Admin, Cron, and Docs Routes",
     "id": null,
     "total": 3
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 9,
-    "started_at": "2026-03-26T18:58:57.429937"
+    "number": 31,
+    "started_at": "2026-03-26T20:03:15.064661"
   },
-  "last_update": "2026-03-26T19:35:57.858029"
+  "last_update": "2026-03-26T21:24:12.442958"
 }

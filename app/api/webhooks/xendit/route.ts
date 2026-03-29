@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { xenditGateway, type WebhookPayload } from "@/lib/payments";
 import { logger } from "@/lib/logger";
+import { withRateLimit } from "@/lib/rate-limit";
 
 const routeLogger = logger.createApiLogger("webhooks/xendit");
 
@@ -29,7 +30,7 @@ const routeLogger = logger.createApiLogger("webhooks/xendit");
  * - payment_method: Payment method used
  * - payment_channel: Payment channel used
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "webhooks/xendit",
   });
@@ -428,7 +429,7 @@ function mapXenditStatus(
  *
  * Health check endpoint
  */
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "webhooks/xendit",
   });
@@ -442,3 +443,14 @@ export async function GET(request: Request) {
     timestamp: new Date().toISOString(),
   });
 }
+
+// Export handlers with rate limiting
+export const POST = withRateLimit(handlePOST as any, {
+  type: "api-public",
+  userBased: false,
+});
+
+export const GET = withRateLimit(handleGET as any, {
+  type: "api-public",
+  userBased: false,
+});

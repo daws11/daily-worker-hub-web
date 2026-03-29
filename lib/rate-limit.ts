@@ -1,23 +1,97 @@
 /**
  * Rate Limiting Middleware for Daily Worker Hub
  *
- * Implements database-backed sliding window rate limiting with:
+ * Implements in-memory sliding window rate limiting with:
  * - IP-based and user-based rate limiting
  * - Configurable limits per endpoint type
+ * - Environment-aware rate limits (dev/staging/prod)
  * - Admin bypass support
  * - Rate limit headers (X-RateLimit-*)
  * - Retry-After header on 429 responses
- * - Fail-open on database errors
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth/get-server-session";
 import { createClient } from "@/lib/supabase/server";
-import {
-  getRateLimitCount,
-  recordRateLimitRequest,
-  cleanupExpiredRateLimits,
-} from "@/lib/db/rate-limit";
+
+/**
+ * Environment types for rate limit configuration
+ */
+export type Environment = "development" | "staging" | "production";
+
+/**
+ * Get current environment
+ */
+function getEnvironment(): Environment {
+  const env = (process.env.NODE_ENV ?? "development") as string;
+  if (env === "production") return "production";
+  if (env === "staging") return "staging";
+  return "development";
+}
+
+/**
+ * Environment-specific multiplier for rate limits
+ * Development: Higher limits for testing
+ * Staging: Moderate limits
+ * Production: Strict limits for security
+ */
+const ENV_MULTIPLIERS: Record<Environment, number> = {
+  development: 5, // 5x more relaxed for local testing
+  staging: 2, // 2x more relaxed than production
+  production: 1, // Standard limits
+};
+
+/**
+ * Environment-aware rate limit overrides
+ * These can be set via environment variables for fine-grained control
+ */
+interface EnvironmentOverrides {
+  authMaxRequests?: number;
+  authWindowMs?: number;
+  apiAuthenticatedMaxRequests?: number;
+  apiAuthenticatedWindowMs?: number;
+  apiPublicMaxRequests?: number;
+  apiPublicWindowMs?: number;
+  paymentMaxRequests?: number;
+  paymentWindowMs?: number;
+}
+
+/**
+ * Parse environment variable overrides
+ */
+function getEnvironmentOverrides(): EnvironmentOverrides {
+  return {
+    // Auth limits
+    authMaxRequests: process.env.RATE_LIMIT_AUTH_MAX_REQUESTS
+      ? parseInt(process.env.RATE_LIMIT_AUTH_MAX_REQUESTS, 10)
+      : undefined,
+    authWindowMs: process.env.RATE_LIMIT_AUTH_WINDOW_MS
+      ? parseInt(process.env.RATE_LIMIT_AUTH_WINDOW_MS, 10)
+      : undefined,
+    // Authenticated API limits
+    apiAuthenticatedMaxRequests: process.env
+      .RATE_LIMIT_API_AUTHENTICATED_MAX_REQUESTS
+      ? parseInt(process.env.RATE_LIMIT_API_AUTHENTICATED_MAX_REQUESTS, 10)
+      : undefined,
+    apiAuthenticatedWindowMs: process.env.RATE_LIMIT_API_AUTHENTICATED_WINDOW_MS
+      ? parseInt(process.env.RATE_LIMIT_API_AUTHENTICATED_WINDOW_MS, 10)
+      : undefined,
+    // Public API limits
+    apiPublicMaxRequests: process.env.RATE_LIMIT_API_PUBLIC_MAX_REQUESTS
+      ? parseInt(process.env.RATE_LIMIT_API_PUBLIC_MAX_REQUESTS, 10)
+      : undefined,
+    apiPublicWindowMs: process.env.RATE_LIMIT_API_PUBLIC_WINDOW_MS
+      ? parseInt(process.env.RATE_LIMIT_API_PUBLIC_WINDOW_MS, 10)
+      : undefined,
+    // Payment limits
+    paymentMaxRequests: process.env.RATE_LIMIT_PAYMENT_MAX_REQUESTS
+      ? parseInt(process.env.RATE_LIMIT_PAYMENT_MAX_REQUESTS, 10)
+      : undefined,
+    paymentWindowMs: process.env.RATE_LIMIT_PAYMENT_WINDOW_MS
+      ? parseInt(process.env.RATE_LIMIT_PAYMENT_WINDOW_MS, 10)
+      : undefined,
+  };
+}
 
 /**
  * Rate limit configuration types
@@ -40,9 +114,9 @@ export interface RateLimitConfig {
 }
 
 /**
- * Predefined rate limit configurations
+ * Base rate limit configurations (production defaults)
  */
-export const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
+const BASE_RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
   auth: {
     maxRequests: 5,
     windowMs: 60 * 1000, // 5 requests per minute
@@ -72,11 +146,100 @@ export const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> = {
 };
 
 /**
- * Request record for tracking rate limits (legacy in-memory store)
- * Exported for backward compatibility — admin metrics may still reference it
- * but actual rate limiting now uses the database.
+ * Apply environment multiplier to a base value
  */
-export interface RequestRecord {
+function applyEnvironmentMultiplier(
+  baseValue: number,
+  multiplier: number,
+): number {
+  return Math.max(1, Math.round(baseValue * multiplier));
+}
+
+/**
+ * Get environment-aware rate limit configurations
+ * Applies environment multipliers and allows environment variable overrides
+ */
+function buildRateLimitConfigs(): Record<RateLimitType, RateLimitConfig> {
+  const env = getEnvironment();
+  const multiplier = ENV_MULTIPLIERS[env];
+  const overrides = getEnvironmentOverrides();
+
+  return {
+    auth: {
+      maxRequests:
+        overrides.authMaxRequests ??
+        applyEnvironmentMultiplier(BASE_RATE_LIMIT_CONFIGS.auth.maxRequests, multiplier),
+      windowMs: overrides.authWindowMs ?? BASE_RATE_LIMIT_CONFIGS.auth.windowMs,
+      type: "auth",
+      message:
+        "Terlalu banyak percobaan login/register. Silakan coba lagi dalam beberapa menit.",
+    },
+    "api-authenticated": {
+      maxRequests:
+        overrides.apiAuthenticatedMaxRequests ??
+        applyEnvironmentMultiplier(
+          BASE_RATE_LIMIT_CONFIGS["api-authenticated"].maxRequests,
+          multiplier,
+        ),
+      windowMs:
+        overrides.apiAuthenticatedWindowMs ??
+        BASE_RATE_LIMIT_CONFIGS["api-authenticated"].windowMs,
+      type: "api-authenticated",
+      message: "Terlalu banyak permintaan. Silakan coba lagi nanti.",
+    },
+    "api-public": {
+      maxRequests:
+        overrides.apiPublicMaxRequests ??
+        applyEnvironmentMultiplier(
+          BASE_RATE_LIMIT_CONFIGS["api-public"].maxRequests,
+          multiplier,
+        ),
+      windowMs:
+        overrides.apiPublicWindowMs ?? BASE_RATE_LIMIT_CONFIGS["api-public"].windowMs,
+      type: "api-public",
+      message: "Terlalu banyak permintaan. Silakan coba lagi nanti.",
+    },
+    payment: {
+      maxRequests:
+        overrides.paymentMaxRequests ??
+        applyEnvironmentMultiplier(
+          BASE_RATE_LIMIT_CONFIGS.payment.maxRequests,
+          multiplier,
+        ),
+      windowMs: overrides.paymentWindowMs ?? BASE_RATE_LIMIT_CONFIGS.payment.windowMs,
+      type: "payment",
+      message:
+        "Terlalu banyak permintaan pembayaran. Silakan coba lagi dalam beberapa menit.",
+    },
+  };
+}
+
+/**
+ * Predefined rate limit configurations (environment-aware)
+ */
+export const RATE_LIMIT_CONFIGS: Record<RateLimitType, RateLimitConfig> =
+  buildRateLimitConfigs();
+
+/**
+ * Get current environment information
+ * Useful for debugging and logging
+ */
+export function getRateLimitEnvironment(): {
+  environment: Environment;
+  multiplier: number;
+  configs: Record<RateLimitType, RateLimitConfig>;
+} {
+  return {
+    environment: getEnvironment(),
+    multiplier: ENV_MULTIPLIERS[getEnvironment()],
+    configs: RATE_LIMIT_CONFIGS,
+  };
+}
+
+/**
+ * Request record for tracking rate limits
+ */
+interface RequestRecord {
   count: number;
   resetTime: number;
 }
@@ -84,21 +247,20 @@ export interface RequestRecord {
 /**
  * In-memory store for rate limit tracking
  * Key format: `${identifier}:${type}`
- * NOTE: This is kept for backward compatibility only. Actual rate limiting
- * uses the database via getRateLimitCount / recordRateLimitRequest.
- * Exported for admin metrics access.
+ * Exported for admin metrics access
  */
 export const rateLimitStore = new Map<string, RequestRecord>();
 
 /**
- * Clean up expired entries periodically (every 5 minutes) using DB cleanup
+ * Clean up expired entries periodically (every 5 minutes)
  */
 setInterval(
-  async () => {
-    try {
-      await cleanupExpiredRateLimits();
-    } catch {
-      // Silently ignore cleanup errors to avoid affecting request handling
+  () => {
+    const now = Date.now();
+    for (const [key, record] of rateLimitStore.entries()) {
+      if (now > record.resetTime) {
+        rateLimitStore.delete(key);
+      }
     }
   },
   5 * 60 * 1000,
@@ -160,62 +322,60 @@ async function isAdminUser(): Promise<boolean> {
 }
 
 /**
- * Database-backed sliding window rate limit check.
- * Returns remaining requests and reset time.
+ * Sliding window rate limit check
+ * Returns remaining requests and reset time
  */
-async function checkRateLimit(
+function checkRateLimit(
   identifier: string,
   config: RateLimitConfig,
-): Promise<{
+): {
   allowed: boolean;
   remaining: number;
   resetTime: number;
   retryAfter: number;
-}> {
+} {
   const now = Date.now();
+  const key = `${identifier}:${config.type}`;
 
-  // Query current count from database
-  const { count, error } = await getRateLimitCount(
-    identifier,
-    config.type,
-    config.windowMs,
-  );
+  const record = rateLimitStore.get(key);
 
-  // Fail-open: if DB errors, allow the request
-  if (error || count === null) {
+  if (!record || now > record.resetTime) {
+    // No record or window expired - create new entry
+    const newRecord: RequestRecord = {
+      count: 1,
+      resetTime: now + config.windowMs,
+    };
+    rateLimitStore.set(key, newRecord);
+
     return {
       allowed: true,
       remaining: config.maxRequests - 1,
-      resetTime: now + config.windowMs,
+      resetTime: newRecord.resetTime,
       retryAfter: 0,
     };
   }
 
-  const remaining = config.maxRequests - count;
+  // Window is still active
+  if (record.count < config.maxRequests) {
+    // Increment count
+    record.count++;
+    rateLimitStore.set(key, record);
 
-  // Always record the request to track usage (even when over limit)
-  try {
-    await recordRateLimitRequest(identifier, config.type, config.windowMs);
-  } catch {
-    // Silently ignore recording errors (fail-open)
-  }
-
-  if (remaining > 0) {
     return {
       allowed: true,
-      remaining: Math.max(0, remaining - 1),
-      resetTime: now + config.windowMs,
+      remaining: config.maxRequests - record.count,
+      resetTime: record.resetTime,
       retryAfter: 0,
     };
   }
 
   // Rate limit exceeded
-  const retryAfter = Math.ceil(config.windowMs / 1000); // Convert to seconds
+  const retryAfter = Math.ceil((record.resetTime - now) / 1000); // Convert to seconds
 
   return {
     allowed: false,
     remaining: 0,
-    resetTime: now + config.windowMs,
+    resetTime: record.resetTime,
     retryAfter,
   };
 }
@@ -358,16 +518,16 @@ export function withRateLimit<T extends NextRequest>(
     }
 
     // Check rate limit
-    let result = await checkRateLimit(identifier, rateLimitConfig);
+    const result = checkRateLimit(identifier, rateLimitConfig);
 
     // If also IP-based, check that too (stricter limit wins)
     if (alsoIpBased && userId) {
       const ipIdentifier = keyPrefix ? `${keyPrefix}:ip:${ip}` : `ip:${ip}`;
-      const ipResult = await checkRateLimit(ipIdentifier, rateLimitConfig);
+      const ipResult = checkRateLimit(ipIdentifier, rateLimitConfig);
 
-      // Use the stricter result (lowest remaining = most restrictive)
+      // Use the stricter result
       if (!ipResult.allowed || ipResult.remaining < result.remaining) {
-        result = ipResult;
+        Object.assign(result, ipResult);
       }
     }
 

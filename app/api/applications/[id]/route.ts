@@ -7,6 +7,7 @@ import {
   acceptApplicationAndCreateBooking,
   withdrawApplication,
 } from "@/lib/actions/job-applications";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 
 const routeLogger = logger.createApiLogger("applications/[id]");
 
@@ -15,7 +16,7 @@ type Params = {
 };
 
 // GET /api/applications/[id] - Get single application details
-export async function GET(request: Request, { params }: Params) {
+async function handleGET(request: Request, { params }: Params) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "applications/[id]",
   });
@@ -187,7 +188,7 @@ export async function GET(request: Request, { params }: Params) {
 }
 
 // PATCH /api/applications/[id] - Update application status
-export async function PATCH(request: Request, { params }: Params) {
+async function handlePATCH(request: Request, { params }: Params) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "applications/[id]",
   });
@@ -457,3 +458,16 @@ export async function PATCH(request: Request, { params }: Params) {
     );
   }
 }
+
+// Export handlers with rate limiting
+// Both GET and PATCH require authentication (100 req/min)
+export const GET = withRateLimitForMethod(
+  handleGET as any,
+  { type: "api-authenticated", userBased: true },
+  ["GET"],
+);
+export const PATCH = withRateLimitForMethod(
+  handlePATCH as any,
+  { type: "api-authenticated", userBased: true },
+  ["PATCH"],
+);

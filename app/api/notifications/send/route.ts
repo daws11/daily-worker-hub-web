@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 import { notificationService } from "@/lib/notifications/service";
 import type {
   NotificationPayload,
@@ -25,7 +26,7 @@ const routeLogger = logger.createApiLogger("notifications/send");
  * - Business: Can send to workers they have bookings with
  * - Worker: Can only send to themselves (for testing)
  */
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications/send",
   });
@@ -233,3 +234,11 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Export handlers with rate limiting
+// POST is authenticated (100 req/min)
+export const POST = withRateLimitForMethod(
+  handlePOST as any,
+  { type: "api-authenticated", userBased: true },
+  ["POST"],
+);

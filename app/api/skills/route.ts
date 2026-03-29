@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import { cache, LRUCache, CACHE_TTL } from "@/lib/cache";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 
 const routeLogger = logger.createApiLogger("skills");
 
@@ -47,7 +48,7 @@ const SKILLS_CACHE_KEY = LRUCache.createKey("skills", "all");
  *       500:
  *         description: Internal server error
  */
-export async function GET(request: Request) {
+async function handleGET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "skills",
   });
@@ -121,3 +122,11 @@ export async function GET(request: Request) {
     );
   }
 }
+
+// Export handlers with rate limiting
+// GET is public (30 req/min)
+export const GET = withRateLimitForMethod(
+  handleGET as any,
+  { type: "api-public", userBased: false },
+  ["GET"],
+);

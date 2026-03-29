@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
+import { withRateLimitForMethod } from "@/lib/rate-limit";
 
 const routeLogger = logger.createApiLogger("notifications/token");
 
@@ -12,7 +13,7 @@ const routeLogger = logger.createApiLogger("notifications/token");
  * - token: FCM token to remove (optional, removes all tokens if not provided)
  * - deviceId: Device identifier to remove tokens for (optional)
  */
-export async function DELETE(request: NextRequest) {
+async function handleDELETE(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications/token",
   });
@@ -105,7 +106,7 @@ export async function DELETE(request: NextRequest) {
  * GET /api/notifications/token
  * Get all FCM tokens for the authenticated user
  */
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications/token",
   });
@@ -174,3 +175,16 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+// Export handlers with rate limiting
+// GET is authenticated (100 req/min), DELETE is authenticated (100 req/min)
+export const GET = withRateLimitForMethod(
+  handleGET as any,
+  { type: "api-authenticated", userBased: true },
+  ["GET"],
+);
+export const DELETE = withRateLimitForMethod(
+  handleDELETE as any,
+  { type: "api-authenticated", userBased: true },
+  ["DELETE"],
+);
