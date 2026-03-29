@@ -137,6 +137,90 @@ export async function getWorkerAvailabilityForDay(
 }
 
 /**
+ * Pure availability check logic - determines if a job fits within an availability block.
+ * This function performs NO database queries and is suitable for batch processing.
+ *
+ * @param availability - Worker's availability record for the day (or null if none)
+ * @param jobStartHour - Job start hour (0-23)
+ * @param jobEndHour - Job end hour (0-23)
+ * @returns Whether the job fits within the worker's availability block
+ */
+export function checkAvailabilityFit(
+  availability: WorkerAvailability | null,
+  jobStartHour: number,
+  jobEndHour: number,
+): boolean {
+  if (!availability || !availability.is_available) {
+    return false;
+  }
+
+  const { start_hour, end_hour } = availability;
+  return (
+    jobStartHour >= start_hour &&
+    jobEndHour <= end_hour &&
+    jobStartHour < jobEndHour
+  );
+}
+
+/**
+ * Batch-check availability for multiple workers in a single DB query.
+ * Avoids the N+1 query problem when checking many workers for the same date/time.
+ *
+ * @param workerIds - Array of worker IDs to check
+ * @param date - Date object (includes day of week)
+ * @param jobStartHour - Job start hour (0-23)
+ * @param jobEndHour - Job end hour (0-23)
+ * @returns Record mapping workerId to availability (true/false)
+ */
+export async function batchCheckWorkerAvailability(
+  workerIds: string[],
+  date: Date,
+  jobStartHour: number,
+  jobEndHour: number,
+): Promise<Record<string, boolean>> {
+  if (workerIds.length === 0) {
+    return {};
+  }
+
+  // Get day of week (0=Sunday, 1=Monday, ..., 6=Saturday)
+  const jsDay = date.getDay();
+  // Convert to our format (1=Monday, 7=Sunday)
+  const dayOfWeek = jsDay === 0 ? 7 : jsDay;
+
+  // Single batch query for all workers on this day
+  const { data, error } = await supabase
+    .from("worker_availabilities")
+    .select("*")
+    .in("worker_id", workerIds)
+    .eq("day_of_week", dayOfWeek);
+
+  if (error) {
+    console.error("Error batch-fetching worker availabilities:", error);
+    // On error, treat all workers as unavailable
+    return workerIds.reduce(
+      (acc, id) => ({ ...acc, [id]: false }),
+      {} as Record<string, boolean>,
+    );
+  }
+
+  // Build lookup map: workerId -> availability record
+  const availabilityMap = new Map<string, WorkerAvailability | null>();
+  for (const record of data || []) {
+    availabilityMap.set(record.worker_id, record);
+  }
+
+  // Determine availability for each worker using pure logic
+  return workerIds.reduce(
+    (acc, workerId) => {
+      const availability = availabilityMap.get(workerId) ?? null;
+      acc[workerId] = checkAvailabilityFit(availability, jobStartHour, jobEndHour);
+      return acc;
+    },
+    {} as Record<string, boolean>,
+  );
+}
+
+/**
  * Check if worker is available for a specific time period
  *
  * @param workerId - Worker ID
