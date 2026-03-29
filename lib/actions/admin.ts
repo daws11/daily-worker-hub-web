@@ -4,8 +4,6 @@ import { createClient } from "../supabase/server";
 import type { Database } from "../supabase/types";
 
 // ============================================================================
-<<<<<<< HEAD
-=======
 // ADMIN ANALYTICS ACTIONS
 // ============================================================================
 
@@ -529,7 +527,6 @@ export async function getPaymentMetrics(): Promise<{
 }
 
 // ============================================================================
->>>>>>> auto-claude/046-add-jsdoc-to-undocumented-lib-actions-server-actio
 // ADMIN EXPORT ACTIONS
 // ============================================================================
 

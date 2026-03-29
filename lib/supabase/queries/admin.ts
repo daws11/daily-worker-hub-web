@@ -707,16 +707,15 @@ interface AuditActionInput {
 }
 
 async function logAuditAction(input: AuditActionInput): Promise<void> {
-  const { error } = await (supabase as unknown as { from: (table: string) => { insert: (data: Record<string, unknown>) => { then: (onrejected: (reason: unknown) => void) => void } } } })
-    .from("admin_audit_logs")
-    .insert({
-      admin_id: input.admin_id,
-      action: input.action,
-      resource_type: input.entity_type,
-      resource_id: input.entity_id,
-      details: input.details,
-      created_at: new Date().toISOString(),
-    });
+  const supabase = await createClient();
+  const { error } = await (supabase as any).from("admin_audit_logs").insert({
+    admin_id: input.admin_id,
+    action: input.action,
+    resource_type: input.entity_type,
+    resource_id: input.entity_id,
+    details: input.details,
+    created_at: new Date().toISOString(),
+  });
 
   if (error) {
     console.error("Error logging audit action:", error);

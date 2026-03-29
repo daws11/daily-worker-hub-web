@@ -6,7 +6,6 @@ import { createClient } from "../supabase/server";
 import { createNotification } from "./notifications";
 
 // ============================================================================
-<<<<<<< HEAD
 // LOCAL TYPES (Database does not include push_subscriptions /
 // user_notification_preferences tables)
 // ============================================================================
@@ -33,15 +32,11 @@ type NotificationPreferences = {
   created_at: string;
   updated_at: string;
 };
-=======
-// PUSH NOTIFICATION ACTIONS
-// ============================================================================
 
 type PushSubscription =
   Database["public"]["Tables"]["push_subscriptions"]["Row"];
 type NotificationPreferences =
   Database["public"]["Tables"]["user_notification_preferences"]["Row"];
->>>>>>> auto-claude/046-add-jsdoc-to-undocumented-lib-actions-server-actio
 
 // Type for inserting a new push subscription
 type PushSubscriptionInsert = Pick<
