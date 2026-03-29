@@ -27,6 +27,34 @@ type WalletTransaction = {
   created_at: string;
 };
 
+type PayoutRequest = {
+  id: string;
+  worker_id: string;
+  amount: number;
+  fee_amount: number;
+  net_amount: number;
+  bank_code: string;
+  bank_account_number: string;
+  bank_account_name: string;
+  status: string;
+  payment_provider: string;
+  metadata: Record<string, unknown>;
+  provider_payout_id: string | null;
+  provider_response: unknown;
+  failure_reason: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+type BankAccount = {
+  id: string;
+  worker_id: string;
+  bank_code: string;
+  bank_account_number: string;
+  bank_account_name: string;
+  created_at: string;
+};
+
 export type WalletResult = {
   success: boolean;
   error?: string;
@@ -70,7 +98,7 @@ export async function getWorkerWallet(workerId: string): Promise<WalletResult> {
     }
 
     const { data, error } = await supabase
-      .from("wallets" as any)
+      .from("wallets")
       .select("*")
       .eq("user_id", worker.user_id)
       .maybeSingle();
@@ -85,7 +113,7 @@ export async function getWorkerWallet(workerId: string): Promise<WalletResult> {
     // Create wallet if it doesn't exist
     if (!data) {
       const { data: newWallet, error: createError } = await supabase
-        .from("wallets" as any)
+        .from("wallets")
         .insert({
           user_id: worker.user_id,
           balance: 0,
@@ -106,7 +134,7 @@ export async function getWorkerWallet(workerId: string): Promise<WalletResult> {
     }
 
     return { success: true, data: data as unknown as Wallet };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       success: false,
       error: "Terjadi kesalahan saat mengambil data dompet",
@@ -130,7 +158,7 @@ export async function getTransactions(
     const supabase = await createClient();
 
     let query = supabase
-      .from("wallet_transactions" as any)
+      .from("wallet_transactions")
       .select("*", { count: "exact" })
       .eq("wallet_id", walletId)
       .order("created_at", { ascending: false });
@@ -168,7 +196,7 @@ export async function getTransactions(
       data: (data || []) as unknown as WalletTransaction[],
       count: count || 0,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       success: false,
       error: "Terjadi kesalahan saat mengambil transaksi",
@@ -210,7 +238,7 @@ export async function requestWithdrawal(
 
     // Get worker's wallet
     const { data: wallet, error: walletError } = await supabase
-      .from("wallets" as any)
+      .from("wallets")
       .select("*")
       .eq("worker_id", workerId)
       .maybeSingle();
@@ -253,7 +281,7 @@ export async function requestWithdrawal(
     }
 
     // Get bank account details
-    const { data: bankAccount, error: bankError } = await (supabase as any)
+    const { data: bankAccount, error: bankError } = await supabase
       .from("bank_accounts")
       .select("*")
       .eq("id", data.bankAccountId)
@@ -264,12 +292,7 @@ export async function requestWithdrawal(
       return { success: false, error: "Rekening bank tidak ditemukan" };
     }
 
-    const bankAccountData = bankAccount as {
-      id: string;
-      bank_code: string;
-      bank_account_number: string;
-      bank_account_name: string;
-    };
+    const bankAccountData = bankAccount as BankAccount;
 
     // Calculate fee (1% or minimum Rp 5,000)
     const feeAmount = Math.max(
@@ -283,7 +306,7 @@ export async function requestWithdrawal(
 
     // Create payout request record (pending)
     const { data: payoutRequest, error: payoutError } = await supabase
-      .from("payout_requests" as any)
+      .from("payout_requests")
       .insert({
         worker_id: workerId,
         amount: data.amount,
@@ -316,7 +339,7 @@ export async function requestWithdrawal(
 
     // Deduct balance from wallet (hold until completed)
     const { error: updateError } = await supabase
-      .from("wallets" as any)
+      .from("wallets")
       .update({
         balance: walletData.balance - data.amount,
         updated_at: new Date().toISOString(),
@@ -326,7 +349,7 @@ export async function requestWithdrawal(
     if (updateError) {
       // Rollback payout request
       await supabase
-        .from("payout_requests" as any)
+        .from("payout_requests")
         .delete()
         .eq("id", payoutData.id);
 
@@ -337,7 +360,7 @@ export async function requestWithdrawal(
     }
 
     // Create hold transaction record
-    await supabase.from("wallet_transactions" as any).insert({
+    await supabase.from("wallet_transactions").insert({
       wallet_id: walletData.id,
       amount: data.amount,
       type: "payout",
@@ -369,7 +392,7 @@ export async function requestWithdrawal(
 
       // Update payout request with provider ID
       await supabase
-        .from("payout_requests" as any)
+        .from("payout_requests")
         .update({
           provider_payout_id: disbursement.id,
           status: "processing",
@@ -380,7 +403,7 @@ export async function requestWithdrawal(
 
       // Update transaction status
       await supabase
-        .from("wallet_transactions" as any)
+        .from("wallet_transactions")
         .update({ status: "paid" })
         .eq("reference_id", payoutData.id);
 
@@ -393,15 +416,10 @@ export async function requestWithdrawal(
           created_at: payoutData.created_at,
         },
       };
-    } catch (disbursementError) {
-      console.error(
-        "[requestWithdrawal] Disbursement failed:",
-        disbursementError,
-      );
-
+    } catch (disbursementError: unknown) {
       // Refund wallet balance
       await supabase
-        .from("wallets" as any)
+        .from("wallets")
         .update({
           balance: walletData.balance,
           updated_at: new Date().toISOString(),
@@ -410,7 +428,7 @@ export async function requestWithdrawal(
 
       // Update payout request as failed
       await supabase
-        .from("payout_requests" as any)
+        .from("payout_requests")
         .update({
           status: "failed",
           failure_reason:
@@ -423,7 +441,7 @@ export async function requestWithdrawal(
 
       // Update transaction status
       await supabase
-        .from("wallet_transactions" as any)
+        .from("wallet_transactions")
         .update({ status: "refunded" })
         .eq("reference_id", payoutData.id);
 
@@ -432,7 +450,7 @@ export async function requestWithdrawal(
         error: `Gagal memproses penarikan: ${disbursementError instanceof Error ? disbursementError.message : "Unknown error"}`,
       };
     }
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       success: false,
       error: "Terjadi kesalahan saat memproses penarikan",
