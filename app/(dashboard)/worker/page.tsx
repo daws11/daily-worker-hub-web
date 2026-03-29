@@ -34,11 +34,11 @@ interface Booking {
     id: string;
     title: string;
     address?: string | null;
-  } | null;
+  }[] | null;
   businesses?: {
     id: string;
     name: string;
-  } | null;
+  }[] | null;
 }
 
 interface WalletData {
@@ -156,8 +156,8 @@ export default function WorkerDashboardPage() {
         const newActivities: RecentActivity[] = (bookings || []).slice(0, 5).map(b => ({
           id: b.id,
           type: "booking" as const,
-          title: b.jobs?.title || "Pekerjaan",
-          description: b.businesses?.name || "Usaha",
+          title: b.jobs?.[0]?.title || "Pekerjaan",
+          description: b.businesses?.[0]?.name || "Usaha",
           time: b.start_date || "",
           status: b.status,
           amount: b.final_price,

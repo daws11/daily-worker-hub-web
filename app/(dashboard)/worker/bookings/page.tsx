@@ -97,8 +97,8 @@ export interface Booking {
   created_at: string;
   check_in_at: string | null;
   check_out_at: string | null;
-  job?: BookingJob;
-  business?: BookingBusiness;
+  job?: BookingJob[];
+  business?: BookingBusiness[];
 }
 
 export interface BookingCardProps {
