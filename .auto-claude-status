@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "053-add-useapplications-hook-to-complete-entity-hook-p",
+  "spec": "055-add-exporttojson-utility-alongside-existing-export",
   "state": "building",
   "subtasks": {
-    "completed": 1,
-    "total": 3,
+    "completed": 2,
+    "total": 5,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Add translation keys",
+    "current": "Implement exportToJSON and exportToExcel",
     "id": null,
-    "total": 1
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 5,
-    "started_at": "2026-03-27T15:01:38.153246"
+    "number": 4,
+    "started_at": "2026-03-27T16:08:53.087833"
   },
-  "last_update": "2026-03-27T15:20:10.845189"
+  "last_update": "2026-03-27T16:34:01.042741"
 }

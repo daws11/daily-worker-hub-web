@@ -1,3 +1,5 @@
+import * as xlsx from "xlsx";
+
 /**
  * Convert data to CSV format and trigger download
  * @param data - Array of objects to export
@@ -46,6 +48,61 @@ export function exportToCSV<T extends Record<string, any>>(
   });
 
   downloadBlob(blob, `${filename}.csv`);
+}
+
+/**
+ * Convert data to JSON format and trigger download
+ * @param data - Array of objects to export
+ * @param filename - Name of the file (without extension)
+ * @throws Error if data is empty or invalid
+ */
+export function exportToJSON<T extends Record<string, any>>(
+  data: T[],
+  filename: string,
+): void {
+  if (!data || data.length === 0) {
+    throw new Error("No data to export");
+  }
+
+  const jsonContent = JSON.stringify(data, null, 2);
+
+  // Add BOM for proper encoding
+  const BOM = "\uFEFF";
+  const blob = new Blob([BOM + jsonContent], {
+    type: "application/json;charset=utf-8;",
+  });
+
+  downloadBlob(blob, `${filename}.json`);
+}
+
+/**
+ * Convert data to Excel format and trigger download using xlsx library
+ * @param data - Array of objects to export
+ * @param filename - Name of the file (without extension)
+ * @throws Error if data is empty or invalid
+ */
+export function exportToExcel<T extends Record<string, any>>(
+  data: T[],
+  filename: string,
+): void {
+  if (!data || data.length === 0) {
+    throw new Error("No data to export");
+  }
+
+  const worksheet = xlsx.utils.json_to_sheet(data);
+  const workbook = xlsx.utils.book_new();
+  xlsx.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+  const excelBuffer = xlsx.write(workbook, {
+    bookType: "xlsx",
+    type: "array",
+  });
+
+  const blob = new Blob([excelBuffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  downloadBlob(blob, `${filename}.xlsx`);
 }
 
 /**
