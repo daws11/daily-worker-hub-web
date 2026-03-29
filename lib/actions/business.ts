@@ -1,6 +1,10 @@
 "use server";
 import { createClient } from "../supabase/server";
 
+// ============================================================================
+// BUSINESS PROFILE ACTIONS
+// ============================================================================
+
 export type BusinessProfile = {
   id: string;
   name: string;
@@ -9,6 +13,9 @@ export type BusinessProfile = {
   lng?: number;
 };
 
+/**
+ * Get the business profile for a given user ID
+ */
 export async function getBusinessProfile(
   userId: string,
 ): Promise<{ success: boolean; data?: BusinessProfile; error?: string }> {

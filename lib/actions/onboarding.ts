@@ -21,6 +21,9 @@ export interface OnboardingResult {
   error?: string;
 }
 
+/**
+ * Complete worker onboarding by creating a worker profile
+ */
 export async function completeWorkerOnboarding(
   data: CompleteWorkerOnboardingData,
 ): Promise<OnboardingResult> {
@@ -94,7 +97,9 @@ export async function completeWorkerOnboarding(
   }
 }
 
-// Check if a user has completed onboarding
+/**
+ * Check if a worker has completed onboarding
+ */
 export async function checkWorkerOnboardingStatus(
   userId: string,
 ): Promise<{ completed: boolean; workerId?: string }> {
@@ -135,6 +140,9 @@ export interface CompleteBusinessOnboardingData {
   businessType: string;
 }
 
+/**
+ * Complete business onboarding by creating a business profile
+ */
 export async function completeBusinessOnboarding(
   data: CompleteBusinessOnboardingData,
 ): Promise<OnboardingResult> {
@@ -230,7 +238,9 @@ export async function completeBusinessOnboarding(
   }
 }
 
-// Check if a business user has completed onboarding
+/**
+ * Check if a business has completed onboarding
+ */
 export async function checkBusinessOnboardingStatus(
   userId: string,
 ): Promise<{ completed: boolean; businessId?: string }> {

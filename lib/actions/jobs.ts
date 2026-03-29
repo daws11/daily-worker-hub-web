@@ -31,8 +31,12 @@ export interface CreateJobInput {
 }
 
 /**
- * Create a new job posting
+ * Create a new job posting for a business
  * Supports social platform distribution through platform_settings
+ *
+ * @param input - The job creation input data including business info, title, budget, requirements
+ * @returns Result containing success status, created job data, or error message
+ * @throws Returns error result if business lookup fails, no categories available, or database insert fails
  *
  * Note: Extra form fields (wageMin, wageMax, workersNeeded, area, positionType)
  * are stored in platform_settings for future use since they're not in the current
