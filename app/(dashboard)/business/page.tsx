@@ -8,17 +8,16 @@ import { DashboardGreeting } from "@/components/dashboard/greeting";
 import { QuickStats, type BusinessStats } from "@/components/dashboard/quick-stats";
 import { UpcomingBookings } from "@/components/dashboard/upcoming-bookings";
 import { QuickActions } from "@/components/dashboard/quick-actions";
+import { WalletActionCard } from "@/components/dashboard/wallet-card";
 import { useTranslation } from "@/lib/i18n/hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Wallet, 
-  TrendingUp, 
-  Users, 
+import {
+  TrendingUp,
+  Users,
   Clock,
   ArrowRight,
-  Plus,
   CheckCircle,
   AlertCircle
 } from "lucide-react";
@@ -211,38 +210,7 @@ export default function BusinessDashboardPage() {
       </div>
 
       {/* Wallet Card - Highlight */}
-      <div className="animate-slide-up animation-delay-100">
-        <Link href="/business/wallet">
-          <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-primary-foreground/80 text-sm font-medium">Saldo Wallet</p>
-                  <p className="text-2xl md:text-3xl font-bold mt-1">
-                    {wallet ? formatCurrency(wallet.available_balance) : "Rp 0"}
-                  </p>
-                  {wallet && wallet.pending_balance > 0 && (
-                    <p className="text-xs text-primary-foreground/70 mt-1">
-                      +{formatCurrency(wallet.pending_balance)} pending
-                    </p>
-                  )}
-                </div>
-                <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
-                  <Wallet className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <div className="flex gap-3 mt-4">
-                <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
-                  <Plus className="h-4 w-4 mr-1" /> Top Up
-                </Button>
-                <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
-                  Riwayat
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-      </div>
+      <WalletActionCard role="business" wallet={wallet} />
 
       {/* Quick Stats */}
       <div className="animate-slide-up animation-delay-200">

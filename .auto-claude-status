@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "034-fix-duplicate-icon-assignment-in-business-sidebar-",
-  "state": "planning",
+  "spec": "035-connect-wallet-card-action-buttons-to-their-actual",
+  "state": "building",
   "subtasks": {
-    "completed": 0,
-    "total": 0,
+    "completed": 3,
+    "total": 5,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Replace duplicate icon",
+    "current": "Verification",
     "id": null,
-    "total": 1
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 2,
-    "started_at": "2026-03-26T19:57:20.091220"
+    "number": 5,
+    "started_at": "2026-03-26T18:44:31.471965"
   },
-  "last_update": "2026-03-26T20:00:02.119675"
+  "last_update": "2026-03-26T19:00:28.603260"
 }

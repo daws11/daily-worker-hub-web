@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./e2e",
+  testDir: "./tests/e2e",
   timeout: 60000, // Increased from 30s to 60s
   fullyParallel: false,
   retries: 1,
@@ -25,7 +25,10 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: devices["Desktop Chrome"],
+      use: {
+        ...devices["Desktop Chrome"],
+        channel: "chrome",
+      },
     },
   ],
 });
