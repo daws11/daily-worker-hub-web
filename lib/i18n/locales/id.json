@@ -518,6 +518,17 @@
     "validationFailed": "Validasi gagal. Silakan periksa input Anda.",
     "failedToLoadData": "Gagal memuat data. Silakan coba lagi."
   },
+  "applications": {
+    "fetchApplicationsFailed": "Gagal memuat lamaran: {message}",
+    "createApplicationFailed": "Gagal membuat lamaran: {message}",
+    "createApplicationSuccess": "Lamaran berhasil dibuat!",
+    "updateStatusFailed": "Gagal memperbarui status lamaran: {message}",
+    "updateStatusSuccess": "Status lamaran berhasil diperbarui!",
+    "acceptApplicationFailed": "Gagal menerima lamaran: {message}",
+    "acceptApplicationSuccess": "Lamaran berhasil diterima!",
+    "withdrawApplicationFailed": "Gagal menarik lamaran: {message}",
+    "withdrawApplicationSuccess": "Lamaran berhasil ditarik!"
+  },
   "business": {
     "postJob": "Pasang Lowongan",
     "myJobs": "Lowongan Saya",
