@@ -553,7 +553,7 @@ export async function acceptApplicationAndCreateBooking(
     const workerTier = (application.workers as any)?.tier || "classic";
 
     // Import interview session functions
-    const { createInterviewSession } = await import("./bookings");
+    const { createInterviewSession } = await import("./interview-sessions");
 
     const interviewResult = await createInterviewSession(
       booking.id,

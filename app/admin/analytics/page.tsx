@@ -42,7 +42,7 @@ import {
   type WorkerStatistics,
   type BookingTrends,
   type PaymentMetrics,
-} from "@/lib/actions/admin";
+} from "@/lib/actions/admin-analytics";
 
 export default function AdminAnalyticsPage() {
   const router = useRouter();
