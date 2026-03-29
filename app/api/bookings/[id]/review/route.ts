@@ -8,6 +8,7 @@ import {
   getBookingReviewStatus,
 } from "@/lib/actions/bookings-completion";
 import { validateData } from "@/lib/validations";
+import { invalidateBookingCache } from "@/lib/cache";
 import { z } from "zod";
 import {
   errorResponse,
@@ -369,6 +370,14 @@ export async function POST(request: Request, { params }: Params) {
 
       return errorResponse(400, result.error, request);
     }
+
+    // Invalidate booking caches since a review was submitted
+    const invalidated = invalidateBookingCache(bookingId);
+    routeLogger.info("Cache invalidated after review submission", {
+      requestId,
+      bookingId,
+      cacheKeysCleared: invalidated,
+    });
 
     logger.requestSuccess(request, { status: 201 }, startTime, {
       requestId,

@@ -35,7 +35,9 @@ export type CacheNamespace =
   | "badges"
   | "categories"
   | "sessions"
-  | "skills";
+  | "skills"
+  | "bookings"
+  | "applications";
 
 // TTL presets in milliseconds
 export const CACHE_TTL = {
@@ -44,6 +46,8 @@ export const CACHE_TTL = {
   BADGES: 60 * 60 * 1000, // 1 hour
   CATEGORIES: 60 * 60 * 1000, // 1 hour
   SESSIONS: 15 * 60 * 1000, // 15 minutes
+  BOOKINGS: 5 * 60 * 1000, // 5 minutes
+  APPLICATIONS: 5 * 60 * 1000, // 5 minutes
 } as const;
 
 /**
@@ -275,6 +279,42 @@ export function invalidateCategoryCache(): number {
   return cache.delPattern("categories:*");
 }
 
+/**
+ * Invalidate all application-related caches
+ */
+export function invalidateApplicationCache(applicationId?: string): number {
+  let deleted = 0;
+
+  if (applicationId) {
+    // Invalidate specific application
+    if (cache.del(LRUCache.createKey("applications", applicationId))) deleted++;
+    deleted += cache.delPattern(`applications:${applicationId}:*`);
+  }
+
+  // Invalidate application listings
+  deleted += cache.delPattern("applications:list:*");
+
+  return deleted;
+}
+
+/**
+ * Invalidate all booking-related caches
+ */
+export function invalidateBookingCache(bookingId?: string): number {
+  let deleted = 0;
+
+  if (bookingId) {
+    // Invalidate specific booking
+    if (cache.del(LRUCache.createKey("bookings", bookingId))) deleted++;
+    deleted += cache.delPattern(`bookings:${bookingId}:*`);
+  }
+
+  // Invalidate booking listings
+  deleted += cache.delPattern("bookings:list:*");
+
+  return deleted;
+}
+
 // ============================================================
 // CACHE MIDDLEWARE FOR API ROUTES
 // ============================================================
@@ -444,6 +484,42 @@ export async function getCachedSession(
   const cacheKey = LRUCache.createKey("sessions", userId, "auth");
 
   return cache.getOrSet(cacheKey, fetcher, CACHE_TTL.SESSIONS);
+}
+
+/**
+ * Cache application listings with automatic key generation
+ */
+export async function getCachedApplications(
+  filters: Record<string, string | number | undefined>,
+  fetcher: () => Promise<unknown>,
+): Promise<unknown> {
+  const filterKey = Object.entries(filters)
+    .filter(([, v]) => v !== undefined)
+    .map(([k, v]) => `${k}=${v}`)
+    .sort()
+    .join("&");
+
+  const cacheKey = LRUCache.createKey("applications", "list", filterKey || "all");
+
+  return cache.getOrSet(cacheKey, fetcher, CACHE_TTL.APPLICATIONS);
+}
+
+/**
+ * Cache booking listings with automatic key generation
+ */
+export async function getCachedBookings(
+  filters: Record<string, string | number | undefined>,
+  fetcher: () => Promise<unknown>,
+): Promise<unknown> {
+  const filterKey = Object.entries(filters)
+    .filter(([, v]) => v !== undefined)
+    .map(([k, v]) => `${k}=${v}`)
+    .sort()
+    .join("&");
+
+  const cacheKey = LRUCache.createKey("bookings", "list", filterKey || "all");
+
+  return cache.getOrSet(cacheKey, fetcher, CACHE_TTL.BOOKINGS);
 }
 
 // Export the class for testing

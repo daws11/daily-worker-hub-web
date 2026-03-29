@@ -14,14 +14,7 @@ import {
   getApplicationsByJob,
   getApplicationsByWorker,
 } from "@/lib/actions/job-applications";
-import {
-  errorResponse,
-  handleApiError,
-  unauthorizedErrorResponse,
-  forbiddenErrorResponse,
-  notFoundErrorResponse,
-  validationErrorResponse,
-} from "@/lib/api/error-response";
+import { cache, LRUCache, CACHE_TTL, invalidateApplicationCache } from "@/lib/cache";
 
 const routeLogger = logger.createApiLogger("applications");
 
@@ -109,7 +102,7 @@ export async function GET(request: Request) {
         requestId,
       });
 
-      return unauthorizedErrorResponse("errors.unauthorized", request);
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -117,6 +110,39 @@ export async function GET(request: Request) {
     const workerId = searchParams.get("worker_id");
     const businessId = searchParams.get("business_id");
     const status = searchParams.get("status") || undefined;
+
+    // Check for cache bypass
+    const bypassCache = searchParams.get("nocache") === "true";
+
+    // Generate cache key from query params
+    const cacheKey = LRUCache.createKey(
+      "applications",
+      "list",
+      jobId || "all",
+      workerId || "all",
+      businessId || "all",
+      status || "all",
+    );
+
+    // Try cache first (unless bypassed)
+    if (!bypassCache) {
+      const cached = cache.get(cacheKey);
+      if (cached !== null) {
+        logger.requestSuccess(request, { status: 200 }, startTime, {
+          requestId,
+          resultCount: (cached as { data: unknown[] })?.data?.length || 0,
+          cached: true,
+        });
+        routeLogger.info("Applications served from cache", {
+          requestId,
+          cacheKey,
+        });
+
+        const response = NextResponse.json(cached);
+        response.headers.set("X-Cache", "HIT");
+        return response;
+      }
+    }
 
     const supabase = await createClient();
 
@@ -140,7 +166,7 @@ export async function GET(request: Request) {
         { requestId },
       );
 
-      return notFoundErrorResponse("User", session.user.id, request);
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Business viewing applicants for a job
@@ -166,7 +192,10 @@ export async function GET(request: Request) {
           { requestId },
         );
 
-        return forbiddenErrorResponse("Unauthorized - Business not found", request);
+        return NextResponse.json(
+          { error: "Unauthorized - Business not found" },
+          { status: 403 },
+        );
       }
 
       const result = await getApplicationsByJob(jobId, businessId);
@@ -181,7 +210,7 @@ export async function GET(request: Request) {
           requestId,
         });
 
-        return errorResponse(400, result.error, request);
+        return NextResponse.json({ error: result.error }, { status: 400 });
       }
 
       routeLogger.info("Applications fetched for business", {
@@ -195,7 +224,13 @@ export async function GET(request: Request) {
         userId: session.user.id,
       });
 
-      return NextResponse.json({ data: result.data });
+      const businessResponse = NextResponse.json({ data: result.data });
+      businessResponse.headers.set("X-Cache", "MISS");
+
+      // Cache the result
+      cache.set(cacheKey, { data: result.data }, CACHE_TTL.APPLICATIONS);
+
+      return businessResponse;
     }
 
     // Worker viewing their applications
@@ -221,7 +256,10 @@ export async function GET(request: Request) {
           { requestId },
         );
 
-        return forbiddenErrorResponse("Unauthorized - Worker not found", request);
+        return NextResponse.json(
+          { error: "Unauthorized - Worker not found" },
+          { status: 403 },
+        );
       }
 
       const result = await getApplicationsByWorker(workerId, status);
@@ -236,7 +274,7 @@ export async function GET(request: Request) {
           requestId,
         });
 
-        return errorResponse(400, result.error, request);
+        return NextResponse.json({ error: result.error }, { status: 400 });
       }
 
       routeLogger.info("Applications fetched for worker", {
@@ -249,7 +287,13 @@ export async function GET(request: Request) {
         userId: session.user.id,
       });
 
-      return NextResponse.json({ data: result.data });
+      const workerResponse = NextResponse.json({ data: result.data });
+      workerResponse.headers.set("X-Cache", "MISS");
+
+      // Cache the result
+      cache.set(cacheKey, { data: result.data }, CACHE_TTL.APPLICATIONS);
+
+      return workerResponse;
     }
 
     routeLogger.warn("Missing required parameters", { requestId });
@@ -261,16 +305,20 @@ export async function GET(request: Request) {
       { requestId },
     );
 
-    return validationErrorResponse(
-      { reason: "Missing required parameters", required: ["job_id or worker_id"] },
-      request,
+    return NextResponse.json(
+      { error: "Missing required parameters" },
+      { status: 400 },
     );
   } catch (error) {
     routeLogger.error("Unexpected error in GET /api/applications", error, {
       requestId,
     });
+    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return handleApiError(error, request, "/api/applications", "GET");
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -360,7 +408,7 @@ export async function POST(request: Request) {
         requestId,
       });
 
-      return unauthorizedErrorResponse("errors.unauthorized", request);
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -376,9 +424,9 @@ export async function POST(request: Request) {
         { requestId },
       );
 
-      return validationErrorResponse(
-        { reason: "Missing required fields", required: ["job_id", "worker_id"] },
-        request,
+      return NextResponse.json(
+        { error: "Missing required fields: job_id, worker_id" },
+        { status: 400 },
       );
     }
 
@@ -405,7 +453,10 @@ export async function POST(request: Request) {
         { requestId },
       );
 
-      return forbiddenErrorResponse("Unauthorized - Worker not found", request);
+      return NextResponse.json(
+        { error: "Unauthorized - Worker not found" },
+        { status: 403 },
+      );
     }
 
     const result = await createJobApplication(body.job_id, body.worker_id, {
@@ -424,7 +475,7 @@ export async function POST(request: Request) {
         requestId,
       });
 
-      return errorResponse(400, result.error, request);
+      return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
     routeLogger.info("Application created successfully", {
@@ -433,6 +484,15 @@ export async function POST(request: Request) {
       jobId: body.job_id,
       userId: session.user.id,
     });
+
+    // Invalidate application listings cache since a new application was created
+    const invalidated = invalidateApplicationCache();
+    routeLogger.info("Cache invalidated after application creation", {
+      requestId,
+      applicationId: result.data?.id,
+      cacheKeysCleared: invalidated,
+    });
+
     logger.requestSuccess(request, { status: 201 }, startTime, {
       requestId,
       userId: session.user.id,
@@ -449,7 +509,11 @@ export async function POST(request: Request) {
     routeLogger.error("Unexpected error in POST /api/applications", error, {
       requestId,
     });
+    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return handleApiError(error, request, "/api/applications", "POST");
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

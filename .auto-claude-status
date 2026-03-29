@@ -1,15 +1,15 @@
 {
   "active": true,
-  "spec": "056-add-skeleton-loaders-for-reviews-and-analytics-com",
+  "spec": "057-extend-lru-cache-to-bookings-and-applications-api-",
   "state": "building",
   "subtasks": {
-    "completed": 4,
-    "total": 5,
+    "completed": 14,
+    "total": 15,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Wire skeleton into existing loading states",
+    "current": "Build Verification",
     "id": null,
     "total": 2
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 6,
-    "started_at": "2026-03-27T11:06:58.882658"
+    "number": 16,
+    "started_at": "2026-03-27T11:06:57.573140"
   },
-  "last_update": "2026-03-27T11:18:30.342221"
+  "last_update": "2026-03-27T11:39:52.334152"
 }

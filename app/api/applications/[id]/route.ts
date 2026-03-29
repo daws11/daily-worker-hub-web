@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getServerSession } from "@/lib/auth/get-server-session";
 import { logger } from "@/lib/logger";
@@ -7,15 +7,16 @@ import {
   acceptApplicationAndCreateBooking,
   withdrawApplication,
 } from "@/lib/actions/job-applications";
-import {
-  errorResponse,
-  handleApiError,
-  unauthorizedErrorResponse,
-  forbiddenErrorResponse,
-  notFoundErrorResponse,
-} from "@/lib/api/error-response";
+import { cache, LRUCache, CACHE_TTL, invalidateApplicationCache } from "@/lib/cache";
 
 const routeLogger = logger.createApiLogger("applications/[id]");
+
+/**
+ * Generate cache key for application detail
+ */
+function getApplicationDetailCacheKey(applicationId: string): string {
+  return LRUCache.createKey("applications", applicationId, "detail");
+}
 
 type Params = {
   params: Promise<{ id: string }>;
@@ -36,11 +37,71 @@ export async function GET(request: Request, { params }: Params) {
         requestId,
       });
 
-      return unauthorizedErrorResponse("errors.unauthorized", request);
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
     const supabase = await createClient();
+
+    // Check for cache bypass
+    const { searchParams } = new URL(request.url);
+    const bypassCache = searchParams.get("nocache") === "true";
+    const cacheKey = getApplicationDetailCacheKey(id);
+
+    // Try cache first (unless bypassed)
+    if (!bypassCache) {
+      const cached = cache.get(cacheKey);
+      if (cached !== null) {
+        // Verify authorization for cached data
+        const { data: user } = await supabase
+          .from("users")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (!user) {
+          return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        const application = cached as Record<string, unknown>;
+
+        if (user.role === "worker") {
+          const { data: worker } = await supabase
+            .from("workers")
+            .select("id")
+            .eq("user_id", session.user.id)
+            .single();
+
+          if (!worker || worker.id !== application.worker_id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+          }
+        } else if (user.role === "business") {
+          const { data: business } = await supabase
+            .from("businesses")
+            .select("id")
+            .eq("user_id", session.user.id)
+            .single();
+
+          if (!business || business.id !== application.business_id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+          }
+        }
+
+        routeLogger.info("Application fetched from cache", {
+          requestId,
+          applicationId: id,
+          userId: session.user.id,
+        });
+
+        const response = NextResponse.json({ data: application });
+        response.headers.set("X-Cache", "HIT");
+        logger.requestSuccess(request, { status: 200 }, startTime, {
+          requestId,
+          userId: session.user.id,
+        });
+        return response;
+      }
+    }
 
     // Get application with related data
     const { data: application, error } = await supabase
@@ -92,7 +153,10 @@ export async function GET(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return notFoundErrorResponse("Application", id, request);
+      return NextResponse.json(
+        { error: "Application not found" },
+        { status: 404 },
+      );
     }
 
     // Verify user has access to this application
@@ -115,7 +179,7 @@ export async function GET(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return notFoundErrorResponse("User", session.user.id, request);
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     if (user.role === "worker") {
@@ -139,7 +203,7 @@ export async function GET(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return forbiddenErrorResponse("Unauthorized - Worker does not own this application", request);
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
     } else if (user.role === "business") {
       // Verify business owns this application
@@ -162,9 +226,12 @@ export async function GET(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return forbiddenErrorResponse("Unauthorized - Business does not own this application", request);
+        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
       }
     }
+
+    // Cache the result
+    cache.set(cacheKey, application, CACHE_TTL.APPLICATIONS);
 
     routeLogger.info("Application fetched successfully", {
       requestId,
@@ -176,13 +243,19 @@ export async function GET(request: Request, { params }: Params) {
       userId: session.user.id,
     });
 
-    return NextResponse.json({ data: application });
+    const response = NextResponse.json({ data: application });
+    response.headers.set("X-Cache", "MISS");
+    return response;
   } catch (error) {
     routeLogger.error("Unexpected error in GET /api/applications/[id]", error, {
       requestId,
     });
+    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return handleApiError(error, request, "/api/applications/[id]", "GET");
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -201,7 +274,7 @@ export async function PATCH(request: Request, { params }: Params) {
         requestId,
       });
 
-      return unauthorizedErrorResponse("errors.unauthorized", request);
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
@@ -229,7 +302,7 @@ export async function PATCH(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return notFoundErrorResponse("User", session.user.id, request);
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     // Business actions: shortlist, accept, reject
@@ -251,7 +324,10 @@ export async function PATCH(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return forbiddenErrorResponse("Only businesses can update application status", request);
+        return NextResponse.json(
+          { error: "Only businesses can update application status" },
+          { status: 403 },
+        );
       }
 
       // Get business ID
@@ -274,7 +350,10 @@ export async function PATCH(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return notFoundErrorResponse("Business", session.user.id, request);
+        return NextResponse.json(
+          { error: "Business not found" },
+          { status: 404 },
+        );
       }
 
       // If accepting, also create booking
@@ -295,7 +374,7 @@ export async function PATCH(request: Request, { params }: Params) {
             { requestId },
           );
 
-          return errorResponse(400, result.error, request);
+          return NextResponse.json({ error: result.error }, { status: 400 });
         }
 
         routeLogger.info("Application accepted and booking created", {
@@ -304,6 +383,15 @@ export async function PATCH(request: Request, { params }: Params) {
           bookingId: result.data?.booking.id,
           userId: session.user.id,
         });
+
+        // Invalidate application cache after status change
+        const invalidated = invalidateApplicationCache();
+        routeLogger.info("Application cache invalidated", {
+          requestId,
+          applicationId: id,
+          cacheKeysCleared: invalidated,
+        });
+
         logger.requestSuccess(request, { status: 200 }, startTime, {
           requestId,
           userId: session.user.id,
@@ -332,7 +420,7 @@ export async function PATCH(request: Request, { params }: Params) {
           requestId,
         });
 
-        return errorResponse(400, result.error, request);
+        return NextResponse.json({ error: result.error }, { status: 400 });
       }
 
       routeLogger.info("Application status updated", {
@@ -341,6 +429,15 @@ export async function PATCH(request: Request, { params }: Params) {
         newStatus: body.status,
         userId: session.user.id,
       });
+
+      // Invalidate application cache after status change
+      const invalidated = invalidateApplicationCache();
+      routeLogger.info("Application cache invalidated", {
+        requestId,
+        applicationId: id,
+        cacheKeysCleared: invalidated,
+      });
+
       logger.requestSuccess(request, { status: 200 }, startTime, {
         requestId,
         userId: session.user.id,
@@ -368,7 +465,10 @@ export async function PATCH(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return forbiddenErrorResponse("Only workers can withdraw applications", request);
+        return NextResponse.json(
+          { error: "Only workers can withdraw applications" },
+          { status: 403 },
+        );
       }
 
       // Get worker ID
@@ -391,7 +491,10 @@ export async function PATCH(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return notFoundErrorResponse("Worker", session.user.id, request);
+        return NextResponse.json(
+          { error: "Worker not found" },
+          { status: 404 },
+        );
       }
 
       const result = await withdrawApplication(id, worker.id);
@@ -406,7 +509,7 @@ export async function PATCH(request: Request, { params }: Params) {
           requestId,
         });
 
-        return errorResponse(400, result.error, request);
+        return NextResponse.json({ error: result.error }, { status: 400 });
       }
 
       routeLogger.info("Application withdrawn", {
@@ -414,6 +517,15 @@ export async function PATCH(request: Request, { params }: Params) {
         applicationId: id,
         userId: session.user.id,
       });
+
+      // Invalidate application cache after status change
+      const invalidated = invalidateApplicationCache();
+      routeLogger.info("Application cache invalidated", {
+        requestId,
+        applicationId: id,
+        cacheKeysCleared: invalidated,
+      });
+
       logger.requestSuccess(request, { status: 200 }, startTime, {
         requestId,
         userId: session.user.id,
@@ -430,14 +542,18 @@ export async function PATCH(request: Request, { params }: Params) {
       requestId,
     });
 
-    return errorResponse(400, "Invalid action", request);
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
   } catch (error) {
     routeLogger.error(
       "Unexpected error in PATCH /api/applications/[id]",
       error,
       { requestId },
     );
+    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return handleApiError(error, request, "/api/applications/[id]", "PATCH");
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

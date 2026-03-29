@@ -1,14 +1,13 @@
-/** @type {import("eslint").Linter.FlatConfig[]} */
+const parser = require("@typescript-eslint/parser");
+const path = require("path");
+
 module.exports = [
   {
-    ignores: ["node_modules/**", ".next/**", "vitest.config.ts"],
-  },
-  {
-    files: ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"],
+    files: ["**/*.ts", "**/*.tsx"],
     languageOptions: {
-      parser: require("@typescript-eslint/parser"),
+      parser,
       parserOptions: {
-        ecmaVersion: 2020,
+        ecmaVersion: "latest",
         sourceType: "module",
         ecmaFeatures: { jsx: true },
       },
@@ -17,9 +16,8 @@ module.exports = [
       "no-unused-vars": "warn",
       "no-console": "warn",
       "prefer-const": "warn",
-      "no-undef": "off",
-      // Disable this rule since @typescript-eslint/eslint-plugin is not installed
-      "@typescript-eslint/no-explicit-any": "off",
+      "react/jsx-uses-react": "off",
+      "react/react-in-jsx-scope": "off",
     },
   },
 ];

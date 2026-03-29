@@ -6,13 +6,7 @@ import { checkOutBooking } from "@/lib/actions/bookings-completion";
 import { validateData } from "@/lib/validations";
 import { checkOutSchema } from "@/lib/validations/booking";
 import { withRateLimit } from "@/lib/rate-limit";
-import {
-  errorResponse,
-  handleApiError,
-  unauthorizedErrorResponse,
-  forbiddenErrorResponse,
-  validationErrorResponse,
-} from "@/lib/api/error-response";
+import { invalidateBookingCache } from "@/lib/cache";
 
 const routeLogger = logger.createApiLogger("bookings/[id]/check-out");
 
@@ -35,7 +29,7 @@ async function handlePOST(request: Request, { params }: Params) {
         requestId,
       });
 
-      return unauthorizedErrorResponse("errors.unauthorized", request);
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id: bookingId } = await params;
@@ -70,10 +64,7 @@ async function handlePOST(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return validationErrorResponse(
-        { reason: validationError.error.error, details: validationError.error.details },
-        request,
-      );
+      return NextResponse.json(validationError.error, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -98,7 +89,10 @@ async function handlePOST(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return forbiddenErrorResponse("Unauthorized - Worker not found", request);
+      return NextResponse.json(
+        { error: "Unauthorized - Worker not found" },
+        { status: 403 },
+      );
     }
 
     const result = await checkOutBooking(
@@ -118,15 +112,18 @@ async function handlePOST(request: Request, { params }: Params) {
         requestId,
       });
 
-      return errorResponse(400, result.error, request);
+      return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
+    // Invalidate booking caches since check-out state changed
+    const invalidated = invalidateBookingCache(bookingId);
     routeLogger.info("Check-out successful", {
       requestId,
       bookingId,
       workerId: worker.id,
       actualHours: body.actual_hours,
       userId: session.user.id,
+      cacheKeysCleared: invalidated,
     });
     logger.requestSuccess(request, { status: 200 }, startTime, {
       requestId,
@@ -143,12 +140,11 @@ async function handlePOST(request: Request, { params }: Params) {
       error,
       { requestId },
     );
+    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return handleApiError(
-      error,
-      request,
-      "/api/bookings/[id]/check-out",
-      "POST",
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
