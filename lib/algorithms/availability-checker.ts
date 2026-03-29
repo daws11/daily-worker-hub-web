@@ -40,9 +40,18 @@ export const DAY_NAMES = [
 ];
 
 /**
- * Minimum and maximum availability block hours
+ * Minimum availability block hours for a single booking.
+ * Enforced as a minimum engagement window to ensure meaningful work assignments.
+ * Any availability block shorter than 4 hours will be rejected by validateAvailabilityBlock.
  */
 export const MIN_BLOCK_HOURS = 4;
+
+/**
+ * Maximum availability block hours for a single booking.
+ * Capped at 12 hours to align with Indonesian labor law daily limits (PP No. 78/2015)
+ * and to prevent overly long single-block commitments.
+ * Blocks exceeding 12 hours must be split into multiple availability records.
+ */
 export const MAX_BLOCK_HOURS = 12;
 
 /**
