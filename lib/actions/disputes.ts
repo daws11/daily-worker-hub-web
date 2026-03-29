@@ -3,7 +3,24 @@
 import { createClient } from "../supabase/server";
 import type { Database } from "../supabase/types";
 
-type Dispute = Database["public"]["Tables"]["disputes"]["Row"];
+type Dispute = {
+  id: string;
+  booking_id: string;
+  raised_by: string;
+  reporter_id: string;
+  reported_id: string;
+  type: string;
+  description: string;
+  status: "pending" | "reviewing" | "resolved" | "dismissed";
+  priority: "low" | "medium" | "high" | "urgent";
+  resolution?: string;
+  resolution_notes?: string;
+  admin_notes?: string;
+  created_at: string;
+  updated_at: string;
+  resolved_at?: string;
+  resolved_by?: string;
+};
 type Booking = Database["public"]["Tables"]["bookings"]["Row"];
 
 // Types for bookings with joined data
@@ -26,6 +43,7 @@ type BookingWithJobAndUsers = Booking & {
     id: string;
     full_name: string;
     phone: string | null;
+    email: string | null;
   } | null;
   businesses: {
     id: string;
@@ -61,6 +79,7 @@ type DisputeWithFullBooking = Dispute & {
       id: string;
       full_name: string;
       phone: string | null;
+      email: string | null;
     } | null;
     businesses: {
       id: string;
@@ -351,11 +370,13 @@ export async function raiseDisputeByWorker(
 /**
  * Get dispute details
  */
-export async function getDispute(disputeId: string) {
+export async function getDispute(
+  disputeId: string,
+): Promise<{ success: boolean; error?: string; data?: DisputeWithFullBooking | null }> {
   try {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("disputes")
       .select(
         `
@@ -372,7 +393,8 @@ export async function getDispute(disputeId: string) {
           workers (
             id,
             full_name,
-            phone
+            phone,
+            email
           ),
           businesses (
             id,
@@ -407,11 +429,13 @@ export async function getDispute(disputeId: string) {
 /**
  * Get all disputes for a business
  */
-export async function getBusinessDisputes(businessId: string) {
+export async function getBusinessDisputes(
+  businessId: string,
+): Promise<{ success: boolean; error?: string; data?: DisputeWithBookingForList[] | null }> {
   try {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("disputes")
       .select(
         `
@@ -441,7 +465,7 @@ export async function getBusinessDisputes(businessId: string) {
 
     return {
       success: true,
-      data: data as DisputeWithBookingForList[] | null,
+      data: data as DisputeWithBookingForList[],
       error: null,
     };
   } catch (error) {
@@ -456,11 +480,13 @@ export async function getBusinessDisputes(businessId: string) {
 /**
  * Get all disputes for a worker
  */
-export async function getWorkerDisputes(workerId: string) {
+export async function getWorkerDisputes(
+  workerId: string,
+): Promise<{ success: boolean; error?: string; data?: DisputeWithBookingForList[] | null }> {
   try {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("disputes")
       .select(
         `
@@ -491,7 +517,7 @@ export async function getWorkerDisputes(workerId: string) {
 
     return {
       success: true,
-      data: data as DisputeWithBookingForList[] | null,
+      data: data as DisputeWithBookingForList[],
       error: null,
     };
   } catch (error) {
@@ -721,11 +747,15 @@ export async function checkActiveDispute(bookingId: string): Promise<{
 /**
  * Get all pending disputes (admin view)
  */
-export async function getPendingDisputes() {
+export async function getPendingDisputes(): Promise<{
+  success: boolean;
+  error?: string;
+  data?: DisputeWithFullBooking[] | null;
+}> {
   try {
     const supabase = await createClient();
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("disputes")
       .select(
         `
@@ -742,7 +772,8 @@ export async function getPendingDisputes() {
           workers (
             id,
             full_name,
-            phone
+            phone,
+            email
           ),
           businesses (
             id,
@@ -762,7 +793,7 @@ export async function getPendingDisputes() {
 
     return {
       success: true,
-      data: data as DisputeWithFullBooking[] | null,
+      data: data as DisputeWithFullBooking[],
       error: null,
     };
   } catch (error) {

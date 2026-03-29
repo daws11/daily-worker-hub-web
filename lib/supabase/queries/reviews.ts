@@ -25,10 +25,15 @@ export type ReviewWithDetails = ReviewRow & {
   };
 };
 
+type ReviewResult<T = unknown> = {
+  data: T | null;
+  error: { message: string } | null;
+};
+
 /**
  * Get reviews for a worker (reviews from businesses)
  */
-export async function getReviewsForWorker(workerId: string) {
+export async function getReviewsForWorker(workerId: string): Promise<ReviewResult<ReviewWithDetails[]>> {
   try {
     const { data, error } = await supabase
       .from("reviews")
@@ -57,17 +62,17 @@ export async function getReviewsForWorker(workerId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as unknown as ReviewWithDetails[]) || [], error: null };
   } catch (error) {
     console.error("Unexpected error fetching worker reviews:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
 /**
  * Get reviews for a business (reviews from workers)
  */
-export async function getReviewsForBusiness(businessId: string) {
+export async function getReviewsForBusiness(businessId: string): Promise<ReviewResult<ReviewWithDetails[]>> {
   try {
     const { data, error } = await supabase
       .from("reviews")
@@ -97,10 +102,10 @@ export async function getReviewsForBusiness(businessId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as unknown as ReviewWithDetails[]) || [], error: null };
   } catch (error) {
     console.error("Unexpected error fetching business reviews:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
@@ -111,7 +116,7 @@ export async function getReviewsForBusiness(businessId: string) {
 export async function getReviewByBookingAndType(
   bookingId: string,
   reviewerType: "business" | "worker",
-) {
+): Promise<ReviewResult<ReviewRow>> {
   try {
     const { data, error } = await supabase
       .from("reviews")
@@ -125,20 +130,20 @@ export async function getReviewByBookingAndType(
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as ReviewRow) || null, error: null };
   } catch (error) {
     console.error(
       "Unexpected error fetching review by booking and type:",
       error,
     );
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
 /**
  * Get a single review by ID
  */
-export async function getReviewById(reviewId: string) {
+export async function getReviewById(reviewId: string): Promise<ReviewResult<ReviewWithDetails>> {
   try {
     const { data, error } = await supabase
       .from("reviews")
@@ -171,10 +176,10 @@ export async function getReviewById(reviewId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as unknown as ReviewWithDetails) || null, error: null };
   } catch (error) {
     console.error("Unexpected error fetching review:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
@@ -182,12 +187,18 @@ export async function getReviewById(reviewId: string) {
  * Create a new review
  */
 export async function createReview(
-  review: Omit<ReviewInsert, "id" | "created_at">,
-) {
+  review: Omit<ReviewInsert, "id" | "created_at"> & {
+    business_id?: string;
+    reviewer?: string;
+    would_rehire?: boolean;
+  },
+): Promise<ReviewResult<ReviewRow>> {
   try {
+    const { business_id, reviewer, would_rehire, ...validFields } =
+      review as ReviewInsert & { business_id?: string; reviewer?: string; would_rehire?: boolean };
     const { data, error } = await supabase
       .from("reviews")
-      .insert(review)
+      .insert(validFields as Omit<ReviewInsert, "id" | "created_at">)
       .select()
       .single();
 
@@ -196,17 +207,17 @@ export async function createReview(
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as ReviewRow) || null, error: null };
   } catch (error) {
     console.error("Unexpected error creating review:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
 /**
  * Update an existing review
  */
-export async function updateReview(reviewId: string, updates: ReviewUpdate) {
+export async function updateReview(reviewId: string, updates: ReviewUpdate): Promise<ReviewResult<ReviewRow>> {
   try {
     const { data, error } = await supabase
       .from("reviews")
@@ -220,17 +231,17 @@ export async function updateReview(reviewId: string, updates: ReviewUpdate) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: (data as ReviewRow) || null, error: null };
   } catch (error) {
     console.error("Unexpected error updating review:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
 /**
  * Delete a review
  */
-export async function deleteReview(reviewId: string) {
+export async function deleteReview(reviewId: string): Promise<{ error: { message: string } | null }> {
   try {
     const { error } = await supabase
       .from("reviews")
@@ -245,7 +256,7 @@ export async function deleteReview(reviewId: string) {
     return { error: null };
   } catch (error) {
     console.error("Unexpected error deleting review:", error);
-    return { error };
+    return { error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
@@ -253,7 +264,10 @@ export async function deleteReview(reviewId: string) {
  * Get average rating for a worker
  * Returns the average rating from all reviews by businesses
  */
-export async function getWorkerAverageRating(workerId: string) {
+export async function getWorkerAverageRating(workerId: string): Promise<{
+  data: { average: number | null; count: number } | null;
+  error: { message: string } | null;
+}> {
   try {
     const { data, error, count } = await supabase
       .from("reviews")
@@ -281,7 +295,7 @@ export async function getWorkerAverageRating(workerId: string) {
     return { data: result, error: null };
   } catch (error) {
     console.error("Unexpected error fetching worker average rating:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
@@ -289,7 +303,10 @@ export async function getWorkerAverageRating(workerId: string) {
  * Get average rating for a business
  * Returns the average rating from all reviews by workers
  */
-export async function getBusinessAverageRating(businessId: string) {
+export async function getBusinessAverageRating(businessId: string): Promise<{
+  data: { average: number | null; count: number } | null;
+  error: { message: string } | null;
+}> {
   try {
     const { data, error, count } = await supabase
       .from("reviews")
@@ -317,7 +334,7 @@ export async function getBusinessAverageRating(businessId: string) {
     return { data: result, error: null };
   } catch (error) {
     console.error("Unexpected error fetching business average rating:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
@@ -325,7 +342,14 @@ export async function getBusinessAverageRating(businessId: string) {
  * Get rating breakdown for a worker
  * Returns distribution of ratings (1-5 stars)
  */
-export async function getWorkerRatingBreakdown(workerId: string) {
+export async function getWorkerRatingBreakdown(workerId: string): Promise<{
+  data: {
+    breakdown: { 5: number; 4: number; 3: number; 2: number; 1: number };
+    percentages: { 5: number; 4: number; 3: number; 2: number; 1: number };
+    total: number;
+  } | null;
+  error: { message: string } | null;
+}> {
   try {
     const { data, error } = await supabase
       .from("reviews")
@@ -367,7 +391,7 @@ export async function getWorkerRatingBreakdown(workerId: string) {
     return { data: { breakdown, percentages, total }, error: null };
   } catch (error) {
     console.error("Unexpected error fetching worker rating breakdown:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }
 
@@ -375,7 +399,10 @@ export async function getWorkerRatingBreakdown(workerId: string) {
  * Get "would rehire" percentage for a worker
  * Percentage of businesses that said they would rehire the worker
  */
-export async function getWorkerRehireRate(workerId: string) {
+export async function getWorkerRehireRate(workerId: string): Promise<{
+  data: { rehireRate: number; count: number } | null;
+  error: { message: string } | null;
+}> {
   try {
     const { data, error, count } = await supabase
       .from("reviews")
@@ -390,7 +417,7 @@ export async function getWorkerRehireRate(workerId: string) {
     }
 
     if (!data || data.length === 0) {
-      return { data: { rehireRate: null, count: 0 }, error: null };
+      return { data: { rehireRate: 0, count: 0 }, error: null };
     }
 
     const wouldRehireCount = data.filter(
@@ -404,6 +431,6 @@ export async function getWorkerRehireRate(workerId: string) {
     };
   } catch (error) {
     console.error("Unexpected error fetching worker rehire rate:", error);
-    return { data: null, error };
+    return { data: null, error: { message: error instanceof Error ? error.message : "Unknown error" } };
   }
 }

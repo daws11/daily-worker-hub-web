@@ -1,7 +1,14 @@
 "use server";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+declare const process: { env: Record<string, string | undefined> };
 
 import { createClient } from "../supabase/server";
 import { createNotification } from "./notifications";
+
+// ============================================================================
+// LOCAL TYPES (Database does not include push_subscriptions /
+// user_notification_preferences tables)
+// ============================================================================
 
 type PushSubscription = {
   id: string;
@@ -10,6 +17,7 @@ type PushSubscription = {
   keys_auth: string;
   keys_p256h: string;
   created_at: string;
+  updated_at: string;
 };
 
 type NotificationPreferences = {
@@ -75,7 +83,8 @@ export async function subscribeToPushNotifications(
     const supabase = await createClient();
 
     // Check if user already has a subscription with this endpoint
-    const { data: existing } = await (supabase as any).from("push_subscriptions")
+    const { data: existing } = await supabase
+      .from("push_subscriptions")
       .select("*")
       .eq("user_id", userId)
       .eq("endpoint", endpoint)
@@ -93,7 +102,8 @@ export async function subscribeToPushNotifications(
       keys_p256h: keysP256dh,
     };
 
-    const { data, error } = await (supabase as any).from("push_subscriptions")
+    const { data, error } = await supabase
+      .from("push_subscriptions")
       .insert(newSubscription)
       .select()
       .single();
@@ -126,7 +136,8 @@ export async function unsubscribeFromPushNotifications(
     const supabase = await createClient();
 
     // Verify the subscription belongs to the user
-    const { data: subscription, error: fetchError } = await (supabase as any).from("push_subscriptions")
+    const { data: subscription, error: fetchError } = await supabase
+      .from("push_subscriptions")
       .select("*")
       .eq("id", subscriptionId)
       .eq("user_id", userId)
@@ -137,7 +148,8 @@ export async function unsubscribeFromPushNotifications(
     }
 
     // Delete the subscription
-    const { error } = await (supabase as any).from("push_subscriptions")
+    const { error } = await supabase
+      .from("push_subscriptions")
       .delete()
       .eq("id", subscriptionId)
       .eq("user_id", userId);
@@ -169,7 +181,8 @@ export async function unsubscribeByEndpoint(
     const supabase = await createClient();
 
     // Verify and get the subscription
-    const { data: subscription, error: fetchError } = await (supabase as any).from("push_subscriptions")
+    const { data: subscription, error: fetchError } = await supabase
+      .from("push_subscriptions")
       .select("*")
       .eq("endpoint", endpoint)
       .eq("user_id", userId)
@@ -180,7 +193,8 @@ export async function unsubscribeByEndpoint(
     }
 
     // Delete the subscription
-    const { error } = await (supabase as any).from("push_subscriptions")
+    const { error } = await supabase
+      .from("push_subscriptions")
       .delete()
       .eq("endpoint", endpoint)
       .eq("user_id", userId);
@@ -210,7 +224,8 @@ export async function getUserPushSubscription(
   try {
     const supabase = await createClient();
 
-    const { data, error } = await (supabase as any).from("push_subscriptions")
+    const { data, error } = await supabase
+      .from("push_subscriptions")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
@@ -246,7 +261,8 @@ export async function getAllUserPushSubscriptions(
   try {
     const supabase = await createClient();
 
-    const { data, error } = await (supabase as any).from("push_subscriptions")
+    const { data, error } = await supabase
+      .from("push_subscriptions")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
@@ -282,7 +298,8 @@ export async function sendPushNotification(
     const supabase = await createClient();
 
     // Get user's notification preferences
-    const { data: preferences } = await (supabase as any).from("user_notification_preferences")
+    const { data: preferences } = await supabase
+      .from("user_notification_preferences")
       .select("*")
       .eq("user_id", userId)
       .single();
@@ -293,7 +310,8 @@ export async function sendPushNotification(
     }
 
     // Get user's push subscription
-    const { data: subscription } = await (supabase as any).from("push_subscriptions")
+    const { data: subscription } = await supabase
+      .from("push_subscriptions")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
@@ -365,7 +383,8 @@ export async function getUserNotificationPreferences(
   try {
     const supabase = await createClient();
 
-    const { data, error } = await (supabase as any).from("user_notification_preferences")
+    const { data, error } = await supabase
+      .from("user_notification_preferences")
       .select("*")
       .eq("user_id", userId)
       .single();
@@ -373,7 +392,8 @@ export async function getUserNotificationPreferences(
     if (error) {
       if (error.code === "PGRST116") {
         // No preferences found - create default preferences
-        const { data: newPrefs, error: insertError } = await (supabase as any).from("user_notification_preferences")
+        const { data: newPrefs, error: insertError } = await supabase
+          .from("user_notification_preferences")
           .insert({ user_id: userId })
           .select()
           .single();
@@ -413,7 +433,8 @@ export async function updateUserNotificationPreferences(
     const supabase = await createClient();
 
     // Check if preferences exist
-    const { data: existing } = await (supabase as any).from("user_notification_preferences")
+    const { data: existing } = await supabase
+      .from("user_notification_preferences")
       .select("*")
       .eq("user_id", userId)
       .single();
@@ -422,7 +443,8 @@ export async function updateUserNotificationPreferences(
 
     if (existing) {
       // Update existing preferences
-      const { data, error } = await (supabase as any).from("user_notification_preferences")
+      const { data, error } = await supabase
+        .from("user_notification_preferences")
         .update(preferences)
         .eq("user_id", userId)
         .select()
@@ -438,7 +460,8 @@ export async function updateUserNotificationPreferences(
       result = data;
     } else {
       // Create new preferences with provided values
-      const { data, error } = await (supabase as any).from("user_notification_preferences")
+      const { data, error } = await supabase
+        .from("user_notification_preferences")
         .insert({ user_id: userId, ...preferences })
         .select()
         .single();
@@ -472,7 +495,8 @@ export async function isNotificationTypeEnabled(
   try {
     const supabase = await createClient();
 
-    const { data, error } = await (supabase as any).from("user_notification_preferences")
+    const { data, error } = await supabase
+      .from("user_notification_preferences")
       .select("*")
       .eq("user_id", userId)
       .single();
