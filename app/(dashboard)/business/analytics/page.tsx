@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { supabase } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/types";
+import { AnalyticsTableSkeleton, AnalyticsStatsSkeleton, AnalyticsMetricCardsSkeleton } from "@/components/ui/skeleton-card";
 import {
   BarChart3,
   Loader2,
@@ -358,66 +359,58 @@ export default function BusinessAnalyticsPage() {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {/* Total Posts */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Postingan
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoadingPosts ? (
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              ) : (
+        {isLoadingPosts ? (
+          <AnalyticsStatsSkeleton />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {/* Total Posts */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Postingan
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5 text-blue-600" />
                   <span className="text-2xl font-bold">
                     {stats?.totalPosts || 0}
                   </span>
                 </div>
-              )}
-              <p className="text-xs text-muted-foreground mt-1">
-                {stats?.successfulPosts || 0} berhasil terbit
-              </p>
-            </CardContent>
-          </Card>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats?.successfulPosts || 0} berhasil terbit
+                </p>
+              </CardContent>
+            </Card>
 
-          {/* Total Views */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Dilihat
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoadingPosts ? (
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              ) : (
+            {/* Total Views */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Dilihat
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="flex items-center gap-2">
                   <Eye className="h-5 w-5 text-green-600" />
                   <span className="text-2xl font-bold">
                     {formatNumber(stats?.totalViews || 0)}
                   </span>
                 </div>
-              )}
-              <p className="text-xs text-muted-foreground mt-1">
-                Impressions semua postingan
-              </p>
-            </CardContent>
-          </Card>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Impressions semua postingan
+                </p>
+              </CardContent>
+            </Card>
 
-          {/* Total Engagement */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Engagement
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoadingPosts ? (
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              ) : (
+            {/* Total Engagement */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Engagement
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-purple-600" />
                   <span className="text-xl md:text-2xl font-bold">
@@ -428,24 +421,20 @@ export default function BusinessAnalyticsPage() {
                     )}
                   </span>
                 </div>
-              )}
-              <p className="text-xs text-muted-foreground mt-1">
-                Likes, comments & shares
-              </p>
-            </CardContent>
-          </Card>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Likes, comments & shares
+                </p>
+              </CardContent>
+            </Card>
 
-          {/* Engagement Rate */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Rata-rata Engagement
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {isLoadingPosts ? (
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              ) : (
+            {/* Engagement Rate */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Rata-rata Engagement
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="flex items-center gap-2">
                   <Share2 className="h-4 w-4 md:h-5 md:w-5 text-orange-600" />
                   <span className="text-xl md:text-2xl font-bold">
@@ -455,78 +444,70 @@ export default function BusinessAnalyticsPage() {
                     %
                   </span>
                 </div>
-              )}
-              <p className="text-xs text-muted-foreground mt-1">
-                Tingkat interaksi
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Tingkat interaksi
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Detailed Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
-          <Card>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm text-muted-foreground">Total Likes</p>
-                  <p className="text-xl md:text-2xl font-bold text-blue-600">
-                    {isLoadingPosts ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      formatNumber(stats?.totalLikes || 0)
-                    )}
-                  </p>
+        {isLoadingPosts ? (
+          <AnalyticsMetricCardsSkeleton />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
+            <Card>
+              <CardContent className="p-4 md:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs md:text-sm text-muted-foreground">Total Likes</p>
+                    <p className="text-xl md:text-2xl font-bold text-blue-600">
+                      {formatNumber(stats?.totalLikes || 0)}
+                    </p>
+                  </div>
+                  <div className="p-2 md:p-3 bg-blue-100 rounded-full">
+                    <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
+                  </div>
                 </div>
-                <div className="p-2 md:p-3 bg-blue-100 rounded-full">
-                  <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm text-muted-foreground">
-                    Total Komentar
-                  </p>
-                  <p className="text-xl md:text-2xl font-bold text-green-600">
-                    {isLoadingPosts ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      formatNumber(stats?.totalComments || 0)
-                    )}
-                  </p>
+            <Card>
+              <CardContent className="p-4 md:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs md:text-sm text-muted-foreground">
+                      Total Komentar
+                    </p>
+                    <p className="text-xl md:text-2xl font-bold text-green-600">
+                      {formatNumber(stats?.totalComments || 0)}
+                    </p>
+                  </div>
+                  <div className="p-2 md:p-3 bg-green-100 rounded-full">
+                    <MessageCircle className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
+                  </div>
                 </div>
-                <div className="p-2 md:p-3 bg-green-100 rounded-full">
-                  <MessageCircle className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardContent className="p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs md:text-sm text-muted-foreground">Total Shares</p>
-                  <p className="text-xl md:text-2xl font-bold text-purple-600">
-                    {isLoadingPosts ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      formatNumber(stats?.totalShares || 0)
-                    )}
-                  </p>
+            <Card>
+              <CardContent className="p-4 md:p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs md:text-sm text-muted-foreground">Total Shares</p>
+                    <p className="text-xl md:text-2xl font-bold text-purple-600">
+                      {formatNumber(stats?.totalShares || 0)}
+                    </p>
+                  </div>
+                  <div className="p-2 md:p-3 bg-purple-100 rounded-full">
+                    <Share2 className="h-4 w-4 md:h-5 md:w-5 text-purple-600" />
+                  </div>
                 </div>
-                <div className="p-2 md:p-3 bg-purple-100 rounded-full">
-                  <Share2 className="h-4 w-4 md:h-5 md:w-5 text-purple-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Posts Performance Table */}
         <Card>
@@ -538,9 +519,7 @@ export default function BusinessAnalyticsPage() {
           </CardHeader>
           <CardContent className="p-4 md:p-6 pt-0">
             {isLoadingPosts ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
+              <AnalyticsTableSkeleton />
             ) : posts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />

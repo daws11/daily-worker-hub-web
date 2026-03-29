@@ -320,3 +320,283 @@ export function ApplicationsPageSkeleton() {
     </div>
   );
 }
+
+/**
+ * Review Card Skeleton - Shows placeholder while review data loads
+ * Supports both WorkerReviewDisplay and BusinessReviewDisplay variants
+ */
+export function ReviewCardSkeleton({
+  variant = "worker",
+  size = "md",
+  className,
+}: {
+  variant?: "worker" | "business";
+  size?: "sm" | "md" | "lg";
+  className?: string;
+}) {
+  const sizeStyles = {
+    sm: {
+      container: "p-4",
+      avatar: "h-8 w-8",
+      text: "text-xs",
+      stars: "h-3 w-3",
+      rating: "text-xs",
+    },
+    md: {
+      container: "p-6",
+      avatar: "h-10 w-10",
+      text: "text-sm",
+      stars: "h-4 w-4",
+      rating: "text-sm",
+    },
+    lg: {
+      container: "p-6",
+      avatar: "h-12 w-12",
+      text: "text-base",
+      stars: "h-5 w-5",
+      rating: "text-base",
+    },
+  };
+
+  const styles = sizeStyles[size];
+
+  return (
+    <Card className={cn("overflow-hidden", className)}>
+      <CardHeader className={cn(styles.container, "pb-3")}>
+        <div className="flex items-start justify-between gap-3">
+          {/* Left: Avatar + Name + Date */}
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <Skeleton className={cn(styles.avatar, "rounded-full shrink-0")} />
+            <div className="flex-1 min-w-0 space-y-1.5">
+              <Skeleton className={cn("h-4 w-32", styles.text)} />
+              <div className="flex items-center gap-1.5">
+                <Skeleton className={cn(styles.stars, "shrink-0")} />
+                <Skeleton className={cn("h-3 w-20", styles.text)} />
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Stars + Rating + Badge */}
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-1.5">
+              <div className="flex gap-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className={cn(styles.stars)} />
+                ))}
+              </div>
+              <Skeleton className={cn("h-4 w-8 font-bold", styles.rating)} />
+            </div>
+            {variant === "worker" && (
+              <Skeleton className="h-5 w-24 rounded-full" />
+            )}
+          </div>
+        </div>
+      </CardHeader>
+
+      {/* Comment Section */}
+      <CardContent className={cn("pt-0", styles.container, "space-y-2")}>
+        <Skeleton className={cn("h-3 w-full", styles.text)} />
+        <Skeleton className={cn("h-3 w-3/4", styles.text)} />
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Review List Skeleton - Shows multiple review cards in a list
+ */
+export function ReviewListSkeleton({
+  count = 3,
+  variant = "worker",
+  size = "md",
+}: {
+  count?: number;
+  variant?: "worker" | "business";
+  size?: "sm" | "md" | "lg";
+}) {
+  return (
+    <div className="space-y-4">
+      {Array.from({ length: count }).map((_, i) => (
+        <ReviewCardSkeleton key={i} variant={variant} size={size} />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Reviews Page Skeleton - Complete loading state for reviews page
+ */
+export function ReviewsPageSkeleton() {
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto">
+      <PageHeaderSkeleton />
+      <QuickStatsSkeleton count={3} />
+      <ReviewListSkeleton count={4} variant="worker" />
+    </div>
+  );
+}
+
+/**
+ * Analytics Stats Skeleton - Shows 4 stat cards for analytics page
+ * Matches: Total Postingan, Total Dilihat, Total Engagement, Engagement Rate
+ */
+export function AnalyticsStatsSkeleton({ className }: { className?: string }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Total Postingan */}
+      <Card className={cn("p-4", className)}>
+        <CardHeader className="pb-3">
+          <Skeleton className="h-3 w-28 mb-1" />
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Skeleton className="h-6 w-8" />
+          <Skeleton className="h-3 w-24" />
+        </CardContent>
+      </Card>
+
+      {/* Total Dilihat */}
+      <Card className={cn("p-4", className)}>
+        <CardHeader className="pb-3">
+          <Skeleton className="h-3 w-24 mb-1" />
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Skeleton className="h-6 w-8" />
+          <Skeleton className="h-3 w-32" />
+        </CardContent>
+      </Card>
+
+      {/* Total Engagement */}
+      <Card className={cn("p-4", className)}>
+        <CardHeader className="pb-3">
+          <Skeleton className="h-3 w-32 mb-1" />
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Skeleton className="h-6 w-8" />
+          <Skeleton className="h-3 w-28" />
+        </CardContent>
+      </Card>
+
+      {/* Engagement Rate */}
+      <Card className={cn("p-4", className)}>
+        <CardHeader className="pb-3">
+          <Skeleton className="h-3 w-36 mb-1" />
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Skeleton className="h-6 w-12" />
+          <Skeleton className="h-3 w-20" />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+/**
+ * Analytics Metric Cards Skeleton - Shows 3 metric cards for analytics page
+ * Matches: Total Likes, Total Komentar, Total Shares
+ */
+export function AnalyticsMetricCardsSkeleton({ className }: { className?: string }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
+      {/* Total Likes */}
+      <Card className={cn(className)}>
+        <CardContent className="p-4 md:p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-7 w-16" />
+            </div>
+            <Skeleton className="h-10 w-10 rounded-full" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Total Komentar */}
+      <Card className={cn(className)}>
+        <CardContent className="p-4 md:p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-28" />
+              <Skeleton className="h-7 w-16" />
+            </div>
+            <Skeleton className="h-10 w-10 rounded-full" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Total Shares */}
+      <Card className={cn(className)}>
+        <CardContent className="p-4 md:p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-7 w-16" />
+            </div>
+            <Skeleton className="h-10 w-10 rounded-full" />
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+/**
+ * Analytics Table Skeleton - Shows data table skeleton for analytics page
+ * Includes header and 5 placeholder rows
+ */
+export function AnalyticsTableSkeleton({ className }: { className?: string }) {
+  return (
+    <Card className={cn(className)}>
+      <CardHeader className="p-4 md:p-6">
+        <Skeleton className="h-5 w-40 mb-2" />
+        <Skeleton className="h-3 w-64" />
+      </CardHeader>
+      <CardContent className="p-4 md:p-6 pt-0">
+        <div className="space-y-3">
+          {/* Table Header */}
+          <div className="flex items-center gap-3 md:gap-4 border-b pb-3">
+            <Skeleton className="h-3 w-20 shrink-0" />
+            <Skeleton className="h-3 w-24 shrink-0" />
+            <Skeleton className="h-3 w-16 shrink-0" />
+            <Skeleton className="h-3 w-14 shrink-0 hidden md:block" />
+            <Skeleton className="h-3 w-12 shrink-0 hidden md:block" />
+            <Skeleton className="h-3 w-16 shrink-0 hidden md:block" />
+            <Skeleton className="h-3 w-14 shrink-0 hidden md:block" />
+            <Skeleton className="h-3 w-12 shrink-0" />
+          </div>
+
+          {/* Table Rows */}
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 md:gap-4 py-2">
+              {/* Platform */}
+              <div className="flex items-center gap-2 shrink-0">
+                <Skeleton className="h-5 w-5 rounded-full" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+
+              {/* Tanggal */}
+              <Skeleton className="h-3 w-24 shrink-0" />
+
+              {/* Status */}
+              <Skeleton className="h-5 w-14 rounded-full shrink-0" />
+
+              {/* Dilihat */}
+              <Skeleton className="h-3 w-10 shrink-0 hidden md:block" />
+
+              {/* Likes */}
+              <Skeleton className="h-3 w-10 shrink-0 hidden md:block" />
+
+              {/* Komentar */}
+              <Skeleton className="h-3 w-10 shrink-0 hidden md:block" />
+
+              {/* Shares */}
+              <Skeleton className="h-3 w-10 shrink-0 hidden md:block" />
+
+              {/* Link */}
+              <Skeleton className="h-3 w-12 shrink-0" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

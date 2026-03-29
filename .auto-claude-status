@@ -1,15 +1,15 @@
 {
   "active": true,
-  "spec": "055-add-exporttojson-utility-alongside-existing-export",
+  "spec": "056-add-skeleton-loaders-for-reviews-and-analytics-com",
   "state": "building",
   "subtasks": {
-    "completed": 2,
+    "completed": 4,
     "total": 5,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Implement exportToJSON and exportToExcel",
+    "current": "Wire skeleton into existing loading states",
     "id": null,
     "total": 2
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 4,
-    "started_at": "2026-03-27T16:08:53.087833"
+    "number": 6,
+    "started_at": "2026-03-27T11:06:58.882658"
   },
-  "last_update": "2026-03-27T16:34:01.042741"
+  "last_update": "2026-03-27T11:18:30.342221"
 }
