@@ -141,12 +141,16 @@ export default function BusinessDashboardPage() {
         // Calculate total spent - first get business wallet
         if (!business) return;
         
+<<<<<<< HEAD
         // @ts-expect-error - Supabase type inference causes deep recursion with UUID comparisons
         const { data: businessWallet } = await supabase
+=======
+        const { data: businessWallet } = await (supabase as any)
+>>>>>>> auto-claude/043-consolidate-duplicate-database-types-files
           .from("wallets")
           .select("id")
           .eq("business_id", business.id)
-          .maybeSingle();
+          .maybeSingle() as { data: { id: string } | null };
 
         if (!businessWallet) {
           setStats({

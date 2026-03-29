@@ -35,5 +35,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "scripts", "supabase/functions"]
+  "exclude": ["node_modules", "scripts", "supabase/functions", "tests", "playwright.config.ts", "vitest.config.ts", "proxy.ts", "sentry.client.config.ts", "sentry.server.config.ts", "sentry.edge.config.ts"]
 }
