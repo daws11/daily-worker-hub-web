@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { cache } from "@/lib/cache";
-import { rateLimitStore } from "@/lib/rate-limit";
+import { getRateLimitMetrics } from "@/lib/db/rate-limit";
 import { logger } from "@/lib/logger";
 import { getServerSession } from "@/lib/auth/get-server-session";
 import os from "os";
@@ -105,55 +105,63 @@ function getCacheMetrics() {
 }
 
 /**
- * Get rate limiting metrics
+ * Get rate limiting metrics from the database
  */
-function getRateLimitMetrics() {
-  const stats = {
-    totalRequests: 0,
-    blockedRequests: 0,
-    activeLimiters: rateLimitStore.size,
-    byType: {
-      auth: { requests: 0, blocked: 0 },
-      "api-authenticated": { requests: 0, blocked: 0 },
-      "api-public": { requests: 0, blocked: 0 },
-      payment: { requests: 0, blocked: 0 },
-    },
-    topEndpoints: [] as Array<{ endpoint: string; count: number }>,
-  };
+async function getRateLimitMetricsFromDb() {
+  const dbMetrics = await getRateLimitMetrics();
 
-  // Aggregate rate limit data
-  for (const [key, record] of rateLimitStore.entries()) {
-    const type = key.split(":")[1] as keyof typeof stats.byType;
-
-    if (type && stats.byType[type]) {
-      stats.byType[type].requests += record.count;
-      stats.totalRequests += record.count;
-
-      // If count equals max requests, consider it as potentially blocked
-      if (record.count >= 5) {
-        // Assuming 5 is the minimum threshold
-        stats.byType[type].blocked++;
-        stats.blockedRequests++;
-      }
-    }
+  if (!dbMetrics) {
+    return {
+      totalRequests: 0,
+      blockedRequests: 0,
+      activeLimiters: 0,
+      byType: {
+        auth: { requests: 0, blocked: 0 },
+        "api-authenticated": { requests: 0, blocked: 0 },
+        "api-public": { requests: 0, blocked: 0 },
+        payment: { requests: 0, blocked: 0 },
+      },
+      topEndpoints: [] as Array<{ endpoint: string; count: number }>,
+    };
   }
 
-  // Get top endpoints (simplified - would need better tracking in production)
+  // Build topEndpoints from topIdentifiers (format: "prefix:user:id" or "prefix:ip:id")
   const endpointCounts = new Map<string, number>();
-  for (const [key, record] of rateLimitStore.entries()) {
-    const endpoint = key.split(":")[0] || "unknown";
-    endpointCounts.set(
-      endpoint,
-      (endpointCounts.get(endpoint) || 0) + record.count,
-    );
+  for (const { identifier, count } of dbMetrics.topIdentifiers) {
+    const parts = identifier.split(":");
+    const endpoint = parts.length >= 2 ? parts[0] : identifier;
+    endpointCounts.set(endpoint, (endpointCounts.get(endpoint) || 0) + count);
   }
 
-  stats.topEndpoints = Array.from(endpointCounts.entries())
+  const topEndpoints = Array.from(endpointCounts.entries())
     .map(([endpoint, count]) => ({ endpoint, count }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
-  return stats;
+  return {
+    totalRequests: dbMetrics.totalRequests,
+    blockedRequests: dbMetrics.blockedRequests,
+    activeLimiters: Object.values(dbMetrics.byType).reduce(
+      (sum, t) => sum + t.activeLimiters,
+      0,
+    ),
+    byType: {
+      auth: { requests: dbMetrics.byType.auth.requests, blocked: dbMetrics.byType.auth.blocked },
+      "api-authenticated": {
+        requests: dbMetrics.byType["api-authenticated"].requests,
+        blocked: dbMetrics.byType["api-authenticated"].blocked,
+      },
+      "api-public": {
+        requests: dbMetrics.byType["api-public"].requests,
+        blocked: dbMetrics.byType["api-public"].blocked,
+      },
+      payment: {
+        requests: dbMetrics.byType.payment.requests,
+        blocked: dbMetrics.byType.payment.blocked,
+      },
+    },
+    topEndpoints,
+  };
 }
 
 /**
@@ -335,7 +343,7 @@ export async function GET(request: NextRequest) {
       timestamp: new Date().toISOString(),
       system: getSystemHealth(),
       cache: getCacheMetrics(),
-      rateLimit: getRateLimitMetrics(),
+      rateLimit: await getRateLimitMetricsFromDb(),
       api: getApiResponseMetrics(),
       errors: getErrorMetrics(),
       users: getActiveUsersMetrics(),

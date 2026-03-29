@@ -1,0 +1,61 @@
+{
+  "project_type": "single",
+  "project_name": "daily-worker-hub-web",
+  "project_description": "Daily Worker Hub - a platform connecting businesses with daily workers in Indonesia",
+  "services": {
+    "frontend": {
+      "path": ".",
+      "tech_stack": ["next.js", "typescript", "react", "tailwindcss", "radix-ui"],
+      "port": 3000,
+      "dev_command": "npm run dev",
+      "build_command": "npm run build",
+      "test_command": "npm test",
+      "test_runner": "vitest"
+    }
+  },
+  "infrastructure": {
+    "docker": false,
+    "database": "supabase-postgresql",
+    "auth": "supabase-auth",
+    "storage": "supabase-storage",
+    "payments": ["xendit", "midtrans"],
+    "notifications": ["firebase", "web-push"]
+  },
+  "conventions": {
+    "linter": "eslint",
+    "formatter": "prettier",
+    "testing": ["vitest", "playwright"],
+    "api_pattern": "Next.js App Router API routes with withRateLimit middleware"
+  },
+  "existing_patterns": {
+    "rate_limiting": {
+      "file": "lib/rate-limit.ts",
+      "pattern": "Higher-order function wrapper (withRateLimit, withRateLimitForMethod)",
+      "identifier": "Map<string, RequestRecord>",
+      "exports": ["withRateLimit", "withRateLimitForMethod", "RATE_LIMIT_CONFIGS", "rateLimitStore", "clearRateLimit", "clearAllRateLimits", "getRateLimitStats"]
+    },
+    "database_access": {
+      "file": "lib/supabase/server.ts",
+      "pattern": "createServerClient from @supabase/ssr with cookie-based session",
+      "service_role_pattern": "Uses SUPABASE_SERVICE_ROLE_KEY for admin operations"
+    },
+    "db_operations": {
+      "file": "lib/db/worker-profile.ts",
+      "pattern": "Named async functions returning { data, error } tuples"
+    },
+    "admin_metrics": {
+      "file": "app/api/admin/metrics/route.ts",
+      "pattern": "GET endpoint with admin auth check, returns system metrics"
+    }
+  },
+  "tech_stack_summary": {
+    "framework": "Next.js 14+ App Router",
+    "language": "TypeScript",
+    "database": "Supabase (PostgreSQL)",
+    "auth": "Supabase Auth",
+    "payments": "Xendit + Midtrans",
+    "notifications": "Firebase + Web Push",
+    "testing": "Vitest (unit) + Playwright (E2E)",
+    "styling": "Tailwind CSS + Radix UI"
+  }
+}

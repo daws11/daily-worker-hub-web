@@ -106,7 +106,7 @@ export default function WorkerDashboardPage() {
           .select("available_balance, pending_balance")
           .eq("user_id", user.id)
           .single();
-        
+
         if (walletData) setWallet(walletData);
 
         // Fetch open jobs count
@@ -117,7 +117,7 @@ export default function WorkerDashboardPage() {
 
         // Fetch worker bookings
         const workerId = worker?.id || user.id;
-        
+
         const { data: bookings } = await (supabase as any)
           .from("bookings")
           .select("id, status, start_date, end_date, final_price, jobs (id, title, address), businesses (id, name)")

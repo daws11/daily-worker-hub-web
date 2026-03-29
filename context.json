@@ -1,0 +1,65 @@
+{
+  "feature": "In-memory rate limiter bypassable in serverless/multi-instance deployments",
+  "feature_type": "security_fix",
+  "root_cause": "lib/rate-limit.ts uses an in-memory Map<string, RequestRecord> (rateLimitStore) to track request counts. In serverless (Vercel) and multi-instance deployments, each execution context has isolated memory. An attacker can bypass the rate limit by distributing requests across instances.",
+  "severity": "high",
+  "affected_endpoints": [
+    "POST /api/payments/create (payment type: 10 req/min)",
+    "POST /api/payments/withdraw (payment type: 10 req/min)",
+    "POST /api/bookings/*/check-in (api-authenticated: 100 req/min)",
+    "POST /api/bookings/*/check-out (api-authenticated: 100 req/min)",
+    "POST /api/bookings/*/complete (api-authenticated: 100 req/min)",
+    "POST /api/bookings/*/review (api-authenticated: 100 req/min)",
+    "GET /api/jobs (api-public: 30 req/min)",
+    "POST /api/jobs (api-authenticated: 100 req/min)",
+    "GET /api/admin/metrics (api-public: 30 req/min)"
+  ],
+  "files_to_modify": [
+    "lib/rate-limit.ts",
+    "app/api/admin/metrics/route.ts",
+    "lib/supabase/database.types.ts"
+  ],
+  "files_to_create": [
+    "supabase/migrations/YYYYMMDDHHMMSS_create_rate_limits_table.sql",
+    "lib/__tests__/rate-limit.test.ts",
+    "lib/db/rate-limit.ts"
+  ],
+  "files_to_reference": [
+    "lib/rate-limit.ts",
+    "lib/db/worker-profile.ts",
+    "lib/supabase/server.ts",
+    "app/api/admin/metrics/route.ts",
+    "lib/cache.ts"
+  ],
+  "patterns": {
+    "service_pattern": "Supabase PostgreSQL is used for all persistence. Service-role client uses SUPABASE_SERVICE_ROLE_KEY. Returns { data, error } tuples.",
+    "rate_limit_pattern": "withRateLimit and withRateLimitForMethod are higher-order functions wrapping handlers. They check IP and/or user ID, call checkRateLimit, return 429 on limit exceeded.",
+    "db_migration_pattern": "Migrations in supabase/migrations/ named YYYYMMDDHHMMSS_description.sql",
+    "type_pattern": "All database types are in lib/supabase/database.types.ts using Database['public']['Tables'] pattern",
+    "cleanup_pattern": "cache.ts uses setInterval for periodic cleanup (5 min). Same pattern should be used for DB cleanup."
+  },
+  "existing_implementations": {
+    "description": "In-memory rate limiter in lib/rate-limit.ts using Map<string, RequestRecord>. Sliding window implementation with admin bypass. Rate limit configs per type (auth, api-authenticated, api-public, payment).",
+    "relevant_files": [
+      "lib/rate-limit.ts",
+      "lib/cache.ts",
+      "lib/supabase/server.ts",
+      "lib/db/worker-profile.ts",
+      "app/api/admin/metrics/route.ts"
+    ]
+  },
+  "technology_stack": {
+    "database": "Supabase PostgreSQL (existing)",
+    "no_redis": true,
+    "no_kv_store": true,
+    "migration_tool": "Supabase migration files"
+  },
+  "solution_approach": {
+    "strategy": "Replace in-memory Map with PostgreSQL-backed sliding window rate limiting using Supabase",
+    "architecture": "UPSERT-based atomic increment on (identifier, type, window_start) with unique constraint",
+    "compatibility": "Keep existing public API (withRateLimit, withRateLimitForMethod) unchanged - drop-in replacement",
+    "fallback": "If DB fails, log error and allow request (fail-open with warning) to avoid breaking availability",
+    "cleanup": "Supabase pg_cron job or Next.js interval cleanup of expired rows",
+    "rls": "No RLS needed - service role used server-side only"
+  }
+}
