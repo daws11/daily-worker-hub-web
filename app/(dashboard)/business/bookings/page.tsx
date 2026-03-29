@@ -214,7 +214,7 @@ export default function BusinessBookingsPage() {
 
       if (bookingsError) throw bookingsError;
 
-      const bookings = (bookingsData as Booking[]) || [];
+      const bookings = (bookingsData as unknown as Booking[]) || [];
 
       // Fetch existing reviews for completed bookings
       const completedBookingIds: string[] = bookings

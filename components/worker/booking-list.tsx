@@ -80,7 +80,7 @@ async function fetchBookings(workerId: string): Promise<Booking[]> {
     throw error;
   }
 
-  return (data as Booking[]) || [];
+  return (data as unknown as Booking[]) || [];
 }
 
 function BookingList({ workerId }: BookingListProps) {

@@ -18,16 +18,16 @@ interface Booking {
     id: string;
     title: string;
     address?: string | null;
-  } | null;
+  }[] | null;
   workers?: {
     id: string;
     full_name: string;
     avatar_url?: string | null;
-  } | null;
+  }[] | null;
   businesses?: {
     id: string;
     name: string;
-  } | null;
+  }[] | null;
 }
 
 interface UpcomingBookingsProps {
@@ -145,12 +145,12 @@ function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }
 function BookingCard({ booking, role }: { booking: Booking; role: "business" | "worker" }) {
   const name =
     role === "business"
-      ? booking.workers?.full_name || "Pekerja"
-      : booking.businesses?.name || "Perusahaan";
-  const jobTitle = booking.jobs?.title || "Pekerjaan";
-  const address = booking.jobs?.address;
+      ? booking.workers?.[0]?.full_name || "Pekerja"
+      : booking.businesses?.[0]?.name || "Perusahaan";
+  const jobTitle = booking.jobs?.[0]?.title || "Pekerjaan";
+  const address = booking.jobs?.[0]?.address;
   const price = booking.final_price;
-  const avatarUrl = role === "business" ? booking.workers?.avatar_url : undefined;
+  const avatarUrl = role === "business" ? booking.workers?.[0]?.avatar_url : undefined;
 
   return (
     <div className="group p-4 bg-card rounded-xl border border-border hover:border-primary/20 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 touch-manipulation">

@@ -97,8 +97,8 @@ export interface Booking {
   created_at: string;
   check_in_at: string | null;
   check_out_at: string | null;
-  job?: BookingJob[];
-  business?: BookingBusiness[];
+  job?: BookingJob;
+  business?: BookingBusiness;
 }
 
 export interface BookingCardProps {
@@ -377,7 +377,7 @@ async function fetchBookings(workerId: string): Promise<Booking[]> {
     throw error;
   }
 
-  return (data as Booking[]) || [];
+  return (data as unknown as Booking[]) || [];
 }
 
 async function fetchReviewsForBookings(
