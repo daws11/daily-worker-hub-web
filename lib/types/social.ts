@@ -49,15 +49,16 @@ export interface BusinessSocialConnection {
   platform_account_id: string | null;
   platform_account_name: string | null;
   platform_account_url: string | null;
-  platform_page_id: string | null;
-  scopes: string[] | null;
-  settings: Record<string, unknown>;
+  auto_post_enabled: boolean | null;
+  is_default: boolean | null;
+  webhook_enabled: boolean | null;
+  webhook_url: string | null;
+  webhook_secret: string | null;
+  metadata: Record<string, unknown> | null;
+  validation_errors: Record<string, unknown> | null;
+  last_posted_at: string | null;
+  last_validated_at: string | null;
   status: ConnectionStatus;
-  error_count: number;
-  last_error: string | null;
-  last_error_at: string | null;
-  last_verified_at: string | null;
-  last_used_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -82,20 +83,28 @@ export interface CreateConnectionInput {
   platform_account_id?: string;
   platform_account_name?: string;
   platform_account_url?: string;
-  platform_page_id?: string;
-  scopes?: string[];
-  settings?: ConnectionSettings;
+  auto_post_enabled?: boolean;
+  is_default?: boolean;
+  webhook_enabled?: boolean;
+  webhook_url?: string;
+  webhook_secret?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface UpdateConnectionInput {
   access_token?: string;
   refresh_token?: string;
   token_expires_at?: string;
-  settings?: ConnectionSettings;
+  auto_post_enabled?: boolean;
+  is_default?: boolean;
+  webhook_enabled?: boolean;
+  webhook_url?: string;
+  webhook_secret?: string;
+  metadata?: Record<string, unknown>;
+  validation_errors?: Record<string, unknown>;
+  last_posted_at?: string;
+  last_validated_at?: string;
   status?: ConnectionStatus;
-  error_count?: number;
-  last_error?: string;
-  last_error_at?: string;
 }
 
 export interface JobPost {

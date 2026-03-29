@@ -32,13 +32,14 @@ export async function getUserGrowthMetrics(
 ): Promise<UserGrowthMetrics[]> {
   const { start_date, end_date } = params;
 
-  const { data, error } = await (supabase as any).rpc(
-    "get_analytics_user_growth",
+  const { data, error } = await supabase.rpc(
+    // @ts-ignore - RPC functions not in Database types
+    "get_analytics_user_growth" as any,
     {
       start_date: start_date || null,
       end_date: end_date || null,
     },
-  );
+  ) as { data: UserGrowthMetrics[] | null; error: { message: string } | null };
 
   if (error) {
     throw new Error(`Failed to fetch user growth metrics: ${error.message}`);
@@ -52,10 +53,14 @@ export async function getUserGrowthMetrics(
  * @returns Array of daily active users by date
  */
 export async function getDailyActiveUsers(): Promise<DailyActiveUsers[]> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = (await supabase
+    // @ts-ignore - analytics_daily_active_users table not in Database types yet
     .from("analytics_daily_active_users")
     .select("*")
-    .order("date", { ascending: true });
+    .order("date", { ascending: true })) as {
+    data: DailyActiveUsers[] | null;
+    error: { message: string } | null;
+  };
 
   if (error) {
     throw new Error(`Failed to fetch daily active users: ${error.message}`);
@@ -69,10 +74,14 @@ export async function getDailyActiveUsers(): Promise<DailyActiveUsers[]> {
  * @returns Array of monthly active users by month
  */
 export async function getMonthlyActiveUsers(): Promise<MonthlyActiveUsers[]> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = (await supabase
+    // @ts-ignore - analytics_monthly_active_users table not in Database types yet
     .from("analytics_monthly_active_users")
     .select("*")
-    .order("month", { ascending: true });
+    .order("month", { ascending: true })) as {
+    data: MonthlyActiveUsers[] | null;
+    error: { message: string } | null;
+  };
 
   if (error) {
     throw new Error(`Failed to fetch monthly active users: ${error.message}`);
@@ -86,9 +95,10 @@ export async function getMonthlyActiveUsers(): Promise<MonthlyActiveUsers[]> {
  * This should be called periodically to keep DAU data up to date
  */
 export async function refreshDailyActiveUsers(): Promise<void> {
-  const { error } = await (supabase as any).rpc(
-    "refresh_analytics_daily_active_users",
-  );
+  const { error } = await supabase.rpc(
+    // @ts-ignore - RPC functions not in Database types
+    "refresh_analytics_daily_active_users" as any,
+  ) as { error: { message: string } | null };
 
   if (error) {
     throw new Error(`Failed to refresh daily active users: ${error.message}`);
@@ -100,9 +110,10 @@ export async function refreshDailyActiveUsers(): Promise<void> {
  * This should be called periodically to keep MAU data up to date
  */
 export async function refreshMonthlyActiveUsers(): Promise<void> {
-  const { error } = await (supabase as any).rpc(
-    "refresh_analytics_monthly_active_users",
-  );
+  const { error } = await supabase.rpc(
+    // @ts-ignore - RPC functions not in Database types
+    "refresh_analytics_monthly_active_users" as any,
+  ) as { error: { message: string } | null };
 
   if (error) {
     throw new Error(`Failed to refresh monthly active users: ${error.message}`);
@@ -123,13 +134,14 @@ export async function getJobCompletionMetrics(
 ): Promise<JobCompletionMetrics[]> {
   const { start_date, end_date } = params;
 
-  const { data, error } = await (supabase as any).rpc(
-    "get_analytics_job_completion",
+  const { data, error } = await supabase.rpc(
+    // @ts-ignore - RPC functions not in Database types
+    "get_analytics_job_completion" as any,
     {
       start_date: start_date || null,
       end_date: end_date || null,
     },
-  );
+  ) as { data: JobCompletionMetrics[] | null; error: { message: string } | null };
 
   if (error) {
     throw new Error(`Failed to fetch job completion metrics: ${error.message}`);
@@ -152,13 +164,17 @@ export async function getTransactionVolumeMetrics(
 ): Promise<TransactionVolumeMetrics[]> {
   const { start_date, end_date } = params;
 
-  const { data, error } = await (supabase as any).rpc(
-    "get_analytics_transaction_volume",
+  const { data, error } = await supabase.rpc(
+    // @ts-ignore - RPC functions not in Database types
+    "get_analytics_transaction_volume" as any,
     {
       start_date: start_date || null,
       end_date: end_date || null,
     },
-  );
+  ) as {
+    data: TransactionVolumeMetrics[] | null;
+    error: { message: string } | null;
+  };
 
   if (error) {
     throw new Error(
@@ -180,9 +196,13 @@ export async function getTransactionVolumeMetrics(
 export async function getGeographicDistribution(): Promise<
   GeographicDistribution[]
 > {
-  const { data, error } = await (supabase as any).rpc(
-    "get_analytics_geographic_distribution",
-  );
+  const { data, error } = await supabase.rpc(
+    // @ts-ignore - RPC functions not in Database types
+    "get_analytics_geographic_distribution" as any,
+  ) as {
+    data: GeographicDistribution[] | null;
+    error: { message: string } | null;
+  };
 
   if (error) {
     throw new Error(
@@ -202,9 +222,10 @@ export async function getGeographicDistribution(): Promise<
  * @returns Array of trending categories sorted by booking count
  */
 export async function getTrendingCategories(): Promise<TrendingCategory[]> {
-  const { data, error } = await (supabase as any).rpc(
-    "get_analytics_trending_categories",
-  );
+  const { data, error } = await supabase.rpc(
+    // @ts-ignore - RPC functions not in Database types
+    "get_analytics_trending_categories" as any,
+  ) as { data: TrendingCategory[] | null; error: { message: string } | null };
 
   if (error) {
     throw new Error(`Failed to fetch trending categories: ${error.message}`);
@@ -227,13 +248,14 @@ export async function getComplianceMetrics(
 ): Promise<ComplianceMetrics[]> {
   const { start_date, end_date } = params;
 
-  const { data, error } = await (supabase as any).rpc(
-    "get_analytics_compliance_violations",
+  const { data, error } = await supabase.rpc(
+    // @ts-ignore - RPC functions not in Database types
+    "get_analytics_compliance_violations" as any,
     {
       start_date: start_date || null,
       end_date: end_date || null,
     },
-  );
+  ) as { data: ComplianceMetrics[] | null; error: { message: string } | null };
 
   if (error) {
     throw new Error(`Failed to fetch compliance metrics: ${error.message}`);
@@ -256,10 +278,14 @@ export async function getRevenueMetrics(
 ): Promise<RevenueMetrics[]> {
   const { start_date, end_date } = params;
 
-  const { data, error } = await (supabase as any).rpc("get_analytics_revenue", {
-    start_date: start_date || null,
-    end_date: end_date || null,
-  });
+  const { data, error } = await supabase.rpc(
+    // @ts-ignore - RPC functions not in Database types
+    "get_analytics_revenue" as any,
+    {
+      start_date: start_date || null,
+      end_date: end_date || null,
+    },
+  ) as { data: RevenueMetrics[] | null; error: { message: string } | null };
 
   if (error) {
     throw new Error(`Failed to fetch revenue metrics: ${error.message}`);
@@ -282,13 +308,14 @@ export async function getBookingMetrics(
 ): Promise<BookingMetrics[]> {
   const { start_date, end_date } = params;
 
-  const { data, error } = await (supabase as any).rpc(
-    "get_analytics_booking_summary",
+  const { data, error } = await supabase.rpc(
+    // @ts-ignore - RPC functions not in Database types
+    "get_analytics_booking_summary" as any,
     {
       start_date: start_date || null,
       end_date: end_date || null,
     },
-  );
+  ) as { data: BookingMetrics[] | null; error: { message: string } | null };
 
   if (error) {
     throw new Error(`Failed to fetch booking metrics: ${error.message}`);
@@ -363,12 +390,6 @@ export async function getAnalyticsDashboard(params?: {
   };
 }
 
-/**
- * Get all platform metrics (users, jobs, bookings, verifications) in a single RPC call.
- * Consolidates 22 individual count queries into one for improved admin dashboard performance.
- * Date boundaries (7-day / 30-day) are computed server-side in SQL to avoid timezone mismatches.
- * @returns Object containing all platform metric counts
- */
 export async function getPlatformMetrics(): Promise<{
   users: {
     total: number;
@@ -421,11 +442,167 @@ export async function getPlatformMetrics(): Promise<{
     resolvedThisWeek: number;
   };
 } | null> {
-  const { data, error } = await (supabase as any).rpc("get_platform_metrics");
+  try {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
-  if (error) {
-    throw new Error(`Failed to fetch platform metrics: ${error.message}`);
+    const [
+      { count: totalUsers },
+      { count: workerCount },
+      { count: businessCount },
+      { count: adminCount },
+      { count: newUsersThisWeek },
+      { count: newUsersThisMonth },
+      { count: totalJobs },
+      { count: activeJobs },
+      { count: completedJobs },
+      { count: cancelledJobs },
+      { count: newJobsThisWeek },
+      { count: newJobsThisMonth },
+      { count: totalBookings },
+      { count: pendingBookings },
+      { count: inProgressBookings },
+      { count: completedBookings },
+      { count: cancelledBookings },
+      { count: newBookingsThisWeek },
+      { count: newBookingsThisMonth },
+      { count: pendingBusinessVerifications },
+      { count: pendingKYCVerifications },
+    ] = await Promise.all([
+      supabase.from("users").select("*", { count: "exact", head: true }),
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .eq("role", "worker"),
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .eq("role", "business"),
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        // @ts-ignore - admin role may not be in Database type enum
+        .eq("role", "admin" as any),
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneWeekAgo.toISOString()),
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneMonthAgo.toISOString()),
+      supabase.from("jobs").select("*", { count: "exact", head: true }),
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "open"),
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "completed"),
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "cancelled"),
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneWeekAgo.toISOString()),
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneMonthAgo.toISOString()),
+      supabase.from("bookings").select("*", { count: "exact", head: true }),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending"),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "in_progress"),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "completed"),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "cancelled"),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneWeekAgo.toISOString()),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneMonthAgo.toISOString()),
+      supabase
+        .from("businesses")
+        .select("*", { count: "exact", head: true })
+        .eq("verification_status", "pending"),
+      (supabase
+        // @ts-ignore - kyc_verifications table not in Database types yet
+        .from("kyc_verifications") as any)
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending"),
+    ]);
+
+    return {
+      users: {
+        total: totalUsers ?? 0,
+        workers: workerCount ?? 0,
+        businesses: businessCount ?? 0,
+        admins: adminCount ?? 0,
+        newThisWeek: newUsersThisWeek ?? 0,
+        newThisMonth: newUsersThisMonth ?? 0,
+      },
+      jobs: {
+        total: totalJobs ?? 0,
+        active: activeJobs ?? 0,
+        completed: completedJobs ?? 0,
+        cancelled: cancelledJobs ?? 0,
+        newThisWeek: newJobsThisWeek ?? 0,
+        newThisMonth: newJobsThisMonth ?? 0,
+      },
+      bookings: {
+        total: totalBookings ?? 0,
+        pending: pendingBookings ?? 0,
+        inProgress: inProgressBookings ?? 0,
+        completed: completedBookings ?? 0,
+        cancelled: cancelledBookings ?? 0,
+        newThisWeek: newBookingsThisWeek ?? 0,
+        newThisMonth: newBookingsThisMonth ?? 0,
+      },
+      transactions: {
+        total: 0,
+        totalVolume: 0,
+        pendingVolume: 0,
+        completedVolume: 0,
+        thisWeekVolume: 0,
+        thisMonthVolume: 0,
+      },
+      verifications: {
+        pendingBusiness: pendingBusinessVerifications ?? 0,
+        pendingKYC: pendingKYCVerifications ?? 0,
+        approvedThisWeek: 0,
+        rejectedThisWeek: 0,
+      },
+      disputes: {
+        open: 0,
+        resolvedThisWeek: 0,
+        resolvedThisMonth: 0,
+        avgResolutionTime: 0,
+      },
+      reports: {
+        pending: 0,
+        open: 0,
+        resolvedThisWeek: 0,
+      },
+    };
+  } catch (error) {
+    return null;
   }
-
-  return data ?? null;
 }

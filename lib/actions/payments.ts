@@ -1,9 +1,7 @@
 "use server";
-/* eslint-disable @typescript-eslint/no-explicit-any */
-declare const process: { env: Record<string, string | undefined> };
 
 import { createClient } from "../supabase/server";
-import type { Database, Json } from "../supabase/types";
+import type { Database } from "../supabase/types";
 import { createInvoice, calculateFee, type PaymentProvider } from "../payments";
 import {
   validateTopUpAmount,
@@ -126,7 +124,7 @@ export async function initializeQrisPayment(
       payment_url: null,
       qris_expires_at: qrisExpiresAt,
       fee_amount: feeAmount,
-      metadata: (metadata || {}) as Json,
+      metadata: (metadata || {}) as any,
     };
 
     const { data: transaction, error: transactionError } = await supabase
@@ -241,7 +239,7 @@ export async function getBusinessWalletBalance(
 
     const { data: wallet, error } = await (supabase as any)
       .from("wallets")
-      .select("balance, currency")
+      .select("available_balance, pending_balance, balance")
       .eq("business_id", businessId)
       .maybeSingle();
 
@@ -258,12 +256,11 @@ export async function getBusinessWalletBalance(
         .from("wallets")
         .insert({
           business_id: businessId,
-          worker_id: null,
           balance: 0,
-          currency: "IDR",
-          is_active: true,
+          available_balance: 0,
+          pending_balance: 0,
         })
-        .select("balance, currency")
+        .select("available_balance, pending_balance, balance")
         .single();
 
       if (createError || !newWallet) {
@@ -275,13 +272,19 @@ export async function getBusinessWalletBalance(
 
       return {
         success: true,
-        data: { balance: (newWallet as { balance: number }).balance, currency: "IDR" },
+        data: {
+          balance: newWallet.available_balance + newWallet.pending_balance,
+          currency: "IDR",
+        },
       };
     }
 
     return {
       success: true,
-      data: { balance: (wallet as { balance: number }).balance, currency: "IDR" },
+      data: {
+        balance: wallet.available_balance + wallet.pending_balance,
+        currency: "IDR",
+      },
     };
   } catch (error) {
     return {
@@ -313,7 +316,7 @@ export async function getWorkerWalletBalance(
 
     const { data: wallet, error } = await (supabase as any)
       .from("wallets")
-      .select("balance")
+      .select("available_balance, pending_balance, balance")
       .eq("user_id", worker.user_id)
       .maybeSingle();
 
@@ -334,7 +337,7 @@ export async function getWorkerWalletBalance(
           pending_balance: 0,
           available_balance: 0,
         })
-        .select("balance")
+        .select("available_balance, pending_balance, balance")
         .single();
 
       if (createError || !newWallet) {
@@ -346,13 +349,19 @@ export async function getWorkerWalletBalance(
 
       return {
         success: true,
-        data: { balance: (newWallet as { balance: number }).balance, currency: "IDR" },
+        data: {
+          balance: newWallet.available_balance + newWallet.pending_balance,
+          currency: "IDR",
+        },
       };
     }
 
     return {
       success: true,
-      data: { balance: (wallet as { balance: number }).balance, currency: "IDR" },
+      data: {
+        balance: wallet.available_balance + wallet.pending_balance,
+        currency: "IDR",
+      },
     };
   } catch (error) {
     return {
@@ -372,14 +381,14 @@ export async function getBusinessPaymentHistory(
   try {
     const supabase = await createClient();
 
-    let query = (supabase as any)
+    let query = supabase
       .from("payment_transactions")
       .select("*")
       .eq("business_id", businessId)
       .order("created_at", { ascending: false });
 
     if (status) {
-      query = query.eq("status", status);
+      query = query.eq("status", status as any);
     }
 
     const { data, error } = await query;

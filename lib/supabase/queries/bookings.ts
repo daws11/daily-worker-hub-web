@@ -5,15 +5,10 @@ type BookingRow = Database["public"]["Tables"]["bookings"]["Row"];
 type BookingUpdate = Database["public"]["Tables"]["bookings"]["Update"];
 type BookingInsert = Database["public"]["Tables"]["bookings"]["Insert"];
 
+// Extended type for bookings with related data from joined tables.
+// Relations (worker, business, job, wallet_transaction) are not in the DB Row type
+// and are appended via Supabase select chains.
 export type JobBookingWithDetails = BookingRow & {
-  // Attendance fields (may not be in current DB schema but needed for feature)
-  check_in_at?: string | null;
-  check_out_at?: string | null;
-  check_in_lat?: number | null;
-  check_in_lng?: number | null;
-  check_out_lat?: number | null;
-  check_out_lng?: number | null;
-  booking_notes?: string | null;
   worker?: {
     id: string;
     full_name: string;
@@ -63,7 +58,7 @@ type BookingResult<T = unknown> = {
  */
 export async function getJobBookings(jobId: string): Promise<BookingResult<JobBookingWithDetails[]>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("bookings")
       .select(
         `
@@ -109,7 +104,7 @@ export async function getJobBookings(jobId: string): Promise<BookingResult<JobBo
  */
 export async function getWorkerBookings(workerId: string): Promise<BookingResult<JobBookingWithDetails[]>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("bookings")
       .select(
         `
@@ -161,7 +156,7 @@ export async function getWorkerBookings(workerId: string): Promise<BookingResult
  */
 export async function getBusinessBookings(businessId: string): Promise<BookingResult<JobBookingWithDetails[]>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("bookings")
       .select(
         `
@@ -210,7 +205,7 @@ export async function getBusinessBookings(businessId: string): Promise<BookingRe
  */
 export async function getBookingById(bookingId: string): Promise<BookingResult<JobBookingWithDetails>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("bookings")
       .select(
         `

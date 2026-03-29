@@ -5,30 +5,24 @@ import type { Database } from "../supabase/types";
 import {
   calculateScore,
   getScoreHistory,
-  getWorkerScore,
-  getWorkerScoreTrend,
   updateScore,
   recordScoreHistory,
 } from "../supabase/queries/reliability-score";
+import type {
+  ReliabilityScoreBreakdown,
+  ReliabilityScoreHistoryRow,
+} from "../supabase/queries/reliability-score";
 
 type Worker = Database["public"]["Tables"]["workers"]["Row"];
-type ReliabilityScoreHistory =
-  Database["public"]["Tables"]["reliability_score_history"]["Row"];
 
-export interface ScoreBreakdown {
-  score: number;
-  attendance_rate: number;
-  punctuality_rate: number;
-  avg_rating: number;
-  completed_jobs_count: number;
-}
+export type { ReliabilityScoreBreakdown };
 
 export type ScoreCalculationResult = {
   success: boolean;
   error?: string;
   data?: {
     worker: Worker;
-    breakdown: ScoreBreakdown;
+    breakdown: ReliabilityScoreBreakdown;
   };
 };
 
@@ -37,7 +31,7 @@ export type WorkerScoreResult = {
   error?: string;
   data?: {
     worker: Worker;
-    history: ReliabilityScoreHistory[];
+    history: ReliabilityScoreHistoryRow[];
   };
 };
 
@@ -45,25 +39,6 @@ export type ScoreUpdateResult = {
   success: boolean;
   error?: string;
   data?: Worker;
-};
-
-export type ScoreTrend = "improving" | "declining" | "stable";
-
-export type WorkerReliabilityTrend = {
-  trend: ScoreTrend;
-  score_change: number;
-  data_points: number;
-};
-
-export type WorkerReliabilityDetailsResult = {
-  success: boolean;
-  error?: string;
-  data?: {
-    worker: Worker;
-    breakdown: ScoreBreakdown;
-    trend: WorkerReliabilityTrend | null;
-    history: ReliabilityScoreHistory[];
-  };
 };
 
 /**
@@ -192,69 +167,6 @@ export async function triggerScoreUpdate(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Gagal memperbarui skor",
-    };
-  }
-}
-
-/**
- * Get comprehensive reliability details for a worker in one call
- * Returns current score, breakdown, trend, and score history
- */
-export async function getWorkerReliabilityDetails(
-  workerId: string,
-): Promise<WorkerReliabilityDetailsResult> {
-  try {
-    const supabase = await createClient();
-
-    // Get current worker data
-    const { data: worker, error: workerError } = await supabase
-      .from("workers")
-      .select("*")
-      .eq("id", workerId)
-      .single();
-
-    if (workerError || !worker) {
-      return { success: false, error: "Pekerja tidak ditemukan" };
-    }
-
-    // Get score breakdown (current calculation)
-    const breakdown = await calculateScore(workerId);
-
-    if (!breakdown) {
-      return {
-        success: false,
-        error: "Tidak dapat menghitung skor - belum ada pekerjaan selesai",
-      };
-    }
-
-    // Get score trend
-    const trend = await getWorkerScoreTrend(workerId);
-
-    // Get score history
-    const history = await getScoreHistory(workerId, 20);
-
-    return {
-      success: true,
-      data: {
-        worker,
-        breakdown,
-        trend: trend
-          ? {
-              trend: trend.trend,
-              score_change: trend.score_change,
-              data_points: trend.data_points,
-            }
-          : null,
-        history,
-      },
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Terjadi kesalahan saat mengambil detail reliabilitas",
     };
   }
 }

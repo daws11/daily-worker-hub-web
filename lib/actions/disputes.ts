@@ -3,24 +3,7 @@
 import { createClient } from "../supabase/server";
 import type { Database } from "../supabase/types";
 
-type Dispute = {
-  id: string;
-  booking_id: string;
-  raised_by: string;
-  reporter_id: string;
-  reported_id: string;
-  type: string;
-  description: string;
-  status: "pending" | "reviewing" | "resolved" | "dismissed";
-  priority: "low" | "medium" | "high" | "urgent";
-  resolution?: string;
-  resolution_notes?: string;
-  admin_notes?: string;
-  created_at: string;
-  updated_at: string;
-  resolved_at?: string;
-  resolved_by?: string;
-};
+type Dispute = Database["public"]["Tables"]["disputes"]["Row"];
 type Booking = Database["public"]["Tables"]["bookings"]["Row"];
 
 // Types for bookings with joined data
@@ -43,7 +26,6 @@ type BookingWithJobAndUsers = Booking & {
     id: string;
     full_name: string;
     phone: string | null;
-    email: string | null;
   } | null;
   businesses: {
     id: string;
@@ -79,7 +61,6 @@ type DisputeWithFullBooking = Dispute & {
       id: string;
       full_name: string;
       phone: string | null;
-      email: string | null;
     } | null;
     businesses: {
       id: string;
@@ -370,13 +351,11 @@ export async function raiseDisputeByWorker(
 /**
  * Get dispute details
  */
-export async function getDispute(
-  disputeId: string,
-): Promise<{ success: boolean; error?: string; data?: DisputeWithFullBooking | null }> {
+export async function getDispute(disputeId: string) {
   try {
     const supabase = await createClient();
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("disputes")
       .select(
         `
@@ -393,8 +372,7 @@ export async function getDispute(
           workers (
             id,
             full_name,
-            phone,
-            email
+            phone
           ),
           businesses (
             id,
@@ -429,13 +407,11 @@ export async function getDispute(
 /**
  * Get all disputes for a business
  */
-export async function getBusinessDisputes(
-  businessId: string,
-): Promise<{ success: boolean; error?: string; data?: DisputeWithBookingForList[] | null }> {
+export async function getBusinessDisputes(businessId: string) {
   try {
     const supabase = await createClient();
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("disputes")
       .select(
         `
@@ -465,7 +441,7 @@ export async function getBusinessDisputes(
 
     return {
       success: true,
-      data: data as DisputeWithBookingForList[],
+      data: data as DisputeWithBookingForList[] | null,
       error: null,
     };
   } catch (error) {
@@ -480,13 +456,11 @@ export async function getBusinessDisputes(
 /**
  * Get all disputes for a worker
  */
-export async function getWorkerDisputes(
-  workerId: string,
-): Promise<{ success: boolean; error?: string; data?: DisputeWithBookingForList[] | null }> {
+export async function getWorkerDisputes(workerId: string) {
   try {
     const supabase = await createClient();
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("disputes")
       .select(
         `
@@ -517,7 +491,7 @@ export async function getWorkerDisputes(
 
     return {
       success: true,
-      data: data as DisputeWithBookingForList[],
+      data: data as DisputeWithBookingForList[] | null,
       error: null,
     };
   } catch (error) {
@@ -747,15 +721,11 @@ export async function checkActiveDispute(bookingId: string): Promise<{
 /**
  * Get all pending disputes (admin view)
  */
-export async function getPendingDisputes(): Promise<{
-  success: boolean;
-  error?: string;
-  data?: DisputeWithFullBooking[] | null;
-}> {
+export async function getPendingDisputes() {
   try {
     const supabase = await createClient();
 
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from("disputes")
       .select(
         `
@@ -772,8 +742,7 @@ export async function getPendingDisputes(): Promise<{
           workers (
             id,
             full_name,
-            phone,
-            email
+            phone
           ),
           businesses (
             id,
@@ -793,7 +762,7 @@ export async function getPendingDisputes(): Promise<{
 
     return {
       success: true,
-      data: data as DisputeWithFullBooking[],
+      data: data as DisputeWithFullBooking[] | null,
       error: null,
     };
   } catch (error) {

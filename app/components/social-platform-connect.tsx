@@ -273,14 +273,14 @@ export function SocialPlatformConnect({
                             "Account Terhubung"}
                         </span>
                       </div>
-                      {connection.last_used_at && (
+                      {connection.last_posted_at && (
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-muted-foreground">
-                            Terakhir digunakan:
+                            Terakhir diposting:
                           </span>
                           <span className="text-muted-foreground">
                             {new Date(
-                              connection.last_used_at,
+                              connection.last_posted_at,
                             ).toLocaleDateString("id-ID", {
                               day: "numeric",
                               month: "short",

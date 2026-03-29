@@ -100,7 +100,7 @@ export async function createSavedSearch(
     const insertData: SavedSearchesInsert = {
       worker_id: workerId,
       name: input.name,
-      filters: input.filters as unknown as Json,
+      filters: input.filters as Json,
       is_favorite: input.is_favorite ?? false,
     };
 
@@ -144,7 +144,7 @@ export async function updateSavedSearch(
       updateData.name = input.name;
     }
     if (input.filters !== undefined) {
-      updateData.filters = input.filters as unknown as Json;
+      updateData.filters = input.filters as Json;
     }
     if (input.is_favorite !== undefined) {
       updateData.is_favorite = input.is_favorite;
