@@ -1,9 +1,17 @@
 # Operations - Daily Worker Hub Web MVP
 
+> ⚠️ **DEPRECATED - Self-Hosted Content**
+>
+> This document previously described operations for a self-hosted VPS architecture (Nginx, PM2, Docker, Supabase Local). The production system now runs on **Vercel + Supabase Cloud** and this document is retained for historical reference only.
+>
+> For the current production architecture, see [docs/Architecture.md](./Architecture.md).
+>
+> Operational procedures (team structure, development workflows, deployment commands, etc.) in this document may be partially outdated. Please verify with the current team before acting on this content.
+
 **Project:** Daily Worker Hub - Web MVP
-**Platform:** Next.js + Supabase Local (Self-Hosted)
+**Tech Stack:** Next.js + Supabase Cloud
 **Version:** 1.0
-**Last Updated:** February 21, 2026
+**Last Updated:** March 27, 2026
 
 ---
 
