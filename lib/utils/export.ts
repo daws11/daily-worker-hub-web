@@ -1,4 +1,49 @@
-import * as xlsx from "xlsx";
+// ─── Metric Interfaces ────────────────────────────────────────────────────────
+
+interface UserGrowthMetric {
+  total_new_users: number;
+  new_workers: number;
+  cumulative_users: number;
+}
+
+interface JobCompletionMetric {
+  total_jobs: number;
+  completed_jobs: number;
+  completion_rate_percentage: number;
+}
+
+interface TransactionVolumeMetric {
+  total_payment_volume: number;
+  total_transactions: number;
+  success_rate_percentage: number;
+}
+
+interface RevenueMetric {
+  gross_revenue: number;
+  net_revenue: number;
+  platform_fee: number;
+}
+
+interface ComplianceMetric {
+  verified_workers: number;
+  pending_verifications?: number;
+}
+
+interface GeographicLocation {
+  location_name: string;
+  worker_count: number;
+  job_count: number;
+  booking_count: number;
+}
+
+interface TrendingCategory {
+  category_name: string;
+  job_count: number;
+  booking_count: number;
+  demand_ratio: number;
+}
+
+// ─── CSV Export ───────────────────────────────────────────────────────────────
 
 /**
  * Convert data to CSV format and trigger download
@@ -6,7 +51,7 @@ import * as xlsx from "xlsx";
  * @param filename - Name of the file (without extension)
  * @throws Error if data is empty or invalid
  */
-export function exportToCSV<T extends Record<string, any>>(
+export function exportToCSV<T extends Record<string, string | number | boolean | object>>(
   data: T[],
   filename: string,
 ): void {
@@ -48,61 +93,6 @@ export function exportToCSV<T extends Record<string, any>>(
   });
 
   downloadBlob(blob, `${filename}.csv`);
-}
-
-/**
- * Convert data to JSON format and trigger download
- * @param data - Array of objects to export
- * @param filename - Name of the file (without extension)
- * @throws Error if data is empty or invalid
- */
-export function exportToJSON<T extends Record<string, any>>(
-  data: T[],
-  filename: string,
-): void {
-  if (!data || data.length === 0) {
-    throw new Error("No data to export");
-  }
-
-  const jsonContent = JSON.stringify(data, null, 2);
-
-  // Add BOM for proper encoding
-  const BOM = "\uFEFF";
-  const blob = new Blob([BOM + jsonContent], {
-    type: "application/json;charset=utf-8;",
-  });
-
-  downloadBlob(blob, `${filename}.json`);
-}
-
-/**
- * Convert data to Excel format and trigger download using xlsx library
- * @param data - Array of objects to export
- * @param filename - Name of the file (without extension)
- * @throws Error if data is empty or invalid
- */
-export function exportToExcel<T extends Record<string, any>>(
-  data: T[],
-  filename: string,
-): void {
-  if (!data || data.length === 0) {
-    throw new Error("No data to export");
-  }
-
-  const worksheet = xlsx.utils.json_to_sheet(data);
-  const workbook = xlsx.utils.book_new();
-  xlsx.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-
-  const excelBuffer = xlsx.write(workbook, {
-    bookType: "xlsx",
-    type: "array",
-  });
-
-  const blob = new Blob([excelBuffer], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  });
-
-  downloadBlob(blob, `${filename}.xlsx`);
 }
 
 /**
@@ -155,7 +145,7 @@ function downloadBlob(blob: Blob, filename: string): void {
  * @returns Formatted data with section identifier
  */
 export function formatAnalyticsDataForExport(
-  data: Record<string, any>,
+  data: Record<string, string | number | boolean | object | null>,
   dateRange: string,
 ): Array<{ section: string; metric: string; value: string }> {
   const exportData: Array<{ section: string; metric: string; value: string }> =
@@ -176,7 +166,7 @@ export function formatAnalyticsDataForExport(
         metric: "Pengguna Baru",
         value: String(
           data.user_growth.metrics.reduce(
-            (sum: number, m: any) => sum + m.total_new_users,
+            (sum: number, m: UserGrowthMetric) => sum + m.total_new_users,
             0,
           ),
         ),
@@ -186,7 +176,7 @@ export function formatAnalyticsDataForExport(
         metric: "Pekerja Baru",
         value: String(
           data.user_growth.metrics.reduce(
-            (sum: number, m: any) => sum + m.new_workers,
+            (sum: number, m: UserGrowthMetric) => sum + m.new_workers,
             0,
           ),
         ),
@@ -202,20 +192,20 @@ export function formatAnalyticsDataForExport(
         section: "Job Completion",
         metric: "Total Job",
         value: String(
-          metrics.reduce((sum: number, m: any) => sum + m.total_jobs, 0),
+          metrics.reduce((sum: number, m: JobCompletionMetric) => sum + m.total_jobs, 0),
         ),
       },
       {
         section: "Job Completion",
         metric: "Job Selesai",
         value: String(
-          metrics.reduce((sum: number, m: any) => sum + m.completed_jobs, 0),
+          metrics.reduce((sum: number, m: JobCompletionMetric) => sum + m.completed_jobs, 0),
         ),
       },
       {
         section: "Job Completion",
         metric: "Rata-rata Completion Rate",
-        value: `${Math.round(metrics.reduce((sum: number, m: any) => sum + m.completion_rate_percentage, 0) / metrics.length)}%`,
+        value: `${Math.round(metrics.reduce((sum: number, m: JobCompletionMetric) => sum + m.completion_rate_percentage, 0) / metrics.length)}%`,
       },
     );
   }
@@ -224,7 +214,7 @@ export function formatAnalyticsDataForExport(
   if (data.transaction_volume?.metrics?.length) {
     const metrics = data.transaction_volume.metrics;
     const totalVolume = metrics.reduce(
-      (sum: number, m: any) => sum + m.total_payment_volume,
+      (sum: number, m: TransactionVolumeMetric) => sum + m.total_payment_volume,
       0,
     );
     exportData.push(
@@ -233,7 +223,7 @@ export function formatAnalyticsDataForExport(
         metric: "Total Transaksi",
         value: String(
           metrics.reduce(
-            (sum: number, m: any) => sum + m.total_transactions,
+            (sum: number, m: TransactionVolumeMetric) => sum + m.total_transactions,
             0,
           ),
         ),
@@ -246,7 +236,7 @@ export function formatAnalyticsDataForExport(
       {
         section: "Volume Transaksi",
         metric: "Rata-rata Success Rate",
-        value: `${Math.round(metrics.reduce((sum: number, m: any) => sum + m.success_rate_percentage, 0) / metrics.length)}%`,
+        value: `${Math.round(metrics.reduce((sum: number, m: TransactionVolumeMetric) => sum + m.success_rate_percentage, 0) / metrics.length)}%`,
       },
     );
   }
@@ -259,21 +249,21 @@ export function formatAnalyticsDataForExport(
         section: "Pendapatan Platform",
         metric: "Gross Revenue",
         value: formatCurrencyForExport(
-          metrics.reduce((sum: number, m: any) => sum + m.gross_revenue, 0),
+          metrics.reduce((sum: number, m: RevenueMetric) => sum + m.gross_revenue, 0),
         ),
       },
       {
         section: "Pendapatan Platform",
         metric: "Net Revenue",
         value: formatCurrencyForExport(
-          metrics.reduce((sum: number, m: any) => sum + m.net_revenue, 0),
+          metrics.reduce((sum: number, m: RevenueMetric) => sum + m.net_revenue, 0),
         ),
       },
       {
         section: "Pendapatan Platform",
         metric: "Biaya Platform",
         value: formatCurrencyForExport(
-          metrics.reduce((sum: number, m: any) => sum + m.platform_fee, 0),
+          metrics.reduce((sum: number, m: RevenueMetric) => sum + m.platform_fee, 0),
         ),
       },
     );
@@ -287,7 +277,7 @@ export function formatAnalyticsDataForExport(
         section: "Verifikasi KYC",
         metric: "Pekerja Terverifikasi",
         value: String(
-          metrics.reduce((sum: number, m: any) => sum + m.verified_workers, 0),
+          metrics.reduce((sum: number, m: ComplianceMetric) => sum + m.verified_workers, 0),
         ),
       },
       {
@@ -302,7 +292,7 @@ export function formatAnalyticsDataForExport(
   if (data.geographic_distribution?.data?.length) {
     data.geographic_distribution.data
       .slice(0, 5)
-      .forEach((location: any, index: number) => {
+      .forEach((location: GeographicLocation, index: number) => {
         exportData.push({
           section: "Distribusi Geografis",
           metric: `#${index + 1} ${location.location_name}`,
@@ -315,7 +305,7 @@ export function formatAnalyticsDataForExport(
   if (data.trending_categories?.data?.length) {
     data.trending_categories.data
       .slice(0, 5)
-      .forEach((category: any, index: number) => {
+      .forEach((category: TrendingCategory, index: number) => {
         exportData.push({
           section: "Kategori Populer",
           metric: `#${index + 1} ${category.category_name}`,
