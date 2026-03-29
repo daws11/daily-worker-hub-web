@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "002-fix-n-1-query-in-generateworkershortlist-availabil",
-  "state": "building",
+  "spec": "034-fix-duplicate-icon-assignment-in-business-sidebar-",
+  "state": "planning",
   "subtasks": {
-    "completed": 4,
-    "total": 6,
+    "completed": 0,
+    "total": 0,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Verify TypeScript compilation and tests",
+    "current": "Replace duplicate icon",
     "id": null,
-    "total": 2
+    "total": 1
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 6,
-    "started_at": "2026-03-26T19:15:20.031599"
+    "number": 2,
+    "started_at": "2026-03-26T19:57:20.091220"
   },
-  "last_update": "2026-03-26T19:34:11.673823"
+  "last_update": "2026-03-26T20:00:02.119675"
 }
