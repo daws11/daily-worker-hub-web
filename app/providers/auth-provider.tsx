@@ -49,7 +49,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log("[AUTH] 📦 Session loaded:", {
         hasSession: !!session,
-        userEmail: session?.user?.email || "null",
         userId: session?.user?.id?.substring(0, 8) || "null",
       });
       // Update all state in a batch - React will handle this properly
@@ -59,8 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Set loading to false after state updates are queued
       setIsLoading(false);
       console.log(
-        "[AUTH] ✅ Session check complete, isLoading set to false, user:",
-        user?.email || "null",
+        "[AUTH] ✅ Session check complete, isLoading set to false",
       );
     });
 
@@ -71,8 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log(
         "[AUTH] 🔐 Auth state changed:",
         _event,
-        "user:",
-        session?.user?.email || "null",
+        "userId:",
+        session?.user?.id?.substring(0, 8) || "null",
       );
       setSession(session);
       setUser(session?.user ?? null);
@@ -114,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ) => {
     setIsLoading(true);
     console.log("[AUTH signUp] Starting...");
-    console.log("[AUTH signUp] Email:", email, "Role:", role);
+    console.log("[AUTH signUp] Role:", role);
 
     try {
       // 1. Sign up with Supabase Auth
