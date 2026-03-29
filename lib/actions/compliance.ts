@@ -58,6 +58,104 @@ export type ComplianceEnforcementResult = {
   autoRejected: boolean;
 };
 
+// ============================================================================
+// SUPPABASE TYPED CLIENT INTERFACES
+// ============================================================================
+
+/**
+ * Minimal interface for Supabase client RPC calls.
+ * Used to avoid `as any` casts when calling database functions.
+ */
+export interface SupabaseRpcClient {
+  <T>(
+    fn: string,
+    args?: Record<string, unknown>,
+  ): Promise<{ data: T | null; error: Error | null }>;
+}
+
+/**
+ * Worker record embedded in compliance queries via join.
+ */
+export interface ComplianceWorkerRef {
+  id: string;
+  full_name: string;
+  avatar_url: string | null;
+}
+
+/**
+ * Business record embedded in compliance queries via join.
+ */
+export interface ComplianceBusinessRef {
+  id: string;
+  name: string;
+  email?: string | null;
+}
+
+/**
+ * Row type for compliance_tracking table (with optional join relations).
+ * Used in queries that select from compliance_tracking with worker/business joins.
+ */
+export interface ComplianceTrackingRecord {
+  id: string;
+  business_id: string;
+  worker_id: string;
+  month: string;
+  days_worked: number;
+  compliance_status?: string;
+  acknowledged?: boolean;
+  acknowledged_at?: string | null;
+  created_at: string;
+  updated_at?: string;
+  worker?: ComplianceWorkerRef;
+  businesses?: ComplianceBusinessRef;
+}
+
+/**
+ * Return type for `get_all_compliance_warnings_admin` RPC function.
+ * Contains worker and business details for admin display.
+ */
+export interface ComplianceWarningAdmin {
+  id: string;
+  business_id: string;
+  worker_id: string;
+  month: string;
+  days_worked: number;
+  warning_level: "none" | "warning" | "blocked";
+  acknowledged: boolean;
+  created_at: string;
+  updated_at: string;
+  worker_name?: string;
+  business_name?: string;
+  worker?: ComplianceWorkerRef;
+  business?: ComplianceBusinessRef;
+}
+
+/**
+ * Return type for `get_business_compliance_summary` RPC function.
+ * Contains aggregated compliance statistics for a business.
+ */
+export interface ComplianceSummaryRecord {
+  total_workers: number;
+  compliant_workers: number;
+  warning_workers: number;
+  blocked_workers: number;
+  average_days_worked: number;
+}
+
+/**
+ * CSV row type used in compliance data export.
+ * Each row contains worker, business, and compliance information.
+ */
+export type CsvRow = [
+  workerId: string,
+  workerName: string,
+  businessId: string,
+  businessName: string,
+  month: string,
+  daysWorked: number,
+  complianceStatus: string,
+];
+
 /**
  * Enhanced compliance check before accepting a booking.
  * Verifies PP 35/2021 compliance (21-day limit for daily workers).
