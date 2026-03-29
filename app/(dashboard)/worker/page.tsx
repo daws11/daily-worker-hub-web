@@ -8,15 +8,15 @@ import { DashboardGreeting } from "@/components/dashboard/greeting";
 import { QuickStats, type WorkerStats } from "@/components/dashboard/quick-stats";
 import { UpcomingBookings } from "@/components/dashboard/upcoming-bookings";
 import { QuickActions } from "@/components/dashboard/quick-actions";
-import { WalletActionCard } from "@/components/dashboard/wallet-card";
 import { useTranslation } from "@/lib/i18n/hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Wallet,
+import { 
+  Wallet, 
   TrendingUp,
   Clock,
   ArrowRight,
+  Plus,
   CheckCircle,
   AlertCircle,
   Briefcase,
@@ -34,11 +34,11 @@ interface Booking {
     id: string;
     title: string;
     address?: string | null;
-  }[] | null;
+  } | null;
   businesses?: {
     id: string;
     name: string;
-  }[] | null;
+  } | null;
 }
 
 interface WalletData {
@@ -94,31 +94,31 @@ export default function WorkerDashboardPage() {
       setIsLoading(true);
       try {
         // Get worker profile
-        const { data: worker } = await (supabase as any)
+        const { data: worker } = await supabase
           .from("workers")
           .select("id, rating")
           .eq("user_id", user.id)
           .single();
 
         // Fetch wallet
-        const { data: walletData } = await (supabase as any)
+        const { data: walletData } = await supabase
           .from("wallets")
           .select("available_balance, pending_balance")
           .eq("user_id", user.id)
           .single();
-
+        
         if (walletData) setWallet(walletData);
 
         // Fetch open jobs count
-        const { count: openJobs } = await (supabase as any)
+        const { count: openJobs } = await supabase
           .from("jobs")
           .select("*", { count: "exact", head: true })
           .eq("status", "open");
 
         // Fetch worker bookings
         const workerId = worker?.id || user.id;
-
-        const { data: bookings } = await (supabase as any)
+        
+        const { data: bookings } = await supabase
           .from("bookings")
           .select("id, status, start_date, end_date, final_price, jobs (id, title, address), businesses (id, name)")
           .eq("worker_id", workerId)
@@ -131,7 +131,8 @@ export default function WorkerDashboardPage() {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        const { data: transactions } = await (supabase as any)
+        // @ts-expect-error - Supabase type inference causes deep recursion with UUID comparisons
+        const { data: transactions } = await supabase
           .from("wallet_transactions")
           .select("amount, created_at")
           .eq("user_id", user.id)
@@ -156,8 +157,8 @@ export default function WorkerDashboardPage() {
         const newActivities: RecentActivity[] = (bookings || []).slice(0, 5).map(b => ({
           id: b.id,
           type: "booking" as const,
-          title: b.jobs?.[0]?.title || "Pekerjaan",
-          description: b.businesses?.[0]?.name || "Usaha",
+          title: b.jobs?.title || "Pekerjaan",
+          description: b.businesses?.name || "Usaha",
           time: b.start_date || "",
           status: b.status,
           amount: b.final_price,
@@ -182,7 +183,38 @@ export default function WorkerDashboardPage() {
       </div>
 
       {/* Wallet Card - Highlight */}
-      <WalletActionCard role="worker" wallet={wallet} />
+      <div className="animate-slide-up animation-delay-100">
+        <Link href="/worker/wallet">
+          <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-emerald-100 text-sm font-medium">Saldo Earnings</p>
+                  <p className="text-2xl md:text-3xl font-bold mt-1">
+                    {wallet ? formatCurrency(wallet.available_balance) : "Rp 0"}
+                  </p>
+                  {wallet && wallet.pending_balance > 0 && (
+                    <p className="text-xs text-emerald-100 mt-1">
+                      +{formatCurrency(wallet.pending_balance)} pending
+                    </p>
+                  )}
+                </div>
+                <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
+                  <Wallet className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div className="flex gap-3 mt-4">
+                <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
+                  <ArrowRight className="h-4 w-4 mr-1" /> Tarik Dana
+                </Button>
+                <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
+                  Riwayat
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
 
       {/* Quick Stats */}
       <div className="animate-slide-up animation-delay-200">

@@ -1,0 +1,381 @@
+{
+  "feature": "Enhanced Reliability Score Display with Trend Indicators",
+  "workflow_type": "feature",
+  "workflow_rationale": "This is a frontend-heavy feature that adds UI enhancements to the existing reliability score system. The work involves: (1) Adding trend indicators to existing components, (2) Enhancing the score breakdown display, (3) Adding historical chart integration, (4) Adding reliability display to marketplace worker cards, and (5) Adding reliability filtering. All work is in the frontend service with no backend changes needed since the data model already exists.",
+  "phases": [
+    {
+      "id": "phase-1-queries",
+      "name": "Backend Data Layer Enhancements",
+      "type": "implementation",
+      "description": "Add new query functions to support trend calculation and filtering by reliability score",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Add getWorkerScoreTrend function to calculate trend based on last 10 shifts",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/supabase/queries/reliability-score.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/queries/reliability-score.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Add getWorkersWithReliabilityFilter function for marketplace filtering",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/supabase/queries/reliability-score.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/queries/reliability-score.ts",
+            "lib/supabase/queries/bookings.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Add server action getWorkerReliabilityDetails for fetching complete reliability data",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/actions/reliability-score.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/actions/reliability-score.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-components",
+      "name": "Core Component Enhancements",
+      "type": "implementation",
+      "description": "Enhance existing reliability score components with trend indicators and improved display",
+      "depends_on": ["phase-1-queries"],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Add TrendIndicator component with up/down/stable arrows based on last 10 shifts",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/worker/trend-indicator.tsx"
+          ],
+          "patterns_from": [
+            "components/worker/score-history.tsx",
+            "components/worker/reliability-badge.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Review TrendIndicator component renders correctly with green up arrow, red down arrow, or gray stable arrow based on score trend"
+          },
+          "status": "completed"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Update ReliabilityScore component to include optional trend indicator",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/worker/reliability-score.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/worker/reliability-score.tsx",
+            "components/worker/reliability-badge.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Enhance ScoreBreakdown component with shift completion rate metric",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/worker/score-breakdown.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/worker/score-breakdown.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-4",
+          "description": "Update ReliabilityBadge component with trend indicator support",
+          "service": "frontend",
+          "files_to_modify": [
+            "components/worker/reliability-badge.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "components/worker/reliability-badge.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-chart",
+      "name": "Historical Chart Integration",
+      "type": "implementation",
+      "description": "Integrate reliability history chart into worker profile with 30/60/90 day options",
+      "depends_on": ["phase-2-components"],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create ReliabilityHistoryChart component with 30/60/90 day period selector",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/worker/reliability-history-chart.tsx"
+          ],
+          "patterns_from": [
+            "components/analytics/analytics-reliability-chart.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Review chart renders with proper time period selector and line chart showing score over time"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Add types for trend calculation results",
+          "service": "frontend",
+          "files_to_modify": [
+            "lib/types/analytics.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/types/analytics.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-marketplace",
+      "name": "Marketplace Integration",
+      "type": "implementation",
+      "description": "Add reliability score and trend to marketplace worker cards and filtering",
+      "depends_on": ["phase-2-components"],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create ReliabilityFilter component for marketplace filtering by score range",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [
+            "components/worker/reliability-filter.tsx"
+          ],
+          "patterns_from": [
+            "components/job-marketplace/JobFilters.tsx",
+            "components/job-marketplace/DistanceRadiusFilter.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npm run type-check",
+            "expected": "No TypeScript errors"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Update BusinessWorkersPage with reliability score on worker cards and filter",
+          "service": "frontend",
+          "files_to_modify": [
+            "app/(dashboard)/business/workers/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/(dashboard)/business/workers/page.tsx",
+            "components/worker/reliability-badge.tsx"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Review marketplace worker cards show reliability score with trend indicator, and filter allows filtering by score range"
+          },
+          "status": "pending"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-integration",
+      "name": "Integration and Testing",
+      "type": "integration",
+      "description": "Wire all components together and verify end-to-end functionality",
+      "depends_on": ["phase-3-chart", "phase-4-marketplace"],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Verify all components work together correctly",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm run build",
+            "expected": "Build completes without errors"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Run existing tests to ensure no regressions",
+          "service": "frontend",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npm test -- --run",
+            "expected": "All tests pass"
+          },
+          "status": "pending"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 5,
+    "total_subtasks": 12,
+    "services_involved": ["frontend"],
+    "parallelism": {
+      "max_parallel_phases": 2,
+      "parallel_groups": [
+        {
+          "phases": ["phase-3-chart", "phase-4-marketplace"],
+          "reason": "Both depend on phase-2-components and are independent of each other"
+        }
+      ],
+      "recommended_workers": 2,
+      "speedup_estimate": "1.3x faster than sequential due to frontend-only parallelization"
+    },
+    "startup_command": "npm run dev"
+  },
+  "verification_strategy": {
+    "risk_level": "medium",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": ["unit"],
+    "security_scanning_required": false,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All existing tests pass",
+      "New code has TypeScript type safety",
+      "Build completes without errors",
+      "Reliability score shows trend indicator on worker cards",
+      "Score breakdown displays all three sub-metrics (punctuality, attendance, shift completion)",
+      "Historical chart shows 30/60/90 day options",
+      "Marketplace filter allows filtering by reliability score range"
+    ],
+    "verification_steps": [
+      {
+        "name": "TypeScript Type Check",
+        "command": "npm run type-check",
+        "expected_outcome": "No TypeScript errors",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Build Test",
+        "command": "npm run build",
+        "expected_outcome": "Build completes successfully",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Unit Tests",
+        "command": "npm test -- --run",
+        "expected_outcome": "All tests pass",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "Medium risk frontend enhancement requires type safety and build verification. No external API changes needed."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": true,
+      "commands": ["npm test -- --run"],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "/business/workers",
+          "checks": [
+            "Worker cards display reliability score with trend indicator",
+            "Reliability filter dropdown works",
+            "No console errors"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": false,
+      "checks": []
+    }
+  },
+  "qa_signoff": null
+}

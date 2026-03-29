@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 export interface ScoreBreakdownProps {
   attendanceRate: number; // 0-100 percentage
   punctualityRate: number; // 0-100 percentage
-  avgRating: number; // 1-5 rating
+  shiftCompletionRate: number; // 0-100 percentage
   className?: string;
 }
 
@@ -64,7 +64,7 @@ function MetricItem({
 export function ScoreBreakdown({
   attendanceRate,
   punctualityRate,
-  avgRating,
+  shiftCompletionRate,
   className,
 }: ScoreBreakdownProps) {
   // Determine color classes based on values
@@ -102,13 +102,13 @@ export function ScoreBreakdown({
     };
   };
 
-  const getRatingColor = (rating: number) => {
-    if (rating >= 4.5)
+  const getShiftCompletionColor = (rate: number) => {
+    if (rate >= 90)
       return {
         text: "text-green-600 dark:text-green-400",
         bg: "bg-green-500",
       };
-    if (rating >= 3.5)
+    if (rate >= 75)
       return {
         text: "text-yellow-600 dark:text-yellow-400",
         bg: "bg-yellow-500",
@@ -121,7 +121,7 @@ export function ScoreBreakdown({
 
   const attendanceColors = getAttendanceColor(attendanceRate);
   const punctualityColors = getPunctualityColor(punctualityRate);
-  const ratingColors = getRatingColor(avgRating);
+  const shiftCompletionColors = getShiftCompletionColor(shiftCompletionRate);
 
   return (
     <Card className={className}>
@@ -151,17 +151,17 @@ export function ScoreBreakdown({
           bgColorClass={punctualityColors.bg}
         />
         <MetricItem
-          label="Average Rating"
-          value={Math.round(avgRating * 10) / 10}
-          maxValue={5}
-          suffix=""
+          label="Shift Completion Rate"
+          value={Math.round(shiftCompletionRate)}
+          maxValue={100}
+          suffix="%"
           weight="30%"
-          colorClass={ratingColors.text}
-          bgColorClass={ratingColors.bg}
+          colorClass={shiftCompletionColors.text}
+          bgColorClass={shiftCompletionColors.bg}
         />
         <div className="pt-2 border-t">
           <p className="text-xs text-muted-foreground">
-            Formula: (Attendance × 0.4) + (Punctuality × 0.3) + (Rating × 0.3)
+            Formula: (Attendance × 0.4) + (Punctuality × 0.3) + (Shift Completion × 0.3)
           </p>
         </div>
       </CardContent>

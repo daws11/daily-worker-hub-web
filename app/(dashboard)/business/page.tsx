@@ -8,16 +8,17 @@ import { DashboardGreeting } from "@/components/dashboard/greeting";
 import { QuickStats, type BusinessStats } from "@/components/dashboard/quick-stats";
 import { UpcomingBookings } from "@/components/dashboard/upcoming-bookings";
 import { QuickActions } from "@/components/dashboard/quick-actions";
-import { WalletActionCard } from "@/components/dashboard/wallet-card";
 import { useTranslation } from "@/lib/i18n/hooks";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  TrendingUp,
-  Users,
+import { 
+  Wallet, 
+  TrendingUp, 
+  Users, 
   Clock,
   ArrowRight,
+  Plus,
   CheckCircle,
   AlertCircle
 } from "lucide-react";
@@ -33,12 +34,12 @@ interface Booking {
     id: string;
     title: string;
     address?: string | null;
-  }[] | null;
+  } | null;
   workers?: {
     id: string;
     full_name: string;
     avatar_url?: string | null;
-  }[] | null;
+  } | null;
 }
 
 interface WalletData {
@@ -93,7 +94,7 @@ export default function BusinessDashboardPage() {
       setIsLoading(true);
       try {
         // Get business ID
-        const { data: business } = await (supabase as any)
+        const { data: business } = await supabase
           .from("businesses")
           .select("id")
           .eq("user_id", user.id)
@@ -105,7 +106,7 @@ export default function BusinessDashboardPage() {
         }
 
         // Fetch wallet
-        const { data: walletData } = await (supabase as any)
+        const { data: walletData } = await supabase
           .from("wallets")
           .select("available_balance, pending_balance")
           .eq("user_id", user.id)
@@ -114,15 +115,15 @@ export default function BusinessDashboardPage() {
         if (walletData) setWallet(walletData);
 
         // Fetch jobs
-        const { data: jobs } = await (supabase as any)
+        const { data: jobs } = await supabase
           .from("jobs")
           .select("id, status")
           .eq("business_id", business.id);
 
-        const activeJobs = jobs?.filter((j: { status: string }) => j.status === "open" || j.status === "in_progress").length || 0;
+        const activeJobs = jobs?.filter(j => j.status === "open" || j.status === "in_progress").length || 0;
 
         // Fetch bookings
-        const { data: bookings } = await (supabase as any)
+        const { data: bookings } = await supabase
           .from("bookings")
           .select("id, status, start_date, end_date, final_price, jobs (id, title, address), workers (id, full_name, avatar_url)")
           .eq("business_id", business.id)
@@ -132,15 +133,16 @@ export default function BusinessDashboardPage() {
         if (bookings) setUpcomingBookings(bookings);
 
         // Fetch reviews count
-        const { count: reviewCount } = await (supabase as any)
+        const { count: reviewCount } = await supabase
           .from("reviews")
           .select("*", { count: "exact", head: true })
           .eq("business_id", business.id);
 
         // Calculate total spent - first get business wallet
         if (!business) return;
-
-        const { data: businessWallet } = await (supabase as any)
+        
+        // @ts-expect-error - Supabase type inference causes deep recursion with UUID comparisons
+        const { data: businessWallet } = await supabase
           .from("wallets")
           .select("id")
           .eq("business_id", business.id)
@@ -157,7 +159,7 @@ export default function BusinessDashboardPage() {
         }
 
         const walletId = businessWallet.id;
-        const { data: wtData, error: wtError } = await (supabase as any)
+        const { data: wtData, error: wtError } = await supabase
           .from("wallet_transactions")
           .select("amount")
           .eq("wallet_id", walletId)
@@ -185,8 +187,8 @@ export default function BusinessDashboardPage() {
         const newActivities: RecentActivity[] = (bookings || []).slice(0, 5).map(b => ({
           id: b.id,
           type: "booking" as const,
-          title: b.jobs?.[0]?.title || "Pekerjaan",
-          description: b.workers?.[0]?.full_name || "Pekerja",
+          title: b.jobs?.title || "Pekerjaan",
+          description: b.workers?.full_name || "Pekerja",
           time: b.start_date || "",
           status: b.status,
         }));
@@ -210,7 +212,38 @@ export default function BusinessDashboardPage() {
       </div>
 
       {/* Wallet Card - Highlight */}
-      <WalletActionCard role="business" wallet={wallet} />
+      <div className="animate-slide-up animation-delay-100">
+        <Link href="/business/wallet">
+          <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-primary-foreground/80 text-sm font-medium">Saldo Wallet</p>
+                  <p className="text-2xl md:text-3xl font-bold mt-1">
+                    {wallet ? formatCurrency(wallet.available_balance) : "Rp 0"}
+                  </p>
+                  {wallet && wallet.pending_balance > 0 && (
+                    <p className="text-xs text-primary-foreground/70 mt-1">
+                      +{formatCurrency(wallet.pending_balance)} pending
+                    </p>
+                  )}
+                </div>
+                <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
+                  <Wallet className="h-6 w-6 text-white" />
+                </div>
+              </div>
+              <div className="flex gap-3 mt-4">
+                <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
+                  <Plus className="h-4 w-4 mr-1" /> Top Up
+                </Button>
+                <Button size="sm" variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
+                  Riwayat
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
 
       {/* Quick Stats */}
       <div className="animate-slide-up animation-delay-200">

@@ -3,6 +3,7 @@ import { Star } from "lucide-react";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
+import { TrendIndicator, type TrendDirection } from "@/components/worker/trend-indicator";
 
 const reliabilityBadgeVariants = cva(
   "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
@@ -31,6 +32,8 @@ export interface ReliabilityBadgeProps
     VariantProps<typeof reliabilityBadgeVariants> {
   score: number | null | undefined;
   showStars?: boolean;
+  trend?: TrendDirection;
+  trendSize?: "sm" | "md" | "lg";
 }
 
 const getScoreVariant = (
@@ -52,6 +55,8 @@ const getStarCount = (score: number | null | undefined): number => {
 export function ReliabilityBadge({
   score,
   showStars = true,
+  trend,
+  trendSize = "sm",
   className,
   ...props
 }: ReliabilityBadgeProps) {
@@ -73,7 +78,7 @@ export function ReliabilityBadge({
 
   return (
     <div
-      className={cn(reliabilityBadgeVariants({ variant }), "gap-1", className)}
+      className={cn(reliabilityBadgeVariants({ variant }), "gap-1.5", className)}
       {...props}
     >
       {showStars && (
@@ -84,6 +89,9 @@ export function ReliabilityBadge({
         </div>
       )}
       <span>{clampedScore.toFixed(1)}</span>
+      {trend && (
+        <TrendIndicator trend={trend} size={trendSize} />
+      )}
     </div>
   );
 }

@@ -13,7 +13,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div style={{ fontFamily: "var(--font-sans)" }}>
+    <div className="font-sans antialiased">
       <div className="flex min-h-screen">
         {/* Sidebar Navigation */}
         <aside className="w-64 border-r bg-background p-4">

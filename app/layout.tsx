@@ -5,7 +5,6 @@ import { AuthProvider } from "./providers/auth-provider";
 import { I18nProvider } from "./providers/i18n-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { ChatNotificationWrapper } from "./providers/chat-notification-provider";
 
 export const metadata: Metadata = {
   title: "Daily Worker Hub",
@@ -31,7 +30,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} dir="ltr" suppressHydrationWarning>
-      <body style={{ fontFamily: "var(--font-sans)" }}>
+      <body className="font-sans antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -39,9 +38,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <I18nProvider>
-            <AuthProvider>
-              <ChatNotificationWrapper>{children}</ChatNotificationWrapper>
-            </AuthProvider>
+            <AuthProvider>{children}</AuthProvider>
           </I18nProvider>
           <Toaster />
         </ThemeProvider>

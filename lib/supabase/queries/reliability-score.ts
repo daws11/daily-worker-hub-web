@@ -112,7 +112,7 @@ export async function getScoreHistory(
     .from("reliability_score_history")
     .select("*")
     .eq("worker_id", workerId)
-    .order("calculated_at", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {
@@ -168,6 +168,62 @@ export async function updateScore(
   return data as WorkersRow;
 }
 
+export type ScoreTrend = "improving" | "declining" | "stable";
+
+export interface WorkerScoreTrendResult {
+  trend: ScoreTrend;
+  score_change: number;
+  data_points: number;
+}
+
+/**
+ * Calculate trend direction based on score history
+ * Compares average of recent 5 scores vs older 5 scores from the last 10 entries
+ * - "improving" if recent avg > older avg + threshold
+ * - "declining" if recent avg < older avg - threshold
+ * - "stable" otherwise
+ */
+export async function getWorkerScoreTrend(
+  workerId: string,
+): Promise<WorkerScoreTrendResult | null> {
+  const history = await getScoreHistory(workerId, 10);
+
+  if (!history || history.length < 2) {
+    return null;
+  }
+
+  // Scores are ordered desc by created_at, so:
+  // First 5 = most recent, Last 5 = older
+  const midpoint = Math.floor(history.length / 2);
+  const recentScores = history.slice(0, midpoint).map((h) => h.new_score ?? 0);
+  const olderScores = history.slice(midpoint).map((h) => h.new_score ?? 0);
+
+  const recentAvg =
+    recentScores.reduce((sum, s) => sum + s, 0) / recentScores.length;
+  const olderAvg =
+    olderScores.reduce((sum, s) => sum + s, 0) / olderScores.length;
+
+  const scoreChange = Math.round((recentAvg - olderAvg) * 10) / 10;
+
+  // Threshold of 0.2 for determining stable vs trending
+  const threshold = 0.2;
+
+  let trend: ScoreTrend;
+  if (scoreChange > threshold) {
+    trend = "improving";
+  } else if (scoreChange < -threshold) {
+    trend = "declining";
+  } else {
+    trend = "stable";
+  }
+
+  return {
+    trend,
+    score_change: scoreChange,
+    data_points: history.length,
+  };
+}
+
 /**
  * Record a score history entry
  */
@@ -178,12 +234,10 @@ export async function recordScoreHistory(
   const historyData: Omit<ReliabilityScoreHistoryInsert, "id" | "created_at"> =
     {
       worker_id: workerId,
-      score: breakdown.score,
-      attendance_rate: breakdown.attendance_rate,
-      punctuality_rate: breakdown.punctuality_rate,
-      avg_rating: breakdown.avg_rating,
-      completed_jobs_count: breakdown.completed_jobs_count,
-      calculated_at: new Date().toISOString(),
+      new_score: breakdown.score,
+      previous_score: null,
+      booking_id: null,
+      change_reason: null,
     };
 
   const { data, error } = await supabase
@@ -197,4 +251,41 @@ export async function recordScoreHistory(
   }
 
   return data as ReliabilityScoreHistoryRow;
+}
+
+export interface WorkersReliabilityFilter {
+  minReliability?: number;
+  maxReliability?: number;
+}
+
+/**
+ * Get workers filtered by reliability score range
+ */
+export async function getWorkersWithReliabilityFilter(
+  filter: WorkersReliabilityFilter,
+): Promise<WorkersRow[]> {
+  let query = supabase
+    .from("workers")
+    .select("*")
+    .not("reliability_score", "is", null);
+
+  if (filter.minReliability !== undefined) {
+    query = query.gte("reliability_score", filter.minReliability);
+  }
+
+  if (filter.maxReliability !== undefined) {
+    query = query.lte("reliability_score", filter.maxReliability);
+  }
+
+  const { data, error } = await query.order("reliability_score", {
+    ascending: false,
+  });
+
+  if (error) {
+    throw new Error(
+      `Failed to fetch workers with reliability filter: ${error.message}`,
+    );
+  }
+
+  return data || [];
 }

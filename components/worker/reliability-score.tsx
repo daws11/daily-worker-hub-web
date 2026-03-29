@@ -2,6 +2,7 @@ import * as React from "react";
 import { Award, Star, StarHalf } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { TrendIndicator, type TrendDirection } from "./trend-indicator";
 
 export interface ReliabilityScoreProps {
   score: number;
@@ -9,6 +10,7 @@ export interface ReliabilityScoreProps {
   showLabel?: boolean;
   size?: "sm" | "md" | "lg";
   badgeCount?: number;
+  trend?: TrendDirection;
   className?: string;
 }
 
@@ -36,6 +38,7 @@ export function ReliabilityScore({
   showLabel = false,
   size = "md",
   badgeCount,
+  trend,
   className,
 }: ReliabilityScoreProps) {
   // Clamp score between 0 and 5
@@ -101,6 +104,10 @@ export function ReliabilityScore({
         >
           {clampedScore.toFixed(1)}
         </span>
+      )}
+
+      {trend !== undefined && (
+        <TrendIndicator trend={trend} size={size} />
       )}
 
       {showLabel && (
