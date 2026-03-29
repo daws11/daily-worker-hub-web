@@ -2,12 +2,17 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getServerSession } from "@/lib/auth/get-server-session";
 import { logger } from "@/lib/logger";
-import { withRateLimitForMethod } from "@/lib/rate-limit";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+  notFoundErrorResponse,
+} from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("business/profile");
 
 // GET /api/business/profile - Get current business user profile
-async function handleGET(request: Request) {
+export async function GET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "business/profile",
   });
@@ -21,7 +26,7 @@ async function handleGET(request: Request) {
         requestId,
       });
 
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const supabase = await createClient();
@@ -40,10 +45,7 @@ async function handleGET(request: Request) {
       });
       logger.requestError(request, error, 500, startTime, { requestId });
 
-      return NextResponse.json(
-        { error: "Failed to fetch business profile" },
-        { status: 500 },
-      );
+      return errorResponse(500, "Failed to fetch business profile", request);
     }
 
     if (!business) {
@@ -59,10 +61,7 @@ async function handleGET(request: Request) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Business profile not found" },
-        { status: 404 },
-      );
+      return notFoundErrorResponse("Business", session.user.id, request);
     }
 
     routeLogger.info("Business profile fetched successfully", {
@@ -80,19 +79,7 @@ async function handleGET(request: Request) {
     routeLogger.error("Unexpected error in GET /api/business/profile", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/business/profile", "GET");
   }
 }
-
-// Export handlers with rate limiting
-// GET is authenticated (100 req/min)
-export const GET = withRateLimitForMethod(
-  handleGET as any,
-  { type: "api-authenticated", userBased: true },
-  ["GET"],
-);

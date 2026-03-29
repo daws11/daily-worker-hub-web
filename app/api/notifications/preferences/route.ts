@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
-import { withRateLimitForMethod } from "@/lib/rate-limit";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+} from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("notifications/preferences");
 
@@ -9,7 +13,7 @@ const routeLogger = logger.createApiLogger("notifications/preferences");
  * GET /api/notifications/preferences
  * Get notification preferences for the authenticated user
  */
-async function handleGET(request: NextRequest) {
+export async function GET(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications/preferences",
   });
@@ -25,10 +29,15 @@ async function handleGET(request: NextRequest) {
 
     if (authError || !user) {
       routeLogger.warn("Unauthorized access attempt", { requestId });
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
+      logger.requestError(
+        request,
+        new Error("Tidak terautentikasi"),
+        401,
+        startTime,
+        { requestId },
       );
+
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { data: preferences, error } = await (supabase as any)
@@ -42,9 +51,18 @@ async function handleGET(request: NextRequest) {
         requestId,
         userId: user.id,
       });
-      return NextResponse.json(
-        { error: "Gagal mengambil preferensi notifikasi" },
-        { status: 500 },
+      logger.requestError(
+        request,
+        new Error("Gagal mengambil preferensi notifikasi"),
+        500,
+        startTime,
+        { requestId },
+      );
+
+      return errorResponse(
+        500,
+        { code: "DB_QUERY_ERROR", i18nKey: "errors.serverError", details: error?.message },
+        request,
       );
     }
 
@@ -112,11 +130,12 @@ async function handleGET(request: NextRequest) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
+    return handleApiError(
+      error,
+      request,
+      "/api/notifications/preferences",
+      "GET",
     );
   }
 }
@@ -137,7 +156,7 @@ async function handleGET(request: NextRequest) {
  * - quiet_hours_start: string (HH:mm format)
  * - quiet_hours_end: string (HH:mm format)
  */
-async function handlePUT(request: NextRequest) {
+export async function PUT(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications/preferences",
   });
@@ -153,10 +172,15 @@ async function handlePUT(request: NextRequest) {
 
     if (authError || !user) {
       routeLogger.warn("Unauthorized access attempt", { requestId });
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
+      logger.requestError(
+        request,
+        new Error("Tidak terautentikasi"),
+        401,
+        startTime,
+        { requestId },
       );
+
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const body = await request.json();
@@ -166,16 +190,26 @@ async function handlePUT(request: NextRequest) {
       body.quiet_hours_start &&
       !/^\d{2}:\d{2}$/.test(body.quiet_hours_start)
     ) {
-      return NextResponse.json(
-        { error: "Format quiet_hours_start tidak valid. Gunakan HH:mm" },
-        { status: 400 },
+      return errorResponse(
+        400,
+        {
+          code: "VALIDATION_ERROR",
+          i18nKey: "errors.validation",
+          details: "Format quiet_hours_start tidak valid. Gunakan HH:mm",
+        },
+        request,
       );
     }
 
     if (body.quiet_hours_end && !/^\d{2}:\d{2}$/.test(body.quiet_hours_end)) {
-      return NextResponse.json(
-        { error: "Format quiet_hours_end tidak valid. Gunakan HH:mm" },
-        { status: 400 },
+      return errorResponse(
+        400,
+        {
+          code: "VALIDATION_ERROR",
+          i18nKey: "errors.validation",
+          details: "Format quiet_hours_end tidak valid. Gunakan HH:mm",
+        },
+        request,
       );
     }
 
@@ -226,9 +260,18 @@ async function handlePUT(request: NextRequest) {
           requestId,
           userId: user.id,
         });
-        return NextResponse.json(
-          { error: "Gagal memperbarui preferensi notifikasi" },
-          { status: 500 },
+        logger.requestError(
+          request,
+          new Error("Gagal memperbarui preferensi notifikasi"),
+          500,
+          startTime,
+          { requestId },
+        );
+
+        return errorResponse(
+          500,
+          { code: "DB_UPDATE_ERROR", i18nKey: "errors.serverError", details: error?.message },
+          request,
         );
       }
 
@@ -246,9 +289,18 @@ async function handlePUT(request: NextRequest) {
           requestId,
           userId: user.id,
         });
-        return NextResponse.json(
-          { error: "Gagal membuat preferensi notifikasi" },
-          { status: 500 },
+        logger.requestError(
+          request,
+          new Error("Gagal membuat preferensi notifikasi"),
+          500,
+          startTime,
+          { requestId },
+        );
+
+        return errorResponse(
+          500,
+          { code: "DB_INSERT_ERROR", i18nKey: "errors.serverError", details: error?.message },
+          request,
         );
       }
 
@@ -275,24 +327,12 @@ async function handlePUT(request: NextRequest) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
+    return handleApiError(
+      error,
+      request,
+      "/api/notifications/preferences",
+      "PUT",
     );
   }
 }
-
-// Export handlers with rate limiting
-// GET is authenticated (100 req/min), PUT is authenticated (100 req/min)
-export const GET = withRateLimitForMethod(
-  handleGET as any,
-  { type: "api-authenticated", userBased: true },
-  ["GET"],
-);
-export const PUT = withRateLimitForMethod(
-  handlePUT as any,
-  { type: "api-authenticated", userBased: true },
-  ["PUT"],
-);

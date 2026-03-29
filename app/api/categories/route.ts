@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import { withRateLimitForMethod } from "@/lib/rate-limit";
 import { cache, LRUCache, CACHE_TTL } from "@/lib/cache";
+import { errorResponse, handleApiError } from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("categories");
 
@@ -95,10 +96,7 @@ async function handleGET(request: Request) {
       routeLogger.error("Error fetching categories", error, { requestId });
       logger.requestError(request, error, 500, startTime, { requestId });
 
-      return NextResponse.json(
-        { error: "Failed to fetch categories" },
-        { status: 500 },
-      );
+      return errorResponse(500, "Failed to fetch categories", request);
     }
 
     const result = { data: categories };
@@ -122,12 +120,8 @@ async function handleGET(request: Request) {
     routeLogger.error("Unexpected error in GET /api/categories", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/categories", "GET");
   }
 }
 

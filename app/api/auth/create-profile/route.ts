@@ -1,8 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
-import { withRateLimitForMethod } from "@/lib/rate-limit";
+import { NextRequest } from "next/server";
 import { logger } from "@/lib/logger";
+import {
+  errorResponse,
+  handleApiError,
+  validationErrorResponse,
+  internalErrorResponse,
+} from "@/lib/api/error-response";
 
-const routeLogger = logger.createApiLogger("auth-create-profile");
+const routeLogger = logger.createApiLogger("create-profile");
 
 /**
  * POST /api/auth/create-profile
@@ -11,15 +16,31 @@ const routeLogger = logger.createApiLogger("auth-create-profile");
  * This is needed because RLS policies require auth.uid() to match the user id,
  * but during signup the session might not be fully established yet.
  */
-async function handlePOST(request: NextRequest) {
+export async function POST(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, {
+    route: "create-profile",
+  });
+
   try {
     const body = await request.json();
     const { userId, email, fullName, role } = body;
 
     if (!userId || !email || !fullName || !role) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
+      routeLogger.warn("Missing required fields", { requestId });
+      logger.requestError(
+        request,
+        new Error("Missing required fields: userId, email, fullName, role"),
+        400,
+        startTime,
+        { requestId },
+      );
+
+      return validationErrorResponse(
+        {
+          reason: "Missing required fields",
+          required: ["userId", "email", "fullName", "role"],
+        },
+        request,
       );
     }
 
@@ -28,11 +49,18 @@ async function handlePOST(request: NextRequest) {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
-      routeLogger.error("Missing Supabase credentials", new Error("Configuration error"));
-      return NextResponse.json(
-        { error: "Server configuration error" },
-        { status: 500 }
+      routeLogger.error("Missing Supabase credentials", new Error("Server configuration error"), {
+        requestId,
+      });
+      logger.requestError(
+        request,
+        new Error("Missing Supabase credentials"),
+        500,
+        startTime,
+        { requestId },
       );
+
+      return internalErrorResponse(new Error("Server configuration error"), request);
     }
 
     // Use service role to bypass RLS
@@ -57,27 +85,40 @@ async function handlePOST(request: NextRequest) {
       });
 
     if (profileError) {
-      routeLogger.error("Profile creation error", profileError);
-      return NextResponse.json(
-        { error: "Failed to create profile", details: profileError.message },
-        { status: 500 }
+      routeLogger.error(
+        "Profile creation failed",
+        new Error(profileError.message),
+        { requestId, userId },
+      );
+      logger.requestError(
+        request,
+        new Error(profileError.message),
+        500,
+        startTime,
+        { requestId },
+      );
+
+      return errorResponse(
+        500,
+        { code: "PROFILE_CREATION_FAILED", details: profileError.message },
+        request,
       );
     }
 
-    routeLogger.info("Profile created successfully", { userId });
-    return NextResponse.json({ success: true });
+    routeLogger.info("Profile created successfully", {
+      requestId,
+      userId,
+    });
+    logger.requestSuccess(request, { status: 200 }, startTime, {
+      requestId,
+    });
+
+    return new (await import("next/server")).NextResponse.json({ success: true });
   } catch (error) {
-    routeLogger.error("Unexpected error in profile creation", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    routeLogger.error("Unexpected error in POST /api/auth/create-profile", error, {
+      requestId,
+    });
+
+    return handleApiError(error, request, "/api/auth/create-profile", "POST");
   }
 }
-
-// Export POST handler with rate limiting for auth routes
-export const POST = withRateLimitForMethod(
-  handlePOST as any,
-  { type: "auth", userBased: false },
-  ["POST"],
-);

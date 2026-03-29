@@ -6,13 +6,17 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
 import { createClient } from "@/lib/supabase/server";
 import { BADGE_DEFINITIONS, BadgeWithProgress } from "@/lib/badges";
 import { cache, LRUCache, CACHE_TTL, invalidateWorkerCache } from "@/lib/cache";
-import { withRateLimitForMethod } from "@/lib/rate-limit";
+import { logger } from "@/lib/logger";
+import {
+  errorResponse,
+  handleApiError,
+  notFoundErrorResponse,
+} from "@/lib/api/error-response";
 
-const routeLogger = logger.createApiLogger("workers-public");
+const routeLogger = logger.createApiLogger("workers:public");
 
 /**
  * Generate cache key for worker public profile
@@ -233,12 +237,12 @@ async function fetchWorkerProfile(workerId: string) {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-async function handleGET(
+export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { startTime, requestId } = logger.requestStart(request, {
-    route: "workers-public",
+    route: "workers:public",
   });
 
   try {
@@ -254,12 +258,7 @@ async function handleGET(
     if (!bypassCache) {
       const cached = cache.get(cacheKey);
       if (cached !== null) {
-        logger.requestSuccess(request, { status: 200 }, startTime, {
-          requestId,
-          workerId,
-          cached: true,
-        });
-        routeLogger.info("Worker profile served from cache", {
+        routeLogger.info("Public worker profile cache hit", {
           requestId,
           workerId,
         });
@@ -274,7 +273,10 @@ async function handleGET(
     const publicProfile = await fetchWorkerProfile(workerId);
 
     if (!publicProfile) {
-      routeLogger.warn("Worker not found", { requestId, workerId });
+      routeLogger.warn("Worker not found", {
+        requestId,
+        workerId,
+      });
       logger.requestError(
         request,
         new Error("Worker not found"),
@@ -282,40 +284,31 @@ async function handleGET(
         startTime,
         { requestId },
       );
-      return NextResponse.json({ error: "Worker not found" }, { status: 404 });
+
+      return notFoundErrorResponse("Worker", workerId, request);
     }
 
     // Cache the result (10 minutes TTL)
     cache.set(cacheKey, publicProfile, CACHE_TTL.WORKERS);
 
-    logger.requestSuccess(request, { status: 200 }, startTime, {
+    routeLogger.info("Public worker profile fetched", {
       requestId,
       workerId,
     });
-    routeLogger.info("Worker profile fetched successfully", {
+    logger.requestSuccess(request, { status: 200 }, startTime, {
       requestId,
-      workerId,
     });
 
     const response = NextResponse.json(publicProfile);
     response.headers.set("X-Cache", "MISS");
     return response;
   } catch (error) {
-    routeLogger.error("Unexpected error in GET /api/workers/[id]/public", error, {
-      requestId,
-    });
-    logger.requestError(request, error, 500, startTime, { requestId });
-
-    return NextResponse.json(
-      { error: "Failed to fetch worker profile" },
-      { status: 500 },
+    routeLogger.error(
+      "Unexpected error in GET /api/workers/[id]/public",
+      error,
+      { requestId },
     );
+
+    return handleApiError(error, request, "/api/workers/[id]/public", "GET");
   }
 }
-
-// Export handler with rate limiting (public endpoint: 30 req/min)
-export const GET = withRateLimitForMethod(
-  handleGET as any,
-  { type: "api-public", userBased: false },
-  ["GET"],
-);

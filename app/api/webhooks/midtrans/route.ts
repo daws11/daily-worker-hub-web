@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { midtransGateway, type WebhookPayload } from "@/lib/payments";
 import { logger } from "@/lib/logger";
-import { withRateLimit } from "@/lib/rate-limit";
+import { errorResponse } from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("webhooks/midtrans");
 
@@ -63,7 +63,7 @@ interface MidtransNotification {
  * - fraud_status: Fraud check status (for card payments)
  * - signature_key: SHA-512 signature for verification
  */
-async function handlePOST(request: NextRequest) {
+export async function POST(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "webhooks/midtrans",
   });
@@ -120,7 +120,7 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+      return errorResponse(401, "AUTH_UNAUTHORIZED", request);
     }
 
     // Map Midtrans status to internal status
@@ -162,7 +162,7 @@ async function handlePOST(request: NextRequest) {
         requestId,
       });
 
-      return NextResponse.json({ error: result.error }, { status: 500 });
+      return errorResponse(500, result.error, request);
     }
 
     routeLogger.info("Midtrans webhook processed successfully", {
@@ -197,10 +197,7 @@ async function handlePOST(request: NextRequest) {
 
     logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return errorResponse(500, "SERVER_INTERNAL_ERROR", request);
   }
 }
 
@@ -504,7 +501,7 @@ function getFailureReason(payload: MidtransNotification): string {
  *
  * Health check endpoint
  */
-async function handleGET(request: Request) {
+export async function GET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "webhooks/midtrans",
   });
@@ -518,14 +515,3 @@ async function handleGET(request: Request) {
     timestamp: new Date().toISOString(),
   });
 }
-
-// Export handlers with rate limiting
-export const POST = withRateLimit(handlePOST as any, {
-  type: "api-public",
-  userBased: false,
-});
-
-export const GET = withRateLimit(handleGET as any, {
-  type: "api-public",
-  userBased: false,
-});

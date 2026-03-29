@@ -7,8 +7,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { cache } from "@/lib/cache";
-import { rateLimitStore, withRateLimitForMethod } from "@/lib/rate-limit";
+import { rateLimitStore } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
+import { errorResponse, handleApiError } from "@/lib/api/error-response";
 import os from "os";
 
 const routeLogger = logger.createApiLogger("admin-metrics");
@@ -295,19 +296,23 @@ function getDatabaseMetrics() {
  *                   type: object
  *       401:
  *         description: Unauthorized
- *       429:
- *         description: Too many requests
  *       500:
  *         description: Internal server error
  */
-async function handleGET(request: NextRequest) {
+export async function GET(request: NextRequest) {
+  const { startTime, requestId } = logger.requestStart(request, {
+    route: "admin-metrics",
+  });
+
   try {
     // Verify admin auth
     const isAuthorized = await verifyAdminAuth(request);
 
     if (!isAuthorized) {
-      routeLogger.warn("Unauthorized metrics access attempt");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      routeLogger.warn("Unauthorized metrics access attempt", { requestId });
+      logger.requestError(request, null, 401, startTime, { requestId });
+
+      return errorResponse(401, "Unauthorized", request);
     }
 
     // Collect all metrics
@@ -322,20 +327,13 @@ async function handleGET(request: NextRequest) {
       database: getDatabaseMetrics(),
     };
 
-    routeLogger.info("Metrics retrieved successfully");
+    routeLogger.info("Metrics retrieved successfully", { requestId });
+    logger.requestSuccess(request, { status: 200 }, startTime, { requestId });
 
     return NextResponse.json(metrics);
   } catch (error) {
-    routeLogger.error("Error retrieving metrics", error);
-    return NextResponse.json(
-      { error: "Internal server error", details: (error as Error).message },
-      { status: 500 },
-    );
+    routeLogger.error("Error retrieving metrics", error, { requestId });
+
+    return handleApiError(error, request, "/api/admin/metrics", "GET");
   }
 }
-
-export const GET = withRateLimitForMethod(
-  handleGET as any,
-  { type: "api-public", userBased: false },
-  ["GET"],
-);

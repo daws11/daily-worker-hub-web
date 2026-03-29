@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
-import { withRateLimitForMethod } from "@/lib/rate-limit";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+} from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("notifications/token");
 
@@ -13,7 +17,7 @@ const routeLogger = logger.createApiLogger("notifications/token");
  * - token: FCM token to remove (optional, removes all tokens if not provided)
  * - deviceId: Device identifier to remove tokens for (optional)
  */
-async function handleDELETE(request: NextRequest) {
+export async function DELETE(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications/token",
   });
@@ -29,10 +33,8 @@ async function handleDELETE(request: NextRequest) {
 
     if (authError || !user) {
       routeLogger.warn("Unauthorized access attempt", { requestId });
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
-      );
+
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { searchParams } = new URL(request.url);
@@ -40,9 +42,10 @@ async function handleDELETE(request: NextRequest) {
     const deviceId = searchParams.get("deviceId");
 
     if (!token && !deviceId) {
-      return NextResponse.json(
-        { error: "Token atau deviceId diperlukan" },
-        { status: 400 },
+      return errorResponse(
+        400,
+        { code: "VALIDATION_ERROR", i18nKey: "errors.validationFailed", details: { message: "Token atau deviceId diperlukan" } },
+        request,
       );
     }
 
@@ -66,9 +69,11 @@ async function handleDELETE(request: NextRequest) {
         requestId,
         userId: user.id,
       });
-      return NextResponse.json(
-        { error: "Gagal menghapus token FCM" },
-        { status: 500 },
+
+      return errorResponse(
+        500,
+        { code: "DB_QUERY_ERROR", i18nKey: "errors.serverError", details: { supabaseMessage: error.message } },
+        request,
       );
     }
 
@@ -93,12 +98,8 @@ async function handleDELETE(request: NextRequest) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/notifications/token", "DELETE");
   }
 }
 
@@ -106,7 +107,7 @@ async function handleDELETE(request: NextRequest) {
  * GET /api/notifications/token
  * Get all FCM tokens for the authenticated user
  */
-async function handleGET(request: NextRequest) {
+export async function GET(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications/token",
   });
@@ -122,10 +123,8 @@ async function handleGET(request: NextRequest) {
 
     if (authError || !user) {
       routeLogger.warn("Unauthorized access attempt", { requestId });
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
-      );
+
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { data: tokens, error } = await (supabase as any)
@@ -141,9 +140,11 @@ async function handleGET(request: NextRequest) {
         requestId,
         userId: user.id,
       });
-      return NextResponse.json(
-        { error: "Gagal mengambil token FCM" },
-        { status: 500 },
+
+      return errorResponse(
+        500,
+        { code: "DB_QUERY_ERROR", i18nKey: "errors.serverError", details: { supabaseMessage: error.message } },
+        request,
       );
     }
 
@@ -167,24 +168,7 @@ async function handleGET(request: NextRequest) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/notifications/token", "GET");
   }
 }
-
-// Export handlers with rate limiting
-// GET is authenticated (100 req/min), DELETE is authenticated (100 req/min)
-export const GET = withRateLimitForMethod(
-  handleGET as any,
-  { type: "api-authenticated", userBased: true },
-  ["GET"],
-);
-export const DELETE = withRateLimitForMethod(
-  handleDELETE as any,
-  { type: "api-authenticated", userBased: true },
-  ["DELETE"],
-);

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
-import { withRateLimitForMethod } from "@/lib/rate-limit";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+} from "@/lib/api/error-response";
 import { notificationService } from "@/lib/notifications/service";
 import type {
   NotificationPayload,
@@ -26,7 +30,7 @@ const routeLogger = logger.createApiLogger("notifications/send");
  * - Business: Can send to workers they have bookings with
  * - Worker: Can only send to themselves (for testing)
  */
-async function handlePOST(request: NextRequest) {
+export async function POST(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications/send",
   });
@@ -42,10 +46,15 @@ async function handlePOST(request: NextRequest) {
 
     if (authError || !user) {
       routeLogger.warn("Unauthorized access attempt", { requestId });
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
+      logger.requestError(
+        request,
+        new Error("Tidak terautentikasi"),
+        401,
+        startTime,
+        { requestId },
       );
+
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     // Check user role
@@ -62,16 +71,18 @@ async function handlePOST(request: NextRequest) {
 
     // Validate notification payload
     if (!notification || !notification.title || !notification.body) {
-      return NextResponse.json(
-        { error: "Judul dan isi notifikasi diperlukan" },
-        { status: 400 },
+      return errorResponse(
+        400,
+        { code: "VALIDATION_ERROR", i18nKey: "errors.validationFailed", details: "Judul dan isi notifikasi diperlukan" },
+        request,
       );
     }
 
     if (!type) {
-      return NextResponse.json(
-        { error: "Tipe notifikasi diperlukan" },
-        { status: 400 },
+      return errorResponse(
+        400,
+        { code: "VALIDATION_ERROR", i18nKey: "errors.validationFailed", details: "Tipe notifikasi diperlukan" },
+        request,
       );
     }
 
@@ -92,9 +103,10 @@ async function handlePOST(request: NextRequest) {
     if (topic) {
       // Send to topic (admin only)
       if (userRole !== "admin") {
-        return NextResponse.json(
-          { error: "Hanya admin yang dapat mengirim ke topik" },
-          { status: 403 },
+        return errorResponse(
+          403,
+          { code: "AUTH_FORBIDDEN", details: "Hanya admin yang dapat mengirim ke topik" },
+          request,
         );
       }
 
@@ -126,21 +138,17 @@ async function handlePOST(request: NextRequest) {
           const invalidIds = userIds.filter((id) => !validWorkerIds.has(id));
 
           if (invalidIds.length > 0) {
-            return NextResponse.json(
-              {
-                error:
-                  "Anda tidak dapat mengirim notifikasi ke beberapa pengguna ini",
-              },
-              { status: 403 },
+            return errorResponse(
+              403,
+              { code: "AUTH_FORBIDDEN", details: "Anda tidak dapat mengirim notifikasi ke beberapa pengguna ini" },
+              request,
             );
           }
         } else {
-          return NextResponse.json(
-            {
-              error:
-                "Hanya admin atau bisnis yang dapat mengirim ke beberapa pengguna",
-            },
-            { status: 403 },
+          return errorResponse(
+            403,
+            { code: "AUTH_FORBIDDEN", details: "Hanya admin atau bisnis yang dapat mengirim ke beberapa pengguna" },
+            request,
           );
         }
       }
@@ -172,19 +180,17 @@ async function handlePOST(request: NextRequest) {
               .single();
 
             if (!booking) {
-              return NextResponse.json(
-                {
-                  error: "Anda tidak dapat mengirim notifikasi ke pengguna ini",
-                },
-                { status: 403 },
+              return errorResponse(
+                403,
+                { code: "AUTH_FORBIDDEN", details: "Anda tidak dapat mengirim notifikasi ke pengguna ini" },
+                request,
               );
             }
           } else {
-            return NextResponse.json(
-              {
-                error: "Anda tidak dapat mengirim notifikasi ke pengguna lain",
-              },
-              { status: 403 },
+            return errorResponse(
+              403,
+              { code: "AUTH_FORBIDDEN", details: "Anda tidak dapat mengirim notifikasi ke pengguna lain" },
+              request,
             );
           }
         }
@@ -202,9 +208,10 @@ async function handlePOST(request: NextRequest) {
         type,
       });
     } else {
-      return NextResponse.json(
-        { error: "userId, userIds, atau topic diperlukan" },
-        { status: 400 },
+      return errorResponse(
+        400,
+        { code: "VALIDATION_ERROR", i18nKey: "errors.validationFailed", details: "userId, userIds, atau topic diperlukan" },
+        request,
       );
     }
 
@@ -226,19 +233,7 @@ async function handlePOST(request: NextRequest) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/notifications/send", "POST");
   }
 }
-
-// Export handlers with rate limiting
-// POST is authenticated (100 req/min)
-export const POST = withRateLimitForMethod(
-  handlePOST as any,
-  { type: "api-authenticated", userBased: true },
-  ["POST"],
-);

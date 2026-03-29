@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { xenditGateway, type WebhookPayload } from "@/lib/payments";
 import { logger } from "@/lib/logger";
-import { withRateLimit } from "@/lib/rate-limit";
+import { errorResponse } from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("webhooks/xendit");
 
@@ -30,7 +30,7 @@ const routeLogger = logger.createApiLogger("webhooks/xendit");
  * - payment_method: Payment method used
  * - payment_channel: Payment channel used
  */
-async function handlePOST(request: NextRequest) {
+export async function POST(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "webhooks/xendit",
   });
@@ -78,10 +78,7 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Invalid callback token" },
-        { status: 401 },
-      );
+      return errorResponse(401, "AUTH_UNAUTHORIZED", request);
     }
 
     // Extract relevant data
@@ -132,7 +129,7 @@ async function handlePOST(request: NextRequest) {
         requestId,
       });
 
-      return NextResponse.json({ error: result.error }, { status: 500 });
+      return errorResponse(500, result.error, request);
     }
 
     routeLogger.info("Xendit webhook processed successfully", {
@@ -167,10 +164,7 @@ async function handlePOST(request: NextRequest) {
 
     logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return errorResponse(500, "SERVER_INTERNAL_ERROR", request);
   }
 }
 
@@ -429,7 +423,7 @@ function mapXenditStatus(
  *
  * Health check endpoint
  */
-async function handleGET(request: Request) {
+export async function GET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "webhooks/xendit",
   });
@@ -443,14 +437,3 @@ async function handleGET(request: Request) {
     timestamp: new Date().toISOString(),
   });
 }
-
-// Export handlers with rate limiting
-export const POST = withRateLimit(handlePOST as any, {
-  type: "api-public",
-  userBased: false,
-});
-
-export const GET = withRateLimit(handleGET as any, {
-  type: "api-public",
-  userBased: false,
-});

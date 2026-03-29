@@ -8,7 +8,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
-import { withRateLimitForMethod } from "@/lib/rate-limit";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+} from "@/lib/api/error-response";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
@@ -64,7 +68,7 @@ const routeLogger = logger.createApiLogger("notifications");
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-async function handleGET(request: NextRequest) {
+export async function GET(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications",
   });
@@ -88,10 +92,7 @@ async function handleGET(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
-      );
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { searchParams } = new URL(request.url);
@@ -135,9 +136,10 @@ async function handleGET(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Gagal mengambil notifikasi" },
-        { status: response.status },
+      return errorResponse(
+        response.status,
+        { code: "DB_QUERY_ERROR", i18nKey: "errors.serverError", details: errorText },
+        request,
       );
     }
 
@@ -185,12 +187,8 @@ async function handleGET(request: NextRequest) {
     routeLogger.error("Unexpected error in GET /api/notifications", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/notifications", "GET");
   }
 }
 
@@ -230,7 +228,7 @@ async function handleGET(request: NextRequest) {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-async function handlePATCH(request: NextRequest) {
+export async function PATCH(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications",
   });
@@ -254,10 +252,7 @@ async function handlePATCH(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
-      );
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     // Mark all as read
@@ -290,9 +285,10 @@ async function handlePATCH(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Gagal menandai notifikasi" },
-        { status: response.status },
+      return errorResponse(
+        response.status,
+        { code: "DB_QUERY_ERROR", i18nKey: "errors.serverError", details: errorText },
+        request,
       );
     }
 
@@ -317,24 +313,7 @@ async function handlePATCH(request: NextRequest) {
     routeLogger.error("Unexpected error in PATCH /api/notifications", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/notifications", "PATCH");
   }
 }
-
-// Export handlers with rate limiting
-// GET is authenticated (100 req/min), PATCH is authenticated (100 req/min)
-export const GET = withRateLimitForMethod(
-  handleGET as any,
-  { type: "api-authenticated", userBased: true },
-  ["GET"],
-);
-export const PATCH = withRateLimitForMethod(
-  handlePATCH as any,
-  { type: "api-authenticated", userBased: true },
-  ["PATCH"],
-);

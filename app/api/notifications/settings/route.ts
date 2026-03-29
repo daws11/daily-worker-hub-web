@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
-import { withRateLimitForMethod } from "@/lib/rate-limit";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+} from "@/lib/api/error-response";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "http://127.0.0.1:54321";
@@ -13,7 +17,7 @@ const routeLogger = logger.createApiLogger("notifications/settings");
  * GET /api/notifications/settings
  * Get notification preferences for the authenticated user
  */
-async function handleGET(request: NextRequest) {
+export async function GET(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications/settings",
   });
@@ -37,10 +41,7 @@ async function handleGET(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
-      );
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     // Fetch notification preferences
@@ -70,9 +71,10 @@ async function handleGET(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Gagal mengambil preferensi notifikasi" },
-        { status: response.status },
+      return errorResponse(
+        response.status,
+        { code: "DB_QUERY_ERROR", i18nKey: "errors.serverError", details: errorText },
+        request,
       );
     }
 
@@ -130,12 +132,8 @@ async function handleGET(request: NextRequest) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/notifications/settings", "GET");
   }
 }
 
@@ -143,7 +141,7 @@ async function handleGET(request: NextRequest) {
  * POST /api/notifications/settings
  * Update notification preferences for the authenticated user
  */
-async function handlePOST(request: NextRequest) {
+export async function POST(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "notifications/settings",
   });
@@ -167,10 +165,7 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Tidak terautentikasi" },
-        { status: 401 },
-      );
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const body = await request.json();
@@ -205,9 +200,10 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Tidak ada data yang valid untuk diperbarui" },
-        { status: 400 },
+      return errorResponse(
+        400,
+        { code: "VALIDATION_ERROR", i18nKey: "errors.validation", details: "Tidak ada data yang valid untuk diperbarui" },
+        request,
       );
     }
 
@@ -276,9 +272,10 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Gagal memperbarui preferensi notifikasi" },
-        { status: response.status },
+      return errorResponse(
+        response.status,
+        { code: "DB_QUERY_ERROR", i18nKey: "errors.serverError", details: errorText },
+        request,
       );
     }
 
@@ -305,24 +302,7 @@ async function handlePOST(request: NextRequest) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Terjadi kesalahan server", details: (error as Error).message },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/notifications/settings", "POST");
   }
 }
-
-// Export handlers with rate limiting
-// GET is authenticated (100 req/min), POST is authenticated (100 req/min)
-export const GET = withRateLimitForMethod(
-  handleGET as any,
-  { type: "api-authenticated", userBased: true },
-  ["GET"],
-);
-export const POST = withRateLimitForMethod(
-  handlePOST as any,
-  { type: "api-authenticated", userBased: true },
-  ["POST"],
-);

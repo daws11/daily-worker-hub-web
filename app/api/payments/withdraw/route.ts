@@ -17,6 +17,14 @@ import { PAYMENT_CONSTANTS } from "@/lib/types/payment";
 import { logger } from "@/lib/logger";
 import { parseRequest } from "@/lib/validations";
 import { withRateLimit } from "@/lib/rate-limit";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+  notFoundErrorResponse,
+  externalServiceErrorResponse,
+} from "@/lib/api/error-response";
+import { ErrorCode } from "@/lib/api/errors";
 import { z } from "zod";
 
 const routeLogger = logger.createApiLogger("payments/withdraw");
@@ -102,7 +110,7 @@ async function handlePOST(request: NextRequest) {
       logger.requestError(request, new Error("Unauthorized"), 401, startTime, {
         requestId,
       });
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     // Validate request body with Zod schema
@@ -144,7 +152,7 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json({ error: "Worker not found" }, { status: 404 });
+      return notFoundErrorResponse("Worker", workerId, request);
     }
 
     // Get worker's wallet
@@ -167,9 +175,13 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Failed to fetch wallet" },
-        { status: 500 },
+      return errorResponse(
+        500,
+        {
+          code: ErrorCode.ERROR_INTERNAL,
+          details: { message: "Failed to fetch wallet" },
+        },
+        request,
       );
     }
 
@@ -183,7 +195,7 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json({ error: "Wallet not found" }, { status: 404 });
+      return notFoundErrorResponse("Wallet", workerId, request);
     }
 
     // Check available balance
@@ -202,13 +214,17 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
+      return errorResponse(
+        400,
         {
-          error: "Insufficient balance",
-          availableBalance: wallet.balance,
-          requestedAmount: amount,
+          code: ErrorCode.ERROR_BAD_REQUEST,
+          details: {
+            message: "Insufficient balance",
+            availableBalance: wallet.balance,
+            requestedAmount: amount,
+          },
         },
-        { status: 400 },
+        request,
       );
     }
 
@@ -234,9 +250,13 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Bank account not found or does not belong to worker" },
-        { status: 404 },
+      return errorResponse(
+        404,
+        {
+          code: ErrorCode.ERROR_NOT_FOUND,
+          details: { message: "Bank account not found or does not belong to worker" },
+        },
+        request,
       );
     }
 
@@ -293,9 +313,13 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Failed to create payout request" },
-        { status: 500 },
+      return errorResponse(
+        500,
+        {
+          code: ErrorCode.ERROR_INTERNAL,
+          details: { message: "Failed to create payout request" },
+        },
+        request,
       );
     }
 
@@ -340,9 +364,13 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Failed to update wallet balance" },
-        { status: 500 },
+      return errorResponse(
+        500,
+        {
+          code: ErrorCode.ERROR_INTERNAL,
+          details: { message: "Failed to update wallet balance" },
+        },
+        request,
       );
     }
 
@@ -488,15 +516,19 @@ async function handlePOST(request: NextRequest) {
         payoutRequestId: payoutRequest.id,
       });
 
-      return NextResponse.json(
+      return errorResponse(
+        500,
         {
-          error: "Failed to process withdrawal",
-          details:
-            disbursementError instanceof Error
-              ? disbursementError.message
-              : "Unknown error",
+          code: ErrorCode.ERROR_EXTERNAL_SERVICE,
+          details: {
+            message: "Failed to process withdrawal",
+            details:
+              disbursementError instanceof Error
+                ? disbursementError.message
+                : "Unknown error",
+          },
         },
-        { status: 500 },
+        request,
       );
     }
   } catch (error) {
@@ -507,10 +539,7 @@ async function handlePOST(request: NextRequest) {
     );
     logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, requestId);
   }
 }
 

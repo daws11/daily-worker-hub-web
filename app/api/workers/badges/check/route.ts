@@ -1,19 +1,78 @@
-import { NextResponse } from "next/server";
-import { logger } from "@/lib/logger";
-import { checkAndAwardBadges, getWorkerAchievements } from "@/lib/badges";
-import { withRateLimitForMethod } from "@/lib/rate-limit";
+/**
+ * Worker Badges Check API Route
+ *
+ * Endpoints for checking and awarding badges to workers.
+ * Internal trigger endpoint for badge processing.
+ */
 
-const routeLogger = logger.createApiLogger("workers-badges-check");
+import { NextResponse } from "next/server";
+import { checkAndAwardBadges, getWorkerAchievements } from "@/lib/badges";
+import { logger } from "@/lib/logger";
+import {
+  errorResponse,
+  handleApiError,
+  validationErrorResponse,
+} from "@/lib/api/error-response";
+
+const routeLogger = logger.createApiLogger("workers/badges/check");
 
 /**
- * POST /api/workers/badges/check
- * Check and award new badges for a worker (internal trigger)
- *
- * Body: { worker_id: string }
+ * @openapi
+ * /api/workers/badges/check:
+ *   post:
+ *     tags:
+ *       - Workers
+ *     summary: Check and award badges for a worker
+ *     description: Internal trigger to check and award new badges for a worker based on their achievements.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - worker_id
+ *             properties:
+ *               worker_id:
+ *                 type: string
+ *                 format: uuid
+ *                 description: Worker ID to check badges for
+ *     responses:
+ *       200:
+ *         description: Badges checked and awarded successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 awarded:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 awardedCount:
+ *                   type: number
+ *                 progress:
+ *                   type: object
+ *                 allBadges:
+ *                   type: array
+ *       400:
+ *         description: Missing required parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
  */
-async function handlePOST(request: Request) {
+export async function POST(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, {
-    route: "workers-badges-check",
+    route: "workers/badges/check",
   });
 
   try {
@@ -21,17 +80,18 @@ async function handlePOST(request: Request) {
     const { worker_id } = body;
 
     if (!worker_id) {
-      routeLogger.warn("Missing worker_id in request", { requestId });
+      routeLogger.warn("Missing required field: worker_id", { requestId });
       logger.requestError(
         request,
-        new Error("worker_id is required"),
+        new Error("Missing required field: worker_id"),
         400,
         startTime,
         { requestId },
       );
-      return NextResponse.json(
-        { error: "worker_id is required" },
-        { status: 400 },
+
+      return validationErrorResponse(
+        { reason: "Missing required field", required: ["worker_id"] },
+        request,
       );
     }
 
@@ -41,15 +101,13 @@ async function handlePOST(request: Request) {
     // Get updated achievements
     const allBadges = await getWorkerAchievements(worker_id);
 
-    logger.requestSuccess(request, { status: 200 }, startTime, {
+    routeLogger.info("Badge check completed", {
       requestId,
       workerId: worker_id,
       awardedCount: result.awarded.length,
     });
-    routeLogger.info("Badges checked and awarded", {
+    logger.requestSuccess(request, { status: 200 }, startTime, {
       requestId,
-      workerId: worker_id,
-      awardedCount: result.awarded.length,
     });
 
     return NextResponse.json({
@@ -60,20 +118,12 @@ async function handlePOST(request: Request) {
       allBadges,
     });
   } catch (error) {
-    routeLogger.error("Unexpected error in POST /api/workers/badges/check", error, {
-      requestId,
-    });
-    logger.requestError(request, error, 500, startTime, { requestId });
-    return NextResponse.json(
-      { error: "Internal server error", details: (error as Error).message },
-      { status: 500 },
+    routeLogger.error(
+      "Unexpected error in POST /api/workers/badges/check",
+      error,
+      { requestId },
     );
+
+    return handleApiError(error, request, "/api/workers/badges/check", "POST");
   }
 }
-
-// Export handler with rate limiting
-export const POST = withRateLimitForMethod(
-  handlePOST as any,
-  { type: "api-authenticated", userBased: true },
-  ["POST"],
-);

@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { logger } from "@/lib/logger";
 import { cache, LRUCache, CACHE_TTL } from "@/lib/cache";
-import { withRateLimitForMethod } from "@/lib/rate-limit";
+import { errorResponse, handleApiError } from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("skills");
 
@@ -48,7 +48,7 @@ const SKILLS_CACHE_KEY = LRUCache.createKey("skills", "all");
  *       500:
  *         description: Internal server error
  */
-async function handleGET(request: Request) {
+export async function GET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "skills",
   });
@@ -87,10 +87,7 @@ async function handleGET(request: Request) {
       routeLogger.error("Error fetching skills", error, { requestId });
       logger.requestError(request, error, 500, startTime, { requestId });
 
-      return NextResponse.json(
-        { error: "Failed to fetch skills" },
-        { status: 500 },
-      );
+      return errorResponse(500, "Failed to fetch skills", request);
     }
 
     const result = { data: skills };
@@ -114,19 +111,7 @@ async function handleGET(request: Request) {
     routeLogger.error("Unexpected error in GET /api/skills", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/skills", "GET");
   }
 }
-
-// Export handlers with rate limiting
-// GET is public (30 req/min)
-export const GET = withRateLimitForMethod(
-  handleGET as any,
-  { type: "api-public", userBased: false },
-  ["GET"],
-);

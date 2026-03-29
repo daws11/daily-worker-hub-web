@@ -23,6 +23,14 @@ import { logger } from "@/lib/logger";
 import { parseRequest } from "@/lib/validations";
 import { createPaymentSchema } from "@/lib/validations/payment";
 import { withRateLimit } from "@/lib/rate-limit";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+  notFoundErrorResponse,
+  externalServiceErrorResponse,
+} from "@/lib/api/error-response";
+import { ErrorCode } from "@/lib/api/errors";
 
 const routeLogger = logger.createApiLogger("payments/create");
 
@@ -81,7 +89,7 @@ async function handlePOST(request: NextRequest) {
       logger.requestError(request, new Error("Unauthorized"), 401, startTime, {
         requestId,
       });
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     // Validate request body with Zod schema
@@ -89,7 +97,7 @@ async function handlePOST(request: NextRequest) {
 
     if (!parseResult.success) {
       routeLogger.warn("Validation failed", { requestId });
-      return (parseResult as unknown as { error: NextResponse }).error;
+      return (parseResult as { error: NextResponse }).error;
     }
 
     const {
@@ -123,9 +131,13 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: `Payment provider '${provider}' is not enabled` },
-        { status: 400 },
+      return errorResponse(
+        400,
+        {
+          code: ErrorCode.ERROR_BAD_REQUEST,
+          details: { message: `Payment provider '${provider}' is not enabled` },
+        },
+        request,
       );
     }
 
@@ -150,10 +162,7 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Business not found" },
-        { status: 404 },
-      );
+      return notFoundErrorResponse("Business", business_id, request);
     }
 
     // Calculate fee
@@ -206,9 +215,10 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Failed to create payment transaction" },
-        { status: 500 },
+      return errorResponse(
+        500,
+        ErrorCode.PAYMENT_CREATION_FAILED,
+        request,
       );
     }
 
@@ -356,15 +366,15 @@ async function handlePOST(request: NextRequest) {
         transactionId,
       });
 
-      return NextResponse.json(
+      return externalServiceErrorResponse(
+        paymentProvider,
         {
-          error: "Failed to create payment invoice",
-          details:
+          message:
             invoiceError instanceof Error
               ? invoiceError.message
               : "Unknown error",
         },
-        { status: 500 },
+        request,
       );
     }
   } catch (error) {
@@ -373,13 +383,7 @@ async function handlePOST(request: NextRequest) {
     });
     logger.requestError(request, error, 500, startTime, {});
 
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/payments/create", "POST");
   }
 }
 
@@ -467,9 +471,13 @@ async function handleGET(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Valid amount is required" },
-        { status: 400 },
+      return errorResponse(
+        400,
+        {
+          code: ErrorCode.VALIDATION_ERROR,
+          details: { message: "Valid amount is required" },
+        },
+        request,
       );
     }
 
@@ -534,10 +542,7 @@ async function handleGET(request: NextRequest) {
     });
     logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/payments/create", "GET");
   }
 }
 

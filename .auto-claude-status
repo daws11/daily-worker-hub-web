@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "037-add-rate-limiting-middleware-to-api-routes",
+  "spec": "038-standardize-error-handling-across-api-routes",
   "state": "building",
   "subtasks": {
-    "completed": 19,
-    "total": 24,
+    "completed": 35,
+    "total": 36,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Add Rate Limiting to Admin, Cron, and Docs Routes",
+    "current": "Verification and testing",
     "id": null,
-    "total": 3
+    "total": 2
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 31,
-    "started_at": "2026-03-26T20:03:15.064661"
+    "number": 37,
+    "started_at": "2026-03-26T21:56:43.433356"
   },
-  "last_update": "2026-03-26T21:24:12.442958"
+  "last_update": "2026-03-26T23:36:54.509464"
 }

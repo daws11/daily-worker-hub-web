@@ -7,6 +7,13 @@ import {
   confirmBookingCompletion,
 } from "@/lib/actions/bookings-completion";
 import { withRateLimit } from "@/lib/rate-limit";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+  forbiddenErrorResponse,
+  notFoundErrorResponse,
+} from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("bookings/[id]/complete");
 
@@ -32,7 +39,7 @@ async function handlePOST(request: Request, { params }: Params) {
         requestId,
       });
 
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { id: bookingId } = await params;
@@ -60,7 +67,7 @@ async function handlePOST(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return notFoundErrorResponse("User", session.user.id, request);
     }
 
     // Get booking status
@@ -80,7 +87,7 @@ async function handlePOST(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+      return notFoundErrorResponse("Booking", bookingId, request);
     }
 
     // Business actions
@@ -105,10 +112,7 @@ async function handlePOST(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return NextResponse.json(
-          { error: "Business not found" },
-          { status: 404 },
-        );
+        return notFoundErrorResponse("Business", session.user.id, request);
       }
 
       // Verify business owns this booking
@@ -126,10 +130,7 @@ async function handlePOST(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return NextResponse.json(
-          { error: "Unauthorized - Not your booking" },
-          { status: 403 },
-        );
+        return forbiddenErrorResponse("Unauthorized - Not your booking", request);
       }
 
       // If booking is already completed (after worker checkout), confirm completion
@@ -150,7 +151,7 @@ async function handlePOST(request: Request, { params }: Params) {
             { requestId },
           );
 
-          return NextResponse.json({ error: result.error }, { status: 400 });
+          return errorResponse(400, result.error, request);
         }
 
         routeLogger.info("Booking completion confirmed and payment released", {
@@ -187,7 +188,7 @@ async function handlePOST(request: Request, { params }: Params) {
           requestId,
         });
 
-        return NextResponse.json({ error: result.error }, { status: 400 });
+        return errorResponse(400, result.error, request);
       }
 
       routeLogger.info("Booking completed successfully", {
@@ -221,9 +222,9 @@ async function handlePOST(request: Request, { params }: Params) {
       { requestId },
     );
 
-    return NextResponse.json(
-      { error: "Unauthorized - Only businesses can complete bookings" },
-      { status: 403 },
+    return forbiddenErrorResponse(
+      "Unauthorized - Only businesses can complete bookings",
+      request,
     );
   } catch (error) {
     routeLogger.error(
@@ -231,12 +232,8 @@ async function handlePOST(request: Request, { params }: Params) {
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/bookings/[id]/complete", "POST");
   }
 }
 

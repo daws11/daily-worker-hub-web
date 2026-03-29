@@ -3,8 +3,6 @@
  *
  * Verifies payment status by checking with the payment gateway.
  * Returns the current status of a payment transaction.
- *
- * Rate limited: 10 requests per minute (payment endpoints)
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -15,7 +13,13 @@ import {
   type PaymentProvider,
 } from "@/lib/payments";
 import { logger } from "@/lib/logger";
-import { withRateLimit } from "@/lib/rate-limit";
+import {
+  errorResponse,
+  handleApiError,
+  notFoundErrorResponse,
+  badRequestErrorResponse,
+} from "@/lib/api/error-response";
+import { ErrorCode } from "@/lib/api/errors";
 
 const routeLogger = logger.createApiLogger("payments/verify");
 
@@ -28,7 +32,7 @@ const routeLogger = logger.createApiLogger("payments/verify");
  * - transaction_id: Transaction ID (required)
  * - provider: Payment provider 'xendit' | 'midtrans' (required)
  */
-async function handleGET(request: NextRequest) {
+export async function GET(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "payments/verify",
   });
@@ -57,9 +61,9 @@ async function handleGET(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Transaction ID is required" },
-        { status: 400 },
+      return badRequestErrorResponse(
+        "errors.validation.transaction_id_required",
+        request,
       );
     }
 
@@ -73,9 +77,9 @@ async function handleGET(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Valid payment provider is required (xendit or midtrans)" },
-        { status: 400 },
+      return badRequestErrorResponse(
+        "errors.validation.invalid_provider",
+        request,
       );
     }
 
@@ -100,10 +104,7 @@ async function handleGET(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Transaction not found" },
-        { status: 404 },
-      );
+      return notFoundErrorResponse("Transaction", transactionId, request);
     }
 
     // If transaction is already in a final state, return from database
@@ -270,13 +271,7 @@ async function handleGET(request: NextRequest) {
     });
     logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/payments/verify", "GET");
   }
 }
 
@@ -288,7 +283,7 @@ async function handleGET(request: NextRequest) {
  * Request body:
  * - transactions: Array of { transaction_id, provider }
  */
-async function handlePOST(request: NextRequest) {
+export async function POST(request: NextRequest) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "payments/verify",
   });
@@ -315,9 +310,9 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Transactions array is required" },
-        { status: 400 },
+      return badRequestErrorResponse(
+        "errors.validation.transactions_required",
+        request,
       );
     }
 
@@ -335,9 +330,13 @@ async function handlePOST(request: NextRequest) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Maximum 50 transactions per batch" },
-        { status: 400 },
+      return errorResponse(
+        400,
+        {
+          code: ErrorCode.VALIDATION_ERROR,
+          details: { message: "Maximum 50 transactions per batch" },
+        },
+        request,
       );
     }
 
@@ -408,10 +407,7 @@ async function handlePOST(request: NextRequest) {
     });
     logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/payments/verify", "POST");
   }
 }
 
@@ -537,13 +533,3 @@ async function recordWalletTransaction(
     });
   }
 }
-
-// Export handlers with rate limiting
-export const GET = withRateLimit(handleGET, {
-  type: "payment",
-  userBased: true,
-});
-export const POST = withRateLimit(handlePOST, {
-  type: "payment",
-  userBased: true,
-});

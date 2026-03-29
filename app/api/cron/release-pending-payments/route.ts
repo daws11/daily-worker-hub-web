@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { releaseFundsAction } from "@/lib/actions/wallets";
 import { createNotification } from "@/lib/actions/notifications";
 import { logger } from "@/lib/logger";
-import { withRateLimit } from "@/lib/rate-limit";
+import { errorResponse, handleApiError } from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("cron/release-pending-payments");
 
@@ -23,7 +23,7 @@ const routeLogger = logger.createApiLogger("cron/release-pending-payments");
  *
  * Action: Release funds to worker's available balance
  */
-async function handlePOST(request: Request) {
+export async function POST(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "cron/release-pending-payments",
   });
@@ -39,7 +39,7 @@ async function handlePOST(request: Request) {
         requestId,
       });
 
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return errorResponse(401, "AUTH_UNAUTHORIZED", request);
     }
 
     routeLogger.info("Starting auto-release cron job", { requestId });
@@ -91,10 +91,7 @@ async function handlePOST(request: Request) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Failed to fetch bookings" },
-        { status: 500 },
-      );
+      return errorResponse(500, "FETCH_ERROR", request);
     }
 
     if (!bookings || bookings.length === 0) {
@@ -247,14 +244,6 @@ async function handlePOST(request: Request) {
 
     logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/cron/release-pending-payments", "POST");
   }
 }
-
-export const POST = withRateLimit(handlePOST as any, {
-  type: "api-public",
-  userBased: false,
-});

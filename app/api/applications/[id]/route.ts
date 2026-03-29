@@ -7,7 +7,13 @@ import {
   acceptApplicationAndCreateBooking,
   withdrawApplication,
 } from "@/lib/actions/job-applications";
-import { withRateLimitForMethod } from "@/lib/rate-limit";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+  forbiddenErrorResponse,
+  notFoundErrorResponse,
+} from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("applications/[id]");
 
@@ -16,7 +22,7 @@ type Params = {
 };
 
 // GET /api/applications/[id] - Get single application details
-async function handleGET(request: Request, { params }: Params) {
+export async function GET(request: Request, { params }: Params) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "applications/[id]",
   });
@@ -30,7 +36,7 @@ async function handleGET(request: Request, { params }: Params) {
         requestId,
       });
 
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { id } = await params;
@@ -86,10 +92,7 @@ async function handleGET(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Application not found" },
-        { status: 404 },
-      );
+      return notFoundErrorResponse("Application", id, request);
     }
 
     // Verify user has access to this application
@@ -112,7 +115,7 @@ async function handleGET(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return notFoundErrorResponse("User", session.user.id, request);
     }
 
     if (user.role === "worker") {
@@ -136,7 +139,7 @@ async function handleGET(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        return forbiddenErrorResponse("Unauthorized - Worker does not own this application", request);
       }
     } else if (user.role === "business") {
       // Verify business owns this application
@@ -159,7 +162,7 @@ async function handleGET(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        return forbiddenErrorResponse("Unauthorized - Business does not own this application", request);
       }
     }
 
@@ -178,17 +181,13 @@ async function handleGET(request: Request, { params }: Params) {
     routeLogger.error("Unexpected error in GET /api/applications/[id]", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/applications/[id]", "GET");
   }
 }
 
 // PATCH /api/applications/[id] - Update application status
-async function handlePATCH(request: Request, { params }: Params) {
+export async function PATCH(request: Request, { params }: Params) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "applications/[id]",
   });
@@ -202,7 +201,7 @@ async function handlePATCH(request: Request, { params }: Params) {
         requestId,
       });
 
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { id } = await params;
@@ -230,7 +229,7 @@ async function handlePATCH(request: Request, { params }: Params) {
         { requestId },
       );
 
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return notFoundErrorResponse("User", session.user.id, request);
     }
 
     // Business actions: shortlist, accept, reject
@@ -252,10 +251,7 @@ async function handlePATCH(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return NextResponse.json(
-          { error: "Only businesses can update application status" },
-          { status: 403 },
-        );
+        return forbiddenErrorResponse("Only businesses can update application status", request);
       }
 
       // Get business ID
@@ -278,10 +274,7 @@ async function handlePATCH(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return NextResponse.json(
-          { error: "Business not found" },
-          { status: 404 },
-        );
+        return notFoundErrorResponse("Business", session.user.id, request);
       }
 
       // If accepting, also create booking
@@ -302,7 +295,7 @@ async function handlePATCH(request: Request, { params }: Params) {
             { requestId },
           );
 
-          return NextResponse.json({ error: result.error }, { status: 400 });
+          return errorResponse(400, result.error, request);
         }
 
         routeLogger.info("Application accepted and booking created", {
@@ -339,7 +332,7 @@ async function handlePATCH(request: Request, { params }: Params) {
           requestId,
         });
 
-        return NextResponse.json({ error: result.error }, { status: 400 });
+        return errorResponse(400, result.error, request);
       }
 
       routeLogger.info("Application status updated", {
@@ -375,10 +368,7 @@ async function handlePATCH(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return NextResponse.json(
-          { error: "Only workers can withdraw applications" },
-          { status: 403 },
-        );
+        return forbiddenErrorResponse("Only workers can withdraw applications", request);
       }
 
       // Get worker ID
@@ -401,10 +391,7 @@ async function handlePATCH(request: Request, { params }: Params) {
           { requestId },
         );
 
-        return NextResponse.json(
-          { error: "Worker not found" },
-          { status: 404 },
-        );
+        return notFoundErrorResponse("Worker", session.user.id, request);
       }
 
       const result = await withdrawApplication(id, worker.id);
@@ -419,7 +406,7 @@ async function handlePATCH(request: Request, { params }: Params) {
           requestId,
         });
 
-        return NextResponse.json({ error: result.error }, { status: 400 });
+        return errorResponse(400, result.error, request);
       }
 
       routeLogger.info("Application withdrawn", {
@@ -443,31 +430,14 @@ async function handlePATCH(request: Request, { params }: Params) {
       requestId,
     });
 
-    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    return errorResponse(400, "Invalid action", request);
   } catch (error) {
     routeLogger.error(
       "Unexpected error in PATCH /api/applications/[id]",
       error,
       { requestId },
     );
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/applications/[id]", "PATCH");
   }
 }
-
-// Export handlers with rate limiting
-// Both GET and PATCH require authentication (100 req/min)
-export const GET = withRateLimitForMethod(
-  handleGET as any,
-  { type: "api-authenticated", userBased: true },
-  ["GET"],
-);
-export const PATCH = withRateLimitForMethod(
-  handlePATCH as any,
-  { type: "api-authenticated", userBased: true },
-  ["PATCH"],
-);

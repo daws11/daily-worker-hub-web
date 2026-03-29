@@ -14,7 +14,14 @@ import {
   getApplicationsByJob,
   getApplicationsByWorker,
 } from "@/lib/actions/job-applications";
-import { withRateLimitForMethod } from "@/lib/rate-limit";
+import {
+  errorResponse,
+  handleApiError,
+  unauthorizedErrorResponse,
+  forbiddenErrorResponse,
+  notFoundErrorResponse,
+  validationErrorResponse,
+} from "@/lib/api/error-response";
 
 const routeLogger = logger.createApiLogger("applications");
 
@@ -88,7 +95,7 @@ const routeLogger = logger.createApiLogger("applications");
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-async function handleGET(request: Request) {
+export async function GET(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "applications",
   });
@@ -102,7 +109,7 @@ async function handleGET(request: Request) {
         requestId,
       });
 
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const { searchParams } = new URL(request.url);
@@ -133,7 +140,7 @@ async function handleGET(request: Request) {
         { requestId },
       );
 
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return notFoundErrorResponse("User", session.user.id, request);
     }
 
     // Business viewing applicants for a job
@@ -159,10 +166,7 @@ async function handleGET(request: Request) {
           { requestId },
         );
 
-        return NextResponse.json(
-          { error: "Unauthorized - Business not found" },
-          { status: 403 },
-        );
+        return forbiddenErrorResponse("Unauthorized - Business not found", request);
       }
 
       const result = await getApplicationsByJob(jobId, businessId);
@@ -177,7 +181,7 @@ async function handleGET(request: Request) {
           requestId,
         });
 
-        return NextResponse.json({ error: result.error }, { status: 400 });
+        return errorResponse(400, result.error, request);
       }
 
       routeLogger.info("Applications fetched for business", {
@@ -217,10 +221,7 @@ async function handleGET(request: Request) {
           { requestId },
         );
 
-        return NextResponse.json(
-          { error: "Unauthorized - Worker not found" },
-          { status: 403 },
-        );
+        return forbiddenErrorResponse("Unauthorized - Worker not found", request);
       }
 
       const result = await getApplicationsByWorker(workerId, status);
@@ -235,7 +236,7 @@ async function handleGET(request: Request) {
           requestId,
         });
 
-        return NextResponse.json({ error: result.error }, { status: 400 });
+        return errorResponse(400, result.error, request);
       }
 
       routeLogger.info("Applications fetched for worker", {
@@ -260,20 +261,16 @@ async function handleGET(request: Request) {
       { requestId },
     );
 
-    return NextResponse.json(
-      { error: "Missing required parameters" },
-      { status: 400 },
+    return validationErrorResponse(
+      { reason: "Missing required parameters", required: ["job_id or worker_id"] },
+      request,
     );
   } catch (error) {
     routeLogger.error("Unexpected error in GET /api/applications", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/applications", "GET");
   }
 }
 
@@ -349,7 +346,7 @@ async function handleGET(request: Request) {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-async function handlePOST(request: Request) {
+export async function POST(request: Request) {
   const { startTime, requestId } = logger.requestStart(request, {
     route: "applications",
   });
@@ -363,7 +360,7 @@ async function handlePOST(request: Request) {
         requestId,
       });
 
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return unauthorizedErrorResponse("errors.unauthorized", request);
     }
 
     const body = await request.json();
@@ -379,9 +376,9 @@ async function handlePOST(request: Request) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Missing required fields: job_id, worker_id" },
-        { status: 400 },
+      return validationErrorResponse(
+        { reason: "Missing required fields", required: ["job_id", "worker_id"] },
+        request,
       );
     }
 
@@ -408,10 +405,7 @@ async function handlePOST(request: Request) {
         { requestId },
       );
 
-      return NextResponse.json(
-        { error: "Unauthorized - Worker not found" },
-        { status: 403 },
-      );
+      return forbiddenErrorResponse("Unauthorized - Worker not found", request);
     }
 
     const result = await createJobApplication(body.job_id, body.worker_id, {
@@ -430,7 +424,7 @@ async function handlePOST(request: Request) {
         requestId,
       });
 
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      return errorResponse(400, result.error, request);
     }
 
     routeLogger.info("Application created successfully", {
@@ -455,24 +449,7 @@ async function handlePOST(request: Request) {
     routeLogger.error("Unexpected error in POST /api/applications", error, {
       requestId,
     });
-    logger.requestError(request, error, 500, startTime, { requestId });
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return handleApiError(error, request, "/api/applications", "POST");
   }
 }
-
-// Export handlers with rate limiting
-// Both GET and POST are authenticated routes (100 req/min)
-export const GET = withRateLimitForMethod(
-  handleGET as any,
-  { type: "api-authenticated", userBased: true },
-  ["GET"],
-);
-export const POST = withRateLimitForMethod(
-  handlePOST as any,
-  { type: "api-authenticated", userBased: true },
-  ["POST"],
-);
