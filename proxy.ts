@@ -11,6 +11,32 @@ const SUPPORTED_LOCALES = ["id", "en"] as const;
 type Locale = (typeof SUPPORTED_LOCALES)[number];
 
 /**
+ * CORS configuration
+ * NEXT_PUBLIC_APP_URL is the primary allowed origin
+ * ALLOWED_CORS_ORIGINS env var can override with comma-separated list
+ */
+const CORS_CONFIG = {
+  allowedOrigins: (() => {
+    const envOverride = process.env.ALLOWED_CORS_ORIGINS;
+    if (envOverride) {
+      return envOverride.split(",").map((o) => o.trim()).filter(Boolean);
+    }
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    return appUrl ? [appUrl] : [];
+  })(),
+} as const;
+
+/**
+ * Validates whether a given origin is in the allowed CORS whitelist
+ * @param origin - The origin string from the request's Origin header
+ * @returns true if origin is allowed, false otherwise
+ */
+function isAllowedOrigin(origin: string | null): boolean {
+  if (!origin) return true; // No Origin header = same-origin request, allow
+  return CORS_CONFIG.allowedOrigins.includes(origin);
+}
+
+/**
  * Creates a Supabase client for use in proxy
  * Handles cookies properly for Next.js proxy environment
  *
