@@ -248,7 +248,20 @@ function setSecurityHeaders(response: NextResponse): void {
  * - Detects and persists language preference via cookies
  */
 export async function proxy(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+  // ── CORS validation: reject disallowed cross-origin requests early ──
+  const requestOrigin = request.headers.get("origin");
+  if (!isAllowedOrigin(requestOrigin)) {
+    const forbiddenResponse = NextResponse.json(
+      { error: "Forbidden: origin not allowed" },
+      { status: 403 }
+    );
+    setSecurityHeaders(forbiddenResponse);
+    return forbiddenResponse;
+  }
+
+  // ── Sanitize pathname before any routing/auth logic ──
+  const rawPathname = request.nextUrl.pathname;
+  const pathname = sanitizeQueryParam(rawPathname);
 
   // Get the origin for proper URL construction
   const origin = request.nextUrl.origin;
@@ -294,7 +307,7 @@ export async function proxy(request: NextRequest) {
   // Redirect unauthenticated users from protected routes to login
   if (!user && (isWorkerRoute || isBusinessRoute)) {
     const redirectUrl = new URL("/login", origin);
-    redirectUrl.searchParams.set("redirect", pathname);
+    redirectUrl.searchParams.set("redirect", sanitizeQueryParam(pathname));
     const redirectResponse = NextResponse.redirect(redirectUrl);
     setSecurityHeaders(redirectResponse);
     return redirectResponse;
