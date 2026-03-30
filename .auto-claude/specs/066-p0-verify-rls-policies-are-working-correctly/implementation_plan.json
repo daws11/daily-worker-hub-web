@@ -3,7 +3,7 @@
   "workflow_type": "feature",
   "workflow_rationale": "Verification task for existing RLS policies — creates test tooling and documents findings. No new features are built. Workflow type is 'feature' because it builds a test script and runs it against the existing codebase.",
   "created_at": "2026-03-30T23:29:54.935Z",
-  "updated_at": "2026-03-30T15:44:25.832Z",
+  "updated_at": "2026-03-30T16:19:33.973Z",
   "status": "in_progress",
   "planStatus": "in_progress",
   "executionPhase": "coding",
@@ -66,8 +66,9 @@
             "command": "npx ts-node scripts/test-rls-policies.ts --help",
             "expected": "Prints usage instructions and exits with code 0"
           },
-          "notes": "Follow the env loading pattern (dotenv + .env.local), createClient usage, colors object, log() function, and exit codes from test-e2e-error-handling.ts exactly.",
-          "status": "pending"
+          "notes": "File already existed with full boilerplate. Fixed 4 TypeScript errors: (1) overlyPermissive scoping — moved declaration to function scope; (2) policyName typo → policy.policy_name; (3) import.meta removal → direct main() call; (4) tablename casing in byTable lookup. Verified: npx tsx scripts/test-rls-policies.ts --help exits 0.",
+          "status": "completed",
+          "updated_at": "2026-03-30T16:18:47.677047+00:00"
         },
         {
           "id": "subtask-2-2",
@@ -85,8 +86,8 @@
             "command": "npx ts-node scripts/test-rls-policies.ts --check-config",
             "expected": "Checks env vars and test account IDs, prints config status, exits 0 or 1"
           },
-          "notes": "Load test account IDs from env vars: TEST_WORKER_USER_ID, TEST_EMPLOYER_USER_ID, TEST_ADMIN_USER_ID, TEST_OTHER_WORKER_USER_ID, TEST_OTHER_EMPLOYER_USER_ID. Use supabase.auth.getSession() via admin user's JWT to get role-specific sessions.",
-          "status": "pending"
+          "notes": "Added: RoleLabel type, TestAccountEntry/AuthenticatedTestClient/TestAccountsConfig interfaces, loadTestAccounts(), retrieveAuthenticatedClient(), getAuthenticatedTestClients(). Updated checkConfig() to display test account IDs and attempt JWT retrieval via create_admin_user_session RPC or admin createSession. Updated printHelp() and exports. File encoded as UTF-8 with Unicode escape sequences for emoji/Unicode chars to avoid encoding issues.",
+          "status": "completed"
         },
         {
           "id": "subtask-2-3",
@@ -398,5 +399,6 @@
     "sequence": 0,
     "type": "PLANNING_COMPLETE",
     "timestamp": "2026-03-30T15:44:21.710806+00:00"
-  }
+  },
+  "last_updated": "2026-03-30T16:18:47.677059+00:00"
 }

@@ -33,7 +33,7 @@ const supabaseUrl =
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error("❌ Missing Supabase configuration");
+  console.error("\u274c Missing Supabase configuration");
   console.error("Required: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY");
   process.exit(1);
 }
@@ -67,6 +67,171 @@ function pad(str: string, width: number): string {
 }
 
 // =============================================================================
+// TEST ACCOUNTS CONFIGURATION
+// =============================================================================
+
+/** Role label for human-readable output. */
+type RoleLabel = "worker" | "employer" | "admin" | "other_worker" | "other_employer";
+
+interface TestAccountEntry {
+  /** Display label used in logs */
+  label: RoleLabel;
+  /** .env.local variable name holding the user ID UUID */
+  envVar: string;
+  /** Resolved user ID (null if env var is not set) */
+  userId: string | null;
+}
+
+interface TestAccountsConfig {
+  worker: TestAccountEntry;
+  employer: TestAccountEntry;
+  admin: TestAccountEntry;
+  otherWorker: TestAccountEntry;
+  otherEmployer: TestAccountEntry;
+}
+
+interface AuthenticatedTestClient {
+  /** Role label */
+  role: RoleLabel;
+  /** Authenticated client (subject to RLS) */
+  client: SupabaseClient;
+  /** Access token used for this client */
+  accessToken: string | null;
+}
+
+/**
+ * Loads test account user IDs from environment variables.
+ * Missing env vars are tolerated — those accounts are simply skipped in checks.
+ */
+function loadTestAccounts(): TestAccountsConfig {
+  return {
+    worker: {
+      label: "worker",
+      envVar: "TEST_WORKER_USER_ID",
+      userId: process.env.TEST_WORKER_USER_ID ?? null,
+    },
+    employer: {
+      label: "employer",
+      envVar: "TEST_EMPLOYER_USER_ID",
+      userId: process.env.TEST_EMPLOYER_USER_ID ?? null,
+    },
+    admin: {
+      label: "admin",
+      envVar: "TEST_ADMIN_USER_ID",
+      userId: process.env.TEST_ADMIN_USER_ID ?? null,
+    },
+    otherWorker: {
+      label: "other_worker",
+      envVar: "TEST_OTHER_WORKER_USER_ID",
+      userId: process.env.TEST_OTHER_WORKER_USER_ID ?? null,
+    },
+    otherEmployer: {
+      label: "other_employer",
+      envVar: "TEST_OTHER_EMPLOYER_USER_ID",
+      userId: process.env.TEST_OTHER_EMPLOYER_USER_ID ?? null,
+    },
+  };
+}
+
+/**
+ * Creates an authenticated Supabase client for a given user ID by obtaining
+ * a short-lived session via the admin API (service role). The resulting client
+ * is subject to RLS policies as that user.
+ *
+ * Returns null if the user cannot be found or the session cannot be created.
+ */
+async function retrieveAuthenticatedClient(
+  userId: string,
+  roleLabel: RoleLabel,
+): Promise<AuthenticatedTestClient | null> {
+  // create_admin_user_session is a Supabase RPC function that creates a session
+  // for the given user ID and returns { access_token, refresh_token }.
+  // Fall back to querying auth.users + manual JWT construction if the RPC
+  // is not available.
+  const { data: rpcData, error: rpcError } = await supabaseService.rpc(
+    "create_admin_user_session",
+    { target_user_id: userId },
+  );
+
+  if (!rpcError && rpcData?.access_token) {
+    const client = createClient(
+      supabaseUrl!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
+      {
+        global: { headers: { Authorization: `Bearer ${rpcData.access_token}` } },
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      },
+    );
+    return { role: roleLabel, client, accessToken: rpcData.access_token };
+  }
+
+  // Fallback: query auth.users directly and use admin createSession
+  const { data: userData, error: userError } = await supabaseService
+    .from("auth.users")
+    .select("id, email")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (userError || !userData) {
+    // auth.users may not be exposed via PostgREST; silently return null
+    return null;
+  }
+
+  const { data: sessionData, error: sessionError } =
+    await supabaseService.auth.admin.createSession(userId);
+
+  if (sessionError || !sessionData?.session) {
+    return null;
+  }
+
+  const { access_token } = sessionData.session;
+
+  const client = createClient(supabaseUrl!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "", {
+    global: { headers: { Authorization: `Bearer ${access_token}` } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  return { role: roleLabel, client, accessToken: access_token };
+}
+
+// Cached authenticated clients — populated once during --check-config
+let _cachedTestClients: AuthenticatedTestClient[] | null = null;
+
+/**
+ * Initialises and caches authenticated Supabase clients for every test account
+ * that has a user ID configured. Safe to call multiple times; subsequent calls
+ * return the cached result.
+ */
+async function getAuthenticatedTestClients(): Promise<AuthenticatedTestClient[]> {
+  if (_cachedTestClients !== null) return _cachedTestClients;
+
+  const config = loadTestAccounts();
+  const entries = [
+    config.worker,
+    config.employer,
+    config.admin,
+    config.otherWorker,
+    config.otherEmployer,
+  ];
+
+  _cachedTestClients = [];
+
+  for (const entry of entries) {
+    if (!entry.userId) continue; // not configured — skip
+
+    const client = await retrieveAuthenticatedClient(entry.userId, entry.label);
+    if (client) {
+      _cachedTestClients.push(client);
+    }
+  }
+
+  return _cachedTestClients;
+}
+
+// =============================================================================
 // HELPERS
 // =============================================================================
 
@@ -95,7 +260,7 @@ interface RlsPolicyRow {
 // =============================================================================
 
 async function runHealthCheck(): Promise<boolean> {
-  log("\n🔍 Running health check...", "cyan");
+  log("\n\ud83d\udd0d Running health check...", "cyan");
   // Query a known application table as a simple connectivity check
   const { data, error } = await supabaseService
     .from("users")
@@ -103,10 +268,10 @@ async function runHealthCheck(): Promise<boolean> {
     .limit(1)
     .maybeSingle();
   if (error) {
-    log(`   ❌ Health check failed: ${error.message}`, "red");
+    log(`   \u274c Health check failed: ${error.message}`, "red");
     return false;
   }
-  log(`   ✅ Connected to Supabase successfully`, "green");
+  log(`   \u2705 Connected to Supabase successfully`, "green");
   return true;
 }
 
@@ -117,7 +282,7 @@ async function auditRlsPolicies(): Promise<{
   exitCode: number;
 }> {
   log("\n" + "=".repeat(72), "cyan");
-  log("📋 RLS POLICY AUDIT — pg_tables & pg_policies", "cyan");
+  log("\ud83d\udccb RLS POLICY AUDIT \u2014 pg_tables & pg_policies", "cyan");
   log("=".repeat(72) + "\n", "cyan");
 
   // The audit migration (20260330000001_rls_audit_helper.sql) creates two
@@ -126,7 +291,7 @@ async function auditRlsPolicies(): Promise<{
 
   // 1. List all public tables and their RLS status
   log("1. All public tables (RLS status):", "magenta");
-  log("─".repeat(72), "magenta");
+  log("\u2500".repeat(72), "magenta");
 
   const { data: allTables, error: tablesError } = await supabaseService
     .from("rls_audit_tables")
@@ -137,24 +302,24 @@ async function auditRlsPolicies(): Promise<{
   if (tablesError) {
     if (tablesError.code === "PGRST204" || tablesError.message?.includes("not find the table")) {
       log("", "reset");
-      log("   ⚠️  Migration not yet applied!", "yellow");
-      log("   ─".repeat(72), "yellow");
+      log("   \u26a0\ufe0f Migration not yet applied!", "yellow");
+      log("   \u2500".repeat(72), "yellow");
       log("   The audit helper tables (rls_audit_tables, rls_audit_policies)", "yellow");
       log("   do not exist. Apply the migration first:", "yellow");
       log("", "yellow");
-      log("   Option 1 — Supabase Dashboard (recommended):", "yellow");
+      log("   Option 1 \u2014 Supabase Dashboard (recommended):", "yellow");
       log("   1. Open: https://supabase.com/dashboard/project/tqnlrqutnhxqbzfcmvpc/sql", "yellow");
       log("   2. Paste the contents of: supabase/migrations/20260330000001_rls_audit_helper.sql", "yellow");
       log("   3. Click Run", "yellow");
       log("", "yellow");
-      log("   Option 2 — Supabase CLI:", "yellow");
+      log("   Option 2 \u2014 Supabase CLI:", "yellow");
       log("   supabase db push --project-ref tqnlrqutnhxqbzfcmvpc", "yellow");
       log("   (requires: supabase link --project-ref tqnlrqutnhxqbzfcmvpc)", "yellow");
       log("", "yellow");
       log("   After applying, re-run: npx ts-node scripts/test-rls-policies.ts --audit-only", "yellow");
-      log("   ─".repeat(72), "yellow");
+      log("   \u2500".repeat(72), "yellow");
     } else {
-      log(`   ❌ Failed to query rls_audit_tables: ${tablesError.message}`, "red");
+      log(`   \u274c Failed to query rls_audit_tables: ${tablesError.message}`, "red");
     }
     return { tables: [], policies: [], overlyPermissive: [], exitCode: 1 };
   }
@@ -173,7 +338,7 @@ async function auditRlsPolicies(): Promise<{
       "blue",
     );
     log(
-      `   ${"─".repeat(colWidth)}-+-${"─".repeat(12)}-+-${"─".repeat(12)}`,
+      `   ${"\u2500".repeat(colWidth)}-+-${"\u2500".repeat(12)}-+-${"\u2500".repeat(12)}`,
       "blue",
     );
 
@@ -200,8 +365,8 @@ async function auditRlsPolicies(): Promise<{
       const isSensitive = sensitiveTables.includes(table.table_name);
 
       const nameColor = hasRls ? "green" : isSensitive ? "red" : "yellow";
-      const rlsStatus = hasRls ? "✅ YES" : isSensitive ? "❌ NO" : "⚠️  NO";
-      const policyStatus = policyCount > 0 ? `${policyCount} policy(ies)` : isSensitive ? "❌ NONE" : "⚠️  NONE";
+      const rlsStatus = hasRls ? "\u2705 YES" : isSensitive ? "\u274c NO" : "\u26a0\ufe0f NO";
+      const policyStatus = policyCount > 0 ? `${policyCount} policy(ies)` : isSensitive ? "\u274c NONE" : "\u26a0\ufe0f NONE";
 
       log(
         `   ${pad(table.table_name, colWidth)} | ${pad(rlsStatus, 14)} | ${policyStatus}`,
@@ -212,7 +377,7 @@ async function auditRlsPolicies(): Promise<{
 
   // 2. List all RLS policies
   log("\n2. RLS Policies (all):", "magenta");
-  log("─".repeat(72), "magenta");
+  log("\u2500".repeat(72), "magenta");
 
   const { data: allPolicies, error: policiesError } = await supabaseService
     .from("rls_audit_policies")
@@ -222,7 +387,7 @@ async function auditRlsPolicies(): Promise<{
     .order("policy_name") as { data: any[] | null; error: any };
 
   if (policiesError) {
-    log(`   ❌ Failed to query rls_audit_policies: ${policiesError.message}`, "red");
+    log(`   \u274c Failed to query rls_audit_policies: ${policiesError.message}`, "red");
     return { tables, policies: [], overlyPermissive: [], exitCode: 1 };
   }
 
@@ -249,7 +414,7 @@ async function auditRlsPolicies(): Promise<{
 
     for (const [tableName, tablePolicies] of Object.entries(byTable)) {
       const isSensitive = sensitiveTables.includes(tableName);
-      log(`\n   📦 ${tableName}${isSensitive ? " (sensitive)" : ""}:`, isSensitive ? "yellow" : "blue");
+      log(`\n   \ud83d\udce6 ${tableName}${isSensitive ? " (sensitive)" : ""}:`, isSensitive ? "yellow" : "blue");
 
       for (const policy of tablePolicies) {
         const cmd = pad(policy.cmd.toUpperCase(), 8);
@@ -271,7 +436,7 @@ async function auditRlsPolicies(): Promise<{
           overlyPermissive.push(`${tableName}.${policy.policy_name}`);
         }
 
-        const flag = isOverlyPermissive ? " 🚨 OVERLY PERMISSIVE" : "";
+        const flag = isOverlyPermissive ? " \ud83d\udea8 OVERLY PERMISSIVE" : "";
         const flagColor = isOverlyPermissive ? "red" : "reset";
 
         log(`      [${cmd}] ${pad(policy.policy_name, 35)} (${permissive})${flag}`, permColor);
@@ -286,7 +451,7 @@ async function auditRlsPolicies(): Promise<{
   }
 
   // 3. Summary
-  log("\n" + "─".repeat(72), "cyan");
+  log("\n" + "\u2500".repeat(72), "cyan");
   log("3. Audit Summary:", "magenta");
 
   const tablesWithRls = tables.filter((t) => t.row_security).length;
@@ -307,25 +472,25 @@ async function auditRlsPolicies(): Promise<{
   log(`   Tables with RLS enabled:     ${tablesWithRls}`, tablesWithRls > 0 ? "green" : "red");
   log(`   Tables WITHOUT RLS:          ${tablesWithoutRls}`, tablesWithoutRls > 0 ? "red" : "green");
   log(`   Total RLS policies:           ${totalPolicies}`, "blue");
-  log(`   🚨 Overly permissive policies: ${overlyPermCount}`, overlyPermCount > 0 ? "red" : "green");
+  log(`   \ud83d\udea8 Overly permissive policies: ${overlyPermCount}`, overlyPermCount > 0 ? "red" : "green");
 
   if (sensitiveWithoutRls.length > 0) {
-    log(`\n   ⚠️  SENSITIVE TABLES WITHOUT RLS:`, "red");
+    log(`\n   \u26a0\ufe0f SENSITIVE TABLES WITHOUT RLS:`, "red");
     for (const t of sensitiveWithoutRls) {
       const name = (t as any).table_name || (t as any).tablename;
       log(`      - ${name}`, "red");
     }
   } else {
-    log(`   ✅ All sensitive tables have RLS enabled`, "green");
+    log(`   \u2705 All sensitive tables have RLS enabled`, "green");
   }
 
   if (overlyPermissive.length > 0) {
-    log(`\n   🚨 OVERLY PERMISSIVE POLICIES (qual = 'true'):`, "red");
+    log(`\n   \ud83d\udea8 OVERLY PERMISSIVE POLICIES (qual = 'true'):`, "red");
     for (const p of overlyPermissive) {
       log(`      - ${p}`, "red");
     }
   } else {
-    log(`   ✅ No overly permissive policies found`, "green");
+    log(`   \u2705 No overly permissive policies found`, "green");
   }
 
   // Determine exit code
@@ -341,7 +506,7 @@ async function auditRlsPolicies(): Promise<{
 
 async function checkConfig(): Promise<number> {
   log("\n" + "=".repeat(72), "cyan");
-  log("⚙️  CONFIGURATION CHECK", "cyan");
+  log("\u2699\ufe0f CONFIGURATION CHECK", "cyan");
   log("=".repeat(72) + "\n", "cyan");
 
   let ok = true;
@@ -353,11 +518,6 @@ async function checkConfig(): Promise<number> {
   ];
   const optional = [
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    "TEST_WORKER_USER_ID",
-    "TEST_EMPLOYER_USER_ID",
-    "TEST_ADMIN_USER_ID",
-    "TEST_OTHER_WORKER_USER_ID",
-    "TEST_OTHER_EMPLOYER_USER_ID",
   ];
 
   log("Required environment variables:", "blue");
@@ -365,9 +525,9 @@ async function checkConfig(): Promise<number> {
     const val = process.env[key];
     if (val) {
       const masked = val.length > 8 ? `${val.slice(0, 4)}...${val.slice(-4)}` : "***";
-      log(`   ✅ ${key}: ${masked}`, "green");
+      log(`   \u2705 ${key}: ${masked}`, "green");
     } else {
-      log(`   ❌ ${key}: NOT SET`, "red");
+      log(`   \u274c ${key}: NOT SET`, "red");
       ok = false;
     }
   }
@@ -376,18 +536,64 @@ async function checkConfig(): Promise<number> {
   for (const key of optional) {
     const val = process.env[key];
     if (val) {
-      log(`   ✅ ${key}: ${val}`, "green");
+      const masked = val.length > 8 ? `${val.slice(0, 4)}...${val.slice(-4)}` : "***";
+      log(`   \u2705 ${key}: ${masked}`, "green");
     } else {
-      log(`   ⚠️  ${key}: not set (some tests may be skipped)`, "yellow");
+      log(`   \u26a0\ufe0f ${key}: not set (some tests may be skipped)`, "yellow");
+    }
+  }
+
+  // Test accounts: display user IDs and attempt JWT retrieval
+  log("\nTest account user IDs:", "blue");
+
+  const testAccounts = loadTestAccounts();
+  const entries = [
+    testAccounts.worker,
+    testAccounts.employer,
+    testAccounts.admin,
+    testAccounts.otherWorker,
+    testAccounts.otherEmployer,
+  ];
+
+  let configuredCount = 0;
+  let jwtSuccessCount = 0;
+
+  for (const entry of entries) {
+    if (entry.userId) {
+      configuredCount++;
+      log(`   \u2705 ${entry.envVar}: ${entry.userId}`, "green");
+
+      // Attempt to retrieve JWT for this account
+      const testClient = await retrieveAuthenticatedClient(entry.userId, entry.label);
+      if (testClient?.accessToken) {
+        const masked = `${testClient.accessToken.slice(0, 12)}...${testClient.accessToken.slice(-6)}`;
+        log(`      \ud83d\udd11 JWT obtained (${entry.label})`, "green");
+        log(`         Token: ${masked}`, "blue");
+        jwtSuccessCount++;
+      } else {
+        log(`      \u26a0\ufe0f Could not retrieve JWT for ${entry.label} \u2014 session creation failed or RPC not available`, "yellow");
+        log(`         (auth.users table may not be exposed via PostgREST)`, "yellow");
+      }
+    } else {
+      log(`   \u26a0\ufe0f ${entry.envVar}: not set (${entry.label} tests will be skipped)`, "yellow");
     }
   }
 
   if (!ok) {
-    log("\n❌ Configuration incomplete — missing required env vars", "red");
+    log("\n\u274c Configuration incomplete \u2014 missing required env vars", "red");
     return 1;
   }
 
-  log("\n✅ Configuration complete", "green");
+  log("\n" + "\u2500".repeat(72), "cyan");
+  if (configuredCount === 0) {
+    log("\u26a0\ufe0f No test account user IDs configured \u2014 set TEST_WORKER_USER_ID,", "yellow");
+    log("    TEST_EMPLOYER_USER_ID, TEST_ADMIN_USER_ID in .env.local", "yellow");
+    log("    RLS role tests will be skipped.", "yellow");
+  } else {
+    log(`   \u2705 ${configuredCount} test account(s) configured, ${jwtSuccessCount} JWT(s) obtained`, "green");
+  }
+
+  log("\n\u2705 Configuration check complete", "green");
   return 0;
 }
 
@@ -410,13 +616,13 @@ async function main(): Promise<void> {
   }
 
   if (mode === "--audit-only") {
-    log("=" .repeat(72), "magenta");
-    log("🔒 RLS Policy Audit — Phase 1 (pg_tables / pg_policies)", "magenta");
+    log("=".repeat(72), "magenta");
+    log("\ud83d\udd12 RLS Policy Audit \u2014 Phase 1 (pg_tables / pg_policies)", "magenta");
     log("=".repeat(72), "magenta");
 
     const healthy = await runHealthCheck();
     if (!healthy) {
-      log("❌ Cannot connect to Supabase. Check environment variables.", "red");
+      log("\u274c Cannot connect to Supabase. Check environment variables.", "red");
       process.exit(1);
     }
 
@@ -424,9 +630,9 @@ async function main(): Promise<void> {
 
     log("\n" + "=".repeat(72), "magenta");
     if (exitCode === 0) {
-      log("✅ Audit PASSED — No critical RLS issues found", "green");
+      log("\u2705 Audit PASSED \u2014 No critical RLS issues found", "green");
     } else {
-      log("❌ Audit FAILED — Issues found (see above)", "red");
+      log("\u274c Audit FAILED \u2014 Issues found (see above)", "red");
     }
     log("=".repeat(72), "magenta");
 
@@ -444,26 +650,40 @@ function printHelp(): void {
   log("Usage: npx ts-node scripts/test-rls-policies.ts [mode]", "blue");
   log("");
   log("Modes:", "blue");
-  log("  --audit-only   Query pg_tables & pg_policies — audit RLS status", "cyan");
-  log("  --check-config Check environment variables are set", "cyan");
-  log("  --help         Show this help message", "cyan");
+  log("  --check-config  Verify env vars, test account IDs, and retrieve JWTs for each role", "cyan");
+  log("  --audit-only    Query pg_tables & pg_policies \u2014 audit RLS status", "cyan");
+  log("  --help          Show this help message", "cyan");
   log("");
   log("Environment Variables Required:", "yellow");
-  log("  NEXT_PUBLIC_SUPABASE_URL", "yellow");
-  log("  SUPABASE_SERVICE_ROLE_KEY", "yellow");
+  log("  NEXT_PUBLIC_SUPABASE_URL       Supabase project URL", "yellow");
+  log("  SUPABASE_SERVICE_ROLE_KEY      Service role key (bypasses RLS)", "yellow");
   log("");
-  log("Optional Test Account IDs:", "yellow");
-  log("  TEST_WORKER_USER_ID", "yellow");
-  log("  TEST_EMPLOYER_USER_ID", "yellow");
-  log("  TEST_ADMIN_USER_ID", "yellow");
-  log("  TEST_OTHER_WORKER_USER_ID", "yellow");
-  log("  TEST_OTHER_EMPLOYER_USER_ID", "yellow");
+  log("Optional \u2014 Test Account User IDs (UUIDs from auth.users):", "yellow");
+  log("  TEST_WORKER_USER_ID        Primary test worker", "yellow");
+  log("  TEST_EMPLOYER_USER_ID       Primary test employer (business)", "yellow");
+  log("  TEST_ADMIN_USER_ID          Admin user (member of admin_users table)", "yellow");
+  log("  TEST_OTHER_WORKER_USER_ID   Second worker (cross-user isolation tests)", "yellow");
+  log("  TEST_OTHER_EMPLOYER_USER_ID Second employer (cross-business isolation tests)", "yellow");
+  log("");
+  log("JWT Retrieval:", "cyan");
+  log("  --check-config attempts to obtain short-lived JWTs for each configured", "cyan");
+  log("  test account via create_admin_user_session RPC or admin createSession.", "cyan");
+  log("  These tokens are cached and used to create RLS-aware authenticated clients", "cyan");
+  log("  for worker, employer, and admin role tests.", "cyan");
 }
 
 // CLI entry point
 main().catch((err) => {
-  log(`\n❌ Unexpected error: ${err instanceof Error ? err.message : String(err)}`, "red");
+  log(`\n\u274c Unexpected error: ${err instanceof Error ? err.message : String(err)}`, "red");
   process.exit(1);
 });
 
-export { auditRlsPolicies, checkConfig, runHealthCheck };
+export {
+  auditRlsPolicies,
+  checkConfig,
+  runHealthCheck,
+  loadTestAccounts,
+  retrieveAuthenticatedClient,
+  getAuthenticatedTestClients,
+};
+export type { TestAccountsConfig, AuthenticatedTestClient, RoleLabel };
