@@ -37,6 +37,49 @@ function isAllowedOrigin(origin: string | null): boolean {
 }
 
 /**
+ * Sanitizes an input string to neutralize XSS/injection payloads.
+ * Strips <script>, <iframe>, javascript:, data:, and other injection patterns.
+ * Designed for cookie names, query param keys, and HTTP header names.
+ * @param input - The raw input string to sanitize
+ * @returns Sanitized string safe for use in headers/cookies
+ */
+function sanitizeInput(input: string): string {
+  if (!input || typeof input !== "string") return "";
+
+  return input
+    // Remove HTML tags (script, iframe, style, object, embed, etc.)
+    .replace(/<[^>]*>/g, "")
+    // Remove javascript: pseudo-protocol
+    .replace(/javascript\s*:/gi, "")
+    // Remove data: URIs (common XSS vector)
+    .replace(/data\s*:/gi, "")
+    // Remove vbscript: pseudo-protocol
+    .replace(/vbscript\s*:/gi, "")
+    // Remove on* event handler attributes (e.g. onerror=, onclick=)
+    .replace(/\bon\w+\s*=/gi, "")
+    // Remove expression() (CSS expression attack)
+    .replace(/expression\s*\(/gi, "")
+    // Remove url() with javascript/data (CSS-based attack)
+    .replace(/url\s*\(\s*['"]?\s*(javascript|data|vbscript):/gi, "url(noop:")
+    .trim();
+}
+
+/**
+ * Sanitizes a query parameter value to neutralize injection payloads.
+ * Used for sanitizing incoming URL query parameters before use.
+ * @param value - The raw query param value to sanitize
+ * @returns Sanitized string safe for use in headers/logs/redirects
+ */
+function sanitizeQueryParam(value: string | string[] | null | undefined): string {
+  if (value == null) return "";
+
+  const str = Array.isArray(value) ? value[0] : value;
+  if (typeof str !== "string") return String(str);
+
+  return sanitizeInput(str);
+}
+
+/**
  * Creates a Supabase client for use in proxy
  * Handles cookies properly for Next.js proxy environment
  *
