@@ -198,6 +198,51 @@ const publicRoutes = [
 ];
 
 /**
+ * Sets all 6 OWASP-recommended security headers on a NextResponse.
+ * Designed to be called before returning the response to the client.
+ * @param response - The NextResponse to attach headers to
+ */
+function setSecurityHeaders(response: NextResponse): void {
+  // Prevent clickjacking attacks (blocks page from being rendered in iframe)
+  response.headers.set("X-Frame-Options", "DENY");
+
+  // Prevent MIME type sniffing vulnerabilities
+  response.headers.set("X-Content-Type-Options", "nosniff");
+
+  // Enforce HTTPS (HSTS) - 1 year max-age, include subdomains, require preload
+  response.headers.set(
+    "Strict-Transport-Security",
+    "max-age=31536000; includeSubDomains; preload"
+  );
+
+  // Control referrer information sent to other sites
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+
+  // Restrict browser features to prevent exploitation if XSS occurs
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), payment=()"
+  );
+
+  // Content Security Policy - mitigate XSS and injection attacks
+  response.headers.set(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "font-src 'self'",
+      "connect-src 'self'",
+      "frame-ancestors 'none'",
+      "form-action 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+    ].join("; ")
+  );
+}
+
+/**
  * Proxy to protect routes and handle locale detection
  * - Checks for Supabase session and redirects unauthenticated users
  * - Detects and persists language preference via cookies
@@ -238,6 +283,7 @@ export async function proxy(request: NextRequest) {
 
   // Allow public routes to proceed normally
   if (isPublicRoute) {
+    setSecurityHeaders(response);
     return response;
   }
 
@@ -249,7 +295,9 @@ export async function proxy(request: NextRequest) {
   if (!user && (isWorkerRoute || isBusinessRoute)) {
     const redirectUrl = new URL("/login", origin);
     redirectUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(redirectUrl);
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+    setSecurityHeaders(redirectResponse);
+    return redirectResponse;
   }
 
   // Check if user has completed onboarding for their role
@@ -285,7 +333,9 @@ export async function proxy(request: NextRequest) {
     if (userRole === "worker") {
       const hasCompletedOnboarding = await checkOnboardingCompleted(supabase, user.id, "worker");
       if (!hasCompletedOnboarding) {
-        return NextResponse.redirect(new URL("/onboarding", origin));
+        const redirectResponse = NextResponse.redirect(new URL("/onboarding", origin));
+        setSecurityHeaders(redirectResponse);
+        return redirectResponse;
       }
     }
   }
@@ -296,7 +346,9 @@ export async function proxy(request: NextRequest) {
     if (userRole === "business") {
       const hasCompletedOnboarding = await checkOnboardingCompleted(supabase, user.id, "business");
       if (!hasCompletedOnboarding) {
-        return NextResponse.redirect(new URL("/onboarding", origin));
+        const redirectResponse = NextResponse.redirect(new URL("/onboarding", origin));
+        setSecurityHeaders(redirectResponse);
+        return redirectResponse;
       }
     }
   }
@@ -307,13 +359,22 @@ export async function proxy(request: NextRequest) {
     user?.user_metadata?.role
   ) {
     if (user.user_metadata?.role === "worker") {
-      return NextResponse.redirect(new URL("/worker/jobs", origin));
+      const redirectResponse = NextResponse.redirect(new URL("/worker/jobs", origin));
+      setSecurityHeaders(redirectResponse);
+      return redirectResponse;
     } else if (user.user_metadata?.role === "business") {
-      return NextResponse.redirect(new URL("/onboarding", origin));
+      const redirectResponse = NextResponse.redirect(new URL("/onboarding", origin));
+      setSecurityHeaders(redirectResponse);
+      return redirectResponse;
     } else if (user.user_metadata?.role === "admin") {
-      return NextResponse.redirect(new URL("/admin", origin));
+      const redirectResponse = NextResponse.redirect(new URL("/admin", origin));
+      setSecurityHeaders(redirectResponse);
+      return redirectResponse;
     }
   }
+
+  // Apply security headers before responding
+  setSecurityHeaders(response);
 
   return response;
 }
