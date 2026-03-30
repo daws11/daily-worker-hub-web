@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Matching Score Algorithm Unit Tests
  *

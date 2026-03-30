@@ -7,31 +7,19 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-
-interface Booking {
-  id: string;
-  status: string;
-  start_date: string | null;
-  end_date: string | null;
-  final_price: number | null;
-  jobs?: {
-    id: string;
-    title: string;
-    address?: string | null;
-  }[] | null;
-  workers?: {
-    id: string;
-    full_name: string;
-    avatar_url?: string | null;
-  }[] | null;
-  businesses?: {
-    id: string;
-    name: string;
-  }[] | null;
-}
+import { Booking } from "@/lib/types/booking";
 
 interface UpcomingBookingsProps {
-  bookings: Booking[];
+  bookings: {
+    id: string;
+    status: string;
+    start_date: string | null;
+    end_date: string | null;
+    final_price: number | null;
+    jobs?: any;
+    workers?: any;
+    businesses?: any;
+  }[];
   role: "business" | "worker";
   isLoading?: boolean;
 }
@@ -142,7 +130,7 @@ function Avatar({ name, avatarUrl }: { name: string; avatarUrl?: string | null }
   );
 }
 
-function BookingCard({ booking, role }: { booking: Booking; role: "business" | "worker" }) {
+function BookingCard({ booking, role }: { booking: any; role: "business" | "worker" }) {
   const name =
     role === "business"
       ? booking.workers?.[0]?.full_name || "Pekerja"

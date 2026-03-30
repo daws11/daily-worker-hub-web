@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "../supabase/server";
-import type { Database } from "../supabase/types";
+import type { Database, Json } from "../supabase/types";
 import type {
   BusinessSocialConnection,
   BusinessSocialConnectionWithPlatform,
@@ -127,8 +127,8 @@ export async function connectSocialPlatform(
       platform_account_name: input.platform_account_name || null,
       platform_account_url: input.platform_account_url || null,
       status: "active",
-      auto_post_enabled: input.settings?.autoPostEnabled ?? null,
-      metadata: input.settings ? { ...input.settings } : null,
+      auto_post_enabled: Boolean(input.settings?.autoPostEnabled) || null,
+      metadata: (input.settings ? { ...input.settings } : null) as Json,
     };
 
     const { data, error } = await (supabase as any)

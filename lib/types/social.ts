@@ -83,6 +83,9 @@ export interface CreateConnectionInput {
   platform_account_id?: string;
   platform_account_name?: string;
   platform_account_url?: string;
+  platform_page_id?: string;
+  scopes?: string[];
+  settings?: Record<string, unknown>;
   auto_post_enabled?: boolean;
   is_default?: boolean;
   webhook_enabled?: boolean;

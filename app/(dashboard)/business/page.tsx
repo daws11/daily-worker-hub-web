@@ -24,12 +24,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+// Local Booking type for dashboard - matches Supabase query result shape
 interface Booking {
   id: string;
-  status: string;
-  start_date: string | null;
-  end_date: string | null;
-  final_price: number | null;
+  status: "cancelled" | "pending" | "accepted" | "rejected" | "in_progress" | "completed" | "no_show";
+  start_date: string;
+  end_date: string;
+  final_price: number;
   jobs?: {
     id: string;
     title: string;

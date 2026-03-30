@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "@/app/providers/auth-provider";
 import { getBadges, getWorkersByBadge } from "@/lib/supabase/queries/badges";
-import { getWorkerScoreTrend } from "@/lib/supabase/queries/reliability-score";
+import { getScoreHistory } from "@/lib/supabase/queries/reliability-score";
 import type { BadgesRow } from "@/lib/supabase/queries/badges";
 import { BadgeFilterSelect } from "@/components/badge/badge-filter-select";
 import { SkillBadgeChip } from "@/components/badge/skill-badge-display";
@@ -201,10 +201,19 @@ export default function BusinessWorkersPage() {
           workersWithBadges.map(async (worker) => {
             if (worker.reliability_score !== undefined && worker.reliability_score !== null) {
               try {
-                const trendResult = await getWorkerScoreTrend(worker.id);
+                const history = await getScoreHistory(worker.id, 2);
+                let trend: TrendDirection = "stable";
+                if (history && history.length >= 2) {
+                  const latest = history[0]?.new_score ?? 0;
+                  const previous = history[1]?.new_score ?? 0;
+                  if (latest > previous + 5) trend = "improving";
+                  else if (latest < previous - 5) trend = "declining";
+                } else {
+                  trend = "insufficient_data";
+                }
                 return {
                   ...worker,
-                  reliability_trend: (trendResult?.trend ?? "insufficient_data") as TrendDirection,
+                  reliability_trend: trend,
                 };
               } catch {
                 return { ...worker, reliability_trend: "insufficient_data" as TrendDirection };

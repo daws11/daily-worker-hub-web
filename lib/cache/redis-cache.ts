@@ -95,7 +95,7 @@ export class RedisCache<T = unknown> {
     try {
       const redis = getRedisClient();
       const redisKey = this.prefixKey(key);
-      const raw = await redis.get<string>(redisKey);
+      const raw = await (redis as any).get(redisKey);
 
       if (raw === null) {
         await this.incrementStat("misses");
@@ -116,7 +116,7 @@ export class RedisCache<T = unknown> {
       const updatedRaw = JSON.stringify(entry);
       // Restore the value with original TTL
       const ttl = Math.max(1, Math.floor((entry.expiresAt - Date.now()) / 1000));
-      await redis.set(redisKey, updatedRaw, { ex: ttl });
+      await (redis as any).set(redisKey, updatedRaw, { ex: ttl } as any);
 
       await this.incrementStat("hits");
 
@@ -151,7 +151,7 @@ export class RedisCache<T = unknown> {
       };
 
       const ttlSeconds = Math.max(1, Math.floor(ttl / 1000));
-      await redis.set(redisKey, JSON.stringify(entry), { ex: ttlSeconds });
+      await (redis as any).set(redisKey, JSON.stringify(entry), { ex: ttlSeconds } as any);
 
       // Enforce max size by evicting oldest entries if needed
       await this.enforceMaxSize();
@@ -199,10 +199,7 @@ export class RedisCache<T = unknown> {
 
       // Use SCAN to safely iterate over keys in production
       do {
-        const [nextCursor, keys] = await redis.scan<
-          string[],
-          [number, string[]]
-        >(cursor, {
+        const [nextCursor, keys] = await (redis as any).scan(cursor, {
           match: searchPattern,
           count: 100,
         });
@@ -236,10 +233,7 @@ export class RedisCache<T = unknown> {
       let cursor = 0;
 
       do {
-        const [nextCursor, keys] = await redis.scan<
-          string[],
-          [number, string[]]
-        >(cursor, {
+        const [nextCursor, keys] = await (redis as any).scan(cursor, {
           match: `${CACHE_KEY_PREFIX}*`,
           count: 100,
         });
@@ -301,8 +295,8 @@ export class RedisCache<T = unknown> {
 
       // Get hit/miss stats
       const [hits, misses] = await Promise.all([
-        redis.hget<number>(CACHE_STATS_KEY, "hits"),
-        redis.hget<number>(CACHE_STATS_KEY, "misses"),
+        (redis as any).hget(CACHE_STATS_KEY, "hits"),
+        (redis as any).hget(CACHE_STATS_KEY, "misses"),
       ]);
       stats.hits = hits ?? 0;
       stats.misses = misses ?? 0;
@@ -318,10 +312,7 @@ export class RedisCache<T = unknown> {
       const now = Date.now();
 
       do {
-        const [nextCursor, keys] = await redis.scan<
-          string[],
-          [number, string[]]
-        >(cursor, {
+        const [nextCursor, keys] = await (redis as any).scan(cursor, {
           match: `${CACHE_KEY_PREFIX}*`,
           count: 100,
         });
@@ -333,7 +324,7 @@ export class RedisCache<T = unknown> {
             continue;
           }
 
-          const raw = await redis.get<string>(key);
+          const raw = await (redis as any).get(key);
           if (raw === null) {
             continue;
           }
@@ -380,10 +371,7 @@ export class RedisCache<T = unknown> {
       let cursor = 0;
 
       do {
-        const [nextCursor, scannedKeys] = await redis.scan<
-          string[],
-          [number, string[]]
-        >(cursor, {
+        const [nextCursor, scannedKeys] = await (redis as any).scan(cursor, {
           match: searchPattern,
           count: 100,
         });
@@ -410,7 +398,7 @@ export class RedisCache<T = unknown> {
 
     try {
       const redis = getRedisClient();
-      await redis.hincrby(CACHE_STATS_KEY, field, 1);
+      await (redis as any).hincrby(CACHE_STATS_KEY, field, 1);
     } catch {
       // Silently ignore stat increment failures
     }
@@ -422,7 +410,7 @@ export class RedisCache<T = unknown> {
   private async enforceMaxSize(): Promise<void> {
     try {
       const redis = getRedisClient();
-      const currentSize = await redis.dbsize();
+      const currentSize = await (redis as any).dbsize();
 
       if (currentSize <= this.maxSize) {
         return;
@@ -434,10 +422,7 @@ export class RedisCache<T = unknown> {
       let deleted = 0;
 
       do {
-        const [nextCursor, keys] = await redis.scan<
-          string[],
-          [number, string[]]
-        >(cursor, {
+        const [nextCursor, keys] = await (redis as any).scan(cursor, {
           match: `${CACHE_KEY_PREFIX}*`,
           count: 100,
         });

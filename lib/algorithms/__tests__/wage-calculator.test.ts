@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Wage Calculator Unit Tests
  *

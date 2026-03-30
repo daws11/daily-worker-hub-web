@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       requestId,
     });
 
-    return new (await import("next/server")).NextResponse.json({ success: true });
+    return (await import("next/server")).NextResponse.json({ success: true });
   } catch (error) {
     routeLogger.error("Unexpected error in POST /api/auth/create-profile", error, {
       requestId,
