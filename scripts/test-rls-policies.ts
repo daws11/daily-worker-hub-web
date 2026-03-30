@@ -924,6 +924,229 @@ function printRoleTestSuiteResult(result: RoleTestSuiteResult): void {
 }
 
 // =============================================================================
+// EMPLOYER ROLE RLS TESTS
+// =============================================================================
+
+/**
+ * Runs the employer role RLS test suite.
+ *
+ * Tests:
+ *   1. Employer SELECT own jobs      — should return rows (businesses.user_id = auth.uid())
+ *   2. Cross-employer blocking       — jobs belonging to other businesses must not appear
+ *   3. Own bookings on own jobs       — employer can see bookings made on their own jobs
+ *
+ * Baseline counts are obtained via the service-role client (RLS bypassed) so
+ * the test can distinguish "RLS filtered correctly" from "no data exists".
+ */
+async function runEmployerRoleTests(): Promise<RoleTestSuiteResult> {
+  const tests: RlsTestCase[] = [];
+  let passedCount = 0;
+  let failedCount = 0;
+
+  // ── Load authenticated employer client ─────────────────────────────────────
+  const testAccounts = loadTestAccounts();
+  const employerAccount = testAccounts.employer;
+
+  if (!employerAccount.userId) {
+    log("\n\u274c TEST_EMPLOYER_USER_ID is not set \u2014 employer role tests skipped.", "red");
+    log("   Set TEST_EMPLOYER_USER_ID in .env.local to run employer RLS tests.", "yellow");
+    return {
+      role: "employer",
+      tests: [],
+      passedCount: 0,
+      failedCount: 0,
+      exitCode: 1,
+    };
+  }
+
+  const employerClient = await retrieveAuthenticatedClient(
+    employerAccount.userId,
+    employerAccount.label,
+  );
+
+  if (!employerClient?.client) {
+    log("\n\u274c Could not create authenticated employer client \u2014 session creation failed.", "red");
+    log("   Employer role tests skipped.", "yellow");
+    return {
+      role: "employer",
+      tests: [],
+      passedCount: 0,
+      failedCount: 0,
+      exitCode: 1,
+    };
+  }
+
+  const otherEmployerAccount = testAccounts.otherEmployer;
+
+  // ── Resolve business IDs via service role ─────────────────────────────────
+  const businessId = await resolveBusinessId(employerAccount.userId);
+  const otherBusinessId = otherEmployerAccount.userId
+    ? await resolveBusinessId(otherEmployerAccount.userId)
+    : null;
+
+  if (!businessId) {
+    log("\n\u274c No business record found for TEST_EMPLOYER_USER_ID.", "red");
+    log("   Ensure the user has a corresponding entry in the businesses table", "yellow");
+    log("   with user_id = TEST_EMPLOYER_USER_ID.", "yellow");
+    return {
+      role: "employer",
+      tests: [],
+      passedCount: 0,
+      failedCount: 0,
+      exitCode: 1,
+    };
+  }
+
+  // ── TEST 1: Employer SELECT own jobs ─────────────────────────────────────
+  {
+    const label = "Employer SELECT own jobs";
+
+    // Service-role baseline — how many jobs does this business have?
+    const { data: serviceData, error: serviceError } = await supabaseService
+      .from("jobs")
+      .select("id, business_id")
+      .eq("business_id", businessId) as { data: any[] | null; error: any };
+
+    const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+    // Authenticated (RLS-bound) query — should return same jobs via business.user_id = auth.uid()
+    const { data: rlsData, error: rlsError } = await employerClient.client
+      .from("jobs")
+      .select("id, business_id")
+      .eq("business_id", businessId) as { data: any[] | null; error: any };
+
+    const rlsCount = rlsError ? -1 : (rlsData?.length ?? 0);
+
+    const passed = !rlsError && rlsCount === serviceCount && rlsCount > 0;
+    if (passed) passedCount++;
+    else failedCount++;
+
+    tests.push({
+      description: label,
+      result: {
+        passed,
+        count: rlsCount,
+        error: rlsError ? rlsError.message : null,
+      },
+      expected: "pass",
+      details:
+        serviceCount > 0
+          ? `service=${serviceCount}, rls=${rlsCount} \u2014 ${rlsCount === serviceCount ? "match" : "MISMATCH"}`
+          : `No jobs exist for business_id=${businessId} (service count=0)`,
+    });
+  }
+
+  // ── TEST 2: Cross-employer blocking ───────────────────────────────────────
+  {
+    const label = "Cross-employer blocking";
+
+    if (otherBusinessId) {
+      // Service-role: how many jobs does the OTHER business have?
+      const { data: serviceData, error: serviceError } = await supabaseService
+        .from("jobs")
+        .select("id, business_id")
+        .eq("business_id", otherBusinessId) as { data: any[] | null; error: any };
+
+      const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+      // Authenticated as employer1: query the other business's jobs
+      const { data: rlsData, error: rlsError } = await employerClient.client
+        .from("jobs")
+        .select("id, business_id")
+        .eq("business_id", otherBusinessId) as { data: any[] | null; error: any };
+
+      const rlsCount = rlsError ? -1 : (rlsData?.length ?? 0);
+
+      // Pass if RLS count is 0 (correctly blocked) OR service count is 0 (no cross-business data)
+      const passed = !rlsError && rlsCount === 0;
+      if (passed) passedCount++;
+      else failedCount++;
+
+      tests.push({
+        description: label,
+        result: {
+          passed,
+          count: rlsCount,
+          error: rlsError ? rlsError.message : null,
+        },
+        expected: "pass",
+        details:
+          serviceCount > 0
+            ? `service=${serviceCount}, rls=${rlsCount} \u2014 ${rlsCount === 0 ? "BLOCKED \u2705" : "LEAKED \u274c"}`
+            : `No cross-business jobs exist (service count=0) \u2014 test inconclusive`,
+      });
+    } else {
+      // Cannot run cross-employer test without other employer data
+      tests.push({
+        description: label,
+        result: { passed: false, count: -1, error: "TEST_OTHER_EMPLOYER_USER_ID not set" },
+        expected: "pass",
+        details: "Skipped \u2014 TEST_OTHER_EMPLOYER_USER_ID not configured",
+      });
+      failedCount++;
+    }
+  }
+
+  // ── TEST 3: Own bookings on own jobs ────────────────────────────────────────
+  {
+    const label = "Employer sees own bookings on own jobs";
+
+    if (!businessId) {
+      tests.push({
+        description: label,
+        result: { passed: false, count: -1, error: "No business_id resolved" },
+        expected: "pass",
+        details: "Skipped \u2014 employer has no business record",
+      });
+      failedCount++;
+    } else {
+      // Service-role: how many bookings exist for this business's jobs?
+      // bookings table has business_id (and job_id → jobs → business_id)
+      const { data: serviceData, error: serviceError } = await supabaseService
+        .from("bookings")
+        .select("id, business_id, job_id")
+        .eq("business_id", businessId) as { data: any[] | null; error: any };
+
+      const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+      // Authenticated (RLS-bound) query — employer should see bookings on their own jobs
+      const { data: rlsData, error: rlsError } = await employerClient.client
+        .from("bookings")
+        .select("id, business_id, job_id")
+        .eq("business_id", businessId) as { data: any[] | null; error: any };
+
+      const rlsCount = rlsError ? -1 : (rlsData?.length ?? 0);
+
+      const passed = !rlsError && rlsCount === serviceCount && rlsCount > 0;
+      if (passed) passedCount++;
+      else failedCount++;
+
+      tests.push({
+        description: label,
+        result: {
+          passed,
+          count: rlsCount,
+          error: rlsError ? rlsError.message : null,
+        },
+        expected: "pass",
+        details:
+          serviceCount > 0
+            ? `service=${serviceCount}, rls=${rlsCount} \u2014 ${rlsCount === serviceCount ? "match" : "MISMATCH"}`
+            : `No bookings exist for business_id=${businessId} (service count=0)`,
+      });
+    }
+  }
+
+  return {
+    role: "employer",
+    tests,
+    passedCount,
+    failedCount,
+    exitCode: failedCount > 0 ? 1 : 0,
+  };
+}
+
+// =============================================================================
 // MAIN
 // =============================================================================
 
@@ -989,6 +1212,27 @@ async function main(): Promise<void> {
     process.exit(result.exitCode);
   }
 
+  if (roleMode === "employer") {
+    const healthy = await runHealthCheck();
+    if (!healthy) {
+      log("\u274c Cannot connect to Supabase. Check environment variables.", "red");
+      process.exit(1);
+    }
+
+    const result = await runEmployerRoleTests();
+    printRoleTestSuiteResult(result);
+
+    log("\n" + "=".repeat(72), "cyan");
+    if (result.exitCode === 0) {
+      log("\u2705 Employer RLS tests PASSED", "green");
+    } else {
+      log("\u274c Employer RLS tests FAILED", "red");
+    }
+    log("=".repeat(72), "cyan");
+
+    process.exit(result.exitCode);
+  }
+
   // Default: print help
   printHelp();
   process.exit(0);
@@ -1004,6 +1248,8 @@ function printHelp(): void {
   log("  --audit-only    Query pg_tables & pg_policies \u2014 audit RLS status", "cyan");
   log("  --role=worker   Run worker role RLS tests (own bookings SELECT, cross-worker", "cyan");
   log("                  blocking, wallet_transactions access)", "cyan");
+  log("  --role=employer Run employer role RLS tests (own jobs SELECT, cross-employer", "cyan");
+  log("                  blocking, own bookings on own jobs)", "cyan");
   log("  --help          Show this help message", "cyan");
   log("");
   log("Environment Variables Required:", "yellow");
@@ -1038,6 +1284,7 @@ export {
   retrieveAuthenticatedClient,
   getAuthenticatedTestClients,
   runWorkerRoleTests,
+  runEmployerRoleTests,
   printRoleTestSuiteResult,
 };
 export type {
