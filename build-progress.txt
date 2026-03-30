@@ -185,3 +185,29 @@ supabase projects list -o json | jq '.[] | select(.name == "daily-worker-hub-pro
 ```
 
 === END SESSION 1 ===
+
+Session 2 (2026-03-31) - subtask-1-2:
+- Task: Capture production project API keys from dashboard
+- BLOCKER: Depends on subtask-1-1 (production project creation)
+- subtask-1-1 is still in_progress/blocked:
+  * Sandbox network restriction blocks api.supabase.com (403 Forbidden)
+  * SUPABASE_ACCESS_TOKEN is empty (length=0)
+  * User must create project manually at https://supabase.com/dashboard
+- Investigation performed:
+  * Supabase CLI confirmed available (version 2.67.1)
+  * supabase projects list → "Forbidden" (no valid token)
+  * No SUPABASE_ACCESS_TOKEN in shell environment
+  * No production credentials found in any .env or shell profile files
+  * No production project reference found anywhere in project files
+- Current state: subtask-1-2 is BLOCKED pending subtask-1-1 completion
+- What needs to happen:
+  1. User creates production Supabase project manually (dashboard)
+  2. User captures 3 values from Settings → API page:
+     - Project URL (NEXT_PUBLIC_SUPABASE_URL)
+     - anon/public key (NEXT_PUBLIC_SUPABASE_ANON_KEY)
+     - service_role key (SUPABASE_SERVICE_ROLE_KEY)
+  3. User provides production project reference to proceed with next phases
+- implementation_plan.json updated: subtask-1-2 notes now document blocker status
+- Status: PENDING (depends on subtask-1-1)
+
+=== END SESSION 2 ===
