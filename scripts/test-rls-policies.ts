@@ -228,18 +228,19 @@ async function auditRlsPolicies(): Promise<{
 
   const policies = (allPolicies || []) as RlsPolicyRow[];
 
+  const overlyPermissive: string[] = [];
+
   if (policies.length === 0) {
     log("   No RLS policies found in public schema.", "yellow");
   } else {
     // Group by table
     const byTable: Record<string, RlsPolicyRow[]> = {};
     for (const p of policies) {
-      const tableName = (p as any).table_name || p.tablename;
+      const tableName = (p as any).table_name || (p as any).tablename;
       if (!byTable[tableName]) byTable[tableName] = [];
       byTable[tableName].push(p);
     }
 
-    let overlyPermissive: string[] = [];
     const sensitiveTables = [
       "bookings", "jobs", "workers", "businesses", "users",
       "wallet_transactions", "reviews", "disputes", "applications",
@@ -273,7 +274,7 @@ async function auditRlsPolicies(): Promise<{
         const flag = isOverlyPermissive ? " 🚨 OVERLY PERMISSIVE" : "";
         const flagColor = isOverlyPermissive ? "red" : "reset";
 
-        log(`      [${cmd}] ${pad(policyName, 35)} (${permissive})${flag}`, permColor);
+        log(`      [${cmd}] ${pad(policy.policy_name, 35)} (${permissive})${flag}`, permColor);
         if (qual !== "(none)") {
           log(`         USING:    ${qual.length > 80 ? qual.slice(0, 77) + "..." : qual}`, flagColor);
         }
@@ -460,11 +461,9 @@ function printHelp(): void {
 }
 
 // CLI entry point
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch((err) => {
-    log(`\n❌ Unexpected error: ${err instanceof Error ? err.message : String(err)}`, "red");
-    process.exit(1);
-  });
-}
+main().catch((err) => {
+  log(`\n❌ Unexpected error: ${err instanceof Error ? err.message : String(err)}`, "red");
+  process.exit(1);
+});
 
 export { auditRlsPolicies, checkConfig, runHealthCheck };
