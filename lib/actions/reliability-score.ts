@@ -12,6 +12,7 @@ import type {
   ReliabilityScoreBreakdown,
   ReliabilityScoreHistoryRow,
 } from "../supabase/queries/reliability-score";
+import type { TrendDirection } from "@/components/worker/trend-indicator";
 
 type Worker = Database["public"]["Tables"]["workers"]["Row"];
 
