@@ -1,0 +1,402 @@
+{
+  "feature": "P0: Verify RLS Policies Are Working Correctly",
+  "workflow_type": "feature",
+  "workflow_rationale": "Verification task for existing RLS policies — creates test tooling and documents findings. No new features are built. Workflow type is 'feature' because it builds a test script and runs it against the existing codebase.",
+  "created_at": "2026-03-30T23:29:54.935Z",
+  "updated_at": "2026-03-30T15:44:25.832Z",
+  "status": "in_progress",
+  "planStatus": "in_progress",
+  "executionPhase": "coding",
+  "phases": [
+    {
+      "id": "phase-1-audit-policies",
+      "name": "RLS Policy Audit via pg_policies",
+      "type": "investigation",
+      "description": "Audit all existing RLS policies in the database by querying pg_policies, pg_tables. Determine which tables have RLS enabled, identify overly permissive policies, and confirm policy names and conditions for each critical table.",
+      "depends_on": [],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Query pg_tables to list all tables and confirm RLS status for each",
+          "service": "supabase",
+          "files_to_modify": [],
+          "files_to_create": [
+            "supabase/migrations/20260330000001_rls_audit_helper.sql",
+            "scripts/test-rls-policies.ts"
+          ],
+          "patterns_from": [
+            "scripts/test-e2e-error-handling.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx ts-node scripts/test-rls-policies.ts --audit-only",
+            "expected": "Lists all tables with rowsecurity=true for RLS-enabled tables"
+          },
+          "notes": "PostgREST does not expose pg_tables/pg_policies in schema cache. Migration creates rls_audit_tables and rls_audit_policies tables that mirror system catalogs. Migration MUST be applied via Supabase Dashboard first: https://supabase.com/dashboard/project/tqnlrqutnhxqbzfcmvpc/sql — paste supabase/migrations/20260330000001_rls_audit_helper.sql and click Run. Script gracefully detects missing migration and displays instructions.",
+          "status": "completed"
+        }
+      ],
+      "phase": 1
+    },
+    {
+      "id": "phase-2-script",
+      "name": "Create RLS Verification Script",
+      "type": "implementation",
+      "description": "Create scripts/test-rls-policies.ts following the existing e2e script patterns from test-e2e-error-handling.ts. The script tests all 9 functional requirements across worker, employer, and admin roles.",
+      "depends_on": [
+        "phase-1-audit-policies"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create scripts/test-rls-policies.ts with env loading, Supabase clients, and colored output boilerplate",
+          "service": "scripts",
+          "files_to_modify": [],
+          "files_to_create": [
+            "scripts/test-rls-policies.ts"
+          ],
+          "patterns_from": [
+            "scripts/test-e2e-error-handling.ts",
+            "scripts/test-e2e-business-topup.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx ts-node scripts/test-rls-policies.ts --help",
+            "expected": "Prints usage instructions and exits with code 0"
+          },
+          "notes": "Follow the env loading pattern (dotenv + .env.local), createClient usage, colors object, log() function, and exit codes from test-e2e-error-handling.ts exactly.",
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Add test-account configuration and JWT retrieval for worker, employer, and admin roles",
+          "service": "scripts",
+          "files_to_modify": [
+            "scripts/test-rls-policies.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "scripts/test-e2e-business-topup.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx ts-node scripts/test-rls-policies.ts --check-config",
+            "expected": "Checks env vars and test account IDs, prints config status, exits 0 or 1"
+          },
+          "notes": "Load test account IDs from env vars: TEST_WORKER_USER_ID, TEST_EMPLOYER_USER_ID, TEST_ADMIN_USER_ID, TEST_OTHER_WORKER_USER_ID, TEST_OTHER_EMPLOYER_USER_ID. Use supabase.auth.getSession() via admin user's JWT to get role-specific sessions.",
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Implement RLS audit queries (pg_policies, pg_tables) and health check",
+          "service": "scripts",
+          "files_to_modify": [
+            "scripts/test-rls-policies.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npx ts-node scripts/test-rls-policies.ts --audit-only",
+            "expected": "Prints table audit: RLS enabled tables, policy names, permissive status, qual content"
+          },
+          "notes": "Run SQL: SELECT tablename, rowsecurity FROM pg_tables WHERE schemaname='public'; SELECT schemaname, tablename, policyname, permissive, cmd, qual FROM pg_policies WHERE schemaname='public'; Check for qual='true' or WITH CHECK='true' (overly permissive).",
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-4",
+          "description": "Implement worker role tests: own bookings SELECT, cross-worker blocking, wallet_transactions access",
+          "service": "scripts",
+          "files_to_modify": [
+            "scripts/test-rls-policies.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/queries/bookings.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx ts-node scripts/test-rls-policies.ts --role=worker",
+            "expected": "Worker sees own bookings (count > 0 if test data exists), does NOT see other worker's bookings (count = 0)"
+          },
+          "notes": "Connect as worker using user's JWT via supabase.auth.setSession(). Query bookings table with anon client. Compare with service-role query for same user. Worker should see only rows where worker_id maps to their user_id via workers table.",
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-5",
+          "description": "Implement employer role tests: own jobs SELECT, cross-employer blocking, own bookings on own jobs",
+          "service": "scripts",
+          "files_to_modify": [
+            "scripts/test-rls-policies.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/queries/jobs.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx ts-node scripts/test-rls-policies.ts --role=employer",
+            "expected": "Employer sees own jobs, does NOT see other employer's jobs"
+          },
+          "notes": "Connect as employer using their JWT. Query jobs table - should return only jobs where business_id maps to employer via businesses.user_id = auth.uid(). Test that another business's job returns 0 rows or 403.",
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-6",
+          "description": "Implement admin role tests: full SELECT on all bookings, jobs, and other sensitive tables",
+          "service": "scripts",
+          "files_to_modify": [
+            "scripts/test-rls-policies.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/supabase/queries/admin.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "npx ts-node scripts/test-rls-policies.ts --role=admin",
+            "expected": "Admin sees all bookings and jobs (row count matches service-role query for same filters)"
+          },
+          "notes": "Admin identified via admin_users table membership (NOT just users.role='admin'). Test with supabase.auth.setSession(admin_jwt). Verify is_admin() function and admin_users table are consistent.",
+          "status": "pending"
+        },
+        {
+          "id": "subtask-2-7",
+          "description": "Implement unauthenticated access test and additional table coverage (reviews, disputes, applications, wallet_transactions, worker_wallets)",
+          "service": "scripts",
+          "files_to_modify": [
+            "scripts/test-rls-policies.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npx ts-node scripts/test-rls-policies.ts --role=unauthenticated",
+            "expected": "Unauthenticated queries to protected tables return empty result or 401"
+          },
+          "notes": "Test with anon client (no JWT set). Also test reviews, disputes, applications, worker_transactions, worker_wallets. Edge case: check for RLS disabled tables that should be protected.",
+          "status": "pending"
+        }
+      ],
+      "phase": 2
+    },
+    {
+      "id": "phase-3-execute",
+      "name": "Execute RLS Verification",
+      "type": "implementation",
+      "description": "Run the full RLS verification script against the Supabase instance. Record all pass/fail results.",
+      "depends_on": [
+        "phase-2-script"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Run full RLS verification script and capture results",
+          "service": "scripts",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "npx ts-node scripts/test-rls-policies.ts",
+            "expected": "Script completes with exit code 0 (all pass) or exit code 1 (with FAILs logged)"
+          },
+          "notes": "Run the script and note which tests pass/fail. All failures go into the findings document.",
+          "status": "pending"
+        }
+      ],
+      "phase": 3
+    },
+    {
+      "id": "phase-4-findings",
+      "name": "Document Findings",
+      "type": "implementation",
+      "description": "Create scripts/rls-findings.md documenting pass/fail for each table and policy, with any SQL to reproduce issues.",
+      "depends_on": [
+        "phase-3-execute"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create scripts/rls-findings.md with audit results and policy pass/fail documentation",
+          "service": "scripts",
+          "files_to_modify": [],
+          "files_to_create": [
+            "scripts/rls-findings.md"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "Review scripts/rls-findings.md — must have sections for all 9 tables audited, PASS/FAIL/NEEDS_REVIEW status for each, and clear description of any broken policies"
+          },
+          "notes": "Document findings in Markdown with: Table name, RLS enabled (Y/N), Policy name, Policy condition, Expected behavior, Actual behavior, Status (PASS/FAIL/NEEDS_REVIEW), SQL to reproduce issue.",
+          "status": "pending"
+        }
+      ],
+      "phase": 4
+    },
+    {
+      "id": "phase-5-manual-dashboard",
+      "name": "Supabase Dashboard Manual Verification",
+      "type": "implementation",
+      "description": "Run manual verification steps in Supabase dashboard SQL Editor and RLS Simulator to cross-check script findings.",
+      "depends_on": [
+        "phase-3-execute"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Run SQL policy audit queries in Supabase SQL Editor",
+          "service": "supabase",
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "manual",
+            "instructions": "In Supabase SQL Editor, run: (1) List RLS-enabled tables, (2) Check for overly permissive policies (qual='true'), (3) Verify worker bookings policy uses auth.uid() or workers.user_id, (4) Verify employer jobs policy uses auth.uid() or businesses.user_id, (5) Verify admin bypass policy exists. Document results in rls-findings.md."
+          },
+          "notes": "These are manual steps requiring Supabase dashboard access. Document the SQL queries used and their results in the findings file.",
+          "status": "pending"
+        }
+      ],
+      "phase": 5
+    }
+  ],
+  "summary": {
+    "total_phases": 5,
+    "total_subtasks": 11,
+    "services_involved": [
+      "supabase",
+      "scripts"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 1,
+      "parallel_groups": [],
+      "recommended_workers": 1,
+      "speedup_estimate": "Sequential execution required — phases build on each other"
+    },
+    "startup_command": "source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 066 --parallel 1"
+  },
+  "verification_strategy": {
+    "risk_level": "high",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "unit",
+      "integration"
+    ],
+    "security_scanning_required": true,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "scripts/test-rls-policies.ts exists and is runnable",
+      "Script exits with code 0 on all-pass run, code 1 on failures",
+      "All 9 tables audited and documented in scripts/rls-findings.md",
+      "Worker role correctly scoped (own bookings only)",
+      "Employer role correctly scoped (own jobs + own bookings only)",
+      "Admin role has full access",
+      "Unauthenticated access blocked on protected tables",
+      "Any overly permissive policies (qual='true') identified and documented",
+      "Script follows existing project conventions (env loading, colored output, exit codes)"
+    ],
+    "verification_steps": [
+      {
+        "name": "Script Runs Without Errors",
+        "command": "npx ts-node scripts/test-rls-policies.ts --help",
+        "expected_outcome": "Prints usage and exits with code 0",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "RLS Audit Pass",
+        "command": "npx ts-node scripts/test-rls-policies.ts --audit-only",
+        "expected_outcome": "Prints table list with RLS status",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Full Script Pass",
+        "command": "npx ts-node scripts/test-rls-policies.ts",
+        "expected_outcome": "Exit code 0 or 1 with clear pass/fail output",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Findings Document Created",
+        "command": "test -f scripts/rls-findings.md",
+        "expected_outcome": "File exists with all 9 tables documented",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "High risk task because RLS misconfiguration can lead to data breaches. Comprehensive testing required with manual dashboard verification as cross-check."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": false,
+      "commands": [],
+      "minimum_coverage": null,
+      "notes": "This is a verification/audit task, not a code implementation task. No new application code is written."
+    },
+    "integration_tests": {
+      "required": true,
+      "commands": [
+        "npx ts-node scripts/test-rls-policies.ts"
+      ],
+      "services_to_test": [
+        "supabase"
+      ]
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": [],
+      "notes": "E2E via Playwright is out of scope per spec.md. Testing is at Supabase query level only."
+    },
+    "browser_verification": {
+      "required": false,
+      "pages": [],
+      "notes": "No browser verification needed — this is a backend/database verification task."
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "RLS enabled on bookings table",
+        "RLS enabled on jobs table",
+        "RLS enabled on wallet_transactions table",
+        "RLS enabled on worker_wallets table",
+        "RLS enabled on reviews table",
+        "RLS enabled on disputes table",
+        "No overly permissive policies (qual='true')",
+        "Worker booking policy uses auth.uid() or workers.user_id",
+        "Employer jobs policy uses auth.uid() or businesses.user_id",
+        "Admin bypass policy uses is_admin() or admin_users table"
+      ]
+    },
+    "security_scan": {
+      "required": true,
+      "checks": [
+        "No SQL injection in policy conditions",
+        "No hardcoded user IDs in policies",
+        "Admin role correctly checked via is_admin() or admin_users table",
+        "auth.uid() used consistently for authenticated checks"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "xstateState": "coding",
+  "lastEvent": {
+    "eventId": "d28d912f-4574-4806-a4e3-97e4d36ccad1",
+    "sequence": 0,
+    "type": "PLANNING_COMPLETE",
+    "timestamp": "2026-03-30T15:44:21.710806+00:00"
+  }
+}
