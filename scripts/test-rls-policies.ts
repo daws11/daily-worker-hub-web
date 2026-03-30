@@ -602,12 +602,336 @@ async function checkConfig(): Promise<number> {
 }
 
 // =============================================================================
+// WORKER ROLE RLS TESTS
+// =============================================================================
+
+interface TestResult {
+  passed: boolean;
+  count: number;
+  error: string | null;
+}
+
+/** Result of a single RLS policy test case. */
+interface RlsTestCase {
+  description: string;
+  result: TestResult;
+  expected: "pass" | "fail";
+  details?: string;
+}
+
+/** Overall result of a role test suite. */
+interface RoleTestSuiteResult {
+  role: string;
+  tests: RlsTestCase[];
+  passedCount: number;
+  failedCount: number;
+  exitCode: number;
+}
+
+/**
+ * Resolves a user's auth.uid to a worker_id by querying the workers table
+ * using the service role client (bypasses RLS so it always works).
+ *
+ * Returns null when the user is not a worker or the worker record is absent.
+ */
+async function resolveWorkerId(userId: string): Promise<string | null> {
+  const { data, error } = await supabaseService
+    .from("workers")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle() as { data: { id: string } | null; error: any };
+
+  if (error || !data) return null;
+  return data.id;
+}
+
+/**
+ * Resolves a user's auth.uid to a business_id by querying the businesses table
+ * using the service role client (bypasses RLS so it always works).
+ */
+async function resolveBusinessId(userId: string): Promise<string | null> {
+  const { data, error } = await supabaseService
+    .from("businesses")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle() as { data: { id: string } | null; error: any };
+
+  if (error || !data) return null;
+  return data.id;
+}
+
+/**
+ * Runs the worker role RLS test suite.
+ *
+ * Tests:
+ *   1. Worker SELECT own bookings  — should return rows (auth.uid → worker_id match)
+ *   2. Cross-worker blocking       — bookings belonging to other workers must not appear
+ *   3. wallet_transactions access  — worker can see transactions on their own wallet
+ *
+ * Baseline counts are obtained via the service-role client (RLS bypassed) so
+ * the test can distinguish "RLS filtered correctly" from "no data exists".
+ */
+async function runWorkerRoleTests(): Promise<RoleTestSuiteResult> {
+  const tests: RlsTestCase[] = [];
+  let passedCount = 0;
+  let failedCount = 0;
+
+  // ── Load authenticated worker client ────────────────────────────────────
+  const testAccounts = loadTestAccounts();
+  const workerAccount = testAccounts.worker;
+
+  if (!workerAccount.userId) {
+    log("\n\u274c TEST_WORKER_USER_ID is not set \u2014 worker role tests skipped.", "red");
+    log("   Set TEST_WORKER_USER_ID in .env.local to run worker RLS tests.", "yellow");
+    return {
+      role: "worker",
+      tests: [],
+      passedCount: 0,
+      failedCount: 0,
+      exitCode: 1,
+    };
+  }
+
+  const workerClient = await retrieveAuthenticatedClient(
+    workerAccount.userId,
+    workerAccount.label,
+  );
+
+  if (!workerClient?.client) {
+    log("\n\u274c Could not create authenticated worker client \u2014 session creation failed.", "red");
+    log("   Worker role tests skipped.", "yellow");
+    return {
+      role: "worker",
+      tests: [],
+      passedCount: 0,
+      failedCount: 0,
+      exitCode: 1,
+    };
+  }
+
+  const otherWorkerAccount = testAccounts.otherWorker;
+
+  // ── Resolve worker IDs via service role ──────────────────────────────────
+  const workerId = await resolveWorkerId(workerAccount.userId);
+  const otherWorkerId = otherWorkerAccount.userId
+    ? await resolveWorkerId(otherWorkerAccount.userId)
+    : null;
+
+  if (!workerId) {
+    log("\n\u274c No worker record found for TEST_WORKER_USER_ID.", "red");
+    log("   Ensure the user has a corresponding entry in the workers table.", "yellow");
+    return {
+      role: "worker",
+      tests: [],
+      passedCount: 0,
+      failedCount: 0,
+      exitCode: 1,
+    };
+  }
+
+  // ── TEST 1: Worker SELECT own bookings ───────────────────────────────────
+  {
+    const label = "Worker SELECT own bookings";
+
+    // Service-role baseline
+    const { data: serviceData, error: serviceError } = await supabaseService
+      .from("bookings")
+      .select("id, worker_id")
+      .eq("worker_id", workerId) as { data: any[] | null; error: any };
+
+    const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+    // Authenticated (RLS-bound) query
+    const { data: rlsData, error: rlsError } = await workerClient.client
+      .from("bookings")
+      .select("id, worker_id")
+      .eq("worker_id", workerId) as { data: any[] | null; error: any };
+
+    const rlsCount = rlsError ? -1 : (rlsData?.length ?? 0);
+
+    const passed = !rlsError && rlsCount === serviceCount && rlsCount > 0;
+    if (passed) passedCount++;
+    else failedCount++;
+
+    tests.push({
+      description: label,
+      result: {
+        passed,
+        count: rlsCount,
+        error: rlsError ? rlsError.message : null,
+      },
+      expected: "pass",
+      details:
+        serviceCount > 0
+          ? `service=${serviceCount}, rls=${rlsCount} \u2014 ${rlsCount === serviceCount ? "match" : "MISMATCH"}`
+          : `No bookings exist for worker_id=${workerId} (service count=0)`,
+    });
+  }
+
+  // ── TEST 2: Cross-worker blocking ──────────────────────────────────────
+  {
+    const label = "Cross-worker blocking";
+
+    if (otherWorkerId) {
+      // Service-role: how many bookings does the OTHER worker have?
+      const { data: serviceData, error: serviceError } = await supabaseService
+        .from("bookings")
+        .select("id, worker_id")
+        .eq("worker_id", otherWorkerId) as { data: any[] | null; error: any };
+
+      const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+      // Authenticated as worker1: query the same other_worker's bookings
+      const { data: rlsData, error: rlsError } = await workerClient.client
+        .from("bookings")
+        .select("id, worker_id")
+        .eq("worker_id", otherWorkerId) as { data: any[] | null; error: any };
+
+      const rlsCount = rlsError ? -1 : (rlsData?.length ?? 0);
+
+      // Pass if RLS count is 0 (correctly blocked) OR service count is 0 (no cross-user data)
+      const passed = !rlsError && rlsCount === 0;
+      if (passed) passedCount++;
+      else failedCount++;
+
+      tests.push({
+        description: label,
+        result: {
+          passed,
+          count: rlsCount,
+          error: rlsError ? rlsError.message : null,
+        },
+        expected: "pass",
+        details:
+          serviceCount > 0
+            ? `service=${serviceCount}, rls=${rlsCount} \u2014 ${rlsCount === 0 ? "BLOCKED \u2705" : "LEAKED \u274c"}`
+            : `No cross-user bookings exist (service count=0) \u2014 test inconclusive`,
+      });
+    } else {
+      // Cannot run cross-worker test without other_worker data
+      tests.push({
+        description: label,
+        result: { passed: false, count: -1, error: "TEST_OTHER_WORKER_USER_ID not set" },
+        expected: "pass",
+        details: "Skipped \u2014 TEST_OTHER_WORKER_USER_ID not configured",
+      });
+      failedCount++;
+    }
+  }
+
+  // ── TEST 3: wallet_transactions access ──────────────────────────────────
+  {
+    const label = "Worker wallet_transactions access";
+
+    // Resolve the worker's wallet_id via service role
+    const { data: walletData, error: walletError } = await supabaseService
+      .from("wallets")
+      .select("id")
+      .eq("user_id", workerAccount.userId)
+      .maybeSingle() as { data: { id: string } | null; error: any };
+
+    if (walletError || !walletData) {
+      tests.push({
+        description: label,
+        result: {
+          passed: false,
+          count: -1,
+          error: walletError ? walletError.message : "No wallet found for worker",
+        },
+        expected: "pass",
+        details: "Skipped \u2014 worker has no wallet record",
+      });
+      failedCount++;
+    } else {
+      const walletId = walletData.id;
+
+      // Service-role baseline
+      const { data: serviceData, error: serviceError } = await supabaseService
+        .from("wallet_transactions")
+        .select("id, wallet_id")
+        .eq("wallet_id", walletId) as { data: any[] | null; error: any };
+
+      const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+      // Authenticated (RLS-bound) query via wallet join
+      const { data: rlsData, error: rlsError } = await workerClient.client
+        .from("wallet_transactions")
+        .select("id, wallet_id")
+        .eq("wallet_id", walletId) as { data: any[] | null; error: any };
+
+      const rlsCount = rlsError ? -1 : (rlsData?.length ?? 0);
+
+      const passed = !rlsError && rlsCount === serviceCount && rlsCount > 0;
+      if (passed) passedCount++;
+      else failedCount++;
+
+      tests.push({
+        description: label,
+        result: {
+          passed,
+          count: rlsCount,
+          error: rlsError ? rlsError.message : null,
+        },
+        expected: "pass",
+        details:
+          serviceCount > 0
+            ? `service=${serviceCount}, rls=${rlsCount} \u2014 ${rlsCount === serviceCount ? "match" : "MISMATCH"}`
+            : `No transactions exist for wallet_id=${walletId} (service count=0)`,
+      });
+    }
+  }
+
+  return {
+    role: "worker",
+    tests,
+    passedCount,
+    failedCount,
+    exitCode: failedCount > 0 ? 1 : 0,
+  };
+}
+
+/**
+ * Prints a formatted test suite result to the console.
+ */
+function printRoleTestSuiteResult(result: RoleTestSuiteResult): void {
+  const roleLabel = result.role.toUpperCase();
+  log(`\n\ud83d\udcbb ${roleLabel} ROLE RLS TESTS`, "cyan");
+  log("\u2500".repeat(72), "cyan");
+
+  for (const tc of result.tests) {
+    const icon = tc.result.passed ? "\u2705" : "\u274c";
+    const color = tc.result.passed ? "green" : "red";
+    const countStr =
+      tc.result.count < 0 ? "(error)" : `count=${tc.result.count}`;
+
+    log(`  ${icon} [${countStr}] ${tc.description}`, color);
+
+    if (tc.details) {
+      const indent = "         ";
+      log(`${indent}${tc.details}`, tc.result.passed ? "blue" : "yellow");
+    }
+
+    if (tc.result.error) {
+      log(`         Error: ${tc.result.error}`, "red");
+    }
+  }
+
+  log("\u2500".repeat(72), "cyan");
+  log(
+    `  Results: ${result.passedCount} passed, ${result.failedCount} failed`,
+    result.failedCount === 0 ? "green" : "red",
+  );
+}
+
+// =============================================================================
 // MAIN
 // =============================================================================
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
   const mode = args[0] || "";
+  const roleArg = args.find((a) => a.startsWith("--role="));
+  const roleMode = roleArg ? roleArg.replace("--role=", "") : null;
 
   if (mode === "--help") {
     printHelp();
@@ -643,6 +967,28 @@ async function main(): Promise<void> {
     process.exit(exitCode);
   }
 
+  // Role-specific RLS tests
+  if (roleMode === "worker") {
+    const healthy = await runHealthCheck();
+    if (!healthy) {
+      log("\u274c Cannot connect to Supabase. Check environment variables.", "red");
+      process.exit(1);
+    }
+
+    const result = await runWorkerRoleTests();
+    printRoleTestSuiteResult(result);
+
+    log("\n" + "=".repeat(72), "cyan");
+    if (result.exitCode === 0) {
+      log("\u2705 Worker RLS tests PASSED", "green");
+    } else {
+      log("\u274c Worker RLS tests FAILED", "red");
+    }
+    log("=".repeat(72), "cyan");
+
+    process.exit(result.exitCode);
+  }
+
   // Default: print help
   printHelp();
   process.exit(0);
@@ -656,6 +1002,8 @@ function printHelp(): void {
   log("Modes:", "blue");
   log("  --check-config  Verify env vars, test account IDs, and retrieve JWTs for each role", "cyan");
   log("  --audit-only    Query pg_tables & pg_policies \u2014 audit RLS status", "cyan");
+  log("  --role=worker   Run worker role RLS tests (own bookings SELECT, cross-worker", "cyan");
+  log("                  blocking, wallet_transactions access)", "cyan");
   log("  --help          Show this help message", "cyan");
   log("");
   log("Environment Variables Required:", "yellow");
@@ -689,5 +1037,14 @@ export {
   loadTestAccounts,
   retrieveAuthenticatedClient,
   getAuthenticatedTestClients,
+  runWorkerRoleTests,
+  printRoleTestSuiteResult,
 };
-export type { TestAccountsConfig, AuthenticatedTestClient, RoleLabel };
+export type {
+  TestAccountsConfig,
+  AuthenticatedTestClient,
+  RoleLabel,
+  RlsTestCase,
+  RoleTestSuiteResult,
+  TestResult,
+};
