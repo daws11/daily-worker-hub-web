@@ -3,7 +3,7 @@
   "workflow_type": "feature",
   "workflow_rationale": "Verification task for existing RLS policies — creates test tooling and documents findings. No new features are built. Workflow type is 'feature' because it builds a test script and runs it against the existing codebase.",
   "created_at": "2026-03-30T23:29:54.935Z",
-  "updated_at": "2026-03-30T17:00:21.510Z",
+  "updated_at": "2026-03-30T17:15:00.128Z",
   "status": "in_progress",
   "planStatus": "in_progress",
   "executionPhase": "coding",
@@ -162,8 +162,9 @@
             "command": "npx ts-node scripts/test-rls-policies.ts --role=admin",
             "expected": "Admin sees all bookings and jobs (row count matches service-role query for same filters)"
           },
-          "notes": "Implemented runAdminRoleTests() with five tests: (1) Admin SELECT all bookings — verifies RLS count equals service-role baseline; (2) Admin SELECT all jobs; (3) Admin SELECT all workers; (4) Admin SELECT all businesses; (5) Admin SELECT all wallet_transactions. Each test compares RLS-bound count vs service-role baseline; passes when counts match (no error). Gracefully skips when TEST_ADMIN_USER_ID not configured. Wired --role=admin into main(), updated printHelp() and exports. Verified: ./node_modules/.bin/tsx scripts/test-rls-policies.ts --help shows admin option; --role=admin correctly detects missing env var and skips (exit 1 as expected).",
-          "status": "completed"
+          "notes": "Implemented runAdminRoleTests() with five tests: (1) Admin SELECT all bookings; (2) Admin SELECT all jobs; (3) Admin SELECT all workers; (4) Admin SELECT all businesses; (5) Admin SELECT all wallet_transactions. Each test compares RLS-bound count vs service-role baseline; passes when counts match (no error). Gracefully skips when TEST_ADMIN_USER_ID not configured. Wired --role=admin into main(), updated printHelp() and exports. Verified: ./node_modules/.bin/tsx scripts/test-rls-policies.ts --help shows admin option; --role=admin correctly detects missing env var and skips (exit 1 as expected).",
+          "status": "completed",
+          "updated_at": "2026-03-30T17:04:34.585430+00:00"
         },
         {
           "id": "subtask-2-7",
@@ -179,8 +180,9 @@
             "command": "npx ts-node scripts/test-rls-policies.ts --role=unauthenticated",
             "expected": "Unauthenticated queries to protected tables return empty result or 401"
           },
-          "notes": "Test with anon client (no JWT set). Also test reviews, disputes, applications, worker_transactions, worker_wallets. Edge case: check for RLS disabled tables that should be protected.",
-          "status": "pending"
+          "notes": "Added runUnauthenticatedRoleTests() suite + admin table coverage for reviews, disputes, applications, worker_wallets. Verification run correctly identified 8 genuine RLS failures in the database (jobs/workers/businesses/users leak; wallet tables throw ambiguous error).",
+          "status": "completed",
+          "updated_at": "2026-03-30T17:14:03.057132+00:00"
         }
       ],
       "phase": 2
@@ -207,8 +209,9 @@
             "command": "npx ts-node scripts/test-rls-policies.ts",
             "expected": "Script completes with exit code 0 (all pass) or exit code 1 (with FAILs logged)"
           },
-          "notes": "Run the script and note which tests pass/fail. All failures go into the findings document.",
-          "status": "pending"
+          "notes": "Full verification run completed. Script behavior confirmed across all modes. Unauthenticated test ran successfully and identified 8 genuine RLS failures (5 PASS, 8 FAIL). Worker/Employer/Admin role tests skipped (no test account IDs configured). Audit-only requires migration to be applied first. Results captured in build-progress.txt.",
+          "status": "completed",
+          "updated_at": "2026-03-30T17:18:43.918136+00:00"
         }
       ],
       "phase": 3
@@ -402,5 +405,5 @@
     "type": "PLANNING_COMPLETE",
     "timestamp": "2026-03-30T15:44:21.710806+00:00"
   },
-  "last_updated": "2026-03-31T00:10:00.000000+00:00"
+  "last_updated": "2026-03-30T17:18:43.918145+00:00"
 }
