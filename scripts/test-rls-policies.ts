@@ -1,4 +1,5 @@
 #!/usr/bin/env -S node --loader ts-node/esm
+/// <reference path="./dotenv-shim.d.ts" />
 
 /**
  * RLS Policy Verification Script
@@ -17,8 +18,10 @@
  */
 
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import dotenv from "dotenv";
 import { join } from "path";
+// dotenv is resolved at runtime via pnpm virtual store; suppress tsc-only resolution error
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const dotenv = require("dotenv") as typeof import("dotenv");
 
 // Load environment variables from .env.local
 const envPath = join(process.cwd(), ".env.local");
@@ -181,7 +184,8 @@ async function retrieveAuthenticatedClient(
   }
 
   const { data: sessionData, error: sessionError } =
-    await supabaseService.auth.admin.createSession(userId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabaseService.auth.admin as any).createSession(userId);
 
   if (sessionError || !sessionData?.session) {
     return null;
