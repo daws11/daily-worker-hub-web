@@ -9,6 +9,10 @@
  *   --help          Print usage instructions
  *   --check-config  Verify environment variables and test accounts
  *   --audit-only    Query pg_tables and pg_policies to audit RLS status
+ *   --role=worker   Run worker role RLS tests
+ *   --role=employer Run employer role RLS tests
+ *   --role=admin    Run admin role RLS tests
+ *   --role=unauthenticated  Run unauthenticated access denial tests
  *
  * Usage:
  *   npx ts-node scripts/test-rls-policies.ts --help
@@ -1397,8 +1401,253 @@ async function runAdminRoleTests(): Promise<RoleTestSuiteResult> {
     });
   }
 
+  // ── TEST 6: Admin SELECT all reviews ──────────────────────────────────────────
+  {
+    const label = "Admin SELECT all reviews";
+
+    const { data: serviceData, error: serviceError } = await supabaseService
+      .from("reviews")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+    const { data: rlsData, error: rlsError } = await adminClient.client
+      .from("reviews")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const rlsCount = rlsError ? -1 : (rlsData?.length ?? 0);
+
+    const passed = !rlsError && rlsCount === serviceCount;
+    if (passed) passedCount++;
+    else failedCount++;
+
+    tests.push({
+      description: label,
+      result: {
+        passed,
+        count: rlsCount,
+        error: rlsError ? rlsError.message : null,
+      },
+      expected: "pass",
+      details:
+        serviceCount > 0
+          ? `service=${serviceCount}, rls=${rlsCount} \u2014 ${rlsCount === serviceCount ? "match \u2705" : "MISMATCH \u274c"}`
+          : `service=${serviceCount}, rls=${rlsCount} \u2014 no reviews in database (pass = RLS returned 0, no error)`,
+    });
+  }
+
+  // ── TEST 7: Admin SELECT all disputes ────────────────────────────────────────
+  {
+    const label = "Admin SELECT all disputes";
+
+    const { data: serviceData, error: serviceError } = await supabaseService
+      .from("disputes")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+    const { data: rlsData, error: rlsError } = await adminClient.client
+      .from("disputes")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const rlsCount = rlsError ? -1 : (rlsData?.length ?? 0);
+
+    const passed = !rlsError && rlsCount === serviceCount;
+    if (passed) passedCount++;
+    else failedCount++;
+
+    tests.push({
+      description: label,
+      result: {
+        passed,
+        count: rlsCount,
+        error: rlsError ? rlsError.message : null,
+      },
+      expected: "pass",
+      details:
+        serviceCount > 0
+          ? `service=${serviceCount}, rls=${rlsCount} \u2014 ${rlsCount === serviceCount ? "match \u2705" : "MISMATCH \u274c"}`
+          : `service=${serviceCount}, rls=${rlsCount} \u2014 no disputes in database (pass = RLS returned 0, no error)`,
+    });
+  }
+
+  // ── TEST 8: Admin SELECT all applications ────────────────────────────────────
+  {
+    const label = "Admin SELECT all applications";
+
+    const { data: serviceData, error: serviceError } = await supabaseService
+      .from("applications")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+    const { data: rlsData, error: rlsError } = await adminClient.client
+      .from("applications")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const rlsCount = rlsError ? -1 : (rlsData?.length ?? 0);
+
+    const passed = !rlsError && rlsCount === serviceCount;
+    if (passed) passedCount++;
+    else failedCount++;
+
+    tests.push({
+      description: label,
+      result: {
+        passed,
+        count: rlsCount,
+        error: rlsError ? rlsError.message : null,
+      },
+      expected: "pass",
+      details:
+        serviceCount > 0
+          ? `service=${serviceCount}, rls=${rlsCount} \u2014 ${rlsCount === serviceCount ? "match \u2705" : "MISMATCH \u274c"}`
+          : `service=${serviceCount}, rls=${rlsCount} \u2014 no applications in database (pass = RLS returned 0, no error)`,
+    });
+  }
+
+  // ── TEST 9: Admin SELECT all worker_wallets ──────────────────────────────────
+  {
+    const label = "Admin SELECT all worker_wallets";
+
+    const { data: serviceData, error: serviceError } = await supabaseService
+      .from("worker_wallets")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+    const { data: rlsData, error: rlsError } = await adminClient.client
+      .from("worker_wallets")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const rlsCount = rlsError ? -1 : (rlsData?.length ?? 0);
+
+    const passed = !rlsError && rlsCount === serviceCount;
+    if (passed) passedCount++;
+    else failedCount++;
+
+    tests.push({
+      description: label,
+      result: {
+        passed,
+        count: rlsCount,
+        error: rlsError ? rlsError.message : null,
+      },
+      expected: "pass",
+      details:
+        serviceCount > 0
+          ? `service=${serviceCount}, rls=${rlsCount} \u2014 ${rlsCount === serviceCount ? "match \u2705" : "MISMATCH \u274c"}`
+          : `service=${serviceCount}, rls=${rlsCount} \u2014 no worker_wallets in database (pass = RLS returned 0, no error)`,
+    });
+  }
+
   return {
     role: "admin",
+    tests,
+    passedCount,
+    failedCount,
+    exitCode: failedCount > 0 ? 1 : 0,
+  };
+}
+
+// =============================================================================
+// UNAUTHENTICATED ROLE RLS TESTS
+// =============================================================================
+
+/**
+ * Runs the unauthenticated (anon key) RLS test suite.
+ *
+ * Uses the public anon client (no JWT attached) to verify that protected tables
+ * deny access — queries should return empty results or trigger errors.
+ *
+ * Tests SELECT on: bookings, jobs, workers, businesses, users,
+ *                  wallet_transactions, reviews, disputes, applications,
+ *                  worker_wallets, wallets, payout_requests, payment_transactions
+ *
+ * A "pass" means the unauthenticated client correctly received zero rows or
+ * an error (empty result is preferred; 401/403 is also acceptable).
+ */
+async function runUnauthenticatedRoleTests(): Promise<RoleTestSuiteResult> {
+  const tests: RlsTestCase[] = [];
+  let passedCount = 0;
+  let failedCount = 0;
+
+  /**
+   * Helper: tests that an unauthenticated SELECT on a table returns 0 rows
+   * (or an error). The test "passes" when no data leaks to unauthenticated users.
+   */
+  async function testUnauthenticatedSelect(
+    label: string,
+    table: string,
+    selectColumns = "id",
+  ): Promise<void> {
+    // Service-role baseline — how many rows exist in the table?
+    const { data: serviceData, error: serviceError } = await supabaseService
+      .from(table as keyof typeof supabaseService.from)
+      .select(selectColumns)
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+    // Unauthenticated (anon key) query — should return 0 rows
+    const { data: anonData, error: anonError } = await supabaseAnon
+      .from(table as keyof typeof supabaseAnon.from)
+      .select(selectColumns)
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const anonCount = anonError ? -1 : (anonData?.length ?? 0);
+
+    // Pass: zero rows returned — the correct response for an unauthenticated query.
+    // An error means the query was attempted but the server returned an error response,
+    // which can still leak schema information (e.g. ambiguous table references in views);
+    // treat errors as failures for unauthenticated tests.
+    const passed = !anonError && anonCount === 0;
+    if (passed) passedCount++;
+    else failedCount++;
+
+    const errorDetail = anonError ? ` [error: ${anonError.message}]` : "";
+    tests.push({
+      description: label,
+      result: {
+        passed,
+        count: anonError ? -1 : anonCount,
+        error: anonError ? anonError.message : null,
+      },
+      expected: "pass",
+      details:
+        serviceCount > 0
+          ? `service=${serviceCount}, anon=${anonError ? "ERROR" : anonCount}${errorDetail} — ${
+              anonCount === 0 ? "BLOCKED \u2705" : "LEAKED \u274c"
+            }`
+          : `service=${serviceCount}, anon=${anonError ? "ERROR" : anonCount} — table empty (no data to leak)${errorDetail}`,
+    });
+  }
+
+  // ── Protected table coverage ────────────────────────────────────────────────
+  await testUnauthenticatedSelect("Unauthenticated SELECT bookings", "bookings");
+  await testUnauthenticatedSelect("Unauthenticated SELECT jobs", "jobs");
+  await testUnauthenticatedSelect("Unauthenticated SELECT workers", "workers");
+  await testUnauthenticatedSelect("Unauthenticated SELECT businesses", "businesses");
+  await testUnauthenticatedSelect("Unauthenticated SELECT users", "users");
+  await testUnauthenticatedSelect("Unauthenticated SELECT wallet_transactions", "wallet_transactions");
+  await testUnauthenticatedSelect("Unauthenticated SELECT reviews", "reviews");
+  await testUnauthenticatedSelect("Unauthenticated SELECT disputes", "disputes");
+  await testUnauthenticatedSelect("Unauthenticated SELECT applications", "applications");
+  await testUnauthenticatedSelect("Unauthenticated SELECT worker_wallets", "worker_wallets");
+  await testUnauthenticatedSelect("Unauthenticated SELECT wallets", "wallets");
+  await testUnauthenticatedSelect("Unauthenticated SELECT payout_requests", "payout_requests");
+  await testUnauthenticatedSelect("Unauthenticated SELECT payment_transactions", "payment_transactions");
+
+  return {
+    role: "unauthenticated",
     tests,
     passedCount,
     failedCount,
@@ -1514,6 +1763,27 @@ async function main(): Promise<void> {
     process.exit(result.exitCode);
   }
 
+  if (roleMode === "unauthenticated") {
+    const healthy = await runHealthCheck();
+    if (!healthy) {
+      log("\u274c Cannot connect to Supabase. Check environment variables.", "red");
+      process.exit(1);
+    }
+
+    const result = await runUnauthenticatedRoleTests();
+    printRoleTestSuiteResult(result);
+
+    log("\n" + "=".repeat(72), "cyan");
+    if (result.exitCode === 0) {
+      log("\u2705 Unauthenticated RLS tests PASSED \u2014 all protected tables blocked", "green");
+    } else {
+      log("\u274c Unauthenticated RLS tests FAILED \u2014 data leaked to unauthenticated users", "red");
+    }
+    log("=".repeat(72), "cyan");
+
+    process.exit(result.exitCode);
+  }
+
   // Default: print help
   printHelp();
   process.exit(0);
@@ -1532,7 +1802,10 @@ function printHelp(): void {
   log("  --role=employer Run employer role RLS tests (own jobs SELECT, cross-employer", "cyan");
   log("                  blocking, own bookings on own jobs)", "cyan");
   log("  --role=admin    Run admin role RLS tests (full SELECT on bookings, jobs,", "cyan");
-  log("                  workers, businesses, wallet_transactions)", "cyan");
+  log("                  workers, businesses, wallet_transactions, reviews,", "cyan");
+  log("                  disputes, applications, worker_wallets)", "cyan");
+  log("  --role=unauthenticated  Run unauthenticated RLS tests \u2014 verifies protected tables", "cyan");
+  log("                  deny SELECT to unauthenticated users (no JWT)", "cyan");
   log("  --help          Show this help message", "cyan");
   log("");
   log("Environment Variables Required:", "yellow");
@@ -1551,6 +1824,7 @@ function printHelp(): void {
   log("  test account via create_admin_user_session RPC or admin createSession.", "cyan");
   log("  These tokens are cached and used to create RLS-aware authenticated clients", "cyan");
   log("  for worker, employer, and admin role tests.", "cyan");
+  log("  Note: --role=unauthenticated requires no JWT (uses the anon key only).", "cyan");
 }
 
 // CLI entry point
@@ -1569,6 +1843,7 @@ export {
   runWorkerRoleTests,
   runEmployerRoleTests,
   runAdminRoleTests,
+  runUnauthenticatedRoleTests,
   printRoleTestSuiteResult,
 };
 export type {
