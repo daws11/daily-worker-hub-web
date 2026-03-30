@@ -1147,6 +1147,266 @@ async function runEmployerRoleTests(): Promise<RoleTestSuiteResult> {
 }
 
 // =============================================================================
+// ADMIN ROLE RLS TESTS
+// =============================================================================
+
+/**
+ * Runs the admin role RLS test suite.
+ *
+ * Tests:
+ *   1. Admin SELECT all bookings    — should return all rows in bookings table
+ *   2. Admin SELECT all jobs        — should return all rows in jobs table
+ *   3. Admin SELECT all workers     — should return all rows in workers table
+ *   4. Admin SELECT all businesses   — should return all rows in businesses table
+ *   5. Admin SELECT wallet_transactions — should return all wallet_transactions rows
+ *
+ * Baseline counts are obtained via the service-role client (RLS bypassed).
+ * Admin RLS counts must exactly match service counts (admin has full SELECT).
+ */
+async function runAdminRoleTests(): Promise<RoleTestSuiteResult> {
+  const tests: RlsTestCase[] = [];
+  let passedCount = 0;
+  let failedCount = 0;
+
+  // ── Load authenticated admin client ──────────────────────────────────────────
+  const testAccounts = loadTestAccounts();
+  const adminAccount = testAccounts.admin;
+
+  if (!adminAccount.userId) {
+    log("\u274c TEST_ADMIN_USER_ID is not set \u2014 admin role tests skipped.", "red");
+    log("   Set TEST_ADMIN_USER_ID in .env.local to run admin RLS tests.", "yellow");
+    return {
+      role: "admin",
+      tests: [],
+      passedCount: 0,
+      failedCount: 0,
+      exitCode: 1,
+    };
+  }
+
+  const adminClient = await retrieveAuthenticatedClient(
+    adminAccount.userId,
+    adminAccount.label,
+  );
+
+  if (!adminClient?.client) {
+    log("\u274c Could not create authenticated admin client \u2014 session creation failed.", "red");
+    log("   Admin role tests skipped.", "yellow");
+    return {
+      role: "admin",
+      tests: [],
+      passedCount: 0,
+      failedCount: 0,
+      exitCode: 1,
+    };
+  }
+
+  // ── TEST 1: Admin SELECT all bookings ────────────────────────────────────────
+  {
+    const label = "Admin SELECT all bookings";
+
+    // Service-role baseline — total bookings in the database
+    const { data: serviceData, error: serviceError } = await supabaseService
+      .from("bookings")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+    // Authenticated (RLS-bound) query — admin should see all bookings
+    const { data: rlsData, error: rlsError } = await adminClient.client
+      .from("bookings")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const rlsCount = rlsError ? -1 : (rlsData?.length ?? 0);
+
+    // Admin should see everything the service role sees (counts match)
+    const passed = !rlsError && rlsCount === serviceCount;
+    if (passed) passedCount++;
+    else failedCount++;
+
+    tests.push({
+      description: label,
+      result: {
+        passed,
+        count: rlsCount,
+        error: rlsError ? rlsError.message : null,
+      },
+      expected: "pass",
+      details:
+        serviceCount > 0
+          ? `service=${serviceCount}, rls=${rlsCount} \u2014 ${rlsCount === serviceCount ? "match \u2705" : "MISMATCH \u274c"}`
+          : `service=${serviceCount}, rls=${rlsCount} \u2014 no bookings in database (pass = RLS returned 0, no error)`,
+    });
+  }
+
+  // ── TEST 2: Admin SELECT all jobs ──────────────────────────────────────────────
+  {
+    const label = "Admin SELECT all jobs";
+
+    // Service-role baseline — total jobs in the database
+    const { data: serviceData, error: serviceError } = await supabaseService
+      .from("jobs")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+    // Authenticated (RLS-bound) query — admin should see all jobs
+    const { data: rlsData, error: rlsError } = await adminClient.client
+      .from("jobs")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const rlsCount = rlsError ? -1 : (rlsData?.length ?? 0);
+
+    const passed = !rlsError && rlsCount === serviceCount;
+    if (passed) passedCount++;
+    else failedCount++;
+
+    tests.push({
+      description: label,
+      result: {
+        passed,
+        count: rlsCount,
+        error: rlsError ? rlsError.message : null,
+      },
+      expected: "pass",
+      details:
+        serviceCount > 0
+          ? `service=${serviceCount}, rls=${rlsCount} \u2014 ${rlsCount === serviceCount ? "match \u2705" : "MISMATCH \u274c"}`
+          : `service=${serviceCount}, rls=${rlsCount} \u2014 no jobs in database (pass = RLS returned 0, no error)`,
+    });
+  }
+
+  // ── TEST 3: Admin SELECT all workers ─────────────────────────────────────────
+  {
+    const label = "Admin SELECT all workers";
+
+    // Service-role baseline
+    const { data: serviceData, error: serviceError } = await supabaseService
+      .from("workers")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+    // Authenticated (RLS-bound) query — admin should see all workers
+    const { data: rlsData, error: rlsError } = await adminClient.client
+      .from("workers")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const rlsCount = rlsError ? -1 : (rlsData?.length ?? 0);
+
+    const passed = !rlsError && rlsCount === serviceCount;
+    if (passed) passedCount++;
+    else failedCount++;
+
+    tests.push({
+      description: label,
+      result: {
+        passed,
+        count: rlsCount,
+        error: rlsError ? rlsError.message : null,
+      },
+      expected: "pass",
+      details:
+        serviceCount > 0
+          ? `service=${serviceCount}, rls=${rlsCount} \u2014 ${rlsCount === serviceCount ? "match \u2705" : "MISMATCH \u274c"}`
+          : `service=${serviceCount}, rls=${rlsCount} \u2014 no workers in database (pass = RLS returned 0, no error)`,
+    });
+  }
+
+  // ── TEST 4: Admin SELECT all businesses ───────────────────────────────────────
+  {
+    const label = "Admin SELECT all businesses";
+
+    // Service-role baseline
+    const { data: serviceData, error: serviceError } = await supabaseService
+      .from("businesses")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+    // Authenticated (RLS-bound) query — admin should see all businesses
+    const { data: rlsData, error: rlsError } = await adminClient.client
+      .from("businesses")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const rlsCount = rlsError ? -1 : (rlsData?.length ?? 0);
+
+    const passed = !rlsError && rlsCount === serviceCount;
+    if (passed) passedCount++;
+    else failedCount++;
+
+    tests.push({
+      description: label,
+      result: {
+        passed,
+        count: rlsCount,
+        error: rlsError ? rlsError.message : null,
+      },
+      expected: "pass",
+      details:
+        serviceCount > 0
+          ? `service=${serviceCount}, rls=${rlsCount} \u2014 ${rlsCount === serviceCount ? "match \u2705" : "MISMATCH \u274c"}`
+          : `service=${serviceCount}, rls=${rlsCount} \u2014 no businesses in database (pass = RLS returned 0, no error)`,
+    });
+  }
+
+  // ── TEST 5: Admin SELECT all wallet_transactions ──────────────────────────────
+  {
+    const label = "Admin SELECT all wallet_transactions";
+
+    // Service-role baseline
+    const { data: serviceData, error: serviceError } = await supabaseService
+      .from("wallet_transactions")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const serviceCount = serviceError ? -1 : (serviceData?.length ?? 0);
+
+    // Authenticated (RLS-bound) query — admin should see all wallet_transactions
+    const { data: rlsData, error: rlsError } = await adminClient.client
+      .from("wallet_transactions")
+      .select("id")
+      .limit(1000) as { data: any[] | null; error: any };
+
+    const rlsCount = rlsError ? -1 : (rlsData?.length ?? 0);
+
+    const passed = !rlsError && rlsCount === serviceCount;
+    if (passed) passedCount++;
+    else failedCount++;
+
+    tests.push({
+      description: label,
+      result: {
+        passed,
+        count: rlsCount,
+        error: rlsError ? rlsError.message : null,
+      },
+      expected: "pass",
+      details:
+        serviceCount > 0
+          ? `service=${serviceCount}, rls=${rlsCount} \u2014 ${rlsCount === serviceCount ? "match \u2705" : "MISMATCH \u274c"}`
+          : `service=${serviceCount}, rls=${rlsCount} \u2014 no wallet_transactions in database (pass = RLS returned 0, no error)`,
+    });
+  }
+
+  return {
+    role: "admin",
+    tests,
+    passedCount,
+    failedCount,
+    exitCode: failedCount > 0 ? 1 : 0,
+  };
+}
+
+// =============================================================================
 // MAIN
 // =============================================================================
 
@@ -1233,6 +1493,27 @@ async function main(): Promise<void> {
     process.exit(result.exitCode);
   }
 
+  if (roleMode === "admin") {
+    const healthy = await runHealthCheck();
+    if (!healthy) {
+      log("\u274c Cannot connect to Supabase. Check environment variables.", "red");
+      process.exit(1);
+    }
+
+    const result = await runAdminRoleTests();
+    printRoleTestSuiteResult(result);
+
+    log("\n" + "=".repeat(72), "cyan");
+    if (result.exitCode === 0) {
+      log("\u2705 Admin RLS tests PASSED", "green");
+    } else {
+      log("\u274c Admin RLS tests FAILED", "red");
+    }
+    log("=".repeat(72), "cyan");
+
+    process.exit(result.exitCode);
+  }
+
   // Default: print help
   printHelp();
   process.exit(0);
@@ -1250,6 +1531,8 @@ function printHelp(): void {
   log("                  blocking, wallet_transactions access)", "cyan");
   log("  --role=employer Run employer role RLS tests (own jobs SELECT, cross-employer", "cyan");
   log("                  blocking, own bookings on own jobs)", "cyan");
+  log("  --role=admin    Run admin role RLS tests (full SELECT on bookings, jobs,", "cyan");
+  log("                  workers, businesses, wallet_transactions)", "cyan");
   log("  --help          Show this help message", "cyan");
   log("");
   log("Environment Variables Required:", "yellow");
@@ -1285,6 +1568,7 @@ export {
   getAuthenticatedTestClients,
   runWorkerRoleTests,
   runEmployerRoleTests,
+  runAdminRoleTests,
   printRoleTestSuiteResult,
 };
 export type {

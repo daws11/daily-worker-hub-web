@@ -3,7 +3,7 @@
   "workflow_type": "feature",
   "workflow_rationale": "Verification task for existing RLS policies — creates test tooling and documents findings. No new features are built. Workflow type is 'feature' because it builds a test script and runs it against the existing codebase.",
   "created_at": "2026-03-30T23:29:54.935Z",
-  "updated_at": "2026-03-30T16:50:30.550Z",
+  "updated_at": "2026-03-30T16:55:43.754Z",
   "status": "in_progress",
   "planStatus": "in_progress",
   "executionPhase": "coding",
@@ -143,8 +143,8 @@
             "command": "npx ts-node scripts/test-rls-policies.ts --role=employer",
             "expected": "Employer sees own jobs, does NOT see other employer's jobs"
           },
-          "notes": "Connect as employer using their JWT. Query jobs table - should return only jobs where business_id maps to employer via businesses.user_id = auth.uid(). Test that another business's job returns 0 rows or 403.",
-          "status": "pending"
+          "notes": "Implemented runEmployerRoleTests() and wired --role=employer into main(). Three tests: (1) Employer SELECT own jobs — compares RLS-bound count vs service-role baseline for business_id; (2) Cross-employer blocking — verifies rls count=0 for other business's jobs; (3) Own bookings on own jobs — verifies employer can see bookings on their own jobs via bookings.business_id. Gracefully skips when TEST_EMPLOYER_USER_ID or TEST_OTHER_EMPLOYER_USER_ID not configured. Updated printHelp() to show employer role. Verified: script --help shows employer tests, --role=employer runs and exits 1 when env vars not set (expected).",
+          "status": "completed"
         },
         {
           "id": "subtask-2-6",
@@ -402,5 +402,5 @@
     "type": "PLANNING_COMPLETE",
     "timestamp": "2026-03-30T15:44:21.710806+00:00"
   },
-  "last_updated": "2026-03-30T16:49:21.644834+00:00"
+  "last_updated": "2026-03-31T00:10:00.000000+00:00"
 }
