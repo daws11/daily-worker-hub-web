@@ -31,7 +31,7 @@ const CORS_CONFIG = {
  * @param origin - The origin string from the request's Origin header
  * @returns true if origin is allowed, false otherwise
  */
-function isAllowedOrigin(origin: string | null): boolean {
+export function isAllowedOrigin(origin: string | null): boolean {
   if (!origin) return true; // No Origin header = same-origin request, allow
   return CORS_CONFIG.allowedOrigins.includes(origin);
 }
@@ -43,7 +43,7 @@ function isAllowedOrigin(origin: string | null): boolean {
  * @param input - The raw input string to sanitize
  * @returns Sanitized string safe for use in headers/cookies
  */
-function sanitizeInput(input: string): string {
+export function sanitizeInput(input: string): string {
   if (!input || typeof input !== "string") return "";
 
   return input
@@ -70,7 +70,7 @@ function sanitizeInput(input: string): string {
  * @param value - The raw query param value to sanitize
  * @returns Sanitized string safe for use in headers/logs/redirects
  */
-function sanitizeQueryParam(value: string | string[] | null | undefined): string {
+export function sanitizeQueryParam(value: string | string[] | null | undefined): string {
   if (value == null) return "";
 
   const str = Array.isArray(value) ? value[0] : value;
@@ -202,7 +202,7 @@ const publicRoutes = [
  * Designed to be called before returning the response to the client.
  * @param response - The NextResponse to attach headers to
  */
-function setSecurityHeaders(response: NextResponse): void {
+export function setSecurityHeaders(response: NextResponse): void {
   // Prevent clickjacking attacks (blocks page from being rendered in iframe)
   response.headers.set("X-Frame-Options", "DENY");
 
