@@ -211,3 +211,28 @@ Session 2 (2026-03-31) - subtask-1-2:
 - Status: PENDING (depends on subtask-1-1)
 
 === END SESSION 2 ===
+
+Session 3 (2026-03-31) - subtask-1-2 (continued):
+- Task: Capture production project API keys from dashboard (manual verification required)
+- Action taken:
+  * Updated PROD_CREDENTIALS.md with structured capture template
+  * Added exact .env.local format section showing all 3 env vars with blank values
+  * Added "Final Captured Credentials Template" section for easy fill-in
+  * Updated status from "BLOCKED" to "READY" in PROD_CREDENTIALS.md
+  * Updated implementation_plan.json subtask-1-2 status to "in_progress"
+- Blockers remain:
+  * subtask-1-1 still pending (user must create project manually)
+  * Sandbox network restriction prevents automated API key capture
+  * User must: (1) create project at supabase.com/dashboard, (2) visit Settings → API page,
+    (3) fill in the three values in PROD_CREDENTIALS.md, (4) update .env.local
+- What needs to happen:
+  1. User creates production Supabase project at https://supabase.com/dashboard
+  2. User captures: Project URL, anon key, service_role key from Settings → API
+  3. User fills in PROD_CREDENTIALS.md with captured values
+  4. User updates .env.local with production credentials (done in subtask-7-1)
+- Files modified:
+  * .auto-claude/specs/065-p0-set-up-production-supabase-project/PROD_CREDENTIALS.md
+  * .auto-claude/specs/065-p0-set-up-production-supabase-project/implementation_plan.json
+- Status: IN_PROGRESS (waiting for user to provide production credentials)
+
+=== END SESSION 3 ===
