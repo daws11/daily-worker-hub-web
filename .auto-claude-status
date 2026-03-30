@@ -1,16 +1,17 @@
 {
   "active": true,
-  "spec": "057-extend-lru-cache-to-bookings-and-applications-api-",
+  "spec": "063-p0-add-security-headers-to-proxy-ts",
   "state": "building",
   "subtasks": {
-    "completed": 14,
-    "total": 15,
-    "in_progress": 1,
+    "completed": 6,
+    "total": 8,
+    "in_progress": 0,
+    "blocked": 2,
     "failed": 0
   },
   "phase": {
-    "current": "Build Verification",
-    "id": null,
+    "current": "Build verification (BLOCKED: sandbox network isolation)",
+    "id": "blocked",
     "total": 2
   },
   "workers": {
@@ -18,8 +19,8 @@
     "max": 1
   },
   "session": {
-    "number": 16,
-    "started_at": "2026-03-27T11:06:57.573140"
+    "number": 7,
+    "started_at": "2026-03-30T23:23:38.850036"
   },
-  "last_update": "2026-03-27T11:39:52.334152"
+  "last_update": "2026-03-31T00:00:10.381232"
 }
