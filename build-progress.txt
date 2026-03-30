@@ -1,8 +1,9 @@
 === AUTO-BUILD PROGRESS ===
 
-Project: Enhanced Reliability Score Display with Trend Indicators
-Workspace: /Users/yanuar/Documents/daws/daily-worker-hub-web/.auto-claude/worktrees/tasks/040-enhanced-reliability-score-display-with-trend-indi
-Started: 2026-03-26
+Project: P0: Set up production Supabase project
+Spec: 065
+Workspace: /Users/yanuar/Documents/daws/daily-worker-hub-web/.auto-claude/worktrees/tasks/065-p0-set-up-production-supabase-project
+Started: 2026-03-31
 
 Workflow Type: feature
 Rationale: Frontend-heavy feature that enhances the existing reliability score system with trend indicators, improved breakdowns, historical charts, and marketplace integration. No backend changes needed since the data model already exists.
@@ -128,3 +129,59 @@ Session 5 (2026-03-26) - Subtask-1-2 Final Verification:
 - Verification command cannot run due to sandbox restrictions
 
 === END SESSION 5 ===
+
+================================================================================
+=== NEW PROJECT: 065 - P0: Set up production Supabase project ================
+================================================================================
+
+Session 1 (2026-03-31) - subtask-1-1:
+- Task: Create new Supabase project via dashboard or CLI
+- BLOCKER IDENTIFIED: Sandbox network restriction
+  * Proxy at localhost:59198 blocks access to api.supabase.com (403 Forbidden)
+  * SUPABASE_ACCESS_TOKEN is empty in environment (length=0)
+  * Cannot run: supabase projects list
+  * Cannot run: supabase projects create
+  * Cannot call Management API directly (curl blocked by proxy)
+- Root cause:
+  * The sandbox uses a proxy that blocks external API calls
+  * The SUPABASE_ACCESS_TOKEN env var is empty/not set
+  * Supabase CLI requires valid credentials + network access
+- Required manual action:
+  * User must create project at https://supabase.com/dashboard
+  * Or set valid SUPABASE_ACCESS_TOKEN in environment
+- Impact: subtask-1-1 blocked, all subsequent phases blocked
+- Status: PENDING (manual step required)
+
+=== BLOCKER DOCUMENTATION ===
+
+To create the Supabase project, you must do ONE of the following:
+
+OPTION 1: Dashboard (Recommended)
+1. Go to https://supabase.com/dashboard
+2. Click "New Project"
+3. Name: "daily-worker-hub-prod"
+4. Database Password: Generate a secure password (save it!)
+5. Region: Choose closest to your users
+6. Pricing Plan: Pro (needed for Edge Functions)
+7. Click "Create new project"
+8. Wait for project to provision (2-5 minutes)
+9. Go to Settings → API
+10. Copy: Project URL, anon key, service_role key
+11. Set environment variables (needed for subsequent phases):
+    export SUPABASE_ACCESS_TOKEN="<your-personal-access-token>"
+    (Get from: https://supabase.com/dashboard/account/tokens)
+
+OPTION 2: CLI (requires valid SUPABASE_ACCESS_TOKEN)
+```bash
+supabase projects create "daily-worker-hub-prod" \
+  --organization-id <your-org-id> \
+  --db-password <generate-secure-password> \
+  --region <closest-region>
+```
+
+Verification command (after project created):
+```bash
+supabase projects list -o json | jq '.[] | select(.name == "daily-worker-hub-prod")'
+```
+
+=== END SESSION 1 ===
