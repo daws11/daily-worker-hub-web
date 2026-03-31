@@ -4,8 +4,30 @@
  * This module provides helper functions for error tracking and monitoring
  * with Sentry in the Daily Worker Hub application.
  *
+ * This file re-exports from the split client and server modules for
+ * backward compatibility. New code should prefer importing from the
+ * appropriate split module.
+ *
  * @see https://docs.sentry.io/platforms/javascript/guides/nextjs/
  */
+
+// Re-export from split files for backward compatibility
+export {
+  captureError,
+  addBreadcrumb,
+  setUser,
+  setTag,
+  setContext,
+} from "./sentry/client";
+
+export {
+  captureError,
+  addBreadcrumb,
+  setUser,
+  setTag,
+  setContext,
+  startSpan,
+} from "./sentry/server";
 
 import * as Sentry from "@sentry/nextjs";
 
@@ -31,35 +53,23 @@ interface ErrorContext {
   user?: SentryUser;
 }
 
+// Re-export Sentry for direct access if needed
+export { Sentry };
+
 /**
- * Capture an exception with optional context
+ * Set extra context for the current scope
  *
- * Use this to capture and send errors to Sentry with additional context
- * like tags, extra data, and user information.
+ * Extra data is arbitrary key-value pairs attached to events.
  *
- * @param error - The error to capture
- * @param context - Optional context including tags, extra data, and user info
+ * @param key - Context key
+ * @param value - Context value
  *
  * @example
- * try {
- *   await riskyOperation();
- * } catch (error) {
- *   captureException(error, {
- *     tags: { component: 'PaymentForm' },
- *     extra: { orderId: '12345' },
- *     user: { id: 'user-123', email: 'user@example.com' }
- *   });
- * }
+ * setExtra('orderId', '12345');
+ * setExtra('retryCount', 3);
  */
-export function captureException(error: unknown, context?: ErrorContext): void {
-  if (context?.user) {
-    Sentry.setUser(context.user);
-  }
-
-  Sentry.captureException(error, {
-    tags: context?.tags,
-    extra: context?.extra,
-  });
+export function setExtra(key: string, value: unknown): void {
+  Sentry.setExtra(key, value);
 }
 
 /**
@@ -108,12 +118,42 @@ export function setUserContext(user: SentryUser | null): void {
       id: user.id,
       email: user.email,
       username: user.username,
-      // Add role as a tag for easier filtering in Sentry
       role: user.role,
     });
   } else {
     Sentry.setUser(null);
   }
+}
+
+/**
+ * Capture an exception with optional context
+ *
+ * Use this to capture and send errors to Sentry with additional context
+ * like tags, extra data, and user information.
+ *
+ * @param error - The error to capture
+ * @param context - Optional context including tags, extra data, and user info
+ *
+ * @example
+ * try {
+ *   await riskyOperation();
+ * } catch (error) {
+ *   captureException(error, {
+ *     tags: { component: 'PaymentForm' },
+ *     extra: { orderId: '12345' },
+ *     user: { id: 'user-123', email: 'user@example.com' }
+ *   });
+ * }
+ */
+export function captureException(error: unknown, context?: ErrorContext): void {
+  if (context?.user) {
+    Sentry.setUser(context.user);
+  }
+
+  Sentry.captureException(error, {
+    tags: context?.tags,
+    extra: context?.extra,
+  });
 }
 
 /**
@@ -146,62 +186,6 @@ export function addBreadcrumb(
 }
 
 /**
- * Start a new span for performance monitoring
- *
- * Use this to measure the duration of important operations.
- * Note: startTransaction was removed in newer Sentry SDKs.
- * Use startSpan for performance instrumentation.
- *
- * @param name - Name of the span
- * @param op - Operation type (e.g., 'http.server', 'db.query')
- *
- * @example
- * const result = await startSpan('process-payment', 'payment', async () => {
- *   // ... do work ...
- *   return result;
- * });
- */
-export async function startSpan<T>(
-  name: string,
-  op: string,
-  callback: () => T | Promise<T>,
-): Promise<T> {
-  return Sentry.startSpan({ name, op }, callback);
-}
-
-/**
- * Set a tag for error categorization
- *
- * Tags are key-value pairs that can be used to filter and search errors.
- *
- * @param key - Tag key
- * @param value - Tag value
- *
- * @example
- * setTag('feature', 'job-matching');
- * setTag('version', '1.0.0');
- */
-export function setTag(key: string, value: string): void {
-  Sentry.setTag(key, value);
-}
-
-/**
- * Set extra context for the current scope
- *
- * Extra data is arbitrary key-value pairs attached to events.
- *
- * @param key - Context key
- * @param value - Context value
- *
- * @example
- * setExtra('orderId', '12345');
- * setExtra('retryCount', 3);
- */
-export function setExtra(key: string, value: unknown): void {
-  Sentry.setExtra(key, value);
-}
-
-/**
  * Create a wrapped function that captures errors
  *
  * Useful for wrapping event handlers or async functions.
@@ -222,7 +206,6 @@ export function withErrorTracking<T extends (...args: unknown[]) => unknown>(
   return ((...args: Parameters<T>) => {
     try {
       const result = fn(...args);
-      // Handle async functions
       if (result instanceof Promise) {
         return result.catch((error) => {
           captureException(error, context);
@@ -298,6 +281,3 @@ export function reportPaymentError(
     },
   });
 }
-
-// Re-export Sentry for direct access if needed
-export { Sentry };
