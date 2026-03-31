@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
-import { captureException } from "@/lib/sentry";
+import { captureError } from "@/lib/sentry/client";
 
 export default function GlobalError({
   error,
@@ -13,8 +13,7 @@ export default function GlobalError({
 }) {
   useEffect(() => {
     // Report global error to Sentry
-    console.error("Global fatal error:", error);
-    captureException(error, {
+    captureError(error, {
       tags: {
         section: "global",
         errorDigest: error.digest,
