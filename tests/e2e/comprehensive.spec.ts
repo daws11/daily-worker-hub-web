@@ -28,7 +28,7 @@ test.describe("Daily Worker Hub - Comprehensive E2E Testing", () => {
 
   test("1. Jobs Page - Home", async () => {
     console.log("Test 1: Jobs Page");
-    await page.goto("http://localhost:3000/jobs");
+    await page.goto("/jobs");
     await page.waitForLoadState("networkidle");
 
     // Wait for DOM content (faster than networkidle)
@@ -49,7 +49,7 @@ test.describe("Daily Worker Hub - Comprehensive E2E Testing", () => {
 
   test("2. Worker Login Page", async () => {
     console.log("Test 2: Worker Login Page");
-    await page.goto("http://localhost:3000/login?role=worker");
+    await page.goto("/login?role=worker");
     await page.waitForLoadState("networkidle");
 
     await page.waitForLoadState("networkidle", { timeout: 10000 });
@@ -65,7 +65,7 @@ test.describe("Daily Worker Hub - Comprehensive E2E Testing", () => {
 
   test("3. Business Login Page", async () => {
     console.log("Test 3: Business Login Page");
-    await page.goto("http://localhost:3000/login?role=business");
+    await page.goto("/login?role=business");
     await page.waitForLoadState("networkidle");
 
     await page.waitForLoadState("networkidle", { timeout: 10000 });
@@ -81,7 +81,7 @@ test.describe("Daily Worker Hub - Comprehensive E2E Testing", () => {
 
   test("4. Worker Dashboard", async () => {
     console.log("Test 4: Worker Dashboard");
-    await page.goto("http://localhost:3000/worker");
+    await page.goto("/worker");
     await page.waitForLoadState("networkidle");
 
     await page.waitForLoadState("networkidle", { timeout: 10000 });
@@ -97,7 +97,7 @@ test.describe("Daily Worker Hub - Comprehensive E2E Testing", () => {
 
   test("5. Business Dashboard", async () => {
     console.log("Test 5: Business Dashboard");
-    await page.goto("http://localhost:3000/business");
+    await page.goto("/business");
     await page.waitForLoadState("networkidle");
 
     await page.waitForLoadState("networkidle", { timeout: 10000 });
@@ -113,7 +113,7 @@ test.describe("Daily Worker Hub - Comprehensive E2E Testing", () => {
 
   test("6. Job Detail Page", async () => {
     console.log("Test 6: Job Detail Page");
-    await page.goto("http://localhost:3000/jobs");
+    await page.goto("/jobs");
     await page.waitForLoadState("networkidle");
 
     // Wait for job cards to load
@@ -148,7 +148,7 @@ test.describe("Daily Worker Hub - Comprehensive E2E Testing", () => {
 
   test("7. Worker Applications Page", async () => {
     console.log("Test 7: Worker Applications Page");
-    await page.goto("http://localhost:3000/worker/applications");
+    await page.goto("/worker/applications");
     await page.waitForLoadState("networkidle");
 
     await page.waitForLoadState("networkidle", { timeout: 10000 });
@@ -164,7 +164,7 @@ test.describe("Daily Worker Hub - Comprehensive E2E Testing", () => {
 
   test("8. Worker Bookings Page", async () => {
     console.log("Test 8: Worker Bookings Page");
-    await page.goto("http://localhost:3000/worker/bookings");
+    await page.goto("/worker/bookings");
     await page.waitForLoadState("networkidle");
 
     await page.waitForLoadState("networkidle", { timeout: 10000 });
@@ -180,7 +180,7 @@ test.describe("Daily Worker Hub - Comprehensive E2E Testing", () => {
 
   test("9. Business Jobs Page", async () => {
     console.log("Test 9: Business Jobs Page");
-    await page.goto("http://localhost:3000/business/jobs");
+    await page.goto("/business/jobs");
     await page.waitForLoadState("networkidle");
 
     await page.waitForLoadState("networkidle", { timeout: 10000 });
@@ -196,7 +196,7 @@ test.describe("Daily Worker Hub - Comprehensive E2E Testing", () => {
 
   test("10. Job Creation Page", async () => {
     console.log("Test 10: Job Creation Page");
-    await page.goto("http://localhost:3000/business/jobs/new");
+    await page.goto("/business/jobs/new");
     await page.waitForLoadState("networkidle");
 
     await page.waitForLoadState("networkidle", { timeout: 10000 });
@@ -212,7 +212,7 @@ test.describe("Daily Worker Hub - Comprehensive E2E Testing", () => {
 
   test("11. Booking Interview Page (Example)", async () => {
     console.log("Test 11: Booking Interview Page");
-    await page.goto("http://localhost:3000/business/interview/test");
+    await page.goto("/business/interview/test");
     await page.waitForLoadState("networkidle");
 
     await page.waitForLoadState("networkidle", { timeout: 10000 });
