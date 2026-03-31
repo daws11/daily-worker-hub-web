@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "057-extend-lru-cache-to-bookings-and-applications-api-",
+  "spec": "070-p1-test-end-to-end-in-production-like-environment",
   "state": "building",
   "subtasks": {
-    "completed": 14,
+    "completed": 1,
     "total": 15,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Build Verification",
+    "current": "Staging Environment Setup",
     "id": null,
-    "total": 2
+    "total": 3
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 16,
-    "started_at": "2026-03-27T11:06:57.573140"
+    "number": 2,
+    "started_at": "2026-03-31T17:10:01.328146"
   },
-  "last_update": "2026-03-27T11:39:52.334152"
+  "last_update": "2026-03-31T17:12:27.945784"
 }

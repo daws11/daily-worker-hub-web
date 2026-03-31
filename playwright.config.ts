@@ -23,11 +23,35 @@ export default defineConfig({
     viewport: { width: 1280, height: 720 },
   },
   projects: [
+    // Chromium (local development)
     {
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
         channel: "chrome",
+      },
+    },
+    // Firefox
+    {
+      name: "firefox",
+      use: {
+        ...devices["Desktop Firefox"],
+      },
+    },
+    // WebKit
+    {
+      name: "webkit",
+      use: {
+        ...devices["Desktop Safari"],
+      },
+    },
+    // Staging environment - Chromium
+    {
+      name: "staging-chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+        channel: "chrome",
+        baseURL: "http://staging.local:3000",
       },
     },
   ],
