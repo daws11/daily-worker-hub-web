@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertTriangle, RefreshCw, Home } from "lucide-react";
-import { captureException } from "@/lib/sentry";
+import { captureError } from "@/lib/sentry/client";
 
 export default function Error({
   error,
@@ -17,7 +17,7 @@ export default function Error({
   useEffect(() => {
     // Log error to console and Sentry
     console.error("Root error:", error);
-    captureException(error, {
+    captureError(error, {
       tags: {
         section: "root",
         errorDigest: error.digest,
