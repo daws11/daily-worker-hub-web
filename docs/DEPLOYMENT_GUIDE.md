@@ -891,4 +891,346 @@ After rolling back, verify the system is healthy before announcing recovery:
 
 ## 🔐 Configuration Management
 
-*(To be added in subtask 1-5 — see [implementation plan](../.auto-claude/specs/072-p1-document-deployment-process/implementation_plan.json))*
+This section explains how environment variables are structured, scoped, and managed across all environments — local development, Vercel preview, and production. It covers the `NEXT_PUBLIC_` naming convention, secrets management, configuration validation, and credential rotation procedures.
+
+> For the complete production environment variable reference table, see [PRODUCTION_ENVIRONMENT_CHECKLIST.md](PRODUCTION_ENVIRONMENT_CHECKLIST.md). For a before/after deployment checklist, see [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md).
+
+---
+
+### Configuration Hierarchy
+
+Daily Worker Hub uses a layered configuration system. Each layer can override the one before it:
+
+| Layer | Source | Scope | Overridable at runtime? |
+|-------|--------|-------|------------------------|
+| **1** | `.env.local` | Local only | No (read at build time) |
+| **2** | `.env.production` | Production build | No (read at build time) |
+| **3** | Vercel dashboard env vars | Per environment | Yes (via dashboard, redeploy needed for `NEXT_PUBLIC_`) |
+| **4** | Runtime env vars (server routes) | Server-side only | Yes (in Vercel dashboard) |
+
+> **Build-time vs. runtime:** `NEXT_PUBLIC_` variables are embedded into the browser bundle at **build time**. Changing them in the Vercel dashboard requires a redeploy to take effect. Server-side variables (`process.env.*` without `NEXT_PUBLIC_`) are read at request time and do not require a redeploy.
+
+---
+
+### The `NEXT_PUBLIC_` Naming Convention
+
+Next.js uses the `NEXT_PUBLIC_` prefix to determine which environment variables should be exposed to the browser. The distinction is critical for security.
+
+#### Always safe to expose (prefixed with `NEXT_PUBLIC_`)
+
+These variables are safe to include in the client-side JavaScript bundle:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...          # intentionally public
+NEXT_PUBLIC_APP_URL=https://yourdomain.com
+NEXT_PUBLIC_BASE_URL=https://yourdomain.com
+NEXT_PUBLIC_SITE_URL=https://yourdomain.com
+NEXT_PUBLIC_VAPID_KEY=BElq...                   # web push public key
+NEXT_PUBLIC_SENTRY_DSN=https://xxx@o.ingest.sentry.io/xxx
+NEXT_PUBLIC_FIREBASE_API_KEY=AIza...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=xxx.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=xxx
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=xxx.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=xxx
+NEXT_PUBLIC_FIREBASE_APP_ID=1:xxx:web:xxx
+NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=your-midtrans-client-key
+```
+
+#### Never expose to the browser (no prefix, or explicit `VERCEL_` / `SERVICE_ROLE`)
+
+These variables are server-side only. Exposing them to the browser would give attackers full administrative access:
+
+```bash
+# ❌ NEVER prefix these with NEXT_PUBLIC_
+
+SUPABASE_SERVICE_ROLE_KEY=eyJ...              # bypasses all RLS policies
+UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
+UPSTASH_REDIS_REST_TOKEN=xxx
+XENDIT_SECRET_KEY=xnd_production_...            # payment API — financial risk
+XENDIT_WEBHOOK_TOKEN=xxx
+VAPID_PRIVATE_KEY=xxx                            # push notification signing key
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n..."
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk@xxx.iam.gserviceaccount.com
+RESEND_API_KEY=re_xxx
+SENTRY_AUTH_TOKEN=xxx                            # CI/CD only
+ADMIN_API_SECRET=xxx
+CRON_SECRET=xxx
+INSTAGRAM_APP_SECRET=xxx
+FACEBOOK_APP_SECRET=xxx
+MIDTRANS_SERVER_KEY=xxx
+```
+
+#### Rule summary
+
+```
+prefixed with NEXT_PUBLIC_  → bundled into client JS (safe: public keys, URLs)
+no prefix                    → server-side only (never expose, never commit)
+```
+
+---
+
+### Managing Secrets
+
+Secrets must never be committed to the repository. Follow these practices at all times.
+
+#### `.env.local` — local development only
+
+The `.env.local` file is git-ignored (listed in `.gitignore`) and is the correct place for local secrets:
+
+```bash
+cp .env.local.example .env.local
+# Then fill in real values (never commit this file)
+```
+
+Never commit `.env.local`. If you accidentally do, rotate the affected credentials immediately and revoke the old key in the respective service dashboard.
+
+#### Vercel dashboard — all non-local environments
+
+All production and preview secrets are managed in the **Vercel dashboard → Settings → Environment Variables**:
+
+1. Navigate to **Project Settings → Environment Variables**.
+2. Add each variable with the correct scope:
+   - **`Production`** — live application accessed by end users
+   - **`Preview`** — isolated deployments for every GitHub pull request
+   - **`Development`** — local `vercel dev` sessions (uses `.env.local` by default)
+3. Mark variables as **sensitive** (the lock icon) where the platform supports it. This prevents the value from appearing in build logs.
+4. For `NEXT_PUBLIC_` variables, set them under **Production** scope — they will be baked into the browser bundle at the next deploy.
+
+> **Screenshot:** Vercel environment variables with sensitive flag — `screenshots/vercel-env-vars-sensitive.png` *(TODO: capture)*
+
+#### Never commit secrets to git
+
+The `.gitignore` file in the project root already excludes the following files:
+
+```
+.env.local
+.env.*.local
+```
+
+If a new secret file is added to the project, add it to `.gitignore` immediately. As an additional safeguard, the CI pipeline (see [CI/CD Pipeline](#-cicd-pipeline)) will reject any commit containing common secret patterns (e.g., `xnd_production_`, `SUPABASE_SERVICE_ROLE_KEY=`).
+
+#### Using `.env.example` for documentation
+
+`.env.local.example` at the project root documents every variable without containing real values. Update it whenever a new environment variable is added to the project. This file is committed to git and serves as the authoritative reference for all available configuration options.
+
+---
+
+### Environment-Specific Configuration
+
+Different deployment environments require different values. The table below maps each environment to its correct configuration.
+
+| Variable | Local (`pnpm dev`) | Preview (PR deploys) | Production (`main` merge) |
+|----------|-------------------|---------------------|--------------------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | `http://127.0.0.1:54321` | Supabase staging URL | Supabase production URL |
+| `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` | `https://*-vercel.app` | `https://yourdomain.com` |
+| `NEXT_PUBLIC_SENTRY_DSN` | Dev/no-op DSN | Preview Sentry project | Production Sentry project |
+| `XENDIT_SECRET_KEY` | Sandbox key | Sandbox key | Production key |
+| `MIDTRANS_IS_PRODUCTION` | `false` | `false` | `true` |
+
+To differentiate environments in code, use `process.env.VERCEL_ENV`:
+
+```typescript
+// lib/supabase/admin.ts
+const isProduction = process.env.VERCEL_ENV === 'production';
+
+if (!isProduction) {
+  console.warn('[Supabase Admin] Running against non-production database');
+}
+```
+
+---
+
+### Accessing Configuration in Code
+
+#### Client-side (browser bundle)
+
+```typescript
+// lib/supabase/client.ts
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+```
+
+#### Server-side (API routes, Server Components)
+
+```typescript
+// lib/supabase/admin.ts
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPabaseUrl!;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+export const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+  auth: { autoRefreshToken: false, persistSession: false },
+});
+```
+
+> **Security note:** `SUPABASE_SERVICE_ROLE_KEY` bypasses Row Level Security (RLS). Use it only in trusted server-side contexts (API routes, cron jobs, background functions). Never use it in client-side code.
+
+#### Payment configuration
+
+```typescript
+// lib/payments/xendit.ts
+const xenditSecretKey = process.env.XENDIT_SECRET_KEY;
+const webhookToken = process.env.XENDIT_WEBHOOK_TOKEN;
+
+if (!xenditSecretKey || !webhookToken) {
+  throw new Error('Missing Xendit environment variables');
+}
+```
+
+---
+
+### Configuration Validation
+
+All required environment variables are validated at application startup using a runtime check in the Next.js server. If a required variable is missing, the app logs a clear error and exits with a non-zero exit code rather than running in a degraded state.
+
+The validation function in `lib/config/validate.ts` (or equivalent entry point) checks:
+
+```typescript
+const REQUIRED_SERVER_VARS = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'SUPABASE_SERVICE_ROLE_KEY',
+  'XENDIT_SECRET_KEY',
+  'ADMIN_API_SECRET',
+  'CRON_SECRET',
+] as const;
+
+const REQUIRED_PUBLIC_VARS = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'NEXT_PUBLIC_APP_URL',
+] as const;
+
+for (const key of REQUIRED_SERVER_VARS) {
+  if (!process.env[key]) {
+    console.error(`[Config] Missing required server variable: ${key}`);
+    process.exit(1);
+  }
+}
+```
+
+This validation runs on every cold start of a serverless function or API route. To skip validation during local development when certain services are unavailable, use a graceful fallback pattern:
+
+```typescript
+// Graceful degradation for local dev (supabase offline)
+if (process.env.NODE_ENV === 'development' && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  console.warn('[Config] Supabase URL not set — running in degraded mode');
+}
+```
+
+---
+
+### Rotating Credentials
+
+When a secret is compromised or a key needs to be refreshed, follow this rotation procedure to avoid downtime.
+
+#### Step 1 — Generate new credentials
+
+In the service dashboard (Supabase, Xendit, Resend, etc.), generate a new API key or pair. Keep the old key active during rotation.
+
+#### Step 2 — Update Vercel environment variables
+
+In the **Vercel dashboard → Settings → Environment Variables**:
+
+1. Find the variable being rotated.
+2. Click the pencil (edit) icon.
+3. Update the value with the new credential.
+4. Click **Save**.
+
+For server-side variables (`XENDIT_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, etc.), the change takes effect immediately on the next request — no redeploy needed.
+
+For `NEXT_PUBLIC_` variables, a redeploy is required to bake the new value into the browser bundle:
+
+```bash
+vercel deploy --prod
+```
+
+Or trigger a redeploy from the Vercel dashboard: **Deployments → ⋯ → Redeploy**.
+
+#### Step 3 — Verify the new credentials work
+
+1. Check the production application logs in the Vercel dashboard for errors.
+2. Run a smoke test for the affected feature (e.g., a test payment for Xendit, a test email for Resend).
+3. Confirm no new errors in Sentry.
+
+#### Step 4 — Revoke the old credential
+
+Once you have confirmed the new credential is working correctly, revoke the old key in the service dashboard. Do not leave old keys active — they are a security risk.
+
+#### Quick reference: rotation triggers
+
+| Variable | Rotation trigger | Downtime risk | Redeploy needed? |
+|----------|-----------------|---------------|-----------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project recreated | Yes (URL change) | Yes |
+| `SUPABASE_SERVICE_ROLE_KEY` | Suspected compromise | None | No |
+| `XENDIT_SECRET_KEY` | Suspected compromise | None | No |
+| `XENDIT_WEBHOOK_TOKEN` | Suspected compromise | None | No |
+| `VAPID_PRIVATE_KEY` | VAPID key leaked | Push notifications fail | No |
+| `FIREBASE_PRIVATE_KEY` | Service account compromised | Push notifications fail | No |
+| `RESEND_API_KEY` | Suspected compromise | Email sending fails | No |
+| `ADMIN_API_SECRET` | Suspected compromise | Admin endpoints fail | No |
+| `CRON_SECRET` | Suspected compromise | Cron endpoints fail | No |
+| `SENTRY_AUTH_TOKEN` | Suspected compromise | Source map uploads fail | No |
+
+---
+
+### Multi-Environment Consistency
+
+Keeping configuration consistent across environments prevents subtle bugs that only appear in production. Follow these practices.
+
+#### Use Vercel environments to isolate
+
+Never point the `Production` Vercel environment at staging Supabase data. Each environment should use its own:
+- **Supabase project** (separate projects for dev/staging/prod)
+- **Xendit account** (separate accounts or sub-accounts for sandbox/production)
+- **Firebase project** (separate Firebase projects)
+- **Sentry project** (separate DSNs per environment)
+
+#### Pin dependency versions in CI
+
+The CI pipeline locks package versions via `pnpm-lock.yaml`. When deploying, always run `pnpm install` (not `pnpm install --frozen-lockfile` if the lock file was intentionally updated). This ensures the deployed code uses the exact same dependency versions as tested.
+
+```bash
+# In CI/CD pipeline
+pnpm install --frozen-lockfile   # strict: only install if lockfile matches package.json
+pnpm run build
+```
+
+#### Validate configuration in CI
+
+As a sanity check before merging, the pre-deployment CI step can validate that all required env vars are present:
+
+```bash
+# Check required production env vars are set (CI pipeline)
+node -e "
+  const required = ['NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
+  const missing = required.filter(k => !process.env[k]);
+  if (missing.length > 0) {
+    console.error('Missing env vars:', missing.join(', '));
+    process.exit(1);
+  }
+  console.log('All required env vars present');
+"
+```
+
+---
+
+### Adding a New Environment Variable
+
+Follow this checklist whenever a new environment variable is added to the project:
+
+1. **Add to `.env.local.example`** with a descriptive comment explaining the variable's purpose and where to obtain its value.
+2. **Choose the correct prefix:**
+   - `NEXT_PUBLIC_` prefix → exposed to browser (safe public values only)
+   - No prefix → server-side only (secrets, keys, connection strings)
+3. **Add to Vercel dashboard** under the appropriate environment scope (`Production`, `Preview`, or `Development`).
+4. **Add validation** in the configuration validation entry point if the variable is required.
+5. **Update `PRODUCTION_ENVIRONMENT_CHECKLIST.md`** to reflect the new variable.
+6. **Commit `.env.local.example`** — never commit the real value.
+
+> **Screenshot:** Updating `.env.local.example` — `screenshots/env-example-update.png` *(TODO: capture)*
