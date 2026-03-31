@@ -738,7 +738,154 @@ Production migrations are pushed separately, after the preview deployment is ver
 
 ## ↩️ Rollback Procedures
 
-*(To be added in subtask 1-4 — see [implementation plan](../.auto-claude/specs/072-p1-document-deployment-process/implementation_plan.json))*
+This section describes how to roll back a broken production deployment — both the frontend application and the database — quickly and safely.
+
+> **Always back up before rolling back.** If time permits, run `scripts/backup-supabase.sh --full` before any destructive rollback operation. See [backup-restore.md](backup-restore.md) for the full backup and restore reference.
+
+---
+
+### Deciding Which Rollback to Use
+
+Use this table to choose the right rollback path based on what went wrong:
+
+| What broke? | Roll back what? | See section |
+|------------|----------------|------------|
+| Bad frontend deploy (broken UI, JS errors, crashes) | Vercel deployment only | [Roll Back a Vercel Deployment](#roll-back-a-vercel-deployment) |
+| Broken migration (failed `supabase db push`, wrong schema) | Database migration only | [Roll Back a Database Migration](#roll-back-a-database-migration) |
+| Both a bad deploy AND a bad migration | Both — deployment first, then database | Both sections below |
+
+---
+
+### Roll Back a Vercel Deployment
+
+A Vercel rollback promotes a previous successful deployment back to production without requiring a code re-deploy. The application state is restored instantly; the Supabase database is **not** affected.
+
+#### Via the Vercel Dashboard
+
+1. Go to **Deployments** in the [Vercel dashboard](https://vercel.com/daily-worker-hub/deployments).
+2. Find the last known good deployment (status ✅ **Ready**).
+3. Click **⋯** (three dots) on that deployment row.
+4. Select **Promote to Production**.
+5. Confirm. Vercel will update the production URL to point at the selected deployment within seconds.
+
+#### Via the Vercel CLI
+
+```bash
+# Roll back to the previous deployment instantly
+vercel rollback
+```
+
+This promotes the most recent successful production deployment. To roll back to a specific deployment:
+
+```bash
+# List recent deployments
+vercel list
+
+# Roll back to a specific deployment URL or deployment ID
+vercel rollback daily-worker-hub-abc123.vercel.app
+```
+
+> **Note:** `vercel rollback` only reverts the Next.js application. Environment variables, cron jobs, and serverless function configurations are preserved as they were in the target deployment.
+
+---
+
+### Roll Back a Database Migration
+
+Supabase does not support automatic rollback of applied migrations. Two options are available.
+
+#### Option A — Compensating Migration (preferred)
+
+For non-destructive mistakes (e.g., added an incorrect column, wrong constraint), the safest approach is to write a new migration that reverses the change.
+
+```bash
+# Create a compensating migration
+touch "migrations/$(date +'%Y%m%d%H%M%S')_undo_your_migration_name.sql"
+```
+
+Example — dropping an incorrectly added column:
+
+```sql
+-- Undo: 20260223_add_subscription_tier.sql
+ALTER TABLE public.users DROP COLUMN IF EXISTS subscription_tier;
+```
+
+Apply the compensating migration the same way as any other migration:
+
+```bash
+supabase db push --project-ref your-project-ref --yes
+```
+
+> **Benefit:** No data is lost. The database stays online throughout.
+> **When to use:** Wrong column type, missing constraint, incorrect default, unwanted index.
+
+#### Option B — Restore from Backup
+
+For destructive mistakes where data integrity is at risk (e.g., `DROP TABLE`, accidental `DELETE` via a bad migration), restore from the most recent pre-migration backup.
+
+> **⚠️ Warning:** Restoring from backup **overwrites all data** created after the backup was taken. Use only when the compensating migration approach is not feasible.
+
+**Steps:**
+
+1. **Confirm a recent backup exists:**
+
+   ```bash
+   ls -lh backups/daily-worker-hub-full-*.sql.gz | head -5
+   ```
+
+2. **Download or locate the backup** created before the bad migration. The `scripts/backup-supabase.sh` timestamps all backups.
+
+3. **Extract the backup:**
+
+   ```bash
+   cd backups
+   gunzip -k daily-worker-hub-full-YYYYMMDD_HHMMSS.sql.gz
+   ```
+
+4. **Restore the database:**
+
+   ```bash
+   psql "$SUPABASE_DB_URL" < daily-worker-hub-full-YYYYMMDD_HHMMSS.sql
+   ```
+
+5. **Verify key tables are present:**
+
+   ```bash
+   psql "$SUPABASE_DB_URL" -c "SELECT count(*) FROM users;"
+   psql "$SUPABASE_DB_URL" -c "SELECT count(*) FROM bookings;"
+   ```
+
+6. **Do not re-apply the bad migration** — fix it locally first, then push a corrected version.
+
+For full restore procedures and configuration, see [backup-restore.md](backup-restore.md).
+
+---
+
+### Pre-Rollback Backup Checklist
+
+Run this before any rollback to preserve the current (broken) state:
+
+- [ ] Run `scripts/backup-supabase.sh --full` to capture the current database state
+- [ ] Note the current Vercel deployment URL from the dashboard
+- [ ] Document the error or incident in your monitoring tool (Sentry, Slack)
+- [ ] Notify the team in the `#incidents` channel (if applicable)
+
+---
+
+### Post-Rollback Verification
+
+After rolling back, verify the system is healthy before announcing recovery:
+
+1. **Check the Vercel dashboard** — confirm the deployment status is ✅ **Ready**.
+2. **Test the application** — load the production URL and verify the broken behaviour is resolved.
+3. **Check Sentry** — confirm no new errors are being reported.
+4. **Check Supabase dashboard** — confirm database is responsive and row counts look correct.
+5. **Run smoke tests:**
+
+   ```bash
+   pnpm run test:e2e
+   ```
+
+6. **Update the incident ticket** with the rollback timestamp and outcome.
 
 ---
 

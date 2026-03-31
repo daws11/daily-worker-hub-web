@@ -1,25 +1,25 @@
 {
   "active": true,
-  "spec": "057-extend-lru-cache-to-bookings-and-applications-api-",
+  "spec": "072-p1-document-deployment-process",
   "state": "building",
   "subtasks": {
-    "completed": 14,
-    "total": 15,
+    "completed": 3,
+    "total": 11,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Build Verification",
+    "current": "Draft Deployment Guide",
     "id": null,
-    "total": 2
+    "total": 5
   },
   "workers": {
     "active": 0,
     "max": 1
   },
   "session": {
-    "number": 16,
-    "started_at": "2026-03-27T11:06:57.573140"
+    "number": 4,
+    "started_at": "2026-03-31T16:38:16.144862"
   },
-  "last_update": "2026-03-27T11:39:52.334152"
+  "last_update": "2026-03-31T16:48:33.519556"
 }
