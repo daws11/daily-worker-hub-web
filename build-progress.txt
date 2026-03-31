@@ -1,11 +1,11 @@
 === AUTO-BUILD PROGRESS ===
 
-Project: Enhanced Reliability Score Display with Trend Indicators
-Workspace: /Users/yanuar/Documents/daws/daily-worker-hub-web/.auto-claude/worktrees/tasks/040-enhanced-reliability-score-display-with-trend-indi
-Started: 2026-03-26
+Project: Full Payment Flow Testing in Sandbox Environment
+Workspace: /Users/yanuar/Documents/daws/daily-worker-hub-web/.auto-claude/worktrees/tasks/067-p0-test-payment-flow-in-sandbox-environment
+Started: 2026-03-31
 
 Workflow Type: feature
-Rationale: Frontend-heavy feature that enhances the existing reliability score system with trend indicators, improved breakdowns, historical charts, and marketplace integration. No backend changes needed since the data model already exists.
+Rationale: E2E test scripts for payment and refund flows. Tests exercise full stack (API/webhook/DB/wallet). Follows patterns from existing test-e2e-business-topup.ts and test-e2e-error-handling.ts.
 
 Session 1 (Planner):
 - Created implementation_plan.json
@@ -128,3 +128,31 @@ Session 5 (2026-03-26) - Subtask-1-2 Final Verification:
 - Verification command cannot run due to sandbox restrictions
 
 === END SESSION 5 ===
+
+Session 6 (2026-03-31) - Subtask-3-1: test-e2e-payment-refund-flow.ts:
+- Subtask: Create scripts/test-e2e-payment-refund-flow.ts
+- Description: Refund scenario: successful top-up → Xendit refund simulation → wallet debit → refund record
+- Status: COMPLETED
+- File created: scripts/test-e2e-payment-refund-flow.ts
+- Implementation follows patterns from:
+  * scripts/test-e2e-business-topup.ts (step functions, color logging, Supabase client, CLI execution)
+  * scripts/test-e2e-error-handling.ts (numbered test phases, wallet seeding, cleanup)
+  * app/api/webhooks/xendit/route.ts (webhook simulation, wallet operations, wallet_transactions)
+- Script phases:
+  1. Phase 1: Successful Top-Up (verify business, create wallet, validate amount, create transaction, simulate webhook, credit wallet)
+  2. Phase 2: Verify Top-Up (confirm transaction success and wallet balance)
+  3. Phase 3: Xendit Refund Simulation (simulate REFUNDED/PARTIALLY_REFUNDED webhook)
+  4. Phase 4: Wallet Debit (debit wallet by refund amount)
+  5. Phase 5: Refund Record (record in wallet_transactions, verify records, verify final balance, cleanup)
+- Script features:
+  * Supports full refund (refund_percentage=1.0) and partial refund (e.g., 0.5 for 50%)
+  * --help flag shows usage instructions
+  * UUID validation for business_id
+  * Amount and refund_percentage validation
+  * Cleanup: deletes test records, resets wallet balance to 0
+  * Follows magenta/cyan/blue/green/red color scheme per patterns
+- Type-check: Blocked (npm registry 403 Forbidden in sandbox environment)
+- Note: ts-node not available in sandbox; script follows exact patterns from verified existing scripts
+- Status in implementation_plan.json: "completed" ✓
+
+=== END SESSION 6 ===
