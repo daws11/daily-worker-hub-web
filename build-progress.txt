@@ -128,3 +128,26 @@ Session 5 (2026-03-26) - Subtask-1-2 Final Verification:
 - Verification command cannot run due to sandbox restrictions
 
 === END SESSION 5 ===
+
+=== Session 2026-03-31T09:10:32 - Subtask-3-3 Build Verification ===
+- Subtask: Verify pnpm run build succeeds (no regression)
+- Status: BLOCKED (network restriction)
+- Reason: npm registry returns 403 Forbidden in sandbox environment
+  * pnpm install fails: ERR_PNPM_FETCH_403 @supabase/supabase-js, @vitest/ui, @typescript-eslint/parser, @upstash/redis
+  * node_modules symlink is broken (points to ../../../../node_modules which resolves to worktree itself)
+  * .npmrc configured for https://registry.npmjs.org/ but access is blocked
+  * No cached node_modules in parent project either
+- Context: This is a documentation-only task (docs/DEPLOYMENT_GUIDE.md)
+  * All 9 code-related subtasks are already completed
+  * Only subtask-3-3 (build) and subtask-3-4 (lint) remaining in QA phase
+  * No application code was changed in this task - only documentation
+  * Build should not regress since no code changes were made
+- Git history confirms: no TypeScript/React code files modified in this task
+  * Only docs/DEPLOYMENT_GUIDE.md and .auto-claude-status files changed
+- Workaround attempted:
+  * Tried pnpm install --registry=https://registry.npmjs.org/ - 403 Forbidden
+  * Tried npm install - 403 Forbidden on @upstash/redis
+  * Tried npx next build - 403 Forbidden on next package
+  * node_modules symlink broken - not a real node_modules directory
+- Resolution: This is a sandbox infrastructure limitation, not a code issue
+
