@@ -434,7 +434,305 @@ This immediately reverts the production deployment to the last known good state.
 
 ## 🗄️ Database Migrations
 
-*(To be added in subtask 1-3 — see [implementation plan](../.auto-claude/specs/072-p1-document-deployment-process/implementation_plan.json))*
+Database schema changes are managed via SQL migration files in the `migrations/` directory. Every change to the production schema — adding columns, creating tables, modifying indexes, or updating RLS policies — must go through a migration. Direct `ALTER TABLE` statements in the Supabase dashboard are not used; all schema changes are code-driven and version-controlled.
+
+> **Important:** Always back up the database before running migrations in production. See [backup-restore.md](backup-restore.md) for backup procedures, or use `scripts/backup-supabase.sh` for automated backups.
+
+---
+
+### Migration File Structure
+
+Migration files live in the `migrations/` directory at the project root. Two naming conventions are used:
+
+| Convention | Pattern | Example |
+|-----------|---------|---------|
+| **Timestamped** (preferred for sequential ordering) | `YYYYMMDDHHMMSS_description.sql` | `20260223_add_notification_preferences.sql` |
+| **Named** (for initial schema or independent changes) | `description.sql` | `add_conversations_table.sql` |
+
+Every migration file follows a consistent structure — modelled after the examples in `migrations/` — using section comments to group related operations:
+
+```sql
+-- ============================================================================
+-- [Migration Title]
+-- ============================================================================
+-- [One-line description of what this migration does and why]
+-- Version: YYYYMMDD
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- [Section Name]
+-- ----------------------------------------------------------------------------
+[SQL statements]
+
+-- ----------------------------------------------------------------------------
+-- [Comments for documentation]
+-- ----------------------------------------------------------------------------
+COMMENT ON TABLE ... IS '...';
+COMMENT ON COLUMN ... IS '...';
+
+-- ----------------------------------------------------------------------------
+-- [Indexes]
+-- ----------------------------------------------------------------------------
+CREATE INDEX ...
+
+-- ----------------------------------------------------------------------------
+-- [Row Level Security]
+-- ----------------------------------------------------------------------------
+ALTER TABLE ... ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "..." ON ...;
+```
+
+Key conventions observed in all migrations:
+- **`public.`** schema prefix on all table/column references (e.g., `public.bookings`).
+- **`uuid_generate_v4()`** for primary key defaults — Supabase's standard UUID generation.
+- **`TIMESTAMPTZ`** for all timestamp columns — always UTC with timezone awareness.
+- **`updated_at` trigger** pattern on every table with `CREATE OR REPLACE FUNCTION update_updated_at_column()` to avoid duplicates.
+- **RLS enabled** on every table. Public access is always denied; policies are explicit.
+- **`IF EXISTS` / `IF NOT EXISTS`** guards on `CREATE/DROP` statements for idempotency.
+
+---
+
+### Local Migration Workflow
+
+Use the Supabase CLI to run migrations against the local Docker database.
+
+#### Prerequisites
+
+Ensure Docker is running and Supabase CLI is installed:
+
+```bash
+# Verify Supabase CLI is available
+supabase --version
+
+# Verify Docker is running
+docker ps
+```
+
+#### Running all pending migrations
+
+```bash
+# Start local Supabase services (Postgres, Auth, Storage, etc.)
+supabase start
+
+# Push all migrations from migrations/ to the local database
+supabase db push
+```
+
+`supabase db push` compares the local database state against the files in `migrations/` and applies only the missing ones. It is safe to run multiple times — it is idempotent.
+
+#### Resetting the local database
+
+To discard all local data and reapply every migration from scratch:
+
+```bash
+# WARNING: This deletes all local data
+supabase db reset
+```
+
+> **Warning:** `supabase db reset` drops and recreates the local database. Do not use this in production.
+
+#### Inspecting migration status
+
+```bash
+# List all migrations applied to the local database and their status
+supabase migration list
+```
+
+#### Applying a specific migration manually (psql)
+
+If you need to run a single migration file directly:
+
+```bash
+psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+  --set ON_ERROR_STOP=on \
+  --file migrations/20260223_add_notification_preferences.sql
+```
+
+Replace the connection string with the one printed by `supabase status` if it differs.
+
+---
+
+### Production Migration Workflow
+
+Migrations are pushed to the Supabase hosted production database using the Supabase CLI. All migrations run within a transaction — if any statement fails, the entire migration is rolled back.
+
+#### Prerequisites
+
+```bash
+# Login to Supabase CLI (one-time setup)
+supabase login
+
+# Link the CLI to your production project
+supabase link --project-ref your-project-ref
+```
+
+> **Note:** You will be prompted for the Supabase database password during linking. Find this in **Settings → Database** in the Supabase dashboard.
+
+#### Pushing migrations to production
+
+```bash
+# Push all pending migrations to the linked production project
+supabase db push --project-ref your-project-ref
+```
+
+The CLI will:
+1. Compare local migration files against the production database's migration history.
+2. Show a diff of the SQL that will be applied.
+3. Prompt for confirmation before executing.
+4. Apply each migration in a transaction.
+
+To skip the confirmation prompt (useful for CI/CD):
+
+```bash
+supabase db push --project-ref your-project-ref --yes
+```
+
+#### Checking production migration status
+
+```bash
+# List applied migrations in production
+supabase migration list --linked
+```
+
+To verify a specific table or column exists in production:
+
+```bash
+psql "$SUPABASE_DB_URL" \
+  --command "\d public.conversations"
+```
+
+> **Screenshot:** Supabase SQL Editor showing table schema — `screenshots/supabase-table-schema.png` *(TODO: capture)*
+
+---
+
+### Creating a New Migration
+
+Follow this checklist when adding a new migration:
+
+1. **Create the file** in `migrations/` with the appropriate naming convention:
+
+```bash
+touch "migrations/$(date +'%Y%m%d%H%M%S')_add_your_feature.sql"
+```
+
+2. **Write the migration** following the structure above. Every migration must:
+   - Be **idempotent** — safe to run on a database that already has the change.
+   - Be **fully commented** — include a table of contents header, section dividers, and `COMMENT ON` statements for every new table and column.
+   - **Enable RLS** on any new table and define explicit access policies.
+   - Include **`updated_at` triggers** for tables that are updated.
+   - Use **`IF EXISTS` / `IF NOT EXISTS`** guards on `CREATE/DROP` statements.
+
+3. **Test locally first:**
+
+```bash
+# Reset local DB to ensure a clean slate
+supabase db reset
+
+# Verify the migration applies cleanly
+supabase db push
+```
+
+4. **Verify the migration contents:**
+
+```bash
+# Confirm the table was created with correct schema
+psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" \
+  --command "\d+ public.your_new_table"
+```
+
+5. **Commit the migration file** before pushing to production.
+
+---
+
+### Handling Migration Failures
+
+If a migration fails during `supabase db push`:
+
+1. **The transaction is automatically rolled back** — no partial state is left in the database.
+2. Check the error message in the terminal output. Common causes:
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `duplicate key value violates unique constraint` | Migration was partially applied | Run `supabase db push` again — the CLI tracks applied migrations |
+| `relation "table_name" does not exist` | Dependent migration not yet applied | Ensure all prerequisite migrations are present in `migrations/` |
+| `permission denied` | Running as wrong Supabase role | Use `--db-url` with the `postgres` role connection string from Supabase dashboard |
+| `syntax error at or near "..."` | SQL syntax error | Review the migration file; check for unescaped characters |
+
+3. **Fix the migration file** and re-run `supabase db push`.
+
+> **Never manually modify the `supabase/schema/migrations/` folder** — that folder is managed by the CLI and should not be edited directly.
+
+---
+
+### Rolling Back a Migration
+
+Supabase does not support automatic rollback of applied migrations. To roll back a migration:
+
+#### Option A — Write a compensating migration (preferred)
+
+Create a new migration file that reverses the change:
+
+```bash
+touch "migrations/$(date +'%Y%m%d%H%M%S')_undo_add_notification_preferences.sql"
+```
+
+Example for dropping a column:
+
+```sql
+-- Undo: drop the notification preferences table
+-- Applied: 20260223_add_notification_preferences.sql
+
+ALTER TABLE public.user_notification_preferences DROP COLUMN IF EXISTS booking_notes;
+DROP TABLE IF EXISTS public.user_notification_preferences;
+```
+
+Apply it the same way as any other migration:
+
+```bash
+supabase db push --project-ref your-project-ref --yes
+```
+
+#### Option B — Restore from backup
+
+If the migration introduced critical data loss and cannot be easily compensated:
+
+1. Identify the backup created before the migration (from `scripts/backup-supabase.sh` logs).
+2. Follow the restore procedure in [backup-restore.md](backup-restore.md).
+3. After restoring, **do not re-run the failing migration** — investigate and fix it first.
+
+> **Warning:** Restoring from backup will overwrite all data changes made after the backup was taken.
+
+---
+
+### Automated Backup Before Migration
+
+The `scripts/backup-supabase.sh` script creates timestamped, gzip-compressed SQL dumps of the full database before any destructive migration. Run a full backup before pushing to production:
+
+```bash
+# Create a pre-migration backup
+./scripts/backup-supabase.sh --full
+```
+
+This writes a backup to `backups/daily-worker-hub-full-YYYYMMDD_HHMMSS.sql.gz` and enforces a 7-day retention policy. See `scripts/backup-supabase.sh` for full configuration options.
+
+---
+
+### CI/CD Migration Integration
+
+In the automated pipeline, database migrations run as part of the pre-deployment phase. The CI/CD pipeline (see [CI/CD Pipeline](#-cicd-pipeline)) executes:
+
+```bash
+# 1. Start local Supabase (for testing)
+supabase start
+
+# 2. Apply all migrations to the local test database
+supabase db push
+
+# 3. Run database-dependent tests
+pnpm run test
+```
+
+Production migrations are pushed separately, after the preview deployment is verified, to allow for a safe rollback window if the migration causes issues.
 
 ---
 
