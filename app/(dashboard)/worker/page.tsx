@@ -131,7 +131,6 @@ export default function WorkerDashboardPage() {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const txQuery = supabase as any;
         const { data: transactions }: { data: any } = await txQuery
           .from("wallet_transactions")
