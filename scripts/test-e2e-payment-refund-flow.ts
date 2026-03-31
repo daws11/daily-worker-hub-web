@@ -4,7 +4,7 @@
  * E2E Test: Payment Refund Flow
  *
  * This script verifies the end-to-end refund flow:
- * 1. Business user performs successful top-up (payment → webhook → wallet credited)
+ * 1. Business user performs successful top-up (payment -> webhook -> wallet credited)
  * 2. Xendit refund webhook is simulated (provider issues partial/full refund)
  * 3. Business wallet is debited by the refund amount
  * 4. Refund record is created in wallet_transactions table
@@ -188,7 +188,7 @@ async function createPaymentTransaction(
   log(`\n📝 Step 4: Creating payment transaction`, "cyan");
 
   const totalAmount = amount + fee;
-  const qrisExpiresAt = new Date(Date.now() + 60 * 60000).toISOString(); // 60 minutes
+  const qrisExpiresAt = new Date(Date.now() + 60 * 60000).toISOString();
 
   const { data: transaction, error } = await supabase
     .from("payment_transactions")
@@ -264,12 +264,11 @@ async function simulateSuccessWebhook(transaction: any) {
 async function creditBusinessWallet(
   businessId: string,
   transactionId: string,
-  amount: number,
+  netAmount: number,
 ) {
   log(`\n💰 Step 6: Crediting business wallet`, "cyan");
-  log(`   Amount to credit: ${formatCurrency(amount)}`);
+  log(`   Net amount to credit: ${formatCurrency(netAmount)}`);
 
-  // Get the wallet first
   const { data: wallet, error: walletError } = await supabase
     .from("wallets")
     .select("*")
@@ -282,9 +281,8 @@ async function creditBusinessWallet(
   }
 
   const currentBalance = Number(wallet.balance);
-  const newBalance = currentBalance + amount;
+  const newBalance = currentBalance + netAmount;
 
-  // Credit the wallet
   const { data: updatedWallet, error: updateError } = await supabase
     .from("wallets")
     .update({
@@ -304,10 +302,9 @@ async function creditBusinessWallet(
   log(`   Previous balance: ${formatCurrency(currentBalance)}`, "blue");
   log(`   New balance: ${formatCurrency(Number(updatedWallet.balance))}`, "blue");
 
-  // Record wallet transaction (top-up)
   await recordWalletTransaction(
     wallet.id,
-    amount,
+    netAmount,
     transactionId,
     "top_up",
     "Payment via Xendit - top_up",
@@ -337,7 +334,8 @@ async function recordWalletTransaction(
 
   if (error) {
     log(`   ⚠️  Failed to record wallet transaction: ${error.message}`, "yellow");
-    // Don't throw - wallet operation already succeeded
+  } else {
+    log(`   ✅ Wallet transaction recorded (type: ${type})`, "green");
   }
 }
 
@@ -355,7 +353,6 @@ async function verifyTopUpSuccess(
 ) {
   log(`\n🔍 Step 7: Verifying top-up was successful`, "cyan");
 
-  // Verify transaction
   const { data: transaction, error: txError } = await supabase
     .from("payment_transactions")
     .select("*")
@@ -377,7 +374,6 @@ async function verifyTopUpSuccess(
 
   log(`   ✅ Transaction status: ${transaction.status}`, "green");
 
-  // Verify wallet balance
   const { data: wallet, error: walletError } = await supabase
     .from("wallets")
     .select("*")
@@ -404,7 +400,7 @@ async function verifyTopUpSuccess(
 }
 
 /**
- * Step 8: Simulate Xendit refund webhook (partial or full)
+ * Step 8: Simulate Xendit refund webhook
  *
  * Note: The current webhook handler does not process refund statuses.
  * Refund simulation is done via direct DB operations to exercise the
@@ -473,7 +469,6 @@ async function debitBusinessWallet(
   log(`\n💰 Step 9: Debiting business wallet for refund`, "cyan");
   log(`   Refund amount: ${formatCurrency(refundAmount)}`);
 
-  // Get the wallet
   const { data: wallet, error: walletError } = await supabase
     .from("wallets")
     .select("*")
@@ -497,7 +492,6 @@ async function debitBusinessWallet(
 
   const newBalance = Math.max(0, currentBalance - refundAmount);
 
-  // Debit the wallet
   const { data: updatedWallet, error: updateError } = await supabase
     .from("wallets")
     .update({
@@ -694,7 +688,6 @@ async function cleanupTestRecords(
 ) {
   log(`\n🧹 Step 14: Cleaning up test records`, "cyan");
 
-  // Delete wallet transaction records
   const { error: walletTxError } = await supabase
     .from("wallet_transactions")
     .delete()
@@ -707,7 +700,6 @@ async function cleanupTestRecords(
     log(`   ✅ Wallet transaction records deleted`, "green");
   }
 
-  // Delete payment transaction
   const { error: txError } = await supabase
     .from("payment_transactions")
     .delete()
@@ -719,7 +711,6 @@ async function cleanupTestRecords(
     log(`   ✅ Payment transaction deleted`, "green");
   }
 
-  // Reset wallet balance to 0
   const { error: resetError } = await supabase
     .from("wallets")
     .update({
@@ -742,7 +733,7 @@ async function cleanupTestRecords(
 async function runE2ETest(
   businessId: string,
   amount: number = TEST_AMOUNT,
-  refundPercentage: number = 1.0, // 1.0 = full refund, 0.5 = 50% refund
+  refundPercentage: number = 1.0,
 ) {
   log("\n" + "=".repeat(70), "magenta");
   log("🧪 E2E TEST: Payment Refund Flow", "magenta");
@@ -772,15 +763,16 @@ async function runE2ETest(
     await sleep(500);
 
     // Step 5: Simulate successful webhook
-    const updatedTransaction = await simulateSuccessWebhook(transaction);
+    await simulateSuccessWebhook(transaction);
 
     await sleep(500);
 
     // Step 6: Credit wallet
+    const netTopupAmount = total - fee;
     const creditedWallet = await creditBusinessWallet(
       businessId,
       transaction.id,
-      amount, // net amount credited to wallet
+      netTopupAmount,
     );
 
     const balanceAfterTopUp = Number(creditedWallet.balance);
@@ -799,10 +791,12 @@ async function runE2ETest(
     log("-".repeat(70), "cyan");
 
     // Calculate refund amount
-    const refundAmount = Math.floor(amount * refundPercentage);
+    const refundAmount = Math.floor(netTopupAmount * refundPercentage);
 
     log(`\n📋 Refund Details:`, "blue");
     log(`   Top-up amount: ${formatCurrency(amount)}`, "blue");
+    log(`   Fee: ${formatCurrency(fee)}`, "blue");
+    log(`   Net credited: ${formatCurrency(netTopupAmount)}`, "blue");
     log(`   Refund percentage: ${(refundPercentage * 100).toFixed(0)}%`, "blue");
     log(`   Refund amount: ${formatCurrency(refundAmount)}`, "blue");
     log(`   Refund type: ${isFullRefund ? "FULL REFUND" : "PARTIAL REFUND"}`, "blue");
@@ -851,6 +845,9 @@ async function runE2ETest(
       refundStatus,
     );
 
+    // Step 14: Clean up
+    await cleanupTestRecords(transaction.id, wallet.id);
+
     // Test Summary
     log("\n" + "=".repeat(70), "green");
     log("✅ ALL REFUND FLOW TESTS PASSED", "green");
@@ -860,14 +857,26 @@ async function runE2ETest(
     log(`   Business ID: ${businessId}`, "blue");
     log(`   Transaction ID: ${transaction.id}`, "blue");
     log(`   Wallet ID: ${wallet.id}`, "blue");
-    log(`   Original top-up: ${formatCurrency(amount)}`, "blue");
+    log(`   Top-up amount: ${formatCurrency(amount)}`, "blue");
     log(`   Fee: ${formatCurrency(fee)}`, "blue");
-    log(`   Net credited: ${formatCurrency(amount)}`, "blue");
+    log(`   Net credited to wallet: ${formatCurrency(netTopupAmount)}`, "blue");
+    log(`   Refund percentage: ${(refundPercentage * 100).toFixed(0)}%`, "blue");
     log(`   Refund amount: ${formatCurrency(refundAmount)}`, "blue");
-    log(`   Refund type: ${refundStatus}`, "blue");
+    log(`   Refund status: ${refundStatus}`, "blue");
     log(`   Initial balance: ${formatCurrency(initialBalance)}`, "blue");
     log(`   Balance after top-up: ${formatCurrency(balanceAfterTopUp)}`, "blue");
     log(`   Final balance: ${formatCurrency(balanceAfterDebit)}`, "blue");
+    log(`\n   Flow verified:`, "green");
+    log(`   1. ✅ Business exists and wallet accessible`, "green");
+    log(`   2. ✅ Pending transaction created`, "green");
+    log(`   3. ✅ PAID webhook simulated → transaction marked success`, "green");
+    log(`   4. ✅ Wallet credited with net amount (total - fee)`, "green");
+    log(`   5. ✅ Refund webhook simulated (REFUNDED/PARTIALLY_REFUNDED)`, "green");
+    log(`   6. ✅ Wallet debited by refund amount`, "green");
+    log(`   7. ✅ Refund record created in wallet_transactions`, "green");
+    log(`   8. ✅ Payment transaction refund fields updated`, "green");
+    log(`   9. ✅ Final balance verified`, "green");
+    log(`   10. ✅ Test records cleaned up`, "green");
 
     return {
       success: true,
@@ -878,6 +887,7 @@ async function runE2ETest(
       finalBalance: balanceAfterDebit,
       refundAmount,
       refundType: refundStatus,
+      netTopupAmount,
     };
   } catch (error) {
     log("\n" + "=".repeat(70), "red");
