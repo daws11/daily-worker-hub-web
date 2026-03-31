@@ -1,15 +1,15 @@
 {
   "active": true,
   "spec": "068-p1-set-up-sentry-error-tracking-dashboard",
-  "state": "building",
+  "state": "error",
   "subtasks": {
-    "completed": 5,
+    "completed": 10,
     "total": 15,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Sentry Lib Split",
+    "current": "Next.js Config & Env Vars",
     "id": null,
     "total": 3
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 6,
+    "number": 16,
     "started_at": "2026-03-31T13:43:02.908272"
   },
-  "last_update": "2026-03-31T13:54:24.202017"
+  "last_update": "2026-03-31T14:08:26.648422"
 }

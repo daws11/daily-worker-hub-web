@@ -16,6 +16,9 @@ const config = {
   turbopack: {
     root: __dirname,
   },
+  experimental: {
+    instrumentationHook: true,
+  },
   async redirects() {
     return [
       {
