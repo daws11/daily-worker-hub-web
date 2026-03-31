@@ -11,10 +11,41 @@ For local development setup, see [SETUP.md](SETUP.md). For a full production env
 ## 📑 Table of Contents
 
 1. [📋 Environment Setup](#-environment-setup)
+   - [Prerequisites](#prerequisites)
+   - [Local Development Environment Setup](#local-development-environment-setup)
+   - [Production Environment Setup](#production-environment-setup)
+   - [Environment Variable Quick Reference](#environment-variable-quick-reference)
 2. [🚀 CI/CD Pipeline](#-cicd-pipeline)
+   - [Pipeline Overview](#pipeline-overview)
+   - [Available npm Scripts](#available-npm-scripts)
+   - [Vercel Cron Jobs](#vercel-cron-jobs)
+   - [Pre-Deployment Checklist](#pre-deployment-checklist)
+   - [Deployment Steps](#deployment-steps)
 3. [🗄️ Database Migrations](#️-database-migrations)
+   - [Migration File Structure](#migration-file-structure)
+   - [Local Migration Workflow](#local-migration-workflow)
+   - [Production Migration Workflow](#production-migration-workflow)
+   - [Creating a New Migration](#creating-a-new-migration)
+   - [Handling Migration Failures](#handling-migration-failures)
+   - [Rolling Back a Migration](#rolling-back-a-migration)
+   - [Automated Backup Before Migration](#automated-backup-before-migration)
+   - [CI/CD Migration Integration](#cicd-migration-integration)
 4. [↩️ Rollback Procedures](#️-rollback-procedures)
+   - [Deciding Which Rollback to Use](#deciding-which-rollback-to-use)
+   - [Roll Back a Vercel Deployment](#roll-back-a-vercel-deployment)
+   - [Roll Back a Database Migration](#roll-back-a-database-migration)
+   - [Pre-Rollback Backup Checklist](#pre-rollback-backup-checklist)
+   - [Post-Rollback Verification](#post-rollback-verification)
 5. [🔐 Configuration Management](#️-configuration-management)
+   - [Configuration Hierarchy](#configuration-hierarchy)
+   - [The `NEXT_PUBLIC_` Naming Convention](#the-next_public_-naming-convention)
+   - [Managing Secrets](#managing-secrets)
+   - [Environment-Specific Configuration](#environment-specific-configuration)
+   - [Accessing Configuration in Code](#accessing-configuration-in-code)
+   - [Configuration Validation](#configuration-validation)
+   - [Rotating Credentials](#rotating-credentials)
+   - [Multi-Environment Consistency](#multi-environment-consistency)
+   - [Adding a New Environment Variable](#adding-a-new-environment-variable)
 
 ---
 
@@ -25,6 +56,34 @@ This section covers all environment variables required to run Daily Worker Hub l
 **Screenshots:**
 - Vercel environment variables dashboard: `screenshots/vercel-env-vars.png` *(TODO: capture)*
 - Supabase project API settings: `screenshots/supabase-project-settings.png` *(TODO: capture)*
+
+---
+
+### ⚠️ Before You Begin — Environment Setup Checklist
+
+Complete all items in this checklist before proceeding with environment configuration.
+
+#### ✅ Before You Start
+
+- [ ] All required accounts are created (Vercel, Supabase, Xendit, Firebase, Sentry, Resend)
+- [ ] GitHub repository is linked to your Vercel project
+- [ ] Docker is installed and running (for local Supabase development)
+- [ ] `pnpm` is installed globally (`npm install -g pnpm`)
+- [ ] Supabase CLI is installed (`npm install -g supabase`)
+
+#### ✅ After Environment Setup
+
+- [ ] `.env.local` is created and contains all required variables
+- [ ] `pnpm run dev` starts the development server without errors
+- [ ] Supabase local instance is running (`supabase status` shows all services green)
+- [ ] All migrations have been applied locally (`supabase db push` succeeds)
+- [ ] Production environment variables are set in Vercel dashboard
+
+#### 🔗 Related Documentation
+
+- Local setup: [SETUP.md](SETUP.md)
+- Production env vars: [PRODUCTION_ENVIRONMENT_CHECKLIST.md](PRODUCTION_ENVIRONMENT_CHECKLIST.md)
+- Secrets management: [Managing Secrets](#managing-secrets)
 
 ---
 
@@ -192,7 +251,28 @@ Set the webhook token to match `XENDIT_WEBHOOK_TOKEN` in your environment variab
 
 ---
 
-### Environment Variable Quick Reference
+### ✅ Production Environment Setup — Before/After Checklist
+
+#### ✅ Before You Configure Production
+
+- [ ] Supabase production project is created and accessible
+- [ ] All environment variable values are gathered from service dashboards
+- [ ] Vercel project is linked to the correct GitHub repository
+- [ ] Webhook URLs are known for Xendit and Supabase
+
+#### ✅ After Production Is Configured
+
+- [ ] All `NEXT_PUBLIC_` variables are set in Vercel dashboard (Production scope)
+- [ ] All sensitive variables are set in Vercel dashboard (Production scope, marked sensitive)
+- [ ] OAuth redirect URIs are configured in Facebook/Instagram developer portals
+- [ ] Xendit webhook URL returns HTTP 200 on `GET /api/webhooks/xendit`
+- [ ] Firebase service account JSON is validated
+
+#### 🔗 Related Documentation
+
+- Full env var table: [PRODUCTION_ENVIRONMENT_CHECKLIST.md](PRODUCTION_ENVIRONMENT_CHECKLIST.md)
+- Secrets management: [Managing Secrets](#managing-secrets)
+- Configuration validation: [Configuration Validation](#configuration-validation)
 
 For the complete production environment variable reference, see [PRODUCTION_ENVIRONMENT_CHECKLIST.md](PRODUCTION_ENVIRONMENT_CHECKLIST.md).
 
@@ -231,6 +311,33 @@ CRON_SECRET=...                        # sensitive, min 32 chars
 ## 🚀 CI/CD Pipeline
 
 This section describes the automated build, test, and deployment pipeline for Daily Worker Hub. All deployments are powered by Vercel with GitHub integration. Every pull request gets an isolated preview deployment; merges to `main` trigger a production deployment automatically.
+
+---
+
+### ⚠️ Before You Deploy — CI/CD Checklist
+
+#### ✅ Before Merging to `main`
+
+- [ ] All checks pass on the pull request (lint, type-check, tests)
+- [ ] New environment variables are added to Vercel dashboard
+- [ ] Database migrations have been pushed to production (`supabase db push`)
+- [ ] Sentry source maps are uploading successfully
+- [ ] Xendit webhook URL is reachable from the production domain
+- [ ] Firebase service account credentials are up to date
+
+#### ✅ After a Production Deploy
+
+- [ ] Vercel deployment status is ✅ **Ready**
+- [ ] `pnpm run test:e2e` smoke tests pass against production URL
+- [ ] No new errors appear in Sentry dashboard
+- [ ] Supabase dashboard shows normal query performance
+- [ ] Real payment flow tested in sandbox mode
+
+#### 🔗 Related Documentation
+
+- Rollback procedure: [Roll Back a Vercel Deployment](#roll-back-a-vercel-deployment)
+- Database migrations: [🗄️ Database Migrations](#️-database-migrations)
+- Monitoring: [PRODUCTION_ENVIRONMENT_CHECKLIST.md](PRODUCTION_ENVIRONMENT_CHECKLIST.md)
 
 ---
 
@@ -430,6 +537,12 @@ vercel rollback
 
 This immediately reverts the production deployment to the last known good state.
 
+#### 🔗 Related Documentation
+
+- Full rollback guide: [↩️ Rollback Procedures](#️-rollback-procedures)
+- Environment setup: [📋 Environment Setup](#-environment-setup)
+- Database migrations: [🗄️ Database Migrations](#️-database-migrations)
+
 ---
 
 ## 🗄️ Database Migrations
@@ -437,6 +550,13 @@ This immediately reverts the production deployment to the last known good state.
 Database schema changes are managed via SQL migration files in the `migrations/` directory. Every change to the production schema — adding columns, creating tables, modifying indexes, or updating RLS policies — must go through a migration. Direct `ALTER TABLE` statements in the Supabase dashboard are not used; all schema changes are code-driven and version-controlled.
 
 > **Important:** Always back up the database before running migrations in production. See [backup-restore.md](backup-restore.md) for backup procedures, or use `scripts/backup-supabase.sh` for automated backups.
+
+#### 🔗 Related Documentation
+
+- Backup and restore: [backup-restore.md](backup-restore.md)
+- Rollback procedures: [↩️ Rollback Procedures](#️-rollback-procedures)
+- CI/CD integration: [CI/CD Migration Integration](#cicd-migration-integration)
+- Production checklist: [PRODUCTION_ENVIRONMENT_CHECKLIST.md](PRODUCTION_ENVIRONMENT_CHECKLIST.md)
 
 ---
 
@@ -744,6 +864,33 @@ This section describes how to roll back a broken production deployment — both 
 
 ---
 
+### ⚠️ Before You Roll Back — Checklist
+
+#### ✅ Before Initiating Any Rollback
+
+- [ ] Run `scripts/backup-supabase.sh --full` to capture current database state
+- [ ] Note the current Vercel deployment URL from the dashboard
+- [ ] Document the error or incident in your monitoring tool (Sentry, Slack)
+- [ ] Notify the team in the `#incidents` channel (if applicable)
+- [ ] Determine whether rollback is needed (frontend, database, or both) — see [Deciding Which Rollback to Use](#deciding-which-rollback-to-use)
+
+#### ✅ After Completing a Rollback
+
+- [ ] Vercel deployment status is ✅ **Ready** in the dashboard
+- [ ] Application loads without errors on the production URL
+- [ ] No new errors reported in Sentry
+- [ ] Supabase database is responsive and row counts are correct
+- [ ] Smoke tests pass: `pnpm run test:e2e`
+- [ ] Incident ticket updated with rollback timestamp and outcome
+
+#### 🔗 Related Documentation
+
+- Backup procedures: [backup-restore.md](backup-restore.md)
+- Database migrations: [🗄️ Database Migrations](#️-database-migrations)
+- CI/CD pipeline: [🚀 CI/CD Pipeline](#-cicd-pipeline)
+
+---
+
 ### Deciding Which Rollback to Use
 
 Use this table to choose the right rollback path based on what went wrong:
@@ -894,6 +1041,13 @@ After rolling back, verify the system is healthy before announcing recovery:
 This section explains how environment variables are structured, scoped, and managed across all environments — local development, Vercel preview, and production. It covers the `NEXT_PUBLIC_` naming convention, secrets management, configuration validation, and credential rotation procedures.
 
 > For the complete production environment variable reference table, see [PRODUCTION_ENVIRONMENT_CHECKLIST.md](PRODUCTION_ENVIRONMENT_CHECKLIST.md). For a before/after deployment checklist, see [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md).
+
+#### 🔗 Related Documentation
+
+- Environment setup: [📋 Environment Setup](#-environment-setup)
+- Pre-deployment checklist: [Pre-Deployment Checklist](#pre-deployment-checklist)
+- CI/CD pipeline: [🚀 CI/CD Pipeline](#-cicd-pipeline)
+- Rotating credentials: [Rotating Credentials](#rotating-credentials)
 
 ---
 
