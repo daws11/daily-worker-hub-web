@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/release-pending-payments",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/health-check",
+      "schedule": "*/5 * * * *"
     }
   ]
 }
