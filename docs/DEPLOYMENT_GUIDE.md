@@ -359,6 +359,8 @@ This section describes the automated build, test, and deployment pipeline for Da
 | **Production** | Merge to `main` / `master` | `https://daily-worker-hub.vercel.app` |
 | **Local** | `pnpm run dev` on developer machine | `http://localhost:3000` |
 
+> **Screenshot:** Vercel deployments dashboard showing pipeline stages — `screenshots/vercel-deployments-pipeline.png` *(TODO: capture)*
+
 ---
 
 ### Available npm Scripts
@@ -568,6 +570,8 @@ Migration files live in the `migrations/` directory at the project root. Two nam
 |-----------|---------|---------|
 | **Timestamped** (preferred for sequential ordering) | `YYYYMMDDHHMMSS_description.sql` | `20260223_add_notification_preferences.sql` |
 | **Named** (for initial schema or independent changes) | `description.sql` | `add_conversations_table.sql` |
+
+> **Screenshot:** Example migration file in `migrations/` directory — `screenshots/migration-file-structure.png` *(TODO: capture)*
 
 Every migration file follows a consistent structure — modelled after the examples in `migrations/` — using section comments to group related operations:
 
@@ -907,6 +911,8 @@ Use this table to choose the right rollback path based on what went wrong:
 
 A Vercel rollback promotes a previous successful deployment back to production without requiring a code re-deploy. The application state is restored instantly; the Supabase database is **not** affected.
 
+> **Screenshot:** Vercel dashboard — finding a deployment to roll back — `screenshots/vercel-rollback-dashboard.png` *(TODO: capture)*
+
 #### Via the Vercel Dashboard
 
 1. Go to **Deployments** in the [Vercel dashboard](https://vercel.com/daily-worker-hub/deployments).
@@ -1182,6 +1188,8 @@ Different deployment environments require different values. The table below maps
 | `XENDIT_SECRET_KEY` | Sandbox key | Sandbox key | Production key |
 | `MIDTRANS_IS_PRODUCTION` | `false` | `false` | `true` |
 
+> **Screenshot:** Vercel environment variable scopes — `screenshots/vercel-env-scopes.png` *(TODO: capture)*
+
 To differentiate environments in code, use `process.env.VERCEL_ENV`:
 
 ```typescript
@@ -1282,6 +1290,8 @@ if (process.env.NODE_ENV === 'development' && !process.env.NEXT_PUBLIC_SUPABASE_
 ### Rotating Credentials
 
 When a secret is compromised or a key needs to be refreshed, follow this rotation procedure to avoid downtime.
+
+> **Screenshot:** Vercel — editing an environment variable for credential rotation — `screenshots/vercel-edit-env-var.png` *(TODO: capture)*
 
 #### Step 1 — Generate new credentials
 
