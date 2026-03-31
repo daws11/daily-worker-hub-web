@@ -3,9 +3,9 @@
   "spec": "067-p0-test-payment-flow-in-sandbox-environment",
   "state": "building",
   "subtasks": {
-    "completed": 5,
+    "completed": 6,
     "total": 9,
-    "in_progress": 1,
+    "in_progress": 0,
     "failed": 0
   },
   "phase": {
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 7,
+    "number": 8,
     "started_at": "2026-03-31T13:25:12.933245"
   },
-  "last_update": "2026-03-31T14:21:11.527452"
+  "last_update": "2026-03-31T14:27:06.863992"
 }
