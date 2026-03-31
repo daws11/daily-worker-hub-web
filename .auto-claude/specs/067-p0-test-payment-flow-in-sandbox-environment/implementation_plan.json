@@ -241,8 +241,8 @@
             "type": "manual",
             "instructions": "Run each new script with --help flag: node --loader ts-node/esm scripts/test-e2e-payment-flow-sandbox.ts --help; node --loader ts-node/esm scripts/test-e2e-payment-refund-flow.ts --help; node --loader ts-node/esm scripts/test-e2e-disbursement-flow.ts --help; node --loader ts-node/esm scripts/test-e2e-payment-timeout.ts --help. Each should show usage instructions without crashing."
           },
-          "status": "pending",
-          "notes": "These scripts require real sandbox credentials and Supabase service role key. Running with real IDs will test the full flow. Verify scripts parse args correctly and exit 0 or 1 based on test result."
+          "status": "completed",
+          "notes": "All 4 E2E scripts verified with --help flag using Node.js v24 native --experimental-strip-types runtime (with task-033 node_modules symlinked for package resolution). Fix: added .ts extension to xenditGateway import in test-e2e-payment-flow-sandbox.ts to enable native TypeScript resolution. Results: (1) test-e2e-payment-flow-sandbox.ts - shows usage with business_id and amount args, (2) test-e2e-payment-refund-flow.ts - shows usage with business_id, amount, refund_percentage args, (3) test-e2e-disbursement-flow.ts - shows PATH A/B descriptions, worker_id, bank_account_id, amount args, (4) test-e2e-payment-timeout.ts - shows QRIS expiry + idempotency usage. All 4 scripts print usage without crashing. Note: actual execution requires ts-node/esm loader and sandbox network access to Supabase/Xendit APIs."
         }
       ]
     }
@@ -377,16 +377,17 @@
     }
   },
   "qa_signoff": null,
-  "executionPhase": "coding",
-  "status": "in_progress",
-  "planStatus": "in_progress",
-  "updated_at": "2026-03-31T07:15:00.000Z",
-  "xstateState": "coding",
+  "executionPhase": "complete",
+  "status": "human_review",
+  "planStatus": "review",
+  "updated_at": "2026-03-31T06:54:47.419Z",
+  "xstateState": "human_review",
   "lastEvent": {
     "eventId": "f9e458a6-6d2d-4bb8-9f4a-07637820d561",
     "sequence": 0,
     "type": "PLANNING_COMPLETE",
     "timestamp": "2026-03-31T05:25:09.481652+00:00"
   },
-  "last_updated": "2026-03-31T06:25:32.400609+00:00"
+  "last_updated": "2026-03-31T06:25:32.400609+00:00",
+  "reviewReason": "completed"
 }
