@@ -140,5 +140,20 @@
       "checks": []
     }
   },
-  "qa_signoff": null
+  "qa_signoff": {
+    "status": "fixes_applied",
+    "timestamp": "2026-03-31T00:00:00.000Z",
+    "fix_session": 1,
+    "issues_fixed": [
+      {
+        "title": "Extra closing brace in e2e/chat.spec.ts",
+        "fix_commit": "6a3a2fe"
+      },
+      {
+        "title": "Wrong env var casing in docs/DEPLOYMENT_GUIDE.md",
+        "fix_commit": "6a3a2fe"
+      }
+    ],
+    "ready_for_qa_revalidation": true
+  }
 }
