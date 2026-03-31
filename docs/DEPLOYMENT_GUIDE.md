@@ -230,7 +230,205 @@ CRON_SECRET=...                        # sensitive, min 32 chars
 
 ## 🚀 CI/CD Pipeline
 
-*(To be added in subtask 1-2 — see [implementation plan](../.auto-claude/specs/072-p1-document-deployment-process/implementation_plan.json))*
+This section describes the automated build, test, and deployment pipeline for Daily Worker Hub. All deployments are powered by Vercel with GitHub integration. Every pull request gets an isolated preview deployment; merges to `main` trigger a production deployment automatically.
+
+---
+
+### Pipeline Overview
+
+```
+┌─────────────┐    push/PR    ┌──────────────────┐    success    ┌─────────────────┐
+│  Developer  │ ─────────────▶│  Vercel Build    │ ────────────▶│  Vercel Deploy  │
+│  (GitHub)    │               │  (install, lint, │               │  (preview or    │
+│              │               │   build, test)   │               │   production)   │
+└─────────────┘               └──────────────────┘               └─────────────────┘
+```
+
+**Three environments:**
+
+| Environment | Trigger | URL pattern |
+|-------------|---------|-------------|
+| **Preview** | Every push to any branch | `https://<project>-<branch>.vercel.app` |
+| **Production** | Merge to `main` / `master` | `https://daily-worker-hub.vercel.app` |
+| **Local** | `pnpm run dev` on developer machine | `http://localhost:3000` |
+
+---
+
+### Available npm Scripts
+
+All scripts are run with `pnpm run <script>`. Do not use `npm` or `yarn` — the project uses pnpm workspaces.
+
+#### Development
+
+```bash
+pnpm run dev          # Start Next.js dev server with hot reload (http://localhost:3000)
+```
+
+#### Build & Start
+
+```bash
+pnpm run build        # Build Next.js app for production (uses --webpack compiler)
+pnpm run start        # Start the production Next.js server (after build)
+```
+
+> **Important:** Always run `pnpm run build` before `pnpm run start`. Never run `pnpm run start` on a fresh clone without building first.
+
+#### Code Quality
+
+```bash
+pnpm run lint         # Run ESLint on the entire codebase
+pnpm run type-check   # Run TypeScript compiler in check mode (no emit)
+pnpm run format       # Run Prettier to format all source files in place
+pnpm run lint:translations   # Run custom script to lint i18n translation files
+```
+
+**Pre-commit hook:** It is recommended to run the following before every commit:
+
+```bash
+pnpm run type-check && pnpm run lint && pnpm run lint:translations
+```
+
+#### Testing
+
+```bash
+pnpm run test              # Run Vitest unit/integration tests in watch mode
+pnpm run test:run           # Run Vitest tests once (CI-friendly, non-interactive)
+pnpm run test:ui            # Run Vitest with the browser-based test runner UI
+pnpm run test:coverage      # Run Vitest with coverage report
+pnpm run test:e2e           # Run Playwright end-to-end tests headlessly
+pnpm run test:e2e:ui        # Run Playwright E2E tests with the Playwright UI
+pnpm run test:e2e:debug      # Run Playwright E2E tests in debug mode
+```
+
+**E2E business flow tests** (each is an independent test runner):
+
+```bash
+pnpm run test:e2e:business-topup          # Test business wallet top-up flow
+pnpm run test:e2e:worker-withdrawal        # Test worker salary withdrawal flow
+pnpm run test:e2e:error-handling           # Test error states and edge cases
+pnpm run test:e2e:emergency-cancellation   # Test emergency cancellation by admin
+pnpm run test:e2e:business-cancellation    # Test business-initiated cancellation
+pnpm run test:e2e:repeated-cancellations   # Test repeated cancellation rate limiting
+```
+
+---
+
+### Vercel Cron Jobs
+
+The `vercel.json` file configures scheduled cron jobs that run in the Vercel infrastructure:
+
+| Cron Job | Schedule | Endpoint | Purpose |
+|----------|----------|----------|---------|
+| `release-pending-payments` | Every hour (`0 * * * *`) | `/api/cron/release-pending-payments` | Automatically releases pending worker payments |
+
+> **Screenshot:** Vercel cron job dashboard — `screenshots/vercel-cron-jobs.png` *(TODO: capture)*
+
+**Cron job security:** All cron endpoints must verify the `CRON_SECRET` header to prevent unauthorized execution:
+
+```typescript
+// Example cron endpoint guard
+if (req.headers.get('x-cron-secret') !== process.env.CRON_SECRET) {
+  return res.status(401).json({ error: 'Unauthorized' });
+}
+```
+
+**Viewing cron job logs:** In the Vercel dashboard, go to **Deployments → [Production Deployment] → Functions** to view cron execution logs.
+
+---
+
+### Pre-Deployment Checklist
+
+Before merging to `main`, run through this checklist:
+
+- [ ] `pnpm run type-check` passes with zero errors
+- [ ] `pnpm run lint` reports zero warnings
+- [ ] `pnpm run lint:translations` passes
+- [ ] `pnpm run test:run` passes (all Vitest tests green)
+- [ ] `pnpm run test:e2e` passes (all Playwright E2E tests green on local)
+- [ ] All new environment variables are added to Vercel dashboard
+- [ ] Database migrations have been pushed to production (`supabase db push`)
+- [ ] Sentry source maps have been uploaded (handled automatically by `@sentry/nextjs`)
+- [ ] Xendit webhook URL is reachable and returning HTTP 200
+- [ ] Firebase service account credentials are up to date
+
+---
+
+### Deployment Steps
+
+#### Deploying a Preview (for a pull request)
+
+Vercel creates a preview automatically for every push to a GitHub branch. To manually trigger a preview:
+
+```bash
+# Push your branch to GitHub
+git push origin feature/my-new-feature
+```
+
+The Vercel GitHub App will automatically create a preview deployment. The preview URL will be posted as a comment on the pull request.
+
+#### Deploying to Production
+
+**Option A — via GitHub merge:**
+
+```bash
+# 1. Ensure all checks pass on your PR
+git checkout main
+git pull origin main
+
+# 2. Merge your feature branch
+git merge feature/my-new-feature
+git push origin main
+```
+
+Vercel automatically detects the push to `main` and deploys to production.
+
+**Option B — via Vercel CLI:**
+
+```bash
+# Install Vercel CLI if not already installed
+npm install -g vercel
+
+# Login to Vercel
+vercel login
+
+# Deploy to production from the project root
+vercel --prod
+```
+
+#### Verifying a Production Deployment
+
+After a production deployment completes:
+
+1. **Check the Vercel dashboard** — confirm the deployment status is ✅ "Ready" (green).
+2. **Run smoke tests** against the production URL:
+
+```bash
+pnpm run test:e2e
+```
+
+3. **Check Sentry** for any new errors spike at https://sentry.io.
+4. **Check Supabase dashboard** for any unusual query performance.
+5. **Test a real payment flow** in staging mode before relying on production.
+
+---
+
+### Deployment Rollback (Quick Reference)
+
+For full rollback procedures, see [↩️ Rollback Procedures](#️-rollback-procedures).
+
+To instantly roll back to the previous deployment via the Vercel dashboard:
+
+1. Go to **Deployments** in the Vercel dashboard.
+2. Find the previous **"Ready"** deployment.
+3. Click **⋯** (three dots) → **Promote to Production**.
+
+To roll back via Vercel CLI:
+
+```bash
+vercel rollback
+```
+
+This immediately reverts the production deployment to the last known good state.
 
 ---
 
