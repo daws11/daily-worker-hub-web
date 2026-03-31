@@ -1,15 +1,15 @@
 {
   "active": true,
-  "spec": "057-extend-lru-cache-to-bookings-and-applications-api-",
+  "spec": "069-p1-configure-vercel-analytics",
   "state": "building",
   "subtasks": {
-    "completed": 14,
-    "total": 15,
+    "completed": 4,
+    "total": 17,
     "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Build Verification",
+    "current": "Analytics Initialization",
     "id": null,
     "total": 2
   },
@@ -18,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 16,
-    "started_at": "2026-03-27T11:06:57.573140"
+    "number": 5,
+    "started_at": "2026-03-31T13:35:52.861134"
   },
-  "last_update": "2026-03-27T11:39:52.334152"
+  "last_update": "2026-03-31T13:50:54.558172"
 }
