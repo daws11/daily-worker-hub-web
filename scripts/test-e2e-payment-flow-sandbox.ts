@@ -25,7 +25,7 @@
 import { createClient } from "@supabase/supabase-js";
 import dotenv from "dotenv";
 import { join } from "path";
-import { xenditGateway } from "../lib/payments/xendit";
+import { xenditGateway } from "../lib/payments/xendit.ts";
 
 // Load environment variables
 const envPath = join(process.cwd(), ".env.local");
