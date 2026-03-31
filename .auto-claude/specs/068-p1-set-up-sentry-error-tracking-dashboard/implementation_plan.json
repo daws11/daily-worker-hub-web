@@ -1,0 +1,539 @@
+{
+  "feature": "P1: Set up Sentry error tracking dashboard",
+  "workflow_type": "feature",
+  "workflow_rationale": "This task adds new infrastructure capabilities (hardened SDK config, typed helpers, alerting docs, dashboards) to an existing Sentry SDK installation following a progressive enhancement pattern. Single-service (Next.js) with 8 phases across config files, lib split, error boundary updates, env vars, example route, and documentation.",
+  "phases": [
+    {
+      "id": "phase-1-server-config",
+      "name": "Server SDK Config",
+      "type": "implementation",
+      "description": "Update sentry.server.config.ts with environment-differentiated tracesSampleRate, spotlight for dev tracing UI, WebVitals attachment via beforeSendTransaction, and registerSpanErrorInstrumentation call.",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Update sentry.server.config.ts with env-differentiated sampling (1.0 dev / 0.05 prod), spotlight: isDev, beforeSendTransaction callback for WebVitals, and Sentry.registerSpanErrorInstrumentation() call",
+          "service": "main",
+          "files_to_modify": [
+            "sentry.server.config.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "sentry.server.config.ts (existing skeleton)"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -c \"NODE_ENV.*development\" sentry.server.config.ts && grep -c \"spotlight\" sentry.server.config.ts && grep -c \"registerSpanErrorInstrumentation\" sentry.server.config.ts",
+            "expected": "3"
+          },
+          "status": "completed",
+          "notes": "Verified: grep counts for NODE_ENV.*development, spotlight, and registerSpanErrorInstrumentation all returned 1. Commit 6203929 created.",
+          "updated_at": "2026-03-31T05:44:01.231760+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-client-config",
+      "name": "Client SDK Config",
+      "type": "implementation",
+      "description": "Update sentry.client.config.ts with environment-differentiated tracesSampleRate, replay sample rates, feedback integration with autoInject:false, WebVitals attachment, and conditional debug flag.",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Update sentry.client.config.ts with env-differentiated sampling (1.0 dev / 0.05 prod), replaysSessionSampleRate: 0.1, replaysOnErrorSampleRate: 1.0, feedbackIntegration with autoInject:false, and conditional debug",
+          "service": "main",
+          "files_to_modify": [
+            "sentry.client.config.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "sentry.client.config.ts (existing skeleton with replay)"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -c \"NODE_ENV.*development\" sentry.client.config.ts && grep -c \"feedbackIntegration\" sentry.client.config.ts && grep -c \"autoInject.*false\" sentry.client.config.ts",
+            "expected": "3"
+          },
+          "status": "completed",
+          "notes": "Verified: grep counts for NODE_ENV.*development, feedbackIntegration, and autoInject.*false all returned 1. Commit 95e8dee created.",
+          "updated_at": "2026-03-31T05:45:00.000000+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-edge-config",
+      "name": "Edge SDK Config",
+      "type": "implementation",
+      "description": "Update sentry.edge.config.ts with environment-differentiated tracesSampleRate matching the server pattern.",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Update sentry.edge.config.ts with env-differentiated sampling (1.0 dev / 0.05 prod) and conditional debug flag",
+          "service": "main",
+          "files_to_modify": [
+            "sentry.edge.config.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "sentry.edge.config.ts (existing skeleton)",
+            "sentry.server.config.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -c \"NODE_ENV.*development\" sentry.edge.config.ts",
+            "expected": "1"
+          },
+          "status": "completed",
+          "notes": "Verified: grep count for NODE_ENV.*development returned 1. Commit 4d8b155 created."
+        }
+      ]
+    },
+    {
+      "id": "phase-4-lib-split",
+      "name": "Sentry Lib Split",
+      "type": "implementation",
+      "description": "Create lib/sentry/client.ts and lib/sentry/server.ts with typed utility exports. Update existing lib/sentry.ts to re-export from the new files for backward compatibility.",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create lib/sentry/client.ts with typed exports: captureError, addBreadcrumb, setUser, setTag, setContext. Use Sentry SDK's captureError alias, setUser, setTag, setContext. Must be client-safe (no server-only APIs).",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/sentry/client.ts"
+          ],
+          "patterns_from": [
+            "lib/sentry.ts (existing utilities)"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -E \"captureError|addBreadcrumb|setUser|setTag|setContext\" lib/sentry/client.ts | wc -l",
+            "expected": "5"
+          },
+          "status": "completed",
+          "notes": "Verified: All 5 exports (captureError, addBreadcrumb, setUser, setTag, setContext) present. Commit 1d17cd5 created.",
+          "updated_at": "2026-03-31T05:50:40.999385+00:00"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Create lib/sentry/server.ts with typed server-side exports: captureError, addBreadcrumb, setUser, setTag, setContext, startSpan. Use server-only Sentry APIs.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "lib/sentry/server.ts"
+          ],
+          "patterns_from": [
+            "lib/sentry.ts (existing utilities)"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -E \"captureError|addBreadcrumb|setUser|setTag|setContext|startSpan\" lib/sentry/server.ts | wc -l",
+            "expected": "6"
+          },
+          "status": "completed",
+          "notes": "Verified: All 6 exports (captureError, addBreadcrumb, setUser, setTag, setContext, startSpan) present. Commit de691f2 created.",
+          "updated_at": "2026-03-31T06:01:00.000000+00:00"
+        },
+        {
+          "id": "subtask-4-3",
+          "description": "Update lib/sentry.ts to re-export from the new split files (lib/sentry/client.ts and lib/sentry/server.ts) for backward compatibility. Existing code importing from @/lib/sentry should continue working.",
+          "service": "main",
+          "files_to_modify": [
+            "lib/sentry.ts"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "lib/sentry.ts (existing)"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -c 're-export' lib/sentry.ts && tsc --noEmit lib/sentry.ts 2>&1 | grep -c 'error' || true",
+            "expected": "1"
+          },
+          "status": "completed",
+          "notes": "Verified: grep count for 're-export' returned 1, tsc --noEmit returned 0 errors. Commit b56280c created."
+        }
+      ]
+    },
+    {
+      "id": "phase-5-instrumentation",
+      "name": "Instrumentation Hook",
+      "type": "implementation",
+      "description": "Create instrumentation.ts at project root to register server-side callbacks. Must NOT call Sentry.init() (handled by sentry.server.config.ts). Use beforeSendTransaction pattern for WebVitals. Must NOT use registerSpanAttributesModifier (does not exist in SDK v8).",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Create instrumentation.ts at project root using Option B (Next.js 14.x pattern): conditionally import sentry.server.config based on NEXT_RUNTIME. Register beforeSendTransaction callback for WebVitals attachment. NO Sentry.init() call. Must NOT use registerSpanAttributesModifier.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "instrumentation.ts"
+          ],
+          "patterns_from": [
+            "spec.md (Instrumentation Hook Pattern - Option B)"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -c \"NEXT_RUNTIME\" instrumentation.ts && grep -c \"Sentry.init\" instrumentation.ts || echo \"Sentry.init not found (correct)\"",
+            "expected": "1"
+          },
+          "status": "completed",
+          "notes": "Verified: instrumentation.ts created with Option B pattern - conditional import of sentry.server.config for nodejs and sentry.edge.config for edge. NO Sentry.init() call. NEXT_RUNTIME appears in both conditional branches (required for both runtimes). Commit 3745400 created.",
+          "updated_at": "2026-03-31T06:02:06.832387+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-6-error-boundaries",
+      "name": "Error Boundary Updates",
+      "type": "implementation",
+      "description": "Update app/global-error.tsx and app/error.tsx to use new lib/sentry/client.ts helpers instead of the old lib/sentry utilities. Switch captureException to captureError from client helper.",
+      "depends_on": [
+        "phase-4-lib-split"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Update app/global-error.tsx to import captureError from @/lib/sentry/client instead of captureException from @/lib/sentry. Preserve existing UI, pass error.digest as tag, call captureError in useEffect.",
+          "service": "main",
+          "files_to_modify": [
+            "app/global-error.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/global-error.tsx (existing)",
+            "lib/sentry/client.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep \"lib/sentry/client\" app/global-error.tsx | wc -l",
+            "expected": "1"
+          },
+          "status": "completed",
+          "notes": "Updated import from captureException @/lib/sentry to captureError @/lib/sentry/client. Removed console.error debugging statement. Verification passed (1 match for lib/sentry/client).",
+          "updated_at": "2026-03-31T06:03:56.506045+00:00"
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Update app/error.tsx to import captureError from @/lib/sentry/client instead of captureException from @/lib/sentry. Preserve existing UI, pass error.digest as tag, call captureError in useEffect.",
+          "service": "main",
+          "files_to_modify": [
+            "app/error.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "app/error.tsx (existing)",
+            "lib/sentry/client.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep \"lib/sentry/client\" app/error.tsx | wc -l",
+            "expected": "1"
+          },
+          "status": "completed",
+          "notes": "Updated import from captureException @/lib/sentry to captureError @/lib/sentry/client. Verification passed (1 match for lib/sentry/client). Commit 9eeb83b created.",
+          "updated_at": "2026-03-31T06:06:17.748397+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-7-nextjs-config",
+      "name": "Next.js Config & Env Vars",
+      "type": "implementation",
+      "description": "Update next.config.mjs sentryConfig with authToken, add SENTRY_ENVIRONMENT to .env.example, and add instrumentationHook experimental flag for Next.js 14.x.",
+      "depends_on": [],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-7-1",
+          "description": "Update next.config.mjs sentryConfig object to add authToken: process.env.SENTRY_AUTH_TOKEN. SENTRY_ORG and SENTRY_PROJECT already present. Keep existing tunnelRoute and hideSourceMaps.",
+          "service": "main",
+          "files_to_modify": [
+            "next.config.mjs"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "next.config.mjs (existing withSentryConfig)"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -c \"authToken.*SENTRY_AUTH_TOKEN\" next.config.mjs",
+            "expected": "1"
+          },
+          "status": "completed",
+          "notes": "Added authToken: process.env.SENTRY_AUTH_TOKEN to sentryConfig object. Verification passed (grep count = 1). Commit 3b9f78d created.",
+          "updated_at": "2026-03-31T06:07:43.782010+00:00"
+        },
+        {
+          "id": "subtask-7-2",
+          "description": "Update .env.example with SENTRY_ENVIRONMENT, add descriptive comment to NEXT_PUBLIC_SENTRY_DSN, ensure SENTRY_AUTH_TOKEN, SENTRY_ORG, SENTRY_PROJECT entries are present and well-documented.",
+          "service": "main",
+          "files_to_modify": [
+            ".env.example"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            ".env.example (existing partial Sentry vars)"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -c \"SENTRY_ENVIRONMENT\" .env.example",
+            "expected": "1"
+          },
+          "status": "pending"
+        },
+        {
+          "id": "subtask-7-3",
+          "description": "Add experimental.instrumentationHook: true to next.config.mjs to enable instrumentation.ts for Next.js 14.x. Add under experimental key alongside existing config.",
+          "service": "main",
+          "files_to_modify": [
+            "next.config.mjs"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "next.config.mjs (existing)"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -c \"instrumentationHook\" next.config.mjs",
+            "expected": "1"
+          },
+          "status": "completed",
+          "notes": "Added experimental.instrumentationHook: true to next.config.mjs under experimental key. Verification passed (grep count = 1). Commit 6f5b2ff created.",
+          "updated_at": "2026-03-31T06:09:01.594208+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-8-documentation",
+      "name": "Example Route & Documentation",
+      "type": "implementation",
+      "description": "Create app/api/sentry-example-api/route.ts demonstrating Sentry.startSpan usage in App Router. Create sentry-alerting.md and sentry-dashboards.md with configuration documentation.",
+      "depends_on": [
+        "phase-4-lib-split"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-8-1",
+          "description": "Create app/api/sentry-example-api/route.ts demonstrating Sentry.startSpan({ name, op: 'http.server' }) pattern in App Router route handler. Include GET handler with named span wrapping full handler body.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "app/api/sentry-example-api/route.ts"
+          ],
+          "patterns_from": [
+            "spec.md (Manual Span Pattern)",
+            "app/api/jobs/route.ts (existing API route pattern)"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "grep -c \"Sentry.startSpan\" app/api/sentry-example-api/route.ts && grep -c \"http.server\" app/api/sentry-example-api/route.ts",
+            "expected": "2"
+          },
+          "status": "completed",
+          "notes": "Created app/api/sentry-example-api/route.ts with Sentry.startSpan wrapping GET handler (op: 'http.server'). File includes span attributes, error handling with captureException, and follows existing app/api/jobs/route.ts patterns. Verification passed: grep found Sentry.startSpan and http.server patterns. Commit 286d303 created.",
+          "updated_at": "2026-03-31T06:11:23.550152+00:00"
+        },
+        {
+          "id": "subtask-8-2",
+          "description": "Create sentry-alerting.md documenting P0-P3 severity tier definitions, alert threshold SLIs (p95 latency, error rate %), notification channel routing (Slack #alerts-sentry, Discord server), ownership rules (path: and tag: syntax), and SLA mapping. Placeholders for Slack/Discord channel IDs (TBD from stakeholders).",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "sentry-alerting.md"
+          ],
+          "patterns_from": [
+            "docs/ (existing docs structure)"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Review sentry-alerting.md: verify P0/P1/P2/P3 severity definitions exist, alert threshold SLI values are documented, notification routing (Slack/Discord) is defined with TBD placeholders for channel IDs, ownership rules use path:/tag: syntax"
+          },
+          "status": "completed",
+          "notes": "Created docs/sentry-alerting.md (493 lines) with: P0-P3 severity definitions, SLI thresholds (p95 latency, error rate %), Slack #alerts-sentry and Discord routing with TBD channel ID placeholders, path:/tag: ownership rules, and SLA mapping. Committed as b375f2a.",
+          "updated_at": "2026-03-31T06:15:08.686630+00:00"
+        },
+        {
+          "id": "subtask-8-3",
+          "description": "Create sentry-dashboards.md documenting three dashboard templates: (1) Engineering Lead - overall health, error trends, team performance; (2) On-Call - active issues, P0/P1 alerts, deployment correlation; (3) Developer - personal issues, assigned items, velocity. Include widget specs (chart types, queries, refresh rates).",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "sentry-dashboards.md"
+          ],
+          "patterns_from": [
+            "docs/ (existing docs structure)"
+          ],
+          "verification": {
+            "type": "manual",
+            "instructions": "Review sentry-dashboards.md: verify all three dashboard templates (Engineering Lead, On-Call, Developer) exist with widget specifications including chart types, queries, and refresh rates. Note that actual Sentry UI creation requires manual action at sentry.io."
+          },
+          "status": "completed",
+          "notes": "Created docs/sentry-dashboards.md (759 lines) with: 3 dashboard templates (Engineering Lead, On-Call, Developer), 23 widget specifications each with chart type, query/filter, time range, interval, and placement. Includes tag requirements table, Sentry UI step-by-step instructions, and dashboard layout diagrams. Committed as a9d6f21."
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 8,
+    "total_subtasks": 14,
+    "services_involved": [
+      "main (Next.js)"
+    ],
+    "parallelism": {
+      "max_parallel_phases": 5,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-2-client-config",
+            "phase-3-edge-config",
+            "phase-4-lib-split",
+            "phase-5-instrumentation",
+            "phase-7-nextjs-config"
+          ],
+          "reason": "All depend only on baseline (no prior phases), each modifies disjoint file sets"
+        },
+        {
+          "phases": [
+            "phase-6-error-boundaries",
+            "phase-8-documentation"
+          ],
+          "reason": "Both depend only on phase-4 (lib split), different file sets"
+        }
+      ],
+      "recommended_workers": 2,
+      "speedup_estimate": "Parallel groups give ~2x speedup vs sequential. Phase 1 (server config) runs first alone as baseline."
+    },
+    "startup_command": "source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 068 --parallel 2"
+  },
+  "verification_strategy": {
+    "risk_level": "high",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "unit",
+      "integration"
+    ],
+    "security_scanning_required": true,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "All existing vitest tests pass (pnpm test:run)",
+      "No TypeScript compilation errors (pnpm run type-check)",
+      "No ESLint errors (pnpm lint)",
+      "Sentry SDK initializes without crashing in dev mode",
+      "tracesSampleRate is 1.0 in dev (NODE_ENV=development), 0.05 in production",
+      "No SENTRY_AUTH_TOKEN or other secrets in source code (grep scan)",
+      "Next.js build succeeds with Sentry config applied"
+    ],
+    "verification_steps": [
+      {
+        "name": "TypeScript Type Check",
+        "command": "cd /Users/yanuar/Documents/daws/daily-worker-hub-web && pnpm run type-check",
+        "expected_outcome": "No TypeScript errors",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "ESLint Check",
+        "command": "cd /Users/yanuar/Documents/daws/daily-worker-hub-web && pnpm lint",
+        "expected_outcome": "No lint errors",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Vitest Unit Tests",
+        "command": "cd /Users/yanuar/Documents/daws/daily-worker-hub-web && pnpm test:run",
+        "expected_outcome": "All existing tests pass",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Next.js Build",
+        "command": "cd /Users/yanuar/Documents/daws/daily-worker-hub-web && NEXT_PUBLIC_SENTRY_DSN=https://test@o0.ingest.sentry.io/0 SENTRY_ORG=test SENTRY_PROJECT=test SENTRY_AUTH_TOKEN=test pnpm run build 2>&1 | tail -20",
+        "expected_outcome": "Build succeeds with Sentry config applied",
+        "type": "command",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Secrets Scan",
+        "command": "grep -r 'sntrys_' --include='*.ts' --include='*.tsx' --include='*.js' --include='*.mjs' . | grep -v node_modules | grep -v .next | grep -v .auto-claude || echo 'No secrets found'",
+        "expected_outcome": "No hardcoded secrets in source files",
+        "type": "security",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "Sentry Config Verification",
+        "command": "grep -c \"tracesSampleRate.*isDev.*1.0\" sentry.server.config.ts sentry.client.config.ts sentry.edge.config.ts | awk -F: '{sum+=$2} END{print sum}'",
+        "expected_outcome": "3 (one env-differentiated rate per config file)",
+        "type": "command",
+        "required": true,
+        "blocking": false
+      }
+    ],
+    "reasoning": "High risk - Sentry SDK integration touches error handling paths and session replay (user data). Security scan needed to verify SENTRY_DSN is not leaked and session replay privacy settings (maskAllText, blockAllMedia) are appropriate. Unit tests for custom sampling logic, type check for typed utility exports."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": true,
+      "commands": [
+        "pnpm test:run"
+      ],
+      "minimum_coverage": null
+    },
+    "integration_tests": {
+      "required": false,
+      "commands": [],
+      "services_to_test": []
+    },
+    "e2e_tests": {
+      "required": false,
+      "commands": [],
+      "flows": []
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000",
+          "checks": [
+            "No console errors on startup",
+            "Page renders without crash"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": false,
+      "checks": []
+    }
+  },
+  "qa_signoff": null,
+  "executionPhase": "failed",
+  "status": "error",
+  "planStatus": "pending",
+  "updated_at": "2026-03-31T06:04:05.627Z",
+  "xstateState": "coding",
+  "lastEvent": {
+    "eventId": "e79daef5-d5cd-450b-9e3a-cb0f8af7122a",
+    "sequence": 0,
+    "type": "PLANNING_COMPLETE",
+    "timestamp": "2026-03-31T05:42:57.307867+00:00"
+  },
+  "last_updated": "2026-03-31T06:15:08.686644+00:00"
+}
