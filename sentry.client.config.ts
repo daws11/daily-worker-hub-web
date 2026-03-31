@@ -3,14 +3,18 @@
 
 import * as Sentry from "@sentry/nextjs";
 
+const isDev = process.env.NODE_ENV === "development";
+
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Adjust this value in production, or use tracesSampler for greater control
-  tracesSampleRate: 1,
+  // Environment-differentiated traces sample rate:
+  // - 1.0 in development: capture all transactions for debugging
+  // - 0.05 in production: keep Sentry quota manageable
+  tracesSampleRate: isDev ? 1.0 : 0.05,
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
-  debug: false,
+  debug: isDev,
 
   replaysOnErrorSampleRate: 1.0,
 
@@ -24,6 +28,9 @@ Sentry.init({
       // Additional Replay configuration goes in here, for example:
       maskAllText: true,
       blockAllMedia: true,
+    }),
+    Sentry.feedbackIntegration({
+      autoInject: false,
     }),
   ],
 });
