@@ -200,9 +200,9 @@ async function processWebhook(
       return { success: true };
     }
 
-    // Update transaction status
+    // Update transaction status — convert internal status to DB enum value
     const updateData: Record<string, unknown> = {
-      status: payload.status,
+      status: mapInternalStatusToDb(payload.status),
       provider_payment_id: payload.id,
       updated_at: new Date().toISOString(),
     };
@@ -299,8 +299,8 @@ async function creditWallet(
         .insert({
           business_id: businessId,
           balance: amount,
-          currency: "IDR",
-          is_active: true,
+          available_balance: amount,
+          pending_balance: 0,
         })
         .select()
         .single();
@@ -315,7 +315,7 @@ async function creditWallet(
         newWallet.id,
         amount,
         transactionId,
-        "top_up",
+        "credit",
       );
 
       routeLogger.info("Wallet created and credited", {
@@ -347,7 +347,7 @@ async function creditWallet(
       wallet.id,
       amount,
       transactionId,
-      "top_up",
+      "credit",
     );
 
     routeLogger.info("Wallet credited successfully", {
@@ -376,7 +376,7 @@ async function recordWalletTransaction(
   walletId: string,
   amount: number,
   referenceId: string,
-  type: "top_up" | "payment" | "refund" | "payout",
+  type: "credit" | "payment" | "refund" | "payout",
 ): Promise<void> {
   try {
     await supabase.from("wallet_transactions").insert({
@@ -395,6 +395,22 @@ async function recordWalletTransaction(
       type,
     });
   }
+}
+
+/**
+ * Map internal status to database payment_status enum value
+ */
+function mapInternalStatusToDb(
+  status: "pending" | "success" | "failed" | "expired" | "cancelled",
+): string {
+  const map: Record<string, string> = {
+    pending: "pending_review",
+    success: "paid",
+    expired: "failed",
+    failed: "failed",
+    cancelled: "cancelled",
+  };
+  return map[status] ?? "pending_review";
 }
 
 /**
