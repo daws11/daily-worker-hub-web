@@ -24,7 +24,8 @@
       "@/*": ["./*"],
       "@/components/*": ["./components/*"],
       "@/lib/*": ["./lib/*"],
-      "@/providers/*": ["./app/providers/*"]
+      "@/providers/*": ["./app/providers/*"],
+      "~/*": ["./*"]
     }
   },
   "include": [

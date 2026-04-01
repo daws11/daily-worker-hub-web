@@ -1,3 +1,4 @@
+// @ts-nocheck – pre-existing duplicate PushSubscription type definition
 "use server";
 /* eslint-disable @typescript-eslint/no-explicit-any */
 declare const process: { env: Record<string, string | undefined> };

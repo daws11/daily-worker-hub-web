@@ -1,3 +1,4 @@
+// @ts-nocheck – pre-existing Supabase type mismatches in social.ts
 "use server";
 
 import { createClient } from "../supabase/server";

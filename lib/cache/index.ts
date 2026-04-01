@@ -13,7 +13,8 @@ import { isRedisAvailable } from "./redis-client";
 
 // Re-export shared types and constants from lib/cache.ts for convenience
 export type { CacheNamespace } from "../cache";
-export { CACHE_TTL } from "../cache";
+import { CACHE_TTL } from "../cache";
+export { CACHE_TTL };
 
 // Unified cache interface — supports both sync (LRU) and async (Redis) backends
 // LRUCache methods are sync; RedisCache methods are async.

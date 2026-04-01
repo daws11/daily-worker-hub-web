@@ -34,12 +34,12 @@ interface Booking {
     id: string;
     title: string;
     address?: string | null;
-  } | null;
+  }[] | null;
   workers?: {
     id: string;
     full_name: string;
     avatar_url?: string | null;
-  } | null;
+  }[] | null;
 }
 
 interface WalletData {
@@ -130,7 +130,14 @@ export default function BusinessDashboardPage() {
           .order("start_date", { ascending: true })
           .limit(5);
 
-        if (bookings) setUpcomingBookings(bookings);
+        if (bookings) {
+          const transformed: Booking[] = bookings.map((b) => ({
+            ...b,
+            jobs: b.jobs ? [b.jobs as { id: string; title: string; address?: string | null }] : null,
+            workers: b.workers ? [b.workers as { id: string; full_name: string; avatar_url?: string | null }] : null,
+          }));
+          setUpcomingBookings(transformed);
+        }
 
         // Fetch reviews count
         const { count: reviewCount } = await supabase

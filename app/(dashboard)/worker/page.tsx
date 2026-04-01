@@ -34,11 +34,11 @@ interface Booking {
     id: string;
     title: string;
     address?: string | null;
-  } | null;
+  }[] | null;
   businesses?: {
     id: string;
     name: string;
-  } | null;
+  }[] | null;
 }
 
 interface WalletData {
@@ -125,7 +125,14 @@ export default function WorkerDashboardPage() {
           .order("start_date", { ascending: true })
           .limit(10);
 
-        if (bookings) setUpcomingBookings(bookings);
+        if (bookings) {
+          const transformed: Booking[] = bookings.map((b) => ({
+            ...b,
+            jobs: b.jobs ? [b.jobs as { id: string; title: string; address?: string | null }] : null,
+            businesses: b.businesses ? [b.businesses as { id: string; name: string }] : null,
+          }));
+          setUpcomingBookings(transformed);
+        }
 
         // Calculate earnings this month
         const now = new Date();

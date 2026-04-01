@@ -3,7 +3,7 @@ import type { Database } from "../types";
 
 type WorkersRow = Database["public"]["Tables"]["workers"]["Row"];
 type WorkersUpdate = Database["public"]["Tables"]["workers"]["Update"];
-type ReliabilityScoreHistoryRow =
+export type ReliabilityScoreHistoryRow =
   Database["public"]["Tables"]["reliability_score_history"]["Row"];
 type ReliabilityScoreHistoryInsert =
   Database["public"]["Tables"]["reliability_score_history"]["Insert"];
@@ -169,22 +169,58 @@ export async function updateScore(
 }
 
 /**
+ * Trend direction based on reliability score history
+ */
+export type WorkerScoreTrend = {
+  trend: "improving" | "declining" | "stable" | "insufficient_data";
+};
+
+/**
+ * Get the reliability score trend for a worker based on recent history.
+ *
+ * Compares the most recent score against the previous one:
+ * - "improving": latest score > previous score by at least 0.1
+ * - "declining": latest score < previous score by at least 0.1
+ * - "stable": scores are within 0.1 of each other
+ * - "insufficient_data": fewer than 2 data points
+ */
+export async function getWorkerScoreTrend(
+  workerId: string,
+): Promise<WorkerScoreTrend> {
+  const history = await getScoreHistory(workerId, 3);
+
+  if (history.length < 2) {
+    return { trend: "insufficient_data" };
+  }
+
+  // History is ordered by calculated_at descending, so index 0 is most recent
+  const latest = history[0]?.new_score ?? 0;
+  const previous = history[1]?.new_score ?? 0;
+  const diff = latest - previous;
+
+  if (diff > 0.1) {
+    return { trend: "improving" };
+  } else if (diff < -0.1) {
+    return { trend: "declining" };
+  } else {
+    return { trend: "stable" };
+  }
+}
+
+/**
  * Record a score history entry
  */
 export async function recordScoreHistory(
   workerId: string,
   breakdown: ReliabilityScoreBreakdown,
 ): Promise<ReliabilityScoreHistoryRow> {
-  const historyData: Omit<ReliabilityScoreHistoryInsert, "id" | "created_at"> =
-    {
-      worker_id: workerId,
-      score: breakdown.score,
-      attendance_rate: breakdown.attendance_rate,
-      punctuality_rate: breakdown.punctuality_rate,
-      avg_rating: breakdown.avg_rating,
-      completed_jobs_count: breakdown.completed_jobs_count,
-      calculated_at: new Date().toISOString(),
-    };
+  const historyData = {
+    worker_id: workerId,
+    new_score: breakdown.score,
+    previous_score: 0,
+    change_reason: "scheduled_calculation",
+    calculated_at: new Date().toISOString(),
+  } as const;
 
   const { data, error } = await supabase
     .from("reliability_score_history")

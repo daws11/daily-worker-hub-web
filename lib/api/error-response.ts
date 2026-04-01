@@ -38,6 +38,7 @@ import { NextResponse } from "next/server";
 import type { Locale } from "~/lib/i18n/types";
 
 import { ErrorCode, isApiError, toApiError } from "./errors";
+import type { ErrorResponse } from "./errors";
 import { captureException } from "~/lib/sentry";
 import { logError } from "~/lib/logger";
 

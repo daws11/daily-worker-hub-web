@@ -19,7 +19,7 @@
 import { describe, it, expect } from "vitest";
 import { renderToString } from "react-dom/server";
 import { CoreWebVitalsCard, formatValue } from "../../components/analytics/core-web-vitals-card";
-import { Activity, Zap, Gauge } from "lucide-react";
+import { Activity, Zap, Gauge, type LucideIcon } from "lucide-react";
 
 // ---------------------------------------------------------------------------
 // Metric descriptions
@@ -39,7 +39,7 @@ function renderCard(props: {
   metric: "LCP" | "INP" | "CLS";
   value: number;
   rating: "good" | "needs-improvement" | "poor";
-  icon?: React.ComponentType<{ style?: React.CSSProperties }>;
+  icon?: LucideIcon;
 }) {
   return renderToString(<CoreWebVitalsCard {...props} />);
 }

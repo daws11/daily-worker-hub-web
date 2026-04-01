@@ -142,6 +142,12 @@ export async function proxy(request: NextRequest) {
   // Create Supabase client and get response
   const { supabase, response } = createProxyClient(request);
 
+  // Add Permissions-Policy header (XSS mitigation — was in middleware.ts)
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), payment=()"
+  );
+
   // Detect and set locale preference
   getOrSetLocale(request, response);
 

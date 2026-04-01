@@ -39,9 +39,9 @@ type WebVitalsAttacher = (
 ) => void;
 
 const { mockOnCLS, mockOnINP, mockOnLCP } = vi.hoisted(() => ({
-  mockOnCLS: vi.fn<[MetricCallback, { reportAllChanges: boolean }?]>(),
-  mockOnINP: vi.fn<[MetricCallback, { reportAllChanges: boolean }?]>(),
-  mockOnLCP: vi.fn<[MetricCallback, { reportAllChanges: boolean }?]>(),
+  mockOnCLS: vi.fn<(cb: (m: Parameters<MetricCallback>[0]) => void, opts?: { reportAllChanges: boolean }) => void>(),
+  mockOnINP: vi.fn<(cb: (m: Parameters<MetricCallback>[0]) => void, opts?: { reportAllChanges: boolean }) => void>(),
+  mockOnLCP: vi.fn<(cb: (m: Parameters<MetricCallback>[0]) => void, opts?: { reportAllChanges: boolean }) => void>(),
 }));
 
 vi.mock("web-vitals", () => ({
@@ -98,10 +98,10 @@ function makeMetric(
  */
 function simulateServerContext() {
   const realWindow = globalThis.window;
-  // @ts-expect-error – intentionally removing window to simulate server env
-  delete globalThis.window;
+  // Intentionally remove window to simulate server env
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delete (globalThis as any).window;
   return () => {
-    // @ts-expect-error – restore
     globalThis.window = realWindow;
   };
 }

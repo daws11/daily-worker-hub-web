@@ -30,10 +30,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
  */
 function simulateServerContext() {
   const realWindow = globalThis.window;
-  // @ts-expect-error – intentionally removing window to simulate server env
-  delete globalThis.window;
+  // Intentionally remove window to simulate server env
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delete (globalThis as any).window;
   return () => {
-    // @ts-expect-error – restore
     globalThis.window = realWindow;
   };
 }
