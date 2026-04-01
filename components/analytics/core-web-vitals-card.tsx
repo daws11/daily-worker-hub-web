@@ -68,7 +68,7 @@ const defaultIconMap: Record<CoreWebVitalsCardProps["metric"], LucideIcon> = {
 // Value formatter
 // ---------------------------------------------------------------------------
 
-function formatValue(metric: CoreWebVitalsCardProps["metric"], value: number): string {
+export function formatValue(metric: CoreWebVitalsCardProps["metric"], value: number): string {
   if (metric === "CLS") {
     return value.toFixed(3);
   }
