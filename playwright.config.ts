@@ -4,6 +4,7 @@ export default defineConfig({
   testDir: "./tests/e2e",
   timeout: 60000, // Increased from 30s to 60s
   fullyParallel: false,
+  workers: 1, // Single worker to prevent Chromium singleton socket conflicts
   retries: 1,
   use: {
     // Base URL for tests
@@ -28,7 +29,19 @@ export default defineConfig({
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
-        channel: "chrome",
+        launchOptions: {
+          executablePath:
+            "/Users/yanuar/Library/Caches/ms-playwright/chromium-1208/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing",
+          args: [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+            "--disable-crashpad",
+            "--disable-mach-lookup",
+            "--crash-dumps-dir=/dev/null",
+          ],
+        },
       },
     },
     // Firefox
