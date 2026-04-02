@@ -154,7 +154,7 @@ export function ApplicantCard({
                 src={worker?.avatar_url || undefined}
                 alt={worker?.full_name}
               />
-              <AvatarFallback className="bg-blue-100 text-blue-600">
+              <AvatarFallback className="bg-primary/10 text-primary">
                 {worker?.full_name?.charAt(0)?.toUpperCase() || "?"}
               </AvatarFallback>
             </Avatar>
@@ -169,7 +169,7 @@ export function ApplicantCard({
                   variant={config.variant}
                   className={
                     application.status === "accepted"
-                      ? "bg-green-600 hover:bg-green-700"
+                      ? "bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-500"
                       : ""
                   }
                 >
@@ -198,7 +198,7 @@ export function ApplicantCard({
             {worker?.reliability_score !== null &&
               worker?.reliability_score !== undefined && (
                 <div className="flex items-center gap-2">
-                  <Star className="h-4 w-4 text-yellow-500" />
+                  <Star className="h-4 w-4 text-yellow-500 dark:text-yellow-400" />
                   <div>
                     <span className="text-xs text-muted-foreground">Skor</span>
                     <div className="flex items-center gap-1">
@@ -231,11 +231,11 @@ export function ApplicantCard({
 
           {/* Proposed Wage */}
           {application.proposed_wage && (
-            <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-md">
-              <DollarSign className="h-4 w-4 text-blue-600" />
+            <div className="flex items-center gap-2 p-2 bg-primary/10 rounded-md">
+              <DollarSign className="h-4 w-4 text-primary" />
               <div>
-                <span className="text-xs text-blue-600">Penawaran Gaji</span>
-                <p className="font-semibold text-blue-700">
+                <span className="text-xs text-primary">Penawaran Gaji</span>
+                <p className="font-semibold text-primary">
                   {formatPrice(application.proposed_wage)}
                 </p>
               </div>
@@ -299,7 +299,7 @@ export function ApplicantCard({
                   size="sm"
                   onClick={onAccept}
                   disabled={isProcessing}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-500"
                 >
                   {isProcessing ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -334,15 +334,15 @@ export function ApplicantCard({
 
           {application.status === "accepted" && (
             <div className="flex gap-2">
-              <Badge className="bg-green-600">Diterima</Badge>
+              <Badge className="bg-green-600 dark:bg-green-600 dark:hover:bg-green-500">Diterima</Badge>
               {bookingId && (
                 <Button
                   variant="default"
                   size="sm"
                   onClick={() =>
-                    router.push(`/dashboard/business/interview/${bookingId}`)
+                    router.push(`/business/interview/${bookingId}`)
                   }
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500"
                 >
                   <Video className="h-4 w-4 mr-1" />
                   Interview
@@ -375,7 +375,7 @@ export function ApplicantCard({
                   src={worker?.avatar_url || undefined}
                   alt={worker?.full_name}
                 />
-                <AvatarFallback className="bg-blue-100 text-blue-600 text-xl">
+                <AvatarFallback className="bg-primary/10 text-primary text-xl">
                   {worker?.full_name?.charAt(0)?.toUpperCase() || "?"}
                 </AvatarFallback>
               </Avatar>
@@ -426,7 +426,7 @@ export function ApplicantCard({
                 <div className="p-3 bg-muted rounded-lg">
                   <span className="text-xs text-muted-foreground">Rating</span>
                   <p className="text-xl font-bold mt-1 flex items-center gap-1">
-                    <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                    <Star className="h-5 w-5 fill-yellow-400 text-yellow-400 dark:fill-yellow-300 dark:text-yellow-300" />
                     {worker.rating.toFixed(1)}
                   </p>
                 </div>
@@ -456,12 +456,12 @@ export function ApplicantCard({
 
             {/* Proposed Wage */}
             {application.proposed_wage && (
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <span className="text-xs text-blue-600">Penawaran Gaji</span>
-                <p className="text-xl font-bold text-blue-700">
+              <div className="p-3 bg-primary/10 rounded-lg">
+                <span className="text-xs text-primary">Penawaran Gaji</span>
+                <p className="text-xl font-bold text-primary">
                   {formatPrice(application.proposed_wage)}
                 </p>
-                <p className="text-xs text-blue-600 mt-1">
+                <p className="text-xs text-primary/70 mt-1">
                   Budget: {formatPrice(budgetMin)} - {formatPrice(budgetMax)}
                 </p>
               </div>
@@ -496,7 +496,7 @@ export function ApplicantCard({
                     onAccept();
                   }}
                   disabled={isProcessing}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-500"
                 >
                   Terima
                 </Button>
@@ -522,9 +522,9 @@ export function ApplicantCard({
               <Button
                 onClick={() => {
                   setShowDetails(false);
-                  router.push(`/dashboard/business/interview/${bookingId}`);
+                  router.push(`/business/interview/${bookingId}`);
                 }}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500"
               >
                 <Video className="h-4 w-4 mr-2" />
                 Mulai Interview

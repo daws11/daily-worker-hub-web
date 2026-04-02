@@ -255,7 +255,7 @@ export async function getApplicationsByJob(
  * Get all applications for a specific worker (worker view)
  * Includes job and business details
  *
- * @param workerId - The worker ID
+ * @param workerId - The worker ID (can be auth.uid or workers.id - auto-detected)
  * @param status - Optional filter by status
  * @returns Applications list with job details
  */
@@ -265,6 +265,21 @@ export async function getApplicationsByWorker(
 ): Promise<{ success: boolean; error?: string; data?: any[] }> {
   try {
     const supabase = await createClient();
+
+    // If workerId looks like a user ID (not a worker record ID), lookup worker first
+    // This handles both auth.uid and workers.id inputs
+    let actualWorkerId = workerId;
+
+    // Check if this is a user_id (auth.uid) by checking if it exists in workers table
+    const { data: workerRecord } = await supabase
+      .from("workers")
+      .select("id")
+      .eq("user_id", workerId)
+      .single();
+
+    if (workerRecord) {
+      actualWorkerId = workerRecord.id;
+    }
 
     let query = supabase
       .from("job_applications")
@@ -289,7 +304,7 @@ export async function getApplicationsByWorker(
         )
       `,
       )
-      .eq("worker_id", workerId)
+      .eq("worker_id", actualWorkerId)
       .order("applied_at", { ascending: false });
 
     if (status) {
@@ -505,38 +520,32 @@ export async function acceptApplicationAndCreateBooking(
       };
     }
 
-    // Update application status to accepted
-    const { data: updatedApplication, error: updateError } = await supabase
-      .from("job_applications")
-      .update({ status: "accepted" })
-      .eq("id", applicationId)
-      .eq("business_id", businessId)
-      .select()
-      .single();
+    // Update application status to accepted using SECURITY DEFINER function
+    const { data: acceptResult, error: acceptError } = await supabase
+      .rpc("accept_application", {
+        p_application_id: applicationId,
+        p_business_id: businessId,
+      });
 
-    if (updateError) {
+    if (acceptError || !acceptResult) {
       return {
         success: false,
-        error: `Gagal menerima lamaran: ${updateError.message}`,
+        error: `Gagal menerima lamaran: ${acceptError?.message || "Unknown error"}`,
       };
     }
 
-    // Create the booking
-    const { data: booking, error: bookingError } = await supabase
-      .from("bookings")
-      .insert({
-        job_id: application.job_id,
-        worker_id: application.worker_id,
-        business_id: businessId,
-        application_id: applicationId,
-        status: "pending",
-        start_date: new Date().toISOString(),
-        final_price: application.jobs?.budget_max || 0,
-      })
-      .select()
-      .single();
+    // Create the booking using SECURITY DEFINER function to bypass RLS
+    const { data: bookingId, error: bookingError } = await supabase
+      .rpc("create_booking_for_application", {
+        p_job_id: application.job_id,
+        p_worker_id: application.worker_id,
+        p_business_id: businessId,
+        p_application_id: applicationId,
+        p_start_date: new Date().toISOString().split("T")[0],
+        p_final_price: application.jobs?.budget_max || 0,
+      });
 
-    if (bookingError) {
+    if (bookingError || !bookingId) {
       // Rollback application status update
       await supabase
         .from("job_applications")
@@ -545,7 +554,21 @@ export async function acceptApplicationAndCreateBooking(
 
       return {
         success: false,
-        error: `Gagal membuat booking: ${bookingError.message}`,
+        error: `Gagal membuat booking: ${bookingError?.message || "Unknown error"}`,
+      };
+    }
+
+    // Fetch the created booking
+    const { data: booking, error: bookingFetchError } = await supabase
+      .from("bookings")
+      .select("*")
+      .eq("id", bookingId)
+      .single();
+
+    if (bookingFetchError || !booking) {
+      return {
+        success: false,
+        error: `Booking dibuat tapi gagal mengambil data: ${bookingFetchError?.message || "Unknown error"}`,
       };
     }
 

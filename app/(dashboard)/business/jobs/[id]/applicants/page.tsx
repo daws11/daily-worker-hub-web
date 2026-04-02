@@ -293,8 +293,8 @@ export default function BusinessApplicantsPage() {
               created.
             </span>
             <Link
-              href={`/dashboard/business/interview/${bookingId}`}
-              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 underline font-medium"
+              href={`/business/interview/${bookingId}`}
+              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline font-medium"
             >
               <Video className="h-4 w-4" />
               Mulai Interview
@@ -340,18 +340,18 @@ export default function BusinessApplicantsPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 text-blue-600 animate-spin" />
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 text-primary animate-spin" />
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-100 p-4 flex items-center justify-center">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 flex items-center gap-3">
-          <AlertCircle className="h-5 w-5 text-red-600" />
-          <p className="text-red-900 font-medium">
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-destructive" />
+          <p className="text-destructive font-medium">
             Error: Tidak dapat memuat informasi pengguna. Silakan refresh
             halaman.
           </p>
@@ -361,7 +361,7 @@ export default function BusinessApplicantsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto">
         {/* Back Button */}
         <Button
@@ -435,25 +435,25 @@ export default function BusinessApplicantsPage() {
           </Card>
           <Card className="p-3">
             <p className="text-xs text-muted-foreground">Menunggu</p>
-            <p className="text-2xl font-bold text-yellow-600">
+            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-500">
               {stats.pending}
             </p>
           </Card>
           <Card className="p-3">
             <p className="text-xs text-muted-foreground">Dipilih</p>
-            <p className="text-2xl font-bold text-blue-600">
+            <p className="text-2xl font-bold text-blue-600 dark:text-blue-500">
               {stats.shortlisted}
             </p>
           </Card>
           <Card className="p-3">
             <p className="text-xs text-muted-foreground">Diterima</p>
-            <p className="text-2xl font-bold text-green-600">
+            <p className="text-2xl font-bold text-green-600 dark:text-green-500">
               {stats.accepted}
             </p>
           </Card>
           <Card className="p-3">
             <p className="text-xs text-muted-foreground">Ditolak</p>
-            <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
+            <p className="text-2xl font-bold text-red-600 dark:text-red-500">{stats.rejected}</p>
           </Card>
         </div>
 
@@ -476,11 +476,11 @@ export default function BusinessApplicantsPage() {
 
         {/* Error State */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4 flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-red-600" />
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-4 flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-destructive" />
             <div className="flex-1">
-              <p className="text-red-900 font-medium mb-1">Gagal memuat data</p>
-              <p className="text-red-800 text-sm">{error}</p>
+              <p className="text-destructive font-medium mb-1">Gagal memuat data</p>
+              <p className="text-destructive/80 text-sm">{error}</p>
             </div>
             <Button onClick={fetchData} size="sm">
               <Loader2 className="h-4 w-4 mr-2" />
@@ -491,22 +491,22 @@ export default function BusinessApplicantsPage() {
 
         {/* Loading State */}
         {isLoading && !error && (
-          <div className="bg-white rounded-lg p-12 shadow-sm text-center">
-            <Loader2 className="h-8 w-8 text-blue-600 mx-auto mb-4 animate-spin" />
-            <p className="text-gray-600">Memuat data pelamar...</p>
+          <div className="bg-card rounded-lg p-12 shadow-sm text-center">
+            <Loader2 className="h-8 w-8 text-primary mx-auto mb-4 animate-spin" />
+            <p className="text-muted-foreground">Memuat data pelamar...</p>
           </div>
         )}
 
         {/* Empty State */}
         {!isLoading && !error && filteredApplications.length === 0 && (
-          <div className="bg-white rounded-lg p-12 shadow-sm text-center border-2 border-dashed border-gray-300">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">
+          <div className="bg-card rounded-lg p-12 shadow-sm text-center border-2 border-dashed border-border">
+            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2 text-foreground">
               {statusFilter === "all"
                 ? "Belum Ada Pelamar"
                 : "Tidak ada pelamar dengan status ini"}
             </h3>
-            <p className="text-gray-600">
+            <p className="text-muted-foreground">
               {statusFilter === "all"
                 ? "Pelamar akan muncul di sini setelah ada yang melamar ke pekerjaan ini"
                 : "Coba ubah filter untuk melihat pelamar lainnya"}

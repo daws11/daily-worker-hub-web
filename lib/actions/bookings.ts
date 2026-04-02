@@ -585,6 +585,7 @@ export async function getBusinessBooking(
 
 /**
  * Get all bookings for a worker
+ * @param workerId - Can be auth.uid or workers.id (auto-detected)
  */
 export async function getWorkerBookings(
   workerId: string,
@@ -592,6 +593,19 @@ export async function getWorkerBookings(
 ) {
   try {
     const supabase = await createClient();
+
+    // If workerId looks like a user ID (not a worker record ID), lookup worker first
+    let actualWorkerId = workerId;
+
+    const { data: workerRecord } = await supabase
+      .from("workers")
+      .select("id")
+      .eq("user_id", workerId)
+      .single();
+
+    if (workerRecord) {
+      actualWorkerId = workerRecord.id;
+    }
 
     let query = supabase
       .from("bookings")
@@ -615,7 +629,7 @@ export async function getWorkerBookings(
         )
       `,
       )
-      .eq("worker_id", workerId)
+      .eq("worker_id", actualWorkerId)
       .order("created_at", { ascending: false });
 
     if (status) {

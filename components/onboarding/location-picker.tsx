@@ -15,29 +15,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MapPin, Loader2, Navigation } from "lucide-react";
 
-// Fix for default marker icon in react-leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-});
-
-// Custom draggable marker icon
+// Custom marker icon using inline SVG data URL (avoids CSP issues)
 const customIcon = new L.Icon({
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+  iconUrl: "data:image/svg+xml;base64," + btoa(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 41" width="25" height="41">
+      <path d="M12.5 0C5.6 0 0 5.6 0 12.5c0 9.4 12.5 28.5 12.5 28.5S25 21.9 25 12.5C25 5.6 19.4 0 12.5 0z" fill="#3b82f6"/>
+      <circle cx="12.5" cy="12.5" r="6" fill="white"/>
+    </svg>
+  `),
+  shadowUrl: "",
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
-  shadowSize: [41, 41],
+  shadowSize: [0, 0],
 });
 
 export interface LocationData {
@@ -107,18 +97,26 @@ function DraggableMarker({
 
 // Reverse geocoding using Nominatim API (free)
 async function reverseGeocode(lat: number, lng: number): Promise<string> {
+  // Simple throttle to respect Nominatim's 1 req/sec limit
+  const now = Date.now();
+  if (reverseGeocode.lastRequest && now - reverseGeocode.lastRequest < 1100) {
+    await new Promise((resolve) => setTimeout(resolve, 1100 - (now - reverseGeocode.lastRequest)));
+  }
+  reverseGeocode.lastRequest = Date.now();
+
   try {
     const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
       {
         headers: {
           "Accept-Language": "id,en",
+          "User-Agent": "DailyWorkerHub/1.0",
         },
       },
     );
 
     if (!response.ok) {
-      throw new Error("Geocoding failed");
+      throw new Error(`Geocoding failed: ${response.status}`);
     }
 
     const data = await response.json();
@@ -128,6 +126,7 @@ async function reverseGeocode(lat: number, lng: number): Promise<string> {
     return `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
   }
 }
+reverseGeocode.lastRequest = 0;
 
 // Default center for Bali, Indonesia
 const BALI_CENTER: [number, number] = [-8.4095, 115.1889];
@@ -190,17 +189,21 @@ export function LocationPicker({
       (error) => {
         console.error("Geolocation error:", error);
         let errorMessage = "Unable to get your location";
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage =
-              "Location permission denied. Please enable location access.";
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = "Location information unavailable";
-            break;
-          case error.TIMEOUT:
-            errorMessage = "Location request timed out";
-            break;
+        if (error && typeof error === "object") {
+          switch (error.code) {
+            case 1: // PERMISSION_DENIED
+              errorMessage =
+                "Location permission denied. Please enable location access in your browser settings.";
+              break;
+            case 2: // POSITION_UNAVAILABLE
+              errorMessage = "Location information is currently unavailable.";
+              break;
+            case 3: // TIMEOUT
+              errorMessage = "Location request timed out. Please try again.";
+              break;
+            default:
+              errorMessage = "Unable to get your location. Please try again or select location manually on the map.";
+          }
         }
         alert(errorMessage);
         setIsLoadingLocation(false);
@@ -268,15 +271,16 @@ export function LocationPicker({
       </Button>
 
       {/* Map */}
-      <div className="rounded-lg overflow-hidden border">
+      <div className="relative rounded-xl overflow-hidden border shadow-sm aspect-[4/3] sm:aspect-video w-full">
         <MapContainer
           center={markerPosition}
           zoom={13}
-          style={{ height: "300px", width: "100%" }}
           scrollWheelZoom={true}
+          zoomControl={false}
+          className="h-full w-full rounded-xl"
         >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution={""}
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <MapEventHandler onLocationSelect={handleLocationSelect} />

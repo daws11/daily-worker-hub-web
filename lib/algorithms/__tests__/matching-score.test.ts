@@ -25,6 +25,7 @@ import {
   calculateMatchingScoreWithDistance,
   getMatchingScoreBreakdownWithDistance,
   getMatchQuality,
+  MatchingScoreParamsWithDistance,
 } from "../matching-score";
 import type { WorkerTier } from "@/lib/supabase/types";
 
@@ -470,7 +471,7 @@ describe("Matching Score Algorithm", () => {
     });
 
     it("should match calculateMatchingScoreWithDistance total", () => {
-      const params = {
+      const params: MatchingScoreParamsWithDistance = {
         workerSkills: ["housekeeping", "cleaning"],
         workerRating: 4.8,
         workerTier: "champion",

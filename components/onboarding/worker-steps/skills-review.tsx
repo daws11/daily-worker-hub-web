@@ -187,7 +187,7 @@ export function SkillsReview({
               </SelectTrigger>
               <SelectContent>
                 {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
+                  <SelectItem key={category.id} value={category.name}>
                     {category.name}
                   </SelectItem>
                 ))}
@@ -335,22 +335,22 @@ export function SkillsReview({
       </div>
 
       {/* Terms & Conditions */}
-      <div className="space-y-3 pt-4 border-t">
-        <div className="flex items-start space-x-3">
+      <div className="rounded-lg border bg-muted/20 p-4">
+        <div className="flex gap-3">
           <Checkbox
             id="terms"
             checked={termsAccepted}
             onCheckedChange={handleTermsChange}
-            className="mt-0.5"
+            className="mt-0.5 shrink-0"
           />
           <Label
             htmlFor="terms"
-            className="text-sm leading-relaxed cursor-pointer"
+            className="text-sm text-muted-foreground cursor-pointer leading-relaxed"
           >
             I agree to the{" "}
             <a
               href="/terms"
-              className="text-primary hover:underline"
+              className="text-primary hover:underline font-medium"
               target="_blank"
             >
               Terms of Service
@@ -358,7 +358,7 @@ export function SkillsReview({
             and{" "}
             <a
               href="/privacy"
-              className="text-primary hover:underline"
+              className="text-primary hover:underline font-medium"
               target="_blank"
             >
               Privacy Policy
