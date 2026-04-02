@@ -519,7 +519,7 @@ async function handlePOST(request: NextRequest) {
       return errorResponse(
         500,
         {
-          code: ErrorCode.EXTERNAL_SERVICE_ERROR,
+          code: ErrorCode.EXTERNAL_SERVICE_UNAVAILABLE,
           details: {
             message: "Failed to process withdrawal",
             details:

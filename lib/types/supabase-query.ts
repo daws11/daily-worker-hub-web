@@ -10,9 +10,7 @@
  * @module lib/types/supabase-query
  */
 
-import type {
-  PostgrestError,
-} from "@supabase/postgrest-js";
+import type { PostgrestError } from "@supabase/supabase-js";
 
 import type {
   QueryResult,

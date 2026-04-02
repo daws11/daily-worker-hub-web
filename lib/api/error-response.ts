@@ -37,9 +37,10 @@ import { NextResponse } from "next/server";
 // ErrorResponse is imported and re-exported from ./errors below
 import type { Locale } from "@/lib/i18n/types";
 
-import { ErrorCode, type ErrorResponse, isApiError, toApiError } from "./errors";
+import { ErrorCode, isApiError, toApiError } from "./errors";
 import { captureException } from "@/lib/sentry";
 import { logError } from "@/lib/logger";
+import type { ErrorResponse } from "./errors";
 
 // Re-export ErrorResponse for convenience
 export type { ErrorResponse } from "./errors";

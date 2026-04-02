@@ -360,7 +360,7 @@ export async function requestWithdrawal(
     }
 
     // Create hold transaction record
-    await supabase.from("wallet_transactions").insert({
+    await (supabase as any).from("wallet_transactions").insert({
       wallet_id: walletData.id,
       amount: data.amount,
       type: "payout",

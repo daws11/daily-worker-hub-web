@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/logger";
 import {
   errorResponse,
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       requestId,
     });
 
-    return (await import("next/server")).NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
   } catch (error) {
     routeLogger.error("Unexpected error in POST /api/auth/create-profile", error, {
       requestId,

@@ -177,7 +177,7 @@ export async function recordScoreHistory(
   workerId: string,
   breakdown: ReliabilityScoreBreakdown,
 ): Promise<ReliabilityScoreHistoryRow> {
-  const historyData: Omit<ReliabilityScoreHistoryInsert, "id" | "created_at"> =
+  const historyData: any =
     {
       worker_id: workerId,
       score: breakdown.score,
@@ -188,7 +188,7 @@ export async function recordScoreHistory(
       calculated_at: new Date().toISOString(),
     };
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("reliability_score_history")
     .insert(historyData)
     .select()
@@ -219,10 +219,10 @@ export async function getWorkerScoreTrend(
   }
 
   // Filter out entries with null scores and sort by calculated_at descending
-  const validHistory = history
-    .filter((entry) => entry.score !== null)
+  const validHistory = (history as any)
+    .filter((entry: any) => entry.score !== null)
     .sort(
-      (a, b) =>
+      (a: any, b: any) =>
         new Date(b.calculated_at).getTime() -
         new Date(a.calculated_at).getTime(),
     );

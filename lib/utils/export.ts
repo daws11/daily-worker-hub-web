@@ -146,16 +146,17 @@ function downloadBlob(blob: Blob, filename: string): void {
  * @returns Formatted data with section identifier
  */
 export function formatAnalyticsDataForExport(
-  data: Record<string, string | number | boolean | object | null>,
+  data: any,
   dateRange: string,
 ): Array<{ section: string; metric: string; value: string }> {
   const exportData: Array<{ section: string; metric: string; value: string }> =
     [];
 
   // User Growth
-  if (data.user_growth?.metrics?.length) {
+  const userGrowth = data.user_growth;
+  if (userGrowth?.metrics?.length) {
     const latest =
-      data.user_growth.metrics[data.user_growth.metrics.length - 1];
+      userGrowth.metrics[userGrowth.metrics.length - 1];
     exportData.push(
       {
         section: "Pertumbuhan Pengguna",
@@ -166,7 +167,7 @@ export function formatAnalyticsDataForExport(
         section: "Pertumbuhan Pengguna",
         metric: "Pengguna Baru",
         value: String(
-          data.user_growth.metrics.reduce(
+          userGrowth.metrics.reduce(
             (sum: number, m: UserGrowthMetric) => sum + m.total_new_users,
             0,
           ),
@@ -176,7 +177,7 @@ export function formatAnalyticsDataForExport(
         section: "Pertumbuhan Pengguna",
         metric: "Pekerja Baru",
         value: String(
-          data.user_growth.metrics.reduce(
+          userGrowth.metrics.reduce(
             (sum: number, m: UserGrowthMetric) => sum + m.new_workers,
             0,
           ),

@@ -44,7 +44,7 @@ export async function getWorkerDaysForMonth(
   month: string,
 ) {
   try {
-    const { data, error } = await supabase.rpc<number | null>(
+    const { data, error } = await (supabase as any).rpc(
       "calculate_days_worked",
       {
         p_business_id: businessId,

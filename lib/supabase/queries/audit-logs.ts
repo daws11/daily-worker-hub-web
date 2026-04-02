@@ -35,7 +35,7 @@ export async function createAuditLog(
     new_values?: Record<string, unknown>;
   },
 ): Promise<AuditLog> {
-  const { data, error } = await (supabase
+  const { data, error } = await ((supabase as any)
     .from("admin_audit_logs")
     .insert({
       old_values: auditData.old_values || {},
@@ -43,7 +43,7 @@ export async function createAuditLog(
       ...auditData,
     })
     .select()
-    .single() as any);
+    .single());
 
   if (error) {
     throw new Error(`Failed to create audit log: ${error.message}`);

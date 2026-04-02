@@ -4,42 +4,26 @@ declare const process: { env: Record<string, string | undefined> };
 
 import { createClient } from "../supabase/server";
 import { createNotification } from "./notifications";
-import type { Database } from "../supabase/types";
 
 // ============================================================================
-// LOCAL TYPES (not in Database schema)
+// LOCAL TYPES (Database does not include push_subscriptions /
+// user_notification_preferences tables)
 // ============================================================================
 
-// Manually define type for user_notification_preferences table
-interface DbNotificationPreferences {
-  id: string;
-  user_id: string;
-  user_type: "worker" | "business";
-  push_enabled: boolean;
-  email_enabled: boolean;
-  sms_enabled: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-// Manually define type for push_subscriptions table
-interface DbPushSubscription {
+type PushSubscriptionRecord = {
   id: string;
   user_id: string;
   endpoint: string;
   keys_auth: string;
   keys_p256h: string;
   created_at: string;
-}
+  updated_at: string;
+};
 
-// Manually define type for notification preferences
-interface NotificationPreferences {
+type NotificationPreferences = {
   id: string;
   user_id: string;
-  user_type: "worker" | "business";
   push_enabled: boolean;
-  email_enabled: boolean;
-  sms_enabled: boolean;
   new_applications: boolean;
   booking_status: boolean;
   payment_confirmation: boolean;
@@ -47,11 +31,11 @@ interface NotificationPreferences {
   shift_reminders: boolean;
   created_at: string;
   updated_at: string;
-}
+};
 
 // Type for inserting a new push subscription
 type PushSubscriptionInsert = Pick<
-  DbPushSubscription,
+  PushSubscriptionRecord,
   "user_id" | "endpoint" | "keys_auth" | "keys_p256h"
 >;
 
@@ -74,7 +58,7 @@ type NotificationPreferencesUpdate = Partial<
 export type PushSubscriptionResult = {
   success: boolean;
   error?: string;
-  data?: DbPushSubscription;
+  data?: PushSubscriptionRecord;
 };
 
 /**
@@ -108,7 +92,6 @@ export async function subscribeToPushNotifications(
     const supabase = await createClient();
 
     // Check if user already has a subscription with this endpoint
-    // Using `as any` since push_subscriptions table not in Database type
     const { data: existing } = await (supabase as any)
       .from("push_subscriptions")
       .select("*")
@@ -283,7 +266,7 @@ export async function getUserPushSubscription(
  */
 export async function getAllUserPushSubscriptions(
   userId: string,
-): Promise<{ success: boolean; data?: DbPushSubscription[]; error?: string }> {
+): Promise<{ success: boolean; data?: PushSubscriptionRecord[]; error?: string }> {
   try {
     const supabase = await createClient();
 
@@ -354,7 +337,7 @@ export async function sendPushNotification(
     // Call edge function to send push notification
     const {
       data: { session },
-    } = await supabase.auth.getSession();
+    } = await (supabase as any).auth.getSession();
     const token = session?.access_token;
 
     const response = await fetch(

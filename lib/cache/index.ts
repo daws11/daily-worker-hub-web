@@ -7,13 +7,13 @@
  * while using distributed Redis in production.
  */
 
-import { LRUCache, cache as inMemoryCache } from "../cache";
-import { RedisCache, CACHE_TTL } from "./redis-cache";
+import { LRUCache, cache as inMemoryCache, CACHE_TTL } from "../cache";
+import { RedisCache } from "./redis-cache";
 import { isRedisAvailable } from "./redis-client";
 
 // Re-export shared types and constants from lib/cache.ts for convenience
-export type { CacheNamespace } from "./redis-cache";
-export { CACHE_TTL } from "./redis-cache";
+export type { CacheNamespace } from "../cache";
+export { CACHE_TTL } from "../cache";
 
 // Unified cache interface — supports both sync (LRU) and async (Redis) backends
 // LRUCache methods are sync; RedisCache methods are async.
