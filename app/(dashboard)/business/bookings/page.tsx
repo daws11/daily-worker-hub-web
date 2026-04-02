@@ -580,7 +580,7 @@ export default function BusinessBookingsPage() {
                               </Badge>
                             </div>
                             <Link
-                              href={`/dashboard/business/interview/${booking.id}`}
+                              href={`/business/interview/${booking.id}`}
                               className="flex items-center gap-1.5 px-3 py-2 bg-green-600 text-primary-foreground rounded-md text-xs font-medium no-underline transition-colors min-h-[44px] touch-manipulation"
                             >
                               {interviewSession.status === "in_progress" ? (

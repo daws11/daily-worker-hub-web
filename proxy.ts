@@ -223,7 +223,7 @@ export function setSecurityHeaders(response: NextResponse): void {
   // Restrict browser features to prevent exploitation if XSS occurs
   response.headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), payment=()"
+    "camera=(), microphone=(), payment=()"
   );
 
   // Content Security Policy - mitigate XSS and injection attacks
@@ -233,9 +233,9 @@ export function setSecurityHeaders(response: NextResponse): void {
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob:",
+      "img-src 'self' data: blob: https://tqnlrqutnhxqbzfcmvpc.supabase.co https://*.tile.openstreetmap.org https://*.openstreetmap.org https://cdnjs.cloudflare.com",
       "font-src 'self'",
-      "connect-src 'self'",
+      "connect-src 'self' https://tqnlrqutnhxqbzfcmvpc.supabase.co wss://tqnlrqutnhxqbzfcmvpc.supabase.co https://nominatim.openstreetmap.org https://*.tile.openstreetmap.org https://cdnjs.cloudflare.com",
       "frame-ancestors 'none'",
       "form-action 'self'",
       "base-uri 'self'",

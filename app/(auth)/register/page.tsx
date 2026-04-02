@@ -6,31 +6,90 @@ import { useAuth } from "../../providers/auth-provider";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { RadioGroup } from "@/components/ui/radio-group";
+import { AccountTypeSelector } from "@/components/ui/account-type-selector";
 import { Separator } from "@/components/ui/separator";
 
 // Simple translation function
 function t(key: string): string {
   const translations: Record<string, string> = {
     "auth.registerTitle": "Daftar Akun",
+    "auth.createAccount": "Buat akun baru untuk memulai",
     "auth.fullName": "Nama Lengkap",
     "auth.email": "Email",
     "auth.password": "Password",
-    "auth.accountType": "Tipe Akun",
-    "auth.worker": "Pekerja",
-    "auth.business": "Bisnis",
     "auth.register": "Daftar",
     "auth.registering": "Mendaftar...",
-    "auth.or": "ATAU",
-    "auth.continueWithGoogle": "Lanjut dengan Google",
+    "auth.or": "atau",
+    "auth.continueWithGoogle": "Daftar dengan Google",
     "auth.hasAccount": "Sudah punya akun?",
     "auth.loginHere": "Masuk sekarang",
     "auth.emailPlaceholder": "nama@email.com",
-    "auth.passwordPlaceholder": "•••••••",
+    "auth.passwordPlaceholder": "Buat password kuat",
     "auth.fullNamePlaceholder": "Budi Santoso",
+    "auth.selectAccountType": "Pilih tipe akun Anda",
+    "auth.worker": "Pekerja",
+    "auth.workerDesc": "Cari lowongan dan lamar kerja",
+    "auth.business": "Perusahaan",
+    "auth.businessDesc": "Temukan kandidat terbaik",
+    "auth.passwordRequirements": "Min. 8 karakter, 1 huruf besar, 1 angka",
   };
   return translations[key] || key;
 }
+
+// Worker Icon
+function WorkerIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+      />
+    </svg>
+  );
+}
+
+// Business Icon
+function BusinessIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+      />
+    </svg>
+  );
+}
+
+const accountTypeOptions = [
+  {
+    value: "worker" as const,
+    label: "Pekerja",
+    description: "Cari lowongan dan lamar kerja",
+    icon: WorkerIcon,
+    color: "text-blue-600",
+  },
+  {
+    value: "business" as const,
+    label: "Perusahaan",
+    description: "Temukan kandidat terbaik",
+    icon: BusinessIcon,
+    color: "text-emerald-600",
+  },
+];
 
 export default function RegisterPage() {
   const { signUp, signInWithGoogle, isLoading } = useAuth();
@@ -49,20 +108,31 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 px-4 py-8">
       <div className="w-full max-w-md space-y-6">
-        <Card className="border border-border">
-          <CardHeader className="space-y-1 pb-4">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
-              {t("auth.registerTitle")}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Buat akun baru untuk mulai bekerja
-            </p>
-          </CardHeader>
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            {t("auth.registerTitle")}
+          </h1>
+          <p className="text-muted-foreground">
+            {t("auth.createAccount")}
+          </p>
+        </div>
 
-          <CardContent className="space-y-5">
-            <form onSubmit={handleSubmit} className="space-y-5">
+        <Card className="border border-border shadow-sm">
+          <CardContent className="pt-6 pb-6">
+            {/* Account Type Selector */}
+            <div className="mb-6">
+              <AccountTypeSelector
+                value={role}
+                onValueChange={setRole}
+                options={accountTypeOptions}
+                label={t("auth.selectAccountType")}
+              />
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
               <Input
                 type="text"
                 label={t("auth.fullName")}
@@ -93,54 +163,9 @@ export default function RegisterPage() {
                 autoComplete="new-password"
               />
 
-              <RadioGroup
-                name="role"
-                label={t("auth.accountType")}
-                value={role}
-                onValueChange={(value: string) =>
-                  setRole(value as "worker" | "business")
-                }
-                options={[
-                  {
-                    value: "worker",
-                    label: t("auth.worker"),
-                    icon: (
-                      <svg
-                        className="w-5 h-5 text-foreground"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        />
-                      </svg>
-                    ),
-                  },
-                  {
-                    value: "business",
-                    label: t("auth.business"),
-                    icon: (
-                      <svg
-                        className="w-5 h-5 text-foreground"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1.5}
-                          d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                        />
-                      </svg>
-                    ),
-                  },
-                ]}
-              />
+              <p className="text-xs text-muted-foreground -mt-2">
+                {t("auth.passwordRequirements")}
+              </p>
 
               <Button
                 type="submit"
@@ -153,7 +178,14 @@ export default function RegisterPage() {
               </Button>
             </form>
 
-            <Separator>{t("auth.or")}</Separator>
+            <div className="relative my-6">
+              <Separator />
+              <span className="absolute inset-0 flex items-center justify-center">
+                <span className="bg-card px-3 text-xs text-muted-foreground uppercase tracking-wider">
+                  {t("auth.or")}
+                </span>
+              </span>
+            </div>
 
             <Button
               type="button"
@@ -162,6 +194,7 @@ export default function RegisterPage() {
               isLoading={isLoading}
               fullWidth
               onClick={handleGoogleSignUp}
+              className="hover:bg-muted/50"
             >
               <svg
                 className="w-5 h-5 mr-2"
@@ -194,7 +227,7 @@ export default function RegisterPage() {
           {t("auth.hasAccount")}{" "}
           <Link
             href="/login"
-            className="text-foreground hover:underline font-medium"
+            className="text-primary hover:text-primary/80 hover:underline font-medium transition-colors"
           >
             {t("auth.loginHere")}
           </Link>

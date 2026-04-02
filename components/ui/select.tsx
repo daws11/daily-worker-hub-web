@@ -99,7 +99,7 @@ function SelectContent({
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
           className={cn(
-            "relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-44 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-xl bg-popover text-popover-foreground shadow-xl ring-1 ring-border/50",
+            "relative isolate z-50 max-h-80 max-h-[var(--available-height)] w-[var(--anchor-width)] min-w-44 origin-[var(--transform-origin)] overflow-x-hidden overflow-y-auto rounded-xl bg-popover text-popover-foreground shadow-xl ring-1 ring-border/50",
             // Smooth animations
             "duration-200 ease-out",
             "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95",

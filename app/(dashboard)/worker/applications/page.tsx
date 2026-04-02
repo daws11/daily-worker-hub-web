@@ -198,7 +198,7 @@ function ApplicationCard({ application }: { application: Application }) {
         {application.status === "accepted" && application.booking && (
           <div className="pt-3 border-t">
             <Link
-              href={`/dashboard/business/interview/${application.booking.id}`}
+              href={`/business/interview/${application.booking.id}`}
               className="inline-flex items-center gap-2 w-full justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
             >
               <Video className="h-4 w-4" />
