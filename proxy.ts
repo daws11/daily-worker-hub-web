@@ -188,13 +188,15 @@ function getOrSetLocale(request: NextRequest, response: NextResponse): Locale {
  * Routes that don't require authentication (public)
  */
 const publicRoutes = [
-  "/",
   "/login",
   "/register",
   "/forgot-password",
   "/reset-password",
   "/auth/callback",
   "/onboarding", // Allow onboarding flow for authenticated users
+  "/docs",
+  "/jobs",
+  "/workers",
 ];
 
 /**
@@ -303,11 +305,30 @@ export async function proxy(request: NextRequest) {
   // Protected routes - require authentication
   const isWorkerRoute = pathname.startsWith("/worker");
   const isBusinessRoute = pathname.startsWith("/business");
+  const isAdminRoute = pathname.startsWith("/admin");
 
   // Redirect unauthenticated users from protected routes to login
+  // Admin routes require authentication
+  if (!user && isAdminRoute) {
+    const redirectUrl = new URL("/login", origin);
+    redirectUrl.searchParams.set("redirect", sanitizeQueryParam(pathname));
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+    setSecurityHeaders(redirectResponse);
+    return redirectResponse;
+  }
+
+  // Redirect unauthenticated users from worker/business routes to login
   if (!user && (isWorkerRoute || isBusinessRoute)) {
     const redirectUrl = new URL("/login", origin);
     redirectUrl.searchParams.set("redirect", sanitizeQueryParam(pathname));
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+    setSecurityHeaders(redirectResponse);
+    return redirectResponse;
+  }
+
+  // Redirect unauthenticated users from root (/) to login
+  if (!user && pathname === "/") {
+    const redirectUrl = new URL("/login", origin);
     const redirectResponse = NextResponse.redirect(redirectUrl);
     setSecurityHeaders(redirectResponse);
     return redirectResponse;
