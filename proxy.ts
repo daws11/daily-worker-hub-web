@@ -11,6 +11,75 @@ const SUPPORTED_LOCALES = ["id", "en"] as const;
 type Locale = (typeof SUPPORTED_LOCALES)[number];
 
 /**
+ * CORS configuration
+ * NEXT_PUBLIC_APP_URL is the primary allowed origin
+ * ALLOWED_CORS_ORIGINS env var can override with comma-separated list
+ */
+const CORS_CONFIG = {
+  allowedOrigins: (() => {
+    const envOverride = process.env.ALLOWED_CORS_ORIGINS;
+    if (envOverride) {
+      return envOverride.split(",").map((o) => o.trim()).filter(Boolean);
+    }
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    return appUrl ? [appUrl] : [];
+  })(),
+} as const;
+
+/**
+ * Validates whether a given origin is in the allowed CORS whitelist
+ * @param origin - The origin string from the request's Origin header
+ * @returns true if origin is allowed, false otherwise
+ */
+export function isAllowedOrigin(origin: string | null): boolean {
+  if (!origin) return true; // No Origin header = same-origin request, allow
+  return CORS_CONFIG.allowedOrigins.includes(origin);
+}
+
+/**
+ * Sanitizes an input string to neutralize XSS/injection payloads.
+ * Strips <script>, <iframe>, javascript:, data:, and other injection patterns.
+ * Designed for cookie names, query param keys, and HTTP header names.
+ * @param input - The raw input string to sanitize
+ * @returns Sanitized string safe for use in headers/cookies
+ */
+export function sanitizeInput(input: string): string {
+  if (!input || typeof input !== "string") return "";
+
+  return input
+    // Remove HTML tags (script, iframe, style, object, embed, etc.)
+    .replace(/<[^>]*>/g, "")
+    // Remove javascript: pseudo-protocol
+    .replace(/javascript\s*:/gi, "")
+    // Remove data: URIs (common XSS vector)
+    .replace(/data\s*:/gi, "")
+    // Remove vbscript: pseudo-protocol
+    .replace(/vbscript\s*:/gi, "")
+    // Remove on* event handler attributes (e.g. onerror=, onclick=)
+    .replace(/\bon\w+\s*=/gi, "")
+    // Remove expression() (CSS expression attack)
+    .replace(/expression\s*\(/gi, "")
+    // Remove url() with javascript/data (CSS-based attack)
+    .replace(/url\s*\(\s*['"]?\s*(javascript|data|vbscript):/gi, "url(noop:")
+    .trim();
+}
+
+/**
+ * Sanitizes a query parameter value to neutralize injection payloads.
+ * Used for sanitizing incoming URL query parameters before use.
+ * @param value - The raw query param value to sanitize
+ * @returns Sanitized string safe for use in headers/logs/redirects
+ */
+export function sanitizeQueryParam(value: string | string[] | null | undefined): string {
+  if (value == null) return "";
+
+  const str = Array.isArray(value) ? value[0] : value;
+  if (typeof str !== "string") return String(str);
+
+  return sanitizeInput(str);
+}
+
+/**
  * Creates a Supabase client for use in proxy
  * Handles cookies properly for Next.js proxy environment
  *
@@ -129,12 +198,70 @@ const publicRoutes = [
 ];
 
 /**
+ * Sets all 6 OWASP-recommended security headers on a NextResponse.
+ * Designed to be called before returning the response to the client.
+ * @param response - The NextResponse to attach headers to
+ */
+export function setSecurityHeaders(response: NextResponse): void {
+  // Prevent clickjacking attacks (blocks page from being rendered in iframe)
+  response.headers.set("X-Frame-Options", "DENY");
+
+  // Prevent MIME type sniffing vulnerabilities
+  response.headers.set("X-Content-Type-Options", "nosniff");
+
+  // Enforce HTTPS (HSTS) - 1 year max-age, include subdomains, require preload
+  response.headers.set(
+    "Strict-Transport-Security",
+    "max-age=31536000; includeSubDomains; preload"
+  );
+
+  // Control referrer information sent to other sites
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+
+  // Restrict browser features to prevent exploitation if XSS occurs
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=(), payment=()"
+  );
+
+  // Content Security Policy - mitigate XSS and injection attacks
+  response.headers.set(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "font-src 'self'",
+      "connect-src 'self'",
+      "frame-ancestors 'none'",
+      "form-action 'self'",
+      "base-uri 'self'",
+      "object-src 'none'",
+    ].join("; ")
+  );
+}
+
+/**
  * Proxy to protect routes and handle locale detection
  * - Checks for Supabase session and redirects unauthenticated users
  * - Detects and persists language preference via cookies
  */
 export async function proxy(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+  // ── CORS validation: reject disallowed cross-origin requests early ──
+  const requestOrigin = request.headers.get("origin");
+  if (!isAllowedOrigin(requestOrigin)) {
+    const forbiddenResponse = NextResponse.json(
+      { error: "Forbidden: origin not allowed" },
+      { status: 403 }
+    );
+    setSecurityHeaders(forbiddenResponse);
+    return forbiddenResponse;
+  }
+
+  // ── Sanitize pathname before any routing/auth logic ──
+  const rawPathname = request.nextUrl.pathname;
+  const pathname = sanitizeQueryParam(rawPathname);
 
   // Get the origin for proper URL construction
   const origin = request.nextUrl.origin;
@@ -169,6 +296,7 @@ export async function proxy(request: NextRequest) {
 
   // Allow public routes to proceed normally
   if (isPublicRoute) {
+    setSecurityHeaders(response);
     return response;
   }
 
@@ -179,8 +307,10 @@ export async function proxy(request: NextRequest) {
   // Redirect unauthenticated users from protected routes to login
   if (!user && (isWorkerRoute || isBusinessRoute)) {
     const redirectUrl = new URL("/login", origin);
-    redirectUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(redirectUrl);
+    redirectUrl.searchParams.set("redirect", sanitizeQueryParam(pathname));
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+    setSecurityHeaders(redirectResponse);
+    return redirectResponse;
   }
 
   // Check if user has completed onboarding for their role
@@ -216,7 +346,9 @@ export async function proxy(request: NextRequest) {
     if (userRole === "worker") {
       const hasCompletedOnboarding = await checkOnboardingCompleted(supabase, user.id, "worker");
       if (!hasCompletedOnboarding) {
-        return NextResponse.redirect(new URL("/onboarding", origin));
+        const redirectResponse = NextResponse.redirect(new URL("/onboarding", origin));
+        setSecurityHeaders(redirectResponse);
+        return redirectResponse;
       }
     }
   }
@@ -227,7 +359,9 @@ export async function proxy(request: NextRequest) {
     if (userRole === "business") {
       const hasCompletedOnboarding = await checkOnboardingCompleted(supabase, user.id, "business");
       if (!hasCompletedOnboarding) {
-        return NextResponse.redirect(new URL("/onboarding", origin));
+        const redirectResponse = NextResponse.redirect(new URL("/onboarding", origin));
+        setSecurityHeaders(redirectResponse);
+        return redirectResponse;
       }
     }
   }
@@ -238,13 +372,22 @@ export async function proxy(request: NextRequest) {
     user?.user_metadata?.role
   ) {
     if (user.user_metadata?.role === "worker") {
-      return NextResponse.redirect(new URL("/worker/jobs", origin));
+      const redirectResponse = NextResponse.redirect(new URL("/worker/jobs", origin));
+      setSecurityHeaders(redirectResponse);
+      return redirectResponse;
     } else if (user.user_metadata?.role === "business") {
-      return NextResponse.redirect(new URL("/onboarding", origin));
+      const redirectResponse = NextResponse.redirect(new URL("/onboarding", origin));
+      setSecurityHeaders(redirectResponse);
+      return redirectResponse;
     } else if (user.user_metadata?.role === "admin") {
-      return NextResponse.redirect(new URL("/admin", origin));
+      const redirectResponse = NextResponse.redirect(new URL("/admin", origin));
+      setSecurityHeaders(redirectResponse);
+      return redirectResponse;
     }
   }
+
+  // Apply security headers before responding
+  setSecurityHeaders(response);
 
   return response;
 }
