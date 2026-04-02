@@ -1,17 +1,16 @@
 {
   "active": true,
-  "spec": "063-p0-add-security-headers-to-proxy-ts",
+  "spec": "065-p0-set-up-production-supabase-project",
   "state": "building",
   "subtasks": {
-    "completed": 6,
-    "total": 8,
-    "in_progress": 0,
-    "blocked": 2,
+    "completed": 0,
+    "total": 27,
+    "in_progress": 1,
     "failed": 0
   },
   "phase": {
-    "current": "Build verification (BLOCKED: sandbox network isolation)",
-    "id": "blocked",
+    "current": "Provision Supabase Project",
+    "id": null,
     "total": 2
   },
   "workers": {
@@ -19,8 +18,8 @@
     "max": 1
   },
   "session": {
-    "number": 7,
-    "started_at": "2026-03-30T23:23:38.850036"
+    "number": 3,
+    "started_at": "2026-03-31T00:01:09.148868"
   },
-  "last_update": "2026-03-31T00:00:10.381232"
+  "last_update": "2026-03-31T00:11:48.697136"
 }
