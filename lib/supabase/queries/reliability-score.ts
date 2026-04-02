@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { supabase } from "../client";
 import type { Database } from "../types";
+import type { TrendDirection } from "@/components/worker/trend-indicator";
 
 type WorkersRow = Database["public"]["Tables"]["workers"]["Row"];
 type WorkersUpdate = Database["public"]["Tables"]["workers"]["Update"];
@@ -198,4 +199,55 @@ export async function recordScoreHistory(
   }
 
   return data as ReliabilityScoreHistoryRow;
+}
+
+/**
+ * Get score trend for a worker by comparing the latest two score history entries.
+ * Returns null if no history exists.
+ */
+export async function getWorkerScoreTrend(
+  workerId: string,
+): Promise<{
+  trend: TrendDirection;
+  previousScore?: number;
+  currentScore?: number;
+} | null> {
+  const history = await getScoreHistory(workerId, 2);
+
+  if (!history || history.length === 0) {
+    return null;
+  }
+
+  // Filter out entries with null scores and sort by calculated_at descending
+  const validHistory = history
+    .filter((entry) => entry.score !== null)
+    .sort(
+      (a, b) =>
+        new Date(b.calculated_at).getTime() -
+        new Date(a.calculated_at).getTime(),
+    );
+
+  if (validHistory.length < 2) {
+    return {
+      trend: "insufficient_data" as TrendDirection,
+      currentScore: validHistory[0]?.score ?? undefined,
+    };
+  }
+
+  const [latest, previous] = validHistory;
+
+  let trend: TrendDirection;
+  if (latest.score! > previous.score!) {
+    trend = "improving";
+  } else if (latest.score! < previous.score!) {
+    trend = "declining";
+  } else {
+    trend = "stable";
+  }
+
+  return {
+    trend,
+    previousScore: previous.score!,
+    currentScore: latest.score!,
+  };
 }
