@@ -13,6 +13,7 @@ import { describe, it, expect } from "vitest";
 import {
   calculateMatchingScoreWithDistance,
   getMatchingScoreBreakdownWithDistance,
+  MatchingScoreParamsWithDistance,
 } from "../matching-score";
 
 describe("Matching Score with Precomputed Distance", () => {
@@ -546,7 +547,7 @@ describe("Matching Score with Precomputed Distance", () => {
     });
 
     it("should match calculateMatchingScoreWithDistance total", () => {
-      const params = {
+      const params: MatchingScoreParamsWithDistance = {
         workerSkills: ["housekeeping", "cleaning"],
         workerRating: 4.8,
         workerTier: "champion",

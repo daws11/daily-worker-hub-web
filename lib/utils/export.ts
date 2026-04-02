@@ -1,3 +1,6 @@
+// ─── Imports ──────────────────────────────────────────────────────────────────
+import * as XLSX from "xlsx";
+
 // ─── Metric Interfaces ────────────────────────────────────────────────────────
 
 interface UserGrowthMetric {
@@ -93,6 +96,63 @@ export function exportToCSV<T extends Record<string, string | number | boolean |
   });
 
   downloadBlob(blob, `${filename}.csv`);
+}
+
+// ─── JSON Export ───────────────────────────────────────────────────────────────
+
+/**
+ * Convert data to JSON format and trigger download
+ * @param data - Array of objects to export
+ * @param filename - Name of the file (without extension)
+ * @throws Error if data is empty or invalid
+ */
+export function exportToJSON<T extends Record<string, unknown>>(
+  data: T[],
+  filename: string,
+): void {
+  if (!data || data.length === 0) {
+    throw new Error("No data to export");
+  }
+
+  const BOM = "\uFEFF";
+  const jsonContent = JSON.stringify(data, null, 2);
+  const blob = new Blob([BOM + jsonContent], {
+    type: "application/json;charset=utf-8;",
+  });
+
+  downloadBlob(blob, `${filename}.json`);
+}
+
+// ─── Excel Export ─────────────────────────────────────────────────────────────
+
+/**
+ * Convert data to Excel format and trigger download
+ * @param data - Array of objects to export
+ * @param filename - Name of the file (without extension)
+ * @throws Error if data is empty or invalid
+ */
+export function exportToExcel<T extends Record<string, unknown>>(
+  data: T[],
+  filename: string,
+): void {
+  if (!data || data.length === 0) {
+    throw new Error("No data to export");
+  }
+
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: "xlsx",
+    type: "array",
+  });
+
+  const blob = new Blob([excelBuffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+
+  downloadBlob(blob, `${filename}.xlsx`);
 }
 
 /**
