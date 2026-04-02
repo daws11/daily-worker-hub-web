@@ -15,26 +15,17 @@ type WalletsRow = {
   worker_id: string | null;
   user_id: string | null;
   balance: number;
+  pending_balance?: number;
+  available_balance?: number;
   currency: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
 };
 
-export type WalletTransactionWithDetails = {
-  id: string;
-  wallet_id: string;
-  amount: number;
-  type: "hold" | "release" | "earn" | "payout" | "refund";
-  status:
-    | "pending_review"
-    | "available"
-    | "released"
-    | "disputed"
-    | "cancelled";
-  booking_id: string | null;
-  description: string | null;
-  created_at: string;
+type WalletTransactionRow = Database["public"]["Tables"]["wallet_transactions"]["Row"];
+
+export type WalletTransactionWithDetails = WalletTransactionRow & {
   booking?: {
     id: string;
     job?: {
@@ -421,18 +412,6 @@ export type WalletWithUser = WalletRow & {
 // ============================================================================
 // ADDITIONAL WALLET FUNCTIONS (STUBS FOR useWallet HOOK)
 // ============================================================================
-
-type WalletTransactionRow = Database["public"]["Tables"]["wallet_transactions"]["Row"];
-
-export type WalletTransactionWithDetails = WalletTransactionRow & {
-  booking?: {
-    id: string;
-    job?: {
-      id: string;
-      title: string;
-    };
-  } | null;
-};
 
 export async function getWalletBalance(userId: string): Promise<{
   data: { pending_balance: number; available_balance: number } | null;

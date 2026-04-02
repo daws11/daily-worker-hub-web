@@ -1,0 +1,44 @@
+/**
+ * Redis Client Factory for Upstash Redis
+ *
+ * Provides a singleton Redis client that is reused across requests.
+ * Only available when UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
+ * environment variables are set.
+ */
+
+import { Redis } from "@upstash/redis";
+
+/**
+ * Check if Redis is available (credentials are configured)
+ */
+export function isRedisAvailable(): boolean {
+  return !!(
+    process.env.UPSTASH_REDIS_REST_URL &&
+    process.env.UPSTASH_REDIS_REST_TOKEN
+  );
+}
+
+/**
+ * Get the Redis client instance.
+ * Throws if Redis is not available (call isRedisAvailable() first).
+ */
+export function getRedisClient(): Redis {
+  if (!isRedisAvailable()) {
+    throw new Error(
+      "Redis is not available. Ensure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are set."
+    );
+  }
+
+  return new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL!,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  });
+}
+
+/**
+ * Reset the Redis client (useful for testing)
+ */
+export function resetRedisClient(): void {
+  // No-op for now - the Redis class doesn't expose a reset method
+  // This is here for API consistency if we later switch to a different client
+}

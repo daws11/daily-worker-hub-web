@@ -239,7 +239,7 @@ export async function raiseDispute(
       }
     }
 
-    return { success: true, data: dispute };
+    return { success: true, data: dispute as unknown as Dispute };
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat membuat sengketa" };
   }
@@ -361,7 +361,7 @@ export async function raiseDisputeByWorker(
       }
     }
 
-    return { success: true, data: dispute };
+    return { success: true, data: dispute as unknown as Dispute };
   } catch (error) {
     return { success: false, error: "Terjadi kesalahan saat membuat sengketa" };
   }
@@ -569,7 +569,7 @@ export async function resolveDispute(
       return { success: false, error: "Sengketa sudah diselesaikan" };
     }
 
-    const typedDispute = dispute as DisputeWithBooking;
+    const typedDispute = dispute as unknown as DisputeWithBooking;
     const bookingData = typedDispute.bookings!;
 
     let newDisputeStatus: "resolved" | "rejected";
@@ -708,7 +708,7 @@ export async function resolveDispute(
       .update({ payment_status: newPaymentStatus })
       .eq("id", bookingData.id);
 
-    return { success: true, data: updatedDispute };
+    return { success: true, data: updatedDispute as unknown as Dispute };
   } catch (error) {
     return {
       success: false,
@@ -738,7 +738,7 @@ export async function checkActiveDispute(bookingId: string): Promise<{
       return { hasActiveDispute: false };
     }
 
-    return { hasActiveDispute: true, dispute: data };
+    return { hasActiveDispute: true, dispute: data as unknown as Dispute };
   } catch (error) {
     return { hasActiveDispute: false };
   }

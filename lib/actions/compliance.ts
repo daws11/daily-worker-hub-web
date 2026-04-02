@@ -66,8 +66,8 @@ export type ComplianceEnforcementResult = {
  * Minimal interface for Supabase client RPC calls.
  * Used to avoid `as any` casts when calling database functions.
  */
-export interface SupabaseRpcClient {
-  <T>(
+export interface SupabaseRpcClient<T = unknown> {
+  rpc(
     fn: string,
     args?: Record<string, unknown>,
   ): Promise<{ data: T | null; error: Error | null }>;
@@ -318,13 +318,7 @@ export async function enforceComplianceBeforeBooking(
 
     // Use the database function to check compliance
     const { data: complianceCheck, error: checkError } =
-      await (supabase as SupabaseRpcClient<{
-        allowed: boolean;
-        current_days: number;
-        projected_days: number;
-        status: string;
-        message: string;
-      }>).rpc("check_booking_compliance", {
+      await (supabase as any).rpc("check_booking_compliance", {
         p_business_id: businessId,
         p_worker_id: workerId,
         p_work_date: workDate,
@@ -397,8 +391,8 @@ export async function getBusinessComplianceRecordsForAudit(
     }
 
     // Get compliance records
-    const { data, error } = await (supabase as SupabaseQueryBuilder)
-      .from<ComplianceTrackingRecord & { worker: ComplianceWorkerRef }>(
+    const { data, error } = await (supabase as any)
+      .from(
         "compliance_tracking",
       )
       .select(
@@ -452,7 +446,7 @@ export async function updateComplianceTracking(
 
     const targetMonth = month || new Date().toISOString().slice(0, 7) + "-01";
 
-    const { error } = await (supabase as SupabaseRpcClient<null>).rpc(
+    const { error } = await (supabase as any).rpc(
       "update_compliance_tracking",
       {
         p_business_id: businessId,
@@ -488,7 +482,7 @@ export async function acknowledgeComplianceWarning(
   try {
     const supabase = await createClient();
 
-    const { error } = await (supabase as SupabaseQueryBuilder)
+    const { error } = await (supabase as any)
       .from("compliance_warnings")
       .update({
         acknowledged: true,
@@ -525,7 +519,7 @@ export async function getAllComplianceWarnings(
 
     const targetMonth = month || new Date().toISOString().slice(0, 7) + "-01";
 
-    const { data, error } = await (supabase as SupabaseRpcClient<ComplianceWarningAdmin[]>).rpc(
+    const { data, error } = await (supabase as any).rpc(
       "get_all_compliance_warnings_admin",
       {
         p_month: targetMonth,
@@ -561,7 +555,7 @@ export async function getBusinessComplianceSummary(
 
     const targetMonth = month || new Date().toISOString().slice(0, 7) + "-01";
 
-    const { data, error } = await (supabase as SupabaseRpcClient<ComplianceSummaryRecord | null>).rpc(
+    const { data, error } = await (supabase as any).rpc(
       "get_business_compliance_summary",
       {
         p_business_id: businessId,
@@ -604,8 +598,8 @@ export async function getBatchComplianceStatus(
     const targetMonth = month || new Date().toISOString().slice(0, 7) + "-01";
 
     // Get compliance tracking for all workers
-    const { data: trackingData, error: trackingError } = await (supabase as SupabaseQueryBuilder)
-      .from<Pick<ComplianceTrackingRecord, "worker_id" | "days_worked" | "compliance_status">>(
+    const { data: trackingData, error: trackingError } = await (supabase as any)
+      .from(
         "compliance_tracking",
       )
       .select("worker_id, days_worked, compliance_status")
@@ -640,10 +634,17 @@ export async function getBatchComplianceStatus(
             ? "warning"
             : "ok";
 
+      const warningLevel: "none" | "warning" | "blocked" =
+        t.compliance_status === "blocked"
+          ? "blocked"
+          : t.compliance_status === "warning"
+            ? "warning"
+            : "none";
+
       result[t.worker_id] = {
         status,
         daysWorked: t.days_worked,
-        warningLevel: t.compliance_status,
+        warningLevel,
         message:
           status === "blocked"
             ? `Worker has reached ${t.days_worked} days. PP 35/2021 limit reached.`
@@ -712,8 +713,8 @@ export async function getComplianceOverview(
     const targetMonth = month || new Date().toISOString().slice(0, 7) + "-01";
 
     // Get all compliance tracking records for the month
-    const { data: trackingData, error: trackingError } = await (supabase as SupabaseQueryBuilder)
-      .from<ComplianceTrackingRecord & { workers: { full_name: string }; businesses: { name: string } }>(
+    const { data: trackingData, error: trackingError } = await (supabase as any)
+      .from(
         "compliance_tracking",
       )
       .select(
@@ -793,8 +794,8 @@ export async function getComplianceWarningsList(
     const targetMonth = month || new Date().toISOString().slice(0, 7) + "-01";
 
     // Get compliance tracking records with warning or blocked status
-    const { data: trackingData, error: trackingError } = await (supabase as SupabaseQueryBuilder)
-      .from<ComplianceTrackingRecord & { workers: { id: string; full_name: string }; businesses: { id: string; name: string } }>(
+    const { data: trackingData, error: trackingError } = await (supabase as any)
+      .from(
         "compliance_tracking",
       )
       .select(
@@ -860,8 +861,8 @@ export async function exportComplianceCsv(
     const targetMonth = month || new Date().toISOString().slice(0, 7) + "-01";
 
     // Get all compliance tracking records for the month
-    const { data: trackingData, error: trackingError } = await (supabase as SupabaseQueryBuilder)
-      .from<ComplianceTrackingRecord & { workers: { full_name: string }; businesses: { name: string } }>(
+    const { data: trackingData, error: trackingError } = await (supabase as any)
+      .from(
         "compliance_tracking",
       )
       .select(

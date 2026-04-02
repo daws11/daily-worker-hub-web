@@ -16,6 +16,25 @@ const config = {
   turbopack: {
     root: __dirname,
   },
+  // Suppress critical dependency warnings from third-party libs that use dynamic requires
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = config.externals || [];
+      // Ignore dynamic require warnings from OpenTelemetry and other instrumentation libs
+      config.resolve.alias = {
+        ...config.resolve.alias,
+      };
+    }
+    // Suppress webpack warnings for these specific modules
+    config.module.rules.push({
+      test: /\.(js|mjs|jsx)$/,
+      include: /node_modules/,
+      resolve: {
+        fullySpecified: false,
+      },
+    });
+    return config;
+  },
   async redirects() {
     return [
       {

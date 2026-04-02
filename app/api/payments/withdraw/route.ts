@@ -178,7 +178,7 @@ async function handlePOST(request: NextRequest) {
       return errorResponse(
         500,
         {
-          code: ErrorCode.ERROR_INTERNAL,
+          code: ErrorCode.SERVER_INTERNAL_ERROR,
           details: { message: "Failed to fetch wallet" },
         },
         request,
@@ -253,7 +253,7 @@ async function handlePOST(request: NextRequest) {
       return errorResponse(
         404,
         {
-          code: ErrorCode.ERROR_NOT_FOUND,
+          code: ErrorCode.RESOURCE_NOT_FOUND,
           details: { message: "Bank account not found or does not belong to worker" },
         },
         request,
@@ -316,7 +316,7 @@ async function handlePOST(request: NextRequest) {
       return errorResponse(
         500,
         {
-          code: ErrorCode.ERROR_INTERNAL,
+          code: ErrorCode.SERVER_INTERNAL_ERROR,
           details: { message: "Failed to create payout request" },
         },
         request,
@@ -367,7 +367,7 @@ async function handlePOST(request: NextRequest) {
       return errorResponse(
         500,
         {
-          code: ErrorCode.ERROR_INTERNAL,
+          code: ErrorCode.SERVER_INTERNAL_ERROR,
           details: { message: "Failed to update wallet balance" },
         },
         request,
@@ -519,7 +519,7 @@ async function handlePOST(request: NextRequest) {
       return errorResponse(
         500,
         {
-          code: ErrorCode.ERROR_EXTERNAL_SERVICE,
+          code: ErrorCode.EXTERNAL_SERVICE_UNAVAILABLE,
           details: {
             message: "Failed to process withdrawal",
             details:
@@ -539,7 +539,7 @@ async function handlePOST(request: NextRequest) {
     );
     logger.requestError(request, error, 500, startTime, { requestId });
 
-    return handleApiError(error, request, requestId);
+    return handleApiError(error, request, "/api/payments/withdraw", "POST");
   }
 }
 

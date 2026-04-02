@@ -87,7 +87,7 @@ export async function getWorkerWallet(workerId: string): Promise<WalletResult> {
     const supabase = await createClient();
 
     // First get the worker's user_id
-    const { data: worker, error: workerError } = await supabase
+    const { data: worker, error: workerError } = await (supabase as any)
       .from("workers")
       .select("user_id")
       .eq("id", workerId)
@@ -97,7 +97,7 @@ export async function getWorkerWallet(workerId: string): Promise<WalletResult> {
       return { success: false, error: "Worker tidak ditemukan" };
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("wallets")
       .select("*")
       .eq("user_id", worker.user_id)
@@ -112,7 +112,7 @@ export async function getWorkerWallet(workerId: string): Promise<WalletResult> {
 
     // Create wallet if it doesn't exist
     if (!data) {
-      const { data: newWallet, error: createError } = await supabase
+      const { data: newWallet, error: createError } = await (supabase as any)
         .from("wallets")
         .insert({
           user_id: worker.user_id,
@@ -164,11 +164,11 @@ export async function getTransactions(
       .order("created_at", { ascending: false });
 
     if (filters?.type) {
-      query = query.eq("type", filters.type);
+      query = query.eq("type", filters.type as any);
     }
 
     if (filters?.status) {
-      query = query.eq("status", filters.status);
+      query = query.eq("status", filters.status as any);
     }
 
     if (filters?.limit) {
@@ -226,7 +226,7 @@ export async function requestWithdrawal(
     const supabase = await createClient();
 
     // Get worker info
-    const { data: worker, error: workerError } = await supabase
+    const { data: worker, error: workerError } = await (supabase as any)
       .from("workers")
       .select("id, user_id, full_name")
       .eq("id", workerId)
@@ -237,7 +237,7 @@ export async function requestWithdrawal(
     }
 
     // Get worker's wallet
-    const { data: wallet, error: walletError } = await supabase
+    const { data: wallet, error: walletError } = await (supabase as any)
       .from("wallets")
       .select("*")
       .eq("worker_id", workerId)
@@ -281,7 +281,7 @@ export async function requestWithdrawal(
     }
 
     // Get bank account details
-    const { data: bankAccount, error: bankError } = await supabase
+    const { data: bankAccount, error: bankError } = await (supabase as any)
       .from("bank_accounts")
       .select("*")
       .eq("id", data.bankAccountId)
@@ -305,7 +305,7 @@ export async function requestWithdrawal(
     const externalId = `payout-${workerId}-${Date.now()}`;
 
     // Create payout request record (pending)
-    const { data: payoutRequest, error: payoutError } = await supabase
+    const { data: payoutRequest, error: payoutError } = await (supabase as any)
       .from("payout_requests")
       .insert({
         worker_id: workerId,
@@ -338,7 +338,7 @@ export async function requestWithdrawal(
     };
 
     // Deduct balance from wallet (hold until completed)
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase as any)
       .from("wallets")
       .update({
         balance: walletData.balance - data.amount,
@@ -348,7 +348,7 @@ export async function requestWithdrawal(
 
     if (updateError) {
       // Rollback payout request
-      await supabase
+      await (supabase as any)
         .from("payout_requests")
         .delete()
         .eq("id", payoutData.id);
@@ -360,7 +360,7 @@ export async function requestWithdrawal(
     }
 
     // Create hold transaction record
-    await supabase.from("wallet_transactions").insert({
+    await (supabase as any).from("wallet_transactions").insert({
       wallet_id: walletData.id,
       amount: data.amount,
       type: "payout",
@@ -391,7 +391,7 @@ export async function requestWithdrawal(
       });
 
       // Update payout request with provider ID
-      await supabase
+      await (supabase as any)
         .from("payout_requests")
         .update({
           provider_payout_id: disbursement.id,
@@ -402,7 +402,7 @@ export async function requestWithdrawal(
         .eq("id", payoutData.id);
 
       // Update transaction status
-      await supabase
+      await (supabase as any)
         .from("wallet_transactions")
         .update({ status: "paid" })
         .eq("reference_id", payoutData.id);
@@ -418,7 +418,7 @@ export async function requestWithdrawal(
       };
     } catch (disbursementError: unknown) {
       // Refund wallet balance
-      await supabase
+      await (supabase as any)
         .from("wallets")
         .update({
           balance: walletData.balance,
@@ -427,7 +427,7 @@ export async function requestWithdrawal(
         .eq("id", walletData.id);
 
       // Update payout request as failed
-      await supabase
+      await (supabase as any)
         .from("payout_requests")
         .update({
           status: "failed",
@@ -440,7 +440,7 @@ export async function requestWithdrawal(
         .eq("id", payoutData.id);
 
       // Update transaction status
-      await supabase
+      await (supabase as any)
         .from("wallet_transactions")
         .update({ status: "refunded" })
         .eq("reference_id", payoutData.id);

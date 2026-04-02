@@ -7,7 +7,7 @@
  * while using distributed Redis in production.
  */
 
-import { LRUCache, cache as inMemoryCache } from "../cache";
+import { LRUCache, cache as inMemoryCache, CACHE_TTL } from "../cache";
 import { RedisCache } from "./redis-cache";
 import { isRedisAvailable } from "./redis-client";
 

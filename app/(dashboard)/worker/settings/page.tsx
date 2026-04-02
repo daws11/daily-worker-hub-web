@@ -350,11 +350,11 @@ function WorkerSettingsContent() {
         <div className="mx-auto max-w-2xl space-y-4 p-4">
           {/* Header */}
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" asChild className="shrink-0">
-              <Link href="/worker/settings">
+            <Link href="/worker/settings" className="shrink-0">
+              <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-5 w-5" />
-              </Link>
-            </Button>
+              </Button>
+            </Link>
             <div className="flex items-center gap-2">
               <HelpCircle className="h-5 w-5 text-emerald-600" />
               <h1 className="text-lg font-semibold">Bantuan & FAQ</h1>

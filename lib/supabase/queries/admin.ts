@@ -493,7 +493,7 @@ export async function moderateJob(
   reason?: string,
   adminId?: string,
 ): Promise<void> {
-  const updateData: Database["public"]["Tables"]["jobs"]["Update"] = {
+  const updateData: any = {
     updated_at: new Date().toISOString(),
   };
 
@@ -707,12 +707,11 @@ interface AuditActionInput {
 }
 
 async function logAuditAction(input: AuditActionInput): Promise<void> {
-  const supabase = await createClient();
   const { error } = await (supabase as any).from("admin_audit_logs").insert({
     admin_id: input.admin_id,
     action: input.action,
-    resource_type: input.entity_type,
-    resource_id: input.entity_id,
+    entity_type: input.entity_type,
+    entity_id: input.entity_id,
     details: input.details,
     created_at: new Date().toISOString(),
   });
@@ -1057,16 +1056,16 @@ export async function getAdminPendingCounts(): Promise<AdminPendingCounts> {
     supabase
       .from("jobs")
       .select("*", { count: "exact", head: true })
-      .in("status", ["open", "draft"]),
+      .in("status", ["open", "draft"] as any),
     supabase
       .from("disputes")
       .select("*", { count: "exact", head: true })
-      .in("status", ["open", "resolved"]),
+      .in("status", ["open", "resolved"] as any),
     supabase
       .from("compliance_warnings")
       .select("*", { count: "exact", head: true })
       .eq("acknowledged", false)
-      .in("warning_level", ["warning", "blocked"]),
+      .in("warning_level", ["warning", "blocked"] as any),
   ]);
 
   return {

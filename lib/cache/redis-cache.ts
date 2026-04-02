@@ -199,14 +199,11 @@ export class RedisCache<T = unknown> {
 
       // Use SCAN to safely iterate over keys in production
       do {
-        const [nextCursor, keys] = await redis.scan<
-          string[],
-          [number, string[]]
-        >(cursor, {
+        const [nextCursor, keys] = await redis.scan(cursor, {
           match: searchPattern,
           count: 100,
         });
-        cursor = nextCursor;
+        cursor = Number(nextCursor);
 
         if (keys.length > 0) {
           const result = await redis.del(...keys);
@@ -236,14 +233,11 @@ export class RedisCache<T = unknown> {
       let cursor = 0;
 
       do {
-        const [nextCursor, keys] = await redis.scan<
-          string[],
-          [number, string[]]
-        >(cursor, {
+        const [nextCursor, keys] = await redis.scan(cursor, {
           match: `${CACHE_KEY_PREFIX}*`,
           count: 100,
         });
-        cursor = nextCursor;
+        cursor = Number(nextCursor);
 
         if (keys.length > 0) {
           await redis.del(...keys);
@@ -318,14 +312,11 @@ export class RedisCache<T = unknown> {
       const now = Date.now();
 
       do {
-        const [nextCursor, keys] = await redis.scan<
-          string[],
-          [number, string[]]
-        >(cursor, {
+        const [nextCursor, keys] = await redis.scan(cursor, {
           match: `${CACHE_KEY_PREFIX}*`,
           count: 100,
         });
-        cursor = nextCursor;
+        cursor = Number(nextCursor);
 
         for (const key of keys) {
           // Skip the stats key
@@ -380,14 +371,11 @@ export class RedisCache<T = unknown> {
       let cursor = 0;
 
       do {
-        const [nextCursor, scannedKeys] = await redis.scan<
-          string[],
-          [number, string[]]
-        >(cursor, {
+        const [nextCursor, scannedKeys] = await redis.scan(cursor, {
           match: searchPattern,
           count: 100,
         });
-        cursor = nextCursor;
+        cursor = Number(nextCursor);
         keys.push(...scannedKeys);
       } while (cursor !== 0);
 
@@ -434,14 +422,11 @@ export class RedisCache<T = unknown> {
       let deleted = 0;
 
       do {
-        const [nextCursor, keys] = await redis.scan<
-          string[],
-          [number, string[]]
-        >(cursor, {
+        const [nextCursor, keys] = await redis.scan(cursor, {
           match: `${CACHE_KEY_PREFIX}*`,
           count: 100,
         });
-        cursor = nextCursor;
+        cursor = Number(nextCursor);
 
         // Filter out the stats key
         const deletableKeys = keys.filter((k) => k !== CACHE_STATS_KEY);

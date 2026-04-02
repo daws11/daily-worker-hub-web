@@ -35,11 +35,12 @@
 import { NextResponse } from "next/server";
 
 // ErrorResponse is imported and re-exported from ./errors below
-import type { Locale } from "~/lib/i18n/types";
+import type { Locale } from "@/lib/i18n/types";
 
 import { ErrorCode, isApiError, toApiError } from "./errors";
-import { captureException } from "~/lib/sentry";
-import { logError } from "~/lib/logger";
+import { captureException } from "@/lib/sentry";
+import { logError } from "@/lib/logger";
+import type { ErrorResponse } from "./errors";
 
 // Re-export ErrorResponse for convenience
 export type { ErrorResponse } from "./errors";
@@ -146,7 +147,7 @@ async function getTranslatedMessage(
   try {
     // Dynamically import getTranslation to avoid circular dependencies
     // and to support both sync (cached) and async (first load) usage
-    const { getTranslation } = await import("~/lib/i18n/config");
+    const { getTranslation } = await import("@/lib/i18n/config");
     return getTranslation(locale, i18nKey);
   } catch {
     // If translation fails (e.g., key not found, translations not loaded),
