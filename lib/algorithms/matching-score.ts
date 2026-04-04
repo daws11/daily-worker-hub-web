@@ -1,15 +1,17 @@
 /**
  * Matching Score Algorithm
  *
- * Implements the 5-factor matching algorithm with tier bonus:
+ * Implements the 7-factor matching algorithm with tier bonus:
  * 1. Skill Compatibility (0–30 points): see calculateSkillScore
  * 2. Distance/Location  (0–30 points): see calculateDistanceScore
  * 3. Availability       (0–20 points): see calculateAvailabilityScore
  * 4. Rating & Reliability (0–15 points): see calculateRatingScore
  * 5. Compliance        (0–5 points):  see calculateComplianceScore
+ * 6. Budget Match      (0–10 points): see calculateBudgetScore
+ * 7. Category Match    (0–5 points):  see calculateCategoryScore
  * + Tier Bonus (5–20 points): see getTierBonus (in tier-classifier.ts)
  *
- * Maximum possible score: 115 points (capped via Math.min in calculateMatchingScore)
+ * Maximum possible score: 130 points (capped via Math.min in calculateMatchingScore)
  *
  * Distance calculation: Haversine formula using Earth's radius of 6371 km
  * (see calculateHaversineDistance)
@@ -186,6 +188,65 @@ export function calculateComplianceScore(isCompliant: boolean): number {
 }
 
 /**
+ * Calculate budget match score (0-10 points)
+ *
+ * Scoring thresholds:
+ * - 10 points: workerWage <= jobBudgetMax (worker fits within budget)
+ * - 5 points:  workerWage <= jobBudgetMax * 1.1 (within 10% over budget)
+ * - 0 points:  workerWage > jobBudgetMax * 1.1 (too expensive)
+ *
+ * @param workerWage - Worker's expected hourly or daily wage
+ * @param jobBudgetMax - Job's maximum budget
+ * @returns Budget match score (0, 5, or 10)
+ */
+export function calculateBudgetScore(
+  workerWage: number | null | undefined,
+  jobBudgetMax: number,
+): number {
+  if (!workerWage || workerWage <= 0) {
+    return 10; // No preference = full score
+  }
+  if (jobBudgetMax <= 0) {
+    return 10; // No budget constraint = full score
+  }
+
+  if (workerWage <= jobBudgetMax) {
+    return 10; // Worker fits within budget
+  } else if (workerWage <= jobBudgetMax * 1.1) {
+    return 5; // Within 10% over budget
+  } else {
+    return 0; // Too expensive
+  }
+}
+
+/**
+ * Calculate category match score (0-5 points)
+ *
+ * Scoring thresholds:
+ * - 5 points: job category is in worker's preferred categories
+ * - 0 points: job category is not in worker's preferred categories
+ *
+ * If worker has no preferred categories, returns full score (no preference).
+ *
+ * @param workerCategories - Array of worker's preferred category IDs
+ * @param jobCategory - Job's category ID
+ * @returns Category match score (0 or 5)
+ */
+export function calculateCategoryScore(
+  workerCategories: string[] | null | undefined,
+  jobCategory: string,
+): number {
+  if (!workerCategories || workerCategories.length === 0) {
+    return 5; // No preference = full score
+  }
+  if (!jobCategory) {
+    return 5; // No category = full score
+  }
+
+  return workerCategories.includes(jobCategory) ? 5 : 0;
+}
+
+/**
  * Calculate total matching score for a worker-job pair
  *
  * @param params - Matching parameters
@@ -198,11 +259,15 @@ export interface MatchingScoreParams {
   workerLng: number;
   workerRating: number | null;
   workerTier: WorkerTier;
+  workerWage?: number | null;
+  workerCategories?: string[] | null;
 
   // Job data
   jobSkills: string[];
   jobLat: number;
   jobLng: number;
+  jobBudgetMax?: number;
+  jobCategoryId?: string;
 
   // Availability & compliance
   isAvailable: boolean;
@@ -218,9 +283,13 @@ export interface MatchingScoreParamsWithDistance {
   workerSkills: string[];
   workerRating: number | null;
   workerTier: WorkerTier;
+  workerWage?: number | null;
+  workerCategories?: string[] | null;
 
   // Job data
   jobSkills: string[];
+  jobBudgetMax?: number;
+  jobCategoryId?: string;
 
   // Precomputed distance in kilometers
   distanceKm: number;
@@ -240,6 +309,8 @@ export interface ScoreBreakdown {
   availabilityScore: number;
   ratingScore: number;
   complianceScore: number;
+  budgetScore: number;
+  categoryScore: number;
   tierBonus: number;
 }
 
@@ -271,9 +342,13 @@ export function getMatchingScoreBreakdown(params: MatchingScoreParams): WorkerSc
     workerLng,
     workerRating,
     workerTier,
+    workerWage,
+    workerCategories,
     jobSkills,
     jobLat,
     jobLng,
+    jobBudgetMax,
+    jobCategoryId,
     isAvailable,
     isCompliant,
   } = params;
@@ -292,6 +367,8 @@ export function getMatchingScoreBreakdown(params: MatchingScoreParams): WorkerSc
   const availabilityScore = calculateAvailabilityScore(isAvailable);
   const ratingScore = calculateRatingScore(workerRating);
   const complianceScore = calculateComplianceScore(isCompliant);
+  const budgetScore = calculateBudgetScore(workerWage, jobBudgetMax ?? 0);
+  const categoryScore = calculateCategoryScore(workerCategories, jobCategoryId ?? "");
   const tierBonus = getTierBonus(workerTier);
 
   // Calculate total score
@@ -301,10 +378,12 @@ export function getMatchingScoreBreakdown(params: MatchingScoreParams): WorkerSc
     availabilityScore +
     ratingScore +
     complianceScore +
+    budgetScore +
+    categoryScore +
     tierBonus;
 
   return {
-    matchingScore: Math.min(totalScore, 115),
+    matchingScore: Math.min(totalScore, 130),
     distanceKm: distance,
     breakdown: {
       skillScore,
@@ -312,6 +391,8 @@ export function getMatchingScoreBreakdown(params: MatchingScoreParams): WorkerSc
       availabilityScore,
       ratingScore,
       complianceScore,
+      budgetScore,
+      categoryScore,
       tierBonus,
     },
   };
@@ -348,7 +429,11 @@ export function getMatchingScoreBreakdownWithDistance(
     workerSkills,
     workerRating,
     workerTier,
+    workerWage,
+    workerCategories,
     jobSkills,
+    jobBudgetMax,
+    jobCategoryId,
     distanceKm,
     isAvailable,
     isCompliant,
@@ -362,6 +447,8 @@ export function getMatchingScoreBreakdownWithDistance(
   const availabilityScore = calculateAvailabilityScore(isAvailable);
   const ratingScore = calculateRatingScore(workerRating);
   const complianceScore = calculateComplianceScore(isCompliant);
+  const budgetScore = calculateBudgetScore(workerWage, jobBudgetMax ?? 0);
+  const categoryScore = calculateCategoryScore(workerCategories, jobCategoryId ?? "");
   const tierBonus = getTierBonus(workerTier);
 
   // Calculate total score
@@ -371,10 +458,12 @@ export function getMatchingScoreBreakdownWithDistance(
     availabilityScore +
     ratingScore +
     complianceScore +
+    budgetScore +
+    categoryScore +
     tierBonus;
 
   return {
-    matchingScore: Math.min(totalScore, 115),
+    matchingScore: Math.min(totalScore, 130),
     distanceKm,
     breakdown: {
       skillScore,
@@ -382,6 +471,8 @@ export function getMatchingScoreBreakdownWithDistance(
       availabilityScore,
       ratingScore,
       complianceScore,
+      budgetScore,
+      categoryScore,
       tierBonus,
     },
   };
@@ -390,11 +481,11 @@ export function getMatchingScoreBreakdownWithDistance(
 /**
  * Get match quality label based on score
  *
- * Quality thresholds (score range 0-115):
- * - "Perfect Match" (green):  score >= 100
- * - "Great Match"  (blue):    score >= 85 && score < 100
- * - "Good Match"   (cyan):    score >= 70 && score < 85
- * - "Fair Match"   (yellow):  score >= 55 && score < 70
+ * Quality thresholds (score range 0-130):
+ * - "Perfect Match" (green):  score >= 115
+ * - "Great Match"  (blue):    score >= 95 && score < 115
+ * - "Good Match"   (cyan):    score >= 75 && score < 95
+ * - "Fair Match"   (yellow):  score >= 55 && score < 75
  * - "Poor Match"   (red):     score < 55
  *
  * @param score - Matching score
@@ -405,19 +496,19 @@ export function getMatchQuality(score: number): {
   color: string;
   description: string;
 } {
-  if (score >= 100) {
+  if (score >= 115) {
     return {
       label: "Perfect Match",
       color: "text-green-600",
       description: "Excellent fit for this job",
     };
-  } else if (score >= 85) {
+  } else if (score >= 95) {
     return {
       label: "Great Match",
       color: "text-blue-600",
       description: "Very good fit for this job",
     };
-  } else if (score >= 70) {
+  } else if (score >= 75) {
     return {
       label: "Good Match",
       color: "text-cyan-600",

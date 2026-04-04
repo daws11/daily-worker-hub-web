@@ -1021,6 +1021,13 @@ export type Database = {
           created_at: string
           deadline: string | null
           description: string | null
+          dispatch_mode: string
+          dispatch_status: string
+          total_dispatched: number
+          total_rejected: number
+          fulfilled_at: string | null
+          auto_accept_top_worker: boolean
+          dispatch_timeout_seconds: number
           hours_needed: number
           id: string
           is_urgent: boolean
@@ -1043,6 +1050,13 @@ export type Database = {
           created_at?: string
           deadline?: string | null
           description?: string | null
+          dispatch_mode?: string
+          dispatch_status?: string
+          total_dispatched?: number
+          total_rejected?: number
+          fulfilled_at?: string | null
+          auto_accept_top_worker?: boolean
+          dispatch_timeout_seconds?: number
           hours_needed?: number
           id?: string
           is_urgent?: boolean
@@ -1065,6 +1079,13 @@ export type Database = {
           created_at?: string
           deadline?: string | null
           description?: string | null
+          dispatch_mode?: string
+          dispatch_status?: string
+          total_dispatched?: number
+          total_rejected?: number
+          fulfilled_at?: string | null
+          auto_accept_top_worker?: boolean
+          dispatch_timeout_seconds?: number
           hours_needed?: number
           id?: string
           is_urgent?: boolean
@@ -2075,6 +2096,19 @@ export type Database = {
           full_name: string
           gender: string | null
           id: string
+          is_online: boolean
+          online_since: string | null
+          auto_offline_at: string | null
+          current_lat: number | null
+          current_lng: number | null
+          last_location_update: string | null
+          max_distance_km: number
+          preferred_categories: string[]
+          total_dispatches: number
+          total_accepted: number
+          total_rejected: number
+          total_timed_out: number
+          avg_response_time_seconds: number | null
           jobs_completed: number
           kyc_status: string
           lat: number | null
@@ -2099,6 +2133,19 @@ export type Database = {
           full_name: string
           gender?: string | null
           id?: string
+          is_online?: boolean
+          online_since?: string | null
+          auto_offline_at?: string | null
+          current_lat?: number | null
+          current_lng?: number | null
+          last_location_update?: string | null
+          max_distance_km?: number
+          preferred_categories?: string[]
+          total_dispatches?: number
+          total_accepted?: number
+          total_rejected?: number
+          total_timed_out?: number
+          avg_response_time_seconds?: number | null
           jobs_completed?: number
           kyc_status?: string
           lat?: number | null
@@ -2123,6 +2170,19 @@ export type Database = {
           full_name?: string
           gender?: string | null
           id?: string
+          is_online?: boolean
+          online_since?: string | null
+          auto_offline_at?: string | null
+          current_lat?: number | null
+          current_lng?: number | null
+          last_location_update?: string | null
+          max_distance_km?: number
+          preferred_categories?: string[]
+          total_dispatches?: number
+          total_accepted?: number
+          total_rejected?: number
+          total_timed_out?: number
+          avg_response_time_seconds?: number | null
           jobs_completed?: number
           kyc_status?: string
           lat?: number | null
@@ -2142,6 +2202,133 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dispatch_queue: {
+        Row: {
+          id: string
+          job_id: string
+          worker_id: string
+          business_id: string
+          status: string
+          matching_score: number | null
+          dispatched_at: string
+          expires_at: string
+          responded_at: string | null
+          response_time_seconds: number | null
+          dispatch_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          job_id: string
+          worker_id: string
+          business_id: string
+          status?: string
+          matching_score?: number | null
+          dispatched_at?: string
+          expires_at: string
+          responded_at?: string | null
+          response_time_seconds?: number | null
+          dispatch_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          job_id?: string
+          worker_id?: string
+          business_id?: string
+          status?: string
+          matching_score?: number | null
+          dispatched_at?: string
+          expires_at?: string
+          responded_at?: string | null
+          response_time_seconds?: number | null
+          dispatch_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispatch_queue_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispatch_queue_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispatch_queue_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      worker_dispatch_history: {
+        Row: {
+          id: string
+          worker_id: string
+          job_id: string
+          dispatch_queue_id: string | null
+          action: string
+          response_time_seconds: number | null
+          worker_lat: number | null
+          worker_lng: number | null
+          distance_km: number | null
+          matching_score: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          worker_id: string
+          job_id: string
+          dispatch_queue_id?: string | null
+          action: string
+          response_time_seconds?: number | null
+          worker_lat?: number | null
+          worker_lng?: number | null
+          distance_km?: number | null
+          matching_score?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          worker_id?: string
+          job_id?: string
+          dispatch_queue_id?: string | null
+          action?: string
+          response_time_seconds?: number | null
+          worker_lat?: number | null
+          worker_lng?: number | null
+          distance_km?: number | null
+          matching_score?: number | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_dispatch_history_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "workers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "worker_dispatch_history_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
         ]
