@@ -57,3 +57,4 @@ playwright-report/
 .worktrees/
 .security-key
 logs/security/
+.vercel

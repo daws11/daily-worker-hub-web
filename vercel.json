@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/release-pending-payments",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }

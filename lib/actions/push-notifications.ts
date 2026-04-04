@@ -1,4 +1,4 @@
-declare const process: { env: Record<string, string | undefined> };
+"use server";
 
 import { createClient } from "../supabase/server";
 import { createNotification } from "./notifications";
