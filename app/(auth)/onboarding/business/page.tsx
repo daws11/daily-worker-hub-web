@@ -176,7 +176,7 @@ export default function BusinessOnboardingPage() {
         if (existingBusiness) {
           setHasBusinessProfile(true);
           // Redirect to business dashboard
-          router.push("/business/jobs");
+          router.push("/business");
           return;
         }
       } catch (error) {
@@ -329,7 +329,7 @@ export default function BusinessOnboardingPage() {
         toast.success("Business profile created successfully!");
 
         // Redirect to business dashboard
-        router.push("/business/jobs");
+        router.push("/business");
       } else {
         toast.error(result.error || "Failed to create business profile");
       }

@@ -86,6 +86,7 @@ export default function WorkerDashboardPage() {
   const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
   const [activities, setActivities] = useState<RecentActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [workerName, setWorkerName] = useState<string>("");
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -96,9 +97,13 @@ export default function WorkerDashboardPage() {
         // Get worker profile
         const { data: worker } = await (supabase as any)
           .from("workers")
-          .select("id, rating")
+          .select("id, rating, full_name")
           .eq("user_id", user.id)
           .single();
+
+        if (worker?.full_name) {
+          setWorkerName(worker.full_name);
+        }
 
         // Fetch wallet
         const { data: walletData } = await (supabase as any)
@@ -188,7 +193,7 @@ export default function WorkerDashboardPage() {
     <div className="space-y-4 md:space-y-6 pb-20 md:pb-6 animate-fade-in">
       {/* Greeting */}
       <div className="animate-slide-up">
-        <DashboardGreeting role="worker" />
+        <DashboardGreeting role="worker" name={workerName} />
       </div>
 
       {/* Wallet Card - Highlight */}

@@ -26,101 +26,42 @@ function AccountTypeSelector({
   label,
   className,
 }: AccountTypeSelectorProps) {
+  const selectedOption = options.find((opt) => opt.value === value);
+
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn("space-y-4", className)}>
       {label && (
         <label className="text-sm font-medium text-foreground block">
           {label}
         </label>
       )}
-      <div className="grid grid-cols-2 gap-3">
+
+      {/* Segmented Control */}
+      <div className="flex p-1 bg-muted rounded-full w-full">
         {options.map((option) => {
           const isSelected = value === option.value;
+          const IconComponent = option.icon;
+          
           return (
             <button
               key={option.value}
               type="button"
               onClick={() => onValueChange(option.value)}
               className={cn(
-                "relative flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 ease-out min-h-[120px] sm:min-h-[140px]",
+                "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                "active:scale-[0.98]",
                 isSelected
-                  ? "border-green-500 bg-gradient-to-br from-green-50 to-green-100/50 shadow-md shadow-green-500/10 scale-[1.02]"
-                  : "border-border bg-background hover:bg-muted/50 hover:border-muted-foreground/30 active:bg-muted/60",
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted-foreground/5",
               )}
             >
-              {/* Selection indicator */}
-              <div
+              <IconComponent 
                 className={cn(
-                  "absolute top-2 right-2 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
-                  isSelected
-                    ? "border-green-500 bg-green-500"
-                    : "border-muted-foreground/30 bg-transparent"
-                )}
-              >
-                {isSelected && (
-                  <svg
-                    className="w-3 h-3 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={3}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                )}
-              </div>
-
-              {/* Icon */}
-              <div
-                className={cn(
-                  "mb-3 p-3 rounded-full transition-colors",
-                  isSelected
-                    ? "bg-green-100"
-                    : "bg-muted"
-                )}
-              >
-                {(() => {
-                  const IconComponent = option.icon;
-                  return (
-                    <IconComponent
-                      className={cn(
-                        "w-8 h-8 transition-colors",
-                        isSelected ? "text-green-600" : "text-muted-foreground"
-                      )}
-                    />
-                  );
-                })()}
-              </div>
-
-              {/* Label */}
-              <span
-                className={cn(
-                  "text-sm font-semibold mb-1 transition-colors",
-                  isSelected
-                    ? "text-green-700"
-                    : "text-foreground"
-                )}
-              >
-                {option.label}
-              </span>
-
-              {/* Description */}
-              <span
-                className={cn(
-                  "text-xs text-center leading-relaxed transition-colors",
-                  isSelected
-                    ? "text-green-600/80"
-                    : "text-muted-foreground"
-                )}
-              >
-                {option.description}
-              </span>
+                  "w-4 h-4",
+                  isSelected ? "text-primary" : "text-muted-foreground"
+                )} 
+              />
+              {option.label}
             </button>
           );
         })}

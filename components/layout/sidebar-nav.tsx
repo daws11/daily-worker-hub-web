@@ -209,7 +209,8 @@ function NavItemComponent({
   const [isOpen, setIsOpen] = React.useState(false);
 
   const isActive =
-    pathname === item.href || pathname?.startsWith(item.href + "/");
+    pathname === item.href || 
+    (pathname?.startsWith(item.href + "/") && item.href !== "/worker" && item.href !== "/business");
   const Icon = item.icon;
   const hasChildren = item.children && item.children.length > 0;
 

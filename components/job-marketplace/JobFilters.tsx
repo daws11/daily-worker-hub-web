@@ -13,7 +13,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { JobFilters as JobFiltersType, PositionType } from "@/lib/types/job";
-import { X, Filter } from "lucide-react";
+import { X, Filter, CalendarIcon } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/lib/i18n/hooks";
 
@@ -163,7 +166,7 @@ export function JobFilters({
             {t("jobs.positionType")}
           </Label>
           <Select
-            value={localFilters.positionType || "all"}
+            value={localFilters.positionType || undefined}
             onValueChange={(value) => handlePositionChange(value as string)}
           >
             <SelectTrigger id="position-type">
@@ -225,34 +228,59 @@ export function JobFilters({
         {/* Deadline Filter */}
         <div className="space-y-2">
           <Label className="text-sm">{t("jobs.deadline")}</Label>
-          <div className="space-y-2">
-            <div className="space-y-1">
-              <Label
-                htmlFor="deadline-after"
-                className="text-xs text-muted-foreground"
-              >
-                {t("common.from")}
-              </Label>
-              <Input
-                id="deadline-after"
-                type="date"
-                value={deadlineAfter}
-                onChange={(e) => handleDeadlineAfterChange(e.target.value)}
-              />
+          <div className="flex items-center gap-2">
+            <div className="flex-1">
+              <Popover>
+                <PopoverTrigger
+                  render={
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal px-3 h-10",
+                        !deadlineAfter && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {deadlineAfter ? format(new Date(deadlineAfter), "dd MMM yyyy") : <span>{t("common.date")}</span>}
+                    </Button>
+                  }
+                />
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={deadlineAfter ? new Date(deadlineAfter) : undefined}
+                    onSelect={(date) => handleDeadlineAfterChange(date ? format(date, "yyyy-MM-dd") : "")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
-            <div className="space-y-1">
-              <Label
-                htmlFor="deadline-before"
-                className="text-xs text-muted-foreground"
-              >
-                {t("jobs.sortDeadline")}
-              </Label>
-              <Input
-                id="deadline-before"
-                type="date"
-                value={deadlineBefore}
-                onChange={(e) => handleDeadlineBeforeChange(e.target.value)}
-              />
+            <span className="text-muted-foreground text-sm">
+              {t("common.to")}
+            </span>
+            <div className="flex-1">
+              <Popover>
+                <PopoverTrigger
+                  render={
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal px-3 h-10",
+                        !deadlineBefore && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {deadlineBefore ? format(new Date(deadlineBefore), "dd MMM yyyy") : <span>{t("common.date")}</span>}
+                    </Button>
+                  }
+                />
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={deadlineBefore ? new Date(deadlineBefore) : undefined}
+                    onSelect={(date) => handleDeadlineBeforeChange(date ? format(date, "yyyy-MM-dd") : "")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>

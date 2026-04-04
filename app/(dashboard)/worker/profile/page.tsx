@@ -187,8 +187,8 @@ export default function WorkerProfilePage() {
         </Card>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
+          <Card className="col-span-2 sm:col-span-1">
             <CardContent className="pt-6">
               <div className="text-center">
                 <p className="text-3xl font-bold">{stats.completedJobs}</p>

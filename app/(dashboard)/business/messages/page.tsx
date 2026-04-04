@@ -215,8 +215,8 @@ export default function BusinessMessagesPage() {
 
       {/* Stats Cards */}
       {!loading && !hookError && (
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          <Card>
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3">
+          <Card className="col-span-2 lg:col-span-1">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">
                 Total Percakapan

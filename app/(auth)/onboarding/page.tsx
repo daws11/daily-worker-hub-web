@@ -41,7 +41,7 @@ export default async function OnboardingPage() {
 
     if (completed) {
       // Already completed onboarding, redirect to dashboard
-      redirect("/worker/jobs");
+      redirect("/worker");
     }
 
     // Redirect to worker onboarding
@@ -54,7 +54,7 @@ export default async function OnboardingPage() {
 
     if (completed) {
       // Already completed onboarding, redirect to dashboard
-      redirect("/business/jobs");
+      redirect("/business");
     }
 
     // Redirect to business onboarding

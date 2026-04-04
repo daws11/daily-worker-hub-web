@@ -97,7 +97,7 @@ export default function WorkerOnboardingPage() {
         if (existingWorker) {
           setHasWorkerProfile(true);
           // Redirect to worker dashboard
-          router.push("/worker/jobs");
+          router.push("/worker");
           return;
         }
       } catch (error) {
@@ -229,7 +229,7 @@ export default function WorkerOnboardingPage() {
         toast.success("Profile created successfully!");
 
         // Redirect to worker dashboard
-        router.push("/worker/jobs");
+        router.push("/worker");
       } else {
         toast.error(result.error || "Failed to create profile");
       }

@@ -87,6 +87,7 @@ export default function BusinessDashboardPage() {
   const [upcomingBookings, setUpcomingBookings] = useState<Booking[]>([]);
   const [activities, setActivities] = useState<RecentActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [businessName, setBusinessName] = useState<string>("");
 
   useEffect(() => {
     async function fetchDashboardData() {
@@ -97,9 +98,13 @@ export default function BusinessDashboardPage() {
         // Get business ID
         const { data: business } = await (supabase as any)
           .from("businesses")
-          .select("id")
+          .select("id, name")
           .eq("user_id", user.id)
           .single();
+
+        if (business?.name) {
+          setBusinessName(business.name);
+        }
 
         if (!business) {
           setIsLoading(false);
@@ -218,7 +223,7 @@ export default function BusinessDashboardPage() {
     <div className="space-y-4 md:space-y-6 pb-20 md:pb-6 animate-fade-in">
       {/* Greeting */}
       <div className="animate-slide-up">
-        <DashboardGreeting />
+        <DashboardGreeting role="business" name={businessName} />
       </div>
 
       {/* Wallet Card - Highlight */}

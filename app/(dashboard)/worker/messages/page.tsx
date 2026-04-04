@@ -192,8 +192,8 @@ export default function WorkerMessagesPage() {
         )}
 
         {/* Statistics Cards */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3">
+          <Card className="col-span-2 sm:col-span-1 bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-blue-100">
                 Total Percakapan

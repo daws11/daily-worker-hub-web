@@ -202,31 +202,31 @@ export function TierBadgeDetailed({
   return (
     <div
       className={cn(
-        compact ? "p-2" : "flex items-start gap-3 p-3 rounded-lg border",
-        config.bgColor,
-        config.borderColor,
+        compact ? "flex items-start gap-3 mt-1.5" : "flex items-start gap-3 p-3 rounded-lg border",
+        !compact && config.bgColor,
+        !compact && config.borderColor,
       )}
     >
       <div
         className={cn(
-          "flex items-center justify-center rounded-full",
+          "flex items-center justify-center rounded-full shrink-0",
           "border-2",
           config.bgGradient,
-          compact ? "h-6 w-6" : "h-10 w-10",
+          compact ? "h-8 w-8" : "h-10 w-10",
         )}
       >
-        <Icon className={cn("text-white", compact ? "h-3 w-3" : "h-5 w-5")} />
+        <Icon className={cn("text-white", compact ? "h-4 w-4" : "h-5 w-5")} />
       </div>
 
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-1">
-          <span className={cn("font-bold text-sm", config.textColor)}>
+          <span className={cn("font-bold text-sm", compact ? "text-white" : config.textColor)}>
             {getTierLabel(tier)}
           </span>
           <span
             className={cn(
-              "text-xs px-2 py-0.5 rounded-full bg-white/50",
-              config.textColor,
+              "text-xs px-2 py-0.5 rounded-full",
+              compact ? "bg-white/20 text-white" : "bg-white/50 " + config.textColor,
             )}
           >
             +{getTierBonus(tier)} bonus
@@ -234,19 +234,19 @@ export function TierBadgeDetailed({
         </div>
 
         {jobsCompleted !== undefined && (
-          <div className="text-xs text-gray-600">
+          <div className={cn("text-xs leading-tight mb-0.5", compact ? "text-white/80" : "text-gray-600")}>
             {jobsCompleted} jobs completed
           </div>
         )}
 
         {rating !== undefined && (
-          <div className="text-xs text-gray-600">
+          <div className={cn("text-xs leading-tight mb-0.5", compact ? "text-white/80" : "text-gray-600")}>
             Rating: {rating.toFixed(1)}/5.0
           </div>
         )}
 
         {punctuality !== undefined && (
-          <div className="text-xs text-gray-600">
+          <div className={cn("text-xs leading-tight", compact ? "text-white/80" : "text-gray-600")}>
             Punctuality: {punctuality.toFixed(1)}%
           </div>
         )}

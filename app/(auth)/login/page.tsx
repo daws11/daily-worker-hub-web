@@ -93,7 +93,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 via-background to-muted/10 px-4 py-8 sm:py-10">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 dark:from-green-950/20 via-background to-muted/10 px-4 py-8 sm:py-10">
       <div className="w-full max-w-md space-y-6 sm:space-y-7 pb-8 sm:pb-0">
         {/* Header */}
         <div className="text-center space-y-2 sm:space-y-3">
@@ -113,7 +113,6 @@ export default function LoginPage() {
                 value={role}
                 onValueChange={setRole}
                 options={accountTypeOptions}
-                label={t("auth.selectAccountType")}
               />
             </div>
 

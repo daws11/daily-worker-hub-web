@@ -362,7 +362,7 @@ export default function BusinessAnalyticsPage() {
         {isLoadingPosts ? (
           <AnalyticsStatsSkeleton />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
             {/* Total Posts */}
             <Card>
               <CardHeader className="pb-3">
@@ -456,8 +456,8 @@ export default function BusinessAnalyticsPage() {
         {isLoadingPosts ? (
           <AnalyticsMetricCardsSkeleton />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
-            <Card>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
+            <Card className="col-span-2 sm:col-span-1">
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
                   <div>

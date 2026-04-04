@@ -62,7 +62,8 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
       <div className="flex justify-around items-center h-[72px] px-2">
         {items.map((item) => {
           const isActive =
-            pathname === item.href || pathname?.startsWith(item.href + "/");
+            pathname === item.href || 
+            (pathname?.startsWith(item.href + "/") && item.href !== `/${userRole}`);
           const Icon = item.icon;
 
           // Special rendering for Profile tab

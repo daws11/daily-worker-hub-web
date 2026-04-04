@@ -61,13 +61,7 @@ export function DashboardGreeting({ name, role }: DashboardGreetingProps) {
   return (
     <div className="mb-6 animate-fade-in">
       <div className="flex items-start gap-4">
-        {/* Time-based icon */}
-        <div className={cn(
-          "flex items-center justify-center w-12 h-12 rounded-xl shrink-0",
-          iconBg
-        )}>
-          <TimeIcon className={cn("w-6 h-6 bg-gradient-to-r bg-clip-text text-transparent", gradient)} />
-        </div>
+
         
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
