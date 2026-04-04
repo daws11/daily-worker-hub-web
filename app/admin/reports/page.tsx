@@ -349,7 +349,7 @@ export default function AdminReportsPage() {
               <Label htmlFor="compliance-month">Month</Label>
               <Select
                 value={complianceForm.month}
-                onValueChange={(value) => setComplianceForm({ month: value })}
+                onValueChange={(value) => setComplianceForm({ month: value || "" })}
               >
                 <SelectTrigger id="compliance-month">
                   <SelectValue placeholder="Select month" />

@@ -415,7 +415,7 @@ export async function getDispute(
     return {
       success: true,
       data: data as DisputeWithFullBooking | null,
-      error: null,
+      error: undefined,
     };
   } catch (error) {
     return {
@@ -466,7 +466,7 @@ export async function getBusinessDisputes(
     return {
       success: true,
       data: data as DisputeWithBookingForList[],
-      error: null,
+      error: undefined,
     };
   } catch (error) {
     return {
@@ -518,7 +518,7 @@ export async function getWorkerDisputes(
     return {
       success: true,
       data: data as DisputeWithBookingForList[],
-      error: null,
+      error: undefined,
     };
   } catch (error) {
     return {
@@ -794,7 +794,7 @@ export async function getPendingDisputes(): Promise<{
     return {
       success: true,
       data: data as DisputeWithFullBooking[],
-      error: null,
+      error: undefined,
     };
   } catch (error) {
     return {

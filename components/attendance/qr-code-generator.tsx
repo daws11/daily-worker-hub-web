@@ -131,6 +131,7 @@ const QRCodeGenerator = React.forwardRef<HTMLDivElement, QRCodeGeneratorProps>(
         }
 
         const svgElement = qrRef.current.querySelector("svg");
+        if (!svgElement) return;
         const serializer = new XMLSerializer();
         const svgString = serializer.serializeToString(svgElement);
 

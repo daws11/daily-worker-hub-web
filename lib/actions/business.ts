@@ -28,7 +28,7 @@ export async function getBusinessProfile(
       .single();
 
     if (error) return { success: false, error: error.message };
-    return { success: true, data };
+    return { success: true, data: data ? { ...data, address: data.address ?? undefined, lat: data.lat ?? undefined, lng: data.lng ?? undefined } : undefined };
   } catch (error) {
     return { success: false, error: "Failed to fetch business profile" };
   }

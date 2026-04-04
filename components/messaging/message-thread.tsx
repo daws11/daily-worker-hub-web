@@ -64,7 +64,7 @@ const MessageThread = React.forwardRef<HTMLDivElement, MessageThreadProps>(
           groups.push({ senderId: message.sender_id, messages: [message] });
         }
       }
-      return groups;
+      return groups as MessageGroup[];
     }, [messages, groupConsecutive]);
 
     // Auto-scroll to bottom when new messages arrive
@@ -110,7 +110,7 @@ const MessageThread = React.forwardRef<HTMLDivElement, MessageThreadProps>(
       >
         <div className="flex flex-col gap-4 p-4">
           {groupConsecutive
-            ? groupedMessages.map((group, groupIndex) => {
+            ? (groupedMessages as MessageGroup[]).map((group, groupIndex) => {
                 const isOwnGroup = group.senderId === currentUserId;
 
                 return (

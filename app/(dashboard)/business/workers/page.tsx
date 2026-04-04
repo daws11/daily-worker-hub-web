@@ -154,7 +154,7 @@ export default function BusinessWorkersPage() {
           );
         } else {
           // Fetch all workers
-          const { data: workersData, error: workersError } = await supabase
+          const { data: workersData, error: workersError } = await (supabase as any)
             .from("workers")
             .select(
               `
@@ -175,7 +175,7 @@ export default function BusinessWorkersPage() {
           // Fetch badges for each worker
           workersWithBadges = await Promise.all(
             (workersData || []).map(async (worker: any) => {
-              const { data: workerBadges } = await supabase
+              const { data: workerBadges } = await (supabase as any)
                 .from("worker_badges")
                 .select(
                   `
@@ -446,7 +446,7 @@ export default function BusinessWorkersPage() {
             </h3>
           </div>
           <BadgeFilterSelect
-            badges={badges}
+            badges={badges as any}
             selectedBadges={selectedBadgeIds}
             onBadgesChange={handleBadgeFilterChange}
             placeholder="Pilih badge untuk filter pekerja..."
@@ -770,7 +770,7 @@ export default function BusinessWorkersPage() {
                         {worker.badges.map((wb) => (
                           <div key={wb.id}>
                             <SkillBadgeChip
-                              badge={wb.badge}
+                              badge={wb.badge as any}
                               verificationStatus={wb.verification_status}
                               size="sm"
                             />

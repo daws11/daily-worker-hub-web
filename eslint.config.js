@@ -17,7 +17,6 @@ module.exports = [
       "prefer-const": "warn",
       "react/jsx-uses-react": "off",
       "react/react-in-jsx-scope": "off",
-      "@typescript-eslint/no-explicit-any": "off",
     },
   },
 ];

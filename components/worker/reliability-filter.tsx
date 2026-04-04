@@ -173,7 +173,7 @@ const ReliabilityFilter = React.forwardRef<
               </Label>
               <Select
                 value={getMinValue()}
-                onValueChange={handleMinChange}
+                onValueChange={handleMinChange as (value: string | null) => void}
                 disabled={disabled}
               >
                 <SelectTrigger id="reliability-min" className="h-9">
@@ -201,7 +201,7 @@ const ReliabilityFilter = React.forwardRef<
               </Label>
               <Select
                 value={getMaxValue()}
-                onValueChange={handleMaxChange}
+                onValueChange={handleMaxChange as (value: string | null) => void}
                 disabled={disabled}
               >
                 <SelectTrigger id="reliability-max" className="h-9">
@@ -226,7 +226,7 @@ const ReliabilityFilter = React.forwardRef<
                 ? value.minScore.toString()
                 : "any"
             }
-            onValueChange={(v) => handleMinChange(v)}
+            onValueChange={(v) => handleMinChange(v || "any")}
             disabled={disabled}
           >
             <SelectTrigger className="h-9">

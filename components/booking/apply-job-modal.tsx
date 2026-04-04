@@ -190,8 +190,8 @@ function AvailabilitySelector({
       {/* Add new slot */}
       <div className="grid grid-cols-3 gap-2">
         <Select
-          value={newSlot.day}
-          onValueChange={(val) => setNewSlot((prev) => ({ ...prev, day: val }))}
+          value={newSlot.day || ""}
+          onValueChange={(val) => setNewSlot((prev) => ({ ...prev, day: val || "" }))}
           disabled={disabled}
         >
           <SelectTrigger>
@@ -207,9 +207,9 @@ function AvailabilitySelector({
         </Select>
 
         <Select
-          value={newSlot.startTime}
+          value={newSlot.startTime || ""}
           onValueChange={(val) =>
-            setNewSlot((prev) => ({ ...prev, startTime: val }))
+            setNewSlot((prev) => ({ ...prev, startTime: val || "" }))
           }
           disabled={disabled}
         >
@@ -226,9 +226,9 @@ function AvailabilitySelector({
         </Select>
 
         <Select
-          value={newSlot.endTime}
+          value={newSlot.endTime || ""}
           onValueChange={(val) =>
-            setNewSlot((prev) => ({ ...prev, endTime: val }))
+            setNewSlot((prev) => ({ ...prev, endTime: val || "" }))
           }
           disabled={disabled}
         >

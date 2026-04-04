@@ -20,10 +20,10 @@ export default function BusinessError({
     captureException(error, {
       tags: {
         section: "business",
-        errorDigest: error.digest,
+        errorDigest: error.digest ?? "",
       },
       extra: {
-        errorDigest: error.digest,
+        errorDigest: error.digest ?? "",
         message: error.message,
         stack: error.stack,
       },

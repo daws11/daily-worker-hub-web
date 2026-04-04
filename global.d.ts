@@ -194,3 +194,32 @@ declare module "web-push" {
 
   export default webpush;
 }
+
+declare module "swagger-ui-react" {
+  const SwaggerUI: React.ComponentType<{
+    spec?: object | string;
+    url?: string;
+    [key: string]: any;
+  }>;
+  export default SwaggerUI;
+}
+
+declare module "swagger-jsdoc" {
+  interface Options {
+    definition: {
+      openapi: string;
+      info: {
+        title: string;
+        version: string;
+        description?: string;
+      };
+      servers?: Array<{ url: string; description?: string }>;
+      components?: Record<string, object>;
+      security?: Array<Record<string, string[]>>;
+      tags?: Array<{ name: string; description?: string }>;
+    };
+    apis: string[];
+  }
+  function swaggerJsdoc(options: Options): object;
+  export default swaggerJsdoc;
+}

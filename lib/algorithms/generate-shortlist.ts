@@ -84,7 +84,7 @@ export async function generateWorkerShortlist(
   try {
     // Fetch available workers with their data
     const { data: workers, error } = await supabase
-      .from("workers")
+      .from("workers" as any)
       .select(
         `
         id,
@@ -101,10 +101,10 @@ export async function generateWorkerShortlist(
         worker_skills (
           skill_id
         )
-      `,
+      ` as any
       )
-      .not("lat", "is", null)
-      .not("lng", "is", null);
+      .not("lat" as any, "is" as any, null as any)
+      .not("lng" as any, "is" as any, null as any);
 
     if (error) {
       console.error("Error fetching workers:", error);
@@ -235,10 +235,7 @@ export async function generateWorkerShortlistFromIds(
 
   try {
     // Fetch workers by IDs
-    const { data: workers, error } = await supabase
-      .from("workers")
-      .select(
-        `
+    const workersQuery = (supabase as any).from("workers").select(`
         id,
         user_id,
         full_name,
@@ -253,9 +250,8 @@ export async function generateWorkerShortlistFromIds(
         worker_skills (
           skill_id
         )
-      `,
-      )
-      .in("id", workerIds);
+      `);
+    const { data: workers, error } = await workersQuery.in("id", workerIds);
 
     if (error || !workers) {
       console.error("Error fetching workers:", error);

@@ -19,7 +19,7 @@ export type AreaValue = string;
 
 export interface AreaSelectProps {
   value?: AreaValue;
-  onChange?: (value: AreaValue) => void;
+  onChange?: (value: AreaValue | null) => void;
   error?: string;
   label?: string;
   placeholder?: string;
@@ -43,8 +43,8 @@ export const AreaSelect = React.forwardRef<HTMLButtonElement, AreaSelectProps>(
     },
     ref,
   ) => {
-    const handleValueChange = (newValue: string) => {
-      if (onChange) {
+    const handleValueChange = (newValue: string | null) => {
+      if (onChange && newValue !== null) {
         onChange(newValue as AreaValue);
       }
     };

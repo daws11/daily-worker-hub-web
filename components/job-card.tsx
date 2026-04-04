@@ -48,11 +48,13 @@ const JobCard = React.forwardRef<HTMLDivElement, JobCardProps>(
     } = job;
 
     // Format deadline date (Indonesian locale)
-    const formattedDeadline = new Date(deadline).toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+    const formattedDeadline = deadline
+      ? new Date(deadline).toLocaleDateString("id-ID", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "N/A";
 
     // Format budget to Indonesian Rupiah
     const formatBudget = (amount: number) => {
@@ -131,13 +133,13 @@ const JobCard = React.forwardRef<HTMLDivElement, JobCardProps>(
         <CardContent className="flex-1 space-y-3">
           {/* Description */}
           <p className="text-sm text-muted-foreground line-clamp-2">
-            {truncateDescription(description)}
+            {truncateDescription(description ?? "")}
           </p>
 
           {/* Category */}
           <div className="flex items-center gap-2 text-sm">
             <Briefcase className="h-4 w-4 text-muted-foreground" />
-            <span>{categories.name}</span>
+            <span>{categories.name ?? ""}</span>
           </div>
 
           {/* Skills */}

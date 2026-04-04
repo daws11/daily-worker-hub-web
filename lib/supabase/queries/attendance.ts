@@ -44,7 +44,7 @@ type BookingWithAttendance = BookingRow & {
  */
 export async function checkIn(bookingId: string, lat?: number, lng?: number) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("bookings")
       .update({
         check_in_at: new Date().toISOString(),
@@ -77,7 +77,7 @@ export async function checkIn(bookingId: string, lat?: number, lng?: number) {
  */
 export async function checkOut(bookingId: string, lat?: number, lng?: number) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("bookings")
       .update({
         check_out_at: new Date().toISOString(),
@@ -111,7 +111,7 @@ export async function getJobAttendanceHistory(
   jobId: string,
 ): Promise<{ data: JobAttendanceHistory | null; error: any }> {
   try {
-    const { data: bookings, error } = await supabase
+    const { data: bookings, error } = await (supabase as any)
       .from("bookings")
       .select(
         `
@@ -214,7 +214,7 @@ export async function getWorkerAttendanceHistory(
   workerId: string,
 ): Promise<{ data: WorkerAttendanceHistory | null; error: any }> {
   try {
-    const { data: bookings, error } = await supabase
+    const { data: bookings, error } = await (supabase as any)
       .from("bookings")
       .select(
         `
@@ -320,11 +320,11 @@ export async function verifyWorkerLocation(
   workerLng: number,
 ): Promise<LocationVerificationResult> {
   try {
-    const { data: job, error } = await supabase
+    const { data: job, error } = await (supabase as any)
       .from("jobs")
       .select("lat, lng")
       .eq("id", jobId)
-      .single();
+      .single() as { data: { lat: number; lng: number } | null; error: any };
 
     if (error) {
       console.error("Error verifying worker location:", error);
@@ -367,7 +367,7 @@ export async function calculateAttendanceRate(
   workerId: string,
 ): Promise<{ data: number | null; error: any }> {
   try {
-    const { data: bookings, error } = await supabase
+    const { data: bookings, error } = await (supabase as any)
       .from("bookings")
       .select("id, check_in_at")
       .eq("worker_id", workerId);
@@ -417,7 +417,7 @@ export async function getAttendanceList(
     const limit = params.limit || 20;
     const offset = (page - 1) * limit;
 
-    let query = supabase.from("bookings").select(
+    let query = (supabase as any).from("bookings").select(
       `
         *,
         job:jobs!inner(
@@ -520,7 +520,7 @@ export async function getWorkerAttendanceStats(
   workerId: string,
 ): Promise<{ data: AttendanceStats | null; error: any }> {
   try {
-    const { data: bookings, error } = await supabase
+    const { data: bookings, error } = await (supabase as any)
       .from("bookings")
       .select("id, check_in_at, check_out_at, start_date")
       .eq("worker_id", workerId);
@@ -667,7 +667,7 @@ function calculateAttendanceStats(
  */
 async function createCheckInNotification(bookingId: string) {
   try {
-    const { data: booking } = await supabase
+    const { data: booking } = await (supabase as any)
       .from("bookings")
       .select(
         `
@@ -683,7 +683,7 @@ async function createCheckInNotification(bookingId: string) {
       return;
     }
 
-    const { data: business } = await supabase
+    const { data: business } = await (supabase as any)
       .from("businesses")
       .select("user_id")
       .eq("id", booking.business_id)
@@ -693,7 +693,7 @@ async function createCheckInNotification(bookingId: string) {
       return;
     }
 
-    await supabase.from("notifications").insert({
+    await (supabase as any).from("notifications").insert({
       user_id: business.user_id,
       title: "Pekerja telah check-in",
       body: `${booking.worker.full_name} telah check-in untuk pekerjaan ${booking.job.title}`,
@@ -708,7 +708,7 @@ async function createCheckInNotification(bookingId: string) {
  */
 async function createCheckOutNotification(bookingId: string) {
   try {
-    const { data: booking } = await supabase
+    const { data: booking } = await (supabase as any)
       .from("bookings")
       .select(
         `
@@ -724,7 +724,7 @@ async function createCheckOutNotification(bookingId: string) {
       return;
     }
 
-    const { data: business } = await supabase
+    const { data: business } = await (supabase as any)
       .from("businesses")
       .select("user_id")
       .eq("id", booking.business_id)
@@ -734,7 +734,7 @@ async function createCheckOutNotification(bookingId: string) {
       return;
     }
 
-    await supabase.from("notifications").insert({
+    await (supabase as any).from("notifications").insert({
       user_id: business.user_id,
       title: "Pekerja telah check-out",
       body: `${booking.worker.full_name} telah menyelesaikan pekerjaan ${booking.job.title}`,

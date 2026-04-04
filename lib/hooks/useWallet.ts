@@ -78,8 +78,9 @@ export function useWallet(options: UseWalletOptions = {}): UseWalletReturn {
       const result = await getWalletByUserId(userId);
 
       if (result.error) {
-        setError(result.error.message);
-        toast.error("Gagal mengambil data dompet: " + result.error.message);
+        const errorMessage = (result.error as any).message || String(result.error);
+        setError(errorMessage);
+        toast.error("Gagal mengambil data dompet: " + errorMessage);
         return;
       }
 

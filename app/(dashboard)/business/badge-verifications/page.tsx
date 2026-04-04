@@ -64,7 +64,7 @@ export default function BusinessBadgeVerificationsPage() {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("businesses")
         .select("*")
         .eq("user_id", user.id)
@@ -88,7 +88,7 @@ export default function BusinessBadgeVerificationsPage() {
     setIsLoadingVerifications(true);
     try {
       // Get all badges provided by this business
-      const { data: businessBadges, error: badgesError } = await supabase
+      const { data: businessBadges, error: badgesError } = await (supabase as any)
         .from("badges")
         .select("id")
         .eq("provider_id", business.id);
@@ -100,11 +100,11 @@ export default function BusinessBadgeVerificationsPage() {
         return;
       }
 
-      const badgeIds = businessBadges.map((b) => b.id);
+      const badgeIds = (businessBadges as any[]).map((b: any) => b.id);
 
       // Get pending worker_badges for these badges
-      const { data: workerBadges, error: workerBadgesError } = await supabase
-        .from("worker_badges" as any)
+      const { data: workerBadges, error: workerBadgesError } = await (supabase as any)
+        .from("worker_badges")
         .select(
           `
           *,

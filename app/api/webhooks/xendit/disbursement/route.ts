@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
         requestId,
       });
 
-      return errorResponse(500, result.error, request);
+      return errorResponse(500, result.error ?? "Unknown error", request);
     }
 
     routeLogger.info("Disbursement webhook processed successfully", {

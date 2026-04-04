@@ -20,10 +20,10 @@ export default function DashboardError({
     captureException(error, {
       tags: {
         section: "dashboard",
-        errorDigest: error.digest,
+        errorDigest: error.digest ?? "",
       },
       extra: {
-        errorDigest: error.digest,
+        errorDigest: error.digest ?? "",
         message: error.message,
         stack: error.stack,
       },

@@ -1,6 +1,9 @@
 import { supabase } from "../client";
 import type { Database } from "../types";
 
+// Cast supabase to any to avoid complex generic type mismatches
+const sb = supabase as any;
+
 export type JobsRow = Database["public"]["Tables"]["jobs"]["Row"];
 type JobsInsert = Database["public"]["Tables"]["jobs"]["Insert"];
 type JobsUpdate = Database["public"]["Tables"]["jobs"]["Update"];
@@ -26,7 +29,7 @@ type JobWithRelations = JobsRow & {
 export async function createJob(
   jobData: Omit<JobsInsert, "id" | "created_at" | "updated_at">,
 ): Promise<JobsRow> {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("jobs")
     .insert(jobData)
     .select()
@@ -46,7 +49,7 @@ export async function updateJob(
   jobId: string,
   updates: JobsUpdate,
 ): Promise<JobsRow> {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("jobs")
     .update({
       ...updates,
@@ -69,7 +72,7 @@ export async function updateJob(
 export async function getJobById(
   jobId: string,
 ): Promise<JobWithRelations | null> {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("jobs")
     .select(
       `
@@ -98,7 +101,7 @@ export async function getBusinessJobs(
   businessId: string,
   status?: JobStatus,
 ): Promise<JobsRow[]> {
-  let query = supabase
+  let query = sb
     .from("jobs")
     .select("*")
     .eq("business_id", businessId)
@@ -152,7 +155,7 @@ export async function publishJob(jobId: string): Promise<JobsRow> {
  * Delete a job
  */
 export async function deleteJob(jobId: string): Promise<void> {
-  const { error } = await supabase.from("jobs").delete().eq("id", jobId);
+  const { error } = await sb.from("jobs").delete().eq("id", jobId);
 
   if (error) {
     throw new Error(`Failed to delete job: ${error.message}`);
@@ -163,7 +166,7 @@ export async function deleteJob(jobId: string): Promise<void> {
  * Get open jobs (for worker marketplace)
  */
 export async function getOpenJobs(limit?: number): Promise<JobWithRelations[]> {
-  let query = supabase
+  let query = sb
     .from("jobs")
     .select(
       `
@@ -195,7 +198,7 @@ export async function searchJobs(
   searchTerm: string,
   limit: number = 20,
 ): Promise<JobWithRelations[]> {
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("jobs")
     .select(
       `
@@ -243,7 +246,7 @@ export async function generateJobQRCode(
   const generatedAt = new Date().toISOString();
 
   // Update job with QR code
-  const { error } = await supabase
+  const { error } = await sb
     .from("jobs")
     .update({
       qr_code: qrCode,
@@ -265,7 +268,7 @@ export async function generateJobQRCode(
 export async function getJobQRCode(
   jobId: string,
 ): Promise<{ qr_code: string | null; generated_at: string | null } | null> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await sb
     .from("jobs")
     .select("qr_code, qr_generated_at")
     .eq("id", jobId)

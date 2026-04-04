@@ -533,7 +533,7 @@ export async function externalServiceErrorResponse(
     {
       code: ErrorCode.EXTERNAL_SERVICE_UNAVAILABLE,
       i18nKey: "errors.serverError",
-      details: { service, ...(details && { reason: details }) },
+      details: { service, ...(details && typeof details === 'object' ? { reason: details } : {}) },
     },
     request ?? new Request("http://localhost"),
   );

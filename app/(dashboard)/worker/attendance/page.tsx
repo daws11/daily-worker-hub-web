@@ -45,7 +45,7 @@ export default function WorkerAttendancePage() {
     error: bookingsError,
     refreshBookings,
   } = useBookings({
-    workerId: workerId, // Use worker.id from workers table
+    workerId: workerId ?? undefined, // Use worker.id from workers table
     autoFetch: !!workerId, // Only fetch when workerId is available
   });
 
@@ -57,7 +57,7 @@ export default function WorkerAttendancePage() {
     workerCheckIn,
     workerCheckOut,
   } = useAttendance({
-    workerId: workerId, // Use worker.id from workers table
+    workerId: workerId ?? undefined, // Use worker.id from workers table
     autoFetch: !!workerId, // Only fetch when workerId is available
   });
 
@@ -284,7 +284,7 @@ export default function WorkerAttendancePage() {
                   <div className="space-y-2 text-sm">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Calendar className="h-3 w-3" />
-                      <span>{formatDate(booking.start_date)}</span>
+                      <span>{formatDate(booking.start_date || "")}</span>
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Clock className="h-3 w-3" />

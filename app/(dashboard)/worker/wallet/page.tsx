@@ -118,7 +118,7 @@ export default function WorkerWalletPage() {
 
       setIsLoadingWorker(true);
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("workers")
         .select("*")
         .eq("user_id", user.id)
@@ -166,7 +166,7 @@ export default function WorkerWalletPage() {
       if (!worker) return;
 
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from("bank_accounts" as any)
           .select("*")
           .eq("worker_id", worker.id)
@@ -201,7 +201,7 @@ export default function WorkerWalletPage() {
       setIsLoadingPayouts(true);
       try {
         // payout_requests stores bank details directly (no join needed)
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from("payout_requests" as any)
           .select("*")
           .eq("worker_id", worker.id)
@@ -614,7 +614,7 @@ export default function WorkerWalletPage() {
                   !withdrawalAmount ||
                   isProcessingPayout ||
                   Number(withdrawalAmount) < 100000 ||
-                  (walletBalance &&
+                  !!(walletBalance &&
                     Number(withdrawalAmount) > walletBalance.balance)
                 }
                 className="w-full min-h-[44px] touch-manipulation"

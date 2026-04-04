@@ -89,10 +89,10 @@ export default function JobForm() {
           if (bizResult.success && bizResult.data) {
             setBusiness(bizResult.data);
             // Pre-fill address if available
-            if (bizResult.data.address) {
+            if (bizResult.data?.address) {
               setFormData((prev) => ({
                 ...prev,
-                address: bizResult.data.address || "",
+                address: bizResult.data?.address || "",
               }));
             }
           }

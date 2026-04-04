@@ -151,7 +151,7 @@ export function useApplications(
           setError(result.error || t("errors.generic"));
           toast.error(
             t("applications.createApplicationFailed", {
-              message: result.error,
+              message: result.error ?? "Unknown error",
             }),
           );
           return result;
@@ -205,7 +205,7 @@ export function useApplications(
         if (!result.success) {
           setError(result.error || t("errors.generic"));
           toast.error(
-            t("applications.updateStatusFailed", { message: result.error }),
+            t("applications.updateStatusFailed", { message: result.error ?? "Unknown error" }),
           );
           return;
         }
@@ -254,7 +254,7 @@ export function useApplications(
           setError(result.error || t("errors.generic"));
           toast.error(
             t("applications.acceptApplicationFailed", {
-              message: result.error,
+              message: result.error ?? "Unknown error",
             }),
           );
           return null;
@@ -302,7 +302,7 @@ export function useApplications(
           setError(result.error || t("errors.generic"));
           toast.error(
             t("applications.withdrawApplicationFailed", {
-              message: result.error,
+              message: result.error ?? "Unknown error",
             }),
           );
           return;

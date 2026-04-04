@@ -164,7 +164,7 @@ export function JobFilters({
           </Label>
           <Select
             value={localFilters.positionType || "all"}
-            onValueChange={handlePositionChange}
+            onValueChange={(value) => handlePositionChange(value as string)}
           >
             <SelectTrigger id="position-type">
               <SelectValue placeholder={t("jobs.allPositions")} />

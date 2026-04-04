@@ -93,7 +93,7 @@ export default function BusinessWalletPage() {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("businesses")
         .select("*")
         .eq("user_id", user.id)
@@ -149,7 +149,7 @@ export default function BusinessWalletPage() {
           return;
         }
 
-        setTransactions(result.data);
+        setTransactions(result.data as any);
       } finally {
         setIsLoadingTransactions(false);
       }
@@ -548,7 +548,7 @@ export default function BusinessWalletPage() {
                             {formatCurrency(transaction.amount)}
                           </TableCell>
                           <TableCell>
-                            {formatCurrency(transaction.fee_amount)}
+                            {formatCurrency(transaction.fee_amount ?? 0)}
                           </TableCell>
                           <TableCell>
                             <Badge

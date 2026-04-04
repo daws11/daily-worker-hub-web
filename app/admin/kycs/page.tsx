@@ -115,7 +115,8 @@ export default function KycsPage({ className, ...props }: KycsPageProps) {
   );
 
   const handleStatusFilter = React.useCallback(
-    (value: string) => {
+    (value: string | null) => {
+      if (!value) return;
       setFilters((prev) => ({
         ...prev,
         status:

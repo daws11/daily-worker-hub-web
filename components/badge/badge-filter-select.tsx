@@ -63,7 +63,7 @@ export function BadgeFilterSelect({
         onOpenChange={setIsOpen}
         disabled={disabled || availableBadges.length === 0}
         value=""
-        onValueChange={handleSelectBadge}
+        onValueChange={(value) => handleSelectBadge(value as string)}
       >
         <SelectTrigger ref={triggerRef}>
           <SelectValue placeholder={placeholder} />

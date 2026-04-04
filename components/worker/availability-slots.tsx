@@ -71,8 +71,9 @@ export function AvailabilitySlot({
     onTimeChange(newStart, newEnd);
   };
 
-  const handleStartChange = (value: number[]) => {
-    let newStart = Math.round(value[0]);
+  const handleStartChange = (value: number | readonly number[]) => {
+    const arr = Array.isArray(value) ? value : [value];
+    let newStart = Math.round(arr[0]);
 
     // Ensure end is at least MIN_BLOCK_HOURS after start
     if (newStart + MIN_BLOCK_HOURS > localEnd) {
@@ -83,8 +84,9 @@ export function AvailabilitySlot({
     validateAndUpdate(newStart, localEnd);
   };
 
-  const handleEndChange = (value: number[]) => {
-    let newEnd = Math.round(value[0]);
+  const handleEndChange = (value: number | readonly number[]) => {
+    const arr = Array.isArray(value) ? value : [value];
+    let newEnd = Math.round(arr[0]);
 
     // Ensure end is at least MIN_BLOCK_HOURS after start
     if (newEnd - MIN_BLOCK_HOURS < localStart) {

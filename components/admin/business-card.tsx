@@ -133,7 +133,7 @@ function BusinessCard({
               <CardTitle className="text-xl">{business.name}</CardTitle>
               <CardDescription className="flex items-center gap-2">
                 <Building2 className="h-3.5 w-3.5" />
-                {getBusinessTypeLabel(business.business_type)}
+                {getBusinessTypeLabel(business.business_type ?? "")}
               </CardDescription>
             </div>
             <VerificationBadge status={business.verification_status as "pending" | "verified" | "rejected"} />

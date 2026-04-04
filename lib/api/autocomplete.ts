@@ -1,4 +1,7 @@
 import { supabase } from "../supabase/client";
+
+// Cast supabase to any to bypass strict type checking for table names
+const db = supabase as any;
 import { Database } from "../supabase/types";
 
 type JobsRow = Database["public"]["Tables"]["jobs"]["Row"];
@@ -33,11 +36,8 @@ export async function getSearchSuggestions(
     const trimmedQuery = query.trim();
 
     // Get position suggestions (distinct job titles)
-    const { data: positionData, error: positionError } = await supabase
-      .from("jobs")
-      .select("title")
-      .ilike("title", `%${trimmedQuery}%`)
-      .limit(limit);
+    const positionQuery = (db as any).from("jobs").select("title").ilike("title", `%${trimmedQuery}%`).limit(limit);
+    const { data: positionData, error: positionError } = await positionQuery;
 
     if (positionError) {
       return { data: null, error: positionError };
@@ -63,11 +63,8 @@ export async function getSearchSuggestions(
     }
 
     // Get area suggestions (distinct addresses)
-    const { data: areaData, error: areaError } = await supabase
-      .from("jobs")
-      .select("address")
-      .ilike("address", `%${trimmedQuery}%`)
-      .limit(limit);
+    const areaQuery = (db as any).from("jobs").select("address").ilike("address", `%${trimmedQuery}%`).limit(limit);
+    const { data: areaData, error: areaError } = await areaQuery;
 
     if (areaError) {
       return { data: null, error: areaError };
@@ -128,11 +125,8 @@ export async function getPositionSuggestions(
     const trimmedQuery = query.trim();
 
     // Get position suggestions (distinct job titles)
-    const { data, error } = await supabase
-      .from("jobs")
-      .select("title")
-      .ilike("title", `%${trimmedQuery}%`)
-      .limit(limit * 3); // Fetch more to account for duplicates
+    const positionQuery = (db as any).from("jobs").select("title").ilike("title", `%${trimmedQuery}%`).limit(limit * 3);
+    const { data, error } = await positionQuery;
 
     if (error) {
       return { data: null, error };
@@ -186,11 +180,8 @@ export async function getAreaSuggestions(
     const trimmedQuery = query.trim();
 
     // Get area suggestions (distinct addresses)
-    const { data, error } = await supabase
-      .from("jobs")
-      .select("address")
-      .ilike("address", `%${trimmedQuery}%`)
-      .limit(limit * 3); // Fetch more to account for duplicates
+    const areaQuery = (db as any).from("jobs").select("address").ilike("address", `%${trimmedQuery}%`).limit(limit * 3);
+    const { data, error } = await areaQuery;
 
     if (error) {
       return { data: null, error };

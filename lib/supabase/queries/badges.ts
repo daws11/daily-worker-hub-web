@@ -42,7 +42,7 @@ type WorkerBadgeWithRelations = WorkerBadgesRow & {
 export async function getBadges(
   category?: BadgeCategory,
 ): Promise<BadgesRow[]> {
-  let query = supabase
+  let query = (supabase as any)
     .from("badges")
     .select("*")
     .order("name", { ascending: true });
@@ -57,7 +57,7 @@ export async function getBadges(
     throw new Error(`Failed to fetch badges: ${error.message}`);
   }
 
-  return data || [];
+  return (data || []) as BadgesRow[];
 }
 
 /**
@@ -66,7 +66,7 @@ export async function getBadges(
 export async function getBadgeById(
   badgeId: string,
 ): Promise<BadgeWithRelations | null> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("badges")
     .select(
       `
@@ -84,7 +84,7 @@ export async function getBadgeById(
     throw new Error(`Failed to fetch badge: ${error.message}`);
   }
 
-  return data;
+  return data as BadgeWithRelations | null;
 }
 
 /**
@@ -94,7 +94,7 @@ export async function getWorkerBadges(
   workerId: string,
   status?: BadgeVerificationStatus,
 ): Promise<WorkerBadgeWithRelations[]> {
-  let query = supabase
+  let query = (supabase as any)
     .from("worker_badges")
     .select(
       `
@@ -108,7 +108,7 @@ export async function getWorkerBadges(
     .order("created_at", { ascending: false });
 
   if (status) {
-    query = query.eq("verification_status", status);
+    query = query.eq("verification_status", status as any);
   }
 
   const { data, error } = await query;
@@ -128,7 +128,7 @@ export async function requestBadge(
   badgeId: string,
 ): Promise<WorkerBadgesRow> {
   // Check if worker already has this badge
-  const { data: existing } = await supabase
+  const { data: existing } = await (supabase as any)
     .from("worker_badges")
     .select("*")
     .eq("worker_id", workerId)
@@ -139,7 +139,7 @@ export async function requestBadge(
     throw new Error("Worker already has this badge");
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("worker_badges")
     .insert({
       worker_id: workerId,
@@ -194,7 +194,7 @@ export async function getWorkersByBadge(
   badgeId: string,
   status: BadgeVerificationStatus = "verified",
 ): Promise<any[]> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("worker_badges")
     .select(
       `
@@ -203,7 +203,7 @@ export async function getWorkersByBadge(
     `,
     )
     .eq("badge_id", badgeId)
-    .eq("verification_status", status)
+    .eq("verification_status", status as any)
     .order("verified_at", { ascending: false });
 
   if (error) {
@@ -219,7 +219,7 @@ export async function getWorkersByBadge(
 export async function createBadge(
   badgeData: Omit<BadgesInsert, "id" | "created_at">,
 ): Promise<BadgesRow> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("badges")
     .insert(badgeData)
     .select()
@@ -239,7 +239,7 @@ export async function updateBadge(
   badgeId: string,
   updates: BadgesUpdate,
 ): Promise<BadgesRow> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("badges")
     .update(updates)
     .eq("id", badgeId)
@@ -257,7 +257,10 @@ export async function updateBadge(
  * Delete a badge
  */
 export async function deleteBadge(badgeId: string): Promise<void> {
-  const { error } = await supabase.from("badges").delete().eq("id", badgeId);
+  const { error } = await (supabase as any)
+    .from("badges")
+    .delete()
+    .eq("id", badgeId);
 
   if (error) {
     throw new Error(`Failed to delete badge: ${error.message}`);
@@ -270,7 +273,7 @@ export async function deleteBadge(badgeId: string): Promise<void> {
 export async function getPendingBadgeVerifications(
   businessId: string,
 ): Promise<WorkerBadgeWithRelations[]> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("worker_badges")
     .select(
       `
@@ -279,7 +282,7 @@ export async function getPendingBadgeVerifications(
       worker:workers(id, full_name, avatar_url)
     `,
     )
-    .eq("verification_status", "pending")
+    .eq("verification_status", "pending" as any)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -301,7 +304,7 @@ export async function searchBadges(
   category?: BadgeCategory,
   limit: number = 20,
 ): Promise<BadgesRow[]> {
-  let query = supabase
+  let query = (supabase as any)
     .from("badges")
     .select("*")
     .or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`)
@@ -318,7 +321,7 @@ export async function searchBadges(
     throw new Error(`Failed to search badges: ${error.message}`);
   }
 
-  return data || [];
+  return (data || []) as BadgesRow[];
 }
 
 /**
@@ -327,7 +330,7 @@ export async function searchBadges(
 export async function getBadgesByProvider(
   providerId: string,
 ): Promise<BadgesRow[]> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("badges")
     .select("*")
     .eq("provider_id", providerId)
@@ -337,7 +340,7 @@ export async function getBadgesByProvider(
     throw new Error(`Failed to fetch provider badges: ${error.message}`);
   }
 
-  return data || [];
+  return (data || []) as BadgesRow[];
 }
 
 /**

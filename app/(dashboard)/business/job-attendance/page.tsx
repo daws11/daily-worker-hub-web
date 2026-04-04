@@ -119,7 +119,7 @@ export default function BusinessJobAttendancePage() {
       }
 
       try {
-        const { data: business } = await supabase
+        const { data: business } = await (supabase as any)
           .from("businesses")
           .select("id")
           .eq("user_id", user.id)

@@ -60,7 +60,7 @@ export default function WorkerBadgesPage() {
 
       setIsLoadingWorker(true);
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("workers")
         .select("*")
         .eq("user_id", user.id)
@@ -88,7 +88,7 @@ export default function WorkerBadgesPage() {
       try {
         // Fetch worker badges with badge details
         const { data: workerBadgesData, error: workerBadgesError } =
-          await supabase
+          await (supabase as any)
             .from("worker_badges" as any)
             .select(
               `
@@ -132,7 +132,7 @@ export default function WorkerBadgesPage() {
     try {
       // Re-fetch worker badges
       const { data: workerBadgesData, error: workerBadgesError } =
-        await supabase
+        await (supabase as any)
           .from("worker_badges" as any)
           .select(
             `
@@ -231,29 +231,29 @@ export default function WorkerBadgesPage() {
   );
 
   // Transform worker badges to BadgeWithStatus for BadgeGrid
-  const verifiedBadgesWithStatus: BadgeWithStatus[] = verifiedBadges.map(
+  const verifiedBadgesWithStatus = verifiedBadges.map(
     (wb) => ({
       ...wb.badge,
       verificationStatus: wb.verification_status,
       verifiedAt: wb.verified_at,
     }),
-  );
+  ) as BadgeWithStatus[];
 
-  const pendingBadgesWithStatus: BadgeWithStatus[] = pendingBadges.map(
+  const pendingBadgesWithStatus = pendingBadges.map(
     (wb) => ({
       ...wb.badge,
       verificationStatus: wb.verification_status,
       verifiedAt: wb.verified_at,
     }),
-  );
+  ) as BadgeWithStatus[];
 
-  const rejectedBadgesWithStatus: BadgeWithStatus[] = rejectedBadges.map(
+  const rejectedBadgesWithStatus = rejectedBadges.map(
     (wb) => ({
       ...wb.badge,
       verificationStatus: wb.verification_status,
       verifiedAt: wb.verified_at,
     }),
-  );
+  ) as BadgeWithStatus[];
 
   return (
     <div className="min-h-screen bg-muted p-4 pb-24 md:pb-4">
@@ -536,7 +536,7 @@ export default function WorkerBadgesPage() {
             {worker && (
               <BadgeVerificationForm
                 workerId={worker.id}
-                availableBadges={availableBadges}
+                availableBadges={availableBadges as any}
                 onSuccess={handleBadgeRequestSuccess}
               />
             )}

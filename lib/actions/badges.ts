@@ -226,7 +226,7 @@ export async function getBadgeProgress(
         currentCount,
         requiredCount,
         isEarned: earnedBadgeIds.has(badge.id),
-        verificationStatus: badgeStatusMap.get(badge.id),
+        verificationStatus: badgeStatusMap.get(badge.id) ?? undefined,
       };
     });
 

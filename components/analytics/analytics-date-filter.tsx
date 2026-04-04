@@ -81,8 +81,8 @@ export function AnalyticsDateFilter({
   const [localDateRange, setLocalDateRange] = useState<DateRange>(
     dateRange || getDateRangeFromPreset("30d"),
   );
-  const [fromDate, setFromDate] = useState<string>(localDateRange.from);
-  const [toDate, setToDate] = useState<string>(localDateRange.to);
+  const [fromDate, setFromDate] = useState<string>(localDateRange.from || "");
+  const [toDate, setToDate] = useState<string>(localDateRange.to || "");
   const [selectedPreset, setSelectedPreset] = useState<SelectedPreset>(
     localDateRange.preset || "30d",
   );
@@ -91,8 +91,8 @@ export function AnalyticsDateFilter({
   useEffect(() => {
     if (dateRange) {
       setLocalDateRange(dateRange);
-      setFromDate(dateRange.from);
-      setToDate(dateRange.to);
+      setFromDate(dateRange.from || "");
+      setToDate(dateRange.to || "");
       if (dateRange.preset) {
         setSelectedPreset(dateRange.preset);
       } else {
@@ -106,8 +106,8 @@ export function AnalyticsDateFilter({
     setSelectedPreset(preset);
     const newDateRange = getDateRangeFromPreset(preset);
     setLocalDateRange(newDateRange);
-    setFromDate(newDateRange.from);
-    setToDate(newDateRange.to);
+    setFromDate(newDateRange.from || "");
+    setToDate(newDateRange.to || "");
     onDateRangeChange(newDateRange);
   };
 
@@ -138,8 +138,8 @@ export function AnalyticsDateFilter({
   const handleClearDates = () => {
     const clearedDateRange = getDateRangeFromPreset("all");
     setLocalDateRange(clearedDateRange);
-    setFromDate(clearedDateRange.from);
-    setToDate(clearedDateRange.to);
+    setFromDate(clearedDateRange.from || "");
+    setToDate(clearedDateRange.to || "");
     setSelectedPreset("all");
     onDateRangeChange(clearedDateRange);
   };
@@ -176,7 +176,7 @@ export function AnalyticsDateFilter({
           </Label>
           <Select
             value={selectedPreset === "custom" ? "custom" : selectedPreset}
-            onValueChange={handlePresetChange}
+            onValueChange={handlePresetChange as any}
           >
             <SelectTrigger id="date-preset">
               <SelectValue placeholder="Pilih periode" />

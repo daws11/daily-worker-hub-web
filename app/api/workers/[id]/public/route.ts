@@ -71,7 +71,7 @@ async function fetchWorkerProfile(workerId: string) {
 
   const skills =
     workerSkills
-      ?.map((ws) => ({
+      ?.map((ws: { skills?: { id: string; name: string; slug: string } | null }) => ({
         id: ws.skills?.id,
         name: ws.skills?.name,
         slug: ws.skills?.slug,
@@ -162,14 +162,14 @@ async function fetchWorkerProfile(workerId: string) {
     .eq("worker_id", workerId);
 
   const achievementBadgeTypes = new Set(
-    achievementBadges?.map((ab) => ab.badge_type) || [],
+    achievementBadges?.map((ab: { badge_type: string }) => ab.badge_type) || [],
   );
 
   const earnedAchievements: BadgeWithProgress[] = BADGE_DEFINITIONS.filter(
     (badge) => achievementBadgeTypes.has(badge.type),
   ).map((badge) => {
     const earned = achievementBadges?.find(
-      (ab) => ab.badge_type === badge.type,
+      (ab: { badge_type: string }) => ab.badge_type === badge.type,
     );
     return {
       ...badge,

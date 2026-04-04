@@ -279,8 +279,8 @@ export default function BusinessApplicantsPage() {
       }
 
       // Store booking ID if accepted
-      if (newStatus === "accepted" && result.data?.booking?.id) {
-        const bookingId = result.data.booking.id;
+      if (newStatus === "accepted" && (result.data as any)?.booking?.id) {
+        const bookingId = (result.data as any).booking.id;
         setBookingIds((prev) => ({ ...prev, [applicationId]: bookingId }));
 
         // Show success toast
@@ -450,7 +450,7 @@ export default function BusinessApplicantsPage() {
         {/* Filter */}
         <div className="flex items-center gap-3 mb-6">
           <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter || "all"} onValueChange={(v) => setStatusFilter(v || "all")}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filter status" />
             </SelectTrigger>

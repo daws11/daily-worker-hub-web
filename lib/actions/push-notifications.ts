@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 declare const process: { env: Record<string, string | undefined> };
 
 import { createClient } from "../supabase/server";

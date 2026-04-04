@@ -91,7 +91,7 @@ describe("Wallet Actions", () => {
 
       vi.mocked(createClient).mockResolvedValue({
         from: mockFrom,
-      } as unknown as ReturnType<typeof createClient>);
+      } as any);
 
       const result = await createWalletAction("user-123");
 
@@ -113,7 +113,7 @@ describe("Wallet Actions", () => {
 
       vi.mocked(createClient).mockResolvedValue({
         from: mockFrom,
-      } as unknown as ReturnType<typeof createClient>);
+      } as any);
 
       const result = await createWalletAction("user-123");
 
@@ -135,7 +135,7 @@ describe("Wallet Actions", () => {
 
       vi.mocked(createClient).mockResolvedValue({
         from: mockFrom,
-      } as unknown as ReturnType<typeof createClient>);
+      } as any);
 
       const result = await createWalletAction("user-123");
 
@@ -165,7 +165,7 @@ describe("Wallet Actions", () => {
 
       vi.mocked(createClient).mockResolvedValue({
         from: mockFrom,
-      } as unknown as ReturnType<typeof createClient>);
+      } as any);
 
       const result = await createWalletAction("user-123");
 
@@ -191,7 +191,7 @@ describe("Wallet Actions", () => {
 
       vi.mocked(createClient).mockResolvedValue({
         from: mockFrom,
-      } as unknown as ReturnType<typeof createClient>);
+      } as any);
 
       const result = await getWalletBalanceAction("user-123");
 
@@ -216,7 +216,7 @@ describe("Wallet Actions", () => {
 
       vi.mocked(createClient).mockResolvedValue({
         from: mockFrom,
-      } as unknown as ReturnType<typeof createClient>);
+      } as any);
 
       const result = await getWalletBalanceAction("user-123");
 
@@ -251,7 +251,7 @@ describe("Wallet Actions", () => {
 
       vi.mocked(createClient).mockResolvedValue({
         from: mockFrom,
-      } as unknown as ReturnType<typeof createClient>);
+      } as any);
 
       const result = await getOrCreateWalletAction("user-123");
 
@@ -273,7 +273,7 @@ describe("Wallet Actions", () => {
 
       vi.mocked(createClient).mockResolvedValue({
         from: mockFrom,
-      } as unknown as ReturnType<typeof createClient>);
+      } as any);
 
       const result = await getOrCreateWalletAction("user-123");
 

@@ -177,7 +177,7 @@ export async function GET(request: NextRequest) {
     // Apply pagination
     const paginatedConversations = conversations?.slice(offset, offset + limit) || [];
 
-    const totalUnread = (conversations || []).reduce((sum, conv) => {
+    const totalUnread = (conversations || []).reduce((sum: number, conv: any) => {
       // Determine which unread count applies to this user
       const isWorker = conv.worker_id === user.id;
       return sum + (isWorker ? conv.unread_worker_count : conv.unread_business_count);

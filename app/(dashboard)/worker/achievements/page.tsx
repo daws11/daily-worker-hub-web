@@ -56,7 +56,7 @@ export default function WorkerAchievementsPage() {
 
       setIsLoadingWorker(true);
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("workers")
         .select("*")
         .eq("user_id", user.id)
@@ -114,35 +114,35 @@ export default function WorkerAchievementsPage() {
 
       try {
         // Get completed bookings count
-        const { count: completedJobs } = await supabase
+        const { count: completedJobs } = await (supabase as any)
           .from("bookings")
           .select("*", { count: "exact", head: true })
           .eq("worker_id", worker.id)
           .eq("status", "completed");
 
         // Get reviews
-        const { data: reviews } = await supabase
+        const { data: reviews } = await (supabase as any)
           .from("reviews")
           .select("rating")
           .eq("worker_id", worker.id);
 
         const validRatings =
-          reviews?.filter((r) => r.rating !== null).map((r) => r.rating) || [];
+          (reviews as any[])?.filter((r: any) => r.rating !== null).map((r: any) => r.rating) || [];
         const averageRating =
           validRatings.length > 0
-            ? validRatings.reduce((a, b) => a + b, 0) / validRatings.length
+            ? validRatings.reduce((a: number, b: number) => a + b, 0) / validRatings.length
             : null;
 
         // Get attendance
-        const { data: bookings } = await supabase
+        const { data: bookings } = await (supabase as any)
           .from("bookings")
           .select("id, check_in_at")
           .eq("worker_id", worker.id)
           .eq("status", "completed");
 
-        const completedBookings = bookings || [];
+        const completedBookings = (bookings as any[]) || [];
         const bookingsWithCheckIn = completedBookings.filter(
-          (b) => b.check_in_at,
+          (b: any) => b.check_in_at,
         );
         const attendanceRate =
           completedBookings.length > 0

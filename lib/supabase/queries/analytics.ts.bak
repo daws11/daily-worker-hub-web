@@ -338,8 +338,8 @@ export async function getAnalyticsDashboard(params?: {
   start_date?: string;
   end_date?: string;
 }) {
-  const start_date = params?.start_date;
-  const end_date = params?.end_date;
+  const start_date = params?.start_date || null;
+  const end_date = params?.end_date || null;
 
   // Fetch all time-series metrics in parallel for better performance
   const [
@@ -471,28 +471,84 @@ export async function getPlatformMetrics(): Promise<{
       { count: pendingBusinessVerifications },
       { count: pendingKYCVerifications },
     ] = await Promise.all([
-      (supabase as any).from("users").select("*", { count: "exact", head: true }),
-      (supabase as any).from("users").select("*", { count: "exact", head: true }).eq("role", "worker"),
-      (supabase as any).from("users").select("*", { count: "exact", head: true }).eq("role", "business"),
-      (supabase as any).from("users").select("*", { count: "exact", head: true }).eq("role", "admin"),
-      (supabase as any).from("users").select("*", { count: "exact", head: true }).gte("created_at", oneWeekAgo.toISOString()),
-      (supabase as any).from("users").select("*", { count: "exact", head: true }).gte("created_at", oneMonthAgo.toISOString()),
-      (supabase as any).from("jobs").select("*", { count: "exact", head: true }),
-      (supabase as any).from("jobs").select("*", { count: "exact", head: true }).eq("status", "open"),
-      (supabase as any).from("jobs").select("*", { count: "exact", head: true }).eq("status", "completed"),
-      (supabase as any).from("jobs").select("*", { count: "exact", head: true }).eq("status", "cancelled"),
-      (supabase as any).from("jobs").select("*", { count: "exact", head: true }).gte("created_at", oneWeekAgo.toISOString()),
-      (supabase as any).from("jobs").select("*", { count: "exact", head: true }).gte("created_at", oneMonthAgo.toISOString()),
-      (supabase as any).from("bookings").select("*", { count: "exact", head: true }),
-      (supabase as any).from("bookings").select("*", { count: "exact", head: true }).eq("status", "pending"),
-      (supabase as any).from("bookings").select("*", { count: "exact", head: true }).eq("status", "in_progress"),
-      (supabase as any).from("bookings").select("*", { count: "exact", head: true }).eq("status", "completed"),
-      (supabase as any).from("bookings").select("*", { count: "exact", head: true }).eq("status", "cancelled"),
-      (supabase as any).from("bookings").select("*", { count: "exact", head: true }).gte("created_at", oneWeekAgo.toISOString()),
-      (supabase as any).from("bookings").select("*", { count: "exact", head: true }).gte("created_at", oneMonthAgo.toISOString()),
-      (supabase as any).from("businesses").select("*", { count: "exact", head: true }).eq("verification_status", "pending"),
-      (supabase as any).from("kyc_verifications").select("*", { count: "exact", head: true }).eq("status", "pending"),
-    ]) as any;
+      supabase.from("users").select("*", { count: "exact", head: true }),
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .eq("role", "worker"),
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .eq("role", "business"),
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        // @ts-ignore - admin role may not be in Database type enum
+        .eq("role", "admin" as any),
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneWeekAgo.toISOString()),
+      supabase
+        .from("users")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneMonthAgo.toISOString()),
+      supabase.from("jobs").select("*", { count: "exact", head: true }),
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "open"),
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "completed"),
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "cancelled"),
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneWeekAgo.toISOString()),
+      supabase
+        .from("jobs")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneMonthAgo.toISOString()),
+      supabase.from("bookings").select("*", { count: "exact", head: true }),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending"),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "in_progress"),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "completed"),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "cancelled"),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneWeekAgo.toISOString()),
+      supabase
+        .from("bookings")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", oneMonthAgo.toISOString()),
+      supabase
+        .from("businesses")
+        .select("*", { count: "exact", head: true })
+        .eq("verification_status", "pending"),
+      (supabase
+        // @ts-ignore - kyc_verifications table not in Database types yet
+        .from("kyc_verifications") as any)
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending"),
+    ]);
 
     return {
       users: {

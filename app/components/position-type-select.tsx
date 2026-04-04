@@ -17,7 +17,7 @@ export type PositionType = (typeof POSITION_TYPES)[number]["value"];
 
 export interface PositionTypeSelectProps {
   value?: PositionType;
-  onChange?: (value: PositionType) => void;
+  onChange?: (value: PositionType | null) => void;
   error?: string;
   label?: string;
   placeholder?: string;
@@ -44,8 +44,8 @@ export const PositionTypeSelect = React.forwardRef<
     },
     ref,
   ) => {
-    const handleValueChange = (newValue: string) => {
-      if (onChange) {
+    const handleValueChange = (newValue: string | null) => {
+      if (onChange && newValue !== null) {
         onChange(newValue as PositionType);
       }
     };

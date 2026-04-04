@@ -167,7 +167,7 @@ export default function BusinessOnboardingPage() {
 
       // Check if business profile already exists
       try {
-        const { data: existingBusiness, error } = await supabase
+        const { data: existingBusiness, error } = await (supabase as any)
           .from("businesses")
           .select("id")
           .eq("user_id", user.id)

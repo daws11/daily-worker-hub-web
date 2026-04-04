@@ -292,10 +292,10 @@ export const DELETE = withRateLimit(
       requestId,
       cleared,
       namespace,
-      key,
-      workerId,
-      jobId,
-      userId,
+      key: key ?? undefined,
+      workerId: workerId ?? undefined,
+      jobId: jobId ?? undefined,
+      userId: userId ?? undefined,
     });
 
     logger.requestSuccess(

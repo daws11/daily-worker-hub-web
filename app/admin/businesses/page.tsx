@@ -97,11 +97,11 @@ export default function BusinessesPage({
   );
 
   const handleStatusFilter = React.useCallback(
-    (value: string) => {
+    (value: string | null) => {
       setFilters((prev) => ({
         ...prev,
         verificationStatus:
-          value === "all"
+          !value || value === "all"
             ? undefined
             : (value as "pending" | "verified" | "rejected"),
       }));
@@ -111,11 +111,11 @@ export default function BusinessesPage({
   );
 
   const handleBusinessTypeFilter = React.useCallback(
-    (value: string) => {
+    (value: string | null) => {
       setFilters((prev) => ({
         ...prev,
         businessType:
-          value === "all"
+          !value || value === "all"
             ? undefined
             : (value as
                 | "hotel"

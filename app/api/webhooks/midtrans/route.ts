@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
         requestId,
       });
 
-      return errorResponse(500, result.error, request);
+      return errorResponse(500, result.error ?? "Unknown error", request);
     }
 
     routeLogger.info("Midtrans webhook processed successfully", {
@@ -311,7 +311,7 @@ async function processWebhook(
     if (payload.status === "paid") {
       const creditResult = await creditWallet(
         supabase,
-        transaction.business_id,
+        transaction.business_id as string,
         transaction.amount - (transaction.fee_amount || 0),
         transaction.id,
       );

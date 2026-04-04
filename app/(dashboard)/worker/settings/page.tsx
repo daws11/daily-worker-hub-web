@@ -251,7 +251,7 @@ function WorkerSettingsContent() {
       setIsLoading(true);
       try {
         // Fetch worker data
-        const { data: worker } = await supabase
+        const { data: worker } = await (supabase as any)
           .from("workers")
           .select("id, tier, jobs_completed, rating")
           .eq("user_id", user.id)
@@ -265,7 +265,7 @@ function WorkerSettingsContent() {
           });
 
           // Fetch availability
-          const { data: availability } = await supabase
+          const { data: availability } = await (supabase as any)
             .from("worker_availabilities")
             .select("*")
             .eq("worker_id", worker.id)

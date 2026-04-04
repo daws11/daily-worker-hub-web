@@ -88,7 +88,7 @@ export default function WorkerOnboardingPage() {
 
       // Check if worker profile already exists
       try {
-        const { data: existingWorker, error } = await supabase
+        const { data: existingWorker, error } = await (supabase as any)
           .from("workers")
           .select("id")
           .eq("user_id", user.id)

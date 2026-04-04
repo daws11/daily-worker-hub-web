@@ -88,7 +88,8 @@ export default function WorkersPage({ className, ...props }: WorkersPageProps) {
   );
 
   const handleKycStatusFilter = React.useCallback(
-    (value: string) => {
+    (value: string | null) => {
+      if (!value) return;
       setFilters((prev) => ({
         ...prev,
         kycStatus:

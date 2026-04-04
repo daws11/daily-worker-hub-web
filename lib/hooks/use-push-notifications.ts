@@ -108,7 +108,7 @@ export function usePushNotifications(
 
       try {
         const registration = await navigator.serviceWorker.getRegistration();
-        return registration;
+        return registration ?? null;
       } catch {
         return null;
       }

@@ -306,7 +306,7 @@ export default function BusinessMessagesPage() {
                         {/* Avatar */}
                         <Avatar className="h-10 w-10 sm:h-12 sm:w-12 shrink-0">
                           <AvatarImage
-                            src={otherUser.avatar_url}
+                            src={otherUser.avatar_url || ""}
                             alt={otherUser.full_name}
                           />
                           <AvatarFallback>

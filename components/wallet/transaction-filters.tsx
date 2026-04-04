@@ -149,7 +149,7 @@ export function TransactionFilters({
           </Label>
           <Select
             value={localFilters.type || "all"}
-            onValueChange={handleTypeChange}
+            onValueChange={(value) => handleTypeChange(value as string)}
           >
             <SelectTrigger id="transaction-type">
               <SelectValue placeholder="All types" />

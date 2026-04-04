@@ -173,7 +173,7 @@ export function SkillsReview({
             <Briefcase className="absolute left-3 top-3 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
             <Select
               value={primaryCategory}
-              onValueChange={setPrimaryCategory}
+              onValueChange={(value) => setPrimaryCategory(value as string)}
               disabled={categoriesLoading}
             >
               <SelectTrigger className="pl-9">

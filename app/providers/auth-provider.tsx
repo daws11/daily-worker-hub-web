@@ -87,10 +87,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("users")
         .select("role")
-        .eq("id", user.id)
+        .eq("id", user.id as any)
         .single();
 
       if (error) {
@@ -249,10 +249,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Fetch user role from database (more reliable than form input)
-      const { data: userData, error: userError } = await supabase
+      const { data: userData, error: userError } = await (supabase as any)
         .from("users")
         .select("role")
-        .eq("id", data.user.id)
+        .eq("id", data.user.id as any)
         .single();
 
       // Be more defensive - if query fails, default to the role parameter
@@ -269,18 +269,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         );
 
         // Auto-create missing user record in public.users
-        const { error: createError } = await (
-          supabase.from("users") as any
-        ).insert({
-          id: data.user.id,
-          email: data.user.email!,
-          full_name:
-            data.user.user_metadata?.full_name ||
-            data.user.email!.split("@")[0],
-          role: role,
-          phone: "",
-          avatar_url: "",
-        });
+        // @ts-ignore - Supabase insert typing issue
+        const { error: createError } = await (supabase as any)
+          .from("users")
+          .insert({
+            id: data.user.id as any,
+            email: data.user.email!,
+            full_name:
+              data.user.user_metadata?.full_name ||
+              data.user.email!.split("@")[0],
+            role: role,
+            phone: "",
+            avatar_url: "",
+          });
 
         if (createError) {
           console.error(

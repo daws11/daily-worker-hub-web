@@ -8,6 +8,9 @@
  */
 
 import { supabase } from "@/lib/supabase/client";
+
+// Cast supabase to any to bypass strict type checking for table names
+const db = supabase as any;
 import type { Database } from "@/lib/supabase/types";
 
 type WorkerAvailability =
@@ -105,8 +108,7 @@ export function validateAvailabilityBlock(
 export async function getWorkerAvailability(
   workerId: string,
 ): Promise<WorkerAvailability[]> {
-  const { data, error } = await supabase
-    .from("worker_availabilities")
+  const { data, error } = await (db.from("worker_availabilities") as any)
     .select("*")
     .eq("worker_id", workerId)
     .order("day_of_week");
@@ -116,7 +118,7 @@ export async function getWorkerAvailability(
     return [];
   }
 
-  return data || [];
+  return (data || []) as WorkerAvailability[];
 }
 
 /**
@@ -130,8 +132,7 @@ export async function getWorkerAvailabilityForDay(
   workerId: string,
   dayOfWeek: number,
 ): Promise<WorkerAvailability | null> {
-  const { data, error } = await supabase
-    .from("worker_availabilities")
+  const { data, error } = await (db.from("worker_availabilities") as any)
     .select("*")
     .eq("worker_id", workerId)
     .eq("day_of_week", dayOfWeek)
@@ -142,7 +143,7 @@ export async function getWorkerAvailabilityForDay(
     return null;
   }
 
-  return data;
+  return data as WorkerAvailability | null;
 }
 
 /**
@@ -197,8 +198,7 @@ export async function batchCheckWorkerAvailability(
   const dayOfWeek = jsDay === 0 ? 7 : jsDay;
 
   // Single batch query for all workers on this day
-  const { data, error } = await supabase
-    .from("worker_availabilities")
+  const { data, error } = await (db.from("worker_availabilities") as any)
     .select("*")
     .in("worker_id", workerIds)
     .eq("day_of_week", dayOfWeek);
@@ -207,7 +207,7 @@ export async function batchCheckWorkerAvailability(
     console.error("Error batch-fetching worker availabilities:", error);
     // On error, treat all workers as unavailable
     return workerIds.reduce(
-      (acc, id) => ({ ...acc, [id]: false }),
+      (acc: Record<string, boolean>, id: string) => ({ ...acc, [id]: false }),
       {} as Record<string, boolean>,
     );
   }
@@ -215,12 +215,12 @@ export async function batchCheckWorkerAvailability(
   // Build lookup map: workerId -> availability record
   const availabilityMap = new Map<string, WorkerAvailability | null>();
   for (const record of data || []) {
-    availabilityMap.set(record.worker_id, record);
+    availabilityMap.set(record.worker_id, record as WorkerAvailability);
   }
 
   // Determine availability for each worker using pure logic
   return workerIds.reduce(
-    (acc, workerId) => {
+    (acc: Record<string, boolean>, workerId: string) => {
       const availability = availabilityMap.get(workerId) ?? null;
       acc[workerId] = checkAvailabilityFit(availability, jobStartHour, jobEndHour);
       return acc;
@@ -334,8 +334,7 @@ export async function getAvailableWorkers(
   jobEndHour: number,
 ): Promise<string[]> {
   // Get all workers with availability for this day
-  const { data, error } = await supabase
-    .from("worker_availabilities")
+  const { data, error } = await (db.from("worker_availabilities") as any)
     .select("worker_id, start_hour, end_hour")
     .eq("day_of_week", dayOfWeek)
     .eq("is_available", true);
@@ -348,12 +347,12 @@ export async function getAvailableWorkers(
   // Filter workers whose availability covers the job time
   const availableWorkers = (data || [])
     .filter(
-      (a) =>
+      (a: any) =>
         a.start_hour <= jobStartHour &&
         a.end_hour >= jobEndHour &&
         jobStartHour < jobEndHour,
     )
-    .map((a) => a.worker_id);
+    .map((a: any) => a.worker_id);
 
   return availableWorkers;
 }
@@ -384,7 +383,7 @@ export async function setWorkerAvailability(
   }
 
   // Upsert the availability record
-  const { error } = await supabase.from("worker_availabilities").upsert(
+  const { error } = await (db.from("worker_availabilities") as any).upsert(
     {
       worker_id: workerId,
       day_of_week: dayOfWeek,
@@ -446,8 +445,7 @@ export async function setWorkerAvailabilityForWeek(
     is_available: av.isAvailable,
   }));
 
-  const { error } = await supabase
-    .from("worker_availabilities")
+  const { error } = await (db.from("worker_availabilities") as any)
     .upsert(records, {
       onConflict: "worker_id,day_of_week",
     });

@@ -1,6 +1,9 @@
 import { supabase } from "./client";
 import type { Database } from "./types";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sb = supabase as any;
+
 type BusinessRow = Database["public"]["Tables"]["businesses"]["Row"];
 type BusinessInsert = any;
 type BusinessUpdate = any;
@@ -14,7 +17,7 @@ export async function getBusinessProfile(
   userId: string,
 ): Promise<{ data: BusinessRow | null; error?: string }> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("businesses")
       .select("*")
       .eq("user_id", userId)
@@ -45,7 +48,7 @@ export async function getBusinessProfileById(
   businessId: string,
 ): Promise<{ data: BusinessRow | null; error?: string }> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("businesses")
       .select("*")
       .eq("id", businessId)
@@ -76,7 +79,7 @@ export async function createBusinessProfile(
   businessData: BusinessInsert,
 ): Promise<{ data: BusinessRow | null; error?: string }> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("businesses")
       .insert(businessData)
       .select()
@@ -109,7 +112,8 @@ export async function updateBusinessProfile(
   businessData: BusinessUpdate,
 ): Promise<{ data: BusinessRow | null; error?: string }> {
   try {
-    const { data, error } = await (supabase.from("businesses") as any)
+    const { data, error } = await sb
+      .from("businesses")
       .update(businessData)
       .eq("id", businessId)
       .select()
@@ -140,7 +144,7 @@ export async function deleteBusinessProfile(
   businessId: string,
 ): Promise<{ error?: string }> {
   try {
-    const { error } = await supabase
+    const { error } = await sb
       .from("businesses")
       .delete()
       .eq("id", businessId);

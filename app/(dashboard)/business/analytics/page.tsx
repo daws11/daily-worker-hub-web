@@ -114,7 +114,7 @@ export default function BusinessAnalyticsPage() {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("businesses")
         .select("*")
         .eq("user_id", user.id)
@@ -139,7 +139,7 @@ export default function BusinessAnalyticsPage() {
       setIsLoadingPosts(true);
       try {
         // First, get all job IDs for this business
-        const { data: jobsData, error: jobsError } = await supabase
+        const { data: jobsData, error: jobsError } = await (supabase as any)
           .from("jobs")
           .select("id")
           .eq("business_id", business.id);
@@ -166,7 +166,7 @@ export default function BusinessAnalyticsPage() {
           return;
         }
 
-        const jobIds = jobsData.map((j) => j.id);
+        const jobIds = (jobsData as any[]).map((j: any) => j.id);
 
         // Now fetch job posts with platform info
         const { data, error } = await (supabase as any)

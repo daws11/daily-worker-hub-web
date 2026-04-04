@@ -45,7 +45,7 @@ export class ErrorBoundary extends Component<
     captureException(error, {
       tags: {
         component: "ErrorBoundary",
-        componentStack: errorInfo.componentStack || undefined,
+        componentStack: errorInfo.componentStack || "",
       },
       extra: {
         componentStack: errorInfo.componentStack,

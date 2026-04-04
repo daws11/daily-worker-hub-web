@@ -217,7 +217,7 @@ export default function AdminCompliancePage() {
       {/* Month Selector */}
       <div className="flex items-center gap-2">
         <Calendar className="h-5 w-5 text-muted-foreground" />
-        <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+        <Select value={selectedMonth} onValueChange={(v) => setSelectedMonth(v as string)}>
           <SelectTrigger className="w-[240px]">
             <SelectValue placeholder="Select month" />
           </SelectTrigger>

@@ -30,29 +30,20 @@ type ReviewResult<T = unknown> = {
   error: { message: string } | null;
 };
 
+const sb = supabase as any;
+
 /**
  * Get reviews for a worker (reviews from businesses)
  */
 export async function getReviewsForWorker(workerId: string): Promise<ReviewResult<ReviewWithDetails[]>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("reviews")
-      .select(
-        `
+      .select(`
         *,
-        business:businesses!inner(
-          id,
-          name
-        ),
-        booking:bookings!inner(
-          id,
-          job:jobs!inner(
-            id,
-            title
-          )
-        )
-      `,
-      )
+        business:businesses!inner(id, name),
+        booking:bookings!inner(id, job:jobs!inner(id, title))
+      `)
       .eq("worker_id", workerId)
       .eq("reviewer", "business")
       .order("created_at", { ascending: false });
@@ -74,25 +65,13 @@ export async function getReviewsForWorker(workerId: string): Promise<ReviewResul
  */
 export async function getReviewsForBusiness(businessId: string): Promise<ReviewResult<ReviewWithDetails[]>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("reviews")
-      .select(
-        `
+      .select(`
         *,
-        worker:workers!inner(
-          id,
-          full_name,
-          avatar_url
-        ),
-        booking:bookings!inner(
-          id,
-          job:jobs!inner(
-            id,
-            title
-          )
-        )
-      `,
-      )
+        worker:workers!inner(id, full_name, avatar_url),
+        booking:bookings!inner(id, job:jobs!inner(id, title))
+      `)
       .eq("business_id", businessId)
       .eq("reviewer", "worker")
       .order("created_at", { ascending: false });
@@ -118,7 +97,7 @@ export async function getReviewByBookingAndType(
   reviewerType: "business" | "worker",
 ): Promise<ReviewResult<ReviewRow>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("reviews")
       .select("*")
       .eq("booking_id", bookingId)
@@ -145,29 +124,14 @@ export async function getReviewByBookingAndType(
  */
 export async function getReviewById(reviewId: string): Promise<ReviewResult<ReviewWithDetails>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("reviews")
-      .select(
-        `
+      .select(`
         *,
-        worker:workers!inner(
-          id,
-          full_name,
-          avatar_url
-        ),
-        business:businesses!inner(
-          id,
-          name
-        ),
-        booking:bookings!inner(
-          id,
-          job:jobs!inner(
-            id,
-            title
-          )
-        )
-      `,
-      )
+        worker:workers!inner(id, full_name, avatar_url),
+        business:businesses!inner(id, name),
+        booking:bookings!inner(id, job:jobs!inner(id, title))
+      `)
       .eq("id", reviewId)
       .single();
 
@@ -196,7 +160,7 @@ export async function createReview(
   try {
     const { business_id, reviewer, would_rehire, ...validFields } =
       review as ReviewInsert & { business_id?: string; reviewer?: string; would_rehire?: boolean };
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("reviews")
       .insert(validFields as Omit<ReviewInsert, "id" | "created_at">)
       .select()
@@ -219,7 +183,7 @@ export async function createReview(
  */
 export async function updateReview(reviewId: string, updates: ReviewUpdate): Promise<ReviewResult<ReviewRow>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("reviews")
       .update(updates)
       .eq("id", reviewId)
@@ -243,7 +207,7 @@ export async function updateReview(reviewId: string, updates: ReviewUpdate): Pro
  */
 export async function deleteReview(reviewId: string): Promise<{ error: { message: string } | null }> {
   try {
-    const { error } = await supabase
+    const { error } = await sb
       .from("reviews")
       .delete()
       .eq("id", reviewId);
@@ -269,7 +233,7 @@ export async function getWorkerAverageRating(workerId: string): Promise<{
   error: { message: string } | null;
 }> {
   try {
-    const { data, error, count } = await supabase
+    const { data, error, count } = await sb
       .from("reviews")
       .select("rating", { count: "exact" })
       .eq("worker_id", workerId)
@@ -284,7 +248,7 @@ export async function getWorkerAverageRating(workerId: string): Promise<{
       return { data: { average: null, count: 0 }, error: null };
     }
 
-    const sum = data.reduce((acc, review) => acc + (review.rating || 0), 0);
+    const sum = data.reduce((acc: number, review: any) => acc + (review.rating || 0), 0);
     const average = sum / data.length;
 
     const result = {
@@ -308,7 +272,7 @@ export async function getBusinessAverageRating(businessId: string): Promise<{
   error: { message: string } | null;
 }> {
   try {
-    const { data, error, count } = await supabase
+    const { data, error, count } = await sb
       .from("reviews")
       .select("rating", { count: "exact" })
       .eq("business_id", businessId)
@@ -323,7 +287,7 @@ export async function getBusinessAverageRating(businessId: string): Promise<{
       return { data: { average: null, count: 0 }, error: null };
     }
 
-    const sum = data.reduce((acc, review) => acc + (review.rating || 0), 0);
+    const sum = data.reduce((acc: number, review: any) => acc + (review.rating || 0), 0);
     const average = sum / data.length;
 
     const result = {
@@ -351,7 +315,7 @@ export async function getWorkerRatingBreakdown(workerId: string): Promise<{
   error: { message: string } | null;
 }> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await sb
       .from("reviews")
       .select("rating")
       .eq("worker_id", workerId)
@@ -371,7 +335,7 @@ export async function getWorkerRatingBreakdown(workerId: string): Promise<{
     };
 
     if (data) {
-      data.forEach((review) => {
+      data.forEach((review: { rating?: number }) => {
         const rating = review.rating || 0;
         if (rating >= 1 && rating <= 5) {
           breakdown[rating as keyof typeof breakdown]++;
@@ -404,7 +368,7 @@ export async function getWorkerRehireRate(workerId: string): Promise<{
   error: { message: string } | null;
 }> {
   try {
-    const { data, error, count } = await supabase
+    const { data, error, count } = await sb
       .from("reviews")
       .select("would_rehire", { count: "exact" })
       .eq("worker_id", workerId)
@@ -421,7 +385,7 @@ export async function getWorkerRehireRate(workerId: string): Promise<{
     }
 
     const wouldRehireCount = data.filter(
-      (review) => review.would_rehire === true,
+      (review: { would_rehire?: boolean }) => review.would_rehire === true,
     ).length;
     const rehireRate = (wouldRehireCount / data.length) * 100;
 

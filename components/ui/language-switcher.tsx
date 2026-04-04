@@ -37,8 +37,8 @@ export function LanguageSwitcher() {
 
   const currentLanguage = LANGUAGES.find((lang) => lang.value === locale);
 
-  const handleValueChange = (value: string) => {
-    setLocale(value as typeof locale);
+  const handleValueChange = (value: string | null) => {
+    if (value) setLocale(value as typeof locale);
   };
 
   return (

@@ -707,7 +707,7 @@ export async function addWorkerReview(
 
     if (businessReviews && businessReviews.length > 0) {
       const avgRating =
-        businessReviews.reduce((sum, r) => sum + r.rating, 0) /
+        businessReviews.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) /
         businessReviews.length;
 
       // Note: rating and total_reviews would need to be added to businesses table schema

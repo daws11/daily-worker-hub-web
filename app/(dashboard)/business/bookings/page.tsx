@@ -183,7 +183,7 @@ export default function BusinessBookingsPage() {
 
     try {
       // Fetch all bookings for the business
-      const { data: bookingsData, error: bookingsError } = await supabase
+      const { data: bookingsData, error: bookingsError } = await (supabase as any)
         .from("bookings")
         .select(
           `
@@ -217,15 +217,15 @@ export default function BusinessBookingsPage() {
       const bookings = (bookingsData as unknown as Booking[]) || [];
 
       // Fetch existing reviews for completed bookings
-      const completedBookingIds: string[] = bookings
-        .filter((b) => b.status === "completed")
-        .map((b) => b.id);
+      const completedBookingIds: string[] = (bookings as any[])
+        .filter((b: any) => b.status === "completed")
+        .map((b: any) => b.id);
 
       if (completedBookingIds.length > 0) {
-        const reviewsTable = supabase.from("reviews") as any;
-        const { data: reviewsData } = await reviewsTable
+        const { data: reviewsData } = await (supabase as any)
+          .from("reviews")
           .select("id, booking_id, rating, comment, would_rehire")
-          .in("booking_id", completedBookingIds)
+          .in("booking_id", completedBookingIds as any[])
           .eq("reviewer", "business");
 
         const reviewsMap = new Map<string, BookingReview>();
@@ -244,7 +244,7 @@ export default function BusinessBookingsPage() {
       // Fetch interview sessions for all bookings
       const allBookingIds: string[] = bookings.map((b) => b.id);
       if (allBookingIds.length > 0) {
-        const { data: sessionsData } = await supabase
+        const { data: sessionsData } = await (supabase as any)
           .from("interview_sessions")
           .select("id, booking_id, status, type")
           .in("booking_id", allBookingIds);
@@ -286,7 +286,7 @@ export default function BusinessBookingsPage() {
     async function lookupBusiness() {
       if (!user?.id) return;
 
-      const { data: business } = await supabase
+      const { data: business } = await (supabase as any)
         .from("businesses")
         .select("id")
         .eq("user_id", user.id)

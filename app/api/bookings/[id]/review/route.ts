@@ -166,7 +166,7 @@ export async function GET(request: Request, { params }: Params) {
         requestId,
       });
 
-      return errorResponse(400, result.error, request);
+      return errorResponse(400, result.error ?? "Unknown error", request);
     }
 
     routeLogger.info("Review status fetched", {
@@ -368,7 +368,7 @@ export async function POST(request: Request, { params }: Params) {
         requestId,
       });
 
-      return errorResponse(400, result.error, request);
+      return errorResponse(400, result.error ?? "Unknown error", request);
     }
 
     // Invalidate booking caches since a review was submitted

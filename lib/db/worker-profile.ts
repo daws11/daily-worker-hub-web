@@ -28,7 +28,7 @@ type WorkerSkillInsert = any;
  * Get worker profile by user ID
  */
 export async function getWorkerProfile(userId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("workers")
     .select(
       `
@@ -60,7 +60,8 @@ export async function createWorkerProfile(
   userId: string,
   profile: Omit<WorkerInsert, "user_id" | "kyc_status" | "reliability_score">,
 ) {
-  const { data, error } = await (supabase.from("workers") as any)
+  const { data, error } = await (supabase as any)
+    .from("workers")
     .insert({
       user_id: userId,
       kyc_status: "unverified",
@@ -84,7 +85,8 @@ export async function updateWorkerProfile(
   workerId: string,
   updates: WorkerUpdate,
 ) {
-  const { data, error } = await (supabase.from("workers") as any)
+  const { data, error } = await (supabase as any)
+    .from("workers")
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
@@ -111,7 +113,8 @@ export async function submitKycVerification(kycData: {
   ktpExtractedData?: KycVerificationInsert["ktp_extracted_data"];
 }) {
   // First, update worker's KYC status to pending
-  const { error: updateError } = await (supabase.from("workers") as any)
+  const { error: updateError } = await (supabase as any)
+    .from("workers")
     .update({
       kyc_status: "pending",
       updated_at: new Date().toISOString(),
@@ -185,7 +188,7 @@ export async function linkWorkerSkills(workerId: string, skillIds: string[]) {
  * Get worker profile with KYC verification details
  */
 export async function getWorkerProfileWithKyc(userId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("workers")
     .select(
       `

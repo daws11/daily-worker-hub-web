@@ -249,14 +249,14 @@ export default function WorkerApplicationsPage() {
         // Get all bookings for these job+worker combinations
         const jobIds = [...new Set(acceptedJobs.map((j) => j.jobId))];
 
-        const { data: bookingsData } = await supabase
+        const { data: bookingsData } = await (supabase as any)
           .from("bookings")
           .select("id, job_id, worker_id")
           .in("job_id", jobIds);
 
         // Create a map of application_id -> booking (matched by job_id + worker_id)
         const bookingMap = new Map<string, { id: string }>();
-        bookingsData?.forEach((booking) => {
+        (bookingsData as any[])?.forEach((booking: any) => {
           const matchingApp = acceptedJobs.find(
             (app) =>
               app.jobId === booking.job_id &&

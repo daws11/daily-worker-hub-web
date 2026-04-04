@@ -17,11 +17,11 @@ export default function GlobalError({
     captureException(error, {
       tags: {
         section: "global",
-        errorDigest: error.digest,
+        errorDigest: error.digest ?? "",
         fatalError: "true",
       },
       extra: {
-        errorDigest: error.digest,
+        errorDigest: error.digest ?? "",
         message: error.message,
         stack: error.stack,
       },

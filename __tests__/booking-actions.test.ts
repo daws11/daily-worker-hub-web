@@ -76,7 +76,7 @@ describe("Booking Actions", () => {
             }),
           }),
         }),
-      } as unknown as ReturnType<typeof createClient>);
+      } as any);
 
       const result = await createBooking("job-none", "worker-789", "business-101");
 
@@ -120,7 +120,7 @@ describe("Booking Actions", () => {
           }
           return {};
         },
-      } as unknown as ReturnType<typeof createClient>);
+      } as any);
 
       const result = await createBooking("job-456", "worker-789", "business-101");
 
@@ -134,10 +134,8 @@ describe("Booking Actions", () => {
       vi.mocked(checkComplianceBeforeAccept).mockResolvedValueOnce({
         success: true,
         canAccept: false,
-        daysWorked: 21,
-        data: { status: "blocked", daysWorked: 21, canAccept: false },
+        data: { status: "blocked", daysWorked: 21, warningLevel: "blocked", message: "PP 35/2021 violation" },
         error: "Limit reached",
-        message: "PP 35/2021 violation",
       });
 
       vi.mocked(createClient).mockResolvedValue({
@@ -165,7 +163,7 @@ describe("Booking Actions", () => {
             }),
           };
         },
-      } as unknown as ReturnType<typeof createClient>);
+      } as any);
 
       const result = await createBooking("job-456", "worker-789", "business-101");
 
@@ -190,7 +188,7 @@ describe("Booking Actions", () => {
             }),
           }),
         }),
-      } as unknown as ReturnType<typeof createClient>);
+      } as any);
 
       const result = await acceptBooking("booking-none", "business-101");
 
@@ -213,7 +211,7 @@ describe("Booking Actions", () => {
             }),
           }),
         }),
-      } as unknown as ReturnType<typeof createClient>);
+      } as any);
 
       const result = await rejectBooking("booking-123", "business-101");
 
@@ -236,7 +234,7 @@ describe("Booking Actions", () => {
             }),
           }),
         }),
-      } as unknown as ReturnType<typeof createClient>);
+      } as any);
 
       const result = await getWorkerBooking("booking-none", "worker-789");
 
@@ -259,7 +257,7 @@ describe("Booking Actions", () => {
             }),
           }),
         }),
-      } as unknown as ReturnType<typeof createClient>);
+      } as any);
 
       const result = await getBusinessBooking("booking-none", "business-101");
 

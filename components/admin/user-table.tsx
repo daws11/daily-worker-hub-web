@@ -192,7 +192,7 @@ export function UserTable({ className, ...props }: UserTableProps) {
             onChange={(e) => handleSearch(e.target.value)}
           />
         </div>
-        <Select defaultValue="all" onValueChange={handleRoleFilter}>
+        <Select defaultValue="all" onValueChange={(value) => handleRoleFilter(value as string)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by role" />
           </SelectTrigger>
@@ -260,7 +260,7 @@ export function UserTable({ className, ...props }: UserTableProps) {
                     <div className="flex items-center gap-3">
                       <Avatar className="h-8 w-8">
                         <AvatarImage
-                          src={userItem.user.avatar_url}
+                          src={userItem.user.avatar_url ?? undefined}
                           alt={userItem.user.full_name}
                         />
                         <AvatarFallback>{userItem.initials}</AvatarFallback>

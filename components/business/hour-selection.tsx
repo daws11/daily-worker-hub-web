@@ -36,8 +36,9 @@ export function HourSelection({
     setInternalValue(value);
   }, [value]);
 
-  const handleSliderChange = (newValue: number[]) => {
-    const roundedValue = Math.round(newValue[0]);
+  const handleSliderChange = (newValue: number | readonly number[]) => {
+    const arr = Array.isArray(newValue) ? newValue : [newValue];
+    const roundedValue = Math.round(arr[0]);
     setInternalValue(roundedValue);
     onChange(roundedValue);
   };

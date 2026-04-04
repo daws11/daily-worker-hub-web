@@ -259,11 +259,11 @@ export function SocialPlatformSettings({
                         </Label>
                         <Select
                           value={settings?.defaultPostTiming || "immediate"}
-                          onValueChange={(value: "immediate" | "scheduled") =>
+                          onValueChange={(value) =>
                             updateSetting(
                               connection.id,
                               "defaultPostTiming",
-                              value,
+                              value as "immediate" | "scheduled",
                             )
                           }
                         >

@@ -658,7 +658,7 @@ export async function getEarningsTransactionHistory(
       }));
 
     // Calculate total amount
-    const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
+    const totalAmount = transactions.reduce((sum: number, t: { amount: number }) => sum + t.amount, 0);
 
     // Calculate total pages
     const totalItems = count || 0;

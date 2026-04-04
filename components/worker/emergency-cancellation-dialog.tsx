@@ -216,7 +216,7 @@ function EmergencyCancellationDialog({
             <Label htmlFor="reason">Alasan Pembatalan</Label>
             <Select
               value={selectedReasonId}
-              onValueChange={setSelectedReasonId}
+              onValueChange={(value) => setSelectedReasonId(value as string)}
               disabled={isSubmitting || isLoadingReasons}
             >
               <SelectTrigger id="reason">

@@ -783,7 +783,7 @@ describe("useNotifications", () => {
     it("should handle null data from API", async () => {
       mockGetUserNotifications.mockResolvedValueOnce({
         success: true,
-        data: null,
+        data: [],
       });
 
       const hook = useNotifications({ userId: "user-123", autoFetch: false });

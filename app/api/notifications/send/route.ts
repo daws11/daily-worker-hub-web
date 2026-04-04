@@ -225,7 +225,6 @@ export async function POST(request: NextRequest) {
       message: result.success
         ? "Notifikasi berhasil dikirim"
         : "Gagal mengirim notifikasi",
-      ...result,
     });
   } catch (error) {
     routeLogger.error(

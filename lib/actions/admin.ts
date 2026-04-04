@@ -900,8 +900,8 @@ export async function exportComplianceCsv(
 
     const csv = [
       headers.join(","),
-      ...(rows?.map((row) =>
-        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+      ...(rows?.map((row: unknown[]) =>
+        row.map((cell: unknown) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
       ) || []),
     ].join("\n");
 

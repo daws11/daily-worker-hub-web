@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 declare const process: { env: Record<string, string | undefined> };
 
 import { createClient } from "../supabase/server";
@@ -191,15 +190,16 @@ export async function initializeQrisPayment(
         };
       }
 
+      const paymentUrl: string = invoice.invoiceUrl ?? "";
       return {
         success: true,
         data: {
           transaction: {
             ...transaction,
-            payment_url: invoice.invoiceUrl,
+            payment_url: paymentUrl,
             provider_payment_id: invoice.id,
           },
-          payment_url: invoice.invoiceUrl,
+          payment_url: paymentUrl,
           expires_at: qrisExpiresAt,
         },
       };

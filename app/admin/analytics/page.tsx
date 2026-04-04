@@ -167,7 +167,7 @@ export default function AdminAnalyticsPage() {
             Platform performance metrics and insights
           </p>
         </div>
-        <Select value={dateRange} onValueChange={setDateRange}>
+        <Select value={dateRange} onValueChange={(v) => setDateRange(v as string)}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Select range" />
           </SelectTrigger>

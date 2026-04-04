@@ -194,7 +194,7 @@ export class NotificationService {
         .in("user_id", userIds);
 
       const preferencesMap = new Map(
-        (preferencesData || []).map((p) => [p.user_id, p]),
+        (preferencesData || []).map((p: any) => [p.user_id, p]),
       );
 
       // Filter users who have this notification type enabled
@@ -247,9 +247,9 @@ export class NotificationService {
         .map((r) => (r.error as any)?.message || "Unknown error");
 
       // Store notifications
-      const uniqueUserIds = [...new Set(eligibleTokens.map((t) => t.user_id))];
+      const uniqueUserIds = [...new Set(eligibleTokens.map((t) => t.user_id).filter((id): id is string => id !== null))];
       await Promise.all(
-        uniqueUserIds.map((userId) =>
+        uniqueUserIds.map((userId: string) =>
           this.storeNotification(userId, notificationType, payload),
         ),
       );

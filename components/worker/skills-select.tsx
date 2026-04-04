@@ -68,7 +68,7 @@ export function SkillsSelect({
         onOpenChange={setIsOpen}
         disabled={disabled || availableSkills.length === 0}
         value=""
-        onValueChange={handleSelectSkill}
+        onValueChange={(value) => handleSelectSkill(value as string)}
       >
         <SelectTrigger ref={triggerRef}>
           <SelectValue placeholder={placeholder} />

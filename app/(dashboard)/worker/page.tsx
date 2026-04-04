@@ -94,14 +94,14 @@ export default function WorkerDashboardPage() {
       setIsLoading(true);
       try {
         // Get worker profile
-        const { data: worker } = await supabase
+        const { data: worker } = await (supabase as any)
           .from("workers")
           .select("id, rating")
           .eq("user_id", user.id)
           .single();
 
         // Fetch wallet
-        const { data: walletData } = await supabase
+        const { data: walletData } = await (supabase as any)
           .from("wallets")
           .select("available_balance, pending_balance")
           .eq("user_id", user.id)
@@ -110,7 +110,7 @@ export default function WorkerDashboardPage() {
         if (walletData) setWallet(walletData);
 
         // Fetch open jobs count
-        const { count: openJobs } = await supabase
+        const { count: openJobs } = await (supabase as any)
           .from("jobs")
           .select("*", { count: "exact", head: true })
           .eq("status", "open");
@@ -118,7 +118,7 @@ export default function WorkerDashboardPage() {
         // Fetch worker bookings
         const workerId = worker?.id || user.id;
         
-        const { data: bookings } = await supabase
+        const { data: bookings } = await (supabase as any)
           .from("bookings")
           .select("id, status, start_date, end_date, final_price, jobs (id, title, address), businesses (id, name)")
           .eq("worker_id", workerId)
@@ -127,7 +127,7 @@ export default function WorkerDashboardPage() {
 
         if (bookings) {
           // Transform data to match expected array format for jobs and businesses
-          const transformedBookings = bookings.map((booking) => ({
+          const transformedBookings = (bookings as any[]).map((booking: any) => ({
             ...booking,
             jobs: booking.jobs ? [booking.jobs] : null,
             businesses: booking.businesses ? [booking.businesses] : null,
@@ -148,10 +148,10 @@ export default function WorkerDashboardPage() {
           .eq("type", "credit")
           .gte("created_at", startOfMonth.toISOString());
 
-        const earnedThisMonth = transactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
+        const earnedThisMonth = (transactions as any[])?.reduce((sum: any, t: any) => sum + (t.amount || 0), 0) || 0;
 
         // Active bookings
-        const activeBookings = bookings?.filter(b => 
+        const activeBookings = (bookings as any[])?.filter((b: any) => 
           b.status === "accepted" || b.status === "in_progress"
         ).length || 0;
 
@@ -163,7 +163,7 @@ export default function WorkerDashboardPage() {
         });
 
         // Generate activities
-        const newActivities: RecentActivity[] = (bookings || []).slice(0, 5).map(b => ({
+        const newActivities: RecentActivity[] = ((bookings as any[]) || []).slice(0, 5).map((b: any) => ({
           id: b.id,
           type: "booking" as const,
           title: b.jobs?.title || "Pekerjaan",

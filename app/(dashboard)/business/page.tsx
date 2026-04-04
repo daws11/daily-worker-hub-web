@@ -95,7 +95,7 @@ export default function BusinessDashboardPage() {
       setIsLoading(true);
       try {
         // Get business ID
-        const { data: business } = await supabase
+        const { data: business } = await (supabase as any)
           .from("businesses")
           .select("id")
           .eq("user_id", user.id)
@@ -107,7 +107,7 @@ export default function BusinessDashboardPage() {
         }
 
         // Fetch wallet
-        const { data: walletData } = await supabase
+        const { data: walletData } = await (supabase as any)
           .from("wallets")
           .select("available_balance, pending_balance")
           .eq("user_id", user.id)
@@ -116,15 +116,15 @@ export default function BusinessDashboardPage() {
         if (walletData) setWallet(walletData);
 
         // Fetch jobs
-        const { data: jobs } = await supabase
+        const { data: jobs } = await (supabase as any)
           .from("jobs")
           .select("id, status")
           .eq("business_id", business.id);
 
-        const activeJobs = jobs?.filter(j => j.status === "open" || j.status === "in_progress").length || 0;
+        const activeJobs = (jobs as any[])?.filter((j: any) => j.status === "open" || j.status === "in_progress").length || 0;
 
         // Fetch bookings
-        const { data: bookings } = await supabase
+        const { data: bookings } = await (supabase as any)
           .from("bookings")
           .select("id, status, start_date, end_date, final_price, jobs (id, title, address), workers (id, full_name, avatar_url)")
           .eq("business_id", business.id)
@@ -133,7 +133,7 @@ export default function BusinessDashboardPage() {
 
         if (bookings) {
           // Transform data to match expected array format for jobs and workers
-          const transformedBookings = bookings.map((booking) => ({
+          const transformedBookings = (bookings as any[]).map((booking: any) => ({
             ...booking,
             jobs: booking.jobs ? [booking.jobs] : null,
             workers: booking.workers ? [booking.workers] : null,
@@ -142,7 +142,7 @@ export default function BusinessDashboardPage() {
         }
 
         // Fetch reviews count
-        const { count: reviewCount } = await supabase
+        const { count: reviewCount } = await (supabase as any)
           .from("reviews")
           .select("*", { count: "exact", head: true })
           .eq("business_id", business.id);
@@ -169,7 +169,7 @@ export default function BusinessDashboardPage() {
         }
 
         const walletId = businessWallet.id;
-        const { data: wtData, error: wtError } = await supabase
+        const { data: wtData, error: wtError } = await (supabase as any)
           .from("wallet_transactions")
           .select("amount")
           .eq("wallet_id", walletId)
@@ -194,7 +194,7 @@ export default function BusinessDashboardPage() {
         });
 
         // Generate activities from bookings
-        const newActivities: RecentActivity[] = (bookings || []).slice(0, 5).map(b => ({
+        const newActivities: RecentActivity[] = ((bookings as any[]) || []).slice(0, 5).map((b: any) => ({
           id: b.id,
           type: "booking" as const,
           title: b.jobs?.title || "Pekerjaan",

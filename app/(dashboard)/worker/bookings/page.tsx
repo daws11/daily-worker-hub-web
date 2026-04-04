@@ -343,7 +343,7 @@ function BookingCard({
 }
 
 async function fetchBookings(workerId: string): Promise<Booking[]> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("bookings")
     .select(
       `
@@ -385,10 +385,10 @@ async function fetchReviewsForBookings(
 ): Promise<Map<string, BookingReview>> {
   if (bookingIds.length === 0) return new Map();
 
-  const { data } = await supabase
+  const { data } = await (supabase as any)
     .from("reviews")
     .select("id, booking_id, rating, comment")
-    .in("booking_id", bookingIds)
+    .in("booking_id", bookingIds as any[])
     .eq("reviewer", "worker");
 
   const reviewsMap = new Map<string, BookingReview>();
@@ -404,7 +404,7 @@ async function fetchReviewsForBookings(
 }
 
 async function cancelBooking(bookingId: string): Promise<void> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("bookings")
     // @ts-ignore - Supabase type inference issue with React 19
     .update({ status: "cancelled" })

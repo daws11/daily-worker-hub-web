@@ -42,12 +42,12 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const transactionId = searchParams.get("transaction_id");
-    const provider = searchParams.get("provider") as PaymentProvider;
+    const provider = (searchParams.get("provider") ?? undefined) as PaymentProvider | undefined;
 
-    // Audit log for all verification requests
+    // Audit log for all verification requests (nullish coalescing since tx may not exist yet)
     logger.audit("payment_verify_request", {
       requestId,
-      transactionId,
+      transactionId: transactionId ?? "unknown",
       provider,
     });
 
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
           provider,
         );
       } else {
-        paymentStatus = await getPaymentStatus(transactionId, provider);
+        paymentStatus = await getPaymentStatus(transactionId, provider ?? "xendit");
       }
 
       // Check if status has changed
@@ -198,14 +198,14 @@ export async function GET(request: NextRequest) {
 
         // If payment is now successful, credit the wallet
         if (
-          paymentStatus.status === "success" &&
-          transaction.status !== ("success" as any)
+          paymentStatus.status === "paid" &&
+          transaction.status !== "paid"
         ) {
           await creditWallet(
             supabase,
-            transaction.business_id,
+            transaction.business_id as string,
             transaction.amount - (transaction.fee_amount || 0),
-            transactionId,
+            (transaction.provider_payment_id ?? transactionId) as string,
           );
         }
       }

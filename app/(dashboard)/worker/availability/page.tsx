@@ -442,7 +442,7 @@ export default function WorkerAvailabilityPage() {
                             onValueChange={(value) =>
                               handleStartHourChange(
                                 day.dayOfWeek,
-                                parseInt(value),
+                                parseInt(value || "0"),
                               )
                             }
                           >
@@ -466,7 +466,7 @@ export default function WorkerAvailabilityPage() {
                         <Select
                           value={day.endHour.toString()}
                           onValueChange={(value) =>
-                            handleEndHourChange(day.dayOfWeek, parseInt(value))
+                            handleEndHourChange(day.dayOfWeek, parseInt(value || "0"))
                           }
                         >
                           <SelectTrigger className="w-[100px]">

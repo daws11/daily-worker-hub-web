@@ -9,13 +9,17 @@ import type {
 type MessageRow = Database["public"]["Tables"]["messages"]["Row"];
 type MessageUpdate = Database["public"]["Tables"]["messages"]["Update"];
 
+type QueryResult<T> = Promise<{ data: T | null; error: any }>;
+
 /**
  * Get all messages for a specific booking
  */
-export async function getBookingMessages(bookingId: string) {
+export async function getBookingMessages(
+  bookingId: string,
+): QueryResult<MessageWithRelations[]> {
   try {
-    const { data, error } = await supabase
-      .from("messages")
+    const { data, error } = await ((supabase as any)
+      .from("messages") as any)
       .select(
         `
         *,
@@ -46,7 +50,7 @@ export async function getBookingMessages(bookingId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: data as MessageWithRelations[] | null, error: null };
   } catch (error) {
     console.error("Unexpected error fetching booking messages:", error);
     return { data: null, error };
@@ -56,10 +60,12 @@ export async function getBookingMessages(bookingId: string) {
 /**
  * Get all messages for a specific user (as sender or receiver)
  */
-export async function getUserMessages(userId: string) {
+export async function getUserMessages(
+  userId: string,
+): QueryResult<MessageWithRelations[]> {
   try {
-    const { data, error } = await supabase
-      .from("messages")
+    const { data, error } = await ((supabase as any)
+      .from("messages") as any)
       .select(
         `
         *,
@@ -90,7 +96,7 @@ export async function getUserMessages(userId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: data as MessageWithRelations[] | null, error: null };
   } catch (error) {
     console.error("Unexpected error fetching user messages:", error);
     return { data: null, error };
@@ -105,8 +111,8 @@ export async function getUnreadCount(
 ): Promise<{ data: UnreadCountResponse | null; error: any }> {
   try {
     // Get total unread count
-    const { count: totalCount, error: countError } = await supabase
-      .from("messages")
+    const { count: totalCount, error: countError } = await ((supabase as any)
+      .from("messages") as any)
       .select("*", { count: "exact", head: true })
       .eq("receiver_id", userId)
       .eq("is_read", false);
@@ -117,8 +123,8 @@ export async function getUnreadCount(
     }
 
     // Get unread count grouped by booking
-    const { data: messagesData, error: messagesError } = await supabase
-      .from("messages")
+    const { data: messagesData, error: messagesError } = await ((supabase as any)
+      .from("messages") as any)
       .select("booking_id")
       .eq("receiver_id", userId)
       .eq("is_read", false);
@@ -165,10 +171,13 @@ export async function getUnreadCount(
 /**
  * Get unread message count for a specific booking
  */
-export async function getBookingUnreadCount(bookingId: string, userId: string) {
+export async function getBookingUnreadCount(
+  bookingId: string,
+  userId: string,
+): QueryResult<number> {
   try {
-    const { count, error } = await supabase
-      .from("messages")
+    const { count, error } = await ((supabase as any)
+      .from("messages") as any)
       .select("*", { count: "exact", head: true })
       .eq("booking_id", bookingId)
       .eq("receiver_id", userId)
@@ -189,10 +198,12 @@ export async function getBookingUnreadCount(bookingId: string, userId: string) {
 /**
  * Mark a single message as read
  */
-export async function markMessageAsRead(messageId: string) {
+export async function markMessageAsRead(
+  messageId: string,
+): QueryResult<MessageRow> {
   try {
-    const { data, error } = await supabase
-      .from("messages")
+    const { data, error } = await ((supabase as any)
+      .from("messages") as any)
       .update({ is_read: true })
       .eq("id", messageId)
       .select()
@@ -203,7 +214,7 @@ export async function markMessageAsRead(messageId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: data as MessageRow | null, error: null };
   } catch (error) {
     console.error("Unexpected error marking message as read:", error);
     return { data: null, error };
@@ -216,10 +227,10 @@ export async function markMessageAsRead(messageId: string) {
 export async function markBookingMessagesAsRead(
   bookingId: string,
   receiverId: string,
-) {
+): QueryResult<MessageRow[]> {
   try {
-    const { data, error } = await supabase
-      .from("messages")
+    const { data, error } = await ((supabase as any)
+      .from("messages") as any)
       .update({ is_read: true })
       .eq("booking_id", bookingId)
       .eq("receiver_id", receiverId)
@@ -231,7 +242,7 @@ export async function markBookingMessagesAsRead(
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: data as MessageRow[] | null, error: null };
   } catch (error) {
     console.error("Unexpected error marking booking messages as read:", error);
     return { data: null, error };
@@ -244,10 +255,10 @@ export async function markBookingMessagesAsRead(
 export async function markSenderMessagesAsRead(
   senderId: string,
   receiverId: string,
-) {
+): QueryResult<MessageRow[]> {
   try {
-    const { data, error } = await supabase
-      .from("messages")
+    const { data, error } = await ((supabase as any)
+      .from("messages") as any)
       .update({ is_read: true })
       .eq("sender_id", senderId)
       .eq("receiver_id", receiverId)
@@ -259,7 +270,7 @@ export async function markSenderMessagesAsRead(
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: data as MessageRow[] | null, error: null };
   } catch (error) {
     console.error("Unexpected error marking sender messages as read:", error);
     return { data: null, error };
@@ -270,9 +281,11 @@ export async function markSenderMessagesAsRead(
  * Mark messages as read based on input parameters
  * Supports marking by message_id, booking_id, or sender_id
  */
-export async function markAsRead(input: MarkAsReadInput) {
+export async function markAsRead(
+  input: MarkAsReadInput,
+): QueryResult<MessageUpdate[]> {
   try {
-    let query = supabase.from("messages").update({ is_read: true });
+    let query = ((supabase as any).from("messages") as any).update({ is_read: true });
 
     if (input.message_id) {
       query = query.eq("id", input.message_id);
@@ -295,7 +308,7 @@ export async function markAsRead(input: MarkAsReadInput) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: data as MessageUpdate[] | null, error: null };
   } catch (error) {
     console.error("Unexpected error marking messages as read:", error);
     return { data: null, error };
@@ -305,10 +318,12 @@ export async function markAsRead(input: MarkAsReadInput) {
 /**
  * Get a single message by ID
  */
-export async function getMessageById(messageId: string) {
+export async function getMessageById(
+  messageId: string,
+): QueryResult<MessageWithRelations> {
   try {
-    const { data, error } = await supabase
-      .from("messages")
+    const { data, error } = await ((supabase as any)
+      .from("messages") as any)
       .select(
         `
         *,
@@ -339,7 +354,7 @@ export async function getMessageById(messageId: string) {
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: data as MessageWithRelations | null, error: null };
   } catch (error) {
     console.error("Unexpected error fetching message:", error);
     return { data: null, error };
@@ -353,10 +368,10 @@ export async function getConversation(
   bookingId: string,
   userId1: string,
   userId2: string,
-) {
+): QueryResult<MessageWithRelations[]> {
   try {
-    const { data, error } = await supabase
-      .from("messages")
+    const { data, error } = await ((supabase as any)
+      .from("messages") as any)
       .select(
         `
         *,
@@ -385,7 +400,7 @@ export async function getConversation(
       return { data: null, error };
     }
 
-    return { data, error: null };
+    return { data: data as MessageWithRelations[] | null, error: null };
   } catch (error) {
     console.error("Unexpected error fetching conversation:", error);
     return { data: null, error };
@@ -396,11 +411,13 @@ export async function getConversation(
  * Get all conversations (message threads) for a user
  * Returns the last message for each booking they have messages in
  */
-export async function getUserConversations(userId: string) {
+export async function getUserConversations(
+  userId: string,
+): QueryResult<MessageWithRelations[]> {
   try {
     // Get all unique booking_ids where user has messages
-    const { data: bookingsData, error: bookingsError } = await supabase
-      .from("messages")
+    const { data: bookingsData, error: bookingsError } = await ((supabase as any)
+      .from("messages") as any)
       .select("booking_id")
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
       .not("booking_id", "is", null);
@@ -416,7 +433,7 @@ export async function getUserConversations(userId: string) {
     // Get unique booking IDs
     const uniqueBookingIds = Array.from(
       new Set(
-        bookingsData?.map((m) => m.booking_id).filter(Boolean) as string[],
+        bookingsData?.map((m: any) => m.booking_id).filter(Boolean) as string[],
       ),
     );
 
@@ -427,8 +444,8 @@ export async function getUserConversations(userId: string) {
     // For each booking, get the most recent message
     const conversations = await Promise.all(
       uniqueBookingIds.map(async (bookingId) => {
-        const { data, error } = await supabase
-          .from("messages")
+        const { data, error } = await ((supabase as any)
+          .from("messages") as any)
           .select(
             `
             *,
@@ -470,7 +487,7 @@ export async function getUserConversations(userId: string) {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
 
-    return { data: validConversations, error: null };
+    return { data: validConversations as MessageWithRelations[], error: null };
   } catch (error) {
     console.error("Unexpected error fetching user conversations:", error);
     return { data: null, error };

@@ -14,7 +14,7 @@ type ConversationUpdate = Database["public"]["Tables"]["conversations"]["Update"
  */
 export async function getConversations(userId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("conversations")
       .select(
         `
@@ -68,7 +68,7 @@ export async function getConversationByBookingId(
   userId: string,
 ) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("conversations")
       .select(
         `
@@ -124,7 +124,7 @@ export async function getConversationByBookingId(
  */
 export async function getConversationById(conversationId: string) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("conversations")
       .select(
         `
@@ -175,7 +175,7 @@ export async function getConversationById(conversationId: string) {
  */
 export async function createConversation(input: CreateConversationInput) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("conversations")
       .insert({
         booking_id: input.booking_id,
@@ -208,7 +208,7 @@ export async function updateConversationLastMessage(
   lastMessageAt: string,
 ) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("conversations")
       .update({
         last_message_id: messageId,
@@ -240,7 +240,7 @@ export async function incrementUnreadCount(
   try {
     const column = isWorker ? "unread_worker_count" : "unread_business_count";
 
-    const { data: conversation, error: fetchError } = await supabase
+    const { data: conversation, error: fetchError } = await (supabase as any)
       .from("conversations")
       .select(column)
       .eq("id", conversationId)
@@ -252,7 +252,7 @@ export async function incrementUnreadCount(
     }
 
     const currentCount = conversation?.[column] ?? 0;
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("conversations")
       .update({
         [column]: currentCount + 1,
@@ -283,7 +283,7 @@ export async function resetUnreadCount(
   try {
     const column = isWorker ? "unread_worker_count" : "unread_business_count";
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("conversations")
       .update({
         [column]: 0,
@@ -314,7 +314,7 @@ export async function getOrCreateConversation(
 ) {
   try {
     // Try to find existing conversation
-    const { data: existing, error: fetchError } = await supabase
+    const { data: existing, error: fetchError } = await (supabase as any)
       .from("conversations")
       .select("*")
       .eq("booking_id", bookingId)

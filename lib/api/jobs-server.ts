@@ -190,8 +190,8 @@ export async function getJobById(id: string): Promise<{
 
     const jobWithRelations: JobWithRelations = {
       id: data.id,
-      business_id: data.business_id,
-      category_id: data.category_id,
+      business_id: String((data as any).business_id ?? ""),
+      category_id: String((data as any).category_id ?? ""),
       title: data.title,
       description: data.description,
       requirements: data.requirements,
@@ -199,16 +199,16 @@ export async function getJobById(id: string): Promise<{
       budget_max: data.budget_max,
       status: data.status,
       deadline: data.deadline,
-      address: data.address,
-      lat: data.lat,
-      lng: data.lng,
+      address: String((data as any).address ?? ""),
+      lat: (data as any).lat ?? 0,
+      lng: (data as any).lng ?? 0,
       created_at: data.created_at,
       updated_at: data.updated_at,
       is_urgent: (data as any).is_urgent ?? false,
-      category: data.category,
-      business: data.business,
+      category: (data as any).category,
+      business: (data as any).business,
       skills: [],
-    };
+    } as JobWithRelations;
 
     return { data: jobWithRelations, error: null };
   } catch (error) {

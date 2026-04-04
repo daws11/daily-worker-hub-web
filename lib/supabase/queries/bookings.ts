@@ -270,7 +270,7 @@ export async function updateBookingStatus(
     | "no_show",
 ): Promise<BookingResult<BookingRow>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("bookings")
       .update({ status, updated_at: new Date().toISOString() })
       .eq("id", bookingId)
@@ -304,7 +304,7 @@ export async function updateMultipleBookingStatuses(
     | "no_show",
 ): Promise<BookingResult<BookingRow[]>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("bookings")
       .update({ status, updated_at: new Date().toISOString() })
       .in("id", bookingIds)
@@ -330,7 +330,7 @@ export async function updateMultipleBookingStatuses(
  */
 export async function addBookingNotes(bookingId: string, notes: string): Promise<BookingResult<BookingRow>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("bookings")
       .update({ booking_notes: notes, updated_at: new Date().toISOString() })
       .eq("id", bookingId)
@@ -356,7 +356,7 @@ export async function createBooking(
   booking: Omit<BookingRow, "id" | "created_at" | "updated_at">,
 ): Promise<BookingResult<BookingRow>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("bookings")
       .insert(booking as BookingInsert)
       .select()
@@ -379,7 +379,7 @@ export async function createBooking(
  */
 export async function deleteBooking(bookingId: string): Promise<{ error: { message: string } | null }> {
   try {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("bookings")
       .delete()
       .eq("id", bookingId);
@@ -467,7 +467,7 @@ export async function getWorkerReliabilityMetrics(workerId: string): Promise<{
 }> {
   try {
     // Fetch bookings data
-    const { data: bookingsData, error: bookingsError } = await supabase
+    const { data: bookingsData, error: bookingsError } = await (supabase as any)
       .from("bookings")
       .select("status, check_in_at, check_out_at")
       .eq("worker_id", workerId)
@@ -482,7 +482,7 @@ export async function getWorkerReliabilityMetrics(workerId: string): Promise<{
     }
 
     // Fetch average rating from reviews
-    const { data: reviewsData, error: reviewsError } = await supabase
+    const { data: reviewsData, error: reviewsError } = await (supabase as any)
       .from("reviews")
       .select("rating")
       .eq("worker_id", workerId)
@@ -522,7 +522,7 @@ export async function getWorkerReliabilityMetrics(workerId: string): Promise<{
     let avgRating: number | null = null;
     if (reviewsData && reviewsData.length > 0) {
       const sum = reviewsData.reduce(
-        (acc, review) => acc + (review.rating || 0),
+        (acc: number, review: any) => acc + (review.rating || 0),
         0,
       );
       avgRating = sum / reviewsData.length;

@@ -20,10 +20,10 @@ export default function WorkerError({
     captureException(error, {
       tags: {
         section: "worker",
-        errorDigest: error.digest,
+        errorDigest: error.digest ?? "",
       },
       extra: {
-        errorDigest: error.digest,
+        errorDigest: error.digest ?? "",
         message: error.message,
         stack: error.stack,
       },

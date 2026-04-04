@@ -43,7 +43,7 @@ export function JobSort({
   return (
     <div className={cn("flex items-center gap-2 w-full", className)}>
       <ArrowUpDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-      <Select value={value} onValueChange={handleSortChange}>
+      <Select value={value} onValueChange={(v) => handleSortChange(v as string)}>
         <SelectTrigger className="w-full sm:w-[180px] min-w-0">
           <SelectValue placeholder={t("jobs.sortBy")} />
         </SelectTrigger>

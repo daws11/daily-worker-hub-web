@@ -150,7 +150,7 @@ export function ReviewList({
           setRatingBreakdown(breakdown);
         }
 
-        if (rehireResult.data?.rehireRate !== null) {
+        if (rehireResult.data?.rehireRate !== null && rehireResult.data) {
           setRehireRate(rehireResult.data.rehireRate);
         }
       } else {

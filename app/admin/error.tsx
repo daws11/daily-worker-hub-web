@@ -20,10 +20,10 @@ export default function AdminError({
     captureException(error, {
       tags: {
         section: "admin",
-        errorDigest: error.digest,
+        errorDigest: error.digest ?? "",
       },
       extra: {
-        errorDigest: error.digest,
+        errorDigest: error.digest ?? "",
         message: error.message,
         stack: error.stack,
       },

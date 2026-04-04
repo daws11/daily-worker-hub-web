@@ -78,7 +78,7 @@ type DisputeResult<T = unknown> = {
  */
 export async function getDisputeById(disputeId: string): Promise<DisputeResult<DisputeWithDetails>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("disputes")
       .select(
         `
@@ -126,7 +126,7 @@ export async function getDisputeById(disputeId: string): Promise<DisputeResult<D
  */
 export async function getDisputesByBookingId(bookingId: string): Promise<DisputeResult<DisputeRow[]>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("disputes")
       .select("*")
       .eq("booking_id", bookingId)
@@ -149,7 +149,7 @@ export async function getDisputesByBookingId(bookingId: string): Promise<Dispute
  */
 export async function getBusinessDisputes(businessId: string): Promise<DisputeResult<DisputeWithDetails[]>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("disputes")
       .select(
         `
@@ -190,7 +190,7 @@ export async function getBusinessDisputes(businessId: string): Promise<DisputeRe
  */
 export async function getWorkerDisputes(workerId: string): Promise<DisputeResult<DisputeWithDetails[]>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("disputes")
       .select(
         `
@@ -232,7 +232,7 @@ export async function getWorkerDisputes(workerId: string): Promise<DisputeResult
  */
 export async function getPendingDisputes(): Promise<DisputeResult<DisputeWithDetails[]>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("disputes")
       .select(
         `
@@ -283,7 +283,7 @@ export async function createDispute(
   disputeData: Omit<DisputeInsert, "id" | "created_at" | "updated_at">,
 ): Promise<DisputeResult<DisputeRow>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("disputes")
       .insert(disputeData)
       .select()
@@ -309,7 +309,7 @@ export async function updateDisputeStatus(
   status: "pending" | "investigating" | "resolved" | "rejected",
 ): Promise<DisputeResult<DisputeRow>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("disputes")
       .update({
         status,
@@ -344,7 +344,7 @@ export async function updateDisputeResolution(
   },
 ): Promise<DisputeResult<DisputeRow>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("disputes")
       .update({
         status: resolution.status,
@@ -374,7 +374,7 @@ export async function updateDisputeResolution(
  */
 export async function checkActiveDispute(bookingId: string): Promise<DisputeResult<DisputeRow>> {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from("disputes")
       .select("*")
       .eq("booking_id", bookingId)

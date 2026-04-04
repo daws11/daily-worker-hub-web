@@ -297,7 +297,7 @@ export function BadgeVerificationForm({
                 <FormItem>
                   <FormLabel>Pilih Badge *</FormLabel>
                   <Select
-                    onValueChange={handleBadgeChange}
+                    onValueChange={(value) => handleBadgeChange(value as string)}
                     defaultValue={field.value}
                     disabled={isSubmitting}
                   >

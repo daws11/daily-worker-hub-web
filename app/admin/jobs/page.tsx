@@ -123,7 +123,8 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
   );
 
   const handleStatusFilter = React.useCallback(
-    (value: string) => {
+    (value: string | null) => {
+      if (!value) return;
       setFilters((prev) => ({
         ...prev,
         status:
@@ -414,7 +415,7 @@ export default function JobsPage({ className, ...props }: JobsPageProps) {
                       <TableCell>
                         <div className="flex items-center gap-1 text-sm">
                           <Calendar className="h-3 w-3 text-muted-foreground" />
-                          <span>{formatDate(job.deadline)}</span>
+                          <span>{formatDate(job.deadline || "")}</span>
                         </div>
                       </TableCell>
                       <TableCell>

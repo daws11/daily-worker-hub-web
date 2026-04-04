@@ -119,7 +119,8 @@ export default function DisputesPage({
   );
 
   const handleStatusFilter = React.useCallback(
-    (value: string) => {
+    (value: string | null) => {
+      if (!value) return;
       setFilters((prev) => ({
         ...prev,
         status:
@@ -133,7 +134,8 @@ export default function DisputesPage({
   );
 
   const handleTypeFilter = React.useCallback(
-    (value: string) => {
+    (value: string | null) => {
+      if (!value) return;
       setFilters((prev) => ({
         ...prev,
         type:

@@ -48,7 +48,7 @@ function groupBookingsByStatus(bookings: Booking[]): BookingStatusGroup {
 }
 
 async function fetchBookings(workerId: string): Promise<Booking[]> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("bookings")
     .select(
       `
