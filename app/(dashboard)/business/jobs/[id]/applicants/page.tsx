@@ -4,7 +4,6 @@ import * as React from "react";
 import { useAuth } from "@/app/providers/auth-provider";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import Link from "next/link";
 import {
   Loader2,
   AlertCircle,
@@ -13,8 +12,7 @@ import {
   Briefcase,
   Building2,
   Filter,
-  Video,
-  ExternalLink,
+  CheckCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -285,23 +283,15 @@ export default function BusinessApplicantsPage() {
         const bookingId = result.data.booking.id;
         setBookingIds((prev) => ({ ...prev, [applicationId]: bookingId }));
 
-        // Show toast with interview link
+        // Show success toast
         toast.success(
           <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4" />
             <span>
-              Pelamar diterima! Booking dibuat. / Applicant accepted! Booking
-              created.
+              Pelamar diterima! Booking dibuat. / Applicant accepted! Booking created.
             </span>
-            <Link
-              href={`/business/interview/${bookingId}`}
-              className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline font-medium"
-            >
-              <Video className="h-4 w-4" />
-              Mulai Interview
-              <ExternalLink className="h-3 w-3" />
-            </Link>
           </div>,
-          { duration: 8000 },
+          { duration: 5000 },
         );
       } else {
         toast.success(

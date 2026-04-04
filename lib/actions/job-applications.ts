@@ -64,11 +64,50 @@ export async function createJobApplication(
     const supabase = await createClient();
 
     // Verify the worker exists (lookup by user_id since workerId is the auth user's ID)
+    // Also fetch tier, avatar, bio, and skills for profile completeness check
     const { data: worker, error: workerError } = await supabase
       .from("workers")
-      .select("id, user_id, full_name")
+      .select("id, user_id, full_name, tier, avatar_url, bio")
       .eq("user_id", workerId)
       .single();
+
+    if (workerError || !worker) {
+      return { success: false, error: "Data pekerja tidak ditemukan" };
+    }
+
+    // Check profile completeness for Classic tier workers
+    // Classic workers must have: photo (avatar_url), bio, and at least 1 skill
+    if (worker.tier === "classic") {
+      // Check avatar (photo)
+      if (!worker.avatar_url) {
+        return {
+          success: false,
+          error: "Lengkapi profile Anda sebelum melamar. Tambahkan foto profile.",
+        };
+      }
+
+      // Check bio
+      if (!worker.bio || worker.bio.trim().length < 10) {
+        return {
+          success: false,
+          error: "Lengkapi profile Anda sebelum melamar. Tambahkan bio profile.",
+        };
+      }
+
+      // Check skills - fetch worker_skills
+      const { data: workerSkills } = await supabase
+        .from("worker_skills")
+        .select("id")
+        .eq("worker_id", worker.id)
+        .limit(1);
+
+      if (!workerSkills || workerSkills.length === 0) {
+        return {
+          success: false,
+          error: "Lengkapi profile Anda sebelum melamar. Tambahkan minimal 1 skill.",
+        };
+      }
+    }
 
     if (workerError || !worker) {
       return { success: false, error: "Data pekerja tidak ditemukan" };
@@ -572,33 +611,12 @@ export async function acceptApplicationAndCreateBooking(
       };
     }
 
-    // Create interview session based on worker tier
-    const workerTier = (application.workers as any)?.tier || "classic";
-
-    // Import interview session functions
-    const { createInterviewSession } = await import("./interview-sessions");
-
-    const interviewResult = await createInterviewSession(
-      booking.id,
-      businessId,
-      application.worker_id,
-      workerTier,
-    );
-
-    if (!interviewResult.success) {
-      console.error(
-        "Failed to create interview session:",
-        interviewResult.error,
-      );
-      // Don't fail the booking creation - interview is a secondary process
-    }
-
     // Send notification to worker
     if (application.workers) {
       await createNotification(
         (application.workers as any).user_id,
         "Lamaran Diterima",
-        `Selamat! Lamaran Anda untuk ${application.jobs?.title} telah diterima. Anda akan segera dihubungi untuk wawancara.`,
+        `Selamat! Lamaran Anda untuk ${application.jobs?.title} telah diterima. Booking sedang diproses.`,
         `/worker/bookings`,
       );
 

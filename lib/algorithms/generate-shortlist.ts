@@ -372,8 +372,12 @@ export function groupWorkersByTier(
 /**
  * Get interview recommendation based on worker tier
  *
+ * @deprecated Interview system removed. All workers apply directly.
+ * Elite/Champion: Instant dispatch (no review needed)
+ * Pro/Classic: Business reviews profile and accepts/rejects
+ *
  * @param tier - Worker tier
- * @returns Interview recommendation
+ * @returns Interview recommendation (all no-op now)
  */
 export function getInterviewRecommendation(tier: WorkerTier): {
   required: boolean;
@@ -391,18 +395,16 @@ export function getInterviewRecommendation(tier: WorkerTier): {
         description: "Instant dispatch - no interview needed",
       };
     case "pro":
-      return {
-        required: true,
-        type: "chat",
-        estimatedTime: "15-30 minutes",
-        description: "In-app chat interview (5-10 min)",
-      };
     case "classic":
+      // Interview removed - all workers apply directly
+      // Classic workers need complete profile (photo, bio, skills)
       return {
-        required: true,
-        type: "chat_and_voice",
-        estimatedTime: "30-60 minutes",
-        description: "In-app chat + voice call (10-15 min)",
+        required: false,
+        type: "none",
+        estimatedTime: "Business reviews profile",
+        description: tier === "classic" 
+          ? "Complete profile required (photo, bio, skills)"
+          : "Direct apply with profile review",
       };
   }
 }

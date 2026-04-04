@@ -1,22 +1,21 @@
 /**
- * Interview Page Example
+ * Interview Page - DEPRECATED
  *
- * This is an example implementation of the interview interface.
- * In production, this would be integrated with your actual auth and data fetching.
+ * This page is no longer functional as the interview system has been removed.
+ * Job applications now go directly to:
+ * - Worker applies for job
+ * - Business reviews worker profile in /business/jobs/[id]/applicants
+ * - Business accepts/rejects application
+ * - If accepted, booking is created directly
+ *
+ * @deprecated Use /business/jobs/[id]/applicants to review applications
  */
 
 import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { InterviewChat } from "@/components/messaging/interview-chat";
-import { getInterviewSessionByBooking } from "@/lib/actions/interview-sessions";
-import { getBookingMessages } from "@/lib/actions/messages";
-import { sendMessage } from "@/lib/actions/messages";
-import {
-  completeInterviewSession,
-  cancelInterviewSession,
-  startVoiceCallInterview,
-  completeVoiceCallInterview,
-} from "@/lib/actions/interview-sessions";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, Calendar, AlertCircle } from "lucide-react";
 
 interface InterviewPageProps {
   params: Promise<{
@@ -26,104 +25,87 @@ interface InterviewPageProps {
 
 export default async function InterviewPage({ params }: InterviewPageProps) {
   const { id } = await params;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    notFound();
-  }
-
-  // Get interview session
-  const { data: interviewSession, error: sessionError } =
-    await getInterviewSessionByBooking(id);
-
-  if (sessionError || !interviewSession) {
-    notFound();
-  }
-
-  // Verify user has access to this interview
-  if (
-    interviewSession.businessId !== user.id &&
-    interviewSession.workerId !== user.id
-  ) {
-    notFound();
-  }
-
-  // Get messages
-  const { data: messages } = await getBookingMessages(id, 100);
-
-  // Get business and worker info
-  const { data: business } = await supabase
-    .from("businesses")
-    .select("id, name, user_id")
-    .eq("id", interviewSession.businessId)
-    .single();
-
-  // Get business avatar from users table
-  const { data: businessUser } = business
-    ? await supabase
-        .from("users")
-        .select("avatar_url")
-        .eq("id", business.user_id)
-        .single()
-    : { data: null };
-
-  const { data: worker } = await supabase
-    .from("workers")
-    .select("id, full_name, avatar_url, user_id")
-    .eq("id", interviewSession.workerId)
-    .single();
-
-  if (!business || !worker) {
-    notFound();
-  }
-
-  const isBusiness = user.id === business.user_id;
 
   return (
     <div className="container mx-auto py-6 px-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold">Interview Session</h1>
-          <p className="text-muted-foreground">
-            {isBusiness
-              ? `Interviewing ${worker.full_name}`
-              : `Interview with ${business.name}`}
-          </p>
-        </div>
+      <div className="max-w-2xl mx-auto">
+        <Link href="/business/jobs">
+          <Button variant="ghost" size="sm" className="mb-6">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Kembali ke Daftar Pekerjaan
+          </Button>
+        </Link>
 
-        <InterviewChat
-          interviewSession={interviewSession}
-          workerName={worker.full_name}
-          workerTier={interviewSession.workerTier}
-          workerAvatar={worker.avatar_url}
-          businessName={business.name}
-          currentUserId={user.id}
-          isBusiness={isBusiness}
-          messages={messages || []}
-          onSendMessage={async (receiverId, content) => {
-            "use server";
-            await sendMessage(user.id, receiverId, content, id);
-          }}
-          onStartVoiceCall={async () => {
-            "use server";
-            await startVoiceCallInterview(interviewSession.id, user.id);
-          }}
-          onEndVoiceCall={async () => {
-            "use server";
-            await completeVoiceCallInterview(interviewSession.id, user.id);
-          }}
-          onCompleteInterview={async () => {
-            "use server";
-            await completeInterviewSession(interviewSession.id, user.id);
-          }}
-          onCancelInterview={async () => {
-            "use server";
-            await cancelInterviewSession(interviewSession.id, user.id);
-          }}
-        />
+        <Card className="border-amber-200 bg-amber-50/50">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-full bg-amber-100">
+                <AlertCircle className="h-6 w-6 text-amber-600" />
+              </div>
+              <CardTitle className="text-xl text-amber-900">
+                Interview System Removed
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4 text-amber-800">
+            <p>
+              Sistem interview telah dihapus. Proses hiring sekarang lebih sederhana:
+            </p>
+            
+            <div className="bg-white/60 rounded-lg p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-200 flex items-center justify-center text-sm font-semibold">
+                  1
+                </div>
+                <div>
+                  <p className="font-medium">Worker melamar pekerjaan</p>
+                  <p className="text-sm text-amber-700">
+                    Worker Classic harus memiliki profile lengkap (foto, bio, skills)
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-200 flex items-center justify-center text-sm font-semibold">
+                  2
+                </div>
+                <div>
+                  <p className="font-medium">Business mereview profile</p>
+                  <p className="text-sm text-amber-700">
+                    Lihat pelamar di halaman applicants
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-200 flex items-center justify-center text-sm font-semibold">
+                  3
+                </div>
+                <div>
+                  <p className="font-medium">Accept/Reject</p>
+                  <p className="text-sm text-amber-700">
+                    Jika accept, booking dibuat langsung
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <Link href="/business/jobs" className="flex-1">
+                <Button className="w-full">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Lihat Lowongan
+                </Button>
+              </Link>
+              <Link href={`/business/jobs/${id}/applicants`} className="flex-1">
+                <Button variant="outline" className="w-full">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Lihat Pelamar
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
