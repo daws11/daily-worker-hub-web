@@ -93,14 +93,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-background to-muted/10 px-4 py-6 sm:py-8">
-      <div className="w-full max-w-md space-y-5 sm:space-y-6 pb-8 sm:pb-0">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 via-background to-muted/10 px-4 py-8 sm:py-10">
+      <div className="w-full max-w-md space-y-6 sm:space-y-7 pb-8 sm:pb-0">
         {/* Header */}
-        <div className="text-center space-y-1.5 sm:space-y-2">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+        <div className="text-center space-y-2 sm:space-y-3">
+          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
             {t("auth.loginTitle")}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground text-base">
             {t("auth.welcomeBack")}
           </p>
         </div>
@@ -149,10 +149,11 @@ export default function LoginPage() {
 
               <Button
                 type="submit"
-                variant="default"
+                variant="gradient"
                 size="lg"
                 isLoading={isLoading}
                 fullWidth
+                className="rounded-full"
               >
                 {isLoading ? t("auth.loggingIn") : t("auth.login")}
               </Button>

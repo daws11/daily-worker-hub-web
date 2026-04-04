@@ -19,7 +19,7 @@
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 217 91% 60%; /* blue-600 - Trust blue */
+    --primary: 142 76% 36%; /* Green-600 like Gojek */
     --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 96.1%;
     --secondary-foreground: 0 0% 9%;
@@ -31,8 +31,11 @@
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 217 91% 60%; /* blue-600 for focus rings */
+    --ring: 142 76% 36%; /* Green-600 for focus rings */
     --radius: 0.5rem;
+    /* Gojek/Grab gradient variables */
+    --gradient-primary: linear-gradient(135deg, #00AA13 0%, #00C853 100%);
+    --gradient-hero: linear-gradient(180deg, #00AA13 0%, #E8F5E9 100%);
     /* Semantic colors */
     --success: 142 76% 36%; /* green-600 */
     --warning: 38 92% 50%; /* amber-600 */
@@ -47,7 +50,7 @@
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 217 91% 60%; /* blue-600 - Trust blue (same in dark) */
+    --primary: 142 76% 36%; /* Green-600 like Gojek (dark mode) */
     --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 14.9%;
     --secondary-foreground: 0 0% 98%;
@@ -59,7 +62,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
-    --ring: 217 91% 60%; /* blue-600 for focus rings */
+    --ring: 142 76% 36%; /* Green-600 for focus rings */
   }
 }
 

@@ -58,8 +58,8 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border md:hidden z-50">
-      <div className="flex justify-around items-center h-16 px-2">
+    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border md:hidden z-50 safe-bottom">
+      <div className="flex justify-around items-center h-[72px] px-2">
         {items.map((item) => {
           const isActive =
             pathname === item.href || pathname?.startsWith(item.href + "/");
@@ -72,20 +72,23 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center justify-center flex-1 h-full touch-manipulation",
+                  "flex flex-col items-center justify-center flex-1 h-full touch-manipulation relative",
                   "transition-all duration-200",
                   isActive
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Avatar className="h-6 w-6 mb-1">
+                {isActive && (
+                  <div className="absolute top-1 w-12 h-8 rounded-full bg-primary/10" />
+                )}
+                <Avatar className="h-6 w-6 mb-1 relative z-10">
                   <AvatarImage src={user?.user_metadata?.avatar_url as string} />
                   <AvatarFallback className="text-[10px] bg-primary text-primary-foreground">
                     {getInitials()}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-xs font-medium">{item.title}</span>
+                <span className="text-xs font-medium relative z-10">{item.title}</span>
               </Link>
             );
           }
@@ -104,7 +107,10 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <div className="relative">
+                {isActive && (
+                  <div className="absolute top-1 w-12 h-8 rounded-full bg-primary/10" />
+                )}
+                <div className="relative z-10">
                   <Icon className="h-6 w-6" />
                   {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 min-w-[16px] h-4 flex items-center justify-center bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full px-1">
@@ -112,7 +118,7 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
                     </span>
                   )}
                 </div>
-                <span className="text-xs mt-1 font-medium">{item.title}</span>
+                <span className="text-xs mt-1 font-medium relative z-10">{item.title}</span>
               </Link>
             );
           }
@@ -122,15 +128,18 @@ export function MobileBottomNav({ role }: MobileBottomNavProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center flex-1 h-full touch-manipulation",
+                "flex flex-col items-center justify-center flex-1 h-full touch-manipulation relative",
                 "transition-all duration-200",
                 isActive
                   ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon className="h-6 w-6" />
-              <span className="text-xs mt-1 font-medium">{item.title}</span>
+              {isActive && (
+                <div className="absolute top-1 w-12 h-8 rounded-full bg-primary/10" />
+              )}
+              <Icon className="h-6 w-6 relative z-10" />
+              <span className="text-xs mt-1 font-medium relative z-10">{item.title}</span>
             </Link>
           );
         })}

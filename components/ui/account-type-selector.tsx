@@ -42,11 +42,11 @@ function AccountTypeSelector({
               type="button"
               onClick={() => onValueChange(option.value)}
               className={cn(
-                "relative flex flex-col items-center justify-center p-4 sm:p-5 rounded-xl border-2 transition-all duration-200 ease-out min-h-[120px] sm:min-h-[140px]",
+                "relative flex flex-col items-center justify-center p-4 sm:p-5 rounded-2xl border-2 transition-all duration-200 ease-out min-h-[120px] sm:min-h-[140px]",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                 "active:scale-[0.98]",
                 isSelected
-                  ? `${option.color} border-current shadow-sm scale-[1.02]`
+                  ? "border-green-500 bg-gradient-to-br from-green-50 to-green-100/50 shadow-md shadow-green-500/10 scale-[1.02]"
                   : "border-border bg-background hover:bg-muted/50 hover:border-muted-foreground/30 active:bg-muted/60",
               )}
             >
@@ -55,7 +55,7 @@ function AccountTypeSelector({
                 className={cn(
                   "absolute top-2 right-2 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all",
                   isSelected
-                    ? "border-current bg-current"
+                    ? "border-green-500 bg-green-500"
                     : "border-muted-foreground/30 bg-transparent"
                 )}
               >
@@ -81,7 +81,7 @@ function AccountTypeSelector({
                 className={cn(
                   "mb-3 p-3 rounded-full transition-colors",
                   isSelected
-                    ? "bg-current/20"
+                    ? "bg-green-100"
                     : "bg-muted"
                 )}
               >
@@ -90,8 +90,8 @@ function AccountTypeSelector({
                   return (
                     <IconComponent
                       className={cn(
-                        "w-7 h-7 transition-colors",
-                        isSelected ? "text-current" : "text-muted-foreground"
+                        "w-8 h-8 transition-colors",
+                        isSelected ? "text-green-600" : "text-muted-foreground"
                       )}
                     />
                   );
@@ -103,7 +103,7 @@ function AccountTypeSelector({
                 className={cn(
                   "text-sm font-semibold mb-1 transition-colors",
                   isSelected
-                    ? "text-current"
+                    ? "text-green-700"
                     : "text-foreground"
                 )}
               >
@@ -115,7 +115,7 @@ function AccountTypeSelector({
                 className={cn(
                   "text-xs text-center leading-relaxed transition-colors",
                   isSelected
-                    ? "text-current/80"
+                    ? "text-green-600/80"
                     : "text-muted-foreground"
                 )}
               >

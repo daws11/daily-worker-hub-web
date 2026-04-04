@@ -30,7 +30,7 @@ export function DashboardLayout({
   const [collapsed, setCollapsed] = React.useState(false);
 
   return (
-    <div className={cn("min-h-screen bg-background", className)} {...props}>
+    <div className={cn("min-h-screen bg-[#F5F5F5] dark:bg-background", className)} {...props}>
       <div className="flex min-h-screen">
         {/* Desktop Sidebar */}
         <aside
@@ -113,7 +113,7 @@ export function DashboardLayout({
           />
 
           {/* Main Content */}
-          <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-20 md:pb-6">
+          <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-24 md:pb-6">
             {children}
           </main>
         </div>
