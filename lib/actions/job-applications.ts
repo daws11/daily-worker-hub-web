@@ -620,7 +620,7 @@ export async function acceptApplicationAndCreateBooking(
     return {
       success: true,
       data: {
-        application: updatedApplication as JobApplication,
+        application: application as JobApplication,
         booking: booking as Booking,
       },
     };

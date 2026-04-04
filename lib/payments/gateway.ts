@@ -15,7 +15,7 @@ export type { PaymentProvider } from "../types/payment";
  */
 export type PaymentStatus =
   | "pending"
-  | "success"
+  | "paid"
   | "failed"
   | "expired"
   | "cancelled";
@@ -431,7 +431,7 @@ export function calculateTotalWithFee(amount: number, fee: number): number {
  * Check if payment is successful
  */
 export function isPaymentSuccessful(status: PaymentStatus): boolean {
-  return status === "success";
+  return status === "paid";
 }
 
 /**

@@ -186,10 +186,11 @@ async function processWebhook(
       .single();
 
     if (txError || !transaction) {
-      routeLogger.warn("Transaction not found", {
+      routeLogger.warn("Transaction not found — acknowledging to prevent retries", {
         transactionId: payload.externalId,
       });
-      return { success: false, error: "Transaction not found" };
+      // Return success so gateway doesn't retry for missing transaction
+      return { success: true };
     }
 
     // Skip if already processed
@@ -200,7 +201,25 @@ async function processWebhook(
       return { success: true };
     }
 
-    // Update transaction status
+    // Guard against status regression (e.g., success → expired)
+    if (transaction.status === 'paid' && payload.status !== 'paid') {
+      routeLogger.warn("Ignoring status regression from paid", {
+        transactionId: payload.externalId,
+        currentStatus: transaction.status,
+        webhookStatus: payload.status,
+      });
+      return { success: true };
+    }
+
+    // Log amount mismatch for monitoring
+    if (payload.amount !== transaction.amount) {
+      routeLogger.warn("Webhook amount mismatch with transaction", {
+        transactionId: payload.externalId,
+        transactionAmount: transaction.amount,
+        webhookAmount: payload.amount,
+      });
+    }
+
     const updateData: Record<string, unknown> = {
       status: payload.status,
       provider_payment_id: payload.id,
@@ -243,7 +262,7 @@ async function processWebhook(
     });
 
     // If payment is successful, credit the wallet
-    if (payload.status === "success") {
+    if (payload.status === "paid") {
       const creditResult = await creditWallet(
         supabase,
         transaction.business_id,
@@ -402,14 +421,14 @@ async function recordWalletTransaction(
  */
 function mapXenditStatus(
   status: string,
-): "pending" | "success" | "failed" | "expired" | "cancelled" {
+): "pending" | "paid" | "failed" | "expired" | "cancelled" {
   const statusMap: Record<
     string,
-    "pending" | "success" | "failed" | "expired" | "cancelled"
+    "pending" | "paid" | "failed" | "expired" | "cancelled"
   > = {
     PENDING: "pending",
-    PAID: "success",
-    COMPLETED: "success",
+    PAID: "paid",
+    COMPLETED: "paid",
     EXPIRED: "expired",
     CANCELLED: "cancelled",
     FAILED: "failed",

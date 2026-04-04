@@ -219,10 +219,11 @@ async function processWebhook(
       .single();
 
     if (txError || !transaction) {
-      routeLogger.warn("Transaction not found", {
+      routeLogger.warn("Transaction not found — acknowledging to prevent retries", {
         transactionId: payload.externalId,
       });
-      return { success: false, error: "Transaction not found" };
+      // Return success so gateway doesn't retry for missing transaction
+      return { success: true };
     }
 
     // Skip if already processed to this status
@@ -233,7 +234,25 @@ async function processWebhook(
       return { success: true };
     }
 
-    // For fraud challenge, we may want to handle differently
+    // Guard against status regression (e.g., success → expired)
+    if (transaction.status === 'paid' && payload.status !== 'paid') {
+      routeLogger.warn("Ignoring status regression from paid", {
+        transactionId: payload.externalId,
+        currentStatus: transaction.status,
+        webhookStatus: payload.status,
+      });
+      return { success: true };
+    }
+
+    // Log amount mismatch for monitoring
+    if (payload.amount !== transaction.amount) {
+      routeLogger.warn("Webhook amount mismatch with transaction", {
+        transactionId: payload.externalId,
+        transactionAmount: transaction.amount,
+        webhookAmount: payload.amount,
+      });
+    }
+
     if (rawPayload.fraud_status === "challenge") {
       routeLogger.info("Transaction in challenge status", {
         transactionId: payload.externalId,
@@ -289,7 +308,7 @@ async function processWebhook(
     });
 
     // If payment is successful, credit the wallet
-    if (payload.status === "success") {
+    if (payload.status === "paid") {
       const creditResult = await creditWallet(
         supabase,
         transaction.business_id,
@@ -449,7 +468,7 @@ async function recordWalletTransaction(
 function mapMidtransStatus(
   status: string,
   fraudStatus?: string,
-): "pending" | "success" | "failed" | "expired" | "cancelled" {
+): "pending" | "paid" | "failed" | "expired" | "cancelled" {
   // Handle fraud status first for card transactions
   if (fraudStatus === "deny" || fraudStatus === "challenge") {
     return "failed";
@@ -457,11 +476,11 @@ function mapMidtransStatus(
 
   const statusMap: Record<
     string,
-    "pending" | "success" | "failed" | "expired" | "cancelled"
+    "pending" | "paid" | "failed" | "expired" | "cancelled"
   > = {
     pending: "pending",
-    capture: "success",
-    settlement: "success",
+    capture: "paid",
+    settlement: "paid",
     deny: "failed",
     cancel: "cancelled",
     expire: "expired",

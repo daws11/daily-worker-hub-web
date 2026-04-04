@@ -578,7 +578,7 @@ export class MidtransGateway implements PaymentGateway {
   private mapStatus(
     status: string,
     fraudStatus?: string,
-  ): "pending" | "success" | "failed" | "expired" | "cancelled" {
+  ): "pending" | "paid" | "failed" | "expired" | "cancelled" {
     // Handle fraud status first for card transactions
     if (fraudStatus === "deny" || fraudStatus === "challenge") {
       return "failed";
@@ -586,11 +586,11 @@ export class MidtransGateway implements PaymentGateway {
 
     const statusMap: Record<
       string,
-      "pending" | "success" | "failed" | "expired" | "cancelled"
+      "pending" | "paid" | "failed" | "expired" | "cancelled"
     > = {
       pending: "pending",
-      capture: "success",
-      settlement: "success",
+      capture: "paid",
+      settlement: "paid",
       deny: "failed",
       cancel: "cancelled",
       expire: "expired",
@@ -629,14 +629,14 @@ export function verifySignature(
 export function mapPaymentStatus(
   status: string,
   fraudStatus?: string,
-): "pending" | "success" | "failed" | "expired" | "cancelled" {
+): "pending" | "paid" | "failed" | "expired" | "cancelled" {
   const statusMap: Record<
     string,
-    "pending" | "success" | "failed" | "expired" | "cancelled"
+    "pending" | "paid" | "failed" | "expired" | "cancelled"
   > = {
     pending: "pending",
-    capture: "success",
-    settlement: "success",
+    capture: "paid",
+    settlement: "paid",
     deny: "failed",
     cancel: "cancelled",
     expire: "expired",

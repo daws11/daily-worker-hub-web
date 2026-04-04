@@ -548,14 +548,14 @@ export class XenditGateway implements PaymentGateway {
    */
   private mapStatus(
     status: string,
-  ): "pending" | "success" | "failed" | "expired" | "cancelled" {
+  ): "pending" | "paid" | "failed" | "expired" | "cancelled" {
     const statusMap: Record<
       string,
-      "pending" | "success" | "failed" | "expired" | "cancelled"
+      "pending" | "paid" | "failed" | "expired" | "cancelled"
     > = {
       PENDING: "pending",
-      PAID: "success",
-      COMPLETED: "success",
+      PAID: "paid",
+      COMPLETED: "paid",
       EXPIRED: "expired",
       CANCELLED: "cancelled",
       FAILED: "failed",
@@ -605,14 +605,14 @@ export function verifyWebhookSignature(signature: string | null): boolean {
 
 export function mapPaymentStatus(
   status: string,
-): "pending" | "success" | "failed" | "expired" | "cancelled" {
+): "pending" | "paid" | "failed" | "expired" | "cancelled" {
   const statusMap: Record<
     string,
-    "pending" | "success" | "failed" | "expired" | "cancelled"
+    "pending" | "paid" | "failed" | "expired" | "cancelled"
   > = {
     PENDING: "pending",
-    PAID: "success",
-    COMPLETED: "success",
+    PAID: "paid",
+    COMPLETED: "paid",
     EXPIRED: "expired",
     CANCELLED: "cancelled",
     FAILED: "failed",

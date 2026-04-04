@@ -2329,6 +2329,21 @@ export type Database = {
         Args: { metrics_data: Json; post_uuid: string }
         Returns: boolean
       }
+      accept_application: {
+        Args: { p_application_id: string; p_business_id: string }
+        Returns: boolean
+      }
+      create_booking_for_application: {
+        Args: {
+          p_job_id: string
+          p_worker_id: string
+          p_business_id: string
+          p_application_id: string
+          p_start_date: string
+          p_final_price: number
+        }
+        Returns: string
+      }
     }
     Enums: {
       badge_category: "skill" | "training" | "certification" | "specialization"
