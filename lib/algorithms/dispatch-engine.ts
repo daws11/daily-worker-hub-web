@@ -25,6 +25,16 @@ import { logger } from "@/lib/logger";
 
 type WorkerTier = Database["public"]["Enums"]["worker_tier"];
 
+// ─── Configuration
+
+/** Dispatch configuration constants */
+export const DISPATCH_CONFIG = {
+  EXPIRY_SECONDS: 45,
+  MAX_DISTANCE_KM: 25,
+  MAX_CANDIDATES: 10,
+  AUTO_OFFLINE_MINUTES: 5,
+};
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface DispatchOptions {

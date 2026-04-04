@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getServerSession } from "@/lib/auth/get-server-session";
 import { logger } from "@/lib/logger";
-import { initiateDispatch, DISPATCH_CONFIG } from "@/lib/dispatch-engine";
+import { initiateDispatch, DISPATCH_CONFIG } from "@/lib/algorithms/dispatch-engine";
 import { createNotification } from "@/lib/actions/notifications";
 import { sendPushNotification } from "@/lib/actions/push-notifications";
 import {
@@ -60,22 +60,34 @@ export async function POST(
 
     if (mode === "auto") {
       // Auto-dispatch: use dispatch engine
-      const result = await initiateDispatch(jobId, business.id);
+      const result = await initiateDispatch(jobId);
 
       if (!result.success) {
         return errorResponse(404, result.error || "No available workers found", request);
       }
 
-      routeLogger.info("Auto dispatch initiated", { requestId, ...result });
+      // Fetch dispatch details for response
+      const { data: dispatchDetails } = await supabase
+        .from("dispatch_queue")
+        .select(`
+          id, matching_score, expires_at,
+          workers ( id, full_name )
+        `)
+        .eq("id", result.dispatchId!)
+        .single();
+
+      const workerInfo = (dispatchDetails as any)?.workers;
+
+      routeLogger.info("Auto dispatch initiated", { requestId, dispatchId: result.dispatchId });
       logger.requestSuccess(request, { status: 200 }, startTime, { requestId });
 
       return NextResponse.json({
         success: true,
         dispatchId: result.dispatchId,
-        workerId: result.workerId,
-        workerName: result.workerName,
-        matchingScore: result.matchingScore,
-        expiresAt: result.expiresAt,
+        workerId: workerInfo?.id || null,
+        workerName: workerInfo?.full_name || null,
+        matchingScore: (dispatchDetails as any)?.matching_score || 0,
+        expiresAt: (dispatchDetails as any)?.expires_at || null,
       });
     } else if (mode === "manual") {
       // Manual dispatch: dispatch to selected workers

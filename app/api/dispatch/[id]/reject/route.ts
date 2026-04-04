@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getServerSession } from "@/lib/auth/get-server-session";
 import { logger } from "@/lib/logger";
-import { handleDispatchTimeout } from "@/lib/dispatch-engine";
+import { handleDispatchTimeout } from "@/lib/algorithms/dispatch-engine";
 import {
   errorResponse,
   handleApiError,
@@ -110,8 +110,7 @@ export async function POST(
     if (nextResult.success) {
       routeLogger.info("Next dispatch initiated after rejection", {
         requestId,
-        nextDispatchId: nextResult.dispatchId,
-        nextWorkerId: nextResult.workerId,
+        nextDispatchId: nextResult.nextDispatchId,
       });
     }
 

@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getServerSession } from "@/lib/auth/get-server-session";
 import { logger } from "@/lib/logger";
-import { DISPATCH_CONFIG } from "@/lib/dispatch-engine";
+import { DISPATCH_CONFIG } from "@/lib/algorithms/dispatch-engine";
 import {
   errorResponse,
   handleApiError,
