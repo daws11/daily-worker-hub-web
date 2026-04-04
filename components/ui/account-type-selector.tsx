@@ -42,11 +42,12 @@ function AccountTypeSelector({
               type="button"
               onClick={() => onValueChange(option.value)}
               className={cn(
-                "relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 ease-out",
+                "relative flex flex-col items-center justify-center p-4 sm:p-5 rounded-xl border-2 transition-all duration-200 ease-out min-h-[120px] sm:min-h-[140px]",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                "active:scale-[0.98]",
                 isSelected
                   ? `${option.color} border-current shadow-sm scale-[1.02]`
-                  : "border-border bg-background hover:bg-muted/50 hover:border-muted-foreground/30",
+                  : "border-border bg-background hover:bg-muted/50 hover:border-muted-foreground/30 active:bg-muted/60",
               )}
             >
               {/* Selection indicator */}

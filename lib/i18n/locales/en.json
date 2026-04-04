@@ -129,7 +129,10 @@
     "forgotPassword": "Forgot Password",
     "or": "or",
     "registrationSuccess": "Registration successful!",
-    "passwordRequirements": "Min. 8 characters, 1 uppercase, 1 number"
+    "passwordRequirements": "Min. 8 characters, 1 uppercase, 1 number",
+    "welcomeBack": "Welcome back!",
+    "selectAccountType": "Select account type",
+    "createAccount": "Create an account to get started"
   },
   "navigation": {
     "dashboard": "Dashboard",

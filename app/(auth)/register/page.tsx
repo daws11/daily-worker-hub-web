@@ -83,11 +83,11 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20 px-4 py-8">
-      <div className="w-full max-w-md space-y-6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background via-background to-muted/10 px-4 py-6 sm:py-8">
+      <div className="w-full max-w-md space-y-5 sm:space-y-6 pb-8 sm:pb-0">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+        <div className="text-center space-y-1.5 sm:space-y-2">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
             {t("auth.registerTitle")}
           </h1>
           <p className="text-muted-foreground">
@@ -95,10 +95,10 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <Card className="border border-border shadow-sm">
-          <CardContent className="pt-6 pb-6">
+        <Card className="border border-border/60 shadow-sm">
+          <CardContent className="pt-5 pb-5 sm:pt-6 sm:pb-6">
             {/* Account Type Selector */}
-            <div className="mb-6">
+            <div className="mb-5 sm:mb-6">
               <AccountTypeSelector
                 value={role}
                 onValueChange={setRole}
