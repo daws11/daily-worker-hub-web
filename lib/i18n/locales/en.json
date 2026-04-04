@@ -128,7 +128,8 @@
     "continueWithGoogle": "Continue with Google",
     "forgotPassword": "Forgot Password",
     "or": "or",
-    "registrationSuccess": "Registration successful!"
+    "registrationSuccess": "Registration successful!",
+    "passwordRequirements": "Min. 8 characters, 1 uppercase, 1 number"
   },
   "navigation": {
     "dashboard": "Dashboard",

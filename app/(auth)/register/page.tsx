@@ -3,38 +3,12 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useAuth } from "../../providers/auth-provider";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/lib/i18n/hooks";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AccountTypeSelector } from "@/components/ui/account-type-selector";
 import { Separator } from "@/components/ui/separator";
-
-// Simple translation function
-function t(key: string): string {
-  const translations: Record<string, string> = {
-    "auth.registerTitle": "Daftar Akun",
-    "auth.createAccount": "Buat akun baru untuk memulai",
-    "auth.fullName": "Nama Lengkap",
-    "auth.email": "Email",
-    "auth.password": "Password",
-    "auth.register": "Daftar",
-    "auth.registering": "Mendaftar...",
-    "auth.or": "atau",
-    "auth.continueWithGoogle": "Daftar dengan Google",
-    "auth.hasAccount": "Sudah punya akun?",
-    "auth.loginHere": "Masuk sekarang",
-    "auth.emailPlaceholder": "nama@email.com",
-    "auth.passwordPlaceholder": "Buat password kuat",
-    "auth.fullNamePlaceholder": "Budi Santoso",
-    "auth.selectAccountType": "Pilih tipe akun Anda",
-    "auth.worker": "Pekerja",
-    "auth.workerDesc": "Cari lowongan dan lamar kerja",
-    "auth.business": "Perusahaan",
-    "auth.businessDesc": "Temukan kandidat terbaik",
-    "auth.passwordRequirements": "Min. 8 karakter, 1 huruf besar, 1 angka",
-  };
-  return translations[key] || key;
-}
 
 // Worker Icon
 function WorkerIcon({ className }: { className?: string }) {
@@ -93,6 +67,7 @@ const accountTypeOptions = [
 
 export default function RegisterPage() {
   const { signUp, signInWithGoogle, isLoading } = useAuth();
+  const { t } = useTranslation();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

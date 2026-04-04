@@ -3,9 +3,11 @@
  *
  * Admin endpoint to view cache statistics and manage cache.
  * Requires admin authentication.
+ * Rate limited: 10 requests per minute (admin tier).
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import {
   cache,
   invalidateJobCache,
@@ -16,26 +18,37 @@ import {
 } from "@/lib/cache/index";
 import { logger } from "@/lib/logger";
 import { errorResponse, handleApiError } from "@/lib/api/error-response";
+import { withRateLimit } from "@/lib/rate-limit";
 
 const routeLogger = logger.createApiLogger("cache-stats");
 
 /**
- * Verify admin authentication
- * TODO: Implement proper admin auth check
+ * Verify admin authentication using timing-safe comparison
  */
 async function verifyAdminAuth(request: NextRequest): Promise<boolean> {
   const authHeader = request.headers.get("authorization");
-
-  // For now, check for a simple admin secret
-  // In production, this should use proper admin authentication
   const adminSecret = process.env.ADMIN_API_SECRET;
 
-  if (!adminSecret) {
-    // If no admin secret is configured, deny access
+  if (!authHeader || !adminSecret) {
     return false;
   }
 
-  return authHeader === `Bearer ${adminSecret}`;
+  // Extract the bearer token
+  const [scheme, token] = authHeader.split(" ");
+  if (scheme !== "Bearer" || !token) {
+    return false;
+  }
+
+  // Use crypto.timingSafeEqual for timing-safe comparison
+  const expected = Buffer.from(token, "utf-8");
+  const actual = Buffer.from(adminSecret, "utf-8");
+
+  // Only compare if lengths match (prevents timing attacks via length leak)
+  if (expected.length !== actual.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expected, actual);
 }
 
 /**
@@ -87,10 +100,11 @@ async function verifyAdminAuth(request: NextRequest): Promise<boolean> {
  *       500:
  *         description: Internal server error
  */
-export async function GET(request: NextRequest) {
-  const { startTime, requestId } = logger.requestStart(request, {
-    route: "admin:cache-stats",
-  });
+export const GET = withRateLimit(
+  async (request: NextRequest) => {
+    const { startTime, requestId } = logger.requestStart(request, {
+      route: "admin:cache-stats",
+    });
 
   try {
     // Verify admin auth
@@ -145,14 +159,19 @@ export async function GET(request: NextRequest) {
       totalEntries: stats.entries.length,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    routeLogger.error("Unexpected error in GET /api/admin/cache-stats", error, {
-      requestId,
-    });
+    } catch (error) {
+      routeLogger.error("Unexpected error in GET /api/admin/cache-stats", error, {
+        requestId,
+      });
 
-    return handleApiError(error, request, "/api/admin/cache-stats", "GET");
+      return handleApiError(error, request, "/api/admin/cache-stats", "GET");
+    }
+  },
+  {
+    type: "api-authenticated",
+    skipAdmin: false,
   }
-}
+);
 
 /**
  * @openapi
@@ -198,10 +217,11 @@ export async function GET(request: NextRequest) {
  *       500:
  *         description: Internal server error
  */
-export async function DELETE(request: NextRequest) {
-  const { startTime, requestId } = logger.requestStart(request, {
-    route: "admin:cache-stats:delete",
-  });
+export const DELETE = withRateLimit(
+  async (request: NextRequest) => {
+    const { startTime, requestId } = logger.requestStart(request, {
+      route: "admin:cache-stats:delete",
+    });
 
   try {
     // Verify admin auth
@@ -291,14 +311,19 @@ export async function DELETE(request: NextRequest) {
       cleared,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    routeLogger.error("Unexpected error in DELETE /api/admin/cache-stats", error, {
-      requestId,
-    });
+    } catch (error) {
+      routeLogger.error("Unexpected error in DELETE /api/admin/cache-stats", error, {
+        requestId,
+      });
 
-    return handleApiError(error, request, "/api/admin/cache-stats", "DELETE");
+      return handleApiError(error, request, "/api/admin/cache-stats", "DELETE");
+    }
+  },
+  {
+    type: "api-authenticated",
+    skipAdmin: false,
   }
-}
+);
 
 /**
  * @openapi
@@ -329,10 +354,11 @@ export async function DELETE(request: NextRequest) {
  *       500:
  *         description: Internal server error
  */
-export async function POST(request: NextRequest) {
-  const { startTime, requestId } = logger.requestStart(request, {
-    route: "admin:cache-stats:warmup",
-  });
+export const POST = withRateLimit(
+  async (request: NextRequest) => {
+    const { startTime, requestId } = logger.requestStart(request, {
+      route: "admin:cache-stats:warmup",
+    });
 
   try {
     // Verify admin auth
@@ -401,11 +427,16 @@ export async function POST(request: NextRequest) {
       results,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    routeLogger.error("Unexpected error in POST /api/admin/cache-stats", error, {
-      requestId,
-    });
+    } catch (error) {
+      routeLogger.error("Unexpected error in POST /api/admin/cache-stats", error, {
+        requestId,
+      });
 
-    return handleApiError(error, request, "/api/admin/cache-stats", "POST");
+      return handleApiError(error, request, "/api/admin/cache-stats", "POST");
+    }
+  },
+  {
+    type: "api-authenticated",
+    skipAdmin: false,
   }
-}
+);

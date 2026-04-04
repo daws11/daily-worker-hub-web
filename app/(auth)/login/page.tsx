@@ -4,36 +4,12 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../../providers/auth-provider";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { useTranslation } from "@/lib/i18n/hooks";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AccountTypeSelector } from "@/components/ui/account-type-selector";
 import { Separator } from "@/components/ui/separator";
-
-// Simple translation function (placeholder for now)
-function t(key: string, fallback?: string): string {
-  const translations: Record<string, string> = {
-    "auth.loginTitle": "Masuk",
-    "auth.welcomeBack": "Selamat datang kembali!",
-    "auth.email": "Email",
-    "auth.password": "Password",
-    "auth.login": "Masuk",
-    "auth.loggingIn": "Masuk...",
-    "auth.noAccount": "Belum punya akun?",
-    "auth.registerHere": "Daftar sekarang",
-    "auth.emailPlaceholder": "nama@email.com",
-    "auth.passwordPlaceholder": "Masukkan password",
-    "auth.forgotPassword": "Lupa password?",
-    "auth.selectAccountType": "Pilih tipe akun Anda",
-    "auth.worker": "Pekerja",
-    "auth.workerDesc": "Cari lowongan dan lamar kerja",
-    "auth.business": "Perusahaan",
-    "auth.businessDesc": "Temukan kandidat terbaik",
-    "auth.or": "atau",
-    "auth.continueWithGoogle": "Masuk dengan Google",
-  };
-  return translations[key] || fallback || key;
-}
 
 // Worker Icon
 function WorkerIcon({ className }: { className?: string }) {
@@ -94,6 +70,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { signIn, signInWithGoogle, isLoading } = useAuth();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"worker" | "business">("worker");

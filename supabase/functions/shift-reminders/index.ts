@@ -219,7 +219,7 @@ serve(async (req) => {
         const userBookings = bookingsByWorker[workerId]
 
         // Create notification message based on number of upcoming shifts
-        let title = 'Pengingat Shift'
+        const title = 'Pengingat Shift'
         let body = ''
 
         if (userBookings.length === 1) {

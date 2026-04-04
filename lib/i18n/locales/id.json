@@ -128,7 +128,8 @@
     "continueWithGoogle": "Lanjutkan dengan Google",
     "forgotPassword": "Lupa Kata Sandi",
     "or": "atau",
-    "registrationSuccess": "Pendaftaran berhasil!"
+    "registrationSuccess": "Pendaftaran berhasil!",
+    "passwordRequirements": "Min. 8 karakter, 1 huruf besar, 1 angka"
   },
   "navigation": {
     "dashboard": "Dasbor",

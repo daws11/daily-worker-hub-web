@@ -3,11 +3,13 @@
  *
  * Provides system metrics for the monitoring dashboard.
  * Collects data from cache, rate limiting, database, and logs.
+ * Rate limited: 10 requests per minute (admin tier).
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { cache } from "@/lib/cache";
-import { rateLimitStore } from "@/lib/rate-limit";
+import { rateLimitStore, withRateLimit, RATE_LIMIT_CONFIGS } from "@/lib/rate-limit";
 import { logger } from "@/lib/logger";
 import { errorResponse, handleApiError } from "@/lib/api/error-response";
 import os from "os";
@@ -15,22 +17,32 @@ import os from "os";
 const routeLogger = logger.createApiLogger("admin-metrics");
 
 /**
- * Verify admin authentication
- * TODO: Implement proper admin auth check
+ * Verify admin authentication using timing-safe comparison
  */
 async function verifyAdminAuth(request: NextRequest): Promise<boolean> {
   const authHeader = request.headers.get("authorization");
-
-  // For now, check for a simple admin secret
-  // In production, this should use proper admin authentication
   const adminSecret = process.env.ADMIN_API_SECRET;
 
-  if (!adminSecret) {
-    // If no admin secret is configured, deny access
+  if (!authHeader || !adminSecret) {
     return false;
   }
 
-  return authHeader === `Bearer ${adminSecret}`;
+  // Extract the bearer token
+  const [scheme, token] = authHeader.split(" ");
+  if (scheme !== "Bearer" || !token) {
+    return false;
+  }
+
+  // Use crypto.timingSafeEqual for timing-safe comparison
+  const expected = Buffer.from(token, "utf-8");
+  const actual = Buffer.from(adminSecret, "utf-8");
+
+  // Only compare if lengths match (prevents timing attacks via length leak)
+  if (expected.length !== actual.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expected, actual);
 }
 
 /**
@@ -296,24 +308,27 @@ function getDatabaseMetrics() {
  *                   type: object
  *       401:
  *         description: Unauthorized
+ *       429:
+ *         description: Rate limit exceeded
  *       500:
  *         description: Internal server error
  */
-export async function GET(request: NextRequest) {
-  const { startTime, requestId } = logger.requestStart(request, {
-    route: "admin-metrics",
-  });
+export const GET = withRateLimit(
+  async (request: NextRequest) => {
+    const { startTime, requestId } = logger.requestStart(request, {
+      route: "admin-metrics",
+    });
 
-  try {
-    // Verify admin auth
-    const isAuthorized = await verifyAdminAuth(request);
+    try {
+      // Verify admin auth
+      const isAuthorized = await verifyAdminAuth(request);
 
-    if (!isAuthorized) {
-      routeLogger.warn("Unauthorized metrics access attempt", { requestId });
-      logger.requestError(request, null, 401, startTime, { requestId });
+      if (!isAuthorized) {
+        routeLogger.warn("Unauthorized metrics access attempt", { requestId });
+        logger.requestError(request, null, 401, startTime, { requestId });
 
-      return errorResponse(401, "Unauthorized", request);
-    }
+        return errorResponse(401, "Unauthorized", request);
+      }
 
     // Collect all metrics
     const metrics = {
@@ -331,9 +346,14 @@ export async function GET(request: NextRequest) {
     logger.requestSuccess(request, { status: 200 }, startTime, { requestId });
 
     return NextResponse.json(metrics);
-  } catch (error) {
-    routeLogger.error("Error retrieving metrics", error, { requestId });
+    } catch (error) {
+      routeLogger.error("Error retrieving metrics", error, { requestId });
 
-    return handleApiError(error, request, "/api/admin/metrics", "GET");
+      return handleApiError(error, request, "/api/admin/metrics", "GET");
+    }
+  },
+  {
+    type: "api-authenticated",
+    skipAdmin: false,
   }
-}
+);

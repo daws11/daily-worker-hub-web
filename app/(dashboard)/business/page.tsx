@@ -150,7 +150,7 @@ export default function BusinessDashboardPage() {
         // Calculate total spent - first get business wallet
         if (!business) return;
         
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const walletQuery = supabase as any;
         const { data: businessWallet }: { data: any } = await walletQuery
           .from("wallets")

@@ -183,7 +183,7 @@ test("Complete Booking Flow - Full Lifecycle", async ({ page }) => {
 
   // Variable to store job ID (extracted after creation)
   let jobId: string | null = null;
-  let bookingId: string | null = null;
+  const bookingId: string | null = null;
 
   console.log(`📋 Test Job Title: ${jobTitle}`);
   console.log(`📅 Job Date: ${tomorrowDate}`);

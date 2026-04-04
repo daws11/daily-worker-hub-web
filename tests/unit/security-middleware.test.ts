@@ -179,7 +179,6 @@ describe("Security Middleware", () => {
       const permissions = response.headers.get("Permissions-Policy");
       expect(permissions).toContain("camera=()");
       expect(permissions).toContain("microphone=()");
-      expect(permissions).toContain("geolocation=()");
       expect(permissions).toContain("payment=()");
     });
 

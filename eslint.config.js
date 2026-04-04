@@ -1,5 +1,4 @@
 const parser = require("@typescript-eslint/parser");
-const path = require("path");
 
 module.exports = [
   {
@@ -18,6 +17,7 @@ module.exports = [
       "prefer-const": "warn",
       "react/jsx-uses-react": "off",
       "react/react-in-jsx-scope": "off",
+      "@typescript-eslint/no-explicit-any": "off",
     },
   },
 ];

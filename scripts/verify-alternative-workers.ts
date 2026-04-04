@@ -123,7 +123,7 @@ async function verifyAlternativeWorkers(): Promise<VerificationResult> {
   );
 
   let businessId: string | null = null;
-  let workerIds: string[] = [];
+  const workerIds: string[] = [];
   let jobId: string | null = null;
 
   try {
