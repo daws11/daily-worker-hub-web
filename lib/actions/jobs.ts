@@ -27,6 +27,7 @@ export interface CreateJobInput {
   description: string;
   requirements: string[];
   area: string;
+  dispatchMode?: "auto" | "manual";
   platformSettings?: Record<string, { enabled: boolean; connectionId: string }>;
 }
 
@@ -83,6 +84,7 @@ export async function createJob(
         hoursNeeded: input.hoursNeeded,
         area: input.area,
         positionType: input.positionType,
+        dispatchMode: input.dispatchMode || "manual",
       },
     };
 

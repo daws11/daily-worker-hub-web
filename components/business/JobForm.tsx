@@ -18,6 +18,8 @@ import { getCategories } from "@/lib/actions/categories";
 import { getBusinessProfile } from "@/lib/actions/business";
 import { createJob } from "@/lib/actions/jobs";
 
+type DispatchMode = "auto" | "manual";
+
 interface JobFormData {
   title: string;
   description: string;
@@ -29,6 +31,7 @@ interface JobFormData {
   address: string;
   deadline: string;
   is_urgent: boolean;
+  dispatch_mode: DispatchMode;
 }
 
 interface Category {
@@ -67,6 +70,7 @@ export default function JobForm() {
     address: "",
     deadline: "",
     is_urgent: false,
+    dispatch_mode: "manual",
   });
 
   // Fetch categories and business profile on mount
@@ -204,6 +208,7 @@ export default function JobForm() {
         description: formData.description.trim(),
         requirements: formData.requirements.split("\n").filter((r) => r.trim()),
         area: formData.address.trim(),
+        dispatchMode: formData.dispatch_mode,
       });
 
       if (result.success) {
@@ -439,7 +444,7 @@ export default function JobForm() {
           </div>
 
           {/* Is Urgent */}
-          <div className="mb-8">
+          <div className="mb-6">
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -453,6 +458,62 @@ export default function JobForm() {
                 Mark this job as urgent
               </span>
             </label>
+          </div>
+
+          {/* Dispatch Mode Selection */}
+          <div className="mb-8">
+            <label className="block text-sm font-medium mb-3 text-foreground">
+              How do you want to find workers?
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Auto-Assign Card */}
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    dispatch_mode: "auto",
+                  }))
+                }
+                disabled={loading}
+                className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer disabled:opacity-50 ${
+                  formData.dispatch_mode === "auto"
+                    ? "border-primary bg-primary/5 shadow-md"
+                    : "border-border hover:border-primary/40"
+                }`
+              }
+              >
+                <div className="text-2xl mb-2">🤖</div>
+                <div className="font-semibold text-sm">AUTO-ASSIGN</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  System automatically finds and dispatches the best matching worker
+                </p>
+              </button>
+
+              {/* Manual Pick Card */}
+              <button
+                type="button"
+                onClick={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    dispatch_mode: "manual",
+                  }))
+                }
+                disabled={loading}
+                className={`p-4 rounded-xl border-2 text-left transition-all cursor-pointer disabled:opacity-50 ${
+                  formData.dispatch_mode === "manual"
+                    ? "border-primary bg-primary/5 shadow-md"
+                    : "border-border hover:border-primary/40"
+                }`
+              }
+              >
+                <div className="text-2xl mb-2">👀</div>
+                <div className="font-semibold text-sm">MANUAL PICK</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Browse available workers and choose who you want
+                </p>
+              </button>
+            </div>
           </div>
 
           {/* Submit Button */}
