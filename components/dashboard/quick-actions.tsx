@@ -15,7 +15,8 @@ import {
   CreditCard,
   FileText,
   CheckCircle,
-  MessageSquare
+  MessageSquare,
+  Activity
 } from "lucide-react";
 import { useTranslation } from "@/lib/i18n/hooks";
 import { cn } from "@/lib/utils";
@@ -63,6 +64,13 @@ export function QuickActions({ role }: QuickActionsProps) {
       icon: Calendar,
       color: "bg-orange-100 dark:bg-orange-900/40",
       iconColor: "text-orange-600 dark:text-orange-400",
+    },
+    {
+      label: "Dispatch Analytics",
+      href: "/business/dispatch-analytics",
+      icon: Activity,
+      color: "bg-cyan-100 dark:bg-cyan-900/40",
+      iconColor: "text-cyan-600 dark:text-cyan-400",
     },
     {
       label: "Analytics",

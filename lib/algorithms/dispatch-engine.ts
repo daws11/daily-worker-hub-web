@@ -371,24 +371,51 @@ export async function initiateDispatch(
 /**
  * Handle dispatch acceptance by worker.
  * Creates a booking and marks dispatch as accepted.
+ * 
+ * RACE CONDITION PROTECTION:
+ * Uses atomic update with status='pending' condition to ensure only one worker
+ * can successfully accept a dispatch. If 0 rows are affected, it means
+ * another worker already accepted or the dispatch was processed.
  */
 export async function handleDispatchAccept(
   dispatchId: string,
 ): Promise<{ success: boolean; bookingId?: string; error?: string }> {
   const supabase = await createClient();
 
-  // Fetch dispatch entry
+  // First check if dispatch exists and is still pending
   const { data: dispatch, error: fetchError } = await supabase
     .from("dispatch_queue")
     .select("*")
     .eq("id", dispatchId)
-    .eq("status", "pending")
     .single();
 
   if (fetchError || !dispatch) {
     return {
       success: false,
       error: "Dispatch not found or already processed",
+    };
+  }
+
+  // Check if job is already fulfilled (race condition check)
+  const { data: jobData } = await supabase
+    .from("jobs")
+    .select("dispatch_status, id")
+    .eq("id", dispatch.job_id)
+    .single();
+
+  if (jobData?.dispatch_status === "fulfilled") {
+    dispatchLogger.warn("Job already fulfilled, reject accept", {
+      dispatchId,
+      jobId: dispatch.job_id,
+    });
+    return { success: false, error: "Job already fulfilled by another worker" };
+  }
+
+  // Check if already processed
+  if (dispatch.status !== "pending") {
+    return {
+      success: false,
+      error: `Dispatch already ${dispatch.status}`,
     };
   }
 
@@ -404,15 +431,27 @@ export async function handleDispatchAccept(
       new Date(dispatch.dispatched_at).getTime()) /
     1000;
 
-  // Update dispatch status
-  await supabase
+  // ATOMIC UPDATE: Only update if status is still 'pending'
+  // This prevents race condition where two workers try to accept
+  const { data: updateResult, error: updateError } = await supabase
     .from("dispatch_queue")
     .update({
       status: "accepted",
       responded_at: respondedAt,
       response_time_seconds: responseTime,
     })
-    .eq("id", dispatchId);
+    .eq("id", dispatchId)
+    .eq("status", "pending") // Critical: only update if still pending
+    .select("id")
+    .single();
+
+  // If no rows affected, another worker already accepted
+  if (updateError || !updateResult) {
+    dispatchLogger.warn("Dispatch already accepted by another worker", {
+      dispatchId,
+    });
+    return { success: false, error: "Dispatch already accepted by another worker" };
+  }
 
   // Create booking
   const { data: booking, error: bookingError } = await supabase
@@ -428,7 +467,14 @@ export async function handleDispatchAccept(
     .single();
 
   if (bookingError || !booking) {
-    dispatchLogger.error("Failed to create booking from dispatch", bookingError);
+    dispatchLogger.error("Failed to create booking from dispatch", bookingError, {
+      dispatchId,
+    });
+    // Revert dispatch status
+    await supabase
+      .from("dispatch_queue")
+      .update({ status: "pending" })
+      .eq("id", dispatchId);
     return { success: false, error: "Failed to create booking" };
   }
 

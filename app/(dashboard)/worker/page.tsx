@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/app/providers/auth-provider";
+import { WorkerStatusToggle } from "@/components/worker/worker-status-toggle";
 import { supabase } from "@/lib/supabase/client";
 import { DashboardGreeting } from "@/components/dashboard/greeting";
 import { QuickStats, type WorkerStats } from "@/components/dashboard/quick-stats";
@@ -191,6 +192,11 @@ export default function WorkerDashboardPage() {
 
   return (
     <div className="space-y-4 md:space-y-6 pb-20 md:pb-6 animate-fade-in">
+      {/* Worker Status Toggle */}
+      <div className="animate-slide-up">
+        <WorkerStatusToggle />
+      </div>
+
       {/* Greeting */}
       <div className="animate-slide-up">
         <DashboardGreeting role="worker" name={workerName} />
