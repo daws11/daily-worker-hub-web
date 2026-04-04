@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 
   const { startTime, requestId } = logger.requestStart(request, {
     route: "analytics/dispatch",
-    businessId,
+    businessId: businessId ?? undefined,
     period,
   });
 
