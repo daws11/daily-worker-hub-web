@@ -12,9 +12,14 @@ import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/app/providers/auth-provider";
 import { IncomingJobCard } from "@/components/worker/incoming-job-card";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Bell, CheckCircle, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, Bell, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import type { AvailableJob } from "@/app/api/workers/available-jobs/route";
+
+function withTimeout<T>(promise: Promise<T>, ms: number = 10000): Promise<T> {
+  return Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Request timed out")), ms))]) as any as Promise<T>;
+}
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -23,18 +28,26 @@ export default function WorkerDispatchesPage() {
   const [pendingJobs, setPendingJobs] = useState<AvailableJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPolling, setIsPolling] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchAvailableJobs = useCallback(async () => {
     if (!user?.id) return;
     
+    setIsPolling(true);
+    
     try {
-      const res = await fetch("/api/workers/available-jobs");
+      const res = await withTimeout(fetch("/api/workers/available-jobs"), 10000);
       if (res.ok) {
         const data = await res.json();
         setPendingJobs(data.jobs || []);
+        setError(null);
+      } else {
+        throw new Error(`HTTP ${res.status}: Failed to fetch jobs`);
       }
-    } catch (error) {
-      console.error("Failed to fetch available jobs:", error);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Gagal memuat lowongan";
+      console.error("Failed to fetch available jobs:", err);
+      setError(message);
     } finally {
       setLoading(false);
       setIsPolling(false);
@@ -115,6 +128,38 @@ export default function WorkerDispatchesPage() {
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         <p className="mt-4 text-muted-foreground">Checking for new jobs...</p>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="space-y-4 md:space-y-6 pb-20 md:pb-6 animate-fade-in">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Job Dispatches</h1>
+        </div>
+
+        <Card className="min-h-[50vh] flex flex-col items-center justify-center">
+          <CardContent className="text-center py-12">
+            <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Gagal Memuat Lowongan</h3>
+            <p className="text-muted-foreground mb-4 max-w-xs mx-auto text-sm">
+              {error}
+            </p>
+            <div className="flex items-center justify-center gap-2">
+              <Button onClick={fetchAvailableJobs} variant="outline">
+                <Loader2 className="h-4 w-4 mr-2" />
+                Coba Lagi
+              </Button>
+              <Button onClick={() => window.location.reload()}>
+                Refresh Halaman
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

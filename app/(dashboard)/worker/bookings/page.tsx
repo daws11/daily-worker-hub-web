@@ -342,6 +342,10 @@ function BookingCard({
   );
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number = 10000): Promise<T> {
+  return Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Request timed out")), ms))]) as any as Promise<T>;
+}
+
 async function fetchBookings(workerId: string): Promise<Booking[]> {
   const { data, error } = await (supabase as any)
     .from("bookings")
@@ -436,7 +440,7 @@ export default function WorkerBookingsPage() {
     setError(null);
 
     try {
-      const bookingsData = await fetchBookings(user.id);
+      const bookingsData = await withTimeout(fetchBookings(user.id));
 
       // Fetch existing reviews for completed bookings
       const completedBookingIds = bookingsData
@@ -444,7 +448,7 @@ export default function WorkerBookingsPage() {
         .map((b) => b.id);
 
       if (completedBookingIds.length > 0) {
-        const reviewsMap = await fetchReviewsForBookings(completedBookingIds);
+        const reviewsMap = await withTimeout(fetchReviewsForBookings(completedBookingIds));
         setBookingReviews(reviewsMap);
       }
 

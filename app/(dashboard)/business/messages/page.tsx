@@ -22,6 +22,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+// Query timeout wrapper to prevent infinite loading
+function withTimeout<T>(promise: Promise<T>, ms: number = 10000): Promise<T> {
+  return Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Request timed out")), ms))]) as any as Promise<T>;
+}
+
 interface ConversationWithDetails extends MessageWithRelations {
   bookingDetails?: {
     job?: {
@@ -68,6 +73,7 @@ export default function BusinessMessagesPage() {
     conversationsList: [],
   });
   const [enriching, setEnriching] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const loading = hookLoading || enriching;
 
@@ -78,17 +84,20 @@ export default function BusinessMessagesPage() {
     setEnriching(true);
 
     try {
-      // Fetch conversations using the hook
-      await fetchConversations();
-      await fetchUnreadCount();
+      setError(null);
 
-      // Get all business bookings to add job details
+      // Fetch conversations using the hook with timeout
+      await withTimeout(Promise.all([fetchConversations(), fetchUnreadCount()]), 10000);
+
+      // Get all business bookings to add job details with timeout
       const { data: bookingsData, error: bookingsError } =
-        await getBusinessBookings(user.id);
+        await withTimeout(getBusinessBookings(user.id), 10000);
 
       if (bookingsError) {
         throw bookingsError;
       }
+
+      setError(null);
 
       // Create a map of booking_id to booking details
       const bookingMap = new Map();
@@ -132,6 +141,7 @@ export default function BusinessMessagesPage() {
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Gagal memuat data";
+      setError(message);
       toast.error(message);
     } finally {
       setEnriching(false);
@@ -189,12 +199,12 @@ export default function BusinessMessagesPage() {
       </div>
 
       {/* Error State */}
-      {hookError && (
+      {(hookError || error) && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Gagal memuat data</AlertTitle>
           <AlertDescription className="flex items-center justify-between">
-            <span>{hookError}</span>
+            <span>{hookError || error}</span>
             <Button variant="outline" size="sm" onClick={fetchAndEnrichConversations}>
               <RefreshCw className="mr-2 h-4 w-4" />
               Coba Lagi
@@ -204,7 +214,7 @@ export default function BusinessMessagesPage() {
       )}
 
       {/* Loading State */}
-      {loading && !hookError && (
+      {loading && !hookError && !error && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
@@ -214,7 +224,7 @@ export default function BusinessMessagesPage() {
       )}
 
       {/* Stats Cards */}
-      {!loading && !hookError && (
+      {!loading && !hookError && !error && (
         <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3">
           <Card className="col-span-2 lg:col-span-1">
             <CardHeader className="pb-2">
@@ -248,7 +258,7 @@ export default function BusinessMessagesPage() {
       )}
 
       {/* Empty State */}
-      {!loading && !hookError && conversationsData.conversationsList?.length === 0 && (
+      {!loading && !hookError && !error && conversationsData.conversationsList?.length === 0 && (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <div className="p-4 bg-primary/10 rounded-full mb-4">
@@ -282,6 +292,7 @@ export default function BusinessMessagesPage() {
       {/* Conversations List */}
       {!loading &&
         !hookError &&
+        !error &&
         conversationsData.conversationsList &&
         conversationsData.conversationsList.length > 0 && (
           <div className="space-y-3">

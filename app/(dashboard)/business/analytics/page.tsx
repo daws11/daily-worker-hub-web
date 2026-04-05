@@ -1,5 +1,9 @@
 "use client";
 
+function withTimeout<T>(promise: Promise<T>, ms: number = 10000): Promise<T> {
+  return Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Request timed out")), ms))]) as any as Promise<T>;
+}
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -114,11 +118,11 @@ export default function BusinessAnalyticsPage() {
         return;
       }
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = (await withTimeout((supabase as any)
         .from("businesses")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .single(), 10000)) as any;
 
       if (error || !data) {
         toast.error("Profil bisnis tidak ditemukan");
@@ -139,10 +143,10 @@ export default function BusinessAnalyticsPage() {
       setIsLoadingPosts(true);
       try {
         // First, get all job IDs for this business
-        const { data: jobsData, error: jobsError } = await (supabase as any)
+        const { data: jobsData, error: jobsError } = (await withTimeout((supabase as any)
           .from("jobs")
           .select("id")
-          .eq("business_id", business.id);
+          .eq("business_id", business.id), 10000)) as any;
 
         if (jobsError) {
           toast.error("Gagal memuat data lowongan");
@@ -169,7 +173,7 @@ export default function BusinessAnalyticsPage() {
         const jobIds = (jobsData as any[]).map((j: any) => j.id);
 
         // Now fetch job posts with platform info
-        const { data, error } = await (supabase as any)
+        const { data, error } = (await withTimeout((supabase as any)
           .from("job_posts")
           .select(
             `
@@ -184,7 +188,7 @@ export default function BusinessAnalyticsPage() {
           `,
           )
           .in("job_id", jobIds)
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false }), 10000)) as any;
 
         if (error) {
           toast.error("Gagal memuat data analitik");

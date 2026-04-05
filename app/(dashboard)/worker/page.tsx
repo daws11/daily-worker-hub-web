@@ -21,7 +21,8 @@ import {
   CheckCircle,
   AlertCircle,
   Briefcase,
-  Star
+  Star,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -88,26 +89,33 @@ export default function WorkerDashboardPage() {
   const [activities, setActivities] = useState<RecentActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [workerName, setWorkerName] = useState<string>("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchDashboardData() {
       if (!user?.id) return;
 
       setIsLoading(true);
+      setError(null);
+
       try {
         // Get worker profile
-        const { data: worker } = await (supabase as any)
+        const { data: worker, error: workerError } = await (supabase as any)
           .from("workers")
           .select("id, rating, full_name")
           .eq("user_id", user.id)
           .single();
+
+        if (workerError) {
+          throw new Error(workerError.message || "Gagal memuat profil worker");
+        }
 
         if (worker?.full_name) {
           setWorkerName(worker.full_name);
         }
 
         // Fetch wallet
-        const { data: walletData } = await (supabase as any)
+        const { data: walletData, error: walletError } = await (supabase as any)
           .from("wallets")
           .select("available_balance, pending_balance")
           .eq("user_id", user.id)
@@ -116,7 +124,7 @@ export default function WorkerDashboardPage() {
         if (walletData) setWallet(walletData);
 
         // Fetch open jobs count
-        const { count: openJobs } = await (supabase as any)
+        const { count: openJobs, error: jobsError } = await (supabase as any)
           .from("jobs")
           .select("*", { count: "exact", head: true })
           .eq("status", "open");
@@ -124,12 +132,16 @@ export default function WorkerDashboardPage() {
         // Fetch worker bookings
         const workerId = worker?.id || user.id;
         
-        const { data: bookings } = await (supabase as any)
+        const { data: bookings, error: bookingsError } = await (supabase as any)
           .from("bookings")
           .select("id, status, start_date, end_date, final_price, jobs (id, title, address), businesses (id, name)")
           .eq("worker_id", workerId)
           .order("start_date", { ascending: true })
           .limit(10);
+
+        if (bookingsError) {
+          throw new Error(bookingsError.message || "Gagal memuat bookings");
+        }
 
         if (bookings) {
           // Transform data to match expected array format for jobs and businesses
@@ -145,14 +157,17 @@ export default function WorkerDashboardPage() {
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-
         const txQuery = supabase as any;
-        const { data: transactions }: { data: any } = await txQuery
+        const { data: transactions, error: txError } = await txQuery
           .from("wallet_transactions")
           .select("amount, created_at")
           .eq("user_id", user.id as string)
           .eq("type", "credit")
           .gte("created_at", startOfMonth.toISOString());
+
+        if (txError) {
+          console.error("Error fetching transactions:", txError);
+        }
 
         const earnedThisMonth = (transactions as any[])?.reduce((sum: any, t: any) => sum + (t.amount || 0), 0) || 0;
 
@@ -180,8 +195,10 @@ export default function WorkerDashboardPage() {
         }));
         setActivities(newActivities);
 
-      } catch (error) {
-        console.error("Error fetching dashboard:", error);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Gagal memuat data dashboard";
+        console.error("Error fetching dashboard:", err);
+        setError(message);
       } finally {
         setIsLoading(false);
       }
@@ -190,8 +207,30 @@ export default function WorkerDashboardPage() {
     fetchDashboardData();
   }, [user]);
 
+  const handleRetry = () => {
+    // Trigger a re-fetch by updating user dependency or calling fetch directly
+    setIsLoading(true);
+    setError(null);
+    window.location.reload();
+  };
+
   return (
     <div className="space-y-4 md:space-y-6 pb-20 md:pb-6 animate-fade-in">
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
+          <div className="flex-1">
+            <p className="text-red-800 font-medium text-sm">Gagal memuat dashboard</p>
+            <p className="text-red-600 text-xs">{error}</p>
+          </div>
+          <Button onClick={handleRetry} size="sm" variant="outline" className="shrink-0">
+            <Loader2 className="h-4 w-4 mr-1" />
+            Coba Lagi
+          </Button>
+        </div>
+      )}
+
       {/* Worker Status Toggle */}
       <div className="animate-slide-up">
         <WorkerStatusToggle />

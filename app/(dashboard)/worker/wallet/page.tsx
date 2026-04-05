@@ -1,5 +1,9 @@
 "use client";
 
+function withTimeout<T>(promise: Promise<T>, ms: number = 10000): Promise<T> {
+  return Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Request timed out")), ms))]) as any as Promise<T>;
+}
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -118,11 +122,11 @@ export default function WorkerWalletPage() {
 
       setIsLoadingWorker(true);
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = (await withTimeout((supabase as any)
         .from("workers")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .single(), 10000)) as any;
 
       if (error || !data) {
         toast.error(t("errors.loadFailed"));
@@ -166,11 +170,11 @@ export default function WorkerWalletPage() {
       if (!worker) return;
 
       try {
-        const { data, error } = await (supabase as any)
+        const { data, error } = (await withTimeout((supabase as any)
           .from("bank_accounts" as any)
           .select("*")
           .eq("worker_id", worker.id)
-          .order("is_primary", { ascending: false });
+          .order("is_primary", { ascending: false }), 10000)) as any;
 
         if (error) {
           toast.error(t("wallet.withdrawRequestFailed"));
@@ -201,11 +205,11 @@ export default function WorkerWalletPage() {
       setIsLoadingPayouts(true);
       try {
         // payout_requests stores bank details directly (no join needed)
-        const { data, error } = await (supabase as any)
+        const { data, error } = (await withTimeout((supabase as any)
           .from("payout_requests" as any)
           .select("*")
           .eq("worker_id", worker.id)
-          .order("created_at", { ascending: false });
+          .order("created_at", { ascending: false }), 10000)) as any;
 
         if (error) {
           toast.error(t("errors.loadFailed"));

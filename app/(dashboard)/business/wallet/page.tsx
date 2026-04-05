@@ -44,6 +44,11 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+// Query timeout wrapper to prevent infinite loading
+function withTimeout<T>(promise: Promise<T>, ms: number = 10000): Promise<T> {
+  return Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Request timed out")), ms))]) as any as Promise<T>;
+}
+
 type BusinessesRow = Database["public"]["Tables"]["businesses"]["Row"];
 
 // Local type until payment_transactions table is created
@@ -75,6 +80,7 @@ export default function BusinessWalletPage() {
   const [isLoadingBusiness, setIsLoadingBusiness] = useState(true);
   const [isLoadingWallet, setIsLoadingWallet] = useState(true);
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState<string>("");
   const [feeBreakdown, setFeeBreakdown] = useState<{
@@ -93,19 +99,24 @@ export default function BusinessWalletPage() {
         return;
       }
 
-      const { data, error } = await (supabase as any)
+      const { data, error } = (await withTimeout(
+        (supabase as any)
         .from("businesses")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .single(),
+        10000
+      )) as any;
 
       if (error || !data) {
         toast.error("Failed to load business data");
+        setError("Failed to load business data");
         setIsLoadingBusiness(false);
         return;
       }
 
       setBusiness(data);
+      setError(null);
       setIsLoadingBusiness(false);
     }
 
@@ -119,14 +130,20 @@ export default function BusinessWalletPage() {
 
       setIsLoadingWallet(true);
       try {
-        const result = await getBusinessWalletBalance(business.id);
+        const result = await withTimeout(getBusinessWalletBalance(business.id), 10000);
 
         if (!result.success || !result.data) {
           toast.error(result.error || "Failed to load wallet balance");
+          setError(result.error || "Failed to load wallet balance");
           return;
         }
 
         setWalletBalance(result.data);
+        setError(null);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to load wallet balance";
+        setError(message);
+        toast.error(message);
       } finally {
         setIsLoadingWallet(false);
       }
@@ -142,14 +159,20 @@ export default function BusinessWalletPage() {
 
       setIsLoadingTransactions(true);
       try {
-        const result = await getBusinessPaymentHistory(business.id);
+        const result = await withTimeout(getBusinessPaymentHistory(business.id), 10000);
 
         if (!result.success || !result.data) {
           toast.error(result.error || "Failed to load payment history");
+          setError(result.error || "Failed to load payment history");
           return;
         }
 
         setTransactions(result.data as any);
+        setError(null);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to load payment history";
+        setError(message);
+        toast.error(message);
       } finally {
         setIsLoadingTransactions(false);
       }
@@ -320,6 +343,21 @@ export default function BusinessWalletPage() {
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-3 max-w-md mx-auto p-4">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <p className="text-destructive font-medium text-center">{error}</p>
+          <Button onClick={() => window.location.reload()}>
+            <Loader2 className="h-4 w-4 mr-2" />
+            {t("common.retry") || "Coba Lagi"}
+          </Button>
         </div>
       </div>
     );

@@ -22,6 +22,10 @@ import { useConversations } from "@/lib/hooks/use-conversations";
 import type { MessageWithRelations } from "@/lib/types/message";
 import Link from "next/link";
 
+function withTimeout<T>(promise: Promise<T>, ms: number = 10000): Promise<T> {
+  return Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Request timed out")), ms))]) as any as Promise<T>;
+}
+
 function formatTime(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();

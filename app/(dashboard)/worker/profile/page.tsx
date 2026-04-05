@@ -20,6 +20,7 @@ import {
   Calendar,
   Trophy,
   ChevronRight,
+  AlertCircle,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import type { Database } from "@/lib/supabase/types";
@@ -34,6 +35,7 @@ export default function WorkerProfilePage() {
   const [worker, setWorker] = useState<WorkersRow | null>(null);
   const [earnedBadges, setEarnedBadges] = useState<BadgeWithProgress[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState({
     completedJobs: 0,
     averageRating: null as number | null,
@@ -49,59 +51,71 @@ export default function WorkerProfilePage() {
       }
 
       setIsLoading(true);
+      setError(null);
 
-      const { data, error } = await (supabase as any)
-        .from("workers")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-
-      if (error || !data) {
-        toast.error("Profil worker tidak ditemukan");
-        setIsLoading(false);
-        return;
-      }
-
-      setWorker(data);
-
-      // Fetch earned badges
       try {
-        const badges = await getWorkerEarnedBadges(data.id);
-        setEarnedBadges(badges);
-      } catch (error) {
-        console.error("Error fetching badges:", error);
+        const { data, error } = await (supabase as any)
+          .from("workers")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+
+        if (error || !data) {
+          throw new Error("Profil worker tidak ditemukan");
+        }
+
+        setWorker(data);
+
+        // Fetch earned badges
+        try {
+          const badges = await getWorkerEarnedBadges(data.id);
+          setEarnedBadges(badges);
+        } catch (badgeError) {
+          console.error("Error fetching badges:", badgeError);
+        }
+
+        // Fetch stats
+        const { count: completedJobs, error: bookingsError } = await (supabase as any)
+          .from("bookings")
+          .select("*", { count: "exact", head: true })
+          .eq("worker_id", data.id)
+          .eq("status", "completed");
+
+        const { data: reviews, error: reviewsError } = await (supabase as any)
+          .from("reviews")
+          .select("rating")
+          .eq("worker_id", data.id);
+
+        const validRatings =
+          (reviews as any[])?.filter((r: any) => r.rating !== null).map((r: any) => r.rating) || [];
+        const averageRating =
+          validRatings.length > 0
+            ? validRatings.reduce((a: number, b: number) => a + b, 0) / validRatings.length
+            : null;
+
+        setStats({
+          completedJobs: completedJobs || 0,
+          averageRating,
+          totalReviews: validRatings.length,
+        });
+
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Gagal memuat profil";
+        toast.error(message);
+        setError(message);
+      } finally {
+        setIsLoading(false);
       }
-
-      // Fetch stats
-      const { count: completedJobs } = await (supabase as any)
-        .from("bookings")
-        .select("*", { count: "exact", head: true })
-        .eq("worker_id", data.id)
-        .eq("status", "completed");
-
-      const { data: reviews } = await (supabase as any)
-        .from("reviews")
-        .select("rating")
-        .eq("worker_id", data.id);
-
-      const validRatings =
-        (reviews as any[])?.filter((r: any) => r.rating !== null).map((r: any) => r.rating) || [];
-      const averageRating =
-        validRatings.length > 0
-          ? validRatings.reduce((a: number, b: number) => a + b, 0) / validRatings.length
-          : null;
-
-      setStats({
-        completedJobs: completedJobs || 0,
-        averageRating,
-        totalReviews: validRatings.length,
-      });
-
-      setIsLoading(false);
     }
 
     fetchWorker();
   }, [user, router]);
+
+  const handleRetry = () => {
+    setIsLoading(true);
+    setError(null);
+    window.location.reload();
+  };
 
   if (isLoading) {
     return (
@@ -116,8 +130,17 @@ export default function WorkerProfilePage() {
 
   if (!worker) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <p className="text-muted-foreground">Profil tidak ditemukan</p>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 flex flex-col items-center gap-3 max-w-sm text-center">
+          <AlertCircle className="h-8 w-8 text-destructive" />
+          <p className="text-destructive font-medium">
+            {error || "Profil tidak ditemukan"}
+          </p>
+          <Button onClick={handleRetry} variant="outline">
+            <Loader2 className="h-4 w-4 mr-2" />
+            Coba Lagi
+          </Button>
+        </div>
       </div>
     );
   }

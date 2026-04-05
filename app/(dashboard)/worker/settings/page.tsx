@@ -1,5 +1,9 @@
 "use client";
 
+function withTimeout<T>(promise: Promise<T>, ms: number = 10000): Promise<T> {
+  return Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Request timed out")), ms))]) as any as Promise<T>;
+}
+
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -251,11 +255,11 @@ function WorkerSettingsContent() {
       setIsLoading(true);
       try {
         // Fetch worker data
-        const { data: worker } = await (supabase as any)
+        const { data: worker } = (await withTimeout((supabase as any)
           .from("workers")
           .select("id, tier, jobs_completed, rating")
           .eq("user_id", user.id)
-          .single();
+          .single(), 10000)) as any;
 
         if (worker) {
           setWorkerData({
@@ -265,11 +269,11 @@ function WorkerSettingsContent() {
           });
 
           // Fetch availability
-          const { data: availability } = await (supabase as any)
+          const { data: availability } = (await withTimeout((supabase as any)
             .from("worker_availabilities")
             .select("*")
             .eq("worker_id", worker.id)
-            .order("day_of_week");
+            .order("day_of_week"), 10000)) as any;
 
           if (availability && availability.length > 0) {
             setAvailabilitySlots(availability.map((av: any) => ({

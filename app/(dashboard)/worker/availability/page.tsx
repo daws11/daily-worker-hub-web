@@ -43,6 +43,10 @@ import {
 } from "lucide-react";
 import type { Database } from "@/lib/supabase/types";
 
+function withTimeout<T>(promise: Promise<T>, ms: number = 10000): Promise<T> {
+  return Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Request timed out")), ms))]) as any as Promise<T>;
+}
+
 type WorkerAvailability =
   Database["public"]["Tables"]["worker_availabilities"]["Row"];
 
@@ -84,7 +88,7 @@ export default function WorkerAvailabilityPage() {
     setError(null);
 
     try {
-      const data = await getWorkerAvailability(user.id);
+      const data = await withTimeout(getWorkerAvailability(user.id), 10000);
 
       if (data && data.length > 0) {
         // Map fetched data to state

@@ -22,6 +22,11 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase/client";
 
+// Query timeout wrapper to prevent infinite loading
+function withTimeout<T>(promise: Promise<T>, ms: number = 10000): Promise<T> {
+  return Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Request timed out")), ms))]) as any as Promise<T>;
+}
+
 interface WorkerWithBadges {
   id: string;
   full_name: string;
@@ -66,7 +71,7 @@ export default function BusinessWorkersPage() {
   // Fetch all available badges
   const fetchBadges = useCallback(async () => {
     try {
-      const allBadges = await getBadges();
+      const allBadges = await withTimeout(getBadges(), 10000);
       setBadges(allBadges);
     } catch (err) {
       const message =
@@ -89,7 +94,7 @@ export default function BusinessWorkersPage() {
         if (badgeIds && badgeIds.length > 0) {
           // Fetch workers who have the selected badges
           const workersByBadgePromises = badgeIds.map((badgeId) =>
-            getWorkersByBadge(badgeId, "verified"),
+            withTimeout(getWorkersByBadge(badgeId, "verified"), 10000),
           );
 
           const workersByBadgeResults = await Promise.all(
@@ -154,7 +159,8 @@ export default function BusinessWorkersPage() {
           );
         } else {
           // Fetch all workers
-          const { data: workersData, error: workersError } = await (supabase as any)
+          const { data: workersData, error: workersError } = (await withTimeout(
+            (supabase as any)
             .from("workers")
             .select(
               `
@@ -168,14 +174,16 @@ export default function BusinessWorkersPage() {
             reliability_score
           `,
             )
-            .order("created_at", { ascending: false });
+            .order("created_at", { ascending: false }),
+            10000
+          )) as any;
 
           if (workersError) throw workersError;
 
           // Fetch badges for each worker
-          workersWithBadges = await Promise.all(
+          workersWithBadges = await withTimeout(Promise.all(
             (workersData || []).map(async (worker: any) => {
-              const { data: workerBadges } = await (supabase as any)
+              const { data: workerBadges } = (await withTimeout((supabase as any)
                 .from("worker_badges")
                 .select(
                   `
@@ -186,22 +194,22 @@ export default function BusinessWorkersPage() {
               `,
                 )
                 .eq("worker_id", worker.id)
-                .eq("verification_status", "verified");
+                .eq("verification_status", "verified"))) as any;
 
               return {
                 ...worker,
                 badges: workerBadges || [],
               };
             }),
-          );
+          ));
         }
 
         // Fetch trend data for each worker
-        const workersWithTrends = await Promise.all(
+        const workersWithTrends = await withTimeout(Promise.all(
           workersWithBadges.map(async (worker) => {
             if (worker.reliability_score !== undefined && worker.reliability_score !== null) {
               try {
-                const history = await getScoreHistory(worker.id, 2);
+                const history = await withTimeout(getScoreHistory(worker.id, 2), 10000);
                 let trend: TrendDirection = "stable";
                 if (history && history.length >= 2) {
                   const latest = history[0]?.new_score ?? 0;
@@ -221,7 +229,7 @@ export default function BusinessWorkersPage() {
             }
             return { ...worker, reliability_trend: "insufficient_data" as TrendDirection };
           }),
-        );
+        ));
 
         // Store unfiltered list
         setUnfilteredWorkers(workersWithTrends);

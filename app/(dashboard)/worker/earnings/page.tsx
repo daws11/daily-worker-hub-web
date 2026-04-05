@@ -111,6 +111,10 @@ function formatDateTime(dateString: string): string {
   });
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number = 10000): Promise<T> {
+  return Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Request timed out")), ms))]) as any as Promise<T>;
+}
+
 async function fetchEarnings(workerId: string): Promise<EarningsEntry[]> {
   // Use any to bypass complex type inference with nested relations
   const result = await (supabase as any)
@@ -178,7 +182,7 @@ export default function WorkerEarningsPage() {
     setError(null);
 
     try {
-      const earningsData = await fetchEarnings(user.id);
+      const earningsData = await withTimeout(fetchEarnings(user.id));
       setEarnings(earningsData);
     } catch (err: any) {
       const message = err.message || "Gagal memuat data penghasilan";

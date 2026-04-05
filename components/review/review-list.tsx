@@ -4,6 +4,11 @@ import * as React from "react";
 import { toast } from "sonner";
 import { Star, TrendingUp } from "lucide-react";
 
+// Query timeout wrapper to prevent infinite loading
+function withTimeout<T>(promise: Promise<T>, ms: number = 10000): Promise<T> {
+  return Promise.race([promise, new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Request timed out")), ms))]) as any as Promise<T>;
+}
+
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
