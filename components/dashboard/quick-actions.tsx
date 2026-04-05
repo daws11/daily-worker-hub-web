@@ -140,7 +140,7 @@ export function QuickActions({ role }: QuickActionsProps) {
     },
     {
       label: "Attendance",
-      href: "/worker/attendance",
+      href: "/worker/bookings",
       icon: Clock,
       color: "bg-pink-100 dark:bg-pink-900/40",
       iconColor: "text-pink-600 dark:text-pink-400",

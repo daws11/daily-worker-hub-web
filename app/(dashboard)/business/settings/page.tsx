@@ -52,8 +52,8 @@ const businessMenuItems: MenuItem[] = [
   { title: "Analytics", href: "/business/analytics", icon: BarChart3, description: "Statistik bisnis" },
   { title: "Reviews", href: "/business/reviews", icon: Star, description: "Ulasan dari pekerja" },
   { title: "Workers", href: "/business/workers", icon: Users, description: "Kelola pekerja" },
-  { title: "Job Attendance", href: "/business/job-attendance", icon: Clock, description: "Absensi pekerja" },
-  { title: "Badge Verifications", href: "/business/badge-verifications", icon: BadgeCheck, description: "Verifikasi badge" },
+  // Attendance removed
+  // Badge Verifications removed
 ];
 
 const bottomMenuItems: MenuItem[] = [

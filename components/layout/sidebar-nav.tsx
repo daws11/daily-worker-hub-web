@@ -11,7 +11,6 @@ import {
   Calendar,
   Briefcase,
   Star,
-  BadgeCheck,
   Wallet,
   Settings,
   BarChart3,
@@ -21,8 +20,6 @@ import {
   Menu,
   X,
   CalendarDays,
-  Trophy,
-  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -78,21 +75,13 @@ const businessNavGroups = {
       href: "/business/workers",
       icon: Users,
     },
-    {
-      title: "Attendance",
-      href: "/business/job-attendance",
-      icon: Clock,
-    },
+    // Attendance removed - dispatch flow handles this
     {
       title: "Reviews",
       href: "/business/reviews",
       icon: Star,
     },
-    {
-      title: "Badge Verifications",
-      href: "/business/badge-verifications",
-      icon: BadgeCheck,
-    },
+    // Badge Verifications removed - legacy feature
   ],
   bottom: [
     {

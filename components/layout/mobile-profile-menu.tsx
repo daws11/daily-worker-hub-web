@@ -44,8 +44,8 @@ const businessMenuItems: ProfileMenuItem[] = [
   { title: "Analytics", href: "/business/analytics", icon: BarChart3 },
   { title: "Reviews", href: "/business/reviews", icon: Star },
   { title: "Workers", href: "/business/workers", icon: Users },
-  { title: "Job Attendance", href: "/business/job-attendance", icon: Clock },
-  { title: "Badge Verifications", href: "/business/badge-verifications", icon: BadgeCheck },
+  // Attendance removed
+  // Badge Verifications removed
   { title: "Settings", href: "/business/settings", icon: Settings },
 ];
 
@@ -55,7 +55,7 @@ const workerMenuItems: ProfileMenuItem[] = [
   { title: "Earnings", href: "/worker/earnings", icon: CreditCard },
   { title: "Applications", href: "/worker/applications", icon: Briefcase },
   { title: "Badges", href: "/worker/badges", icon: Award },
-  { title: "Attendance", href: "/worker/attendance", icon: Clock },
+  // Attendance removed
   { title: "Availability", href: "/worker/availability", icon: CalendarCheck },
   { title: "Settings", href: "/worker/settings", icon: Settings },
 ];

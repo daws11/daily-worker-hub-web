@@ -231,7 +231,7 @@ export default function WorkerProfilePage() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => router.push("/worker/achievements")}
+                onClick={() => router.push("/worker/badges")}
               >
                 Lihat Semua
                 <ChevronRight className="h-4 w-4 ml-1" />
@@ -257,7 +257,7 @@ export default function WorkerProfilePage() {
                 <Button
                   variant="link"
                   className="mt-2"
-                  onClick={() => router.push("/worker/achievements")}
+                  onClick={() => router.push("/worker/badges")}
                 >
                   Lihat badge yang tersedia
                 </Button>

@@ -53,7 +53,7 @@ const workerMenuItems: MenuItem[] = [
   { title: "Earnings", href: "/worker/earnings", icon: CreditCard, description: "Pendapatan" },
   { title: "Applications", href: "/worker/applications", icon: FileText, description: "Lamaran kerja" },
   { title: "Badges", href: "/worker/badges", icon: Award, description: "Badge & pencapaian" },
-  { title: "Attendance", href: "/worker/attendance", icon: Clock, description: "Riwayat absensi" },
+  // Attendance removed - dispatch flow
   { title: "Availability", href: "/worker/availability", icon: Calendar, description: "Atur ketersediaan" },
 ];
 

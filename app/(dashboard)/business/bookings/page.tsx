@@ -15,8 +15,6 @@ import {
   XCircle,
   Clock,
   Star,
-  Video,
-  ExternalLink,
   Plus,
   Calendar,
 } from "lucide-react";
@@ -79,12 +77,6 @@ interface BookingReview {
   would_rehire: boolean | null;
 }
 
-interface InterviewSession {
-  id: string;
-  booking_id: string;
-  status: "pending" | "in_progress" | "completed" | "skipped" | "failed";
-  type: "none" | "chat" | "chat_and_voice";
-}
 
 type BookingStatusGroup = {
   pending: Booking[];
@@ -166,9 +158,6 @@ export default function BusinessBookingsPage() {
   const [bookingReviews, setBookingReviews] = React.useState<
     Map<string, BookingReview>
   >(new Map());
-  const [interviewSessions, setInterviewSessions] = React.useState<
-    Map<string, InterviewSession>
-  >(new Map());
   const [reviewDialogOpen, setReviewDialogOpen] = React.useState(false);
   const [selectedBooking, setSelectedBooking] = React.useState<Booking | null>(
     null,
@@ -239,28 +228,7 @@ export default function BusinessBookingsPage() {
         });
 
         setBookingReviews(reviewsMap);
-      }
-
-      // Fetch interview sessions for all bookings
-      const allBookingIds: string[] = bookings.map((b) => b.id);
-      if (allBookingIds.length > 0) {
-        const { data: sessionsData } = await (supabase as any)
-          .from("interview_sessions")
-          .select("id, booking_id, status, type")
-          .in("booking_id", allBookingIds);
-
-        const sessionsMap = new Map<string, InterviewSession>();
-        sessionsData?.forEach((session: any) => {
-          sessionsMap.set(session.booking_id, {
-            id: session.id,
-            booking_id: session.booking_id,
-            status: session.status,
-            type: session.type,
-          });
-        });
-
-        setInterviewSessions(sessionsMap);
-      }
+      }      }
 
       setBookings(bookings);
     } catch (err: any) {
@@ -439,14 +407,6 @@ export default function BusinessBookingsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
                   {groupBookings.map((booking) => {
                     const existingReview = bookingReviews.get(booking.id);
-                    const hasReviewed = !!existingReview;
-                    const interviewSession = interviewSessions.get(booking.id);
-                    const showInterviewLink =
-                      interviewSession &&
-                      ["pending", "accepted", "in_progress"].includes(
-                        booking.status,
-                      );
-
                     return (
                       <div
                         key={booking.id}
@@ -550,53 +510,7 @@ export default function BusinessBookingsPage() {
                           </div>
                         )}
 
-                        {/* Interview Section - For active bookings with interview sessions */}
-                        {showInterviewLink && (
-                          <div className="px-4 py-3 border-t border-border bg-muted/30 flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2">
-                              <Video className="w-4 h-4 text-violet-500" />
-                              <span className="text-xs font-medium text-muted-foreground">
-                                Interview:
-                              </span>
-                              <Badge
-                                variant="outline"
-                                className={
-                                  interviewSession.status === "in_progress"
-                                    ? "bg-green-500/10 text-green-700 dark:text-green-400 border-green-200"
-                                    : interviewSession.status === "completed"
-                                      ? "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200"
-                                      : interviewSession.status === "skipped"
-                                        ? "bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-200"
-                                        : "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200"
-                                }
-                              >
-                                {interviewSession.status === "in_progress"
-                                  ? "Berlangsung"
-                                  : interviewSession.status === "completed"
-                                    ? "Selesai"
-                                    : interviewSession.status === "skipped"
-                                      ? "Dilewati"
-                                      : "Menunggu"}
-                              </Badge>
-                            </div>
-                            <Link
-                              href={`/business/interview/${booking.id}`}
-                              className="flex items-center gap-1.5 px-3 py-2 bg-green-600 text-primary-foreground rounded-md text-xs font-medium no-underline transition-colors min-h-[44px] touch-manipulation"
-                            >
-                              {interviewSession.status === "in_progress" ? (
-                                <>
-                                  <Video className="w-3.5 h-3.5" />
-                                  Gabung Interview
-                                </>
-                              ) : (
-                                <>
-                                  <ExternalLink className="w-3.5 h-3.5" />
-                                  Lihat Interview
-                                </>
-                              )}
-                            </Link>
-                          </div>
-                        )}
+                        {/* Interview section removed - dispatch flow is primary */}
                       </div>
                     );
                   })}
