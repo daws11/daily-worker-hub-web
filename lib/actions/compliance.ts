@@ -321,7 +321,7 @@ export async function enforceComplianceBeforeBooking(
       await (supabase as any).rpc("check_booking_compliance", {
         p_business_id: businessId,
         p_worker_id: workerId,
-        p_work_date: workDate,
+        p_start_date: workDate,
       });
 
     if (checkError) {
