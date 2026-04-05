@@ -228,7 +228,7 @@ export default function BusinessBookingsPage() {
         });
 
         setBookingReviews(reviewsMap);
-      }      }
+      }
 
       setBookings(bookings);
     } catch (err: any) {
