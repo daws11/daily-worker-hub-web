@@ -407,6 +407,7 @@ export default function BusinessBookingsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
                   {groupBookings.map((booking) => {
                     const existingReview = bookingReviews.get(booking.id);
+                    const hasReviewed = !!existingReview;
                     return (
                       <div
                         key={booking.id}
