@@ -1,3 +1,16 @@
+/**
+ * DEPRECATED: This page is no longer active.
+ * 
+ * The application flow has been replaced by the DISPATCH flow:
+ * - Business posts job → Auto-dispatch matching engine → Worker accepts/rejects dispatch → Booking created
+ * 
+ * Worker should now use:
+ * - /worker/jobs - View dispatched jobs
+ * - /worker/bookings - View active bookings
+ * 
+ * @deprecated Use /worker/jobs for dispatch-based job matching
+ */
+
 "use client";
 
 import * as React from "react";

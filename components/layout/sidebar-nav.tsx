@@ -129,8 +129,8 @@ const workerNavGroups = {
       icon: LayoutDashboard,
     },
     {
-      title: "Jobs",
-      href: "/worker/jobs",
+      title: "Dispatches",
+      href: "/worker/dispatches",
       icon: Briefcase,
     },
     {
@@ -154,11 +154,6 @@ const workerNavGroups = {
       title: "Badges",
       href: "/worker/badges",
       icon: BadgeCheck,
-    },
-    {
-      title: "Achievements",
-      href: "/worker/achievements",
-      icon: Trophy,
     },
   ],
   bottom: [
